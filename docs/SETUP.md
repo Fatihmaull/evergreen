@@ -87,12 +87,35 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 
 | Service | Purpose | Account/owner | Status |
 |---|---|---|---|
-| GitHub | repo, CI, Action publishing | Apex | *(W1-D3-01)* |
+| GitHub | repo, CI, Action publishing | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ public, MIT, CI green |
 | npm | `evergreen` packages | *(reserve W1-D5-01)* | ⬜ |
 | Hosting (Vercel/Netlify/Cloudflare) | dashboard | *(W1-D5-02)* | ⬜ |
 | Scheduler (Actions cron / CF Workers cron) | engine runs | *(W1-D5-03)* | ⬜ |
 | Email provider | alerts | *(W1-D5-04)* | ⬜ |
 | Shared drive | evidence (screenshots, video) | *(W1-D5-06)* | ⬜ |
+
+## Branch protection on `main`
+
+Set 2026-09-05 (`W1-D3-05`). `main` accepts changes **only through a pull request**:
+
+| Rule | Value |
+|---|---|
+| Required status check | `typecheck · lint · test` (strict — branch must be up to date) |
+| Pull request required | yes, approvals required: **0** |
+| Admins bound by the rules | **yes** |
+| Force pushes / branch deletion | blocked |
+| Conversation resolution required | yes |
+
+Two deliberate choices worth knowing:
+
+- **Approvals are set to 0, not 1.** `docs/CONVENTIONS.md` says "no direct pushes" and "CI green before merge" — it does not require an approval, and on a two-person team across timezones a mandatory reviewer is a stall risk on a hard deadline. Every change still goes through a PR, so it is reviewable; it just isn't blocked on someone being awake. Raise it to 1 if that turns out to be too loose.
+- **Admins are bound too.** With admin bypass on, a normal `git push` to `main` silently succeeds and prints a small "bypassed rule violations" notice that is easy to miss — so the protection would be decoration, and would read as decoration to anyone inspecting the repo. If you genuinely need to push directly in an emergency, turn enforcement off deliberately and turn it back on:
+
+```bash
+gh api -X DELETE repos/Fatihmaull/evergreen/branches/main/protection/enforce_admins
+# ... do the thing, then immediately:
+gh api -X POST   repos/Fatihmaull/evergreen/branches/main/protection/enforce_admins
+```
 
 ## Common commands
 
