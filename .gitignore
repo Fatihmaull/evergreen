@@ -1,0 +1,53 @@
+# Secrets — never commit. See docs/CONVENTIONS.md § Secrets and keys.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+secrets.json
+stellar-keys.json
+.stellar/
+.soroban/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+.next/
+.turbo/
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Local engine state (bump history, locks) — never a shared artifact
+.evergreen/
+evergreen.local.json
+
+# Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# OS noise
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
