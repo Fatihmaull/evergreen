@@ -1,0 +1,17 @@
+# Default: both of us.
+*                       @fatihmaulana @rakha
+
+# Fatih owns product, CLI, dashboard, and the docs a stranger reads first.
+/packages/cli/          @fatihmaulana
+/apps/dashboard/        @fatihmaulana
+/docs/PRD.md            @fatihmaulana
+/README.md              @fatihmaulana
+
+# Rakha owns the engine, the signer path, and their setup guides.
+/packages/engine/       @rakha
+/docs/POLICY-SIGNER.md  @rakha
+
+# The seams. Changing these ripples across both workstreams, so both review.
+/packages/shared-types/ @fatihmaulana @rakha
+/docs/adr/              @fatihmaulana @rakha
+/CLAUDE.md              @fatihmaulana @rakha

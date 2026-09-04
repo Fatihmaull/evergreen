@@ -1,0 +1,23 @@
+{
+  "name": "evergreen",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "evergreen": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@evergreen/core": "workspace:*",
+    "@evergreen/shared-types": "workspace:*"
+  }
+}

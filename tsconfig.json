@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared-types" },
+    { "path": "packages/core" },
+    { "path": "packages/cli" },
+    { "path": "packages/engine" },
+    { "path": "apps/dashboard" }
+  ]
+}

@@ -1,0 +1,13 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# Vitest needs esbuild's native binary, so its install script must run.
+# This is the only build script we allow; anything else added here is a
+# dependency-trust decision and belongs in a PR description.
+allowBuilds:
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - '@eslint/plugin-kit@0.7.3'
+  - eslint@10.10.0

@@ -1,0 +1,25 @@
+{
+  "name": "@evergreen/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TTL math, rent model, RPC client, storage optimizer, and decision rules. The only place that talks to the network.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@evergreen/shared-types": "workspace:*"
+  }
+}

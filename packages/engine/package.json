@@ -1,0 +1,20 @@
+{
+  "name": "@evergreen/engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scheduled auto-bump worker. One run = load config, scan, decide, submit, record, notify.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@evergreen/core": "workspace:*",
+    "@evergreen/shared-types": "workspace:*"
+  }
+}

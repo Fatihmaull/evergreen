@@ -37,6 +37,7 @@ Scopes: `cli` `core` `engine` `dashboard` `types` `action` `repo` `docs`.
 
 ## Testing
 
+- Test runner is **Vitest** (ADR-003). `pnpm test` runs unit tests only.
 - Unit tests never touch the network. Use fixtures in `packages/core/test/fixtures` and the mock RPC client.
 - Integration tests that hit testnet live in `*.integration.test.ts`, are excluded from the default `pnpm test`, and are run manually.
 - Every bug fix gets a regression test reproducing the bug first.
@@ -56,13 +57,19 @@ Scopes: `cli` `core` `engine` `dashboard` `types` `action` `repo` `docs`.
 - Every code path that can submit a transaction defaults to dry-run/simulation.
 - Live submission requires an explicit flag (`--submit`) or config field. No exceptions.
 - Log the tx hash on every submission, at info level, in a greppable format: `submitted tx=<hash> contract=<id> op=extendTTL`.
-- Copy every meaningful hash into `docs/EVIDENCE.md` the day it happens.
+- Copy every meaningful hash into `docs/EVIDENCE.md` the day it happens — **with all three artifacts**: the hash, the full unedited JSON RPC response, and an explorer screenshot. Testnet resets make explorer links dead, and a hash pointing at a chain that no longer exists proves nothing. One minute per transaction now; unrecoverable later.
 
 ## Documentation
 
 - Any user-facing behavior change updates the relevant doc in the same PR.
 - Code comments explain *why*, not *what*. The what is the code.
 - Public exports get a short JSDoc line — the CLI's `--help` and the README are generated from real behavior, so keep them honest.
+
+## Formatting
+
+- Prettier formats TypeScript, JSON, and YAML. `pnpm format` writes, `pnpm format:check` runs in CI.
+- **Markdown is excluded on purpose.** Prettier reflows tables and rewrites emphasis markers, which buries a real docs change under formatting churn — and these docs are read by a grant reviewer, not only by us. Format markdown by hand.
+- Lint rules enforce the TypeScript section above (no default exports, no `any`, explicit return types on exports, no floating promises). If a rule blocks good work, change it in a PR rather than sprinkling disables.
 
 ## Dependencies
 

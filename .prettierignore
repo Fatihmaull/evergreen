@@ -1,0 +1,9 @@
+dist/
+coverage/
+node_modules/
+pnpm-lock.yaml
+
+# Markdown is hand-formatted here on purpose. Prettier reflows tables and
+# rewrites emphasis markers, which buries real docs changes under churn — and
+# this repo's docs are read by a grant reviewer, not just by us.
+*.md
