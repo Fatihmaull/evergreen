@@ -5,7 +5,7 @@
 **Last updated:** 2026-09-04 · by: Phase 0 alignment + doc reconciliation (Fatih + Claude)
 **Sprint day:** 2 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track
+**Health:** 🟢 on track — one blocker (GitHub auth) that needs Fatih, not code
 
 ---
 
@@ -16,7 +16,7 @@
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
-| Repo & toolchain | 🔄 in progress | F | W1-D3-01 → W1-D3-05 |
+| Repo & toolchain | 🟡 done locally, **push blocked** | F | W1-D3-02/03/04 ✅ · W1-D3-01 `[!]` · W1-D3-05 partial |
 | Stellar dev env | ⬜ not started | R | W1-D4-01 → W1-D4-06 |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
@@ -27,7 +27,13 @@
 
 ## Blocked
 
-*(nothing blocked)*
+**[W1-D3-01] Cannot create or push to the GitHub repo — no GitHub authentication on this machine.**
+
+- *What was tried:* `gh auth status` reports no logged-in host. The GitHub MCP connector is configured but unauthorized, and this session is non-interactive, so neither the OAuth flow nor `gh auth login` (device/browser flow) can be completed from here.
+- *What is ready:* the local repo is initialized on `main` with two commits — the doc reconciliation and the full scaffold. Nothing is lost; this is purely the publish step.
+- *What would unblock it:* Fatih authorizes GitHub — either `gh auth login` in an interactive terminal, or the GitHub connector via claude.ai connector settings. Then: create the public repo `evergreen` under the Apex org and `git push -u origin main`.
+- *Also still pending on this:* branch protection on `main` (part of W1-D3-05), and confirming CI is green on GitHub rather than only locally (W1-D3-04).
+- *Since:* 2026-09-04. **Not on the critical path today** — W1-D4 (Rakha's Stellar environment work) does not depend on the remote existing, though he cannot clone until it does.
 
 > Format when something blocks: `**[TASK-ID]** what's blocked · what was tried · what would unblock it · since when`. A blocker sitting here for more than a day gets escalated between Fatih and Rakha directly, not left in the doc.
 
@@ -85,6 +91,15 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-04 — W1-D3 scaffolding (Claude)
+- **Monorepo scaffolded and verified.** Node 24, pnpm workspaces, TypeScript strict, ESLint flat config + Prettier, Vitest. Five packages (shared-types, core, cli, engine, dashboard), each importable with a passing no-op test.
+- **Clean-clone test passed** — cloned to a fresh directory, `pnpm install --frozen-lockfile` then `pnpm check`: typecheck, lint, format:check, 5/5 tests green. That is the Phase 1 definition of done, minus the push.
+- Toolchain recorded in ADR-003 Part 1. Chose Vitest over Jest: no per-package transform config, and v8 coverage needs no extra plumbing for the SOW's required coverage report.
+- **Prettier excluded from markdown** — it reflows tables and rewrites emphasis markers, burying real docs changes under churn in a repo whose docs a grant reviewer reads. Noted in CONVENTIONS.
+- Bumped ESLint to 10.x: 9.x is out of support and installing it printed a deprecation warning on day 3, which is a bad first impression in a repo built to be read.
+- **Blocked on pushing** — see Blocked above. Two commits sit locally, ready.
+- **Next:** Fatih authorizes GitHub and pushes; Rakha starts W1-D4 (Stellar env, both guinea-pigs, TTL floors, the permissionless check at W1-D4-06).
 
 ### 2026-09-04 — Phase 0 alignment + doc reconciliation (Fatih + Claude)
 - **Phase 0 closed.** Vision, scope boundaries, payment model, and risk ranking agreed and restated. Alignment happens once; future sessions follow the STATUS-first ritual (noted in CLAUDE.md).

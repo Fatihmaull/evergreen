@@ -70,12 +70,12 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ### Day 3 · Repo & toolchain
 *Planned: Fri Sep 5 — may slip; the D-number does not.*
-- [ ] **W1-D3-01** (F) Create the GitHub repo `evergreen` (public, MIT, Apex-owned). Push these docs as the first commit — docs land before code.
-- [ ] **W1-D3-02** (F) Monorepo skeleton: pnpm workspaces, root `tsconfig.base.json`, strict TS, ESLint + Prettier, **Vitest** (decided — ADR-003 Part 1), Node 24 pinned via `.nvmrc`.
-- [ ] **W1-D3-03** (R) Package boundaries created empty but importable: `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `apps/dashboard`. Each with its own `package.json`, `README.md` stub, and passing no-op test.
-- [ ] **W1-D3-04** (F) CI workflow: install → typecheck → lint → test on every PR. It must be green on the skeleton before any feature work.
-- [ ] **W1-D3-05** (F) Repo hygiene: branch protection on `main`, PR template, issue templates, `CODEOWNERS`, `.gitignore` covering `.env*` and key material, commit convention documented in `docs/CONVENTIONS.md`.
-- **Done when:** a fresh `git clone && pnpm install && pnpm test` passes on both machines.
+- [!] **W1-D3-01** (F) Create the GitHub repo `evergreen` (public, MIT, Apex-owned). Push these docs as the first commit — docs land before code. **BLOCKED: no GitHub auth on this machine** — see STATUS. Local repo is initialized with both commits ready to push.
+- [x] **W1-D3-02** (F) Monorepo skeleton: pnpm workspaces, root `tsconfig.base.json`, strict TS, ESLint + Prettier, **Vitest** (decided — ADR-003 Part 1), Node 24 pinned via `.nvmrc`.
+- [x] **W1-D3-03** (R) Package boundaries created empty but importable: `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `apps/dashboard`. Each with its own `package.json`, `README.md` stub, and passing no-op test.
+- [x] **W1-D3-04** (F) CI workflow: install → typecheck → lint → format:check → test on every PR. Green on the skeleton locally; **unverified on GitHub until the repo exists** (W1-D3-01).
+- [~] **W1-D3-05** (F) Repo hygiene: PR template, issue templates, `CODEOWNERS`, `.gitignore` covering `.env*` and key material, commit convention documented — all done. **Branch protection on `main` pending the repo existing** (W1-D3-01).
+- **Done when:** a fresh `git clone && pnpm install && pnpm test` passes on both machines. *(Verified 2026-09-04 against a clean clone of the local repo: install, typecheck, lint, format:check and 5/5 tests all green. Re-verify on Rakha's machine once the remote exists.)*
 
 ### Day 4 · Stellar/Soroban dev environment
 *Planned: Sat Sep 6 — may slip; the D-number does not.*
