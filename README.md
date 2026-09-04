@@ -42,6 +42,7 @@ npx evergreen scan <contract-id>
 | [`docs/PRD.md`](docs/PRD.md) | What we're building, for whom, and what's explicitly out of scope |
 | [`BACKLOG.md`](BACKLOG.md) | The 30-day plan: weekly milestones, daily tasks, slack ledger, cut order |
 | [`docs/STATUS.md`](docs/STATUS.md) | Current state — what's done, in flight, and blocked |
+| [`docs/EVIDENCE.md`](docs/EVIDENCE.md) | Grant deliverable evidence — tx hashes, screenshots, published artifacts |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Modules, data flow, boundaries |
 | [`docs/SOROBAN-PRIMER.md`](docs/SOROBAN-PRIMER.md) | TTL, rent, archival, and the RPC shapes we rely on |
 | [`docs/SETUP.md`](docs/SETUP.md) | Getting a machine productive |

@@ -70,12 +70,12 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ### Day 3 · Repo & toolchain
 *Planned: Fri Sep 5 — may slip; the D-number does not.*
-- [!] **W1-D3-01** (F) Create the GitHub repo `evergreen` (public, MIT, Apex-owned). Push these docs as the first commit — docs land before code. **BLOCKED: no GitHub auth on this machine** — see STATUS. Local repo is initialized with both commits ready to push.
+- [x] **W1-D3-01** (F) Create the GitHub repo `evergreen` (public, MIT, Apex-owned). Push these docs as the first commit — docs land before code. *Live at [github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen).*
 - [x] **W1-D3-02** (F) Monorepo skeleton: pnpm workspaces, root `tsconfig.base.json`, strict TS, ESLint + Prettier, **Vitest** (decided — ADR-003 Part 1), Node 24 pinned via `.nvmrc`.
 - [x] **W1-D3-03** (R) Package boundaries created empty but importable: `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `apps/dashboard`. Each with its own `package.json`, `README.md` stub, and passing no-op test.
-- [x] **W1-D3-04** (F) CI workflow: install → typecheck → lint → format:check → test on every PR. Green on the skeleton locally; **unverified on GitHub until the repo exists** (W1-D3-01).
-- [~] **W1-D3-05** (F) Repo hygiene: PR template, issue templates, `CODEOWNERS`, `.gitignore` covering `.env*` and key material, commit convention documented — all done. **Branch protection on `main` pending the repo existing** (W1-D3-01).
-- **Done when:** a fresh `git clone && pnpm install && pnpm test` passes on both machines. *(Verified 2026-09-04 against a clean clone of the local repo: install, typecheck, lint, format:check and 5/5 tests all green. Re-verify on Rakha's machine once the remote exists.)*
+- [x] **W1-D3-04** (F) CI workflow: install → typecheck → lint → format:check → test on every PR. **Verified green on GitHub**, not only locally. Actions pinned to v5 majors — the v4 line targets Node 20 and warns.
+- [x] **W1-D3-05** (F) Repo hygiene: branch protection on `main` with CI as a required status check, PR template, issue templates, `CODEOWNERS`, `.gitignore` covering `.env*` and key material, commit convention documented.
+- **Done when:** a fresh `git clone && pnpm install && pnpm test` passes on both machines. *(Verified 2026-09-04 against a clean clone: install, typecheck, lint, format:check and 5/5 tests green. CI confirmed green on GitHub 2026-09-05. Re-verify on Rakha's machine when he clones.)*
 
 ### Day 4 · Stellar/Soroban dev environment
 *Planned: Sat Sep 6 — may slip; the D-number does not.*

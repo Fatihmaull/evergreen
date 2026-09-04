@@ -106,7 +106,7 @@ Evergreen's model: an **Ed25519 signer** (headless — no browser, no passkey ce
 - **Stage 1 (v1 default, what the README teaches):** a plain funded Ed25519 account holding only enough XLM to pay extend fees. Short quickstart, nothing to configure.
 - **Stage 2 (hardened path):** the same signer scoped by a policy so a leaked key cannot drain the account it sits on. In v1 that account is the user's, so this protects the user.
 
-See `docs/adr/ADR-002.md` for the provider decision and its 2026-09-04 amendment, and `docs/POLICY-SIGNER.md` (written in W3) for setup.
+See [`ADR-002`](adr/ADR-002-policy-signer-provider.md) for the provider decision and its 2026-09-04 amendment, and [`POLICY-SIGNER.md`](POLICY-SIGNER.md) for setup.
 
 ## Gotchas to design around
 

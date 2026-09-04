@@ -18,6 +18,16 @@ chore(repo): pin node version [W1-D3-02]
 Types: `feat` `fix` `docs` `test` `refactor` `chore` `ci`.
 Scopes: `cli` `core` `engine` `dashboard` `types` `action` `repo` `docs`.
 
+**Attribution:** commits and PR descriptions carry **no AI co-author trailer and no "generated with" footer.** The contributor list reflects the two people on the team. This is enforced mechanically in [`.claude/settings.json`](../.claude/settings.json):
+
+```json
+{ "attribution": { "commit": "", "pr": "", "sessionUrl": false } }
+```
+
+That file is committed rather than personal, so it applies to every clone and every session, not just one machine. The rule is written here as well because a settings file can be lost, overridden locally, or simply not noticed. *(The older `includeCoAuthoredBy` key is deprecated as of Claude Code v2.0.62 and is ignored once `attribution` is set — don't reintroduce it.)*
+
+Commits made before 2026-09-05 carry the old trailer. They stay as they are: three commits are not worth a force-push on a repository a second person is cloning.
+
 **PRs:** one task (or one tight cluster) per PR. Title = commit subject. Body must state: what changed, how it was verified, and any evidence captured. CI must be green before merge. `main` is protected — no direct pushes.
 
 ## TypeScript
@@ -64,6 +74,16 @@ Scopes: `cli` `core` `engine` `dashboard` `types` `action` `repo` `docs`.
 - Any user-facing behavior change updates the relevant doc in the same PR.
 - Code comments explain *why*, not *what*. The what is the code.
 - Public exports get a short JSDoc line — the CLI's `--help` and the README are generated from real behavior, so keep them honest.
+
+## Why some of these rules exist
+
+Three decisions that look arbitrary from the outside, recorded so nobody spends an afternoon re-litigating them.
+
+**Prettier doesn't touch markdown.** Our docs are unusually table-heavy — `BACKLOG.md`, `EVIDENCE.md`, and `PRD.md` are largely tables, and `STATUS.md` is edited nearly every session. Prettier reflows tables and rewrites emphasis markers, so every future docs diff would be unreadable at exactly the moment docs diffs matter most: when a reviewer or a future agent session is trying to see what actually changed. It cost 381 lines of churn on day 3; by Week 3 it would have been constant.
+
+**TypeScript stays on 5.x for this sprint.** TypeScript 7 is a rewritten compiler. Adopting it in a 30-day sprint, immediately before integrating a Stellar SDK whose behavior under it nobody has tested, is exactly the avoidable variance this document exists to prevent. Other tooling is kept current — ESLint 9 was out of support and got bumped to 10 — but the compiler stays boring.
+
+**Conventions are lint rules wherever that's cheap.** A convention that lives only in a document is advisory, and in agent-assisted development a future session may not read it carefully or at all. Mechanically enforced, it holds regardless of who or what is writing the code. So: no default exports, no `any`, explicit return types on exports, and no floating promises are ESLint errors, not paragraphs. **Prefer a rule that fails CI over a sentence in a doc** — apply this anywhere else it's cheap.
 
 ## Formatting
 

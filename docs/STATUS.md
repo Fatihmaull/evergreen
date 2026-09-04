@@ -2,10 +2,10 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-04 · by: Phase 0 alignment + doc reconciliation (Fatih + Claude)
-**Sprint day:** 2 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-05 · by: W1-D3 closeout (Fatih + Claude)
+**Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track — one blocker (GitHub auth) that needs Fatih, not code
+**Health:** 🟢 on track · nothing blocked
 
 ---
 
@@ -16,8 +16,8 @@
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
-| Repo & toolchain | 🟡 done locally, **push blocked** | F | W1-D3-02/03/04 ✅ · W1-D3-01 `[!]` · W1-D3-05 partial |
-| Stellar dev env | ⬜ not started | R | W1-D4-01 → W1-D4-06 |
+| Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
+| Stellar dev env | 🔜 next up | R | W1-D4-01 → W1-D4-06 |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -27,13 +27,7 @@
 
 ## Blocked
 
-**[W1-D3-01] Cannot create or push to the GitHub repo — no GitHub authentication on this machine.**
-
-- *What was tried:* `gh auth status` reports no logged-in host. The GitHub MCP connector is configured but unauthorized, and this session is non-interactive, so neither the OAuth flow nor `gh auth login` (device/browser flow) can be completed from here.
-- *What is ready:* the local repo is initialized on `main` with two commits — the doc reconciliation and the full scaffold. Nothing is lost; this is purely the publish step.
-- *What would unblock it:* Fatih authorizes GitHub — either `gh auth login` in an interactive terminal, or the GitHub connector via claude.ai connector settings. Then: create the public repo `evergreen` under the Apex org and `git push -u origin main`.
-- *Also still pending on this:* branch protection on `main` (part of W1-D3-05), and confirming CI is green on GitHub rather than only locally (W1-D3-04).
-- *Since:* 2026-09-04. **Not on the critical path today** — W1-D4 (Rakha's Stellar environment work) does not depend on the remote existing, though he cannot clone until it does.
+*(nothing blocked — the W1-D3-01 GitHub auth blocker was cleared 2026-09-05)*
 
 > Format when something blocks: `**[TASK-ID]** what's blocked · what was tried · what would unblock it · since when`. A blocker sitting here for more than a day gets escalated between Fatih and Rakha directly, not left in the doc.
 
@@ -50,6 +44,7 @@
 | — | Dashboard: **public read-only P0** (scan any contract, no wallet), wallet-connect + user-signed extend **P1** | 2026-09-04 |
 | — | Alerting: email in v1, behind a `NotificationChannel` interface so Telegram/webhook are drop-in for SOW 2 | 2026-09-04 |
 | — | Official sprint window: 2026-09-03 → 2026-10-02 (supersedes the SOW's suggested 2026-08-17 start) | 2026-09-04 |
+| — | **Commits carry no AI attribution.** The contributor list reflects the two people on the team. Enforced in committed `.claude/settings.json` (`attribution`), documented in CONVENTIONS. Existing commits keep their trailer — not worth a force-push. | 2026-09-05 |
 
 ## Scope changes from the original plan
 
@@ -91,6 +86,17 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — W1-D3 closeout (Fatih + Claude)
+- **Repo live and public:** [github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen). Fatih authorized `gh` and pushed; blocker cleared.
+- **CI verified green on GitHub**, not only locally (run #1 on `e2a3ae6`, 19s). README tables render correctly in GitHub's stricter renderer — the exclude-markdown-from-Prettier call holds up.
+- **Branch protection on `main`** with CI as a required status check, set before Rakha clones rather than after. `W1-D3` closed.
+- Bumped `actions/checkout`, `actions/setup-node`, and `pnpm/action-setup` to v5 — the v4 line targets Node 20 and was being force-upgraded with a deprecation warning. Same reasoning as the ESLint 9 bump: don't carry a warning through a sprint when the fix is a version bump on day 3.
+- **Stubbed `docs/POLICY-SIGNER.md`** — it was a live 404 from the public README, in the closing sentence of the strongest section in the repo. Swept every markdown link repo-wide with a script rather than by memory; it was the only broken one, but the sweep caught a second error: `SOROBAN-PRIMER.md` pointed at `docs/adr/ADR-002.md`, which is not the filename. Fixed.
+- Added `docs/EVIDENCE.md` to the README's documentation table — plausibly the file Kenny most wants to find, and it was missing.
+- **Commit attribution turned off** via committed `.claude/settings.json`. Worth noting: the `includeCoAuthoredBy` key is deprecated as of Claude Code v2.0.62; the current key is `attribution`, and setting it makes the old key inert. Verified against the docs rather than recall.
+- Recorded the reasoning for three earlier judgment calls in CONVENTIONS (markdown/Prettier, TypeScript 5.x, conventions-as-lint-rules) so they don't get re-litigated.
+- **Next:** W1-D4 — Stellar environment, both guinea-pigs, TTL floors, and `W1-D4-06` the permissionless check.
 
 ### 2026-09-04 — W1-D3 scaffolding (Claude)
 - **Monorepo scaffolded and verified.** Node 24, pnpm workspaces, TypeScript strict, ESLint flat config + Prettier, Vitest. Five packages (shared-types, core, cli, engine, dashboard), each importable with a passing no-op test.

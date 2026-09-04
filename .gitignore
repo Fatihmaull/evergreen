@@ -31,6 +31,11 @@ coverage/
 .evergreen/
 evergreen.local.json
 
+# Claude Code — the shared project settings file IS committed (it carries the
+# commit-attribution rule, so it must reach every clone). Personal overrides
+# are not.
+.claude/settings.local.json
+
 # Editors
 .vscode/
 !.vscode/extensions.json
