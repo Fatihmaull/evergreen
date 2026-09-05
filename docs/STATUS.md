@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: TTL boundary semantics + onboarding corrections (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: Rakha setup and boundary experiment
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,19 +11,35 @@
 
 ## Right now
 
+**2026-09-05 — Rakha's local setup:** working on `codex/W1-D4-13-testnet-setup`. All touched Notion IDs, owners, and initial statuses were validated against the repo before work.
+
+| Task | Current result |
+|---|---|
+| `W1-D4-01` · in progress | Rakha: Node 24.13.0, pnpm 11.25.0, CLI 28.0.0, Rust 1.98.1 + Wasm target. Local Wasm hash matches the deployed fixture exactly. Fatih's current machine check remains pending; existing Wasm identifies his CLI/Rust build versions. |
+| `W1-D4-02` · in progress | Rakha dev funded from Friendbot; separate bot funded with 20 XLM Testnet. Keys only in ignored `.env` (0600). Fatih's everyday dev-account designation remains pending. |
+| `W1-D4-03` · done | `.env.example` documented, passphrase quoted, local env verified against RPC protocol 28. Developer and bot keys separated. |
+| `W1-D4-13` · in progress | Fresh isolated instance seeded at 4,519,384; exact boundary at 4,520,103 under observation, expected around 23:02 WIB. Evidence captures ongoing. |
+| `W1-D4-14` · done | [Issue #17](https://github.com/Fatihmaull/evergreen/issues/17): ESLint/Prettier now ignore Rust `target/` output. `pnpm check` green with build artifacts present. |
+
+**Evidence:** four successful Testnet transactions each have full RPC JSON and an explorer screenshot in [EVIDENCE.md](EVIDENCE.md). B/C instance TTL and shared code TTL are unchanged before/after setup. No engine scheduler is running.
+
+**Verified TTL correction:** raw network configuration says temporary minimum **720**, durable minimum **120960**. The previously reported **688** is remaining TTL at the sampled ledger, not the initial minimum; the old fixture was sampled 31 ledgers after the temporary entry was created. The adjacent-ledger expiry check is still pending, so this does not yet close `W1-D4-13`.
+
+**Checks:** 3 Rust unit tests pass; Wasm build matches `c7e55f0a…bce98bfb`; `pnpm check` passes its 5 current placeholder tests; the offline boundary-evidence verifier passes 8 tests. New task `W1-D4-14` was registered in BACKLOG, [Issue #17](https://github.com/Fatihmaull/evergreen/issues/17), and Notion before implementation. GitHub connector writes returned HTTP 403; authenticated GitHub CLI succeeded. Boundary completion and final Notion outcome sync are pending.
+
 | Workstream | State | Owner | Task |
 |---|---|---|---|
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
+| Stellar dev env | 🟡 local setup ready; boundary observation running | F/R | D4-03/14 done; D4-01/02 await Fatih confirmation; D4-13 under observation |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | ⬜ empty | S | first snapshot due W1-D7-03 |
+| Evidence | 🟡 setup transactions captured | S | Four setup transactions with JSON + screenshots; deliverable proofs still pending |
 
 ## Blocked
 
@@ -124,6 +140,8 @@ Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from
 Evergreen is now tracked in two places. **The repo is canonical; Notion is a mirror.** Truth flows repo → Notion, never the reverse. Only agents write to Notion — Fatih and Rakha read it, so any disagreement is an agent error, never a human update to respect.
 
 Workflow is in `AGENTS.md` § Dual-channel sync; the status vocabulary is in `docs/CONVENTIONS.md`. Sync happens at boundaries only — session start, session end, PR merge — never per commit.
+
+**2026-09-05 cost guard:** this session has no Notion connector and used the logged-in browser. Editing an existing row is workable; creating a complete row and navigating the board took substantially longer than the two-line build-output fix itself. Keep the repo authoritative and re-examine this UI-only sync cost at the week gate; it should not become a prerequisite for every small code change.
 
 **The board is agent-write / human-read.** Fatih has posted that rule at the top of the Project Brain page, addressed to both humans by name: ticking a box there will be silently reverted, task state changes go through the repo, and prose in the Knowledge Base and Decisions pages is theirs to write freely — nothing syncs over that. Noted here because the rule only holds while it is visible *where a person is standing when they are tempted*, and `AGENTS.md` is read by agents, not by Rakha.
 

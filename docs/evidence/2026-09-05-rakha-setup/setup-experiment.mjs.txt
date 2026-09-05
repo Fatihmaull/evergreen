@@ -1,0 +1,121 @@
+import fs from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import * as s from '@stellar/stellar-sdk';
+const root='/home/rakhargo/projects/evergreen';
+const out=`${root}/docs/evidence/2026-09-05-rakha-setup`;
+fs.mkdirSync(out,{recursive:true});
+const cmd=process.argv[2];
+const live=process.argv.includes('--live');
+const save=(name,data)=>fs.writeFileSync(`${out}/${name}.json`,JSON.stringify(data,null,2)+'\n',{flag:'wx'});
+if(cmd==='keys') {
+  const dev=s.Keypair.random(),bot=s.Keypair.random();
+  const template=fs.readFileSync(`${root}/.env.example`,'utf8').replace('STELLAR_NETWORK_PASSPHRASE=Test SDF Network ; September 2015','STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"').replace('EVERGREEN_SIGNER_SECRET=',`EVERGREEN_SIGNER_SECRET=${bot.secret()}`);
+  fs.writeFileSync(`${root}/.env`,template+`\n# Local Testnet developer account\nEVERGREEN_DEV_SECRET=${dev.secret()}\n`,{flag:'wx',mode:0o600});
+  save('accounts',{network:'Testnet',dev:dev.publicKey(),bot:bot.publicKey(),createdAt:new Date().toISOString()});
+  console.log('Created two fresh Testnet keypairs; secrets stored only in ignored .env (0600).');
+  process.exit(0);
+}
+process.loadEnvFile(`${root}/.env`);
+const url=process.env.SOROBAN_RPC_URL.replace(/\/?$/,'/');
+const passphrase=process.env.STELLAR_NETWORK_PASSPHRASE;
+if(passphrase!==s.Networks.TESTNET || url!=='https://soroban-testnet.stellar.org/') throw Error('Only the official Testnet endpoint/passphrase is permitted');
+const dev=s.Keypair.fromSecret(process.env.EVERGREEN_DEV_SECRET);
+const bot=s.Keypair.fromSecret(process.env.EVERGREEN_SIGNER_SECRET);
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function rpc(method,params={},name) {
+  const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','User-Agent':'evergreen-w1-testnet-setup'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:AbortSignal.timeout(25000)});
+  const raw=await response.text();
+  if(name) fs.writeFileSync(`${out}/${name}.json`,raw,{flag:'wx'});
+  if(!response.ok) throw Error(`RPC HTTP ${response.status}`);
+  const body=JSON.parse(raw);if(body.error) throw Error(JSON.stringify(body.error));
+  return {body,raw};
+}
+const network=(await rpc('getNetwork')).body.result;
+if(network.passphrase!==s.Networks.TESTNET) throw Error('Live RPC is not Testnet');
+const server=new s.rpc.Server(url);
+async function submit(operation,name,soroban=true) {
+  if(fs.existsSync(`${out}/${name}-send.json`)) throw Error('Submission already recorded; reconcile hash before retrying');
+  const account=await server.getAccount(dev.publicKey());
+  const unsigned=new s.TransactionBuilder(account,{fee:'1000',networkPassphrase:passphrase}).addOperation(operation).setTimeout(300).build();
+  let prepared=unsigned, sim;
+  if(soroban) {
+    sim=(await rpc('simulateTransaction',{transaction:unsigned.toXDR()},`${name}-simulation-${Date.now()}`)).body.result;
+    if(sim.error) throw Error(`Simulation failed: ${sim.error}`);
+    prepared=s.rpc.assembleTransaction(unsigned,sim).build();
+  }
+  if(!live) {console.log('DRY RUN: simulation/build succeeded; no transaction submitted.');return {sim};}
+  prepared.sign(dev);
+  const hash=Buffer.from(prepared.hash()).toString('hex');
+  save(`${name}-intent`,{hash,at:new Date().toISOString(),signer:dev.publicKey(),network:'Testnet'});
+  const result=(await rpc('sendTransaction',{transaction:prepared.toXDR()},`${name}-send`)).body.result;
+  console.log(JSON.stringify({name,hash,status:result.status}));
+  if(!['PENDING','DUPLICATE'].includes(result.status)) throw Error(`Submission ${result.status}: ${result.errorResultXdr??''}`);
+  for(let i=0;i<40;i++) {
+    await delay(2000);
+    const got=await rpc('getTransaction',{hash});
+    if(got.body.result.status==='NOT_FOUND')continue;
+    fs.writeFileSync(`${out}/${name}-transaction.json`,got.raw,{flag:'wx'});
+    if(got.body.result.status!=='SUCCESS') throw Error(`Transaction ${got.body.result.status}`);
+    console.log(JSON.stringify({name,hash,status:'SUCCESS',ledger:got.body.result.ledger}));
+    return {sim,result:got.body.result,hash};
+  }
+  throw Error('Confirmation pending: query the recorded hash, do not resubmit');
+}
+const ids={A:'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L',B:'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',C:'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL'};
+const tempKey=id=>s.xdr.LedgerKey.contractData(new s.xdr.LedgerKeyContractData({contract:new s.Address(id).toScAddress(),key:s.xdr.ScVal.scvVec([s.xdr.ScVal.scvSymbol('Temporary')]),durability:s.xdr.ContractDataDurability.temporary}));
+const instanceKey=id=>new s.Contract(id).getFootprint().toXdr('base64');
+if(cmd==='fund') {
+  if(!live){console.log('DRY RUN: would fund the new developer account through Testnet Friendbot.');process.exit(0);}
+  if(fs.existsSync(`${out}/dev-friendbot.json`))throw Error('Friendbot response already saved; reconcile before retrying');
+  const response=await fetch(`https://friendbot.stellar.org/?addr=${dev.publicKey()}`,{signal:AbortSignal.timeout(60000)});
+  const raw=await response.text();fs.writeFileSync(`${out}/dev-friendbot.json`,raw,{flag:'wx'});
+  if(!response.ok)throw Error(`Friendbot HTTP ${response.status}`);
+  const data=JSON.parse(raw);console.log(JSON.stringify({funded:dev.publicKey(),hash:data.hash}));
+  if(data.hash)await rpc('getTransaction',{hash:data.hash},'dev-funding-transaction');
+} else if(cmd==='baseline' || cmd==='after') {
+  const fixture=JSON.parse(fs.readFileSync(`${root}/packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json`));
+  const codeKey=fixture.result.entries[1].key;
+  const keys=[...Object.values(ids).map(instanceKey),codeKey];
+  const result=(await rpc('getLedgerEntries',{keys},`${cmd}-protected-entries`)).body.result;
+  console.log(JSON.stringify({ledger:result.latestLedger,ttls:result.entries.map(e=>({key:e.key,liveUntilLedgerSeq:e.liveUntilLedgerSeq}))}));
+} else if(cmd==='deploy') {
+  const a=(await rpc('getLedgerEntries',{keys:[instanceKey(ids.A)]})).body.result.entries[0];
+  const exec=s.xdr.LedgerEntryData.fromXdr(a.xdr,'base64').contractData.val.instance.executable;
+  const hash=exec.wasmHash.toXdr('hex');
+  const result=await submit(s.Operation.createCustomContract({address:new s.Address(dev.publicKey()),wasmHash:Buffer.from(hash,'hex'),salt:randomBytes(32)}),'boundary-deploy');
+  if(live){const id=s.scValToNative(s.xdr.ScVal.fromXdr(result.sim.results[0].xdr,'base64'));save('boundary-contract',{id,wasmHash:hash,deployHash:result.hash});console.log('Boundary contract:',id);}
+} else if(cmd==='seed') {
+  const {id}=JSON.parse(fs.readFileSync(`${out}/boundary-contract.json`));
+  const result=await submit(new s.Contract(id).call('seed',s.nativeToScVal(1,{type:'u32'})),'boundary-seed');
+  if(live) {
+    const key=tempKey(id).toXdr('base64');
+    const read=(await rpc('getLedgerEntries',{keys:[key]},'boundary-initial-entry')).body.result;
+    const entry=read.entries[0];if(!entry)throw Error('Seeded temporary entry missing');
+    save('boundary-observation',{contract:id,key,liveUntilLedgerSeq:entry.liveUntilLedgerSeq,seedLedger:result.result.ledger,startedAt:new Date().toISOString()});
+    console.log(JSON.stringify({contract:id,latestLedger:read.latestLedger,liveUntilLedgerSeq:entry.liveUntilLedgerSeq,remaining:entry.liveUntilLedgerSeq-read.latestLedger}));
+  }
+} else if(cmd==='bot') {
+  await submit(s.Operation.createAccount({destination:bot.publicKey(),startingBalance:'20'}),'bot-funding',false);
+} else if(cmd==='poll') {
+  const meta=JSON.parse(fs.readFileSync(`${out}/boundary-observation.json`));
+  let lastLedger=-1,failures=0;
+  const seen=new Map();
+  for(let n=0;n<6000;n++) {
+    let got;
+    try{got=await rpc('getLedgerEntries',{keys:[meta.key]});failures=0;}catch(error){console.log('Read failed:',error.message);if(++failures>=20)throw error;await delay(3000);continue;}
+    const result=got.body.result,ledger=result.latestLedger,present=(result.entries??[]).some(e=>e.key===meta.key);
+    const remaining=meta.liveUntilLedgerSeq-ledger;
+    if(ledger!==lastLedger){
+      fs.writeFileSync(`${out}/boundary-ledger-${ledger}.json`,got.raw,{flag:'wx'});
+      seen.set(ledger,present);lastLedger=ledger;
+      if(remaining%12===0 || remaining<10)console.log(JSON.stringify({at:new Date().toISOString(),ledger,remaining,present}));
+    }
+    if(ledger>meta.liveUntilLedgerSeq+2){
+      const result={...meta,lastInclusivePresent:seen.get(meta.liveUntilLedgerSeq),nextLedgerPresent:seen.get(meta.liveUntilLedgerSeq+1),lastObservedLedger:ledger,finishedAt:new Date().toISOString()};
+      save('boundary-result',result);console.log('RESULT',JSON.stringify(result));
+      process.exit(result.lastInclusivePresent===true && result.nextLedgerPresent===false?0:2);
+    }
+    await delay(remaining<24?800:15000);
+  }
+  throw Error('Observation timeout');
+} else throw Error('Unknown action');

@@ -29,6 +29,17 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Transaction hashes
 
+### 2026-09-05 — Rakha Testnet setup (W1-D4-02/13)
+
+Raw responses are saved byte-for-byte under [`evidence/2026-09-05-rakha-setup/`](evidence/2026-09-05-rakha-setup/). This is setup and TTL-boundary evidence, not the unattended engine proof.
+
+| Task | Action / signer | Tx hash | Full RPC JSON | Explorer screenshot |
+|---|---|---|---|---|
+| W1-D4-02 | Create bot account with 20 XLM Testnet / Rakha dev | `f07dd5cafb40ea3466f6d59955c6e04158d3df2c0a684ed3cd790676e3f5be29` | [SUCCESS response](evidence/2026-09-05-rakha-setup/bot-funding-transaction.json) | [Screenshot](evidence/2026-09-05-rakha-setup/bot-funding-explorer.jpg) |
+| W1-D4-13 | Seed fresh temporary entry / Rakha dev | `12650a38e3751c4e185dc173c5c0735e11a76b5a889f7ef95704af5692a42b9c` | [SUCCESS response](evidence/2026-09-05-rakha-setup/boundary-seed-transaction.json), [initial entry](evidence/2026-09-05-rakha-setup/boundary-initial-entry.json) | [Screenshot](evidence/2026-09-05-rakha-setup/boundary-seed-explorer.jpg) |
+| W1-D4-13 | Isolated boundary contract deploy / Rakha dev | `34099447d179f0039b811295b7a40b313324a73dbe2ca101825c7214b2b0dc19` | [SUCCESS response](evidence/2026-09-05-rakha-setup/boundary-deploy-transaction.json) | [Screenshot](evidence/2026-09-05-rakha-setup/boundary-deploy-explorer.jpg) |
+| W1-D4-02 | Friendbot funds Rakha dev | `1af342f683e3a754cca7b3bfc8f41be995fb33fef77ddca48a1bf0ce77e76114` | [SUCCESS response](evidence/2026-09-05-rakha-setup/dev-funding-transaction.json), [Friendbot response](evidence/2026-09-05-rakha-setup/dev-friendbot.json) | [Screenshot](evidence/2026-09-05-rakha-setup/dev-funding-explorer.jpg) |
+
 Add the row the moment you see the hash. `Signer` records which signing path produced it — Stage 1 (plain funded account) or Stage 2 (capped policy signer) — so evidence captured before and after Stage 2 lands reads as a progression rather than a contradiction.
 
 | Date | Task | What it proves | Contract | Signer | Tx hash | JSON | Screenshot |

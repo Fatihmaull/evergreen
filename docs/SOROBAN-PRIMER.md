@@ -130,21 +130,25 @@ Combine with the current ledger sequence (from RPC network/latest-ledger info) t
 
 ## Measured TTL floors
 
-**Placeholder — fill in during W1-D4-04.** Record the *actual* minimum TTL a freshly deployed entry receives on testnet, per entry type. Two things depend on these numbers and neither can be guessed:
+Record the *actual* minimum TTL a freshly deployed entry receives on testnet, per entry type. Two things depend on these numbers and neither can be guessed:
 
 1. **The bump threshold** has to be chosen against a real floor, not an assumed one.
 2. **Whether the natural-decay proof is achievable in-sprint.** If a fresh persistent entry's floor is longer than the days remaining, a contract cannot decay to the threshold before Sep 30 and the "would have been archived, was saved" demonstration has to be designed around the floor instead of assumed into existence.
 
-Measured 2026-09-05 on a freshly deployed and seeded guinea-pig contract (protocol 28, testnet). Wall-clock figures assume ~5s per ledger and are estimates — ledgers are the unit of truth.
+**Correction during `W1-D4-13`, 2026-09-05:** the first table below records **remaining TTL when sampled**, not the initial network minimum. The [unedited A fixture](../packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json) was sampled 31 ledgers after its temporary entry was written. The [raw Testnet configuration](evidence/2026-09-05-rakha-setup/state-archival-settings.json) at ledger 4,519,665 reports `min_temporary_ttl = 720`, `min_persistent_ttl = 120960`, and `max_entry_ttl = 3110400`. These values are network configuration, not constants to hardcode in the engine.
 
-| Entry type | Observed floor (ledgers) | ≈ wall clock | Measured on | Notes |
+The new isolated temporary entry was created at ledger 4,519,384 with `liveUntilLedgerSeq = 4,520,103`: **719 remaining ledgers at the creation ledger**, consistent with an inclusive 720-ledger lifetime. Exact adjacent-ledger expiry observation is still in progress. [Full experiment record](evidence/2026-09-05-rakha-setup/README.md).
+
+Original snapshot, retained as measured on 2026-09-05 (protocol 28, testnet). Wall-clock figures assume ~5s per ledger and are estimates — ledgers are the unit of truth.
+
+| Entry type | Remaining TTL when sampled (ledgers) | ≈ wall clock | Measured on | Notes |
 |---|---|---|---|---|
 | Instance | 120,927 | ~7 days | 2026-09-05 | |
 | Code (Wasm) | 120,926 | ~7 days | 2026-09-05 | |
 | Persistent | 120,928 | ~7 days | 2026-09-05 | |
-| **Temporary** | **688** | **~57 minutes** | 2026-09-05 | Two orders of magnitude shorter than everything else |
+| **Temporary** | **688** | **~57 minutes remaining** | 2026-09-05 | Sampled after creation; configured minimum is 720 |
 
-**The temporary figure is the surprising one and it has design consequences.** A fresh temporary entry lives under an hour, and it is **deleted** rather than archived — unrecoverable. Two things follow:
+**The temporary figure has design consequences.** A fresh temporary entry lives about an hour under the measured configuration, and it is **deleted** rather than archived — unrecoverable. Two things follow:
 
 1. **A 5–15 minute engine cadence (ADR-001) is adequate but not generous for temporary entries.** With ~688 ledgers of headroom, the reaction-time argument in ADR-001 ("TTL headroom is measured in days") holds for persistent/instance/code and does **not** hold for temporary. Thresholds for temporary entries must be expressed in ledgers with that in mind, and the CLI should probably warn when a temporary entry's remaining TTL is within a couple of cron intervals.
 2. **It makes temporary entries a fast, cheap test loop** — an entry that expires in an hour is a far quicker way to exercise expiry handling than waiting a week.
@@ -241,7 +245,7 @@ Either answer is useful, and it costs an afternoon already budgeted.
 - **Fee estimation drift.** A modeled rent cost must be validated against a real transaction's actual fee at least once (W2-D9-02), or the "cost estimate" is fiction.
 - **Archived ≠ deleted.** Report them differently. Telling a user their persistent data is "gone" when it's restorable is a serious UX bug.
 - **The code entry is shared across every contract built from the same Wasm** (see above). Do not model TTL as strictly per-contract.
-- **Temporary entries really do vanish, fast.** Observed 2026-09-05: guinea-pig B's temporary entry was written at deploy and deleted ~57 minutes later, exactly as the 688-ledger floor predicted. Not hypothetical.
+- **Temporary entries really do vanish, fast.** B and C were observed absent well after their advertised expiry. The original 688-ledger figure was remaining TTL when sampled, not the network's 720-ledger minimum; the exact adjacent-ledger check is tracked in `W1-D4-13`.
 
 ## References
 
