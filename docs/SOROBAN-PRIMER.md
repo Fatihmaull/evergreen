@@ -58,7 +58,33 @@ Everything downstream follows from this:
 
 Source: [Smart contract state archival — Stellar Docs](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival). Also relevant: [Extending Wasm TTL](https://developers.stellar.org/docs/build/guides/conventions/extending-wasm-ttl).
 
-> **Verified against docs 2026-09-04. Empirical confirmation due W1-D4 (Rakha extends the TTL of a contract deployed by Fatih's account).** Docs are not the network — if observed behavior contradicts this, that discovery outranks everything else in the plan and gets escalated immediately, not worked around.
+### ✅ Observed on testnet, 2026-09-05 (`W1-D4-06`)
+
+**Not "the docs say" — we ran it.** Two independently generated testnet accounts, no authorization of any kind between them:
+
+- **Account A** (deployer): `GBRGOJUAPPDR7YWM4GOGV3YLSCPWDW4KJZVL4R2LRG7HFIYCY5ODMWLZ` — deployed the contract.
+- **Account B** (extender): `GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE` — generated separately, never granted anything by A, never mentioned in the contract.
+- Contract: `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` (guinea-pig A, deployed by A)
+
+**B extended all four entry types on A's contract, and every one increased:**
+
+| Entry type | `liveUntilLedgerSeq` before | after | delta | tx hash (source = B) |
+|---|---|---|---|---|
+| Instance | 4,633,568 | 4,712,648 | +79,080 | `484e5c33fe47d65ce8afef1d62c7963cb3c5367c446b3d5f14097688715af41e` |
+| Code (Wasm) | 4,633,567 | 4,712,652 | +79,085 | `54d59191c1e9adccc35c846f169d774419b714dfa4758af834f93215086e1c0b` |
+| Persistent | 4,633,569 | 4,712,658 | +79,089 | `b0bf79efa1421cfe9d6cfef763b572a05909fa7a38553c1b89c101a30a9375ae` |
+| Temporary | 4,513,329 | 4,712,659 | +199,330 | `e796eb55c16839c25a9e20b5899ea5df4bab68aceb99d1a82ca88d098792a2b3` |
+
+Verified properly, not by trusting a success code:
+
+- **Before and after were read from `getLedgerEntries`**, not inferred from the transaction succeeding.
+- **The built transaction's footprint carries no auth entries at all** — checked with `--build-only` and decoding the envelope. There is no authorization step to satisfy, which is the whole point.
+- **Horizon confirms `source_account` is B**, not A, on every extend. Fees were paid by B: 14,032 and 11,104 stroops.
+- **No entry type behaved differently.** All four extend identically for an unauthorized third party.
+
+**Conclusion: confirmed. Evergreen needs no authority over a user's contract, because none exists to grant.** The README states this publicly and the statement is now backed by observation.
+
+> Docs are not the network — if future observation ever contradicts this, that discovery outranks everything else in the plan and gets escalated immediately, not worked around.
 
 ## The operations we care about
 
@@ -82,18 +108,48 @@ Combine with the current ledger sequence (from RPC network/latest-ledger info) t
 1. **The bump threshold** has to be chosen against a real floor, not an assumed one.
 2. **Whether the natural-decay proof is achievable in-sprint.** If a fresh persistent entry's floor is longer than the days remaining, a contract cannot decay to the threshold before Sep 30 and the "would have been archived, was saved" demonstration has to be designed around the floor instead of assumed into existence.
 
+Measured 2026-09-05 on a freshly deployed and seeded guinea-pig contract (protocol 28, testnet). Wall-clock figures assume ~5s per ledger and are estimates — ledgers are the unit of truth.
+
 | Entry type | Observed floor (ledgers) | ≈ wall clock | Measured on | Notes |
 |---|---|---|---|---|
-| Instance | *(W1-D4-04)* | | | |
-| Code (Wasm) | *(W1-D4-04)* | | | |
-| Persistent | *(W1-D4-04)* | | | |
-| Temporary | *(W1-D4-04)* | | | |
+| Instance | 120,927 | ~7 days | 2026-09-05 | |
+| Code (Wasm) | 120,926 | ~7 days | 2026-09-05 | |
+| Persistent | 120,928 | ~7 days | 2026-09-05 | |
+| **Temporary** | **688** | **~57 minutes** | 2026-09-05 | Two orders of magnitude shorter than everything else |
+
+**The temporary figure is the surprising one and it has design consequences.** A fresh temporary entry lives under an hour, and it is **deleted** rather than archived — unrecoverable. Two things follow:
+
+1. **A 5–15 minute engine cadence (ADR-001) is adequate but not generous for temporary entries.** With ~688 ledgers of headroom, the reaction-time argument in ADR-001 ("TTL headroom is measured in days") holds for persistent/instance/code and does **not** hold for temporary. Thresholds for temporary entries must be expressed in ledgers with that in mind, and the CLI should probably warn when a temporary entry's remaining TTL is within a couple of cron intervals.
+2. **It makes temporary entries a fast, cheap test loop** — an entry that expires in an hour is a far quicker way to exercise expiry handling than waiting a week.
 
 > **Fixture placeholder — fill in during W1-D4-05.** Paste a real, unedited `getLedgerEntries` response for our guinea-pig contract here, and mirror it into `packages/core/test/fixtures`. Every unit test should run against real observed shapes, not invented ones.
 
+Recorded 2026-09-05 from the guinea-pig A contract, unedited, and mirrored into
+[`packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json`](../packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json).
+
+Note the actual entry shape — `key`, `xdr`, `lastModifiedLedgerSeq`, `liveUntilLedgerSeq`, and an `extXdr` field the plan didn't anticipate:
+
 ```jsonc
-// TODO(W1-D4-05): paste real testnet response
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "entries": [
+      {
+        "key": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "xdr": "AAAABgAAAAAAAAABG5bMFvjwwWfEBjoX+/o/AL07R6xC/juHjQmYgmeEYrsAAAAU...",
+        "lastModifiedLedgerSeq": 4512610,
+        "liveUntilLedgerSeq": 4633568,
+        "extXdr": "..."
+      }
+      // ... one entry per requested key
+    ],
+    "latestLedger": 4512641
+  }
+}
 ```
+
+`latestLedger` in the same response is what `remainingLedgers` is computed against — one round trip, no separate latest-ledger call needed.
 
 ## Non-custodial authorization
 

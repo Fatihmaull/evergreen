@@ -2,10 +2,10 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: W1-D3 closeout + W1-D4-00 (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: W1-D4-06 permissionless verification (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track · nothing blocked
+**Health:** 🟢 on track · **`W1-D4-06` confirmed — the plan's central assumption holds** · one open decision (guinea-pig B timing)
 
 ---
 
@@ -17,7 +17,7 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🔜 next up | R | W1-D4-01 → W1-D4-06 · contract ready (W1-D4-00 ✅) |
+| Stellar dev env | 🟡 partly done | F/R | D4-00/04/04b/05/06 ✅ · **D4-04c `[!]` decision** · D4-01/02/03 remain (R) |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -27,7 +27,12 @@
 
 ## Blocked
 
-*(nothing blocked — the W1-D3-01 GitHub auth blocker was cleared 2026-09-05)*
+**[W1-D4-04c] Guinea-pig B's deploy date needs a decision — it is no longer a rote task.**
+
+- *What changed:* `W1-D4-04b` measured the real persistent TTL floor at **≈120,928 ledgers ≈ 7 days**. A B deployed 2026-09-05 archives around **Sep 12** — roughly eight days *before* `W3-D18-02b`, the proof it exists for. "Deploy it early so it ages" was the right instinct applied to a guessed number; it would age straight past the window.
+- *Options, both sound:* (1) deploy ~Sep 12–13 and let the natural floor land the crossing near Sep 19–20 — purest, but it is a task that must happen on a specific future day in a sprint with movable slack; (2) deploy now plus one calibrating extend that places the crossing in Sep 19–21, then leave it strictly alone. Option 2 does not weaken the claim: every contract has some initial TTL, and choosing it is not intervening in the decay.
+- *What would unblock it:* Fatih picks. Full reasoning in `docs/SETUP.md`.
+- *Since:* 2026-09-05. **Not urgent for several days**, but it must be settled before Sep 12 or option 1 expires by default.
 
 > Format when something blocks: `**[TASK-ID]** what's blocked · what was tried · what would unblock it · since when`. A blocker sitting here for more than a day gets escalated between Fatih and Rakha directly, not left in the doc.
 
@@ -69,6 +74,19 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
 
+## ✅ W1-D4-06 — the permissionless property is confirmed on testnet
+
+**2026-09-05.** Two independently generated accounts, no authorization between them. Account B extended **all four entry types** on a contract deployed by account A, and every `liveUntilLedgerSeq` increased. Verified by reading `getLedgerEntries` before and after — not by trusting a success code — and by confirming through Horizon that the transaction source was B, not A. The built transaction's footprint carries no auth entries at all.
+
+Full record with tx hashes, before/after ledger values and account addresses: `docs/SOROBAN-PRIMER.md`.
+
+**What this settles.** The ADR-002 amendment, the Week 3 two-stage restructure, ADR-004's payment model, and the public non-custodial claim in the README all rested on this. They now rest on an observation rather than a reading of the docs.
+
+**It also produced the TTL floors** (`W1-D4-04b`), and one number was a surprise: a fresh **temporary** entry lives **688 ledgers ≈ 57 minutes**, against ≈120,927 (~7 days) for instance, code and persistent. Two consequences, both recorded in the primer:
+
+- ADR-001's reaction-time argument — "TTL headroom is measured in days, so a 5–15 minute cadence buys plenty of margin" — **holds for persistent/instance/code and does not hold for temporary.** Thresholds for temporary entries need to account for that, and the CLI should warn when one is within a couple of cron intervals.
+- It changed `W1-D4-04c`, above.
+
 ## History rewrite — 2026-09-05
 
 **If you are here because a commit SHA doesn't resolve, this is why.**
@@ -100,6 +118,16 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — W1-D4-06 permissionless verification (Claude)
+- **Confirmed on testnet.** See the section above. This was the highest-leverage unverified assumption in the plan and it holds.
+- Ran it end to end on the hot environment rather than waiting for ownership to line up: two independent funded testnet identities, deployed guinea-pig A from one, extended all four entry types from the other, read before/after from RPC, cross-checked the source account on Horizon.
+- **Measured the TTL floors** as a by-product (`W1-D4-04b`). Temporary at 688 ledgers (~57 min) vs ~120,927 (~7 days) for everything else — a two-order-of-magnitude gap with real design consequences for threshold defaults, and it partially qualifies ADR-001's reaction-time reasoning.
+- **Recorded the first real RPC fixture** (`W1-D4-05`) at `packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json`, unedited. It carries an `extXdr` field the plan hadn't anticipated, and confirms `latestLedger` arrives in the same response — so `remainingLedgers` needs one round trip, not two.
+- Excluded fixtures from Prettier: reformatting a recorded response would defeat the purpose of recording it.
+- **Surfaced a scheduling problem in the natural-decay proof** — guinea-pig B would archive ~8 days before the proof date. Blocked pending a decision rather than deploying B on a guess.
+- Guinea-pig A deployed and recorded: `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L`.
+- **Next:** `W1-D4-01/02/03` (Rakha) — pin tooling versions, generate the team's own keypairs, wire `.env`. Then the guinea-pig B decision.
 
 ### 2026-09-05 — W1-D3 closeout (Fatih + Claude)
 - **Repo live and public:** [github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen). Fatih authorized `gh` and pushed; blocker cleared.
