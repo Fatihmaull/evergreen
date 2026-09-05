@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: tool-agnostic onboarding docs (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: TTL boundary semantics + onboarding corrections (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -228,6 +228,15 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — TTL boundary semantics recorded; onboarding corrections (Fatih + Claude)
+- **The `liveUntilLedgerSeq` boundary is answered by the docs, and it carries a trap.** The boundary is **inclusive**: an entry stops being live only when `currentLedger > liveUntilLedgerSeq`, so `remainingLedgers = liveUntil − current` with no `+1` — and therefore **`remainingLedgers == 0` means the entry is on its last live ledger, not that it has expired.** The naive `<= 0` guard is wrong by one ledger *in the dangerous direction* and is silent, because every test agrees with whichever convention was picked.
+- **Recorded as documented-not-yet-pinned.** Partial observation today: B and C's temporary entries were absent at ledger 4,515,215, ~1,300 ledgers past their `liveUntil` — consistent with the inclusive boundary, but it confirms *dead well after* and does **not** pin *alive exactly at*. `W1-D4-13` observes the exact boundary ledger using a ~57-minute temporary entry, **before `W2-D8-01`'s math is written**. If observation disagrees with the docs, the observation wins and it escalates.
+- **`projectedArchiveDate` is banned from `shared-types`** (`W1-D6-01c`). Both halves are wrong — *archive* is false for temporary entries, which are deleted, and *date* invites storing wall-clock where the truth is a ledger. One field cannot describe two fates: `endsAtLedger` plus `endBehavior: 'archived' | 'deleted'`, with any wall-clock estimate derived at the display edge and never stored.
+- **The self-test was measuring the wrong property.** 7/7 on recall with zero readiness meant it tested whether an agent could restate facts, not act on them. Question 8 now requires *doing* something checkable against the repo — pick a task, name its branch, state that task's specific done conditions — with a note explaining why it is shaped differently so nobody tidies it back into a comprehension question.
+- **"Precision distributed backwards" is now a standing rule** in `CONVENTIONS`: identifiers a reader must *act on* are complete and exact; identifiers a reader must *avoid* may be abbreviated. The instinct gets this backwards because the dangerous ones feel like they deserve the full string.
+- **`W1-D7-07` added to the week gate:** verify the four deliberately duplicated statements in `ONBOARDING.md` and `AGENTS.md` still agree. The duplication is justified; leaving it unchecked is how it becomes accidental.
+- **`AGENTS.md` now says why `CLAUDE.md` stays thin** — some harnesses inject it at session start, so it can be stale in context while correct on disk. A stale pointer is inert; a stale manual misleads the highest-traffic agent on the project.
 
 ### 2026-09-05 — tool-agnostic agent onboarding (Claude)
 - **`AGENTS.md` is now the canonical operating manual**, tool-agnostic, for any agent — Cursor, Codex, Copilot, Gemini, Claude Code. `CLAUDE.md` is a 15-line pointer carrying only Claude-Code-specific facts with no general equivalent. Two full manuals would have drifted within a week, which is the duplicate-`Evergreen-PRD.md` failure again.

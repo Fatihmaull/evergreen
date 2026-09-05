@@ -14,19 +14,32 @@ remainingLedgers = liveUntilLedgerSeq - currentLedgerSeq
 
 Every ledger that closes decrements the remaining TTL by one. Ledgers close roughly every 5–6 seconds, so converting to wall-clock is an *estimate*, not a guarantee. Always compute in ledgers internally and convert to dates only for display.
 
-> ### ⚠️ OPEN: the boundary convention is not yet verified
+### The boundary is inclusive — and `remainingLedgers == 0` does NOT mean expired
+
+**Documented, partially observed, not yet pinned.** Sourced from Stellar's [state archival](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival) and [`getLedgerEntries`](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries) docs on 2026-09-05.
+
+An entry stops being live when **`currentLedger > liveUntilLedgerSeq`**. So at `currentLedger == liveUntilLedgerSeq` the entry is **still live** — that is its *final live ledger*, not its first dead one.
+
+The arithmetic is plain subtraction, no `+1`. Stellar's worked example: current 5, live-until 15 → TTL 10.
+
+```
+remainingLedgers = liveUntilLedgerSeq − currentLedgerSeq
+```
+
+> #### ⚠️ The trap those two facts create
 >
-> The formula above leaves one thing undefined, and it is the entire arithmetic content of `W2-D8-01`:
+> **`remainingLedgers == 0` means the entry is on its last live ledger, not that it has expired.** Expiry begins at `−1`.
 >
-> - Is an entry **live at** `liveUntilLedgerSeq`, or is that the first ledger at which it is gone?
-> - Is `remainingLedgers` therefore `liveUntil − latest`, or `liveUntil − latest + 1`?
-> - Is an entry with `remainingLedgers === 0` alive or archived?
+> ```ts
+> if (remainingLedgers <= 0)  // WRONG — reports a live entry as dead
+> if (remainingLedgers < 0)   // correct
+> ```
 >
-> **Do not guess this** (hard rule 3). It is the perfect silent-wrong-answer bug: whichever convention you pick, every test you write will agree with it, and the error only surfaces as an off-by-one in a projected archive date — or as a bump fired one ledger too late.
->
-> **Resolve it at `W2-D8-01`** against the official Stellar docs, and confirm empirically: we have live contracts with known values, and a temporary entry expires in ~57 minutes, which is a fast enough cycle to observe the boundary directly rather than reason about it. Record the answer here with the observation that settled it.
->
-> *Found 2026-09-05 by a fresh-eyes onboarding test — an agent trying to write the TTL math discovered the primer never says.*
+> The naive guard is wrong by one ledger **in the dangerous direction**, and it is silent: every test you write will agree with whichever convention you picked. It surfaces only as an off-by-one in a projected date, or a bump fired one ledger late.
+
+**What we have actually observed (2026-09-05):** guinea-pigs B and C's temporary entries, `liveUntil` 4,513,652 and 4,513,931, were **absent** from `getLedgerEntries` at ledger 4,515,215. That is consistent with the inclusive boundary and rules out nothing else — both were ~1,300 ledgers past expiry, so it confirms *dead well after* and does **not** pin *alive exactly at*.
+
+**Still to observe: the exact boundary ledger** (`W1-D4-13`). Docs are not the network — that is our own standard, and this is the case it was written for. If observation disagrees with the above, **the observation wins and the disagreement is escalated.**
 
 ## Rent
 
