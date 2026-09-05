@@ -55,12 +55,31 @@ esac
 
 # --- Refuse anything but testnet ---------------------------------------------
 # CLAUDE.md hard rule 1: testnet only. Not a flag, not an override.
-passphrase="$(stellar network info "${NETWORK}" 2>/dev/null | grep -i 'passphrase' || true)"
-case "${passphrase}" in
-  *"Test SDF Network"*) : ;;
-  *) die "network '${NETWORK}' is not Stellar testnet (passphrase: ${passphrase:-unknown}).
-       This script deploys to testnet only. Refusing to continue." ;;
-esac
+#
+# This asks the LIVE RPC we are about to deploy through what network it is on,
+# and compares against testnet's network id. The network id is the SHA-256 of
+# the network passphrase, so this verifies the actual endpoint rather than
+# trusting a local alias called "testnet" that might point somewhere else.
+#
+#   $ printf '%s' 'Test SDF Network ; September 2015' | shasum -a 256
+#   cee0302d59844d32bdca915c8203dd44b33fbb7edc19051ea37abedf28ecd472
+readonly TESTNET_NETWORK_ID="cee0302d59844d32bdca915c8203dd44b33fbb7edc19051ea37abedf28ecd472"
+
+# --output json writes clean JSON to stdout. The default text mode writes its
+# decorated output to STDERR, which is easy to discard by accident and fragile
+# to scrape — use the machine-readable form.
+network_id="$(stellar network info --network "${NETWORK}" --output json 2>/dev/null \
+  | grep -o '"id":"[0-9a-f]\{64\}"' | head -1 | cut -d'"' -f4)"
+
+[ -n "${network_id}" ] || die "could not read the network id from '${NETWORK}'.
+       Is the RPC reachable and the network configured? Refusing to deploy blind."
+
+[ "${network_id}" = "${TESTNET_NETWORK_ID}" ] || die "network '${NETWORK}' is NOT Stellar testnet.
+       expected: ${TESTNET_NETWORK_ID}
+       got:      ${network_id}
+       This script deploys to testnet only (CLAUDE.md hard rule 1). Refusing."
+
+printf 'network verified: testnet (%s...)\n' "${network_id:0:16}"
 
 # --- Build --------------------------------------------------------------------
 [ -f "${WASM}" ] || {
