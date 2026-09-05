@@ -53,7 +53,7 @@ v1 does not implement multi-tenancy. It must simply not foreclose it. If a short
 
 ### `packages/core`
 All the logic worth testing:
-- **RPC client** — wraps `getLedgerEntries` + latest-ledger lookup. The only place that talks to the network.
+- **RPC client** — wraps `getLedgerEntries`. The only place that talks to the network. **`getLedgerEntries` returns `latestLedger` in the same response**, so `remainingLedgers` costs one round trip — do not fetch the latest ledger separately out of habit. Across a batch scan that is the difference between a scan that feels instant and one that does not. Observed 2026-09-05, fixture in `packages/core/test/fixtures/`.
 - **TTL math** — `remainingLedgers`, projected archive ledger, projected archive date. Ledgers are the unit of truth; dates are derived for display.
 - **Rent model** — estimated cost to extend N ledgers, per entry and per contract. **Reads fee parameters from the network rather than hardcoding constants** — network state and protocol upgrades move them, and a constant validated once in Week 2 is quietly wrong by Week 4. Validated against a real tx fee (W2-D9-02).
 - **Storage optimizer** — flags oversized/duplicated entries and data in the wrong storage class.

@@ -36,7 +36,33 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 | | W2-D11-02 | first manual `extendTTL` succeeded | | dev key | | ⬜ | ⬜ |
 | | W3-D16-01 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
 | | **W3-D20-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
-| | **W3-D20-02b** | **unattended bump — natural-decay proof** | guinea-pig B | Stage 1 | | ⬜ | ⬜ |
+| | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
+
+### ⚠️ Disclosure: guinea-pig B's TTL was deliberately calibrated
+
+**Read this before the proof, not after.** Guinea-pig B's transaction history shows three transactions: deploy → **a manual extend by us** → the engine's unattended extend. That middle transaction is not staging, and we would rather explain it here than have a reviewer wonder.
+
+On **2026-09-05**, immediately after deploying B, we submitted **one** manual extend to place its threshold crossing inside the observation window. Nothing was touched after that.
+
+| | |
+|---|---|
+| Contract | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` |
+| Deployed | 2026-09-05, ledger ≈ 4,512,936 |
+| Calibrating extend | +280,747 ledgers, applied to instance, code, and persistent entries |
+| Tx hashes | instance `54117bd95783ef3d9f19d6caf9831064243fd85ddece3421bbc3a8606757fbb1` · persistent `a99a93bfc7af5bfd783a53f1f3fb04880c9fa74d3194f827490c3e7f8d7b7390` · code `9731d135f7a0a3c645eafb93efa971f946a6d786355d9c341ee3179364c38554` |
+| Resulting `liveUntilLedgerSeq` | 4,793,687 / 4,793,688 / 4,793,689 |
+| Projected threshold crossing | ledger ≈ 4,776,407 → **2026-09-20 ~12:00 UTC** at a 17,280-ledger (24h) threshold |
+| Interventions after calibration | **none, by design** |
+
+**Why this was necessary.** A freshly deployed persistent entry gets ≈120,928 ledgers ≈ 7 days (measured, `W1-D4-04b`). B deployed on Sep 5 would have archived around Sep 12 — roughly eight days *before* the proof it exists for. Left uncalibrated, there would have been nothing to save.
+
+**Why it does not weaken the claim.** Every contract has some initial TTL. Choosing it deliberately is experimental control, not interference with the process being demonstrated. The claim under test is unchanged and unassisted:
+
+> TTL fell below the threshold with nobody intervening, and the engine extended it unattended.
+
+The ledger rate was measured, not assumed — exactly 5.000 s/ledger over a 100,000-ledger sample, i.e. 17,280 ledgers/day.
+
+**One entry was deliberately left alone.** B's *temporary* entry was not calibrated and was deleted about an hour after deployment, as temporary entries are meant to be. See the storage-type note in `docs/SOROBAN-PRIMER.md`.
 
 ### The two unattended-bump proofs are not interchangeable
 

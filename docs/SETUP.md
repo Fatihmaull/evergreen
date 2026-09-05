@@ -71,12 +71,21 @@ Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on i
 
 | Field | Value |
 |---|---|
-| Contract ID | *(not yet deployed — timing decision open, see below)* |
-| Deployed | *(pending)* |
-| Initial TTL | *(pending)* |
-| Expected threshold-crossing | *(pending)* |
+| Contract ID | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` |
+| Deployed | 2026-09-05, ledger ≈ 4,512,936 |
+| Calibrated | +280,747 ledgers on instance, code, persistent — **one manual extend, disclosed in `EVIDENCE.md`** |
+| `liveUntilLedgerSeq` | 4,793,687 / 4,793,688 / 4,793,689 |
+| **Threshold crossing** | ledger ≈ 4,776,407 → **2026-09-20 ~12:00 UTC** (at a 17,280-ledger / 24h threshold) |
+| Temporary entry | deliberately **not** calibrated — deleted ~1h after deploy, as intended |
+| Interventions since | **none, and none permitted until the proof** |
 
-> ### ⚠️ B's deploy date is now a real decision, not a rote task
+> ### ✅ Resolved 2026-09-05 — deployed now, with one calibrating extend
+>
+> Option 2 was chosen. B is deployed and calibrated; nothing further needs to be remembered, and no task has to fire on a specific future day in a sprint whose slack is designed to move things.
+>
+> Setting initial conditions is experimental control, not interference: every contract has some initial TTL, and choosing it deliberately does not touch the process being demonstrated. The calibration is disclosed openly in `docs/EVIDENCE.md` next to the proof, so a reviewer reading B's transaction history is told what the middle transaction is before they have to ask.
+>
+> The reasoning that made this necessary, kept for the record:
 >
 > The measured floors (`W1-D4-04b`) changed this. A fresh persistent entry gets **≈120,928 ledgers ≈ 7 days**. So a B deployed on **Sep 5 archives around Sep 12** — roughly **eight days before** `W3-D18-02b`, the proof it exists for. Deploying it "early so it ages" was the right instinct against the wrong number: it would age straight past the window and be archived before the engine ever watched it.
 >
@@ -87,7 +96,9 @@ Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on i
 >
 > Option 2 does not weaken the claim. The proof is *"TTL fell below threshold with nobody intervening, and the engine saved it unattended"* — every contract has some initial TTL, and choosing it is not intervening in the decay. The evidence would show one calibrating extend on the deploy date and then untouched decay.
 >
-> **Unresolved — pick before Rakha runs `W1-D4-04c`.**
+> **Resolved. Crossing is projected for 2026-09-20 ~12:00 UTC.**
+>
+> If Sep 12–13 arrives with genuine slack, deploying a pure third contract as a bonus is cheap, and whichever reads better can be used. That is opportunistic — **B is the plan.**
 
 > ### ⚠️ Guinea-pig B must stay OUT of the engine's watched-contract config
 >
