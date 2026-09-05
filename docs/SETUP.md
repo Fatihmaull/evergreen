@@ -8,15 +8,28 @@ Filled in during Week 1 (W1-D3 → W1-D5). Keep it current: this is the file tha
 
 | Tool | Version | Notes |
 |---|---|---|
-| Node | *(pin in W1-D3-02)* | pinned via `.nvmrc` |
-| pnpm | *(pin)* | workspace manager |
-| Stellar CLI | *(pin in W1-D4-01)* | exact version — Soroban's surface moves |
-| Rust toolchain | *(only if ADR-002 fallback to OpenZeppelin)* | not needed on the default path |
+| Node | 24 (`24.13.0` verified locally) | major pinned via `.nvmrc` |
+| pnpm | `11.25.0` | exact pin in root `package.json` |
+| Stellar CLI | `28.0.0` | version recorded in `.stellar-cli-version`; activate the matching binary as shown below |
+| Rust | `1.98.1` + `wasm32v1-none` | `rust-toolchain.toml`; needed to build the guinea-pig fixture, not for TypeScript-only work |
+| Soroban Rust SDK | `27.0.6` | exact workspace dependency in `Cargo.toml` and `Cargo.lock` |
+
+The verified local CLI binary is installed at `.stellar/tools/28.0.0/stellar` (gitignored). `.stellar-cli-version` records the version; it does not install or activate it. From the repository root, activate the installed project version in each new terminal:
 
 ```bash
-git clone <repo-url> && cd evergreen
+export PATH="$PWD/.stellar/tools/$(cat .stellar-cli-version):$PATH"
+stellar --version
+```
+
+For another machine, install the exact version from the [official CLI 28.0.0 release](https://github.com/stellar/stellar-cli/releases/tag/v28.0.0), or use `cargo install --locked stellar-cli --version 28.0.0`. Verify `stellar --version` after installation. The Linux x86_64 release archive used here has SHA-256 `207544486734fccb4df1afc4a7745478f9f1e21688b2f9506f0ef36f60ce3fdc`, verified against the release asset metadata before extraction.
+
+The deployed guinea-pig Wasm identifies CLI 28.0.0 / Rust 1.98.1 as its build tools. A local rebuild matches its hash. `W1-D4-01` remains in progress until current tooling versions are confirmed on both development machines.
+
+```bash
+git clone https://github.com/Fatihmaull/evergreen.git && cd evergreen
 pnpm install
-cp .env.example .env     # then fill in locally — never commit
+test -e .env || (umask 077 && cp .env.example .env)
+# Fill in missing secrets locally; preserve an existing .env.
 pnpm typecheck && pnpm lint && pnpm test
 ```
 
@@ -28,9 +41,25 @@ Documented here, values only in your local `.env` / platform secret store.
 |---|---|---|
 | `SOROBAN_RPC_URL` | Testnet RPC endpoint | `.env` (non-secret, but env-driven) |
 | `STELLAR_NETWORK_PASSPHRASE` | Testnet passphrase | `.env` |
+| `EVERGREEN_DEV_SECRET` | Developer key for Testnet setup/tests, separate from the bot | local `.env` only |
 | `EVERGREEN_SIGNER_SECRET` | Ed25519 signer for the bot (**testnet only**) | `.env` local · GitHub Actions secret · hosting env store |
 | `EMAIL_API_KEY` | Email provider key | secret stores only |
+| `EVERGREEN_ALERT_TO` | Destination for later engine alerts | `.env` / hosting env store |
 | `EVERGREEN_CONFIG_PATH` | Path to `evergreen.config.json` | `.env` |
+
+Use `https://soroban-testnet.stellar.org/` and the exact passphrase `Test SDF Network ; September 2015`. The quotes in `.env.example` preserve the spaces and semicolon. Load it with Node's `--env-file=.env` or an env-file parser; do not print the file or pass a secret as a command-line argument. No email provider or hosted engine is configured by this setup.
+
+Read-only smoke test, verified locally (returns `"guinea_pig"`):
+
+```bash
+stellar network info --network testnet --output json
+stellar contract invoke \
+  --id CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L \
+  --source-account GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB \
+  --network testnet --send=no -- ping
+```
+
+The public source account is enough for this simulation; no secret is passed on the command line.
 
 ## Testnet accounts
 
@@ -39,17 +68,21 @@ Documented here, values only in your local `.env` / platform secret store.
 | Purpose | Public key | Funded via | Owner |
 |---|---|---|---|
 | Fatih dev | *(W1-D4-02)* | friendbot | F |
-| Rakha dev | *(W1-D4-02)* | friendbot | R |
+| Rakha dev | `GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB` | Friendbot: 10,000 XLM Testnet on 2026-09-05 | R |
 | `evergreen-a` — W1-D4-06 deployer | `GBRGOJUAPPDR7YWM4GOGV3YLSCPWDW4KJZVL4R2LRG7HFIYCY5ODMWLZ` | friendbot | F |
 | `evergreen-b` — W1-D4-06 extender | `GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE` | friendbot | F |
-| Bot signer (Stage 1, plain funded) | *(W1-D4-02)* | friendbot | R |
+| Bot signer (Stage 1, plain funded) | `GBG4I4RN4L5NFPQBG734SJ6R4N4CZRT6YVFTXM7OWP5JBUUI6R6GRQQB` | 20 XLM Testnet from the developer's faucet balance on 2026-09-05 | R |
 | Policy signer (Stage 2, hardened) | *(W3-D19)* | friendbot | R |
 
 > The bot account holds only enough XLM to pay `extendTTL` fees. It has no authority over any contract — it does not need any, because `extendTTL` is permissionless. Treat it as a hot, expendable key (`AGENTS.md` hard rule 4).
 
+The bot starts with a fixed **20 XLM Testnet allocation**; no automatic replenishment or engine job is active. This is an operational balance limit, not the Stage 2 policy signer. The bot was created from the developer's faucet balance to avoid placing the full 10,000 XLM faucet allocation in the hot account. [Transaction evidence](EVIDENCE.md#2026-09-05--testnet-account-setup-w1-d4-02) records both funding steps.
+
+The local developer and bot keys were generated fresh and stored only in ignored `.env` with mode `0600`. The second developer's everyday account designation remains unconfirmed; the existing experiment accounts are recorded separately above. `W1-D4-02` stays in progress until that designation is resolved on the corresponding machine.
+
 ## Guinea-pig contracts
 
-**Two of them, with different jobs.** Do not use one where the other is meant.
+**A is the working subject; B and C are calibrated decay subjects.** Do not use one where another is meant.
 
 ### A — the working test subject
 

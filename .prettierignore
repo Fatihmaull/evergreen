@@ -1,6 +1,7 @@
 dist/
 coverage/
 node_modules/
+target/
 pnpm-lock.yaml
 
 # Markdown is hand-formatted here on purpose. Prettier reflows tables and
@@ -20,3 +21,4 @@ contracts/**/test_snapshots/
 # them — see packages/core/test/fixtures/README.md. Reformatting one would
 # defeat the point of having it.
 packages/core/test/fixtures/
+docs/evidence/
