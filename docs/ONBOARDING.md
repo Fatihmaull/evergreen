@@ -208,7 +208,11 @@ If you can answer these, start work. If not, the answer is in a linked document 
 5. **When do you open a GitHub Issue — and when do you not?**
 6. **A task's code is written and the tests pass. Is it `[x]`?**
 7. **You need an RPC method you're not certain exists. What do you do?**
-8. **Is an entry still live at `liveUntilLedgerSeq`, or is that the first dead ledger?** *(You cannot answer this from these two documents — that is the point. Knowing which questions send you to `SOROBAN-PRIMER.md` is part of being ready. This one is currently open: see the primer.)*
+**Question 8 is shaped differently on purpose. Do not "tidy" it into a comprehension question.**
+
+Questions 1–7 test whether you can *recall* what you read. That is not the same property as being able to *act* correctly, and only the second one is what onboarding is for — a previous fresh-eyes test scored 7/7 on recall and still could not correctly start a task. So the last item requires doing something small and checkable against the repo, which an agent that has understood can produce and one that has only read cannot.
+
+8. **Do this, don't recite it.** Open `docs/STATUS.md` and `BACKLOG.md`, then state: **(a)** the first task you would pick up and why it is startable now, **(b)** the exact branch name you would create for it, and **(c)** the specific things that would have to be true before you could mark it `[x]` — for *that* task, not the generic list. If you cannot produce all three concretely, you are not ready yet; the missing piece tells you which file to open.
 
 ---
 

@@ -2,6 +2,8 @@
 
 **This file is canonical for every coding agent, whatever tool you are.** Claude Code, Cursor, Codex, Copilot, Gemini, or anything else — the rules here apply unchanged. `CLAUDE.md` is a pointer to this file, not a second manual.
 
+> **`CLAUDE.md` is deliberately thin — do not "helpfully" copy this manual back into it.** Beyond the ordinary drift argument, some harnesses **inject `CLAUDE.md` into an agent's context at session start**, which means it can be stale there while correct on disk. A stale pointer is inert; a stale manual actively misleads, and it misleads the highest-traffic agent on the project. Observed 2026-09-05 when a test agent read an outdated cached copy and reported rules the canonical file had already retracted.
+
 **New here? Read [`docs/ONBOARDING.md`](docs/ONBOARDING.md) first.** It is the orientation: what Evergreen is, what will bite you, and the workflows. This file is the manual — what you must obey — and it makes more sense once you have the orientation.
 
 Read this file every session. It tells you what this project is, how to pick up work, and what you must never do.

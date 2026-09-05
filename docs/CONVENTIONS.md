@@ -46,6 +46,14 @@ Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLO
 
 **Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
 
+### Identifiers in documentation — precision goes where it is acted on
+
+**An identifier a reader must act on has to be complete and exact. An identifier a reader must avoid can be abbreviated.**
+
+These are opposite requirements and the instinct gets them backwards, because the dangerous ones *feel* like they deserve the full string. A warning marker reads fine as `CCYGO7KQ…LTTQ`. Anything someone will type, paste, or compare against must be the whole thing, cross-checked against [`SETUP.md`](SETUP.md), which is the source of truth for contract IDs and public keys.
+
+*(Found 2026-09-05: `ONBOARDING.md` gave the two contracts you must never touch in full, and the one you are required to verify against truncated **and** mistyped. Precision distributed exactly backwards.)*
+
 ### Querying the Notion mirror — one silent trap
 
 **`SELECT ID` returns Notion page UUIDs, not task IDs.** The Tasks database has a property literally named `ID`, which collides with Notion's own page identifier. The query does not error — it returns a plausible-looking column of wrong values.
