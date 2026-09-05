@@ -37,6 +37,7 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 | | W3-D16-01 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
 | | **W3-D20-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
 | | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
+| | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
 ### ⚠️ Disclosure: guinea-pig B's TTL was deliberately calibrated
 
@@ -63,6 +64,16 @@ On **2026-09-05**, immediately after deploying B, we submitted **one** manual ex
 The ledger rate was measured, not assumed — exactly 5.000 s/ledger over a 100,000-ledger sample, i.e. 17,280 ledgers/day.
 
 **One entry was deliberately left alone.** B's *temporary* entry was not calibrated and was deleted about an hour after deployment, as temporary entries are meant to be. See the storage-type note in `docs/SOROBAN-PRIMER.md`.
+
+### Guinea-pig C — the staggered spare
+
+C (`CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL`) was deployed the same day and calibrated the same way, crossing **2026-09-25 ~12:00 UTC** — five days after B.
+
+It exists because a single unrecoverable date protecting a never-cut proof is one point of failure. If B's window is missed, C is still ahead of us with room before the Oct 2 deadline. If B's proof lands, C is recorded here as an unused spare.
+
+Same disclosure applies: C carries one calibrating extend on 2026-09-05 and no interventions since. **B and C have different crossing dates — do not read them interchangeably.**
+
+One thing worth stating because it is not obvious: B and C were deployed from the same Wasm and therefore **share a single `ContractCode` ledger entry**. It was extended past the whole sprint (to ~2026-10-19) so it drives neither crossing; each contract's crossing is governed by its own instance and persistent entries.
 
 ### The two unattended-bump proofs are not interchangeable
 

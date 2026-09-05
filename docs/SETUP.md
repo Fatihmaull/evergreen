@@ -121,6 +121,46 @@ stellar contract build
 
 The script deploys **and seeds** — seeding writes the persistent and temporary entries, so all four entry types exist and `W1-D4-04b` has something to measure. It refuses to run against any network but testnet.
 
+### C — the staggered spare ⚠️
+
+Insurance against a single unrecoverable date. Same method as B, different target: if the engine is not live for B's Sep 20 crossing, C is still ahead of us with time before the Oct 2 deadline.
+
+| Field | Value |
+|---|---|
+| Contract ID | `CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL` |
+| Deployed | 2026-09-05, ledger ≈ 4,513,212 |
+| Calibrated | +366,871 ledgers on instance and persistent |
+| **Threshold crossing** | **2026-09-25 ~12:00 UTC** — five days after B |
+| Interventions since | none, and none permitted |
+
+> **B and C have different crossing dates. Do not reason about them interchangeably.** B is the plan; C is the spare. If B's proof lands, C is documented as an unused spare and costs nothing.
+
+### The shared code entry ⚠️
+
+B and C were deployed from the same Wasm, so **they share one `ContractCode` ledger entry**. Extending it for one extends it for both — it cannot be staggered.
+
+It has been pushed to ledger **5,290,829 (~2026-10-19)**, past the entire sprint, so it drives neither crossing. Each contract's crossing is governed by its own instance and persistent entries. Do not "helpfully" extend or shorten it; doing so affects both proofs at once. Full explanation in `docs/SOROBAN-PRIMER.md`.
+
+### Watching for drift
+
+```bash
+python3 scripts/check-decay-drift.py
+```
+
+**Run it twice a week and paste the output into `docs/STATUS.md`.** The calibration assumes 5.000 s/ledger holds for ~16 days; a 0.5% deviation is ~1,400 ledgers ≈ 2 hours. Drift running **early** is the dangerous direction — being live "by the projected date" is no good if the crossing arrives six hours before it. The script exits non-zero if anything has drifted more than 6h early.
+
+### Putting B and C into the engine config
+
+The old instruction was "keep them strictly out of the config." That was written before calibration existed. Now that both are calibrated against a specific threshold, they can sit in the config early — the engine will correctly do nothing until the crossing.
+
+**But that safety depends entirely on the configured threshold matching the calibration.** So add them as a deliberate, verified step, never as a convenience:
+
+1. Add the contract to `evergreen.config.json` with the threshold the calibration assumed (17,280 ledgers).
+2. Run the engine in **dry-run** and confirm it reports **no action needed** for that contract.
+3. Only then let it run live.
+
+Same principle as the testnet guard: exercise the mechanism in the direction where it should *decline* to act, and confirm it declines. A threshold that is accidentally too high bumps the contract immediately and destroys the proof, silently.
+
 ### Measured TTL floors
 
 Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thresholds are set against those real numbers — never assumed ones — and they determine whether B's proof is achievable in-sprint at all.
