@@ -46,6 +46,29 @@ Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLO
 
 **Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
 
+### Querying the Notion mirror — one silent trap
+
+**`SELECT ID` returns Notion page UUIDs, not task IDs.** The Tasks database has a property literally named `ID`, which collides with Notion's own page identifier. The query does not error — it returns a plausible-looking column of wrong values.
+
+Always select `"userDefined:ID"`:
+
+```sql
+SELECT "userDefined:ID" AS task_id, Status FROM "collection://..." WHERE Week = 'W1'
+```
+
+This belongs in the same family as the testnet guard that refused everything and the local gate that was weaker than CI: **a check that fails in the safe-looking direction, silently.** Anyone writing an ad-hoc query later will hit it.
+
+### A divergent ID is worse than a wrong status
+
+A wrong status is a **visible mismatch** — the diff catches it and someone fixes it. A divergent ID does not fail; it **quietly stops matching.** The row falls out of scope entirely while the diff still reads green, so the one row that most needed checking is the one no longer being checked.
+
+Two rules follow, both in [`CLAUDE.md`](../CLAUDE.md) § Dual-channel sync:
+
+- **Row IDs come from `BACKLOG.md`, never inferred from a naming pattern.** The repo registers the ID; Notion copies it.
+- **Diff on presence, not only on status.** A divergent ID appears as a phantom on one side and a missing row on the other, which a status-only diff will not see.
+
+*(Learned the hard way on 2026-09-05: guinea-pig C existed as `W1-D4-04d` in Notion and `W1-D4-07` in the repo — a divergence in the join key created on the same day the key was declared frozen.)*
+
 Full workflow, including the session-start validation and the discrepancy rules, is in [`CLAUDE.md`](../CLAUDE.md) § Dual-channel sync.
 
 ## TypeScript
