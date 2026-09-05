@@ -17,7 +17,7 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | D4-00/04/04b/04c/05/06 ✅ · D4-01/02/03 remain (R) |
+| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -68,6 +68,12 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 15 | **`W1-D4-00` added: guinea-pig contract source.** Assigned to Fatih, not Rakha. | Work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract source existed, and `deploy-guinea-pig.sh` was a stub. Rakha's D4 was already five tasks; writing the boilerplate for him means his day starts on the TTL floors and the permissionless check. |
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
+
+## ⏱️ Start `W1-D4-13` before the other D4 tasks
+
+It is a **timer, not a task**: ~57 minutes elapsed, a few minutes of effort — seed a temporary entry, then poll until the read fails. `W1-D4-01/02/03` are hands-on and will fill the wait, so run the boundary check alongside them rather than behind them.
+
+Its task number hides this. **`W2-D8-01` (Thu Sep 10) cannot be written correctly until it lands**, so picking it up last converts an hour of waiting into a day of slippage on the week's first real math task.
 
 ## ⚠️ `W1-D6` (Tue Sep 8) matters more than its position suggests
 
