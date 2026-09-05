@@ -79,6 +79,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ### Day 4 · Stellar/Soroban dev environment
 *Planned: Sat Sep 6 — may slip; the D-number does not.*
+- [x] **W1-D4-00** (F) **Guinea-pig contract source.** *Added 2026-09-05 — work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract existed to deploy. Written by Fatih rather than Rakha so his day starts on the two things that matter — the TTL floors and the permissionless check — instead of on boilerplate.* Minimal Soroban contract writing one persistent + one temporary entry, so all four entry types exist on one contract (instance and code come with any deployment). `soroban-sdk` pinned exactly. 3 local tests, no network. Parameterised deploy script (`A` | `B`) that refuses any network but testnet.
 - [ ] **W1-D4-01** (R) Install and pin the Stellar CLI + Soroban tooling versions on both machines; record exact versions in `docs/SETUP.md`.
 - [ ] **W1-D4-02** (R) Generate testnet keypairs (one per developer + one for the future bot); fund via friendbot. **Testnet only — never a mainnet key, never a real-funds key.**
 - [ ] **W1-D4-03** (R) Configure Soroban RPC endpoint + network passphrase as env vars; document `.env.example` (no real values committed, ever).

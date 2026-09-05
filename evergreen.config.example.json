@@ -1,0 +1,54 @@
+{
+  "_README": [
+    "Example Evergreen config. Copy to evergreen.config.json and edit.",
+    "Shared by the CLI and the engine so their behaviour cannot drift.",
+    "",
+    "⚠️  DO NOT ADD GUINEA-PIG B TO 'contracts'. It is the natural-decay subject",
+    "for W3-D18-02b and must age untouched until the moment of proof. If the",
+    "engine sees it, it will bump it and destroy weeks of ageing that cannot be",
+    "recovered inside the sprint. See docs/SETUP.md and scripts/deploy-guinea-pig.sh.",
+    "",
+    "Shape is provisional until W1-D6-01 defines EvergreenConfig in shared-types."
+  ],
+
+  "network": {
+    "rpcUrl": "https://soroban-testnet.stellar.org",
+    "networkPassphrase": "Test SDF Network ; September 2015"
+  },
+
+  "defaults": {
+    "bumpWhenRemainingLedgersBelow": 17280,
+    "extendToLedgers": 518400
+  },
+
+  "contracts": [
+    {
+      "_note": "Guinea-pig A — the working subject. Safe for the engine to watch.",
+      "id": "REPLACE_WITH_GUINEA_PIG_A_ID",
+      "label": "guinea-pig-A",
+      "payer": "bot-testnet"
+    }
+  ],
+
+  "_doNotWatch": [
+    {
+      "_warning": "GUINEA-PIG B — NEVER MOVE THIS INTO 'contracts' BEFORE W3-D18-02b.",
+      "_why": "It is deliberately ageing so the engine can save it unattended. Bumping it early destroys the grant's strongest evidence.",
+      "id": "REPLACE_WITH_GUINEA_PIG_B_ID",
+      "label": "guinea-pig-B-natural-decay"
+    }
+  ],
+
+  "payers": {
+    "bot-testnet": {
+      "_note": "The engine's own account. Holds only enough XLM to pay extendTTL fees; it has no authority over any contract and needs none, because extendTTL is permissionless. Secret lives in .env, never here.",
+      "signer": "ed25519",
+      "secretEnvVar": "EVERGREEN_SIGNER_SECRET"
+    }
+  },
+
+  "notifications": {
+    "channel": "email",
+    "toEnvVar": "EVERGREEN_ALERT_TO"
+  }
+}

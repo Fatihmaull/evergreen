@@ -22,6 +22,10 @@ out/
 .next/
 .turbo/
 
+# Rust / Soroban contract build output
+target/
+**/*.rs.bk
+
 # Test / coverage
 coverage/
 .nyc_output/

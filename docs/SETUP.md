@@ -77,6 +77,19 @@ Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on i
 >
 > The config file carries a comment saying so. **Do not add B to it until the moment of proof.** Losing this to an accidental bump would be an entirely self-inflicted way to lose the grant's best evidence.
 
+### Building and deploying them
+
+Both are deployed from the same source in [`contracts/guinea-pig`](../contracts/guinea-pig) (`W1-D4-00`).
+
+```bash
+rustup target add wasm32v1-none                               # once
+cargo test --manifest-path contracts/guinea-pig/Cargo.toml    # local, no network
+stellar contract build
+./scripts/deploy-guinea-pig.sh A     # or B
+```
+
+The script deploys **and seeds** — seeding writes the persistent and temporary entries, so all four entry types exist and `W1-D4-04b` has something to measure. It refuses to run against any network but testnet.
+
 ### Measured TTL floors
 
 Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thresholds are set against those real numbers — never assumed ones — and they determine whether B's proof is achievable in-sprint at all.

@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: W1-D3 closeout (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: W1-D3 closeout + W1-D4-00 (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · nothing blocked
@@ -17,7 +17,7 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🔜 next up | R | W1-D4-01 → W1-D4-06 |
+| Stellar dev env | 🔜 next up | R | W1-D4-01 → W1-D4-06 · contract ready (W1-D4-00 ✅) |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -65,7 +65,21 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 11 | **Replanned against 24 effective days** with an explicit 6-day slack ledger; D-numbers frozen as sequence positions with slippable planned dates. | The old plan assigned work to all 30 days including every weekend. Consuming slack is now a visible, logged event rather than silent drift. |
 | 12 | **Week 4 reallocated:** `evergreen-check` Action, npm publish, and engine/Action docs move from Fatih to Rakha. | Week 4 was full before the write path was added and nearly all of it was Fatih's. The Week 3 rescope frees Rakha ~Sep 19. **Dependency: if Stage 2 runs long, these come back to Fatih — that is the first sign Week 4 is in trouble.** |
 | 13 | **Rent model reads fee parameters from the network** rather than constants validated once. | A constant validated in Week 2 is quietly wrong by Week 4 after any protocol or network movement, and the cost estimate is the CLI's headline feature. |
+| 15 | **`W1-D4-00` added: guinea-pig contract source.** Assigned to Fatih, not Rakha. | Work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract source existed, and `deploy-guinea-pig.sh` was a stub. Rakha's D4 was already five tasks; writing the boilerplate for him means his day starts on the TTL floors and the permissionless check. |
+| 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
+
+## History rewrite — 2026-09-05
+
+**If you are here because a commit SHA doesn't resolve, this is why.**
+
+`main` was force-pushed once, on 2026-09-05, to remove `c8aea7b "test: protection probe"` — an empty commit created while verifying branch protection by attempting a real push. With admin bypass still enabled at the time, the push silently succeeded.
+
+- **What changed:** the probe commit is gone; every commit after it has a new SHA. `1a0f543` → `1f8feb0` for the PR #1 squash-merge.
+- **What did not change:** nothing. The working tree after the rebase was byte-identical to before it — verified by comparing tree hashes, not by eye.
+- **Known cost:** [PR #1](https://github.com/Fatihmaull/evergreen/pull/1) still shows as merged but references `1a0f543`, which is no longer reachable from `main`. Judged worth it — an orphaned reference inside a merged PR is invisible unless someone goes looking, while `test: protection probe` would sit in `git log` forever in a repo a grant reviewer reads.
+- **Why it was safe then and would not be now:** zero clones, one contributor. Rakha had not yet cloned. **This is the last such rewrite** — from here `main` is shared, and hard rule 9 applies without exception.
+- **Procedure note:** removing it needed *two* protections relaxed, not one. `enforce_admins: false` was not enough; `allow_force_pushes: false` blocks everyone independently. Both were restored afterwards and verified by re-reading the API, not by assuming the calls succeeded.
 
 ## Open risks being watched
 
@@ -96,7 +110,14 @@ Append one entry per working session. Newest at the top. Keep entries short — 
 - Added `docs/EVIDENCE.md` to the README's documentation table — plausibly the file Kenny most wants to find, and it was missing.
 - **Commit attribution turned off** via committed `.claude/settings.json`. Worth noting: the `includeCoAuthoredBy` key is deprecated as of Claude Code v2.0.62; the current key is `attribution`, and setting it makes the old key inert. Verified against the docs rather than recall.
 - Recorded the reasoning for three earlier judgment calls in CONVENTIONS (markdown/Prettier, TypeScript 5.x, conventions-as-lint-rules) so they don't get re-litigated.
-- **Next:** W1-D4 — Stellar environment, both guinea-pigs, TTL floors, and `W1-D4-06` the permissionless check.
+- **`W1-D4-00`** — wrote the guinea-pig contract, which turned out not to exist. `W1-D4-04` said "deploy a guinea-pig contract" and `deploy-guinea-pig.sh` was a stub that failed loudly; there was no Rust source anywhere. Logged as discovered work rather than built quietly.
+  - Minimal Soroban contract writing one persistent + one temporary entry, so all four entry types sit on one contract for the `W1-D4-04b` floor measurements. `soroban-sdk` pinned to `=27.0.6`.
+  - Verified by compiling and running it, not by reading docs — 3 local tests pass, wasm builds at 2.4K. That is the check hard rule 3 actually asks for.
+  - Deploy script takes `A` or `B`, deploys *and* seeds, and refuses any network whose passphrase is not testnet's.
+  - The decay warning is now in four places: the contract's own doc comment, the deploy script, `evergreen.config.example.json`, and `SETUP.md`. A comment at the point of use beats a line in a doc nobody rereads.
+  - Contract build is deliberately **not** in CI — it needs the Rust toolchain and would add minutes per PR for a fixture that changes almost never. The tradeoff is documented in `contracts/README.md` with the trigger for revisiting it.
+- **History rewritten** — see the section above.
+- **Next:** W1-D4 proper — Stellar environment, both guinea-pigs deployed, TTL floors, and `W1-D4-06` the permissionless check.
 
 ### 2026-09-04 — W1-D3 scaffolding (Claude)
 - **Monorepo scaffolded and verified.** Node 24, pnpm workspaces, TypeScript strict, ESLint flat config + Prettier, Vitest. Five packages (shared-types, core, cli, engine, dashboard), each importable with a passing no-op test.

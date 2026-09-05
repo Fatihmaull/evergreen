@@ -7,3 +7,7 @@ pnpm-lock.yaml
 # rewrites emphasis markers, which buries real docs changes under churn — and
 # this repo's docs are read by a grant reviewer, not just by us.
 *.md
+
+# Shaped by hand: the _README/_doNotWatch warnings are laid out to be read, and
+# Prettier would collapse them.
+evergreen.config.example.json

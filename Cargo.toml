@@ -1,0 +1,24 @@
+# Rust workspace for the testnet guinea-pig contract.
+#
+# This is a TEST FIXTURE, not a deliverable. It exists to give the CLI and the
+# engine a contract whose TTL we own and can watch decay. It is deliberately not
+# part of the pnpm workspace and not built in CI — see contracts/README.md.
+
+[workspace]
+resolver = "2"
+members = ["contracts/*"]
+
+[workspace.dependencies]
+# Pinned exactly. Soroban's surface moves and a silent minor bump can change TTL
+# semantics — docs/CONVENTIONS.md § Dependencies.
+soroban-sdk = "=27.0.6"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
