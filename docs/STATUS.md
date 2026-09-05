@@ -2,10 +2,10 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: ledger refined, F-01 floated, Rakha ramp added to the gate (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: weekday labels corrected, engine-live gate moved to Fri Sep 18 (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed, two shots (Sep 20 / Sep 25)** · 🔴 **hard gate Sep 19**
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
@@ -69,7 +69,7 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
 
-## ⚠️ Monday (`W1-D6`) matters more than its position suggests
+## ⚠️ `W1-D6` (Tue Sep 8) matters more than its position suggests
 
 `shared-types` was scoped on Sep 4 and has accumulated three findings since, with no change to its estimate:
 
@@ -77,7 +77,7 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 2. **`payer` distinct from contract, config as N contracts × M payers** — keeps the hosted direction open (ADR-004).
 3. **`ScanResult` keyed by ledger key, carrying which contracts each entry serves** — the shared-`ContractCode` finding.
 
-Naming the growth because the cost curve is steep: **an hour on Monday, a simultaneous refactor across CLI, engine and dashboard in Week 3.**
+Naming the growth because the cost curve is steep: **an hour on Tue Sep 8, a simultaneous refactor across CLI, engine and dashboard in Week 3.**
 
 **The third is a shape inversion, and it is the one to get right.** The instinctive model is contract-centric — a contract with its entries hanging off it — and that shape *structurally cannot* represent one entry serving twelve contracts without duplicating it. Which is exactly the bug we found on Sep 5.
 
@@ -88,11 +88,11 @@ The primary collection must be keyed by ledger key, with the contracts it serves
 
 Get it wrong and the rent double-count, the severity error, and the dedupe bug are all inherited downstream — then found and fixed separately, late.
 
-## 📉 Friday's hosting decision is lower-stakes than when it was written
+## 📉 The `W1-D5` hosting decision (Mon Sep 7) is lower-stakes than when it was written
 
 `W3-D18-00` gives us the real engine code running on a GitHub Actions cron. That is not only a fallback for the Sep 19 gate — it is a **proven floor**. Actions cron plus a hosted database is a viable production answer, not an emergency one.
 
-So Friday's decision has to be *reasonable*, not *right*. SDK runtime compatibility stays the first filter — a platform the SDK cannot run on fails before cost or ergonomics matter — but it is **timeboxed to one afternoon**. If Cloudflare's `nodejs_compat` story for the Stellar SDK is not settled by then, that ambiguity *is* the answer for a 24-day sprint: take Railway for the plain Node runtime, or defer and let the Actions runner carry it.
+So it has to be *reasonable*, not *right*. SDK runtime compatibility stays the first filter — a platform the SDK cannot run on fails before cost or ergonomics matter — but it is **timeboxed to one afternoon**. If Cloudflare's `nodejs_compat` story for the Stellar SDK is not settled by then, that ambiguity *is* the answer for a 24-day sprint: take Railway for the plain Node runtime, or defer and let the Actions runner carry it.
 
 ## 🔎 Week 1's most consequential finding: contracts share code entries
 
@@ -113,11 +113,30 @@ Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from
 
 **Positioning is being measured, not assumed** (`F-01`, a *floating* task — no day, nothing depends on it): how often do deployed testnet contracts actually share code entries? Common → headline capability and it leads the demo video. Rare → correctness requirement and a footnote. Never done → the demo leads with something else, which is fine.
 
-## 🔴 HARD DATE — Sep 19: the engine must be watching guinea-pig B
+## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
+
+**Moved from Sep 19 to Sep 18 on 2026-09-05, and the reason matters more than the date.**
+
+Every weekday label in `BACKLOG.md` was shifted by one day — Sep 3 2026 is a Thursday, not a Wednesday. The dates and task IDs were always right; only the day names were wrong, and we had been using them as shorthand. Recomputed:
+
+| | |
+|---|---|
+| **Fri Sep 18** | engine-live gate |
+| **Sat Sep 19** | *(was the gate)* — now margin |
+| **Sun Sep 20 ~12:00 UTC** | **B's crossing** |
+| **Fri Sep 25 ~12:00 UTC** | C's crossing |
+
+**We replanned to 24 effective days precisely because weekends are not real working days — and then the least recoverable event in the sprint landed on a Sunday, with its gate on a Saturday.** Nobody noticed because the labels said otherwise.
+
+So: **Friday Sep 18 is the gate; Saturday is margin, not the deadline.**
+
+**The crossing happening with nobody watching is the claim, not a problem** — "unattended" is the entire point. But it makes the alerting path load-bearing as evidence: `W3-D17-04` requires it **verified working before Sep 18**, exercised in both directions, not merely built. A bump with no alert leaves us reconstructing the event afterwards instead of capturing it as it happens.
+
+**C's crossing is a Friday** — a working day with people around. Another point in C's favour, and an argument for treating B as the proof that may be observed imperfectly rather than the one everything rests on.
 
 **The one date in this sprint that is not ours to move.** Now a milestone gate in `BACKLOG.md` with the same weight as the weekly gates.
 
-The gate is **not** "the hosting decision is deployed and hardened." It is: *the engine's decision-and-bump path is running unattended on some scheduler, watching B, at the calibrated threshold.* The `W3-D18-00` minimal fallback runner — GitHub Actions cron invoking the same engine code — satisfies it completely. Nothing in the claim being proved requires the platform chosen on Friday, so an unrecoverable date is no longer coupled to an open decision (ADR-003).
+The gate is **not** "the hosting decision is deployed and hardened." It is: *the engine's decision-and-bump path is running unattended on some scheduler, watching B, at the calibrated threshold.* The `W3-D18-00` minimal fallback runner — GitHub Actions cron invoking the same engine code — satisfies it completely. Nothing in the claim being proved requires the platform chosen at `W1-D5`, so an unrecoverable date is no longer coupled to an open decision (ADR-003).
 
 ## ⏳ The decay proof is armed — two shots, staggered
 
@@ -172,7 +191,7 @@ Reordered after Phase 0 — the Week 3 spike risk has been largely defused; Week
 - **🔴 Week 4 compression, Fatih as single bottleneck.** Was arithmetically impossible; now merely full, after the reallocation above. The write path was a symptom, not the cause. Watch the Stage-2-runs-long dependency.
 - **🟠 The natural-decay proof is fragile.** Two ways to lose it: an accidental bump (mitigated — B stays out of the config, warnings in SETUP and EVIDENCE), or a TTL floor too long to decay in-sprint (mitigated — threshold proof banked at `W3-D18-02a` as insurance). Floors measured `W1-D4-04b`.
 - **🟠 Testnet resets.** Can wipe both guinea-pigs *and* invalidate every explorer link in EVIDENCE.md. Mitigated by the three-artifact rule and contract IDs in config. **Check whether SDF has a reset announced inside Sep 3 – Oct 2.** A reset also destroys B's accumulated age.
-- **🟡 `shared-types` churn.** It now carries `Signer`, payer-distinct `BumpRecord`, and N×M config — all landing `W1-D6`, all rippling across both developers if changed later. Get it right Monday; don't refactor it mid-week.
+- **🟡 `shared-types` churn.** It now carries `Signer`, payer-distinct `BumpRecord`, and N×M config — all landing `W1-D6`, all rippling across both developers if changed later. Get it right on `W1-D6` (Tue Sep 8); don't refactor it mid-week.
 - **🟡 Stage 2 scope compliance.** If the policy signer slips, Deliverable 2 ships with a documented gap against the SOW's literal wording. Fatih owns raising it with Kenny early. Not an agent task.
 - **🟡 Fee model fidelity.** Rent estimates must be validated against a real tx fee (`W2-D9-02`) *and* read live network parameters, or the CLI's headline feature is guesswork.
 - **🟢 Week 3 policy-signer spike.** Was the top risk; now off the critical path. Rakha's Rust is solid, so the OpenZeppelin fallback is genuinely available and no longer time-boxed against a proof deadline.
@@ -185,6 +204,13 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
 
+### 2026-09-05 — weekday labels corrected; engine-live gate moved to Fri Sep 18 (Fatih + Claude)
+- **Every weekday label in `BACKLOG.md` was shifted by one day.** Sep 3 2026 is a Thursday. Verified by computing all 30, then rewriting them from their dates programmatically rather than by hand, so the same slip cannot recur.
+- **Prose shorthand was doubly wrong** — "Friday's hosting decision" was `W1-D5` on **Mon Sep 7**, and "Monday's shape check" was `W1-D6` on **Tue Sep 8**. Replaced weekday shorthand with task ID + explicit date throughout, which cannot drift again.
+- **The engine-live gate moved from Sat Sep 19 to Fri Sep 18.** The collision was invisible behind the wrong labels: we replanned to 24 effective days *because weekends are not working days*, and the sprint's least recoverable event sits on a **Sunday** with its gate on a **Saturday**. Friday is the gate; Saturday is margin.
+- **Added `W3-D17-04`: alerting verified working before Sep 18**, exercised in both directions. B's crossing happens with nobody watching — which is the claim being proved, but it makes the alert the evidence trail. A bump with no alert means reconstructing the event after the fact instead of capturing it live.
+- **C's Sep 25 crossing is a Friday**, a working day. That strengthens the case for treating B as the proof that may be observed imperfectly rather than the one everything depends on.
+
 ### 2026-09-05 — ledger refined into three categories (Claude)
 - **"Six added tasks" was still the wrong unit.** Split it: **four corrections** (`W2-D8-04`, `W2-D9-01`, `W2-D10-01`, `W3-D16-02b`) — the rent model always needed to not double-count and the severity model was always wrong for shared entries, so these are a mispriced estimate found on day 3, **not cuttable without shipping wrong answers**; **two elective** (`F-01`, `W4-D23-01`); **one that pays for itself** (`W3-D18-00`, which protects a never-cut proof *and* buys a production floor).
 - **`W2-D12-02b` moved out of Week 2 entirely** and became **`F-01`** under a new *Floating tasks* section. Its only consumer is the demo video's framing; nothing in W2 depends on it, and leaving it there made it a cut decision in Week 2 rather than a non-decision now. If no day has room it simply doesn't happen and the demo leads with something else.
@@ -192,7 +218,7 @@ Append one entry per working session. Newest at the top. Keep entries short — 
 - **Added `W1-D7-06`: report Rakha's ramp as a measured thing.** It is the one variable this week nobody has checked empirically, which is conspicuous given everything else was observed rather than assumed. He clones into a repo with an unusual amount of context; *"should help"* is a hypothesis. Record what he picked up unaided, where the docs failed him, what he had to ask — fixing the context files on Sep 9 is far cheaper than finding the gap in Week 3 when he is building the engine alone.
 
 ### 2026-09-05 — W1-D6 scope growth named; slack accounting opened (Claude)
-- **Named the silent growth on `W1-D6`.** Three findings have landed on `shared-types` since it was scoped Sep 4, with no change to its estimate. Written into the task itself, `packages/shared-types/README.md`, and above — so Monday's session sees it wherever it looks.
+- **Named the silent growth on `W1-D6`.** Three findings have landed on `shared-types` since it was scoped Sep 4, with no change to its estimate. Written into the task itself, `packages/shared-types/README.md`, and above — so the `W1-D6` session sees it wherever it looks.
 - **The `ScanResult` shape inversion is the acceptance criterion**, not a suggestion: the primary collection is keyed by ledger key, contracts are a property of the entry. The explicit check — *can this shape represent one entry serving N contracts, exactly once?* — must be answered in writing here before `W1-D6-01` closes.
 - **Friday downgraded from load-bearing to reasonable.** `W3-D18-00` turned GitHub Actions cron from a fallback into a proven floor, so the hosting decision no longer sits on the critical path. SDK compatibility remains the first filter, timeboxed to an afternoon; unresolved ambiguity *is* the answer.
 - **Opened the slack accounting** in `BACKLOG.md` with a running table, and added `W1-D7-05` to report it formally at the W1 gate. Current honest read: **0 of 6 slack days consumed, sequence position ahead** (day 3 complete plus six of day 4's tasks on calendar day 3) — **but scope grew by ~5 task IDs in W1 and ~6 in W2–W4**, and the W2–W4 additions land in days that were already full. That is where the pressure will show, and `W1-D7-05` is where it gets a number rather than a feeling.

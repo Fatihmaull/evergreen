@@ -90,20 +90,20 @@ None of this is new scope. The rent model always needed to not double-count; the
 Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set up." Every service, key, package boundary, and doc an agent or human needs exists.
 
 ### Day 1 · Kickoff & scope lock
-*Planned: Wed Sep 3 — may slip; the D-number does not.*
+*Planned: Thu Sep 3 — may slip; the D-number does not.*
 - [x] **W1-D1-01** (S) Re-read the signed SOW; confirm the three deliverables and out-of-scope list are what we're actually building.
 - [x] **W1-D1-02** (S) Confirm official sprint start = Sep 3, deadline = Oct 2.
 - [ ] **W1-D1-03** (F) Send the start-date confirmation message to Kenny Rivaldi (Ambassador Chapter Lead) so his records match ours. *Carried into D3 if not sent.*
 
 ### Day 2 · Product definition
-*Planned: Thu Sep 4 — may slip; the D-number does not.*
+*Planned: Fri Sep 4 — may slip; the D-number does not.*
 - [x] **W1-D2-01** (S) Write the PRD (`docs/PRD.md`) — problem, goals, non-goals, personas, requirements P0/P1/P2, metrics.
 - [x] **W1-D2-02** (S) Research policy-signer tooling; decide build vs. buy (→ `docs/adr/ADR-002`).
 - [x] **W1-D2-03** (S) Decide engine runtime shape: scheduled serverless, not always-on (→ `docs/adr/ADR-001`).
 - [x] **W1-D2-04** (S) Write this backlog + the agent context docs (`CLAUDE.md`, `docs/CONVENTIONS.md`, `docs/SOROBAN-PRIMER.md`, `docs/STATUS.md`).
 
 ### Day 3 · Repo & toolchain
-*Planned: Fri Sep 5 — may slip; the D-number does not.*
+*Planned: Sat Sep 5 — may slip; the D-number does not.*
 - [x] **W1-D3-01** (F) Create the GitHub repo `evergreen` (public, MIT, Apex-owned). Push these docs as the first commit — docs land before code. *Live at [github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen).*
 - [x] **W1-D3-02** (F) Monorepo skeleton: pnpm workspaces, root `tsconfig.base.json`, strict TS, ESLint + Prettier, **Vitest** (decided — ADR-003 Part 1), Node 24 pinned via `.nvmrc`.
 - [x] **W1-D3-03** (R) Package boundaries created empty but importable: `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `apps/dashboard`. Each with its own `package.json`, `README.md` stub, and passing no-op test.
@@ -112,7 +112,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - **Done when:** a fresh `git clone && pnpm install && pnpm test` passes on both machines. *(Verified 2026-09-04 against a clean clone: install, typecheck, lint, format:check and 5/5 tests green. CI confirmed green on GitHub 2026-09-05. Re-verify on Rakha's machine when he clones.)*
 
 ### Day 4 · Stellar/Soroban dev environment
-*Planned: Sat Sep 6 — may slip; the D-number does not.*
+*Planned: Sun Sep 6 — may slip; the D-number does not.*
 - [x] **W1-D4-00** (F) **Guinea-pig contract source.** *Added 2026-09-05 — work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract existed to deploy. Written by Fatih rather than Rakha so his day starts on the two things that matter — the TTL floors and the permissionless check — instead of on boilerplate.* Minimal Soroban contract writing one persistent + one temporary entry, so all four entry types exist on one contract (instance and code come with any deployment). `soroban-sdk` pinned exactly. 3 local tests, no network. Parameterised deploy script (`A` | `B`) that refuses any network but testnet.
 - [ ] **W1-D4-01** (R) Install and pin the Stellar CLI + Soroban tooling versions on both machines; record exact versions in `docs/SETUP.md`.
 - [ ] **W1-D4-02** (R) Generate testnet keypairs (one per developer + one for the future bot); fund via friendbot. **Testnet only — never a mainnet key, never a real-funds key.**
@@ -128,12 +128,12 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - **Done when:** both devs can hit testnet RPC and read live TTL data from our own contract, TTL floors are recorded, guinea-pig B is aging, and the permissionless property is confirmed on the network.
 
 ### Day 5 · Third-party services & accounts
-*Planned: Sun Sep 7 — may slip; the D-number does not.*
+*Planned: Mon Sep 7 — may slip; the D-number does not.*
 - [ ] **W1-D5-01** (F) Reserve the npm scope/package names (`evergreen` CLI + core). Confirm availability *now*, not in Week 4.
 - [ ] **W1-D5-02** (F) Dashboard hosting account + empty project deployed (Vercel/Netlify/Cloudflare — pick one, record in ADR-003). A "hello world" deploy must be live by end of day.
 - [ ] **W1-D5-03** (R) Scheduler platform decided and a trivial cron job running end-to-end (GitHub Actions cron vs Cloudflare Workers cron — see ADR-001). Prove it can run on schedule and log output before we trust it with bumps.
   - **Run SDK runtime compatibility as the first filter.** A platform the Stellar SDK cannot run on fails before cost or ergonomics matter. **Timebox it to one afternoon**: if Cloudflare Workers' `nodejs_compat` story for the SDK is not settled by then, *that ambiguity is the answer* for a 24-day sprint — take Railway for the plain Node runtime and move on.
-  - **This decision is lower-stakes than when it was written.** `W3-D18-00` gives us a GitHub Actions cron running the real engine code, which is not only a fallback — it is a **proven floor**. Actions cron plus a hosted database is a viable production answer, not an emergency one. Friday's decision has to be *reasonable*, not *right*; it is no longer the only path to a working engine. Deferring is also legitimate: let the Actions runner carry the load and decide later with more information.
+  - **This decision is lower-stakes than when it was written.** `W3-D18-00` gives us a GitHub Actions cron running the real engine code, which is not only a fallback — it is a **proven floor**. Actions cron plus a hosted database is a viable production answer, not an emergency one. This decision (`W1-D5`, **Mon Sep 7**) has to be *reasonable*, not *right*; it is no longer the only path to a working engine. Deferring is also legitimate: let the Actions runner carry the load and decide later with more information.
 - [ ] **W1-D5-04** (R) Email provider account (Resend/SendGrid/etc.) + a test email successfully sent from code in the sandbox.
 - [ ] **W1-D5-05** (F) Secrets handling: where do prod-ish secrets live (GitHub Actions secrets / hosting env vars)? Document the rule in `docs/CONVENTIONS.md`. **No secret ever enters git, a doc, or a chat log.**
 - [ ] **W1-D5-06** (S) Create the shared evidence folder (cloud drive) referenced by `docs/EVIDENCE.md`, for screenshots and video.
@@ -148,7 +148,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 > 2. **`payer` distinct from contract, and an N-contracts × M-payers config shape** — from ADR-004, to keep the hosted direction open without building it.
 > 3. **`ScanResult` keyed by ledger key, carrying which contracts each entry serves** — from the shared-`ContractCode` finding.
 >
-> Naming the growth out loud because the cost curve is steep: **an hour on Monday, a simultaneous refactor across CLI, engine and dashboard in Week 3.** CLAUDE.md already says not to churn `shared-types` mid-week; this is why.
+> Naming the growth out loud because the cost curve is steep: **an hour on `W1-D6` (Tue Sep 8), a simultaneous refactor across CLI, engine and dashboard in Week 3.** CLAUDE.md already says not to churn `shared-types` mid-week; this is why.
 >
 > ### The third one is a shape inversion — get it right or inherit three bugs
 >
@@ -160,8 +160,8 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 >
 > > *Can this shape represent one ledger entry serving N contracts, exactly once?*
 >
-> If `ScanResult` comes out of Monday organised by contract, everything downstream inherits the rent double-count (`W2-D9-01`), the severity error (`W2-D10-01`), and the dedupe bug (`W2-D8-04`, `W3-D16-02b`) — and each gets found and fixed separately, late.
-*Planned: Mon Sep 8 — may slip; the D-number does not.*
+> If `ScanResult` comes out of `W1-D6` organised by contract, everything downstream inherits the rent double-count (`W2-D9-01`), the severity error (`W2-D10-01`), and the dedupe bug (`W2-D8-04`, `W3-D16-02b`) — and each gets found and fixed separately, late.
+*Planned: Tue Sep 8 — may slip; the D-number does not.*
 - [ ] **W1-D6-01** (R) Define shared TypeScript types in `packages/shared-types`: `ContractRef`, `LedgerEntryTTL`, `ScanResult`, `RentEstimate`, `BumpDecision`, `BumpRecord`, `NotificationChannel`, `EvergreenConfig`, `Signer`. These are the seams every later task codes against — and per CLAUDE.md they must not churn mid-week, so get them right today.
 - [ ] **W1-D6-01b** (R) Honour the three ADR-004 shape constraints, all cheap now and expensive later: `BumpRecord` carries **payer** as a field distinct from the contract (and which signer produced it); `EvergreenConfig` expresses **N contracts × M payers**, not one global bot; `Signer` is an **interface** resolved per payer, so Stage 1 (plain funded account) and Stage 2 (policy signer) are drop-in. v1 implements no multi-tenancy — it must only avoid foreclosing it.
 - [ ] **W1-D6-02** (R) Write `docs/ARCHITECTURE.md` data-flow section against those types (RPC → core → {CLI, engine, dashboard}).
@@ -170,7 +170,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - **Done when:** an agent can open `shared-types` and know exactly what shape every module speaks.
 
 ### Day 7 · First vertical slice + W1 review
-*Planned: Tue Sep 9 — may slip; the D-number does not.*
+*Planned: Wed Sep 9 — may slip; the D-number does not.*
 - [ ] **W1-D7-01** (F) `evergreen scan <contract-id>` — thinnest possible end-to-end path: CLI → core → real testnet RPC → prints remaining TTL. No cost model yet, no pretty output.
 - [ ] **W1-D7-02** (F) Unit test for the TTL-remaining calculation using the recorded fixture.
 - [ ] **W1-D7-03** (S) **Week 1 review:** walk the W1 checklist, mark STATUS.md, screenshot the working scan (evidence snapshot #1).
@@ -184,21 +184,21 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 ## Week 2 — Core CLI, Deliverable 1 (Sep 10 – Sep 16)
 
 ### Day 8
-*Planned: Wed Sep 10 — may slip; the D-number does not.*
+*Planned: Thu Sep 10 — may slip; the D-number does not.*
 - [ ] **W2-D8-01** (F) TTL math module: remaining ledgers → projected archive ledger → projected archive **date** using network ledger-close cadence.
 - [ ] **W2-D8-02** (F) Unit tests incl. edge cases: already-archived entry, entry with no TTL, ledger close-time drift.
 - [ ] **W2-D8-03** (R) Scan all entry types for a contract (instance, code/wasm, persistent, temporary) — not just one; each has different archival behavior (see `docs/SOROBAN-PRIMER.md`).
 - [ ] **W2-D8-04** (R) **Deduplicate by ledger key.** Scanning N contracts that share a Wasm surfaces the same `ContractCode` entry N times. `ScanResult` must carry unique entries with the set of contracts each one serves — that set is what severity and reporting both need downstream.
 
 ### Day 9
-*Planned: Thu Sep 11 — may slip; the D-number does not.*
+*Planned: Fri Sep 11 — may slip; the D-number does not.*
 - [ ] **W2-D9-01** (R) Rent/cost estimation model: what does extending N ledgers cost, per entry and per contract?
   - **Sum per unique ledger key, never per contract.** Contracts sharing a Wasm share one `ContractCode` entry, so a per-contract sum charges it N times across a factory deployment — the headline cost estimate would be silently wrong for exactly the users who care most about cost. **Regression test with two contracts sharing a Wasm; B and C are that fixture.**
 - [ ] **W2-D9-02** (R) Validate the estimate against a real testnet transaction's actual fee — the model is worthless if it's off by an order of magnitude. Record the comparison.
 - [ ] **W2-D9-03** (F) Unit tests for the cost model with fixture inputs.
 
 ### Day 10
-*Planned: Fri Sep 12 — may slip; the D-number does not.*
+*Planned: Sat Sep 12 — may slip; the D-number does not.*
 - [ ] **W2-D10-01** (F) CLI UX: `--json` vs human-readable output, colored TTL health states (healthy / warning / critical), `--help` that a stranger can follow.
   - **Severity accounts for blast radius.** A shared code entry at 3 days is not one contract at 3 days, it is N contracts at 3 days. This changes what "critical" means and must be reflected in both the colour states and the exit code the Action depends on.
   - **Say when an entry is shared** — *"this code entry is shared with 12 other contracts"*. A per-contract view that omits it is misleading by omission, and misleading in the confidently-green-before-total-outage direction.
@@ -206,14 +206,14 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W2-D10-03** (F) Error handling: bad contract ID, RPC down, network mismatch, archived entry. Every failure gets a human-readable message, never a raw stack trace.
 
 ### Day 11 · First write transaction
-*Planned: Sat Sep 13 — may slip; the D-number does not.*
+*Planned: Sun Sep 13 — may slip; the D-number does not.*
 - [ ] **W2-D11-01** (R) `evergreen extend <contract-id> --ledgers N` — manual `extendTTL` submission, signed locally by the developer key (not the policy signer yet).
 - [ ] **W2-D11-02** (R) Execute on the guinea-pig contract; **capture the tx hash into `docs/EVIDENCE.md`** — this is required SOW evidence for Deliverable 2.
 - [ ] **W2-D11-03** (R) Verify TTL actually increased by re-running `scan` before/after; screenshot both.
 - [ ] **W2-D11-04** (F) Dry-run mode (`--dry-run`) that simulates without submitting. This becomes the engine's safety default in W3.
 
 ### Day 12
-*Planned: Sun Sep 14 — may slip; the D-number does not.*
+*Planned: Mon Sep 14 — may slip; the D-number does not.*
 - [ ] **W2-D12-01** (R) Storage optimizer: flag entries that are oversized, duplicated, or better suited to temporary storage; output concrete recommendations, not just warnings.
   - **Cite the observed deletion, not a hypothetical.** We watched guinea-pig B's temporary entry get written at deploy and deleted ~57 minutes later on 2026-09-05. "We watched one go, here is the date" is more persuasive than "temporary entries are deleted."
   - **Report the shared code entry.** Contracts built from identical Wasm share one `ContractCode` entry (primer). A per-contract-only report can show four healthy contracts whose common code entry expires tomorrow.
@@ -221,13 +221,13 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W2-D12-02** (R) Run it against the guinea-pig contracts + third-party public testnet contracts; sanity-check the advice isn't nonsense.
 
 ### Day 13
-*Planned: Mon Sep 15 — may slip; the D-number does not.*
+*Planned: Tue Sep 15 — may slip; the D-number does not.*
 - [ ] **W2-D13-01** (F) Config file support (`evergreen.config.json`): contract list, thresholds, RPC URL, payer/signer resolution — shared later by the engine. Include the comment marking guinea-pig B as deliberately unwatched (`W1-D4-04c`).
 - [ ] **W2-D13-02** (F) **Wallet-connect spike (half a day, throwaway).** Connect a wallet, sign one `extendTTL` payment, throw the code away. Moved here from Week 4 deliberately: the transaction-building machinery from `W2-D11` is hot, this is Fatih's day, and it displaces the batch scan below, which is already first in the cut order. Turns the Week 4 job from *learn wallet integration under deadline* into *put a button on something that already works*. **If this spike says the write path is unshippable at 24 effective days, say so now** — an early, cheap decision, and SOW 2 is a strong home for it.
 - [ ] **W2-D13-03** (F) Batch scan: multiple contracts in one command with a summary table *(P1 — cut this first if the week is tight)*.
 
 ### Day 14 · W2 review
-*Planned: Tue Sep 16 — may slip; the D-number does not.*
+*Planned: Wed Sep 16 — may slip; the D-number does not.*
 - [ ] **W2-D14-01** (S) Coverage pass; get `packages/core` meaningfully covered (target ~80% on the math/cost modules, not vanity 100% everywhere).
 - [ ] **W2-D14-02** (F) `packages/cli/README.md` quickstart good enough for a stranger to install and run.
 - [ ] **W2-D14-03** (S) **Week 2 review** + evidence snapshot #2 (CLI screenshots, coverage report, extend tx hash).
@@ -245,53 +245,60 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 The old plan spent the riskiest week's first two days on a spike the whole deliverable depended on. It no longer does.
 
 ### Day 15 · Engine core
-*Planned: Wed Sep 17 — may slip; the D-number does not.*
+*Planned: Thu Sep 17 — may slip; the D-number does not.*
 - [ ] **W3-D15-01** (R) Engine core: read config → scan registered contracts → evaluate threshold rules → decide bump/no-bump. Dry-run by default.
 - [ ] **W3-D15-02** (R) Threshold rules: bump when remaining TTL < X ledgers OR < Y days; per-contract overrides. Set thresholds against the **measured** floors from `W1-D4-04b`, not assumed ones.
 - [ ] **W3-D15-02b** (S) **Decide whether Evergreen auto-bumps temporary entries at all — a scope question, not a cadence one.** Temporary storage exists for data *meant* to expire (nonces, sessions), and it is deleted rather than archived. An autopilot that silently keeps temporary entries alive forever fights the storage type's purpose and may preserve exactly the data a contract's design intends to drop. Proposed position, to settle here: **default off** — scan and report temporary entries, do not extend them; **opt-in per contract**, with an explicit warning that a ~688-ledger (~57 min) floor leaves very little margin at a 5–15 minute cadence and that a miss is unrecoverable. **Amend ADR-001 once this is decided** — recording that its reaction-time argument was validated for three entry types and bounded for the fourth, with the measured numbers. Deliberately not amended in advance.
 - [ ] **W3-D15-03** (F) Unit tests for the decision logic with mocked scan results (no network).
 
 ### Day 16 · Bump execution
-*Planned: Thu Sep 18 — may slip; the D-number does not.*
+*Planned: Fri Sep 18 — may slip; the D-number does not.*
 - [ ] **W3-D16-01** (R) Bump execution path behind the `Signer` interface, with retry + backoff. Stage 1 implementation = plain funded Ed25519 account holding only enough XLM to pay extend fees.
 - [ ] **W3-D16-02** (R) Idempotency **across** runs: handle an in-flight tx when overlapping scheduler runs collide.
 - [ ] **W3-D16-02b** (R) Idempotency **within** a run: bump each unique ledger key exactly once. Distinct from the across-run case above and **not covered by it** — a single run over N contracts sharing a Wasm will otherwise try to bump one `ContractCode` entry N times. Test with B and C. This is the correctness property ADR-001 accepted the risk on — it needs the atomic write from ADR-003, so it cannot be faked with a flat file.
 - [ ] **W3-D16-03** (F) Persist `BumpRecord` history per the ADR-003 decision, including **payer** and **which signer produced it**.
 
 ### Day 17 · Notifications
-*Planned: Fri Sep 19 — may slip; the D-number does not.*
+*Planned: Sat Sep 19 — may slip; the D-number does not.*
 - [ ] **W3-D17-01** (R) `NotificationChannel` interface + `EmailChannel` implementation.
 - [ ] **W3-D17-02** (R) Stub `WebhookChannel` / `TelegramChannel` — interface-conformant, deliberately unimplemented, clearly marked as SOW 2 scope. Foundation, not half-features.
 - [ ] **W3-D17-03** (F) Email templates: bump succeeded, bump failed, contract approaching critical TTL. Send real test emails.
+- [ ] **W3-D17-04** (R) **Verify the alerting path end-to-end, before Fri Sep 18 — working, not merely built.** Trigger a real bump on guinea-pig A and confirm the success alert actually arrives; force a failure and confirm the failure alert arrives too. B's crossing is on a **Sunday** with nobody watching, so the alert is the evidence trail. A bump that happens with no alert leaves us reconstructing the event afterwards instead of capturing it as it happens. **Exercise both directions** — an alerting path only ever observed succeeding has the same invisible-failure shape as the testnet guard.
 
 ### Day 18 · **The proof** — end-to-end on a real schedule
-*Planned: Sat Sep 20 — may slip; the D-number does not.*
-- [ ] **W3-D18-00** (R) **Minimal fallback runner — build it early, well before Sep 19.** A GitHub Actions cron invoking the same engine code. *The proof does not require the production scheduler.* The claim is "the engine's decision logic ran unattended, detected the crossing, and bumped with no human involved" — nothing in that requires the platform chosen on Friday. This decouples an unrecoverable date from an open decision (ADR-003), and it can stand by ready while production deployment proceeds on its own timeline. Bonus: it makes the engine's platform-independence a *tested* property rather than an assumed one, which matters while the Cloudflare option's Stellar SDK compatibility is unresolved.
+*Planned: Sun Sep 20 — may slip; the D-number does not.*
+- [ ] **W3-D18-00** (R) **Minimal fallback runner — build it early, well before Fri Sep 18.** A GitHub Actions cron invoking the same engine code. *The proof does not require the production scheduler.* The claim is "the engine's decision logic ran unattended, detected the crossing, and bumped with no human involved" — nothing in that requires the platform chosen at `W1-D5`. This decouples an unrecoverable date from an open decision (ADR-003), and it can stand by ready while production deployment proceeds on its own timeline. Bonus: it makes the engine's platform-independence a *tested* property rather than an assumed one, which matters while the Cloudflare option's Stellar SDK compatibility is unresolved.
 - [ ] **W3-D18-01** (R) Deploy the engine to the scheduler chosen in `W1-D5-03`; run on a real cron cadence (5–15 min).
 - [ ] **W3-D18-02a** (S) **Threshold proof (insurance — bank this first).** Set the threshold above guinea-pig A's current TTL; the engine fires on its next scheduled run, unattended. Proves detect-and-bump on a real cron. Cheap and repeatable.
 - [ ] **W3-D18-02b** (S) **Natural-decay proof (the compelling one).** Guinea-pig B, deployed `W1-D4-04c` and aging since Sep 6, decays to threshold on its own and is saved with nobody watching. This is the claim the demo video makes. Achievable only if the floors measured at `W1-D4-04b` allow it — if not, say so in STATUS and ship the threshold proof described honestly.
 - [ ] **W3-D18-03** (S) Capture per the three-artifact rule: tx hash **+ full JSON response + explorer screenshot**, plus engine logs and alert email screenshots → `docs/EVIDENCE.md`. Same day, not later.
-- **🔴 HARD DATE GATE — Sep 19: the engine must be running unattended against guinea-pig B.**
-  This is the one date in the sprint that is not ours to move. B's threshold crossing is projected for **2026-09-20 ~12:00 UTC** and drift can run **early**. Both failure modes are silent and unrecoverable inside the sprint: the engine live too late and the crossing passes unobserved; B in the config with a wrong threshold and it gets bumped before the crossing.
+- **🔴 HARD DATE GATE — Fri Sep 18: the engine must be running unattended against guinea-pig B.**
+  This is the one date in the sprint that is not ours to move. B's threshold crossing is projected for **Sun 2026-09-20 ~12:00 UTC**, and drift can run **early**. Both failure modes are silent and unrecoverable inside the sprint: the engine live too late and the crossing passes unobserved; B in the config with a wrong threshold and it gets bumped before the crossing.
+
+  **The gate is Friday Sep 18, not Saturday Sep 19.** Sep 19 is a Saturday and Sep 20 is a Sunday — and we replanned to 24 effective days precisely because weekends are not real working days. The most important, least recoverable event in the sprint lands on a Sunday with its gate on a Saturday. **Friday is the gate; Saturday is margin, not the deadline.**
+
+  **The crossing will happen with nobody watching, which is the claim** — "unattended" is the entire point, so that is not a hardship. But it means the **alerting path must be verified working before Sep 18** (`W3-D17-04`), not merely built. If the engine bumps B on Sunday and no alert fires, we still have the event but a weaker evidence trail, and the confirming screenshots get taken after the fact rather than as it happens.
+
+  **C's Sep 25 crossing is a Friday** — a working day, people around. That is another point in C's favour, and an argument for treating B as the proof that may be observed imperfectly rather than the one everything depends on.
   The gate is **not** "the W1-D5 hosting decision is deployed and hardened." It is: *the engine's decision-and-bump path is running unattended on some scheduler, watching B, at the calibrated threshold.* The `W3-D18-00` fallback runner satisfies it. If production is ready, use production; if not, the proof still lands.
   Guinea-pig C (crossing **Sep 25**) is the second shot if Sep 20 is missed. Do not treat C as a reason to relax about Sep 19.
 - **Stage 1 gate:** an unattended bump has demonstrably happened on testnet with proof that survives a testnet reset. **Deliverable 2's core is now safe.** Everything after this is hardening.
 
 ### Day 19 · Stage 2 spike — policy signer
-*Planned: Sun Sep 21 — may slip; the D-number does not.*
+*Planned: Mon Sep 21 — may slip; the D-number does not.*
 - [ ] **W3-D19-01** (R) Spike `stellar/passkey-kit`: deploy a smart account on testnet, register an **Ed25519 signer** (not passkey/WebAuthn — we need headless).
 - [ ] **W3-D19-02** (R) Attach a policy scoping that signer to `extendTTL` only; verify a fund-moving call is actually **rejected**. *A signer that works but can also move funds is a failed spike, not a partial success.*
   - **Write the failing case first.** A scope check that has only ever been observed permitting things has the same invisible-failure shape as the `W1-D4-00` testnet guard, which refused everything and looked fine because nothing failed loudly. Exercise the mechanism in **both** directions: it must permit `extendTTL` *and* reject a fund-moving call, with both observed. The same applies to the dry-run default (`W2-D11-04`) — prove it does not submit, not just that it runs.
 - [ ] **W3-D19-03** (R) End-to-end: script signs and submits `extendTTL` through the policy signer, fully headless. Capture the tx hash with all three artifacts.
 
 ### Day 20 · Stage 2 decision + hardening
-*Planned: Mon Sep 22 — may slip; the D-number does not.*
+*Planned: Tue Sep 22 — may slip; the D-number does not.*
 - [ ] **W3-D20-01** (S) **Go/no-go on Stage 2.** Go → wire it in behind the `Signer` interface as the documented hardened path. No-go → fall back to OpenZeppelin (ADR-002 Option B; Rakha's Rust is solid, and this is no longer on the critical path so it can take the time it takes) **or** ship policy scoping documented as partial with full scoping deferred to SOW 2. Record the outcome in ADR-002's update log — amend, don't rewrite.
 - [ ] **W3-D20-02** (R) Failure modes: RPC timeout, insufficient balance, policy rejection, scheduler missed run. Each must alert, not fail silently.
 - [ ] **W3-D20-03** (R) `docs/POLICY-SIGNER.md` setup guide — required SOW evidence for Deliverable 2. Present it as **the hardened path for self-hosters**: in v1 the hot key sits on the user's server with the user's lumens on it, so capping it protects *them*. That is the reason worth reading, not the SOW line item.
 
 ### Day 21 · W3 review
-*Planned: Tue Sep 23 — may slip; the D-number does not.*
+*Planned: Wed Sep 23 — may slip; the D-number does not.*
 - [ ] **W3-D21-01** (S) **Week 3 review** + evidence snapshot #3. Confirm every transaction row carries all three artifacts.
 - [ ] **W3-D21-02** (S) Reconcile the slack ledger: how many of the six are gone, and what took them.
 - **Milestone gate:** unattended non-custodial bump proven with reset-proof evidence (Stage 1), and Stage 2 either shipped or explicitly, honestly documented as partial.
@@ -307,44 +314,44 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 > **Dependency:** if Stage 2 runs long, `W4-D25` (Action) and `W4-D27` (npm publish) come back to Fatih. That is the first sign Week 4 is in trouble — surface it in STATUS the day it happens, don't absorb it quietly.
 
 ### Day 22 · Dashboard — public read-only (P0)
-*Planned: Wed Sep 24 — may slip; the D-number does not.*
+*Planned: Thu Sep 24 — may slip; the D-number does not.*
 - [ ] **W4-D22-01** (F) Dashboard scaffold. **No wallet, no signup, no accounts.** Build the public view as the whole product — the write path is additive and must be removable without leaving dead buttons or empty auth-gated regions.
 - [ ] **W4-D22-02** (F) **Scan any contract.** Paste any contract ID → TTL health, projected archive date, rent estimate. Scanning is a permissionless read, `core` already does it, and the dashboard already renders `ScanResult` — near-zero cost, and it makes the deployed instance a real utility for strangers rather than a display case.
 
 ### Day 23 · Dashboard — status and history
-*Planned: Thu Sep 25 — may slip; the D-number does not.*
+*Planned: Fri Sep 25 — may slip; the D-number does not.*
 - [ ] **W4-D23-01** (F) Contract list view: TTL health, projected archive date, last bump. **Surface shared code entries** — a list showing N healthy contracts whose common code entry expires tomorrow is the exact failure this tool exists to prevent.
 - [ ] **W4-D23-02** (F) Bump history view reading real `BumpRecord` data from W3. For contracts this instance doesn't monitor, the section reads "not monitored by this instance" — it must not imply the contract is unprotected.
 - [ ] **W4-D23-03** (F) Empty states + error states (unknown contract, no history, RPC down).
 
 ### Day 24 · Deploy
-*Planned: Fri Sep 26 — may slip; the D-number does not.*
+*Planned: Sat Sep 26 — may slip; the D-number does not.*
 - [ ] **W4-D24-01** (F) Deploy to the hosting set up in `W1-D5-02` — **live public URL** (required evidence). This is a demonstration instance, not a service: no registration, no accounts, no storing strangers' contract IDs.
 - [ ] **W4-D24-02** (F) Mobile-reasonable layout; the Ambassador may review on a phone.
 - [ ] **W4-D24-03** (F) Rent cost view: estimated ongoing storage cost per contract *(P1 — cut order #3)*.
 - [ ] **W4-D24-04** (F) Wallet-connect + user-signed "extend now" *(P1 — the DX feature; ship only if the `W2-D13-02` spike said it fits. Wallet-connect authorizes a **payment**, never access — check the UI copy says so.)*
 
 ### Day 25 · `evergreen-check` Action — **owner: R**
-*Planned: Sat Sep 27 — may slip; the D-number does not.*
+*Planned: Sun Sep 27 — may slip; the D-number does not.*
 - [ ] **W4-D25-01** (R) `evergreen-check` GitHub Action: `action.yml`, wraps the CLI, fails the job below threshold.
 - [ ] **W4-D25-02** (R) Test it in a **separate** throwaway repo — proving it works for someone who isn't us.
 - [ ] **W4-D25-03** (R) Publish/tag the Action so it's referenceable as `apex/evergreen-check@v1`; screenshot a red run and a green run.
 
 ### Day 26 · Docs
-*Planned: Sun Sep 28 — may slip; the D-number does not.*
+*Planned: Mon Sep 28 — may slip; the D-number does not.*
 - [ ] **W4-D26-01** (F) Root `README.md`: what Evergreen is, install, 60-second quickstart, screenshots. Quickstart teaches the **plain funded account**; the policy signer is the documented hardened path, not the default (ADR-002 amendment).
 - [ ] **W4-D26-02** (R) Engine setup guide + CI Action usage guide — his components, his docs.
 - [ ] **W4-D26-03** (S) Troubleshooting page from every real failure we hit during the sprint *(cut order #4 for depth, not existence)*.
 - [ ] **W4-D26-04** (S) `CONTRIBUTING.md` + roadmap naming SOW 2 candidates (hosted engine per ADR-004, mainnet, Telegram channel, always-on mode, dashboard write path if it slipped).
 
 ### Day 27 · Publish — **owner: R**
-*Planned: Mon Sep 29 — may slip; the D-number does not.*
+*Planned: Tue Sep 29 — may slip; the D-number does not.*
 - [ ] **W4-D27-01** (R) `npm publish --dry-run`, verify package contents (no secrets, no junk, correct files field).
 - [ ] **W4-D27-02** (R) Publish `packages/core` + `packages/cli` to npm; verify a clean `npx evergreen scan ...` works on a machine that never saw the repo.
 - [ ] **W4-D27-03** (R) Git tag + GitHub release with notes.
 
 ### Day 28 · Demo + W4 review
-*Planned: Tue Sep 30 — may slip; the D-number does not.*
+*Planned: Wed Sep 30 — may slip; the D-number does not.*
 - [ ] **W4-D28-01** (S) Demo video script (3–5 min): problem → scan → auto-bump saving a contract → dashboard → CI check. **If `F-01` finds code-entry sharing is common, lead with it** *(and if `F-01` never happens, lead with something else — it is not a blocker)*: *"your 40 vault contracts share one code entry that expires Thursday"* is a non-obvious operational trap, and non-obvious traps are what make tooling worth installing.
 - [ ] **W4-D28-02** (S) Record + edit; upload; put the link in `docs/EVIDENCE.md`.
 - [ ] **W4-D28-03** (S) **Week 4 review** + evidence snapshot #4.
@@ -355,13 +362,13 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ## Buffer — Evidence & submission (Oct 1 – Oct 2)
 
 ### Day 29
-*Planned: Wed Oct 1 — may slip; the D-number does not.*
+*Planned: Thu Oct 1 — may slip; the D-number does not.*
 - [ ] **B-D29-01** (S) Assemble the evidence bundle exactly per SOW §6.1: repo link, npm links, CLI screenshots, coverage report, tx hashes, engine logs, alert screenshots, policy-signer guide, dashboard URL, Action link, demo video.
 - [ ] **B-D29-02** (F) Write a one-page verification walkthrough for Kenny — a non-technical reviewer should be able to confirm each deliverable in under 10 minutes.
 - [ ] **B-D29-03** (S) Fresh-machine test: clone, install, run, following only the README. Fix whatever breaks.
 
 ### Day 30 · Submit
-*Planned: Thu Oct 2 — may slip; the D-number does not.*
+*Planned: Fri Oct 2 — may slip; the D-number does not.*
 - [ ] **B-D30-01** (F) Send the evidence bundle to the Ambassador Chapter Lead for the Airtable submission.
 - [ ] **B-D30-02** (S) Retro: what slipped, what we cut, what we learned.
 - [ ] **B-D30-03** (S) Draft the SOW 2 candidate list (mainnet auto-bump, Telegram/webhook channels, always-on mode, custom policy contract if A/B fell short).
