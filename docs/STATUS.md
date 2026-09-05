@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: weekday labels corrected, engine-live gate moved to Fri Sep 18 (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: dual-channel sync installed and exercised (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -113,6 +113,25 @@ Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from
 
 **Positioning is being measured, not assumed** (`F-01`, a *floating* task — no day, nothing depends on it): how often do deployed testnet contracts actually share code entries? Common → headline capability and it leads the demo video. Rare → correctness requirement and a footnote. Never done → the demo leads with something else, which is fine.
 
+## 🔄 Dual-channel sync — live from 2026-09-05
+
+Evergreen is now tracked in two places. **The repo is canonical; Notion is a mirror.** Truth flows repo → Notion, never the reverse. Only agents write to Notion — Fatih and Rakha read it, so any disagreement is an agent error, never a human update to respect.
+
+Workflow is in `CLAUDE.md` § Dual-channel sync; the status vocabulary is in `docs/CONVENTIONS.md`. Sync happens at boundaries only — session start, session end, PR merge — never per commit.
+
+### Sync anomaly log
+
+Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two in one week means the workflow itself is suspect.**
+
+| Date | Task | What | Resolution |
+|---|---|---|---|
+| 2026-09-05 | `W1-D4-04d` → `W1-D4-07` | **ID divergence, not a false claim.** Notion had guinea-pig C as `W1-D4-04d` (following the 04b/04c pattern); the repo calls it `W1-D4-07`. Same work, genuinely done, two identifiers. | Notion renamed to `W1-D4-07`. Repo canonical. **This is the more dangerous failure than a wrong status** — the ID is the join key, so a divergent ID silently breaks every future sync on that row rather than showing up as a visible mismatch. |
+| 2026-09-05 | `W1-D4-09` | Notion "In progress", repo `[ ]`. | **The repo was wrong, not Notion.** The drift check has started and runs until Sep 20. Repo corrected to `[~]`, and `CONVENTIONS` now states that recurring work is `[~]`. *Repo-canonical means the repo is where truth is authored — not that it is always right. When the mirror reveals a repo error, fix the repo, then sync.* |
+
+### Repo defect found by the same validation
+
+`W1-D4-10` shipped in PR #7's title and commit subject but had **no checkbox row in `BACKLOG.md`** — only prose mentions. A task ID used in shipped work with no task registered against it. Added retroactively. Found because Notion had no row to match, which is exactly the kind of gap a second surface catches and a single surface does not.
+
 ## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
 
 **Moved from Sep 19 to Sep 18 on 2026-09-05, and the reason matters more than the date.**
@@ -203,6 +222,13 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — dual-channel sync installed and exercised (Fatih + Claude)
+- **Notion MCP was already connected** via claude.ai connectors at `https://mcp.notion.com/mcp`. Running the `claude mcp add` from the brief would have created a duplicate server; checked before acting.
+- All three connection verifications passed: workspace identity, database read, and a write → read-back → revert round trip (write via `update_page`, read back via SQL — genuinely independent code paths, not an echo).
+- **First validation found three real things**, two of them recorded above as anomalies and one a repo defect (`W1-D4-10` shipped with no task row). Week 1 rows were hand-populated from a snapshot, so mismatches were expected — but the *shape* of them was more interesting than a wrong status.
+- Also missing from Notion and now created: `W1-D4-07`, `W1-D4-08`, `W1-D6-01b`.
+- The workflow was exercised end to end on its own PR, including a deliberately introduced discrepancy to confirm detection works in both directions rather than only on the happy path.
 
 ### 2026-09-05 — weekday labels corrected; engine-live gate moved to Fri Sep 18 (Fatih + Claude)
 - **Every weekday label in `BACKLOG.md` was shifted by one day.** Sep 3 2026 is a Thursday. Verified by computing all 30, then rewriting them from their dates programmatically rather than by hand, so the same slip cannot recur.
