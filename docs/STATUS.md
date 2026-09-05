@@ -2,10 +2,10 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: W1-D4-06 permissionless verification (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: W1-D4-04c guinea-pig B calibration (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track · **`W1-D4-06` confirmed — the plan's central assumption holds** · one open decision (guinea-pig B timing)
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed for 2026-09-20** · nothing blocked
 
 ---
 
@@ -17,7 +17,7 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | D4-00/04/04b/05/06 ✅ · **D4-04c `[!]` decision** · D4-01/02/03 remain (R) |
+| Stellar dev env | 🟡 partly done | F/R | D4-00/04/04b/04c/05/06 ✅ · D4-01/02/03 remain (R) |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -27,12 +27,7 @@
 
 ## Blocked
 
-**[W1-D4-04c] Guinea-pig B's deploy date needs a decision — it is no longer a rote task.**
-
-- *What changed:* `W1-D4-04b` measured the real persistent TTL floor at **≈120,928 ledgers ≈ 7 days**. A B deployed 2026-09-05 archives around **Sep 12** — roughly eight days *before* `W3-D18-02b`, the proof it exists for. "Deploy it early so it ages" was the right instinct applied to a guessed number; it would age straight past the window.
-- *Options, both sound:* (1) deploy ~Sep 12–13 and let the natural floor land the crossing near Sep 19–20 — purest, but it is a task that must happen on a specific future day in a sprint with movable slack; (2) deploy now plus one calibrating extend that places the crossing in Sep 19–21, then leave it strictly alone. Option 2 does not weaken the claim: every contract has some initial TTL, and choosing it is not intervening in the decay.
-- *What would unblock it:* Fatih picks. Full reasoning in `docs/SETUP.md`.
-- *Since:* 2026-09-05. **Not urgent for several days**, but it must be settled before Sep 12 or option 1 expires by default.
+*(nothing blocked)*
 
 > Format when something blocks: `**[TASK-ID]** what's blocked · what was tried · what would unblock it · since when`. A blocker sitting here for more than a day gets escalated between Fatih and Rakha directly, not left in the doc.
 
@@ -73,6 +68,23 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 15 | **`W1-D4-00` added: guinea-pig contract source.** Assigned to Fatih, not Rakha. | Work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract source existed, and `deploy-guinea-pig.sh` was a stub. Rakha's D4 was already five tasks; writing the boilerplate for him means his day starts on the TTL floors and the permissionless check. |
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
+
+## ⏳ The decay proof is armed — 2026-09-20 ~12:00 UTC
+
+**Guinea-pig B is deployed, calibrated, and must now be left alone.**
+
+| | |
+|---|---|
+| Contract | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` |
+| Crossing | ledger ≈ 4,776,407 → **2026-09-20 ~12:00 UTC** at a 17,280-ledger (24h) threshold |
+| Calibration | one manual extend, 2026-09-05, **disclosed openly in `docs/EVIDENCE.md`** |
+| Since then | no interventions, and none permitted |
+
+The engine must be watching B by Sep 19 at the latest. `W3-D18-01` (deploy the engine to the scheduler) is planned for ~Sep 20 — **that is cutting it fine**, and if the schedule slips even a day the crossing happens with nothing watching. Treat Sep 19 as a hard internal date for having the engine live, independent of the backlog's planned dates.
+
+> ⚠️ **B stays out of `evergreen.config.json` until the engine is genuinely ready to watch it.** Adding it early means the engine bumps it and the crossing never happens. Adding it too late means the crossing happens unobserved. Both failures are silent, and both are unrecoverable within the sprint.
+
+The ledger rate was measured, not assumed: exactly 5.000 s/ledger over a 100,000-ledger sample (17,280 ledgers/day).
 
 ## ✅ W1-D4-06 — the permissionless property is confirmed on testnet
 
@@ -118,6 +130,15 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — W1-D4-04c guinea-pig B calibration (Claude)
+- **Decay proof armed.** B deployed and calibrated with one manual extend; crossing projected 2026-09-20 ~12:00 UTC. Details above.
+- Measured the ledger close rate from Horizon rather than assuming 5s — it is exactly 5.000 s/ledger over a 100,000-ledger sample, so the calibration arithmetic is grounded.
+- **Disclosed the calibration up front in `EVIDENCE.md`**, next to the proof rather than buried: a reviewer reading B's history sees deploy → manual extend → engine extend, and the middle transaction is explained before they have to wonder about it.
+- B's *temporary* entry was deliberately left uncalibrated and was deleted about an hour after deploy — which is what temporary storage is for.
+- **Seeded two downstream decisions rather than pre-empting them:** `W3-D15-02b` asks whether Evergreen should auto-bump temporary entries *at all* (proposed: default off, opt-in per contract) and defers the ADR-001 amendment until that is settled; `W2-D12-01` now points the storage optimizer at the measured floors, which turn generic hygiene advice into a checkable warning.
+- Added the write-the-failing-case-first requirement to `W3-D19-02` and the dry-run default — a scope check only ever observed permitting things has the same invisible-failure shape as the testnet guard that refused everything.
+- **Noted `extXdr` in the primer** as unanticipated and currently unused, and flagged that the RPC client should exploit `latestLedger` arriving in the same response rather than making a second call.
 
 ### 2026-09-05 — W1-D4-06 permissionless verification (Claude)
 - **Confirmed on testnet.** See the section above. This was the highest-leverage unverified assumption in the plan and it holds.

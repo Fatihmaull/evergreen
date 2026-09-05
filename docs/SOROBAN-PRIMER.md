@@ -149,7 +149,10 @@ Note the actual entry shape — `key`, `xdr`, `lastModifiedLedgerSeq`, `liveUnti
 }
 ```
 
-`latestLedger` in the same response is what `remainingLedgers` is computed against — one round trip, no separate latest-ledger call needed.
+Two things in this response that the plan did not anticipate:
+
+- **`latestLedger` arrives in the same response**, and it is what `remainingLedgers` is computed against. One round trip, not two — the RPC client should exploit this rather than fetching the latest ledger separately out of habit. Across a batch scan that is the difference between a scan that feels instant and one that does not.
+- **`extXdr`** is present on each entry and was not in any of our planning docs. We do not currently use it. Whoever needs it later should know it was not designed for — read the current Stellar docs before relying on its shape.
 
 ## Non-custodial authorization
 
