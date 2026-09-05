@@ -29,6 +29,15 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Transaction hashes
 
+### 2026-09-05 — Testnet account setup (W1-D4-02)
+
+Two account-funding transactions, with original RPC responses and explorer captures. Account roles and public keys are recorded in [SETUP.md](SETUP.md#testnet-accounts).
+
+| Task | Action / signer | Tx hash | Full RPC JSON | Explorer screenshot |
+|---|---|---|---|---|
+| W1-D4-02 | Create bot account with 20 XLM Testnet / developer key | `f07dd5cafb40ea3466f6d59955c6e04158d3df2c0a684ed3cd790676e3f5be29` | [SUCCESS response](evidence/2026-09-05-testnet-setup/bot-funding-transaction.json) | [Screenshot](evidence/2026-09-05-testnet-setup/bot-funding-explorer.jpg) |
+| W1-D4-02 | Friendbot funds developer account | `1af342f683e3a754cca7b3bfc8f41be995fb33fef77ddca48a1bf0ce77e76114` | [SUCCESS response](evidence/2026-09-05-testnet-setup/dev-funding-transaction.json) | [Screenshot](evidence/2026-09-05-testnet-setup/dev-funding-explorer.jpg) |
+
 Add the row the moment you see the hash. `Signer` records which signing path produced it — Stage 1 (plain funded account) or Stage 2 (capped policy signer) — so evidence captured before and after Stage 2 lands reads as a progression rather than a contradiction.
 
 | Date | Task | What it proves | Contract | Signer | Tx hash | JSON | Screenshot |

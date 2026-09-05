@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: TTL boundary semantics + onboarding corrections (Fatih + Claude)
+**Last updated:** 2026-09-05 · Testnet environment setup
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,19 +11,37 @@
 
 ## Right now
 
+**2026-09-05 — Testnet environment setup:** local tooling, environment configuration, and account funding are verified. The setup changes are prepared for review; no engine scheduler is running.
+
+**Publication tracking:** [Issue #19](https://github.com/Fatihmaull/evergreen/issues/19) tracks the reviewed setup change. Second-machine/account confirmation and the TTL-boundary experiment remain open separately.
+
+| Task | Current result |
+|---|---|
+| `W1-D4-01` · in progress | Node 24.13.0, pnpm 11.25.0, CLI 28.0.0, Rust 1.98.1 + Wasm target verified locally. The rebuilt Wasm matches the deployed fixture. Current tooling confirmation on the second machine remains pending. |
+| `W1-D4-02` · in progress | Developer account funded through Friendbot; separate bot account funded with 20 XLM Testnet. Keys remain in ignored local `.env`. The second developer's everyday account designation remains pending. |
+| `W1-D4-03` · done locally | Testnet endpoint/passphrase configured and checked; developer and bot key placeholders documented. |
+| `W1-D4-14` · done locally | ESLint and Prettier ignore generated Rust output; repository checks pass with build artifacts present. |
+| `W1-D4-13` · in progress, paused | The separate TTL-boundary experiment is incomplete. Its scripts and observation artifacts remain in local work and are outside this setup publication. |
+
+**Validation:** `pnpm check` passes typecheck, lint, formatting, and the 5 existing placeholder tests. Earlier setup verification passed 3 Rust fixture tests and reproduced Wasm hash `c7e55f0a…bce98bfb`. CLI `ping --send=no` against guinea-pig A returned `"guinea_pig"`.
+
+**Evidence:** two account-funding transactions have full unedited JSON RPC responses and explorer screenshots in [EVIDENCE.md](EVIDENCE.md). The developer and bot public keys are documented in [SETUP.md](SETUP.md).
+
+**Pending Notion sync — `W1-D4-01/02/03/13/14`:** reconcile task notes and publication links after the setup review. Local work is canonical; the mirror has not been updated in this preparation step.
+
 | Workstream | State | Owner | Task |
 |---|---|---|---|
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
+| Stellar dev env | 🟡 local setup verified | F/R | D4-03/14 complete locally; D4-01/02 await confirmation; D4-13 paused |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | ⬜ empty | S | first snapshot due W1-D7-03 |
+| Evidence | 🟡 account setup captured | S | Two funding transactions with JSON and screenshots; product proofs still pending |
 
 ## Blocked
 
