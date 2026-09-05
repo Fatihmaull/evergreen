@@ -167,6 +167,17 @@ Evergreen's model: an **Ed25519 signer** (headless — no browser, no passkey ce
 
 See [`ADR-002`](adr/ADR-002-policy-signer-provider.md) for the provider decision and its 2026-09-04 amendment, and [`POLICY-SIGNER.md`](POLICY-SIGNER.md) for setup.
 
+## Contracts deployed from identical Wasm share ONE code entry
+
+**Observed 2026-09-05.** Guinea-pigs B and C were deployed separately, from the same compiled Wasm. They have different contract ids and their own instance and data entries — but they share a **single** `ContractCode` ledger entry, keyed by the Wasm hash.
+
+Consequences, all of which caught us:
+
+- **Extending the code entry for one contract extends it for every contract sharing that Wasm.** We tried to give B and C staggered TTLs and found the code entry could not be staggered at all.
+- **A contract is only as alive as its code entry.** If the shared Wasm entry is archived, every contract deployed from it is unusable, regardless of how healthy its own instance and data entries look.
+- **A scan must report the code entry, and should say when it is shared.** Reporting per-contract TTL without it gives a false picture — a user could see four healthy contracts whose common code entry expires tomorrow.
+- Our fix for the guinea-pigs was to extend the shared code entry well past the whole sprint (to ledger 5,290,829, ~2026-10-19) so it drives neither crossing, leaving each contract's crossing governed by its own instance and persistent entries.
+
 ## Gotchas to design around
 
 - **Ledgers ≠ seconds.** Never store a TTL as a date. Convert at the edge, for display only.
@@ -174,6 +185,8 @@ See [`ADR-002`](adr/ADR-002-policy-signer-provider.md) for the provider decision
 - **Testnet resets.** Stellar testnet is periodically reset — contracts and accounts vanish. Don't hardcode contract IDs in source; read them from config (`docs/SETUP.md` holds the current guinea-pig ID). If everything suddenly 404s, suspect a reset before suspecting your code.
 - **Fee estimation drift.** A modeled rent cost must be validated against a real transaction's actual fee at least once (W2-D9-02), or the "cost estimate" is fiction.
 - **Archived ≠ deleted.** Report them differently. Telling a user their persistent data is "gone" when it's restorable is a serious UX bug.
+- **The code entry is shared across every contract built from the same Wasm** (see above). Do not model TTL as strictly per-contract.
+- **Temporary entries really do vanish, fast.** Observed 2026-09-05: guinea-pig B's temporary entry was written at deploy and deleted ~57 minutes later, exactly as the 688-ledger floor predicted. Not hypothetical.
 
 ## References
 

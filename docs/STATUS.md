@@ -2,10 +2,10 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: W1-D4-04c guinea-pig B calibration (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: decay-proof mitigations — C, drift check, Sep 19 gate (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
-**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed for 2026-09-20** · nothing blocked
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed, two shots (Sep 20 / Sep 25)** · 🔴 **hard gate Sep 19**
 
 ---
 
@@ -69,22 +69,32 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
 
-## ⏳ The decay proof is armed — 2026-09-20 ~12:00 UTC
+## 🔴 HARD DATE — Sep 19: the engine must be watching guinea-pig B
 
-**Guinea-pig B is deployed, calibrated, and must now be left alone.**
+**The one date in this sprint that is not ours to move.** Now a milestone gate in `BACKLOG.md` with the same weight as the weekly gates.
 
-| | |
-|---|---|
-| Contract | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` |
-| Crossing | ledger ≈ 4,776,407 → **2026-09-20 ~12:00 UTC** at a 17,280-ledger (24h) threshold |
-| Calibration | one manual extend, 2026-09-05, **disclosed openly in `docs/EVIDENCE.md`** |
-| Since then | no interventions, and none permitted |
+The gate is **not** "the hosting decision is deployed and hardened." It is: *the engine's decision-and-bump path is running unattended on some scheduler, watching B, at the calibrated threshold.* The `W3-D18-00` minimal fallback runner — GitHub Actions cron invoking the same engine code — satisfies it completely. Nothing in the claim being proved requires the platform chosen on Friday, so an unrecoverable date is no longer coupled to an open decision (ADR-003).
 
-The engine must be watching B by Sep 19 at the latest. `W3-D18-01` (deploy the engine to the scheduler) is planned for ~Sep 20 — **that is cutting it fine**, and if the schedule slips even a day the crossing happens with nothing watching. Treat Sep 19 as a hard internal date for having the engine live, independent of the backlog's planned dates.
+## ⏳ The decay proof is armed — two shots, staggered
 
-> ⚠️ **B stays out of `evergreen.config.json` until the engine is genuinely ready to watch it.** Adding it early means the engine bumps it and the crossing never happens. Adding it too late means the crossing happens unobserved. Both failures are silent, and both are unrecoverable within the sprint.
+| | Contract | Crossing | Role |
+|---|---|---|---|
+| **B** | `CCYGO7KQ…LTTQ` | **2026-09-20 ~12:00 UTC** | the plan |
+| **C** | `CCLW55OI…33FL` | **2026-09-25 ~12:00 UTC** | the spare |
 
-The ledger rate was measured, not assumed: exactly 5.000 s/ledger over a 100,000-ledger sample (17,280 ledgers/day).
+C was deployed 2026-09-05 as insurance: a single unrecoverable date protecting a never-cut proof is one point of failure. If the Sep 20 window is missed — deployment slips, the spike runs long, someone gets sick — C is still ahead of us with room before Oct 2. If Sep 20 works, C is documented as an unused spare and cost nothing. **C is not a reason to relax about Sep 19.**
+
+**The crossing is a window, not a timestamp.** The calibration assumes 5.000 s/ledger holds for ~16 days. A 0.5% deviation over 280,747 ledgers is ~1,400 ledgers ≈ 2 hours, and testnet close times are less regular than mainnet's. **Drift running early is the dangerous direction** — being live "by the projected date" is worthless if the crossing arrives six hours before it.
+
+So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice weekly, output pasted below**, exiting non-zero if anything drifts >6h early.
+
+### Drift log
+
+| Checked (UTC) | B crossing | drift | C crossing | drift |
+|---|---|---|---|---|
+| 2026-09-05 06:29 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+
+> ⚠️ **B and C can now sit in the engine config early** — calibrated against a threshold, the engine correctly does nothing until the crossing. But that safety depends on the configured threshold matching the calibration, so adding them is a deliberate verified step: add, run **dry-run**, confirm the engine reports **no action needed**, only then run live. A threshold accidentally too high bumps them immediately and destroys both proofs silently. Procedure in `docs/SETUP.md`.
 
 ## ✅ W1-D4-06 — the permissionless property is confirmed on testnet
 
@@ -130,6 +140,14 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — decay-proof mitigations (Claude)
+- **Guinea-pig C deployed and calibrated** to cross 2026-09-25, five days after B. One unrecoverable date protecting a never-cut proof was a single point of failure; now there are two shots.
+- **Found that B and C share one `ContractCode` ledger entry** — same Wasm, one entry. Extending it for one extends it for both, so it cannot be staggered. Pushed it to ~Oct 19, past the whole sprint, so each contract's crossing is driven only by its own instance and persistent entries. Recorded in the primer as domain knowledge: a scan reporting per-contract TTL without the shared code entry can show four healthy contracts whose common code expires tomorrow.
+- **Wrote `scripts/check-decay-drift.py`** and logged the first reading. The calibration is an assumption with a 16-day horizon, so it gets re-derived from live ledger state twice weekly rather than trusted.
+- **Sep 19 promoted to a milestone gate** in BACKLOG, and redefined so it does not depend on Friday's hosting decision — `W3-D18-00` adds a minimal GitHub Actions fallback runner. The proof needs the engine's logic running unattended somewhere, not the production platform. Side benefit: platform-independence becomes tested rather than assumed, which matters while Cloudflare's SDK compatibility is open.
+- **Relaxed the "keep B out of the config" rule into a verified procedure** — calibration makes early inclusion safe, but only if the configured threshold matches, so it is add → dry-run → confirm no-action → go live.
+- Storage optimizer (`W2-D12-01`) now cites the observed temporary-entry deletion with its date, and must report the shared code entry.
 
 ### 2026-09-05 — W1-D4-04c guinea-pig B calibration (Claude)
 - **Decay proof armed.** B deployed and calibrated with one manual extend; crossing projected 2026-09-20 ~12:00 UTC. Details above.
