@@ -32,6 +32,8 @@ import urllib.request
 RPC = "https://soroban-testnet.stellar.org"
 WASM_HASH = "c7e55f0ad89efb0600bc15048b155099fa4d97cee16466fa1244b3dcbce98bfb"
 THRESHOLD_LEDGERS = 17_280  # 24h, matches evergreen.config.example.json
+EARLY_FAIL_HOURS = 6  # early drift can make us miss a crossing entirely -> fail
+LATE_WARN_HOURS = 24  # late drift eats margin before Oct 2 -> warn, don't fail
 SECONDS_PER_LEDGER = 5.0  # measured 2026-09-05 over a 100,000-ledger sample
 
 # docs/SETUP.md is the source of truth for these ids.
@@ -71,7 +73,8 @@ def get_entries(keys: list[str]) -> dict:
 def main() -> int:
     now = datetime.datetime.now(datetime.UTC)
     print(f"decay-proof drift check — {now.strftime('%Y-%m-%d %H:%M')} UTC\n")
-    worst = None
+    worst = None   # most-early drift seen
+    latest = None  # most-late drift seen
 
     for label, (cid, expected) in CONTRACTS.items():
         keys = {
@@ -101,12 +104,26 @@ def main() -> int:
                 f"   drift {drift_h:+.1f}h vs plan{flag}"
             )
             worst = drift_h if worst is None or drift_h < worst else worst
+            latest = drift_h if latest is None or drift_h > latest else latest
         print()
 
-    if worst is not None and worst < -6:
-        print("⚠️  A crossing has drifted more than 6h EARLY. The engine must be live sooner")
-        print("    than planned. Update docs/STATUS.md and tell the team today.")
+    # Early drift is the dangerous direction: the engine can be live "by the
+    # projected date" and still miss a crossing that arrived six hours sooner.
+    if worst is not None and worst < -EARLY_FAIL_HOURS:
+        print(f"⚠️  A crossing has drifted more than {EARLY_FAIL_HOURS}h EARLY. The engine must be live")
+        print("    sooner than planned. Update docs/STATUS.md and tell the team today.")
         return 1
+
+    # Late drift is far less likely and needs a much bigger deviation, but it is
+    # not harmless: C's crossing is only ~7 days clear of the Oct 2 deadline, so
+    # a large late drift could push it out of the sprint entirely. Proportionate
+    # response is a visible warning, not a failure — the point is that it gets
+    # noticed now rather than on Sep 26.
+    if latest is not None and latest > LATE_WARN_HOURS:
+        print(f"⚠️  A crossing has drifted more than {LATE_WARN_HOURS}h LATE.")
+        print("    Check the margin against the Oct 2 deadline — C has the least room.")
+        print("    Not a failure, but do not let this go unread.")
+
     print("Paste this into docs/STATUS.md under the decay-proof section.")
     return 0
 

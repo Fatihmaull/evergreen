@@ -129,16 +129,20 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W2-D8-01** (F) TTL math module: remaining ledgers → projected archive ledger → projected archive **date** using network ledger-close cadence.
 - [ ] **W2-D8-02** (F) Unit tests incl. edge cases: already-archived entry, entry with no TTL, ledger close-time drift.
 - [ ] **W2-D8-03** (R) Scan all entry types for a contract (instance, code/wasm, persistent, temporary) — not just one; each has different archival behavior (see `docs/SOROBAN-PRIMER.md`).
+- [ ] **W2-D8-04** (R) **Deduplicate by ledger key.** Scanning N contracts that share a Wasm surfaces the same `ContractCode` entry N times. `ScanResult` must carry unique entries with the set of contracts each one serves — that set is what severity and reporting both need downstream.
 
 ### Day 9
 *Planned: Thu Sep 11 — may slip; the D-number does not.*
 - [ ] **W2-D9-01** (R) Rent/cost estimation model: what does extending N ledgers cost, per entry and per contract?
+  - **Sum per unique ledger key, never per contract.** Contracts sharing a Wasm share one `ContractCode` entry, so a per-contract sum charges it N times across a factory deployment — the headline cost estimate would be silently wrong for exactly the users who care most about cost. **Regression test with two contracts sharing a Wasm; B and C are that fixture.**
 - [ ] **W2-D9-02** (R) Validate the estimate against a real testnet transaction's actual fee — the model is worthless if it's off by an order of magnitude. Record the comparison.
 - [ ] **W2-D9-03** (F) Unit tests for the cost model with fixture inputs.
 
 ### Day 10
 *Planned: Fri Sep 12 — may slip; the D-number does not.*
 - [ ] **W2-D10-01** (F) CLI UX: `--json` vs human-readable output, colored TTL health states (healthy / warning / critical), `--help` that a stranger can follow.
+  - **Severity accounts for blast radius.** A shared code entry at 3 days is not one contract at 3 days, it is N contracts at 3 days. This changes what "critical" means and must be reflected in both the colour states and the exit code the Action depends on.
+  - **Say when an entry is shared** — *"this code entry is shared with 12 other contracts"*. A per-contract view that omits it is misleading by omission, and misleading in the confidently-green-before-total-outage direction.
 - [ ] **W2-D10-02** (F) Proper exit codes (0 healthy, non-zero when below threshold) — the GitHub Action in W4 depends on this.
 - [ ] **W2-D10-03** (F) Error handling: bad contract ID, RPC down, network mismatch, archived entry. Every failure gets a human-readable message, never a raw stack trace.
 
@@ -155,7 +159,8 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
   - **Cite the observed deletion, not a hypothetical.** We watched guinea-pig B's temporary entry get written at deploy and deleted ~57 minutes later on 2026-09-05. "We watched one go, here is the date" is more persuasive than "temporary entries are deleted."
   - **Report the shared code entry.** Contracts built from identical Wasm share one `ContractCode` entry (primer). A per-contract-only report can show four healthy contracts whose common code entry expires tomorrow.
   - **Use the measured floors** (`docs/SOROBAN-PRIMER.md`). They turn vague hygiene advice into a checkable warning: *"this data is in temporary storage and will be **deleted** — not archived — roughly an hour after creation unless extended"* is concrete and verifiable, where "consider your storage class" is not. The 688-vs-120,927 ledger gap is the sharpest thing the optimizer can say.
-- [ ] **W2-D12-02** (R) Run it against the guinea-pig contract + at least one third-party public testnet contract; sanity-check the advice isn't nonsense.
+- [ ] **W2-D12-02** (R) Run it against the guinea-pig contracts + third-party public testnet contracts; sanity-check the advice isn't nonsense.
+- [ ] **W2-D12-02b** (R) **Measure how often deployed contracts actually share a code entry.** Sample third-party testnet contracts and count distinct `ContractCode` entries against contract count. We are reasoning from how contracts are *usually* structured; find out instead. **Common** → shared-entry detection is a headline capability, it shapes the demo video, and it is a real differentiator for the standard-rent-tooling ambition. **Rare** → it stays a correctness requirement and a footnote. Either answer is useful and it costs part of an afternoon already budgeted.
 
 ### Day 13
 *Planned: Mon Sep 15 — may slip; the D-number does not.*
@@ -191,7 +196,8 @@ The old plan spent the riskiest week's first two days on a spike the whole deliv
 ### Day 16 · Bump execution
 *Planned: Thu Sep 18 — may slip; the D-number does not.*
 - [ ] **W3-D16-01** (R) Bump execution path behind the `Signer` interface, with retry + backoff. Stage 1 implementation = plain funded Ed25519 account holding only enough XLM to pay extend fees.
-- [ ] **W3-D16-02** (R) Idempotency: never double-bump the same entry in one cycle; handle an in-flight tx across overlapping scheduler runs. This is the correctness property ADR-001 accepted the risk on — it needs the atomic write from ADR-003, so it cannot be faked with a flat file.
+- [ ] **W3-D16-02** (R) Idempotency **across** runs: handle an in-flight tx when overlapping scheduler runs collide.
+- [ ] **W3-D16-02b** (R) Idempotency **within** a run: bump each unique ledger key exactly once. Distinct from the across-run case above and **not covered by it** — a single run over N contracts sharing a Wasm will otherwise try to bump one `ContractCode` entry N times. Test with B and C. This is the correctness property ADR-001 accepted the risk on — it needs the atomic write from ADR-003, so it cannot be faked with a flat file.
 - [ ] **W3-D16-03** (F) Persist `BumpRecord` history per the ADR-003 decision, including **payer** and **which signer produced it**.
 
 ### Day 17 · Notifications
@@ -249,7 +255,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### Day 23 · Dashboard — status and history
 *Planned: Thu Sep 25 — may slip; the D-number does not.*
-- [ ] **W4-D23-01** (F) Contract list view: TTL health, projected archive date, last bump.
+- [ ] **W4-D23-01** (F) Contract list view: TTL health, projected archive date, last bump. **Surface shared code entries** — a list showing N healthy contracts whose common code entry expires tomorrow is the exact failure this tool exists to prevent.
 - [ ] **W4-D23-02** (F) Bump history view reading real `BumpRecord` data from W3. For contracts this instance doesn't monitor, the section reads "not monitored by this instance" — it must not imply the contract is unprotected.
 - [ ] **W4-D23-03** (F) Empty states + error states (unknown contract, no history, RPC down).
 
@@ -281,7 +287,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### Day 28 · Demo + W4 review
 *Planned: Tue Sep 30 — may slip; the D-number does not.*
-- [ ] **W4-D28-01** (S) Demo video script (3–5 min): problem → scan → auto-bump saving a contract → dashboard → CI check.
+- [ ] **W4-D28-01** (S) Demo video script (3–5 min): problem → scan → auto-bump saving a contract → dashboard → CI check. **If `W2-D12-02b` finds code-entry sharing is common, lead with it**: *"your 40 vault contracts share one code entry that expires Thursday"* is a non-obvious operational trap, and non-obvious traps are what make tooling worth installing.
 - [ ] **W4-D28-02** (S) Record + edit; upload; put the link in `docs/EVIDENCE.md`.
 - [ ] **W4-D28-03** (S) **Week 4 review** + evidence snapshot #4.
 - **Milestone gate:** all three deliverables shipped and publicly reachable.

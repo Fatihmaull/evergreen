@@ -130,6 +130,15 @@ Reads from the same data the CLI/engine produce. `evergreen-check` GitHub Action
 - `evergreen-check` GitHub Action published and usable in a real repo. *(Deliverable 3)*
 - Docs + 3–5 min demo video + published npm packages. *(Deliverable 3)*
 
+### Candidate headline capability — pending measurement (`W2-D12-02b`)
+
+**Shared code-entry detection.** Contracts deployed from identical Wasm share a single `ContractCode` ledger entry (`docs/SOROBAN-PRIMER.md`). That is the factory pattern — per-user vaults, per-pair pools, per-market instances — so one entry expiring breaks every instance at once, while a per-contract scan reports them all healthy right up to the outage.
+
+Detecting and reporting that is already a **P0 correctness requirement** (it lands in the scan, the rent model, the severity model, and the engine's within-run dedupe). The open question is one of *positioning*, and it is being answered empirically rather than assumed: `W2-D12-02b` measures how often deployed testnet contracts actually share code entries.
+
+- **Common** → it is a headline capability and leads the demo. "Your 40 vault contracts share one code entry that expires Thursday" is the kind of non-obvious operational trap that makes tooling worth installing, and it serves the standard-rent-tooling ambition in §2 directly.
+- **Rare** → it stays a correctness requirement and a footnote.
+
 ### P1 (strongly desired, can slip a few days into follow-on if needed)
 - Dashboard wallet-connect + user-signed "extend now". The DX feature and the reason the write path exists at all; if it does not fit, it is the headline of SOW 2, which is a strong position. Spiked early at `W2-D13` so the Week 4 decision is cheap.
 - Storage optimizer recommendations (which entries are inefficient / costly).

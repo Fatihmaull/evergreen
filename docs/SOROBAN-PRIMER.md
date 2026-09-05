@@ -169,6 +169,16 @@ See [`ADR-002`](adr/ADR-002-policy-signer-provider.md) for the provider decision
 
 ## Contracts deployed from identical Wasm share ONE code entry
 
+> **This is the most consequential thing we found in Week 1, and it is a product requirement, not a fixture detail.** Read the whole section before writing anything that scans, prices, or prioritises entries.
+
+### It is the factory pattern, not an edge case
+
+Deploying N contracts from one Wasm is what protocols do at scale: per-user vaults, per-pair pools, per-market instances. Every one of those deployments shares a single `ContractCode` entry.
+
+So the failure mode is: **one entry expires and every instance breaks at the same moment.** And a naive per-contract scan reports each of those instances as healthy right up until they all die together, because each instance's own entries genuinely are fine.
+
+That is the worst possible shape for a monitoring tool — confidently green immediately before a total outage. We found it because two guinea-pigs happened to share a Wasm. A user finds it in production.
+
 **Observed 2026-09-05.** Guinea-pigs B and C were deployed separately, from the same compiled Wasm. They have different contract ids and their own instance and data entries — but they share a **single** `ContractCode` ledger entry, keyed by the Wasm hash.
 
 Consequences, all of which caught us:
@@ -177,6 +187,24 @@ Consequences, all of which caught us:
 - **A contract is only as alive as its code entry.** If the shared Wasm entry is archived, every contract deployed from it is unusable, regardless of how healthy its own instance and data entries look.
 - **A scan must report the code entry, and should say when it is shared.** Reporting per-contract TTL without it gives a false picture — a user could see four healthy contracts whose common code entry expires tomorrow.
 - Our fix for the guinea-pigs was to extend the shared code entry well past the whole sprint (to ledger 5,290,829, ~2026-10-19) so it drives neither crossing, leaving each contract's crossing governed by its own instance and persistent entries.
+
+### What this requires of Evergreen
+
+Four concrete requirements, each tracked in `BACKLOG.md`:
+
+1. **Deduplicate by ledger key, not by contract.** Scanning N contracts that share code surfaces the same entry N times. The engine must dedupe *before* deciding, or a single run tries to bump one entry N times. This is **within-run** idempotency and is a different concern from the across-run, overlapping-scheduler case — do not assume one task covers both.
+2. **The rent model must not double-count.** Summing per-contract costs across a factory deployment charges the shared code entry N times, so the CLI's headline cost estimate is silently wrong for exactly the users who care most about cost. Needs a test with two contracts sharing a Wasm — B and C are that fixture.
+3. **Severity must account for blast radius.** A shared code entry at 3 days is not one contract at 3 days; it is N contracts at 3 days. Whatever severity model the CLI and dashboard use has to reflect that a shared entry's expiry takes everything with it. This changes what "critical" means.
+4. **Reporting must make sharing visible.** A per-contract view that does not say *"this code entry is shared with 12 other contracts"* is misleading by omission. That belongs in CLI output and the dashboard, not only in the optimizer's advice.
+
+### How common is it? — measure, don't assume
+
+The reasoning above is from how contracts are usually structured, not from observation. `W2-D12-02` surveys deployed third-party testnet contracts to find out how often code entries are actually shared in the wild.
+
+- **Common** → this is a headline capability. *"Your 40 vault contracts share one code entry that expires Thursday"* is a non-obvious operational trap that makes tooling worth installing, and it belongs in the demo video rather than a footnote.
+- **Rare** → it stays a correctness requirement and a footnote.
+
+Either answer is useful, and it costs an afternoon already budgeted.
 
 ## Gotchas to design around
 

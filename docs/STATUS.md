@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: decay-proof mitigations — C, drift check, Sep 19 gate (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: shared code-entry finding propagated (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed, two shots (Sep 20 / Sep 25)** · 🔴 **hard gate Sep 19**
@@ -68,6 +68,25 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 15 | **`W1-D4-00` added: guinea-pig contract source.** Assigned to Fatih, not Rakha. | Work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract source existed, and `deploy-guinea-pig.sh` was a stub. Rakha's D4 was already five tasks; writing the boilerplate for him means his day starts on the TTL floors and the permissionless check. |
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
+
+## 🔎 Week 1's most consequential finding: contracts share code entries
+
+**Contracts deployed from identical Wasm share a single `ContractCode` ledger entry.** Found while staggering guinea-pigs B and C, which turned out to share one.
+
+**Why it is a product finding, not a fixture detail.** Deploying N contracts from one Wasm is the factory pattern — per-user vaults, per-pair pools, per-market instances. One entry expires and every instance breaks simultaneously, while a naive per-contract scan reports each as healthy right up to the moment they all die together. That is the worst possible shape for a monitoring tool: confidently green immediately before a total outage. We found it because two test contracts happened to share a Wasm; a user finds it in production.
+
+**Four requirements now tracked, not one footnote:**
+
+| Requirement | Where |
+|---|---|
+| Dedupe by ledger key; `ScanResult` carries which contracts each entry serves | `W2-D8-04` |
+| Rent summed per unique key — a per-contract sum charges a factory deployment N times | `W2-D9-01` |
+| Severity weighted by blast radius — a shared entry at 3 days is N contracts at 3 days | `W2-D10-01` |
+| Sharing visible in CLI output and dashboard, not just optimizer advice | `W2-D10-01`, `W4-D23-01` |
+
+Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from the across-run overlapping-scheduler case and not covered by it.
+
+**Positioning is being measured, not assumed** (`W2-D12-02b`): how often do deployed testnet contracts actually share code entries? Common → headline capability and it leads the demo video. Rare → correctness requirement and a footnote. Costs part of an afternoon already budgeted.
 
 ## 🔴 HARD DATE — Sep 19: the engine must be watching guinea-pig B
 
@@ -140,6 +159,13 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — shared code-entry finding propagated (Claude)
+- Took the shared `ContractCode` finding out of the primer footnote it was buried in and propagated it as a product requirement: PRD (candidate headline capability), ARCHITECTURE (ledger key is the unit of work, not the contract), core README, and six backlog tasks.
+- Added **within-run** idempotency as its own task rather than assuming the across-run task covered it. It does not: one run over N contracts sharing a Wasm would try to bump one entry N times.
+- The rent model double-count is the sharpest correctness consequence — a per-contract sum overcharges a factory deployment by N for exactly the users most sensitive to cost. Regression test uses B and C, which already share an entry.
+- **Positioning deferred to measurement** (`W2-D12-02b`) rather than asserted. We are reasoning from how contracts are usually structured; the survey settles whether this leads the demo or stays a footnote.
+- Drift check now warns on **late** drift (>24h) as well as failing on early (>6h). C has only ~7 days of margin before Oct 2, so a large late drift could push its crossing out of the sprint — proportionate response is a visible warning, not a failure, but not something to discover on Sep 26.
 
 ### 2026-09-05 — decay-proof mitigations (Claude)
 - **Guinea-pig C deployed and calibrated** to cross 2026-09-25, five days after B. One unrecoverable date protecting a never-cut proof was a single point of failure; now there are two shots.
