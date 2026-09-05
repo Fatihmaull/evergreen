@@ -33,16 +33,33 @@ Slack is not rest scheduled in advance — it is unassigned absorption capacity.
 
 ### Running account (updated as things land; formal report at `W1-D7-05`)
 
-**Slack consumed so far: 0 of 6.** But scope grew, which is the thing to watch:
+**Slack consumed so far: 0 of 6.** That number is true and nearly useless on its own — the real signal is what landed in days that were already full. And those additions are not one category.
 
-| Added mid-week | Why it wasn't in the plan |
+**Corrections — the estimate was wrong on Sep 4 and we found out on Sep 5. Not cuttable.**
+
+| Task | What it corrects |
 |---|---|
-| `W1-D4-00` guinea-pig contract | `W1-D4-04` said "deploy a contract" and none existed |
-| `W1-D4-07` guinea-pig C | one unrecoverable date protecting a never-cut proof was a single point of failure |
-| `W1-D4-08` / `W1-D4-09` drift script + recurring check | the calibration is a 16-day assumption, not a fact |
-| `W1-D4-10` shared-code propagation | a product requirement found while staggering B and C |
-| `W3-D18-00` fallback runner | decouples the Sep 19 gate from Friday's hosting decision |
-| `W2-D8-04`, `W2-D9-01`, `W2-D10-01`, `W2-D12-02b`, `W3-D16-02b`, `W4-D23-01` | consequences of the shared-entry finding, added to existing days |
+| `W2-D8-04` | dedupe by ledger key |
+| `W2-D9-01` | rent summed per unique key |
+| `W2-D10-01` | severity by blast radius |
+| `W3-D16-02b` | within-run dedupe |
+
+None of this is new scope. The rent model always needed to not double-count; the severity model was always wrong for shared entries. **Cutting any of it means shipping something that computes wrong answers**, so it is not a cut candidate — it is work that was always required and was mispriced. Discovering it on day 3 is the cheapest possible outcome.
+
+**Elective — genuinely optional, and both already neutralised.**
+
+| Task | Status |
+|---|---|
+| `F-01` sharing-prevalence research | moved out of Week 2 into *Floating tasks* — nothing depends on it |
+| `W4-D23-01` sharing visible in dashboard | sits in W4, cuttable without affecting correctness |
+
+**Pays for itself.**
+
+| Task | Why it earns its slot |
+|---|---|
+| `W3-D18-00` fallback runner | protects a never-cut proof *and* buys a viable production floor, which de-risks an open ADR |
+
+**Absorbed by running ahead (W1, already done):** `W1-D4-00` guinea-pig contract · `W1-D4-07` guinea-pig C · `W1-D4-08`/`09` drift script and recurring check · `W1-D4-10` shared-code propagation.
 
 **Sequence position is ahead, not behind:** on calendar day 3, Day 3 is complete and six of Day 4's tasks are done (`04`, `04b`, `04c`, `05`, `06`, plus the added `00`). Only `W1-D4-01/02/03` remain of Rakha's day.
 
@@ -157,7 +174,8 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W1-D7-01** (F) `evergreen scan <contract-id>` — thinnest possible end-to-end path: CLI → core → real testnet RPC → prints remaining TTL. No cost model yet, no pretty output.
 - [ ] **W1-D7-02** (F) Unit test for the TTL-remaining calculation using the recorded fixture.
 - [ ] **W1-D7-03** (S) **Week 1 review:** walk the W1 checklist, mark STATUS.md, screenshot the working scan (evidence snapshot #1).
-- [ ] **W1-D7-05** (S) **Slack accounting — report against the ledger, not against a feeling.** Real unplanned work was absorbed this week: the guinea-pig contract (`W1-D4-00`), guinea-pig C and its calibration (`W1-D4-07`), the drift script (`W1-D4-08`), the shared-code propagation (`W1-D4-10`), and two self-caught bugs. All of it was correct and most of it prevented something worse — but it came from somewhere. State explicitly: **how many of the six slack days are spent, what consumed each, and whether W2 still fits.** The ledger exists so this is a number rather than a feeling. **If W1 ran over, say so plainly** — the cut order exists and its first item (`W2-D13-03` batch scan) is cheap. An honest number now is worth more than an optimistic one on Sep 16.
+- [ ] **W1-D7-05** (S) **Slack accounting — report against the ledger, not against a feeling.** Real unplanned work was absorbed this week: the guinea-pig contract (`W1-D4-00`), guinea-pig C and its calibration (`W1-D4-07`), the drift script (`W1-D4-08`), the shared-code propagation (`W1-D4-10`), and two self-caught bugs. All of it was correct and most of it prevented something worse — but it came from somewhere. State explicitly: **how many of the six slack days are spent, what consumed each, and whether W2 still fits** — and report the additions by category rather than as one number. Four are **corrections** (a mispriced estimate found on day 3, not cuttable without shipping wrong answers), two are **elective** (both already neutralised), one **pays for itself**. "Six added tasks" reads as six units of avoidable growth; that is not the honest picture. The ledger exists so this is a number rather than a feeling. **If W1 ran over, say so plainly** — the cut order exists and its first item (`W2-D13-03` batch scan) is cheap. An honest number now is worth more than an optimistic one on Sep 16.
+- [ ] **W1-D7-06** (S) **Report Rakha's onboarding as a measured thing, not an impression.** His ramp is the one variable this week that nobody has checked empirically — everything else has been observed rather than assumed, which makes it conspicuous by contrast. He clones into a repo carrying an unusual amount of context, which *should* help; "should help" is a hypothesis, not a finding. Record concretely: **what he picked up unaided, where the docs failed him, what he had to ask.** If the context files work, that is worth knowing before Week 2 depends on them. If they don't, fixing the docs on Sep 9 is far cheaper than discovering the gap in Week 3 when he is building the engine alone.
 - [ ] **W1-D7-04** (S) Adjust W2–W4 tasks if W1 revealed anything (e.g. RPC quirks, tooling surprises). Record changes in STATUS.md.
 - **Milestone gate:** if `scan` doesn't return real testnet data by end of Sep 9, W2 starts with this task, and the first P1 item gets cut.
 
@@ -201,7 +219,6 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
   - **Report the shared code entry.** Contracts built from identical Wasm share one `ContractCode` entry (primer). A per-contract-only report can show four healthy contracts whose common code entry expires tomorrow.
   - **Use the measured floors** (`docs/SOROBAN-PRIMER.md`). They turn vague hygiene advice into a checkable warning: *"this data is in temporary storage and will be **deleted** — not archived — roughly an hour after creation unless extended"* is concrete and verifiable, where "consider your storage class" is not. The 688-vs-120,927 ledger gap is the sharpest thing the optimizer can say.
 - [ ] **W2-D12-02** (R) Run it against the guinea-pig contracts + third-party public testnet contracts; sanity-check the advice isn't nonsense.
-- [ ] **W2-D12-02b** (R) **Measure how often deployed contracts actually share a code entry.** Sample third-party testnet contracts and count distinct `ContractCode` entries against contract count. We are reasoning from how contracts are *usually* structured; find out instead. **Common** → shared-entry detection is a headline capability, it shapes the demo video, and it is a real differentiator for the standard-rent-tooling ambition. **Rare** → it stays a correctness requirement and a footnote. Either answer is useful and it costs part of an afternoon already budgeted.
 
 ### Day 13
 *Planned: Mon Sep 15 — may slip; the D-number does not.*
@@ -328,7 +345,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### Day 28 · Demo + W4 review
 *Planned: Tue Sep 30 — may slip; the D-number does not.*
-- [ ] **W4-D28-01** (S) Demo video script (3–5 min): problem → scan → auto-bump saving a contract → dashboard → CI check. **If `W2-D12-02b` finds code-entry sharing is common, lead with it**: *"your 40 vault contracts share one code entry that expires Thursday"* is a non-obvious operational trap, and non-obvious traps are what make tooling worth installing.
+- [ ] **W4-D28-01** (S) Demo video script (3–5 min): problem → scan → auto-bump saving a contract → dashboard → CI check. **If `F-01` finds code-entry sharing is common, lead with it** *(and if `F-01` never happens, lead with something else — it is not a blocker)*: *"your 40 vault contracts share one code entry that expires Thursday"* is a non-obvious operational trap, and non-obvious traps are what make tooling worth installing.
 - [ ] **W4-D28-02** (S) Record + edit; upload; put the link in `docs/EVIDENCE.md`.
 - [ ] **W4-D28-03** (S) **Week 4 review** + evidence snapshot #4.
 - **Milestone gate:** all three deliverables shipped and publicly reachable.
@@ -350,6 +367,14 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **B-D30-03** (S) Draft the SOW 2 candidate list (mainnet auto-bump, Telegram/webhook channels, always-on mode, custom policy contract if A/B fell short).
 
 ---
+
+## Floating tasks — no day, no dependency
+
+Work that belongs to no particular day because nothing is blocked by not having it. Do them on whichever day has room. **If no day has room, they don't happen** — that is the intended outcome, not a failure, and it is why they live here instead of occupying a slot in a week that is already full.
+
+- [ ] **F-01** (R) **Measure how often deployed contracts actually share a code entry.** Sample third-party testnet contracts and count distinct `ContractCode` entries against contract count. We are reasoning from how contracts are *usually* structured; find out instead.
+  - *Only consumer:* the demo video's framing at `W4-D28-01`. **Common** → shared-entry detection leads the demo and is a real differentiator for the standard-rent-tooling ambition. **Rare** → it stays a correctness requirement and a footnote. **Not knowing** → the demo leads with something else, which is fine.
+  - *Due:* any time before `W4-D28-01`. Originally filed as `W2-D12-02b`; moved out because nothing in Week 2 depends on it and leaving it there made it a cut decision later instead of a non-decision now.
 
 ## Cut order (when — not if — we run out of time)
 
