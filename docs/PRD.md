@@ -134,7 +134,9 @@ Reads from the same data the CLI/engine produce. `evergreen-check` GitHub Action
 
 **Shared code-entry detection.** Contracts deployed from identical Wasm share a single `ContractCode` ledger entry (`docs/SOROBAN-PRIMER.md`). That is the factory pattern — per-user vaults, per-pair pools, per-market instances — so one entry expiring breaks every instance at once, while a per-contract scan reports them all healthy right up to the outage.
 
-Detecting and reporting that is already a **P0 correctness requirement** (it lands in the scan, the rent model, the severity model, and the engine's within-run dedupe). The open question is one of *positioning*, and it is being answered empirically rather than assumed: `W2-D12-02b` measures how often deployed testnet contracts actually share code entries.
+Detecting and reporting that is already a **P0 correctness requirement** — it lands in the scan, the rent model, the severity model, and the engine's within-run dedupe, and none of it is optional because getting it wrong means computing wrong answers.
+
+The open question is only one of *positioning*, and it is answered empirically rather than assumed: **`F-01`** measures how often deployed testnet contracts actually share code entries. It is a *floating* task with no day and no dependents — if it never happens, the demo leads with something else.
 
 - **Common** → it is a headline capability and leads the demo. "Your 40 vault contracts share one code entry that expires Thursday" is the kind of non-obvious operational trap that makes tooling worth installing, and it serves the standard-rent-tooling ambition in §2 directly.
 - **Rare** → it stays a correctness requirement and a footnote.

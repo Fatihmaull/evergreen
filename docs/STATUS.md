@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: W1-D6 scope growth named, W1 slack accounting (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: ledger refined, F-01 floated, Rakha ramp added to the gate (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed, two shots (Sep 20 / Sep 25)** · 🔴 **hard gate Sep 19**
@@ -111,7 +111,7 @@ So Friday's decision has to be *reasonable*, not *right*. SDK runtime compatibil
 
 Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from the across-run overlapping-scheduler case and not covered by it.
 
-**Positioning is being measured, not assumed** (`W2-D12-02b`): how often do deployed testnet contracts actually share code entries? Common → headline capability and it leads the demo video. Rare → correctness requirement and a footnote. Costs part of an afternoon already budgeted.
+**Positioning is being measured, not assumed** (`F-01`, a *floating* task — no day, nothing depends on it): how often do deployed testnet contracts actually share code entries? Common → headline capability and it leads the demo video. Rare → correctness requirement and a footnote. Never done → the demo leads with something else, which is fine.
 
 ## 🔴 HARD DATE — Sep 19: the engine must be watching guinea-pig B
 
@@ -184,6 +184,12 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — ledger refined into three categories (Claude)
+- **"Six added tasks" was still the wrong unit.** Split it: **four corrections** (`W2-D8-04`, `W2-D9-01`, `W2-D10-01`, `W3-D16-02b`) — the rent model always needed to not double-count and the severity model was always wrong for shared entries, so these are a mispriced estimate found on day 3, **not cuttable without shipping wrong answers**; **two elective** (`F-01`, `W4-D23-01`); **one that pays for itself** (`W3-D18-00`, which protects a never-cut proof *and* buys a production floor).
+- **`W2-D12-02b` moved out of Week 2 entirely** and became **`F-01`** under a new *Floating tasks* section. Its only consumer is the demo video's framing; nothing in W2 depends on it, and leaving it there made it a cut decision in Week 2 rather than a non-decision now. If no day has room it simply doesn't happen and the demo leads with something else.
+- With `W4-D23-01` already sitting in a cuttable W4 slot, **both elective items are neutralised before Week 2 starts** — which is the entire point of doing this accounting on Sep 5 rather than Sep 16.
+- **Added `W1-D7-06`: report Rakha's ramp as a measured thing.** It is the one variable this week nobody has checked empirically, which is conspicuous given everything else was observed rather than assumed. He clones into a repo with an unusual amount of context; *"should help"* is a hypothesis. Record what he picked up unaided, where the docs failed him, what he had to ask — fixing the context files on Sep 9 is far cheaper than finding the gap in Week 3 when he is building the engine alone.
 
 ### 2026-09-05 — W1-D6 scope growth named; slack accounting opened (Claude)
 - **Named the silent growth on `W1-D6`.** Three findings have landed on `shared-types` since it was scoped Sep 4, with no change to its estimate. Written into the task itself, `packages/shared-types/README.md`, and above — so Monday's session sees it wherever it looks.
