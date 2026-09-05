@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: shared code-entry finding propagated (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: W1-D6 scope growth named, W1 slack accounting (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed, two shots (Sep 20 / Sep 25)** · 🔴 **hard gate Sep 19**
@@ -19,7 +19,7 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | 🟡 partly done | F/R | D4-00/04/04b/04c/05/06 ✅ · D4-01/02/03 remain (R) |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
-| Shared types & harness | ⬜ not started | R/F | W1-D6-01 → W1-D6-04 |
+| Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
@@ -68,6 +68,31 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 15 | **`W1-D4-00` added: guinea-pig contract source.** Assigned to Fatih, not Rakha. | Work discovered mid-week (hard rule 8): `W1-D4-04` said "deploy a guinea-pig contract" but no contract source existed, and `deploy-guinea-pig.sh` was a stub. Rakha's D4 was already five tasks; writing the boilerplate for him means his day starts on the TTL floors and the permissionless check. |
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
+
+## ⚠️ Monday (`W1-D6`) matters more than its position suggests
+
+`shared-types` was scoped on Sep 4 and has accumulated three findings since, with no change to its estimate:
+
+1. **`Signer` as an interface** — Stage 1 and Stage 2 drop-in (ADR-002 amendment).
+2. **`payer` distinct from contract, config as N contracts × M payers** — keeps the hosted direction open (ADR-004).
+3. **`ScanResult` keyed by ledger key, carrying which contracts each entry serves** — the shared-`ContractCode` finding.
+
+Naming the growth because the cost curve is steep: **an hour on Monday, a simultaneous refactor across CLI, engine and dashboard in Week 3.**
+
+**The third is a shape inversion, and it is the one to get right.** The instinctive model is contract-centric — a contract with its entries hanging off it — and that shape *structurally cannot* represent one entry serving twelve contracts without duplicating it. Which is exactly the bug we found on Sep 5.
+
+The primary collection must be keyed by ledger key, with the contracts it serves as a property of the entry. Contracts are the input to a scan and a back-reference on the output.
+
+> **Acceptance check, to be answered explicitly here before `W1-D6-01` is marked done:**
+> *Can this shape represent one ledger entry serving N contracts, exactly once?*
+
+Get it wrong and the rent double-count, the severity error, and the dedupe bug are all inherited downstream — then found and fixed separately, late.
+
+## 📉 Friday's hosting decision is lower-stakes than when it was written
+
+`W3-D18-00` gives us the real engine code running on a GitHub Actions cron. That is not only a fallback for the Sep 19 gate — it is a **proven floor**. Actions cron plus a hosted database is a viable production answer, not an emergency one.
+
+So Friday's decision has to be *reasonable*, not *right*. SDK runtime compatibility stays the first filter — a platform the SDK cannot run on fails before cost or ergonomics matter — but it is **timeboxed to one afternoon**. If Cloudflare's `nodejs_compat` story for the Stellar SDK is not settled by then, that ambiguity *is* the answer for a 24-day sprint: take Railway for the plain Node runtime, or defer and let the Actions runner carry it.
 
 ## 🔎 Week 1's most consequential finding: contracts share code entries
 
@@ -159,6 +184,12 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — W1-D6 scope growth named; slack accounting opened (Claude)
+- **Named the silent growth on `W1-D6`.** Three findings have landed on `shared-types` since it was scoped Sep 4, with no change to its estimate. Written into the task itself, `packages/shared-types/README.md`, and above — so Monday's session sees it wherever it looks.
+- **The `ScanResult` shape inversion is the acceptance criterion**, not a suggestion: the primary collection is keyed by ledger key, contracts are a property of the entry. The explicit check — *can this shape represent one entry serving N contracts, exactly once?* — must be answered in writing here before `W1-D6-01` closes.
+- **Friday downgraded from load-bearing to reasonable.** `W3-D18-00` turned GitHub Actions cron from a fallback into a proven floor, so the hosting decision no longer sits on the critical path. SDK compatibility remains the first filter, timeboxed to an afternoon; unresolved ambiguity *is* the answer.
+- **Opened the slack accounting** in `BACKLOG.md` with a running table, and added `W1-D7-05` to report it formally at the W1 gate. Current honest read: **0 of 6 slack days consumed, sequence position ahead** (day 3 complete plus six of day 4's tasks on calendar day 3) — **but scope grew by ~5 task IDs in W1 and ~6 in W2–W4**, and the W2–W4 additions land in days that were already full. That is where the pressure will show, and `W1-D7-05` is where it gets a number rather than a feeling.
 
 ### 2026-09-05 — shared code-entry finding propagated (Claude)
 - Took the shared `ContractCode` finding out of the primer footnote it was buried in and propagated it as a product requirement: PRD (candidate headline capability), ARCHITECTURE (ledger key is the unit of work, not the contract), core README, and six backlog tasks.

@@ -31,6 +31,23 @@ Slack is not rest scheduled in advance — it is unassigned absorption capacity.
 
 **W1 carries no slack** — it is already 5 build days for 5 day-blocks with 2 days spent on planning. A W1 slip consumes W2's slack immediately.
 
+### Running account (updated as things land; formal report at `W1-D7-05`)
+
+**Slack consumed so far: 0 of 6.** But scope grew, which is the thing to watch:
+
+| Added mid-week | Why it wasn't in the plan |
+|---|---|
+| `W1-D4-00` guinea-pig contract | `W1-D4-04` said "deploy a contract" and none existed |
+| `W1-D4-07` guinea-pig C | one unrecoverable date protecting a never-cut proof was a single point of failure |
+| `W1-D4-08` / `W1-D4-09` drift script + recurring check | the calibration is a 16-day assumption, not a fact |
+| `W1-D4-10` shared-code propagation | a product requirement found while staggering B and C |
+| `W3-D18-00` fallback runner | decouples the Sep 19 gate from Friday's hosting decision |
+| `W2-D8-04`, `W2-D9-01`, `W2-D10-01`, `W2-D12-02b`, `W3-D16-02b`, `W4-D23-01` | consequences of the shared-entry finding, added to existing days |
+
+**Sequence position is ahead, not behind:** on calendar day 3, Day 3 is complete and six of Day 4's tasks are done (`04`, `04b`, `04c`, `05`, `06`, plus the added `00`). Only `W1-D4-01/02/03` remain of Rakha's day.
+
+**But scope grew by ~5 task IDs in W1 and ~6 in W2–W4**, and the W2–W4 additions land in days that were already full. That is where the pressure shows up, not here. `W1-D7-05` is where it gets a number.
+
 **Sequencing rule:** anything producing never-cut evidence moves as early as it can go; anything that is polish moves as late as it can go. The Week 3 two-stage split and the `W2-D13` wallet spike are both applications of this rule — look for more.
 
 **Legend:** `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped (must say why in STATUS.md)
@@ -98,12 +115,35 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W1-D5-01** (F) Reserve the npm scope/package names (`evergreen` CLI + core). Confirm availability *now*, not in Week 4.
 - [ ] **W1-D5-02** (F) Dashboard hosting account + empty project deployed (Vercel/Netlify/Cloudflare — pick one, record in ADR-003). A "hello world" deploy must be live by end of day.
 - [ ] **W1-D5-03** (R) Scheduler platform decided and a trivial cron job running end-to-end (GitHub Actions cron vs Cloudflare Workers cron — see ADR-001). Prove it can run on schedule and log output before we trust it with bumps.
+  - **Run SDK runtime compatibility as the first filter.** A platform the Stellar SDK cannot run on fails before cost or ergonomics matter. **Timebox it to one afternoon**: if Cloudflare Workers' `nodejs_compat` story for the SDK is not settled by then, *that ambiguity is the answer* for a 24-day sprint — take Railway for the plain Node runtime and move on.
+  - **This decision is lower-stakes than when it was written.** `W3-D18-00` gives us a GitHub Actions cron running the real engine code, which is not only a fallback — it is a **proven floor**. Actions cron plus a hosted database is a viable production answer, not an emergency one. Friday's decision has to be *reasonable*, not *right*; it is no longer the only path to a working engine. Deferring is also legitimate: let the Actions runner carry the load and decide later with more information.
 - [ ] **W1-D5-04** (R) Email provider account (Resend/SendGrid/etc.) + a test email successfully sent from code in the sandbox.
 - [ ] **W1-D5-05** (F) Secrets handling: where do prod-ish secrets live (GitHub Actions secrets / hosting env vars)? Document the rule in `docs/CONVENTIONS.md`. **No secret ever enters git, a doc, or a chat log.**
 - [ ] **W1-D5-06** (S) Create the shared evidence folder (cloud drive) referenced by `docs/EVIDENCE.md`, for screenshots and video.
 - **Done when:** every external dependency the next 3 weeks need is authenticated and smoke-tested.
 
 ### Day 6 · Contracts-first design
+> ### ⚠️ This day has grown since it was written, and its estimate has not
+>
+> `shared-types` was scoped on Sep 4. Three findings have landed on it since, none of which were in the original task:
+>
+> 1. **`Signer` as an interface** so Stage 1 (plain funded account) and Stage 2 (policy signer) are drop-in — from the ADR-002 amendment.
+> 2. **`payer` distinct from contract, and an N-contracts × M-payers config shape** — from ADR-004, to keep the hosted direction open without building it.
+> 3. **`ScanResult` keyed by ledger key, carrying which contracts each entry serves** — from the shared-`ContractCode` finding.
+>
+> Naming the growth out loud because the cost curve is steep: **an hour on Monday, a simultaneous refactor across CLI, engine and dashboard in Week 3.** CLAUDE.md already says not to churn `shared-types` mid-week; this is why.
+>
+> ### The third one is a shape inversion — get it right or inherit three bugs
+>
+> The model anyone writes by instinct is **contract-centric**: a contract, with its entries hanging off it. That shape *structurally cannot* represent one ledger entry serving twelve contracts without duplicating it — which is precisely the bug we found on Sep 5.
+>
+> The primary collection must be **keyed by ledger key**, with the contracts it serves as a property of the entry. Contracts are the *input* to a scan and a back-reference on the output, not the thing the result is organised around.
+>
+> **Acceptance check before this task is marked done — answer it explicitly, in writing, in STATUS:**
+>
+> > *Can this shape represent one ledger entry serving N contracts, exactly once?*
+>
+> If `ScanResult` comes out of Monday organised by contract, everything downstream inherits the rent double-count (`W2-D9-01`), the severity error (`W2-D10-01`), and the dedupe bug (`W2-D8-04`, `W3-D16-02b`) — and each gets found and fixed separately, late.
 *Planned: Mon Sep 8 — may slip; the D-number does not.*
 - [ ] **W1-D6-01** (R) Define shared TypeScript types in `packages/shared-types`: `ContractRef`, `LedgerEntryTTL`, `ScanResult`, `RentEstimate`, `BumpDecision`, `BumpRecord`, `NotificationChannel`, `EvergreenConfig`, `Signer`. These are the seams every later task codes against — and per CLAUDE.md they must not churn mid-week, so get them right today.
 - [ ] **W1-D6-01b** (R) Honour the three ADR-004 shape constraints, all cheap now and expensive later: `BumpRecord` carries **payer** as a field distinct from the contract (and which signer produced it); `EvergreenConfig` expresses **N contracts × M payers**, not one global bot; `Signer` is an **interface** resolved per payer, so Stage 1 (plain funded account) and Stage 2 (policy signer) are drop-in. v1 implements no multi-tenancy — it must only avoid foreclosing it.
@@ -117,6 +157,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [ ] **W1-D7-01** (F) `evergreen scan <contract-id>` — thinnest possible end-to-end path: CLI → core → real testnet RPC → prints remaining TTL. No cost model yet, no pretty output.
 - [ ] **W1-D7-02** (F) Unit test for the TTL-remaining calculation using the recorded fixture.
 - [ ] **W1-D7-03** (S) **Week 1 review:** walk the W1 checklist, mark STATUS.md, screenshot the working scan (evidence snapshot #1).
+- [ ] **W1-D7-05** (S) **Slack accounting — report against the ledger, not against a feeling.** Real unplanned work was absorbed this week: the guinea-pig contract (`W1-D4-00`), guinea-pig C and its calibration (`W1-D4-07`), the drift script (`W1-D4-08`), the shared-code propagation (`W1-D4-10`), and two self-caught bugs. All of it was correct and most of it prevented something worse — but it came from somewhere. State explicitly: **how many of the six slack days are spent, what consumed each, and whether W2 still fits.** The ledger exists so this is a number rather than a feeling. **If W1 ran over, say so plainly** — the cut order exists and its first item (`W2-D13-03` batch scan) is cheap. An honest number now is worth more than an optimistic one on Sep 16.
 - [ ] **W1-D7-04** (S) Adjust W2–W4 tasks if W1 revealed anything (e.g. RPC quirks, tooling surprises). Record changes in STATUS.md.
 - **Milestone gate:** if `scan` doesn't return real testnet data by end of Sep 9, W2 starts with this task, and the first P1 item gets cut.
 
