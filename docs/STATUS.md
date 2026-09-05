@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: dual-channel sync installed and exercised (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: sync workflow corrections installed (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -119,6 +119,8 @@ Evergreen is now tracked in two places. **The repo is canonical; Notion is a mir
 
 Workflow is in `CLAUDE.md` § Dual-channel sync; the status vocabulary is in `docs/CONVENTIONS.md`. Sync happens at boundaries only — session start, session end, PR merge — never per commit.
 
+**The board is agent-write / human-read.** Fatih has posted that rule at the top of the Project Brain page, addressed to both humans by name: ticking a box there will be silently reverted, task state changes go through the repo, and prose in the Knowledge Base and Decisions pages is theirs to write freely — nothing syncs over that. Noted here because the rule only holds while it is visible *where a person is standing when they are tempted*, and `CLAUDE.md` is read by agents, not by Rakha.
+
 ### Sync anomaly log
 
 Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two in one week means the workflow itself is suspect.**
@@ -128,9 +130,13 @@ Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two 
 | 2026-09-05 | `W1-D4-04d` → `W1-D4-07` | **ID divergence, not a false claim.** Notion had guinea-pig C as `W1-D4-04d` (following the 04b/04c pattern); the repo calls it `W1-D4-07`. Same work, genuinely done, two identifiers. | Notion renamed to `W1-D4-07`. Repo canonical. **This is the more dangerous failure than a wrong status** — the ID is the join key, so a divergent ID silently breaks every future sync on that row rather than showing up as a visible mismatch. |
 | 2026-09-05 | `W1-D4-09` | Notion "In progress", repo `[ ]`. | **The repo was wrong, not Notion.** The drift check has started and runs until Sep 20. Repo corrected to `[~]`, and `CONVENTIONS` now states that recurring work is `[~]`. *Repo-canonical means the repo is where truth is authored — not that it is always right. When the mirror reveals a repo error, fix the repo, then sync.* |
 
-### Repo defect found by the same validation
+### The workflow's first catch — the other side of the cost ledger
 
-`W1-D4-10` shipped in PR #7's title and commit subject but had **no checkbox row in `BACKLOG.md`** — only prose mentions. A task ID used in shipped work with no task registered against it. Added retroactively. Found because Notion had no row to match, which is exactly the kind of gap a second surface catches and a single surface does not.
+`W1-D4-10` shipped in PR #7's title and commit subject but had **no checkbox row in `BACKLOG.md`** — only prose mentions. A task ID used in shipped work with nothing registered against it: a quiet violation of hard rule 8, committed by the agent that wrote the rule down.
+
+**It was found only because Notion had no row to match.** No amount of reading `BACKLOG.md` would have surfaced it, because the file was internally consistent — the gap was invisible from inside. That is precisely the one job a second surface exists to do: catch what a single source cannot see about itself.
+
+Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes per session** of wall clock, plus roughly **35k tokens** of Notion tool schemas loaded per session — a context cost, not a time cost, and the one more likely to bite. On day one it returned one repo defect, one ID divergence, and one repo error the mirror was right about. Both sides of that ledger get reported at the `W1-D7-05` gate, not just the pleasant one.
 
 ## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
 
@@ -222,6 +228,13 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — sync workflow corrections installed (Fatih + Claude)
+- **The discrepancy rule had a narrow-case error and it is now fixed in `CLAUDE.md`.** "Correct Notion to match the repo" would have degraded the mirror for `W1-D4-09`, where Notion was right and the repo was wrong. Installed the clarification: *repo-canonical means the repo is where truth is authored, not that it is always right; when the mirror reveals a repo error, fix repo-first-then-sync.* Rules that are wrong in a narrow case get followed, which makes them more dangerous than obviously wrong ones.
+- **Escalation broadened** from "Notion claimed a completion" to *"Notion asserts something the repo does not support"* — covering wrong status, phantom row, and divergent ID in one sentence rather than naming only the imagined failure mode. The actual finding was none of the three originally described.
+- **Two rules against ID divergence:** row IDs come from `BACKLOG.md` and are never inferred from a naming pattern; and the session-start diff reports presence/absence, not only status disagreement. A divergent ID does not fail — it silently stops matching, so the row that most needed checking is the one no longer checked.
+- **The `userDefined:ID` SQL trap** is in `CONVENTIONS` now, not only in the workflow section: `SELECT ID` returns page UUIDs rather than task IDs and does not error. Same family as the testnet guard and the weaker-than-CI local gate — a check that fails in the safe-looking direction.
+- Recorded the workflow's first catch alongside its cost, so the `W1-D7-05` gate reports both sides.
 
 ### 2026-09-05 — dual-channel sync installed and exercised (Fatih + Claude)
 - **Notion MCP was already connected** via claude.ai connectors at `https://mcp.notion.com/mcp`. Running the `claude mcp add` from the brief would have created a duplicate server; checked before acting.

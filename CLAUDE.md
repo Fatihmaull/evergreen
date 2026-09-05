@@ -40,9 +40,14 @@ Match task rows by the `ID` property (`userDefined:ID`), never by title.
 
 1. Read the repo first, always: `docs/STATUS.md`, then `BACKLOG.md`, then open PRs, open Issues, and any comments or mentions addressed to you.
 2. **Then validate Notion against it.** Compare the task rows you are about to touch against their repo state.
+   **Diff on presence, not only on status.** Report rows present in one channel and absent in the other, as well as rows whose status disagrees. A divergent ID looks exactly like that — a phantom on one side, a missing row on the other — and a status-only diff will read green while the row it should have caught has silently fallen out of scope.
 3. Resolve any discrepancy **before writing code**:
-   - **Notion ahead of repo** (Notion Done, repo not) → treat as a false completion claim. Correct Notion to match the repo, and log it in `docs/STATUS.md` as a sync anomaly with the date and task ID. If this happens twice, say the workflow itself is suspect.
+   - **Notion asserts something the repo does not support** → escalate. This covers a wrong status, a phantom row, and a divergent ID alike; do not narrow it to "claimed a completion." Correct Notion to match the repo, and log it in `docs/STATUS.md` as a sync anomaly with the date and task ID. If this happens twice, say the workflow itself is suspect.
    - **Repo ahead of Notion** → a missed write. Correct Notion. No escalation needed.
+
+   > **Repo-canonical means the repo is where truth is *authored*, not that it is always right. When the mirror reveals a repo error, the fix is repo-first-then-sync — not mirror-ward.**
+   >
+   > This exception is load-bearing. A recurring task left `[ ]` in the repo while Notion correctly says `In progress` is a *repo* error: mechanically "correcting" Notion would degrade the mirror while feeling like enforcement. Rules that are wrong in a narrow case are more dangerous than rules that are obviously wrong, because they get followed. Ask which channel is *right* before asking which is canonical.
 4. Only after the two agree, mark your task `[~]` / `In progress` in both, and start.
 
 Never skip step 2 because the task looks obvious. The validation exists to catch the case where a previous session recorded work it did not do.
@@ -62,6 +67,8 @@ Update the Notion row(s) for every task ID in that PR: `Status`, plus a one-line
 
 1. Repo: flip the `BACKLOG.md` checkbox, update `docs/STATUS.md`, record any evidence in `docs/EVIDENCE.md`.
 2. Notion: set `Status` on every task touched, and write the outcome into `Notes` — what happened, not just that something happened. Link the PR or Issue.
+
+   > **When creating a Notion row, take the ID from `BACKLOG.md`. Never infer it from a naming pattern.** Guessing `W1-D4-04d` because `04b` and `04c` exist is how the join key diverges — and a divergent ID does not fail, it silently stops matching. The row falls out of every future diff while the diff still reads green. The repo registers the ID first; Notion copies it.
 3. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
 4. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
 
