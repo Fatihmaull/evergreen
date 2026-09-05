@@ -40,6 +40,8 @@ Documented here, values only in your local `.env` / platform secret store.
 |---|---|---|---|
 | Fatih dev | *(W1-D4-02)* | friendbot | F |
 | Rakha dev | *(W1-D4-02)* | friendbot | R |
+| `evergreen-a` — W1-D4-06 deployer | `GBRGOJUAPPDR7YWM4GOGV3YLSCPWDW4KJZVL4R2LRG7HFIYCY5ODMWLZ` | friendbot | F |
+| `evergreen-b` — W1-D4-06 extender | `GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE` | friendbot | F |
 | Bot signer (Stage 1, plain funded) | *(W1-D4-02)* | friendbot | R |
 | Policy signer (Stage 2, hardened) | *(W3-D19)* | friendbot | R |
 
@@ -55,10 +57,13 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 
 | Field | Value |
 |---|---|
-| Contract ID | *(W1-D4-04)* |
-| Deployed | *(date)* |
-| Initial TTL | *(ledgers)* |
-| Redeploy script | `scripts/deploy-guinea-pig.sh` *(W1-D4-04)* |
+| Contract ID | `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` |
+| Deployed | 2026-09-05, by account A (`GBRGOJUA…MWLZ`) |
+| Initial TTL | instance/code/persistent ≈ 120,927 ledgers · temporary 688 ledgers |
+| Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 |
+| Redeploy script | `./scripts/deploy-guinea-pig.sh A` |
+
+> Deployed during `W1-D4-06` and already used for the permissionless verification, so its TTL has been extended once. That is fine — A is the working subject and is expected to be bumped, broken, and redeployed.
 
 ### B — the natural-decay subject ⚠️
 
@@ -66,10 +71,23 @@ Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on i
 
 | Field | Value |
 |---|---|
-| Contract ID | *(W1-D4-04c)* |
-| Deployed | *(date — early, on purpose)* |
-| Initial TTL | *(ledgers)* |
-| Expected threshold-crossing | *(estimate from the measured floor)* |
+| Contract ID | *(not yet deployed — timing decision open, see below)* |
+| Deployed | *(pending)* |
+| Initial TTL | *(pending)* |
+| Expected threshold-crossing | *(pending)* |
+
+> ### ⚠️ B's deploy date is now a real decision, not a rote task
+>
+> The measured floors (`W1-D4-04b`) changed this. A fresh persistent entry gets **≈120,928 ledgers ≈ 7 days**. So a B deployed on **Sep 5 archives around Sep 12** — roughly **eight days before** `W3-D18-02b`, the proof it exists for. Deploying it "early so it ages" was the right instinct against the wrong number: it would age straight past the window and be archived before the engine ever watched it.
+>
+> Two ways to fix it, both sound:
+>
+> 1. **Deploy B around Sep 12–13** and let the 7-day floor land the crossing near Sep 19–20. Purest version — zero intervention. Cost: a task that must happen on a specific future day, in a sprint that already has slack days that move things.
+> 2. **Deploy B now and extend it once, deliberately, to place the crossing in the Sep 19–21 window.** Then leave it strictly alone. B exists and is recorded today, and nothing has to be remembered later.
+>
+> Option 2 does not weaken the claim. The proof is *"TTL fell below threshold with nobody intervening, and the engine saved it unattended"* — every contract has some initial TTL, and choosing it is not intervening in the decay. The evidence would show one calibrating extend on the deploy date and then untouched decay.
+>
+> **Unresolved — pick before Rakha runs `W1-D4-04c`.**
 
 > ### ⚠️ Guinea-pig B must stay OUT of the engine's watched-contract config
 >
@@ -80,6 +98,8 @@ Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on i
 ### Building and deploying them
 
 Both are deployed from the same source in [`contracts/guinea-pig`](../contracts/guinea-pig) (`W1-D4-00`).
+
+The testnet guard in the deploy script is **deliberate friction.** It compares the live RPC's network id against testnet's — which is the SHA-256 of the network passphrase — so it verifies the endpoint the deploy actually goes through rather than trusting a local alias named "testnet". When mainnet eventually becomes in scope for SOW 2, changing this must be a conscious, reviewed act with its own ADR. It is not a convenience edit, and it should never be relaxed to make a script run.
 
 ```bash
 rustup target add wasm32v1-none                               # once
