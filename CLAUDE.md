@@ -23,6 +23,69 @@ This is a funded 30-day grant engagement (Stellar Instawards, $4,800). **Deadlin
 
 If STATUS.md and BACKLOG.md disagree, STATUS.md is the more recent truth. Fix the disagreement before starting work.
 
+## Dual-channel sync — repo canonical, Notion mirrored
+
+Evergreen is tracked in two places. **The repo is canonical. Notion is a mirror.** Truth flows repo → Notion, never the reverse. Only agents write to Notion; Fatih and Rakha read it.
+
+**Notion objects:**
+- Project Brain (hub): `3d2e2030-b2ce-815d-ad98-cc01cf6109df`
+- Evergreen Tasks database: `9aa56f2512b648fca04a8a0e21c727fa`
+- Tasks data source (writes): `collection://3e078dc6-0805-4b11-b970-6d544fa4a98c`
+- Knowledge Base: `3d2e2030-b2ce-811c-bdeb-c6ca652a0d6c`
+- Decisions: `3d2e2030-b2ce-813e-8976-c11ea5dc6c29`
+
+Match task rows by the `ID` property (`userDefined:ID`), never by title.
+
+### A. Session start — read, then validate, then work
+
+1. Read the repo first, always: `docs/STATUS.md`, then `BACKLOG.md`, then open PRs, open Issues, and any comments or mentions addressed to you.
+2. **Then validate Notion against it.** Compare the task rows you are about to touch against their repo state.
+3. Resolve any discrepancy **before writing code**:
+   - **Notion ahead of repo** (Notion Done, repo not) → treat as a false completion claim. Correct Notion to match the repo, and log it in `docs/STATUS.md` as a sync anomaly with the date and task ID. If this happens twice, say the workflow itself is suspect.
+   - **Repo ahead of Notion** → a missed write. Correct Notion. No escalation needed.
+4. Only after the two agree, mark your task `[~]` / `In progress` in both, and start.
+
+Never skip step 2 because the task looks obvious. The validation exists to catch the case where a previous session recorded work it did not do.
+
+### B. During work
+
+- Commit and PR as normal, with the task ID in the branch and commit subject.
+- **Do not sync Notion on every commit.** The mirror updates at boundaries only.
+- If you hit a blocker: mark `[!]` / `Blocked` in both, and **open a GitHub Issue** — title carries the task ID, body states what is blocked, what was tried, and what would unblock it. Put the issue link in the Notion row's `Notes`.
+- If you discover work that is not in the backlog: **open a GitHub Issue**, add it to `BACKLOG.md` with a new frozen ID, and create the matching Notion row. Never absorb undocumented work silently — that is hard rule 8.
+
+### C. On PR merge
+
+Update the Notion row(s) for every task ID in that PR: `Status`, plus a one-line outcome in `Notes`. If the PR closed an Issue, note that too.
+
+### D. Session end — write both channels
+
+1. Repo: flip the `BACKLOG.md` checkbox, update `docs/STATUS.md`, record any evidence in `docs/EVIDENCE.md`.
+2. Notion: set `Status` on every task touched, and write the outcome into `Notes` — what happened, not just that something happened. Link the PR or Issue.
+3. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
+4. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
+
+### E. Status vocabulary — identical meaning in both channels
+
+| `BACKLOG.md` | Notion `Status` | Means |
+| --- | --- | --- |
+| `[ ]` | Pending | Not started |
+| `[~]` | In progress | Started, not finished |
+| `[x]` | Done | Full definition of done: works against testnet, unit tests with fixtures, `pnpm check` green, docs updated, evidence recorded |
+| `[!]` | Blocked | Cannot proceed. Requires an open Issue |
+| `[-]` | Dropped | Cut. Reason required in `Notes` and `STATUS.md` |
+
+**"Done" never means "code written."** If the definition of done is not fully met, it is `In progress`. Fatih and Rakha trust Notion's "Done" without checking, so it must never overstate.
+
+### F. When Notion is unreachable
+
+Do the work anyway. Record everything in the repo, and note the pending sync in `docs/STATUS.md` so the next session catches up. The repo is canonical precisely so the mirror can fail without stopping anything. Never block work on the mirror.
+
+### G. Cost guard
+
+If keeping the mirror current starts costing meaningful time in a 24-effective-day sprint, that is a design failure, not a cost to absorb. Say so rather than quietly working around it.
+
+
 ## Hard rules — these are not suggestions
 
 1. **Testnet only.** Never target mainnet, never use a key that controls real funds. Mainnet is explicitly out of scope for this grant (PRD §3). If a task seems to require mainnet, stop and ask.

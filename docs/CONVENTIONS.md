@@ -30,6 +30,24 @@ Commits made before 2026-09-05 carry the old trailer. They stay as they are: thr
 
 **PRs:** one task (or one tight cluster) per PR. Title = commit subject. Body must state: what changed, how it was verified, and any evidence captured. CI must be green before merge. `main` is protected — no direct pushes.
 
+## Task status — one meaning in both channels
+
+Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLOG.md` checkbox and the Notion `Status` select must mean **exactly** the same thing, or they will agree syntactically while diverging semantically.
+
+| `BACKLOG.md` | Notion `Status` | Means |
+|---|---|---|
+| `[ ]` | Pending | Not started |
+| `[~]` | In progress | Started, not finished |
+| `[x]` | Done | Full definition of done: works against testnet, unit tests with fixtures, `pnpm check` green, docs updated, evidence recorded |
+| `[!]` | Blocked | Cannot proceed. Requires an open Issue |
+| `[-]` | Dropped | Cut. Reason required in `Notes` and `STATUS.md` |
+
+**"Done" never means "code written."** If the definition of done is not fully met, it is `In progress`. Fatih and Rakha trust Notion's "Done" without checking, so it must never overstate.
+
+**Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
+
+Full workflow, including the session-start validation and the discrepancy rules, is in [`CLAUDE.md`](../CLAUDE.md) § Dual-channel sync.
+
 ## TypeScript
 
 - Strict mode on, everywhere. No `any` without a comment explaining why.
