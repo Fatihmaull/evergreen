@@ -14,6 +14,20 @@ remainingLedgers = liveUntilLedgerSeq - currentLedgerSeq
 
 Every ledger that closes decrements the remaining TTL by one. Ledgers close roughly every 5–6 seconds, so converting to wall-clock is an *estimate*, not a guarantee. Always compute in ledgers internally and convert to dates only for display.
 
+> ### ⚠️ OPEN: the boundary convention is not yet verified
+>
+> The formula above leaves one thing undefined, and it is the entire arithmetic content of `W2-D8-01`:
+>
+> - Is an entry **live at** `liveUntilLedgerSeq`, or is that the first ledger at which it is gone?
+> - Is `remainingLedgers` therefore `liveUntil − latest`, or `liveUntil − latest + 1`?
+> - Is an entry with `remainingLedgers === 0` alive or archived?
+>
+> **Do not guess this** (hard rule 3). It is the perfect silent-wrong-answer bug: whichever convention you pick, every test you write will agree with it, and the error only surfaces as an off-by-one in a projected archive date — or as a bump fired one ledger too late.
+>
+> **Resolve it at `W2-D8-01`** against the official Stellar docs, and confirm empirically: we have live contracts with known values, and a temporary entry expires in ~57 minutes, which is a fast enough cycle to observe the boundary directly rather than reason about it. Record the answer here with the observation that settled it.
+>
+> *Found 2026-09-05 by a fresh-eyes onboarding test — an agent trying to write the TTL math discovered the primer never says.*
+
 ## Rent
 
 Contracts prepay **rent** in XLM to keep entries alive. Extending TTL means topping up rent. This is what Evergreen automates: watch `remainingLedgers`, and before it runs out, pay to extend.

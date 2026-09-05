@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: sync workflow corrections installed (Fatih + Claude)
+**Last updated:** 2026-09-05 · by: tool-agnostic onboarding docs (Fatih + Claude)
 **Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -55,7 +55,7 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 1 | **`extendTTL` confirmed permissionless** (Stellar state-archival docs: *"There is no access control for TTL extension operations"*). Empirical check queued at `W1-D4-06`. | The plan assumed the engine needed authority over user contracts. It does not. This reshaped Week 3, the payment model, and the dashboard. |
 | 2 | **Week 3 split into Stage 1 / Stage 2.** Core loop proven with a plain funded account first; policy signer added after. | The never-cut unattended-bump proof moves ~5 days earlier and stops depending on an unverified third-party library. The old ADR-002 fallback (25–40h of Rust starting Sep 19 against a Sep 22 proof) never closed arithmetically; now it doesn't have to. |
 | 3 | **Policy signer restated, not dropped.** SOW-committed; purpose is protecting the *self-hosting user's* hot key, not earning non-custodiality. | The SOW names it in Deliverable 2's description and evidence list. Resequencing is not dropping — Fatih raises the change with Kenny in W1, not at review. |
-| 4 | **ADR-004 written: the user always pays.** Three mechanisms (dashboard signature / self-hosted engine / future hosted prepay), one invariant. Apex never subsidises. | Subsidy is unbounded cost and the hosted-billing non-goal in disguise. Now a hard rule in CLAUDE.md. |
+| 4 | **ADR-004 written: the user always pays.** Three mechanisms (dashboard signature / self-hosted engine / future hosted prepay), one invariant. Apex never subsidises. | Subsidy is unbounded cost and the hosted-billing non-goal in disguise. Now a hard rule in `AGENTS.md`. |
 | 5 | **Data model must not foreclose multi-tenancy.** `BumpRecord.payer` distinct from contract; config N contracts × M payers; `Signer` an interface resolved per payer. | A single public engine is the SOW 2 direction. Cheap to preserve on Day 6, expensive to retrofit in Week 3. Design for it; do not build it. |
 | 6 | **Dashboard split P0/P1 and the write path added.** P0 public read-only incl. **scan any contract**; P1 wallet-connect + user-signed extend. Overturns ARCHITECTURE's "no write path". | Scanning is a permissionless read, so serving strangers costs ~nothing and makes the instance a real utility. Wallet-connect became necessary for user-signed extends, but stays P1 because Week 4 cannot absorb it. Constraint held: the read-only layer must ship complete on its own. |
 | 7 | **Wallet spike pulled forward to `W2-D13-02`**, displacing batch scan (already cut-order #1). | Fatih's day, and the tx-building machinery from `W2-D11` is hot. `W2-D11` is Rakha's day, already 4 tasks, and carries the first required SOW evidence — crowding it risked evidence for convenience. |
@@ -117,9 +117,9 @@ Plus **within-run** idempotency as its own task (`W3-D16-02b`) — distinct from
 
 Evergreen is now tracked in two places. **The repo is canonical; Notion is a mirror.** Truth flows repo → Notion, never the reverse. Only agents write to Notion — Fatih and Rakha read it, so any disagreement is an agent error, never a human update to respect.
 
-Workflow is in `CLAUDE.md` § Dual-channel sync; the status vocabulary is in `docs/CONVENTIONS.md`. Sync happens at boundaries only — session start, session end, PR merge — never per commit.
+Workflow is in `AGENTS.md` § Dual-channel sync; the status vocabulary is in `docs/CONVENTIONS.md`. Sync happens at boundaries only — session start, session end, PR merge — never per commit.
 
-**The board is agent-write / human-read.** Fatih has posted that rule at the top of the Project Brain page, addressed to both humans by name: ticking a box there will be silently reverted, task state changes go through the repo, and prose in the Knowledge Base and Decisions pages is theirs to write freely — nothing syncs over that. Noted here because the rule only holds while it is visible *where a person is standing when they are tempted*, and `CLAUDE.md` is read by agents, not by Rakha.
+**The board is agent-write / human-read.** Fatih has posted that rule at the top of the Project Brain page, addressed to both humans by name: ticking a box there will be silently reverted, task state changes go through the repo, and prose in the Knowledge Base and Decisions pages is theirs to write freely — nothing syncs over that. Noted here because the rule only holds while it is visible *where a person is standing when they are tempted*, and `AGENTS.md` is read by agents, not by Rakha.
 
 ### Sync anomaly log
 
@@ -228,6 +228,13 @@ See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published art
 ## Session log
 
 Append one entry per working session. Newest at the top. Keep entries short — what moved, what broke, what's next.
+
+### 2026-09-05 — tool-agnostic agent onboarding (Claude)
+- **`AGENTS.md` is now the canonical operating manual**, tool-agnostic, for any agent — Cursor, Codex, Copilot, Gemini, Claude Code. `CLAUDE.md` is a 15-line pointer carrying only Claude-Code-specific facts with no general equivalent. Two full manuals would have drifted within a week, which is the duplicate-`Evergreen-PRD.md` failure again.
+- **`docs/ONBOARDING.md` written** — orientation rather than rules: what Evergreen is, the five things that will bite you, the workflows, the dates, and a self-test.
+- **Fresh-eyes tested** with an agent restricted to those two files, attempting a real backlog task (`W2-D8-01`). It scored 7/7 on the self-test and still could not correctly start the task — which was the useful result. Fixed from its gap list: guinea-pig A's contract ID was **truncated *and* mistyped** in ONBOARDING (worst kind of error: the contract you must *not* touch was fully specified, the one you verify against was wrong); the definition of done never said what "verified against testnet" means for a pure function; "evidence if applicable" never defined applicable; PR title format was asserted but never given; "ask rather than assume" had no channel; and "Apex" appeared in ADRs without ever being introduced.
+- **Two of its findings were wrong about the repo and still valuable.** It reported `CLAUDE.md` as a stale 175-line duplicate — it had read a copy *injected by its harness at session start*, not the 15-line file on disk. That is a real discovery in a different form: harnesses cache `CLAUDE.md`, which argues *for* the pointer design, since a stale pointer is harmless where a stale manual is not. It also reported `pnpm check` as possibly weaker than CI; the script is correct, but ONBOARDING listed three of its four commands and implied equivalence. Both fixed.
+- **Found a real domain gap:** the primer never says whether an entry is live *at* `liveUntilLedgerSeq` or whether that is the first dead ledger — the entire arithmetic content of `W2-D8-01`. Flagged as open in the primer rather than guessed (hard rule 3), with a note that a ~57-minute temporary entry makes the boundary cheap to observe directly.
 
 ### 2026-09-05 — sync workflow corrections installed (Fatih + Claude)
 - **The discrepancy rule had a narrow-case error and it is now fixed in `CLAUDE.md`.** "Correct Notion to match the repo" would have degraded the mirror for `W1-D4-09`, where Notion was right and the repo was wrong. Installed the clarification: *repo-canonical means the repo is where truth is authored, not that it is always right; when the mirror reveals a repo error, fix repo-first-then-sync.* Rules that are wrong in a narrow case get followed, which makes them more dangerous than obviously wrong ones.
