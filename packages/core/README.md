@@ -9,6 +9,7 @@ Two rules that are easy to get wrong:
 - **Ledgers are the unit of truth.** Compute in ledgers; convert to dates only at the display edge. Never store a TTL as a date.
 - **`liveUntilLedgerSeq` is optional.** Some entry types carry no TTL. Handle its absence explicitly; never `!`-assert it.
 - **One round trip, not two.** `getLedgerEntries` returns `latestLedger` alongside the entries, which is what `remainingLedgers` is computed against. Don't call for the latest ledger separately.
+- **The ledger key is the unit, not the contract.** Contracts sharing a Wasm share one `ContractCode` entry. Dedupe by ledger key before deciding, sum rent per unique key (or you charge a factory deployment N times for one entry), and weight severity by blast radius — a shared code entry expiring takes every contract with it.
 - **Temporary entries expire two orders of magnitude faster than everything else** — ~688 ledgers (~57 min) against ~120,927 (~7 days), measured 2026-09-05. Any code that reasons about "days of headroom" is wrong for temporary entries.
 
 Decision rules are a pure function — `(ScanResult, thresholds) => BumpDecision` — with no I/O, so the engine can be tested without a network.

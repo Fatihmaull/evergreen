@@ -29,6 +29,18 @@ Read alongside `docs/PRD.md` (what and why) and `docs/SOROBAN-PRIMER.md` (domain
 
 Everything shares `packages/shared-types`. `core` never imports from `cli`, `engine`, or `dashboard` — the dependency arrow points one way only.
 
+## Entries are shared; contracts are not the unit
+
+**Contracts deployed from identical Wasm share a single `ContractCode` ledger entry.** That is the factory pattern — per-user vaults, per-pair pools, per-market instances — not an edge case, and it means one entry expiring breaks every instance simultaneously while a per-contract scan reports them all healthy.
+
+So across every module: **the ledger key is the unit of work, not the contract.**
+
+- `core` dedupes by ledger key before deciding, prices per unique key, and weights severity by how many contracts an entry serves.
+- `engine` bumps each unique entry once per run — *within-run* idempotency, distinct from the across-run overlapping-scheduler case.
+- `cli` and `dashboard` say when an entry is shared. A per-contract view that omits it is misleading by omission.
+
+Full reasoning and the four derived requirements: `docs/SOROBAN-PRIMER.md`.
+
 ## The property everything else rests on
 
 **TTL extension is permissionless.** Anyone may submit `ExtendFootprintTTLOp` against any ledger entry if they pay the resource fee (see `docs/SOROBAN-PRIMER.md`). Evergreen therefore needs *no authority over a user's contract*, and no component should be designed as though it does.
@@ -55,9 +67,9 @@ v1 does not implement multi-tenancy. It must simply not foreclose it. If a short
 All the logic worth testing:
 - **RPC client** — wraps `getLedgerEntries`. The only place that talks to the network. **`getLedgerEntries` returns `latestLedger` in the same response**, so `remainingLedgers` costs one round trip — do not fetch the latest ledger separately out of habit. Across a batch scan that is the difference between a scan that feels instant and one that does not. Observed 2026-09-05, fixture in `packages/core/test/fixtures/`.
 - **TTL math** — `remainingLedgers`, projected archive ledger, projected archive date. Ledgers are the unit of truth; dates are derived for display.
-- **Rent model** — estimated cost to extend N ledgers, per entry and per contract. **Reads fee parameters from the network rather than hardcoding constants** — network state and protocol upgrades move them, and a constant validated once in Week 2 is quietly wrong by Week 4. Validated against a real tx fee (W2-D9-02).
+- **Rent model** — estimated cost to extend N ledgers, per entry and per contract. **Costs are summed per unique ledger key, never per contract.** Contracts sharing a Wasm share one `ContractCode` entry, so summing per-contract across a factory deployment charges it N times and the headline estimate is silently wrong for the users who care most about cost. **Reads fee parameters from the network rather than hardcoding constants** — network state and protocol upgrades move them, and a constant validated once in Week 2 is quietly wrong by Week 4. Validated against a real tx fee (W2-D9-02).
 - **Storage optimizer** — flags oversized/duplicated entries and data in the wrong storage class.
-- **Decision rules** — given a `ScanResult` and thresholds, return a `BumpDecision`. Pure function, no I/O; this is what makes the engine testable without a network.
+- **Decision rules** — given a `ScanResult` and thresholds, return a `BumpDecision`. Pure function, no I/O; this is what makes the engine testable without a network. **Decisions are keyed by ledger key, not by contract**, and severity accounts for blast radius: a shared code entry expiring takes every contract built on it, so its severity is not that of a single instance entry.
 
 ### `packages/cli` — `evergreen`
 Thin. Parses args, calls `core`, formats output (human + `--json`), maps errors to readable messages, sets exit codes (non-zero below threshold — the GitHub Action depends on this contract). Commands: `scan`, `extend`, `optimize`.
