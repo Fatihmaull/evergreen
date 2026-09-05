@@ -18,4 +18,4 @@ When you self-host the engine, it signs with a key that sits on a server with lu
 
 ## Until this is written
 
-Use the plain funded account described in the [engine README](../packages/engine/README.md) and the [quickstart](../README.md#quickstart). Fund it with only what it needs to pay extend fees, and treat it as a hot, expendable key ([`CLAUDE.md`](../CLAUDE.md) hard rule 4).
+Use the plain funded account described in the [engine README](../packages/engine/README.md) and the [quickstart](../README.md#quickstart). Fund it with only what it needs to pay extend fees, and treat it as a hot, expendable key ([`AGENTS.md`](../AGENTS.md) hard rule 4).

@@ -4,7 +4,8 @@ Evergreen is built during a 30-day Stellar Instawards engagement by [Apex](READM
 
 ## Start here
 
-1. [`CLAUDE.md`](CLAUDE.md) — the operating manual: session ritual, hard rules, repo map. Written for agents, useful for humans.
+1. [`docs/ONBOARDING.md`](docs/ONBOARDING.md) — orientation: what Evergreen is, the five things that will bite you, how work gets done.
+2. [`AGENTS.md`](AGENTS.md) — the operating manual: session ritual, hard rules, repo map. Canonical for every agent tool; written for agents, useful for humans.
 2. [`docs/STATUS.md`](docs/STATUS.md) — what's actually happening right now. Read first, write last.
 3. [`BACKLOG.md`](BACKLOG.md) — the plan, with stable task IDs.
 4. [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) — style, commits, testing, secret handling.
@@ -37,7 +38,7 @@ One task per PR. CI green before merge. `main` is protected.
 
 ## Rules that aren't negotiable
 
-These exist because breaking them is expensive, not because we like rules. Full list in [`CLAUDE.md`](CLAUDE.md).
+These exist because breaking them is expensive, not because we like rules. Full list in [`AGENTS.md`](AGENTS.md).
 
 - **Testnet only.** No mainnet path — not a flag, not a branch.
 - **No secrets anywhere in the repo.** Not in code, docs, tests, commit messages, or issue descriptions. Testnet keys included; the habit is what protects the real ones later.

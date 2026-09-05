@@ -45,7 +45,7 @@ Documented here, values only in your local `.env` / platform secret store.
 | Bot signer (Stage 1, plain funded) | *(W1-D4-02)* | friendbot | R |
 | Policy signer (Stage 2, hardened) | *(W3-D19)* | friendbot | R |
 
-> The bot account holds only enough XLM to pay `extendTTL` fees. It has no authority over any contract — it does not need any, because `extendTTL` is permissionless. Treat it as a hot, expendable key (CLAUDE.md hard rule 4).
+> The bot account holds only enough XLM to pay `extendTTL` fees. It has no authority over any contract — it does not need any, because `extendTTL` is permissionless. Treat it as a hot, expendable key (`AGENTS.md` hard rule 4).
 
 ## Guinea-pig contracts
 

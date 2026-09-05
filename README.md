@@ -48,11 +48,12 @@ npx evergreen scan <contract-id>
 | [`docs/SETUP.md`](docs/SETUP.md) | Getting a machine productive |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | Code style, commits, testing, secret handling |
 | [`docs/adr/`](docs/adr/) | Why things are the way they are |
-| [`CLAUDE.md`](CLAUDE.md) | Operating manual for AI agents working in this repo |
+| [`docs/ONBOARDING.md`](docs/ONBOARDING.md) | **Start here if you're an agent** — orientation, the five things that will bite you |
+| [`AGENTS.md`](AGENTS.md) | Operating manual for any coding agent — canonical, tool-agnostic |
 
 ## Contributing
 
-This repo is built with heavy agent assistance, so context lives in files rather than in anyone's head. Start with `CLAUDE.md` and `docs/STATUS.md` — between them they tell you the rules and the current state. Tasks come from `BACKLOG.md` and carry stable IDs (`W2-D8-01`) referenced in branches and commits.
+This repo is built with heavy agent assistance, so context lives in files rather than in anyone's head. Start with [`docs/ONBOARDING.md`](docs/ONBOARDING.md) for orientation, then [`AGENTS.md`](AGENTS.md) for the rules and `docs/STATUS.md` for current state. `AGENTS.md` is canonical for every agent tool; `CLAUDE.md` is just a pointer to it. Tasks come from `BACKLOG.md` and carry stable IDs (`W2-D8-01`) referenced in branches and commits.
 
 ## Scope boundaries (v1)
 
