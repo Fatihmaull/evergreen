@@ -16,14 +16,17 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
+    "test": "vitest run && pnpm test:scheduler",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
+    "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@stellar/stellar-sdk": "17.0.1",
     "@types/node": "26.4.1",
     "@vitest/coverage-v8": "5.0.0",
     "eslint": "10.10.0",
