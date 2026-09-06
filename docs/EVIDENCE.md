@@ -89,7 +89,9 @@ Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (record
 
 2026-09-06: [local runtime record](evidence/2026-09-06-scheduler-smoke/README.md) and [unedited script stdout](evidence/2026-09-06-scheduler-smoke/local-run.jsonl) show SDK 17.0.1 on Node 24.13.0 reading guinea-pig A's instance from Testnet. At ledger **4,530,578**, `liveUntilLedgerSeq` was **4,712,648**, leaving **182,070 ledgers**. These are derived script logs, not raw RPC responses. The probe submitted no transaction.
 
-**Still pending:** workflow publication/merge, a successful manual GitHub run, and a successful run with event `schedule`, with run URLs, commit SHAs, and exported logs. This local record does not prove cron execution or an unattended bump.
+Published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23).
+
+**Still pending:** review/merge, a successful manual GitHub run, and a successful run with event `schedule`, with run URLs, commit SHAs, and exported logs. This local record does not prove cron execution or an unattended bump.
 
 ## Screenshots
 

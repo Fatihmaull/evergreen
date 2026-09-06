@@ -36,7 +36,7 @@ The script only calls `getNetwork()` and `getLedgerEntries()` for A's instance. 
 
 ## What remains
 
-After local review, publication, and merge to the default branch:
+Preparation published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23). After review and merge to the default branch:
 
 1. Run the workflow manually and capture its run URL, event, commit SHA, and exported logs.
 2. Capture at least one successful **schedule** event with the same artifacts.

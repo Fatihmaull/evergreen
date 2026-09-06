@@ -174,7 +174,7 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 | GitHub | repo, CI, Action publishing | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ public, MIT, CI green |
 | npm | `evergreen` packages | *(reserve W1-D5-01)* | ⬜ |
 | Hosting (Vercel/Netlify/Cloudflare) | dashboard | *(W1-D5-02)* | ⬜ |
-| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | 🟡 local SDK read verified; workflow awaiting publication and scheduled proof |
+| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | 🟡 local SDK read verified; PR #24 open for review; merge and scheduled proof pending |
 | Email provider | alerts | *(W1-D5-04)* | ⬜ |
 | Shared drive | evidence (screenshots, video) | *(W1-D5-06)* | ⬜ |
 
@@ -192,7 +192,7 @@ The script uses the public Testnet endpoint and guinea-pig A instance ID embedde
 
 `.github/workflows/scheduler-smoke.yml` runs the command manually (`workflow_dispatch`) or at minutes `7,22,37,52` UTC each hour. The GitHub job has a five-minute timeout. This schedule is best-effort, so its interval is not a latency guarantee. Offline tests run through `pnpm test:scheduler` and `pnpm check`; ordinary PR CI does not call Testnet.
 
-**Activation and remaining proof:** after the workflow is reviewed, published, and merged to the default branch, run **Scheduler smoke test → Run workflow** once, then capture at least one successful run whose event is **schedule**. Save each run URL, commit SHA, event type, and exported logs in `docs/EVIDENCE.md`. A local or manually dispatched success alone does not complete the scheduler task. Current evidence: [local runtime check](evidence/2026-09-06-scheduler-smoke/README.md).
+**Activation and remaining proof:** review [PR #24](https://github.com/Fatihmaull/evergreen/pull/24); after it is merged to the default branch, run **Scheduler smoke test → Run workflow** once, then capture at least one successful run whose event is **schedule**. Save each run URL, commit SHA, event type, and exported logs in `docs/EVIDENCE.md`. A local or manually dispatched success alone does not complete the scheduler task. Current evidence: [local runtime check](evidence/2026-09-06-scheduler-smoke/README.md).
 
 If Testnet resets or A expires, the probe fails visibly. Reconcile the fixture through the existing setup task before changing its ID; the probe itself only reads.
 

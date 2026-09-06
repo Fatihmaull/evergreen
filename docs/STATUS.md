@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-06 · scheduler smoke test prepared for local review
+**Last updated:** 2026-09-06 · scheduler smoke test published for review
 **Sprint day:** 4 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,9 +11,9 @@
 
 ## Right now
 
-**2026-09-06 — `W1-D5-03` ready for local review:** GitHub Actions + Node 24 selected for the scheduler smoke test on `chore/W1-D5-03-scheduler-smoke`. SDK 17.0.1 verified Testnet and read guinea-pig A's instance at ledger **4,530,578**, with **182,070** ledgers remaining. The read-only script, manual/15-minute workflow, and nine offline regression tests are prepared; `pnpm check` passes, including the five existing package placeholder tests. No signing or transaction is involved. Publication and a real GitHub `schedule` run remain pending, so the task stays **In progress**. Notion task and Decisions page synced through MCP and fetched again to verify the exact task ID, In progress state, and local-only proof boundary.
+**2026-09-06 — `W1-D5-03` published for review:** [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) tracks [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) on `chore/W1-D5-03-scheduler-smoke`, with review requested from @Fatihmaull. SDK 17.0.1 verified Testnet and read guinea-pig A's instance at ledger **4,530,578**, with **182,070** ledgers remaining. The read-only script, manual/15-minute workflow, and nine offline regression tests are published; `pnpm check` passes, including the five existing package placeholder tests. No signing or transaction is involved. The PR is unmerged, and manual/scheduled GitHub runtime evidence is still pending, so the task and issue remain **In progress/open**. Notion publication sync completed through MCP: the exact task row remains In progress, with PR/Issue links; the Decisions page links the published ADR and local runtime record. Both were fetched again and verified. GitHub CI is reported in the PR checks.
 
-Local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/README.md). This branch starts from `main`; the separate setup and TTL publications remain in PR #20 and PR #22. Reconcile their overlapping tracking updates when integrating; they are not included in this scheduler change.
+Recorded local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/README.md). This branch starts from `main`; the separate setup and TTL publications remain in PR #20 and PR #22. Reconcile their overlapping tracking updates when integrating; they are not included in this scheduler change.
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|

@@ -22,7 +22,7 @@ Use **GitHub Actions with Node 24** as the initial scheduler, at a nominal 15-mi
 
 The read-only smoke script pins `@stellar/stellar-sdk` **17.0.1** and calls `getNetwork()` followed by `getLedgerEntries()` for guinea-pig A's instance. On 2026-09-06 it succeeded locally on **Node 24.13.0**, verifying the Testnet passphrase and reading a live TTL. See the [runtime record](../evidence/2026-09-06-scheduler-smoke/README.md). This verifies the two SDK read paths; signing and engine execution are later tasks. Cloudflare Workers was **not tested** in this task; its compatibility is still unknown.
 
-The workflow provides `workflow_dispatch` and a UTC schedule at minutes `7,22,37,52`. Both require the workflow to exist on the default branch. Local review and publication therefore precede the first GitHub run. **`W1-D5-03` stays In progress until a real `schedule` event succeeds and its logs are saved.** A manual run alone does not meet that condition.
+The workflow provides `workflow_dispatch` and a UTC schedule at minutes `7,22,37,52`. Both require the workflow to exist on the default branch. The preparation is published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24); merge and runtime verification remain pending. **`W1-D5-03` stays In progress until a real `schedule` event succeeds and its logs are saved.** A manual run alone does not meet that condition.
 
 GitHub schedules are [best-effort and may be delayed or dropped](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule); 15 minutes is not a maximum reaction time. The engine's future threshold and missed-run handling must tolerate that. Workflow concurrency limits smoke-test overlap, but does not supply a durable per-entry lock: that remains `W1-D6-04` and the Week 3 engine implementation.
 
@@ -64,4 +64,4 @@ Whatever is chosen must not model "the bot account" as a process-wide singleton.
 ## Update log
 
 - 2026-09-04: created. Toolchain decided; hosting/scheduler/persistence deferred to W1-D5-03 with the shortlist and evaluation order above.
-- 2026-09-06: selected GitHub Actions + Node 24 for the initial scheduler; verified SDK 17.0.1 reads locally. Workflow prepared for review; scheduled-run proof pending. Hosting and atomicity remain separate tasks.
+- 2026-09-06: selected GitHub Actions + Node 24 for the initial scheduler; verified SDK 17.0.1 reads locally. Workflow published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23); merge and scheduled-run proof pending. Hosting and atomicity remain separate tasks.
