@@ -16,7 +16,7 @@ Every ledger that closes decrements the remaining TTL by one. Ledgers close roug
 
 ### The boundary is inclusive — and `remainingLedgers == 0` does NOT mean expired
 
-**Documented, partially observed, not yet pinned.** Sourced from Stellar's [state archival](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival) and [`getLedgerEntries`](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries) docs on 2026-09-05.
+**Documented and directly observed on Testnet, 2026-09-06 (`W1-D4-13`).** Sourced from Stellar's [state archival](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival) and [`getLedgerEntries`](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries) docs, rechecked on 2026-09-06, then confirmed by the adjacent-ledger observation below.
 
 An entry stops being live when **`currentLedger > liveUntilLedgerSeq`**. So at `currentLedger == liveUntilLedgerSeq` the entry is **still live** — that is its *final live ledger*, not its first dead one.
 
@@ -39,7 +39,7 @@ remainingLedgers = liveUntilLedgerSeq − currentLedgerSeq
 
 **What we have actually observed (2026-09-05):** guinea-pigs B and C's temporary entries, `liveUntil` 4,513,652 and 4,513,931, were **absent** from `getLedgerEntries` at ledger 4,515,215. That is consistent with the inclusive boundary and rules out nothing else — both were ~1,300 ledgers past expiry, so it confirms *dead well after* and does **not** pin *alive exactly at*.
 
-**Still to observe: the exact boundary ledger** (`W1-D4-13`). Docs are not the network — that is our own standard, and this is the case it was written for. If observation disagrees with the above, **the observation wins and the disagreement is escalated.**
+**Exact boundary observed, 2026-09-06 (`W1-D4-13`):** the isolated temporary entry's `liveUntilLedgerSeq` was **4,529,810**. A valid `getLedgerEntries` response [at that exact ledger](evidence/2026-09-06-ttl-boundary/boundary-ledger-4529810.json) still contains the same key with the same TTL. The [response at 4,529,811](evidence/2026-09-06-ttl-boundary/boundary-ledger-4529811.json) has `entries: []`. Both ledger numbers come from the respective response's own `latestLedger`. Thus **remaining 0 is still live; remaining -1 is no longer live**. Offline replay of 412 responses confirmed the result; the 11 verifier tests pass. This directly observes one temporary entry and agrees with the documented convention. [Full evidence and reproduction](evidence/2026-09-06-ttl-boundary/README.md).
 
 ## Rent
 
@@ -130,23 +130,27 @@ Combine with the current ledger sequence (from RPC network/latest-ledger info) t
 
 ## Measured TTL floors
 
-**Placeholder — fill in during W1-D4-04.** Record the *actual* minimum TTL a freshly deployed entry receives on testnet, per entry type. Two things depend on these numbers and neither can be guessed:
+Record the *actual* minimum TTL a freshly deployed entry receives on testnet, per entry type. Two things depend on these numbers and neither can be guessed:
 
 1. **The bump threshold** has to be chosen against a real floor, not an assumed one.
 2. **Whether the natural-decay proof is achievable in-sprint.** If a fresh persistent entry's floor is longer than the days remaining, a contract cannot decay to the threshold before Sep 30 and the "would have been archived, was saved" demonstration has to be designed around the floor instead of assumed into existence.
 
-Measured 2026-09-05 on a freshly deployed and seeded guinea-pig contract (protocol 28, testnet). Wall-clock figures assume ~5s per ledger and are estimates — ledgers are the unit of truth.
+**Correction during `W1-D4-13`, 2026-09-05:** the first table below records **remaining TTL when sampled**, not the initial network minimum. The [unedited A fixture](../packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json) was sampled 31 ledgers after its temporary entry was written. The [raw Testnet configuration](evidence/2026-09-05-ttl-boundary/state-archival-settings.json) at ledger 4,519,665 reports `min_temporary_ttl = 720`, `min_persistent_ttl = 120960`, and `max_entry_ttl = 3110400`. These values are network configuration, not constants to hardcode in the engine.
 
-| Entry type | Observed floor (ledgers) | ≈ wall clock | Measured on | Notes |
+The first isolated temporary entry was created at ledger 4,519,384 with `liveUntilLedgerSeq = 4,520,103`: **719 remaining ledgers at the creation ledger**. That observation stopped before the boundary and remains inconclusive. [First experiment record](evidence/2026-09-05-ttl-boundary/README.md). The [2026-09-06 repeat](evidence/2026-09-06-ttl-boundary/README.md) recreated the absent entry at ledger 4,529,091, with final live ledger 4,529,810. It directly confirmed presence at L and absence at L+1, an inclusive lifetime of 720 ledgers.
+
+Original snapshot, retained as measured on 2026-09-05 (protocol 28, testnet). Wall-clock figures assume ~5s per ledger and are estimates — ledgers are the unit of truth.
+
+| Entry type | Remaining TTL when sampled (ledgers) | ≈ wall clock | Measured on | Notes |
 |---|---|---|---|---|
 | Instance | 120,927 | ~7 days | 2026-09-05 | |
 | Code (Wasm) | 120,926 | ~7 days | 2026-09-05 | |
 | Persistent | 120,928 | ~7 days | 2026-09-05 | |
-| **Temporary** | **688** | **~57 minutes** | 2026-09-05 | Two orders of magnitude shorter than everything else |
+| **Temporary** | **688** | **~57 minutes remaining** | 2026-09-05 | Sampled after creation; configured minimum is 720 |
 
-**The temporary figure is the surprising one and it has design consequences.** A fresh temporary entry lives under an hour, and it is **deleted** rather than archived — unrecoverable. Two things follow:
+**The temporary figure has design consequences.** A fresh temporary entry lives about an hour under the measured configuration, and it is **deleted** rather than archived — unrecoverable. Two things follow:
 
-1. **A 5–15 minute engine cadence (ADR-001) is adequate but not generous for temporary entries.** With ~688 ledgers of headroom, the reaction-time argument in ADR-001 ("TTL headroom is measured in days") holds for persistent/instance/code and does **not** hold for temporary. Thresholds for temporary entries must be expressed in ledgers with that in mind, and the CLI should probably warn when a temporary entry's remaining TTL is within a couple of cron intervals.
+1. **A 5–15 minute engine cadence (ADR-001) is adequate but not generous for temporary entries.** With about 720 ledgers in a fresh entry's lifetime, the reaction-time argument in ADR-001 ("TTL headroom is measured in days") holds for persistent/instance/code and does **not** hold for temporary. Thresholds for temporary entries must be expressed in ledgers with that in mind, and the CLI should probably warn when a temporary entry's remaining TTL is within a couple of cron intervals.
 2. **It makes temporary entries a fast, cheap test loop** — an entry that expires in an hour is a far quicker way to exercise expiry handling than waiting a week.
 
 > **Fixture placeholder — fill in during W1-D4-05.** Paste a real, unedited `getLedgerEntries` response for our guinea-pig contract here, and mirror it into `packages/core/test/fixtures`. Every unit test should run against real observed shapes, not invented ones.
@@ -241,7 +245,7 @@ Either answer is useful, and it costs an afternoon already budgeted.
 - **Fee estimation drift.** A modeled rent cost must be validated against a real transaction's actual fee at least once (W2-D9-02), or the "cost estimate" is fiction.
 - **Archived ≠ deleted.** Report them differently. Telling a user their persistent data is "gone" when it's restorable is a serious UX bug.
 - **The code entry is shared across every contract built from the same Wasm** (see above). Do not model TTL as strictly per-contract.
-- **Temporary entries really do vanish, fast.** Observed 2026-09-05: guinea-pig B's temporary entry was written at deploy and deleted ~57 minutes later, exactly as the 688-ledger floor predicted. Not hypothetical.
+- **Temporary entries really do vanish, fast.** B and C were observed absent well after their advertised expiry. The original 688-ledger figure was remaining TTL when sampled, not the network's measured 720-ledger minimum. `W1-D4-13` confirmed the exact L/L+1 boundary on an isolated temporary entry on 2026-09-06; remaining zero is still live.
 
 ## References
 
