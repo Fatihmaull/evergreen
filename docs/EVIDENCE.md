@@ -85,6 +85,14 @@ Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (record
 
 > ⚠️ **Guinea-pig B must stay OUT of the engine's watched-contract config until the moment of proof.** If it lands in the config during Week 3 testing, the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
 
+## Scheduler runtime evidence — `W1-D5-03`
+
+2026-09-06: [local runtime record](evidence/2026-09-06-scheduler-smoke/README.md) and [unedited script stdout](evidence/2026-09-06-scheduler-smoke/local-run.jsonl) show SDK 17.0.1 on Node 24.13.0 reading guinea-pig A's instance from Testnet. At ledger **4,530,578**, `liveUntilLedgerSeq` was **4,712,648**, leaving **182,070 ledgers**. These are derived script logs, not raw RPC responses. The probe submitted no transaction.
+
+Published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23).
+
+**Still pending:** review/merge, a successful manual GitHub run, and a successful run with event `schedule`, with run URLs, commit SHAs, and exported logs. This local record does not prove cron execution or an unattended bump.
+
 ## Screenshots
 
 Store files in the shared evidence drive (W1-D5-06); link them here.
