@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-06 · TTL boundary confirmed and verified
+**Last updated:** 2026-09-06 · TTL boundary published for review
 **Sprint day:** 4 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,7 +11,7 @@
 
 ## Right now
 
-**2026-09-06 — `W1-D4-13` validated for publication:** the exact boundary remains confirmed by 412 raw responses. The verifier now rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21) tracks publication on `chore/W1-D4-13-ttl-boundary`, based on `main`. Setup PR #20 is unchanged. Notion publication sync is pending for `W1-D4-13`.
+**2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Both PRs are unmerged; their overlapping tracking-document updates need reconciliation when the second one merges. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|
