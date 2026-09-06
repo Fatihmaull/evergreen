@@ -20,3 +20,7 @@ contracts/**/test_snapshots/
 # them — see packages/core/test/fixtures/README.md. Reformatting one would
 # defeat the point of having it.
 packages/core/test/fixtures/
+
+# Preserve the exact JSON RPC responses captured for W1-D4-13.
+docs/evidence/2026-09-05-ttl-boundary/
+docs/evidence/2026-09-06-ttl-boundary/

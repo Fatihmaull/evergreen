@@ -1,0 +1,15 @@
+{
+  "task": "W1-D4-13",
+  "network": "Testnet",
+  "rpcUrl": "https://soroban-testnet.stellar.org/",
+  "contract": "CBVX3LUUEZR4HQEPZI3E6DZJN4KGST6EICMVJ5SXIZMSS3DQRZACMWZX",
+  "key": "AAAABgAAAAFrfa6UJmPDwI/KNk8PKW8UaU/EQJlU9ldGWSlscI5AJgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+  "sdk": "@stellar/stellar-sdk@17.0.1",
+  "startedAt": "2026-09-06T04:29:57.047Z",
+  "previousRun": "../2026-09-05-ttl-boundary/",
+  "protectedKeys": [
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+    "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB",
+    "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7"
+  ]
+}

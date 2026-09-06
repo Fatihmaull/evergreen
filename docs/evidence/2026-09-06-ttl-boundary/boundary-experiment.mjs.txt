@@ -1,0 +1,145 @@
+// One-time W1-D4-13 experiment, using @stellar/stellar-sdk@17.0.1.
+// Only `seed --live` submits; `seed` alone simulates. `poll` only reads RPC.
+import fs from 'node:fs';
+import * as s from '@stellar/stellar-sdk';
+import { verifyBoundary } from '/home/rakhargo/projects/evergreen/scripts/verify-ttl-boundary.mjs';
+
+const root = '/home/rakhargo/projects/evergreen';
+const out = `${root}/docs/evidence/2026-09-06-ttl-boundary`;
+const rpcUrl = 'https://soroban-testnet.stellar.org/';
+const contract = 'CBVX3LUUEZR4HQEPZI3E6DZJN4KGST6EICMVJ5SXIZMSS3DQRZACMWZX';
+const old = JSON.parse(fs.readFileSync(`${root}/docs/evidence/2026-09-05-rakha-setup/boundary-observation.json`));
+if (old.contract !== contract) throw Error('Isolated experiment contract mismatch');
+const key = old.key;
+const mode = process.argv[2];
+const live = process.argv.includes('--live');
+if (!['preflight', 'seed', 'poll', 'after'].includes(mode)) throw Error('Use preflight | seed [--live] | poll | after');
+fs.mkdirSync(out, { recursive: true });
+const saveRaw = (name, raw) => fs.writeFileSync(`${out}/${name}.json`, raw, { flag: 'wx' });
+const save = (name, value) => saveRaw(name, JSON.stringify(value, null, 2) + '\n');
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function rpc(method, params = {}, name) {
+  const response = await fetch(rpcUrl, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    signal: AbortSignal.timeout(12000),
+  });
+  const raw = await response.text();
+  if (name) saveRaw(name, raw);
+  if (!response.ok) throw Error(`RPC HTTP ${response.status}`);
+  const body = JSON.parse(raw);
+  if (body.error || !body.result) throw Error(`Invalid RPC response for ${method}`);
+  return { body, raw };
+}
+function entriesOf(body) {
+  if (!Number.isSafeInteger(body.result.latestLedger) || !Array.isArray(body.result.entries)) {
+    throw Error('Malformed getLedgerEntries result is not evidence of absence');
+  }
+  return body.result.entries;
+}
+const network = await rpc('getNetwork');
+if (network.body.result.passphrase !== s.Networks.TESTNET) throw Error('RPC is not Testnet');
+const protectedIDs = [
+  'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',
+  'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL',
+];
+const fixture = JSON.parse(fs.readFileSync(`${root}/packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json`));
+const protectedKeys = [...protectedIDs.map(id => new s.Contract(id).getFootprint().toXdr('base64')), fixture.result.entries[1].key];
+
+if (mode === 'preflight' || mode === 'after') {
+  const protectedRead = await rpc('getLedgerEntries', { keys: protectedKeys }, `${mode}-protected-entries`);
+  const entries = entriesOf(protectedRead.body);
+  if (entries.length !== protectedKeys.length) throw Error('A protected entry is missing');
+  saveRaw(`${mode}-network`, network.raw);
+  if (mode === 'preflight') {
+    const got = await rpc('getLedgerEntries', { keys: [new s.Contract(contract).getFootprint().toXdr('base64'), key] }, 'preflight-isolated-entry');
+    const isolated = entriesOf(got.body);
+    if (isolated.some(e => e.key === key)) throw Error('Old temporary entry is still present; do not reseed');
+    if (isolated.length !== 1) throw Error('Isolated instance is not live');
+    save('experiment', { task: 'W1-D4-13', network: 'Testnet', rpcUrl, contract, key, sdk: '@stellar/stellar-sdk@17.0.1', startedAt: new Date().toISOString(), previousRun: '../2026-09-05-rakha-setup/', protectedKeys });
+  }
+  console.log(JSON.stringify({ mode, ledger: protectedRead.body.result.latestLedger, protectedTTLs: entries.map(e => e.liveUntilLedgerSeq) }));
+} else if (mode === 'seed') {
+  if (fs.existsSync(`${out}/boundary-seed-intent.json`)) throw Error('Seed intent already exists; reconcile its hash instead of resubmitting');
+  if (!fs.existsSync(`${out}/experiment.json`)) throw Error('Run preflight first');
+  const before = await rpc('getLedgerEntries', { keys: [key] }, `seed-before-${Date.now()}`);
+  if (entriesOf(before.body).length !== 0) throw Error('Temporary key must be absent before seeding');
+  process.loadEnvFile(`${root}/.env`);
+  if (process.env.STELLAR_NETWORK_PASSPHRASE !== s.Networks.TESTNET || process.env.SOROBAN_RPC_URL.replace(/\/?$/, '/') !== rpcUrl) throw Error('Local environment is not official Testnet');
+  const signer = s.Keypair.fromSecret(process.env.EVERGREEN_DEV_SECRET);
+  const server = new s.rpc.Server(rpcUrl);
+  const account = await server.getAccount(signer.publicKey());
+  const unsigned = new s.TransactionBuilder(account, { fee: '1000', networkPassphrase: s.Networks.TESTNET })
+    .addOperation(new s.Contract(contract).call('seed', s.nativeToScVal(1, { type: 'u32' })))
+    .setTimeout(300).build();
+  const sim = (await rpc('simulateTransaction', { transaction: unsigned.toXDR() }, `boundary-seed-simulation-${Date.now()}`)).body.result;
+  if (sim.error) throw Error(`Simulation failed: ${sim.error}`);
+  const prepared = s.rpc.assembleTransaction(unsigned, sim).build();
+  if (BigInt(prepared.fee) > 100000n) throw Error('Unexpected seed fee above 0.01 Testnet XLM');
+  if (!live) {
+    console.log(JSON.stringify({ mode: 'DRY RUN', contract, feeStroops: prepared.fee, submitted: false }));
+    process.exit(0);
+  }
+  prepared.sign(signer);
+  const hash = Buffer.from(prepared.hash()).toString('hex');
+  save('boundary-seed-intent', { hash, network: 'Testnet', contract, signer: signer.publicKey(), at: new Date().toISOString() });
+  const sent = await rpc('sendTransaction', { transaction: prepared.toXDR() }, 'boundary-seed-send');
+  console.log(JSON.stringify({ hash, status: sent.body.result.status }));
+  if (!['PENDING', 'DUPLICATE'].includes(sent.body.result.status)) throw Error('Seed was not accepted; inspect saved response');
+  let confirmed;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    await delay(2000);
+    const got = await rpc('getTransaction', { hash });
+    if (got.body.result.status === 'NOT_FOUND') continue;
+    saveRaw('boundary-seed-transaction', got.raw);
+    if (got.body.result.status !== 'SUCCESS') throw Error('Seed failed; inspect saved transaction');
+    confirmed = got.body.result;
+    break;
+  }
+  if (!confirmed) throw Error(`Confirmation pending for recorded hash ${hash}; do not resend`);
+  const initial = await rpc('getLedgerEntries', { keys: [key] }, 'boundary-initial-entry');
+  const entry = entriesOf(initial.body).find(e => e.key === key);
+  if (!entry || !Number.isSafeInteger(entry.liveUntilLedgerSeq)) throw Error('Seeded entry or TTL is missing');
+  const metadata = { contract, key, liveUntilLedgerSeq: entry.liveUntilLedgerSeq, seedLedger: confirmed.ledger, seedHash: hash, startedAt: new Date().toISOString() };
+  save('boundary-observation', metadata);
+  console.log(JSON.stringify({ ...metadata, key: undefined, initialRemaining: entry.liveUntilLedgerSeq - initial.body.result.latestLedger }));
+} else if (mode === 'poll') {
+  const metadata = JSON.parse(fs.readFileSync(`${out}/boundary-observation.json`));
+  const responses = fs.readdirSync(out).filter(name => /^boundary-ledger-\d+\.json$/.test(name)).map(name => JSON.parse(fs.readFileSync(`${out}/${name}`)));
+  const seen = new Set(responses.map(response => response.result.latestLedger));
+  const started = Date.now();
+  let lastLog = 0, failures = 0;
+  while (Date.now() - started < 90 * 60 * 1000) {
+    let got;
+    try {
+      got = await rpc('getLedgerEntries', { keys: [metadata.key] });
+      entriesOf(got.body);
+      failures = 0;
+    } catch (error) {
+      console.log(JSON.stringify({ at: new Date().toISOString(), readError: error.message }));
+      if (++failures >= 20) throw error;
+      await delay(2000);
+      continue;
+    }
+    const ledger = got.body.result.latestLedger;
+    const remaining = metadata.liveUntilLedgerSeq - ledger;
+    if (!seen.has(ledger)) {
+      saveRaw(`boundary-ledger-${ledger}`, got.raw);
+      responses.push(got.body);
+      seen.add(ledger);
+      const present = got.body.result.entries.some(entry => entry.key === metadata.key);
+      if (Date.now() - lastLog >= 55000 || remaining <= 5) {
+        console.log(JSON.stringify({ at: new Date().toISOString(), ledger, remaining, present, samples: seen.size }));
+        lastLog = Date.now();
+      }
+    }
+    if (remaining < -2) {
+      const result = { ...verifyBoundary(responses, metadata), finishedAt: new Date().toISOString() };
+      save('boundary-result', result);
+      console.log(JSON.stringify(result));
+      process.exit(result.status === 'confirmed' ? 0 : 2);
+    }
+    await delay(remaining <= 120 ? 500 : 10000);
+  }
+  throw Error('Observation time limit reached; saved evidence remains available');
+}

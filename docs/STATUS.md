@@ -2,8 +2,8 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · by: TTL boundary semantics + onboarding corrections (Fatih + Claude)
-**Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-06 · TTL boundary confirmed and verified
+**Sprint day:** 4 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
@@ -11,19 +11,21 @@
 
 ## Right now
 
+**2026-09-06 — `W1-D4-13` validated for publication:** the exact boundary remains confirmed by 412 raw responses. The verifier now rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21) tracks publication on `chore/W1-D4-13-ttl-boundary`, based on `main`. Setup PR #20 is unchanged. Notion publication sync is pending for `W1-D4-13`.
+
 | Workstream | State | Owner | Task |
 |---|---|---|---|
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
+| Stellar dev env | 🟡 partly done | F/R | D4-13 boundary confirmed and checks passed · setup in PR #20 |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | ⬜ empty | S | first snapshot due W1-D7-03 |
+| Evidence | 🟡 TTL boundary captured | S | D4-13 adjacent-ledger proof and three transaction records; first weekly snapshot due W1-D7-03 |
 
 ## Blocked
 
@@ -69,11 +71,12 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
 
-## ⏱️ Start `W1-D4-13` before the other D4 tasks
+## `W1-D4-13` — exact boundary observed
 
-It is a **timer, not a task**: ~57 minutes elapsed, a few minutes of effort — seed a temporary entry, then poll until the read fails. `W1-D4-01/02/03` are hands-on and will fill the wait, so run the boundary check alongside them rather than behind them.
+The 2026-09-06 temporary entry was present at its final live ledger **4,529,810** (remaining 0) and absent at **4,529,811** (remaining -1). The 412 raw RPC responses confirm the inclusive boundary, consistent with the documented semantics. The [evidence record](evidence/2026-09-06-ttl-boundary/README.md) includes the seed transaction JSON and explorer screenshot. The earlier 189 samples remain unchanged and inconclusive.
 
-Its task number hides this. **`W2-D8-01` (Thu Sep 10) cannot be written correctly until it lands**, so picking it up last converts an hour of waiting into a day of slippage on the week's first real math task.
+The configured minimum is **720 ledgers**; **688** was remaining TTL at an earlier sample. This finding informs `W2-D8-01`. It is a temporary-entry expiry observation; the unattended-bump deliverable remains pending. B/C instance entries and their shared code are unchanged before/after this experiment. No new network transaction was needed during publication review.
+
 
 ## ⚠️ `W1-D6` (Tue Sep 8) matters more than its position suggests
 
