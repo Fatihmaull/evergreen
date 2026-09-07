@@ -1,6 +1,6 @@
 # ADR-005: Use JSON-compatible shared domain types
 
-**Status:** Proposed — implemented locally for review in W1-D6-01/01b/01c
+**Status:** Proposed — implemented for review in [PR #36](https://github.com/Fatihmaull/evergreen/pull/36), W1-D6-01/01b/01c
 **Date:** 2026-09-07
 **Deciders:** Pending human review
 
@@ -32,3 +32,4 @@ The signer interface is not a security boundary or a validation of the Stage 2 S
 
 - 2026-09-07: proposed and implemented locally for Issue #29 review. No publication, real signing, transaction submission or notification delivery is part of this change.
 - 2026-09-07 final review: simulation/failure records can omit an unresolved signer identity; submitted/succeeded records still require it. Regression examples reject the previous shape and pass with the correction.
+- 2026-09-07 publication: PR #36 links the implementation and review correction to Issue #29. Proposal remains pending human review.
