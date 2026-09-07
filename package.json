@@ -21,9 +21,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "check": "pnpm check:conflicts && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
-    "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs"
+    "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
+    "check:conflicts": "node scripts/check-conflict-markers.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

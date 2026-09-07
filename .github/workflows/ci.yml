@@ -25,6 +25,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # A conflict marker in a config file does not fail loudly — it silently
+      # stops the file meaning what it says. Cheapest check we have; runs first.
+      - run: pnpm check:conflicts
+
       - run: pnpm typecheck
 
       - run: pnpm lint
