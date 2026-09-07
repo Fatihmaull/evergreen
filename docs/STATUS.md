@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-07 · W1-D4 setup + TTL boundary merged
+**Last updated:** 2026-09-07 · scheduler evidence published in PR #27; review/merge pending
 **Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,10 @@
 ---
 
 ## Right now
+
+**2026-09-07 — `W1-D5-03` runtime proof complete:** PR #24 is merged on `main`. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) both succeeded on `5509c44`. Node 24.20.0 / SDK 17.0.1 read A's Testnet instance, with **162,169** and **161,964 ledgers** remaining respectively. Both events and run IDs match the structured output; full logs and GitHub metadata are saved in the [runtime evidence](evidence/2026-09-07-scheduler-runs/README.md) on branch `chore/W1-D5-03-scheduler-evidence`. `pnpm check` passes all 25 tests. Task **Done**; evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), with review requested from @Fatihmaull. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains **open** until merge. No implementation/workflow edit, signing key, or transaction was needed. A single scheduled read proves automatic invocation, not a cadence guarantee or unattended bump. Notion publication sync completed via MCP: both exact task IDs are Done with PR/Issue links; the Decisions page links the published evidence. All updates were fetched again and verified.
+
+**2026-09-07 — `W1-D5-03a` correction complete:** removed the conflict markers and redundant dated paths in `.prettierignore`, retaining the effective `docs/evidence/` exclusion. All 13 scheduler evidence files remain excluded from formatting; scheduler source remains checked. `pnpm check` passes all 25 tests. Tracked in [Issue #26](https://github.com/Fatihmaull/evergreen/issues/26), as a separate commit in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). The issue remains open until merge; Notion task is Done with the PR link, fetched and verified via MCP.
 
 **2026-09-05 — Testnet environment setup:** local tooling, environment configuration, and account funding are verified. The setup changes are prepared for review; no engine scheduler is running.
 
@@ -31,9 +35,7 @@
 
 **2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
 
-**2026-09-06 — `W1-D5-03` published for review:** [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) tracks [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) on `chore/W1-D5-03-scheduler-smoke`, with review requested from @Fatihmaull. SDK 17.0.1 verified Testnet and read guinea-pig A's instance at ledger **4,530,578**, with **182,070** ledgers remaining. The read-only script, manual/15-minute workflow, and nine offline regression tests are published; `pnpm check` passes, including the five existing package placeholder tests. No signing or transaction is involved. The PR is unmerged, and manual/scheduled GitHub runtime evidence is still pending, so the task and issue remain **In progress/open**. Notion publication sync completed through MCP: the exact task row remains In progress, with PR/Issue links; the Decisions page links the published ADR and local runtime record. Both were fetched again and verified. GitHub CI is reported in the PR checks.
-
-Recorded local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/README.md). This branch starts from `main`; the separate setup and TTL publications remain in PR #20 and PR #22. Reconcile their overlapping tracking updates when integrating; they are not included in this scheduler change.
+**Scheduler preparation history:** [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) was published on 2026-09-06 and merged on 2026-09-07. It added the read-only SDK probe, manual/15-minute workflow, and nine offline regression tests. The original [local runtime record](evidence/2026-09-06-scheduler-smoke/README.md) remains preserved. The merged test command retains both TTL and scheduler suites (25 total tests). Current GitHub runtime proof is recorded above.
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|
@@ -42,10 +44,7 @@ Recorded local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/READM
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
-| Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
-
-| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
-| Services & accounts | 🟡 scheduler preparation in progress | F/R | W1-D5-03 local SDK check passed; scheduled-run proof pending. Other D5 tasks remain open. |
+| Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
@@ -66,7 +65,7 @@ Recorded local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/READM
 | ADR-002 | Policy signer via `stellar/passkey-kit` (Ed25519 + policy scoping); OpenZeppelin as fallback; custom signer contract out of scope | 2026-09-04 |
 | **ADR-002 amendment** | **`extendTTL` is permissionless — the policy signer is not what makes Evergreen non-custodial. Week 3 splits: Stage 1 (plain funded account, critical path) / Stage 2 (policy signer, off critical path, still SOW-committed).** | **2026-09-04** |
 | ADR-003 (part 1) | Toolchain: Node 24, pnpm workspaces, TypeScript strict, ESLint + Prettier, **Vitest** over Jest | 2026-09-04 |
-| ADR-003 (scheduler) | GitHub Actions + Node 24 chosen for the initial smoke test; local SDK reads verified, scheduled proof pending. Hosting (D5-02) and atomicity (D6-04) remain open. | 2026-09-06 |
+| ADR-003 (scheduler) | GitHub Actions + Node 24 chosen; local, manual GitHub, and genuine scheduled reads verified. Hosting (D5-02) and atomicity (D6-04) remain open. | 2026-09-07 |
 | **ADR-004** | **The user always pays their own extend fees. Apex never subsidises rent, in any phase.** | **2026-09-04** |
 | — | Dashboard: **public read-only P0** (scan any contract, no wallet), wallet-connect + user-signed extend **P1** | 2026-09-04 |
 | — | Alerting: email in v1, behind a `NotificationChannel` interface so Telegram/webhook are drop-in for SOW 2 | 2026-09-04 |
@@ -188,7 +187,7 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 >
 > Same shape as the testnet guard that refused everything and the local gate weaker than CI: **a failure in the safe-looking direction.** Watch for it whenever two branches extend one entry point — it is a structural hazard of parallel work, not anyone's mistake.
 
-**Still open:** `W1-D4-01/02` await second-machine tooling and everyday-account confirmation **from Fatih**, not from Rakha. Issue #23 stays open until a manual dispatch and one real `schedule` run both succeed with evidence.
+**Still open:** `W1-D4-01/02` await second-machine tooling and everyday-account confirmation **from Fatih**, not from Rakha. **Later Sep 7 update:** both scheduler runtime proofs succeeded; Issue #23 now remains open for review and merge of the published evidence in PR #27.
 
 ## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
 

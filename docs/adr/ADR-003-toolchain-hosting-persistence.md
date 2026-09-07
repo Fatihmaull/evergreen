@@ -1,6 +1,6 @@
 # ADR-003: Toolchain, hosting, scheduler, and persistence
 
-**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), scheduled-run evidence pending. Dashboard hosting (`W1-D5-02`) and persistence/locking (`W1-D6-04`) remain open.
+**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), with manual and genuine scheduled reads verified 2026-09-07. Dashboard hosting (`W1-D5-02`) and persistence/locking (`W1-D6-04`) remain open.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -16,13 +16,13 @@ Four infrastructure choices were left open at planning time. Toolchain was settl
 
 ## Part 2 — Hosting, scheduler, and persistence
 
-### Scheduler choice — local verification complete, scheduled proof pending
+### Scheduler choice — local, manual GitHub, and scheduled verification complete
 
 Use **GitHub Actions with Node 24** as the initial scheduler, at a nominal 15-minute cadence. The repository already uses that runner/toolchain for CI, and each run exposes its event, commit, exit status, and logs for review. This follows the existing `W1-D5-03` option to use Actions first and defer additional hosting decisions.
 
 The read-only smoke script pins `@stellar/stellar-sdk` **17.0.1** and calls `getNetwork()` followed by `getLedgerEntries()` for guinea-pig A's instance. On 2026-09-06 it succeeded locally on **Node 24.13.0**, verifying the Testnet passphrase and reading a live TTL. See the [runtime record](../evidence/2026-09-06-scheduler-smoke/README.md). This verifies the two SDK read paths; signing and engine execution are later tasks. Cloudflare Workers was **not tested** in this task; its compatibility is still unknown.
 
-The workflow provides `workflow_dispatch` and a UTC schedule at minutes `7,22,37,52`. Both require the workflow to exist on the default branch. The preparation is published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24); merge and runtime verification remain pending. **`W1-D5-03` stays In progress until a real `schedule` event succeeds and its logs are saved.** A manual run alone does not meet that condition.
+The workflow provides `workflow_dispatch` and a UTC schedule at minutes `7,22,37,52`. Both require the workflow to exist on the default branch. [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) merged on 2026-09-07. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) then succeeded on `main` (`5509c44`), verifying SDK 17.0.1 reads on the hosted Node 24.20.0 runner. Full logs and metadata are in the [GitHub runtime record](../evidence/2026-09-07-scheduler-runs/README.md). **The `W1-D5-03` runtime proof is complete.** Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), awaiting merge.
 
 GitHub schedules are [best-effort and may be delayed or dropped](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule); 15 minutes is not a maximum reaction time. The engine's future threshold and missed-run handling must tolerate that. Workflow concurrency limits smoke-test overlap, but does not supply a durable per-entry lock: that remains `W1-D6-04` and the Week 3 engine implementation.
 
@@ -58,10 +58,11 @@ Whatever is chosen must not model "the bot account" as a process-wide singleton.
 
 - The scheduler preparation adds a root development dependency for the standalone smoke script; it does not yet change the engine or core package APIs.
 - The manual and scheduled smoke workflow stays separate from offline PR tests. A missing A instance or RPC failure exits nonzero; it does not redeploy or extend anything automatically.
-- Capture the first successful manual and scheduled run URLs, event types, commit SHAs, and logs after publication and merge. Keep exported evidence in the repo so the record is self-contained.
+- The first successful manual and scheduled run URLs, event types, commit SHAs, and full logs are captured and published in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), keeping the record available independently of GitHub log retention.
 - Dashboard hosting, durable locking, and the real unattended-bump proof remain open under their own task IDs.
 
 ## Update log
 
 - 2026-09-04: created. Toolchain decided; hosting/scheduler/persistence deferred to W1-D5-03 with the shortlist and evaluation order above.
 - 2026-09-06: selected GitHub Actions + Node 24 for the initial scheduler; verified SDK 17.0.1 reads locally. Workflow published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23); merge and scheduled-run proof pending. Hosting and atomicity remain separate tasks.
+- 2026-09-07: PR #24 merged; manual run `34110254224` and genuine scheduled run `34111732199` succeeded. Their full logs and metadata were captured and cross-checked. Runtime proof complete, evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); no change to the platform decision or the separate hosting/atomicity tasks.

@@ -1,0 +1,6 @@
+{
+  "requestedAt": "2026-09-07T10:12:43.954121+00:00",
+  "workflow": "scheduler-smoke.yml",
+  "ref": "main",
+  "purpose": "W1-D5-03 read-only Testnet runtime proof"
+}
