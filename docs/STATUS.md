@@ -43,7 +43,7 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
+| Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
@@ -170,6 +170,16 @@ Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two 
 **It was found only because Notion had no row to match.** No amount of reading `BACKLOG.md` would have surfaced it, because the file was internally consistent — the gap was invisible from inside. That is precisely the one job a second surface exists to do: catch what a single source cannot see about itself.
 
 Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes per session** of wall clock, plus roughly **35k tokens** of Notion tool schemas loaded per session — a context cost, not a time cost, and the one more likely to bite. On day one it returned one repo defect, one ID divergence, and one repo error the mirror was right about. Both sides of that ledger get reported at the `W1-D7-05` gate, not just the pleasant one.
+
+## ✅ W1-D4 is complete — reproducibility proven, not asserted
+
+`W1-D4-01/02` closed 2026-09-07. Every Day-4 task is now done.
+
+**The evidence that matters is the hash, not the version strings.** `stellar contract build` produced Wasm `c7e55f0ad89efb0600bc15048b155099fa4d97cee16466fa1244b3dcbce98bfb` on **both** machines — byte-identical to the deployed guinea-pig. Matching `--version` output only suggests reproducibility; a matching hash demonstrates it.
+
+Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.nvmrc` pins the major, and pinning a patch buys churn rather than safety. If a patch ever *does* change build output, the hash comparison is what catches it — which is the argument for comparing hashes in the first place.
+
+Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
 ## 🚨 `W1-D5-01` BLOCKED — the npm name `evergreen` is taken
 
