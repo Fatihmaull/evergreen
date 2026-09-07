@@ -111,6 +111,23 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - Testnet keys are still treated as secrets — they're not valuable, but the habit is what protects the mainnet keys later.
 - If a secret leaks: rotate first, then clean history, then note it in STATUS.md.
 
+### Where each secret lives — one row per surface
+
+Every secret has exactly one home per surface. If you find yourself copying a value into a second place, that is the bug.
+
+| Secret | Local dev | GitHub Actions | Hosting platform |
+|---|---|---|---|
+| `EVERGREEN_SIGNER_SECRET` (bot Ed25519, **testnet only**) | `.env`, gitignored | repository secret | platform env store |
+| `EMAIL_API_KEY` | `.env` | repository secret | platform env store |
+| `SOROBAN_RPC_URL`, `STELLAR_NETWORK_PASSPHRASE` | `.env` | workflow env — **not secret**, but env-driven so a testnet reset is a config edit | platform env |
+
+**Rules that follow from the table:**
+
+- **Nothing but `.env.example` is committed**, and it holds placeholders with a comment per variable — never a real value, not even a testnet one.
+- **A secret never travels through a PR body, an issue, a commit message, a log line, or a chat.** If a workflow needs one, it reads it from the secret store at run time.
+- **The scheduler workflow deliberately needs no secret.** It performs public reads only. Keep it that way as long as possible: a workflow with no credential cannot leak one, and the read path is exactly where we do not need authority.
+- **Rotation is the first move, not the last.** A leaked testnet key is worth nothing; rotating it anyway is what keeps the reflex intact for the key that will one day matter.
+
 ## Transactions
 
 - Every code path that can submit a transaction defaults to dry-run/simulation.

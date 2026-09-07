@@ -123,6 +123,19 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 **Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); Issue #23 remains open until merge. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
 
+## Where evidence lives — resolved 2026-09-07 (`W1-D5-06`)
+
+The original plan called for a shared cloud drive. **In practice we have been committing evidence into the repository under `docs/evidence/<date>-<topic>/`, and that is the better default** — so it is now the rule, not the accident:
+
+- **It is versioned and reviewable.** Evidence arrives through a PR, gets read, and cannot be edited afterwards without a commit.
+- **It survives a testnet reset**, which is the entire reason for the three-artifact rule. A cloud drive does too, but only if somebody remembers to upload.
+- **It cannot drift from the claim it supports**, because the claim and the artifact land in the same commit.
+- **A grant reviewer can see it without being granted access to anything.**
+
+**Use the shared drive only for what genuinely does not belong in git:** the demo video, and any single artifact above roughly 5 MB. Link those from here.
+
+**Size check.** The evidence tree is small — raw JSON compresses well and screenshots are the bulk. Re-check at each week gate; if it approaches a size that makes cloning unpleasant, move screenshots to the drive and keep the JSON in-repo, since the JSON is the part that must be diffable.
+
 ## Screenshots
 
 Store files in the shared evidence drive (W1-D5-06); link them here.

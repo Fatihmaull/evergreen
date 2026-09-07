@@ -171,6 +171,24 @@ Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two 
 
 Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes per session** of wall clock, plus roughly **35k tokens** of Notion tool schemas loaded per session — a context cost, not a time cost, and the one more likely to bite. On day one it returned one repo defect, one ID divergence, and one repo error the mirror was right about. Both sides of that ledger get reported at the `W1-D7-05` gate, not just the pleasant one.
 
+## 🚨 `W1-D5-01` BLOCKED — the npm name `evergreen` is taken
+
+Checked 2026-09-07 (this is exactly what the task meant by *"confirm availability now, not in Week 4"*).
+
+`evergreen` is squatted by an abandoned package — a MongoDB build-platform client, last published **2016-04-28**. So `packages/cli/package.json`'s declared name and the README's `npx evergreen scan` are both unpublishable as written.
+
+**Free:** `evergreen-soroban`, `soroban-evergreen`, `stellar-evergreen`, `@evergreen-soroban/*`. The `@evergreen` scope could not be confirmed without an account (npm org page returns 403).
+
+**The command name is recoverable even though the package name is not.** A package published as `evergreen-soroban` can still declare `"bin": { "evergreen": … }`, so `npm i -g evergreen-soroban` still gives users `evergreen scan <contract-id>`. Only `npx <name>` and the install line change — the DX we actually care about survives.
+
+**Needs Fatih's npm account.** Once the name is picked it touches `packages/cli/package.json`, `README.md`, `packages/cli/README.md` and `BACKLOG.md`.
+
+## ✅ 2026-09-07 — `W1-D5` partly closed
+
+- **`W1-D5-05` secrets** — one table, one home per secret per surface, plus the rules that follow. Notable: the scheduler workflow needs **no credential at all**, because it only reads public data. A workflow with no secret cannot leak one.
+- **`W1-D5-06` evidence location — resolved differently than planned.** We have been committing evidence to `docs/evidence/<date>-<topic>/` rather than a cloud drive, and that is better: versioned, reviewed through a PR, cannot drift from the claim it supports, and a grant reviewer needs no access grant. The drive is now scoped to the demo video and anything over ~5 MB. Tree is 3.0 MB; re-check each gate.
+- **`W1-D5-07` conflict-marker check** (new) — wired into `pnpm check` and CI, running first because it is the cheapest. Written because I left markers in `.prettierignore` and the whole suite went green: **Prettier treats an unparseable line as a pattern matching nothing, so a broken ignore file passes.** Third silent-direction failure this sprint — after the testnet guard that refused everything and the local gate weaker than CI — which is enough evidence that this class belongs in a check rather than a paragraph. Tested in both directions, and against Markdown `====` rules for false positives.
+
 ## ✅ 2026-09-07 — three PRs merged, one silent-loss conflict caught
 
 `main` had not moved since Sep 5 while Rakha stacked three CI-green PRs. All merged today in dependency order: **#22** (TTL boundary) → **#20** (testnet setup) → **#24** (scheduler smoke).
