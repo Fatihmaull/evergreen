@@ -53,6 +53,9 @@ Two invariants follow, and they bind every module:
 ## Modules
 
 ### `packages/shared-types`
+
+The concrete interfaces and examples are in [`packages/shared-types`](../packages/shared-types/README.md). [ADR-005](adr/ADR-005-shared-domain-types.md) records the proposed JSON representation, exact stroop amounts and explicit observation/outcome states. The full data-flow rewrite remains `W1-D6-02`.
+
 The seams. `ContractRef`, `LedgerEntryTTL`, `ScanResult`, `RentEstimate`, `BumpDecision`, `BumpRecord`, `NotificationChannel`, `EvergreenConfig`, `Signer`. Changing a type here ripples across every workstream, so changes need a note in STATUS.md.
 
 Three shape requirements come from decisions that are cheap to honour now and expensive to retrofit (ADR-004):
@@ -66,7 +69,7 @@ v1 does not implement multi-tenancy. It must simply not foreclose it. If a short
 ### `packages/core`
 All the logic worth testing:
 - **RPC client** — wraps `getLedgerEntries`. The only place that talks to the network. **`getLedgerEntries` returns `latestLedger` in the same response**, so `remainingLedgers` costs one round trip — do not fetch the latest ledger separately out of habit. Across a batch scan that is the difference between a scan that feels instant and one that does not. Observed 2026-09-05, fixture in `packages/core/test/fixtures/`.
-- **TTL math** — `remainingLedgers`, projected archive ledger, projected archive date. Ledgers are the unit of truth; dates are derived for display.
+- **TTL math** — `remainingLedgers`, inclusive `endsAtLedger`, and `endBehavior` (archived or deleted). Ledgers are the unit of truth; dates are derived for display.
 - **Rent model** — estimated cost to extend N ledgers, per entry and per contract. **Costs are summed per unique ledger key, never per contract.** Contracts sharing a Wasm share one `ContractCode` entry, so summing per-contract across a factory deployment charges it N times and the headline estimate is silently wrong for the users who care most about cost. **Reads fee parameters from the network rather than hardcoding constants** — network state and protocol upgrades move them, and a constant validated once in Week 2 is quietly wrong by Week 4. Validated against a real tx fee (W2-D9-02).
 - **Storage optimizer** — flags oversized/duplicated entries and data in the wrong storage class.
 - **Decision rules** — given a `ScanResult` and thresholds, return a `BumpDecision`. Pure function, no I/O; this is what makes the engine testable without a network. **Decisions are keyed by ledger key, not by contract**, and severity accounts for blast radius: a shared code entry expiring takes every contract built on it, so its severity is not that of a single instance entry.
