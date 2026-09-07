@@ -6,6 +6,21 @@ Filled in during Week 1 (W1-D3 → W1-D5). Keep it current: this is the file tha
 
 ## Prerequisites
 
+### Second-machine confirmation — 2026-09-07 (`W1-D4-01`)
+
+Verified on Fatih's machine (aarch64-apple-darwin) against Rakha's pins:
+
+| Tool | Rakha | Fatih | |
+|---|---|---|---|
+| Node | 24.13.0 | 24.20.0 | both Node 24 — `.nvmrc` pins the major, which is the intent |
+| pnpm | 11.25.0 | 11.25.0 | exact |
+| Stellar CLI | 28.0.0 | 28.0.0 | exact |
+| Rust | 1.98.1 | 1.98.1 | exact |
+
+**The check that actually matters: `stellar contract build` produced Wasm hash `c7e55f0ad89efb0600bc15048b155099fa4d97cee16466fa1244b3dcbce98bfb` on both machines** — byte-identical to the deployed guinea-pig. Matching version strings suggest reproducibility; a matching hash demonstrates it, which is why this is the recorded evidence rather than the `--version` output.
+
+The two Node patch versions differ and that is fine — `.nvmrc` pins `24`, and pinning a patch would create churn without buying anything. If a Node patch ever *does* change the build output, the hash comparison catches it, which is the point of checking the hash rather than the version.
+
 | Tool | Version | Notes |
 |---|---|---|
 | Node | 24 (`24.13.0` verified locally) | major pinned via `.nvmrc` |
@@ -67,7 +82,7 @@ The public source account is enough for this simulation; no secret is passed on 
 
 | Purpose | Public key | Funded via | Owner |
 |---|---|---|---|
-| Fatih dev | *(W1-D4-02)* | friendbot | F |
+| Fatih dev (`fatih-dev`) | `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` | friendbot | F |
 | Rakha dev | `GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB` | Friendbot: 10,000 XLM Testnet on 2026-09-05 | R |
 | `evergreen-a` — W1-D4-06 deployer | `GBRGOJUAPPDR7YWM4GOGV3YLSCPWDW4KJZVL4R2LRG7HFIYCY5ODMWLZ` | friendbot | F |
 | `evergreen-b` — W1-D4-06 extender | `GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE` | friendbot | F |
