@@ -114,7 +114,7 @@ describe('shared domain contracts', () => {
   });
 
   it('represents pre-submit failure, pending confirmation and simulation independently', () => {
-    const { after, transactionHash, ...attempt } = successfulBump;
+    const { after, transactionHash, signer, ...attempt } = successfulBump;
     expect(after.endsAtLedger).toBe(1101);
     expect(transactionHash).toBe('synthetic-confirmed-hash');
     const failed: BumpRecord = {
@@ -125,12 +125,16 @@ describe('shared domain contracts', () => {
     const submitted: BumpRecord = {
       ...attempt,
       outcome: 'submitted',
+      signer,
       transactionHash: 'synthetic-unconfirmed-hash',
     };
     const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
     expect(failed).not.toHaveProperty('transactionHash');
+    expect(failed).not.toHaveProperty('signer');
     expect(submitted).not.toHaveProperty('after');
+    expect(submitted.signer).toEqual(signer);
     expect(simulated).not.toHaveProperty('transactionHash');
+    expect(simulated).not.toHaveProperty('signer');
   });
 
   it('accepts both signer implementations and a channel without an SDK or credentials', async () => {

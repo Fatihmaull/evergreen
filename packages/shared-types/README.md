@@ -9,7 +9,7 @@ The public TypeScript contracts for core, CLI, engine and dashboard (`W1-D6-01`,
 | `ScanResult` | Unique entries keyed by canonical ledger key, input contracts and scan issues |
 | `RentEstimate` | Rent per unique key and total, with ledger/target context |
 | `BumpDecision` | Extend with an explicit payer, or skip with a reason |
-| `BumpRecord` | Simulation, submission, confirmed success or failure, with payer and signer identity |
+| `BumpRecord` | Simulation, submission, confirmed success or failure, with payer and resolved signer identity |
 | `EvergreenConfig` | Testnet network, thresholds, contracts, per-payer signer config and notification config |
 | `Signer` | Per-payer signing interface; no submission or secret exposure |
 | `NotificationChannel` | Transport-independent consumer of a bump record |
@@ -63,7 +63,7 @@ If a shared entry has multiple payer candidates, the types preserve those relati
 | `succeeded` | Transaction confirmed and TTL verified | Hash and after observation |
 | `failed` | Explicitly failed attempt | Error; hash optional because failure may precede submission |
 
-All carry the entry key, affected contracts, payer, signer kind/public account, requested target and event timestamp. Event timestamps are appropriate for history; they are not TTL projections. Errors must be sanitized by the producer. A timeout or uncertain transaction result is not proof of failure: retain a submitted record and reconcile it before retrying. Persistence/locking and notification routing remain separate work.
+All carry the entry key, affected contracts, payer, requested target and event timestamp. Submitted and succeeded records also require the signer kind/public account. Simulation and failure records retain the identity when resolved, but may omit it: a failure to load the signer must be recordable without inventing an account, and simulation does not prove a signature was produced. Event timestamps are appropriate for history; they are not TTL projections. Errors must be sanitized by the producer. A timeout or uncertain transaction result is not proof of failure: retain a submitted record and reconcile it before retrying. Persistence/locking and notification routing remain separate work.
 
 ## Configuration and checks
 

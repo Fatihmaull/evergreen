@@ -26,8 +26,9 @@ Configuration refers to payers, environment variable names and policy-adapter co
 
 The same records can survive JSON round-trips without losing large integer fees. Consumers must convert monetary text for arithmetic and validate canonical non-negative values at input. IDs are documented string aliases, not runtime validators. Producers still enforce canonical keys, uniqueness, reference integrity, safe ledger integers and arithmetic consistency.
 
-The signer interface is not a security boundary or a validation of the Stage 2 SDK. Real adapters must verify Testnet, payer, operations and fee policy; the Week 3 spike can amend that seam if integration evidence requires it. Dry-run defaults are a runtime-loader responsibility, documented now and explicit in the config example.
+The signer interface is not a security boundary or a validation of the Stage 2 SDK. Real adapters must verify Testnet, payer, operations and fee policy; the Week 3 spike can amend that seam if integration evidence requires it. Submitted/succeeded records require the resolved signer identity; simulation/failure records may omit it when the signer has not resolved, so a missing signer can be reported without inventing an account. Dry-run defaults are a runtime-loader responsibility, documented now and explicit in the config example.
 
 ## Update log
 
 - 2026-09-07: proposed and implemented locally for Issue #29 review. No publication, real signing, transaction submission or notification delivery is part of this change.
+- 2026-09-07 final review: simulation/failure records can omit an unresolved signer identity; submitted/succeeded records still require it. Regression examples reject the previous shape and pass with the correction.

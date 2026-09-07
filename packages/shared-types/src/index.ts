@@ -122,7 +122,6 @@ export interface Signer {
 
 interface BumpAttempt extends EntryDecision {
   readonly payer: PayerId;
-  readonly signer: SignerIdentity;
   readonly extendToLedgers: number;
   /** ISO 8601 event timestamp; unlike TTL, history events do use wall-clock time. */
   readonly recordedAt: string;
@@ -134,6 +133,8 @@ export type BumpRecord = BumpAttempt &
     | {
         readonly outcome: 'simulated';
         readonly mode: 'dry-run';
+        /** Resolved identity if available; simulation does not prove signing occurred. */
+        readonly signer?: SignerIdentity;
         readonly transactionHash?: never;
         readonly after?: never;
       }
@@ -141,6 +142,7 @@ export type BumpRecord = BumpAttempt &
         /** Submitted or awaiting confirmation; never treated as successful yet. */
         readonly outcome: 'submitted';
         readonly mode: 'live';
+        readonly signer: SignerIdentity;
         readonly transactionHash: string;
         readonly after?: never;
       }
@@ -148,12 +150,15 @@ export type BumpRecord = BumpAttempt &
         /** Confirmed transaction AND a verified post-bump TTL observation. */
         readonly outcome: 'succeeded';
         readonly mode: 'live';
+        readonly signer: SignerIdentity;
         readonly transactionHash: string;
         readonly after: { readonly observedAtLedger: number; readonly endsAtLedger: number };
         readonly paidFeeStroops?: Stroops;
       }
     | ({
         readonly outcome: 'failed';
+        /** Omit when failure prevented signer resolution; retain any known identity. */
+        readonly signer?: SignerIdentity;
         readonly after?: never;
         readonly error: { readonly code: string; readonly message: string };
       } & (

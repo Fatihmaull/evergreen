@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-07 · shared types complete locally; email held on its separate branch
+**Last updated:** 2026-09-07 · shared types final local review complete; email held on its separate branch
 **Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,11 +11,13 @@
 
 ## Right now
 
+**2026-09-07 — shared types final review complete (`W1-D6-01`, `01b`):** corrected a record-shape gap: failures before signer resolution and simulations no longer require an unavailable signer identity. Submitted/succeeded records still require it. The regression examples failed compilation before the correction and pass afterward. Negative examples independently reject a simulated hash, simulated after-state and missing signer on submitted/succeeded records. Repo and Notion matched at review start; both reopened tasks are complete locally again. TTL semantics (`01c`) are unchanged. No remaining blocking finding within this type-only scope. No publication in this review.
+
 **2026-09-07 — shared types complete locally (`W1-D6-01`, `01b`, `01c`):** implemented on `feat/W1-D6-01-shared-types` from `main` `c592d2e`, tracked by [Issue #29](https://github.com/Fatihmaull/evergreen/issues/29). All nine shared types are exported with ledger-key scan/rent maps, explicit TTL availability and lifecycle, payer/signer separation, and bump outcome variants. The JSON config example is checked against typed usage and explicitly selects dry-run. No runtime SDK dependency was added. [ADR-005](adr/ADR-005-shared-domain-types.md) records representation choices as Proposed for review.
 
 **Acceptance answer — can this shape represent one ledger entry serving N contracts, exactly once? Yes.** `ScanResult.entries` maps one canonical ledger key to one `LedgerEntryTTL`, whose `contracts` lists all known input consumers. The synthetic two-consumer example has exactly one code entry and one rent amount; JSON round-trip retains an integer stroop amount above the safe JavaScript number range. This validates representability, not a production deduplication algorithm or real cross-contract RPC discovery. Producers still enforce canonical keys, reference integrity and arithmetic consistency.
 
-**Validation:** `pnpm check` passed conflict-marker detection, typecheck (including the new test tsconfig), lint, formatting and all **31 tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler). The unmodified recorded Testnet A fixture fits all four entry kinds; synthetic cases cover shared consumers, unavailable TTL, multiple payers and outcome variants. Fourteen negative type examples are compiler-checked; temporarily removing their suppression directives produced all 14 expected compiler rejections through root `pnpm typecheck`, and the source was restored. No live RPC read, signing, transaction submission or email was needed for this type-only task. Full data flow (`W1-D6-02`), mock RPC (`03`) and persistence (`04`) remain Pending. Local review precedes any push/PR; Issue #29 stays open. Notion completion sync finished via MCP: all three exact task IDs are Done locally with outcomes and Issue #29, and the Decisions page records ADR-005 as Proposed. Rows and page content were read back; D6-02/03/04 remain Pending.
+**Validation:** final `pnpm check` passed conflict-marker detection, typecheck (including the new test tsconfig), lint, formatting and all **31 tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler). The unmodified recorded Testnet A fixture fits all four entry kinds; synthetic cases cover shared consumers, unavailable TTL, multiple payers and outcome variants. Seventeen negative type examples are compiler-checked; the simulation/hash check now isolates that restriction from the separate after-state restriction. No live RPC read, signing, transaction submission or email was needed for this type-only task. Full data flow (`W1-D6-02`), mock RPC (`03`) and persistence (`04`) remain Pending. Final local review is complete; push/PR is the next publication step and Issue #29 stays open. Notion final-review sync completed via MCP: `W1-D6-01`, `01b`, `01c` are Done with the updated outcomes, and ADR-005 records the review correction. Read-back confirms all three IDs and the decision text; D6-02/03/04 remain Pending. The proposal remains Proposed for human review. Local `.env` content/permissions, the recorded fixture, held email branch and existing stash match the preservation snapshot; the reviewed 15-file scope contains no configured credentials or secret-pattern matches.
 
 **Email remains on hold:** the completed local `W1-D5-04` proof and integration are preserved on `chore/W1-D5-04-email-smoke` at `470d41c` (implementation `699a699`). The email code/evidence from that branch is not included here. Earlier preparation notes below describe main before that local completion; no new email work or publication is in this task.
 
@@ -53,7 +55,7 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | 🟡 types complete locally; review next | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
+| Shared types & harness | 🟡 final local type review complete; publication next | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |

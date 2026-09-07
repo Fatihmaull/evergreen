@@ -39,18 +39,33 @@ export const unpaidDecision: BumpDecision = {
   reason: 'low TTL',
   extendToLedgers: 1000,
 };
-// @ts-expect-error A simulated result cannot claim a live transaction hash.
-export const simulatedTransaction: BumpRecord = {
-  ...successfulBump,
-  outcome: 'simulated',
-  mode: 'dry-run',
-};
 const { transactionHash, ...withoutHash } = successfulBump;
 // @ts-expect-error A successful record requires a transaction hash.
 export const unprovenSuccess: BumpRecord = withoutHash;
 const { after, ...withoutAfter } = successfulBump;
 // @ts-expect-error A successful record also requires observed post-bump TTL.
 export const unobservedSuccess: BumpRecord = withoutAfter;
+// @ts-expect-error A simulated result cannot claim a live transaction hash.
+export const simulatedTransaction: BumpRecord = {
+  ...withoutAfter,
+  outcome: 'simulated',
+  mode: 'dry-run',
+};
+// @ts-expect-error A simulated result cannot claim an observed post-bump TTL.
+export const simulatedObservation: BumpRecord = {
+  ...withoutHash,
+  outcome: 'simulated',
+  mode: 'dry-run',
+};
+const { signer, ...withoutSigner } = successfulBump;
+// @ts-expect-error Successful transactions still require the signer that produced them.
+export const unidentifiedSuccess: BumpRecord = withoutSigner;
+const { signer: submittedSigner, ...withoutAfterOrSigner } = withoutAfter;
+// @ts-expect-error Submitted transactions still require the signer that produced them.
+export const unidentifiedSubmission: BumpRecord = {
+  ...withoutAfterOrSigner,
+  outcome: 'submitted',
+};
 export const contractCentricScan: ScanResult = {
   network: 'testnet',
   contracts: [],
@@ -68,6 +83,8 @@ export function consumeUnknownTTL(entry: LedgerEntryTTL): number | undefined {
 
 void transactionHash;
 void after;
+void signer;
+void submittedSigner;
 
 // @ts-expect-error A failed dry-run cannot claim a live transaction hash either.
 export const failedSimulation: BumpRecord = {
