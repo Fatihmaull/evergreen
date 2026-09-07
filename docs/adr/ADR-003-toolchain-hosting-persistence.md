@@ -43,6 +43,16 @@ Asked as "where do we keep bump history?", flat JSON committed to the repo looks
 | **Render** | Native cron jobs | Managed Postgres | Near-identical to Railway; choose on account/DX preference rather than capability. |
 | **GitHub Actions cron + hosted DB** (Neon / Turso / Supabase) | Scheduled workflows | External DB provides the lock; Actions alone provides none | Public run logs are easy to review; export the proof logs for grant evidence. **Risk: scheduled workflows are best-effort and can be delayed well past the interval** — the threshold design must tolerate it and a missed run must alert. |
 
+### Dashboard hosting is a *separate, much smaller* question
+
+Worth separating explicitly, because the shortlist above is about running the **engine** and it does not apply here.
+
+**The P0 dashboard needs no backend.** Scanning is a permissionless read, so the browser calls Soroban RPC directly — there is no server-side secret, no signing, and nothing to keep warm. Bump history is the only server-shaped need, and it is read-only; it can be fetched client-side from whatever ADR-003 Part 2 chooses, or published as a static JSON artifact.
+
+So the dashboard is a **static site**, and Vercel, Netlify and Cloudflare Pages are functionally identical for it — all free at our scale, all deploy from a GitHub push. **This decision does not deserve deliberation**; it deserves whichever account exists already.
+
+**Recommendation: Cloudflare Pages**, on one non-obvious ground rather than any hosting merit — it comes with the account needed to test whether the Stellar SDK runs on Workers, which is the single blocking unknown left in Part 2 above. One signup answers a hosting question we barely care about *and* unblocks one we care about a lot. If a Vercel or Netlify account already exists, use it and test Workers separately; the dashboard genuinely does not care.
+
 ### Evaluation order
 
 1. Does the Stellar SDK run there at all?

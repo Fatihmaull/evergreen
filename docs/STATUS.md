@@ -181,6 +181,16 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## ⏳ `W1-D5-02` / `W1-D5-04` — everything but the accounts is ready
+
+Both tasks need an account created, which is Fatih's to do. The rest is prepared so each is about five minutes.
+
+**Dashboard hosting.** `apps/dashboard/public/index.html` is a static placeholder — framework-free on purpose, because the framework choice is still deferred and a hello-world should prove the *pipeline*, not commit the stack.
+
+The useful finding here: **the P0 dashboard needs no backend at all.** Scanning is a permissionless read, so the browser calls Soroban RPC directly — no server-side secret, nothing to keep warm. That makes Vercel, Netlify and Cloudflare Pages functionally identical, and the decision not worth deliberating. Recommending **Cloudflare Pages** on a non-hosting ground: the same signup provides the account needed to test whether the Stellar SDK runs on Workers, which is the one blocking unknown left in ADR-003 Part 2. One signup, two questions.
+
+**Email.** `scripts/send-test-email.mjs`, guarded to refuse running without a key rather than failing obscurely. Resend's sandbox sender needs no domain verification and delivers only to the key owner — which is exactly enough for a connectivity test, and our alerts go to two people who own their own addresses. The script is marked for deletion once `EmailChannel` lands at `W3-D17-01`.
+
 ## 🚨 `W1-D5-01` BLOCKED — the npm name `evergreen` is taken
 
 Checked 2026-09-07 (this is exactly what the task meant by *"confirm availability now, not in Week 4"*).
