@@ -64,6 +64,11 @@ Never skip step 2 because the task looks obvious. The validation exists to catch
 
 ### B. During work
 
+- **Push the branch as soon as work starts — unfinished, failing, WIP, whatever it is.** A branch name on the remote is enough; nobody has to read it. Do not wait until the work is presentable.
+
+  *Why this is a rule and not a preference:* on 2026-09-07 the same email task was built twice, because one version sat on a local branch for a day. The repo is canonical, but **only the pushed repo is visible** — the dual-channel sync cannot catch what was never pushed, and neither can a person. A day of duplicated work cost more than an ugly branch name ever will.
+
+  Stacking branches is fine and encouraged. Reconciling three open PRs takes minutes; rebuilding someone's work takes a day.
 - Commit and PR as normal, with the task ID in the branch and commit subject.
 - **Do not sync Notion on every commit.** The mirror updates at boundaries only.
 - If you hit a blocker: mark `[!]` / `Blocked` in both, and **open a GitHub Issue** — title carries the task ID, body states what is blocked, what was tried, and what would unblock it. Put the issue link in the Notion row's `Notes`.

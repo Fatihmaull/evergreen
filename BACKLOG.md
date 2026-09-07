@@ -95,7 +95,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 *Planned: Thu Sep 3 — may slip; the D-number does not.*
 - [x] **W1-D1-01** (S) Re-read the signed SOW; confirm the three deliverables and out-of-scope list are what we're actually building.
 - [x] **W1-D1-02** (S) Confirm official sprint start = Sep 3, deadline = Oct 2.
-- [ ] **W1-D1-03** (F) Send the start-date confirmation message to Kenny Rivaldi (Ambassador Chapter Lead) so his records match ours. *Carried into D3 if not sent.*
+- [x] **W1-D1-03** (F) ✅ **Sent 2026-09-07.** Start and end dates confirmed with Kenny Rivaldi (Ambassador Chapter Lead): sprint 2026-09-03 → 2026-10-02, so his records match ours.
 
 ### Day 2 · Product definition
 *Planned: Fri Sep 4 — may slip; the D-number does not.*

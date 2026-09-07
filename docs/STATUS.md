@@ -193,6 +193,29 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🔁 New rule in `AGENTS.md`: push the branch as soon as work starts
+
+**On 2026-09-07 the same email task was built twice.** Rakha had `W1-D5-04` working on a local branch; I built `scripts/send-test-email.mjs` a few hours later without knowing, because that branch had never been pushed.
+
+Nobody did anything wrong by the rules as written. That is what makes it worth a rule: **the repo is canonical, but only the *pushed* repo is visible.** The dual-channel sync cannot catch what does not exist on the remote, and neither can a person reading the repo.
+
+So: push the branch as soon as work starts — unfinished, failing, WIP. A branch name on the remote is enough. Stacking is fine; reconciling three open PRs takes minutes, rebuilding someone's work takes a day.
+
+**`W1-D5-04` is resolved in Rakha's favour.** He had already sent a real test email (HTTP 200, confirmed inbox receipt) — the task is complete. And his script previews by default and requires `--send`, where mine sent on invocation. Hard rule 6 is written about transactions, but the shape is identical: an irreversible outward action on plain invocation is exactly what that rule guards against. His version is the one consistent with our own conventions, and the `--send` guard is now on `main`.
+
+**No mailbox screenshot, no second send.** The three-artifact rule is scoped to testnet transactions; an email has no hash, no JSON RPC response and no explorer page. Alert screenshots are real evidence but belong to `W3-D19-03`, when there are bump-success and bump-failure alerts worth capturing.
+
+## ✅ `W1-D6-01` merged — the shape inversion landed correctly
+
+PR #36. `ScanResult.entries` is keyed by canonical ledger key with `contracts` as a back-reference on each entry, so one shared code entry and its rent are represented once for N contracts. Acceptance answer recorded, and honestly scoped: it validates *representability*, not a production dedupe algorithm.
+
+Two things in it are better than what the issue asked for:
+
+- **`endBehavior` is bound to `kind` in a discriminated union** — `temporary → 'deleted'`, `instance|code|persistent → 'archived'`. "A temporary entry that gets archived" is structurally unrepresentable rather than merely discouraged.
+- **`endsAtLedger?: never` on the no-TTL variant**, so a TTL that does not exist cannot be read. The optional-`liveUntilLedgerSeq` trap closed in the type system instead of in review.
+
+31 tests green. **ADR-005 is `Proposed` and needs Fatih's acceptance** — a non-trivial decision is not settled by the code merging.
+
 ## ⏳ `W1-D5-02` / `W1-D5-04` — everything but the accounts is ready
 
 Both tasks need an account created, which is Fatih's to do. The rest is prepared so each is about five minutes.
