@@ -172,6 +172,24 @@ Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two 
 
 Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes per session** of wall clock, plus roughly **35k tokens** of Notion tool schemas loaded per session — a context cost, not a time cost, and the one more likely to bite. On day one it returned one repo defect, one ID divergence, and one repo error the mirror was right about. Both sides of that ledger get reported at the `W1-D7-05` gate, not just the pleasant one.
 
+## ✅ 2026-09-07 — three PRs merged, one silent-loss conflict caught
+
+`main` had not moved since Sep 5 while Rakha stacked three CI-green PRs. All merged today in dependency order: **#22** (TTL boundary) → **#20** (testnet setup) → **#24** (scheduler smoke).
+
+**The boundary is settled by observation.** Entry present at ledger **4,529,810** (remaining 0), absent at **4,529,811** (remaining −1) — confirming the documented inclusive boundary and the `remainingLedgers == 0` trap. `W2-D8-01` is unblocked. Rakha used an **isolated contract** with a `protectedIDs` guard enforcing the B/C rule in code rather than in a doc note; verified independently after merge, both proofs still +0.0h.
+
+**Correction to the primer, from him:** the temporary floor is **720** (`min_temporary_ttl` from live network settings), not 688. My 688 was remaining-at-sampling. He also noted these are *network configuration, not constants to hardcode* — the same reason the rent model must read fee params live.
+
+> ### ⚠️ The `package.json` conflict was a near-miss worth remembering
+>
+> PR #24 set `"test": "vitest run && pnpm test:scheduler"`; `main` had `"test": "vitest run && pnpm test:ttl"` from #22. **Both sides chained their own suite onto the same entry point, so taking either side would have silently dropped the other's tests — and CI would still have passed**, because everything remaining is green.
+>
+> Resolved to run both. `main` now runs **25 tests** (5 vitest + 11 TTL verifier + 9 scheduler), confirmed by running them, not by reading the diff.
+>
+> Same shape as the testnet guard that refused everything and the local gate weaker than CI: **a failure in the safe-looking direction.** Watch for it whenever two branches extend one entry point — it is a structural hazard of parallel work, not anyone's mistake.
+
+**Still open:** `W1-D4-01/02` await second-machine tooling and everyday-account confirmation **from Fatih**, not from Rakha. Issue #23 stays open until a manual dispatch and one real `schedule` run both succeed with evidence.
+
 ## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
 
 **Moved from Sep 19 to Sep 18 on 2026-09-05, and the reason matters more than the date.**
@@ -215,6 +233,8 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | Checked (UTC) | B crossing | drift | C crossing | drift |
 |---|---|---|---|---|
 | 2026-09-05 06:29 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+| 2026-09-06 02:20 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+| 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 
 > ⚠️ **B and C can now sit in the engine config early** — calibrated against a threshold, the engine correctly does nothing until the crossing. But that safety depends on the configured threshold matching the calibration, so adding them is a deliberate verified step: add, run **dry-run**, confirm the engine reports **no action needed**, only then run live. A threshold accidentally too high bumps them immediately and destroys both proofs silently. Procedure in `docs/SETUP.md`.
 
