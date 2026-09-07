@@ -2,8 +2,8 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-06 · TTL boundary published for review
-**Sprint day:** 4 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-07 · W1-D4 setup + TTL boundary merged
+**Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
@@ -11,7 +11,25 @@
 
 ## Right now
 
-**2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Both PRs are unmerged; their overlapping tracking-document updates need reconciliation when the second one merges. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
+**2026-09-05 — Testnet environment setup:** local tooling, environment configuration, and account funding are verified. The setup changes are prepared for review; no engine scheduler is running.
+
+**Merged 2026-09-07:** [PR #20](https://github.com/Fatihmaull/evergreen/pull/20) (setup, closing [#19](https://github.com/Fatihmaull/evergreen/issues/19)) and [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) (TTL boundary, closing [#21](https://github.com/Fatihmaull/evergreen/issues/21)). Second-machine/account confirmation remains open.
+
+| Task | Current result |
+|---|---|
+| `W1-D4-01` · in progress | Node 24.13.0, pnpm 11.25.0, CLI 28.0.0, Rust 1.98.1 + Wasm target verified locally. The rebuilt Wasm matches the deployed fixture. Current tooling confirmation on the second machine remains pending. |
+| `W1-D4-02` · in progress | Developer account funded through Friendbot; separate bot account funded with 20 XLM Testnet. Keys remain in ignored local `.env`. The second developer's everyday account designation remains pending. |
+| `W1-D4-03` · done locally | Testnet endpoint/passphrase configured and checked; developer and bot key placeholders documented. |
+| `W1-D4-14` · done locally | ESLint and Prettier ignore generated Rust output; repository checks pass with build artifacts present. |
+| `W1-D4-13` · **done** | **Boundary confirmed:** entry present at ledger **4,529,810** (remaining 0), absent at **4,529,811** (remaining −1). 412 raw responses, offline replay, 11 verifier tests. Confirms the documented inclusive boundary and the `remainingLedgers == 0` trap. |
+
+**Validation:** `pnpm check` passes typecheck, lint, formatting, and the 5 existing placeholder tests. Earlier setup verification passed 3 Rust fixture tests and reproduced Wasm hash `c7e55f0a…bce98bfb`. CLI `ping --send=no` against guinea-pig A returned `"guinea_pig"`.
+
+**Evidence:** two account-funding transactions have full unedited JSON RPC responses and explorer screenshots in [EVIDENCE.md](EVIDENCE.md). The developer and bot public keys are documented in [SETUP.md](SETUP.md).
+
+**Notion:** `W1-D4-13` synced by Rakha via MCP with PR/Issue links, and the Knowledge Base records the verifier. Remaining rows reconciled on merge 2026-09-07.
+
+**2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|
@@ -19,13 +37,13 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 partly done | F/R | D4-13 boundary confirmed and checks passed · setup in PR #20 |
+| Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | 🟡 TTL boundary captured | S | D4-13 adjacent-ledger proof and three transaction records; first weekly snapshot due W1-D7-03 |
+| Evidence | 🟡 building | S | Setup: 2 funding txs. Boundary: adjacent-ledger proof + 3 tx records. All with JSON + screenshots. First weekly snapshot due W1-D7-03 |
 
 ## Blocked
 
