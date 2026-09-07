@@ -31,6 +31,10 @@
 
 **2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
 
+**2026-09-06 — `W1-D5-03` published for review:** [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) tracks [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) on `chore/W1-D5-03-scheduler-smoke`, with review requested from @Fatihmaull. SDK 17.0.1 verified Testnet and read guinea-pig A's instance at ledger **4,530,578**, with **182,070** ledgers remaining. The read-only script, manual/15-minute workflow, and nine offline regression tests are published; `pnpm check` passes, including the five existing package placeholder tests. No signing or transaction is involved. The PR is unmerged, and manual/scheduled GitHub runtime evidence is still pending, so the task and issue remain **In progress/open**. Notion publication sync completed through MCP: the exact task row remains In progress, with PR/Issue links; the Decisions page links the published ADR and local runtime record. Both were fetched again and verified. GitHub CI is reported in the PR checks.
+
+Recorded local proof: [runtime record](evidence/2026-09-06-scheduler-smoke/README.md). This branch starts from `main`; the separate setup and TTL publications remain in PR #20 and PR #22. Reconcile their overlapping tracking updates when integrating; they are not included in this scheduler change.
+
 | Workstream | State | Owner | Task |
 |---|---|---|---|
 | Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
@@ -39,6 +43,9 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
+
+| Stellar dev env | 🟡 partly done | F/R | ⏱️ **start `D4-13` first — it runs in background** · then D4-01/02/03 (R) |
+| Services & accounts | 🟡 scheduler preparation in progress | F/R | W1-D5-03 local SDK check passed; scheduled-run proof pending. Other D5 tasks remain open. |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
@@ -59,7 +66,7 @@
 | ADR-002 | Policy signer via `stellar/passkey-kit` (Ed25519 + policy scoping); OpenZeppelin as fallback; custom signer contract out of scope | 2026-09-04 |
 | **ADR-002 amendment** | **`extendTTL` is permissionless — the policy signer is not what makes Evergreen non-custodial. Week 3 splits: Stage 1 (plain funded account, critical path) / Stage 2 (policy signer, off critical path, still SOW-committed).** | **2026-09-04** |
 | ADR-003 (part 1) | Toolchain: Node 24, pnpm workspaces, TypeScript strict, ESLint + Prettier, **Vitest** over Jest | 2026-09-04 |
-| ADR-003 (part 2) | *(pending W1-D5-03)* hosting, scheduler, persistence — framed as **atomicity**, not storage | — |
+| ADR-003 (scheduler) | GitHub Actions + Node 24 chosen for the initial smoke test; local SDK reads verified, scheduled proof pending. Hosting (D5-02) and atomicity (D6-04) remain open. | 2026-09-06 |
 | **ADR-004** | **The user always pays their own extend fees. Apex never subsidises rent, in any phase.** | **2026-09-04** |
 | — | Dashboard: **public read-only P0** (scan any contract, no wallet), wallet-connect + user-signed extend **P1** | 2026-09-04 |
 | — | Alerting: email in v1, behind a `NotificationChannel` interface so Telegram/webhook are drop-in for SOW 2 | 2026-09-04 |
