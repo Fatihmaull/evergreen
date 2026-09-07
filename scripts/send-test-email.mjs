@@ -8,9 +8,15 @@
  * before Week 3 depends on them, and it should be deleted once EmailChannel
  * lands rather than maintained alongside it.
  *
+ * Previews by default; sending requires an explicit --send. `AGENTS.md` hard
+ * rule 6 is written about transactions, but the shape is identical: a script
+ * that performs an irreversible outward action on plain invocation is what that
+ * rule guards against. Adopted from Rakha's version (Issue #37), which had this
+ * right where the first draft of this file did not.
+ *
  * Usage:
- *   EMAIL_API_KEY=re_… EVERGREEN_ALERT_TO=you@example.com \
- *     node scripts/send-test-email.mjs
+ *   node scripts/send-test-email.mjs            # preview, sends nothing
+ *   node scripts/send-test-email.mjs --send     # actually submits
  *
  * Reads from .env if present. Never hardcode the key — see
  * docs/CONVENTIONS.md § Where each secret lives.
@@ -51,6 +57,8 @@ function die(msg) {
 
 loadDotEnv();
 
+const shouldSend = process.argv.includes('--send');
+
 const key = process.env.EMAIL_API_KEY;
 const to = process.env.EVERGREEN_ALERT_TO;
 
@@ -58,6 +66,15 @@ if (!key) die('EMAIL_API_KEY is not set. Put it in .env (gitignored) or the envi
 if (!to) die('EVERGREEN_ALERT_TO is not set — no recipient to test against.');
 
 const sentAt = new Date().toISOString();
+
+if (!shouldSend) {
+  console.log('Preview only — nothing was sent.\n');
+  console.log(`  from: ${SANDBOX_FROM}`);
+  console.log(`  to:   ${to}`);
+  console.log(`  key:  ${key.slice(0, 6)}… (${key.length} chars)`);
+  console.log('\nRe-run with --send to submit.');
+  process.exit(0);
+}
 
 const res = await fetch(PROVIDER_ENDPOINT, {
   method: 'POST',
