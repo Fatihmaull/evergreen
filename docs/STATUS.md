@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-07 · scheduler runtime proof complete; evidence review pending
+**Last updated:** 2026-09-07 · scheduler evidence published in PR #27; review/merge pending
 **Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,9 +11,9 @@
 
 ## Right now
 
-**2026-09-07 — `W1-D5-03` runtime proof complete:** PR #24 is merged on `main`. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) both succeeded on `5509c44`. Node 24.20.0 / SDK 17.0.1 read A's Testnet instance, with **162,169** and **161,964 ledgers** remaining respectively. Both events and run IDs match the structured output; full logs and GitHub metadata are saved in the [runtime evidence](evidence/2026-09-07-scheduler-runs/README.md) on local branch `chore/W1-D5-03-scheduler-evidence`. `pnpm check` passes all 25 tests. Task **Done locally**; evidence publication awaits review, so [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains **open**. No implementation/workflow edit, signing key, or transaction was needed. A single scheduled read proves automatic invocation, not a cadence guarantee or unattended bump. Notion exact-ID task is Done; its outcome and Decisions page were synced via MCP and fetched again to verify both run links and the local/unpublished evidence boundary.
+**2026-09-07 — `W1-D5-03` runtime proof complete:** PR #24 is merged on `main`. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) both succeeded on `5509c44`. Node 24.20.0 / SDK 17.0.1 read A's Testnet instance, with **162,169** and **161,964 ledgers** remaining respectively. Both events and run IDs match the structured output; full logs and GitHub metadata are saved in the [runtime evidence](evidence/2026-09-07-scheduler-runs/README.md) on branch `chore/W1-D5-03-scheduler-evidence`. `pnpm check` passes all 25 tests. Task **Done**; evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), with review requested from @Fatihmaull. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains **open** until merge. No implementation/workflow edit, signing key, or transaction was needed. A single scheduled read proves automatic invocation, not a cadence guarantee or unattended bump. Notion publication sync completed via MCP: both exact task IDs are Done with PR/Issue links; the Decisions page links the published evidence. All updates were fetched again and verified.
 
-**2026-09-07 — `W1-D5-03a` correction complete:** removed the conflict markers and redundant dated paths in `.prettierignore`, retaining the effective `docs/evidence/` exclusion. All 13 scheduler evidence files remain excluded from formatting; scheduler source remains checked. `pnpm check` passes all 25 tests. Tracked in [Issue #26](https://github.com/Fatihmaull/evergreen/issues/26), as a separate commit in the scheduler evidence PR. Notion completion sync pending publication.
+**2026-09-07 — `W1-D5-03a` correction complete:** removed the conflict markers and redundant dated paths in `.prettierignore`, retaining the effective `docs/evidence/` exclusion. All 13 scheduler evidence files remain excluded from formatting; scheduler source remains checked. `pnpm check` passes all 25 tests. Tracked in [Issue #26](https://github.com/Fatihmaull/evergreen/issues/26), as a separate commit in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). The issue remains open until merge; Notion task is Done with the PR link, fetched and verified via MCP.
 
 **2026-09-05 — Testnet environment setup:** local tooling, environment configuration, and account funding are verified. The setup changes are prepared for review; no engine scheduler is running.
 
@@ -44,7 +44,7 @@
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
-| Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence awaits publication review. Other D5 tasks remain open. |
+| Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
@@ -187,7 +187,7 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 >
 > Same shape as the testnet guard that refused everything and the local gate weaker than CI: **a failure in the safe-looking direction.** Watch for it whenever two branches extend one entry point — it is a structural hazard of parallel work, not anyone's mistake.
 
-**Still open:** `W1-D4-01/02` await second-machine tooling and everyday-account confirmation **from Fatih**, not from Rakha. **Later Sep 7 update:** both scheduler runtime proofs succeeded; Issue #23 now remains open for review and publication of the exported evidence.
+**Still open:** `W1-D4-01/02` await second-machine tooling and everyday-account confirmation **from Fatih**, not from Rakha. **Later Sep 7 update:** both scheduler runtime proofs succeeded; Issue #23 now remains open for review and merge of the published evidence in PR #27.
 
 ## 🔴 HARD DATE — Fri Sep 18: the engine must be watching guinea-pig B
 

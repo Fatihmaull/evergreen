@@ -1,8 +1,8 @@
 # W1-D5-03 — GitHub scheduler runtime evidence
 
-**Status:** manual and genuine `schedule` runs both verified. The task's runtime proof is complete; this evidence is prepared locally for review before publication.
+**Status:** manual and genuine `schedule` runs both verified. The task's runtime proof is complete; this evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), awaiting merge.
 
-The read-only workflow from [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) is merged and active on `main`. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains open until the evidence is reviewed and published.
+The read-only workflow from [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) is merged and active on `main`. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains open until PR #27 merges.
 
 ## Verified manual run
 

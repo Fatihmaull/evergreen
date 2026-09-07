@@ -121,7 +121,7 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 2026-09-07: genuine scheduled run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199), event `schedule`, also succeeded on the same commit. At 10:30:10 UTC, it read A at ledger **4,550,684**, with **161,964 ledgers** remaining. The same [runtime record](evidence/2026-09-07-scheduler-runs/README.md) includes its full log and GitHub run/job metadata, with event and run ID verified against the script output.
 
-**Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Evidence publication awaits local review; Issue #23 remains open for that step. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
+**Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); Issue #23 remains open until merge. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
 
 ## Screenshots
 
