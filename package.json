@@ -11,7 +11,7 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "typecheck": "tsc --build --force",
+    "typecheck": "tsc --build --force && pnpm typecheck:shared-types",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -24,7 +24,8 @@
     "check": "pnpm check:conflicts && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
-    "check:conflicts": "node scripts/check-conflict-markers.mjs"
+    "check:conflicts": "node scripts/check-conflict-markers.mjs",
+    "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

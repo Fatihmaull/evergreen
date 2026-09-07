@@ -8,6 +8,7 @@ One file per non-trivial decision. Numbered, immutable in spirit: if a decision 
 | [ADR-002](ADR-002-policy-signer-provider.md) | Policy signer via `stellar/passkey-kit`; OpenZeppelin as fallback; custom contract out of scope | Accepted — amended 2026-09-04, moved off the critical path; pending W3 spike validation |
 | [ADR-003](ADR-003-toolchain-hosting-persistence.md) | Toolchain, hosting, scheduler, and persistence | Toolchain accepted; hosting/scheduler/persistence pending W1-D5-03 |
 | [ADR-004](ADR-004-payment-model.md) | The user always pays their own extend fees; Apex never subsidises rent | Accepted |
+| [ADR-005](ADR-005-shared-domain-types.md) | JSON-compatible shared domain types | Proposed — W1-D6-01/01b/01c local implementation for review |
 
 ## When to write one
 

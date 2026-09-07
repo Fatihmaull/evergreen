@@ -8,19 +8,16 @@
     "engine sees it, it will bump it and destroy weeks of ageing that cannot be",
     "recovered inside the sprint. See docs/SETUP.md and scripts/deploy-guinea-pig.sh.",
     "",
-    "Shape is provisional until W1-D6-01 defines EvergreenConfig in shared-types."
+    "Shape checked against EvergreenConfig in packages/shared-types. Underscore-prefixed fields are documentation only; ignored by the future loader."
   ],
-
   "network": {
     "rpcUrl": "https://soroban-testnet.stellar.org",
     "networkPassphrase": "Test SDF Network ; September 2015"
   },
-
   "defaults": {
     "bumpWhenRemainingLedgersBelow": 17280,
     "extendToLedgers": 518400
   },
-
   "contracts": [
     {
       "_note": "Guinea-pig A — the working subject. Safe for the engine to watch.",
@@ -29,7 +26,6 @@
       "payer": "bot-testnet"
     }
   ],
-
   "_doNotWatch": [
     {
       "_warning": "GUINEA-PIG B — NEVER MOVE THIS INTO 'contracts' BEFORE W3-D18-02b.",
@@ -38,7 +34,6 @@
       "label": "guinea-pig-B-natural-decay"
     }
   ],
-
   "payers": {
     "bot-testnet": {
       "_note": "The engine's own account. Holds only enough XLM to pay extendTTL fees; it has no authority over any contract and needs none, because extendTTL is permissionless. Secret lives in .env, never here.",
@@ -46,9 +41,9 @@
       "secretEnvVar": "EVERGREEN_SIGNER_SECRET"
     }
   },
-
   "notifications": {
     "channel": "email",
     "toEnvVar": "EVERGREEN_ALERT_TO"
-  }
+  },
+  "mode": "dry-run"
 }

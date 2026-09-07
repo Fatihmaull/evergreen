@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-07 · scheduler evidence published in PR #27; review/merge pending
+**Last updated:** 2026-09-07 · shared types complete locally; email held on its separate branch
 **Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,14 @@
 ---
 
 ## Right now
+
+**2026-09-07 — shared types complete locally (`W1-D6-01`, `01b`, `01c`):** implemented on `feat/W1-D6-01-shared-types` from `main` `c592d2e`, tracked by [Issue #29](https://github.com/Fatihmaull/evergreen/issues/29). All nine shared types are exported with ledger-key scan/rent maps, explicit TTL availability and lifecycle, payer/signer separation, and bump outcome variants. The JSON config example is checked against typed usage and explicitly selects dry-run. No runtime SDK dependency was added. [ADR-005](adr/ADR-005-shared-domain-types.md) records representation choices as Proposed for review.
+
+**Acceptance answer — can this shape represent one ledger entry serving N contracts, exactly once? Yes.** `ScanResult.entries` maps one canonical ledger key to one `LedgerEntryTTL`, whose `contracts` lists all known input consumers. The synthetic two-consumer example has exactly one code entry and one rent amount; JSON round-trip retains an integer stroop amount above the safe JavaScript number range. This validates representability, not a production deduplication algorithm or real cross-contract RPC discovery. Producers still enforce canonical keys, reference integrity and arithmetic consistency.
+
+**Validation:** `pnpm check` passed conflict-marker detection, typecheck (including the new test tsconfig), lint, formatting and all **31 tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler). The unmodified recorded Testnet A fixture fits all four entry kinds; synthetic cases cover shared consumers, unavailable TTL, multiple payers and outcome variants. Fourteen negative type examples are compiler-checked; temporarily removing their suppression directives produced all 14 expected compiler rejections through root `pnpm typecheck`, and the source was restored. No live RPC read, signing, transaction submission or email was needed for this type-only task. Full data flow (`W1-D6-02`), mock RPC (`03`) and persistence (`04`) remain Pending. Local review precedes any push/PR; Issue #29 stays open. Notion completion sync finished via MCP: all three exact task IDs are Done locally with outcomes and Issue #29, and the Decisions page records ADR-005 as Proposed. Rows and page content were read back; D6-02/03/04 remain Pending.
+
+**Email remains on hold:** the completed local `W1-D5-04` proof and integration are preserved on `chore/W1-D5-04-email-smoke` at `470d41c` (implementation `699a699`). The email code/evidence from that branch is not included here. Earlier preparation notes below describe main before that local completion; no new email work or publication is in this task.
 
 **2026-09-07 — `W1-D5-03` runtime proof complete:** PR #24 is merged on `main`. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) both succeeded on `5509c44`. Node 24.20.0 / SDK 17.0.1 read A's Testnet instance, with **162,169** and **161,964 ledgers** remaining respectively. Both events and run IDs match the structured output; full logs and GitHub metadata are saved in the [runtime evidence](evidence/2026-09-07-scheduler-runs/README.md) on branch `chore/W1-D5-03-scheduler-evidence`. `pnpm check` passes all 25 tests. Task **Done**; evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), with review requested from @Fatihmaull. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains **open** until merge. No implementation/workflow edit, signing key, or transaction was needed. A single scheduled read proves automatic invocation, not a cadence guarantee or unattended bump. Notion publication sync completed via MCP: both exact task IDs are Done with PR/Issue links; the Decisions page links the published evidence. All updates were fetched again and verified.
 
@@ -45,7 +53,7 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
+| Shared types & harness | 🟡 types complete locally; review next | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |

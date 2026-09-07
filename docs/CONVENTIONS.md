@@ -90,7 +90,7 @@ Full workflow, including the session-start validation and the discrepancy rules,
 
 ## Naming
 
-- Ledger-related values always carry their unit in the name: `remainingLedgers`, `liveUntilLedgerSeq`, `projectedArchiveDate`. TTL bugs come from confusing ledgers with seconds — the names should make that impossible.
+- Ledger-related values always carry their unit in the name: `remainingLedgers`, `observedAtLedger`, `endsAtLedger`. TTL bugs come from confusing ledgers with seconds — the names should make that impossible. `endsAtLedger` is the final live ledger; `endBehavior` distinguishes archival from deletion. Wall-clock estimates are display-only.
 - Money/fee values carry the unit too: `estimatedRentStroops`, never bare `cost`.
 - Booleans read as assertions: `isArchived`, `shouldBump`, `hasPolicySigner`.
 
@@ -101,7 +101,7 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - Integration tests that hit testnet live in `*.integration.test.ts`, are excluded from the default `pnpm test`, and are run manually.
 - Every bug fix gets a regression test reproducing the bug first.
 - Coverage target: meaningful coverage on `core` math/cost/decision logic (~80%). Don't chase 100% on glue code.
-- Test names describe behavior: `returns 0 remaining ledgers when entry is already archived`.
+- Test names describe behavior: `keeps an entry live at zero remaining ledgers`.
 
 ## Secrets and keys
 
