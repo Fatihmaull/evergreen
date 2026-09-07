@@ -29,6 +29,32 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Transaction hashes
 
+### 2026-09-05 — Testnet account setup (W1-D4-02)
+
+Two account-funding transactions, with original RPC responses and explorer captures. Account roles and public keys are recorded in [SETUP.md](SETUP.md#testnet-accounts).
+
+| Task | Action / signer | Tx hash | Full RPC JSON | Explorer screenshot |
+|---|---|---|---|---|
+| W1-D4-02 | Create bot account with 20 XLM Testnet / developer key | `f07dd5cafb40ea3466f6d59955c6e04158d3df2c0a684ed3cd790676e3f5be29` | [SUCCESS response](evidence/2026-09-05-testnet-setup/bot-funding-transaction.json) | [Screenshot](evidence/2026-09-05-testnet-setup/bot-funding-explorer.jpg) |
+| W1-D4-02 | Friendbot funds developer account | `1af342f683e3a754cca7b3bfc8f41be995fb33fef77ddca48a1bf0ce77e76114` | [SUCCESS response](evidence/2026-09-05-testnet-setup/dev-funding-transaction.json) | [Screenshot](evidence/2026-09-05-testnet-setup/dev-funding-explorer.jpg) |
+
+### 2026-09-06 — TTL boundary repeat (W1-D4-13)
+
+The existing isolated contract was reseeded after its old temporary entry was confirmed absent. The prior run remains inconclusive and unchanged. This transaction calls `seed`; it is not an `extendTTL` or unattended-engine proof. **Exact boundary confirmed:** the entry is [present at L = 4,529,810](evidence/2026-09-06-ttl-boundary/boundary-ledger-4529810.json), when remaining TTL is zero, and [absent at L+1 = 4,529,811](evidence/2026-09-06-ttl-boundary/boundary-ledger-4529811.json). Offline replay of 412 distinct ledger responses confirms the result. [Experiment and verification record](evidence/2026-09-06-ttl-boundary/README.md).
+
+| Task | Action / signer | Tx hash | Full RPC JSON | Explorer screenshot |
+|---|---|---|---|---|
+| W1-D4-13 | Reseed isolated fixture / developer key | `8617c2f39f39d27a88ef8577e23e0b06ad1f2354fba906b6f04f6dfc72a3e34a` | [SUCCESS response](evidence/2026-09-06-ttl-boundary/boundary-seed-transaction.json), [initial entry](evidence/2026-09-06-ttl-boundary/boundary-initial-entry.json) | [Screenshot](evidence/2026-09-06-ttl-boundary/boundary-seed-explorer.jpg) |
+
+### 2026-09-05 — First TTL boundary observation (W1-D4-13)
+
+The first isolated lifetime was not observed at its boundary and remains **inconclusive**. All 189 raw samples are preserved; see the [experiment record](evidence/2026-09-05-ttl-boundary/README.md). Funding evidence is handled separately in setup PR #20.
+
+| Task | Action / signer | Tx hash | Full RPC JSON | Explorer screenshot |
+|---|---|---|---|---|
+| W1-D4-13 | Deploy isolated boundary instance / developer key | `34099447d179f0039b811295b7a40b313324a73dbe2ca101825c7214b2b0dc19` | [SUCCESS response](evidence/2026-09-05-ttl-boundary/boundary-deploy-transaction.json) | [Screenshot](evidence/2026-09-05-ttl-boundary/boundary-deploy-explorer.jpg) |
+| W1-D4-13 | Seed first temporary entry / developer key | `12650a38e3751c4e185dc173c5c0735e11a76b5a889f7ef95704af5692a42b9c` | [SUCCESS response](evidence/2026-09-05-ttl-boundary/boundary-seed-transaction.json), [initial entry](evidence/2026-09-05-ttl-boundary/boundary-initial-entry.json) | [Screenshot](evidence/2026-09-05-ttl-boundary/boundary-seed-explorer.jpg) |
+
 Add the row the moment you see the hash. `Signer` records which signing path produced it — Stage 1 (plain funded account) or Stage 2 (capped policy signer) — so evidence captured before and after Stage 2 lands reads as a progression rather than a contradiction.
 
 | Date | Task | What it proves | Contract | Signer | Tx hash | JSON | Screenshot |
