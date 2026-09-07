@@ -115,9 +115,13 @@ Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (record
 
 2026-09-06: [local runtime record](evidence/2026-09-06-scheduler-smoke/README.md) and [unedited script stdout](evidence/2026-09-06-scheduler-smoke/local-run.jsonl) show SDK 17.0.1 on Node 24.13.0 reading guinea-pig A's instance from Testnet. At ledger **4,530,578**, `liveUntilLedgerSeq` was **4,712,648**, leaving **182,070 ledgers**. These are derived script logs, not raw RPC responses. The probe submitted no transaction.
 
-Published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23).
+Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) on 2026-09-07, tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23).
 
-**Still pending:** review/merge, a successful manual GitHub run, and a successful run with event `schedule`, with run URLs, commit SHAs, and exported logs. This local record does not prove cron execution or an unattended bump.
+2026-09-07: manual GitHub run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224), event `workflow_dispatch`, succeeded on `main` at `5509c44e37be3bf51d1ef2ec0c8e8f109f605eb2`. Node **24.20.0** / SDK **17.0.1** read A at ledger **4,550,479**, with **162,169 ledgers** remaining. See the [GitHub runtime record, full logs, and metadata](evidence/2026-09-07-scheduler-runs/README.md).
+
+2026-09-07: genuine scheduled run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199), event `schedule`, also succeeded on the same commit. At 10:30:10 UTC, it read A at ledger **4,550,684**, with **161,964 ledgers** remaining. The same [runtime record](evidence/2026-09-07-scheduler-runs/README.md) includes its full log and GitHub run/job metadata, with event and run ID verified against the script output.
+
+**Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Evidence publication awaits local review; Issue #23 remains open for that step. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
 
 ## Screenshots
 

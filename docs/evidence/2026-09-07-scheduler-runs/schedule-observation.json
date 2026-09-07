@@ -1,0 +1,8 @@
+{
+  "capturedAt": "2026-09-07T10:30:32.845077+00:00",
+  "source": "GitHub REST workflow runs filtered to event=schedule",
+  "workflowId": 352007774,
+  "responseFile": "schedule-runs-observed.json",
+  "totalCount": 1,
+  "interpretation": "Point-in-time run count; does not identify the intended cron slot or guarantee future scheduling."
+}
