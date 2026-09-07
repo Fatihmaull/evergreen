@@ -1,0 +1,8 @@
+{
+  "status": "confirmed",
+  "liveUntilLedgerSeq": 4529810,
+  "presentAtBoundary": true,
+  "presentAtNextLedger": false,
+  "distinctLedgers": 412,
+  "finishedAt": "2026-09-06T05:30:52.681Z"
+}

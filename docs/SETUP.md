@@ -82,6 +82,8 @@ The local developer and bot keys were generated fresh and stored only in ignored
 
 ## Guinea-pig contracts
 
+`W1-D4-13` uses a separate instance for the temporary-entry boundary experiment: **`CBVX3LUUEZR4HQEPZI3E6DZJN4KGST6EICMVJ5SXIZMSS3DQRZACMWZX`**. It reuses the existing Wasm and does not replace A/B/C. The [first observation](evidence/2026-09-05-ttl-boundary/README.md) stopped before expiry; the [2026-09-06 repeat](evidence/2026-09-06-ttl-boundary/README.md) confirmed presence at ledger 4,529,810 and absence at 4,529,811. B/C and shared code were unchanged. Keep this instance out of automated bump configuration when observing natural expiry.
+
 **A is the working subject; B and C are calibrated decay subjects.** Do not use one where another is meant.
 
 ### A — the working test subject
@@ -92,7 +94,7 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 |---|---|
 | Contract ID | `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` |
 | Deployed | 2026-09-05, by account A (`GBRGOJUA…MWLZ`) |
-| Initial TTL | instance/code/persistent ≈ 120,927 ledgers · temporary 688 ledgers |
+| Remaining TTL at initial sample | instance/code/persistent ≈ 120,927 ledgers · temporary 688 ledgers; these are sampled remainders, not network minimums — see [the correction](SOROBAN-PRIMER.md#measured-ttl-floors) |
 | Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 |
 | Redeploy script | `./scripts/deploy-guinea-pig.sh A` |
 

@@ -2,8 +2,8 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-05 · Testnet environment setup
-**Sprint day:** 3 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-07 · W1-D4 setup + TTL boundary merged
+**Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
@@ -13,7 +13,7 @@
 
 **2026-09-05 — Testnet environment setup:** local tooling, environment configuration, and account funding are verified. The setup changes are prepared for review; no engine scheduler is running.
 
-**Publication tracking:** [Issue #19](https://github.com/Fatihmaull/evergreen/issues/19) tracks the reviewed setup change. Second-machine/account confirmation and the TTL-boundary experiment remain open separately.
+**Merged 2026-09-07:** [PR #20](https://github.com/Fatihmaull/evergreen/pull/20) (setup, closing [#19](https://github.com/Fatihmaull/evergreen/issues/19)) and [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) (TTL boundary, closing [#21](https://github.com/Fatihmaull/evergreen/issues/21)). Second-machine/account confirmation remains open.
 
 | Task | Current result |
 |---|---|
@@ -21,13 +21,15 @@
 | `W1-D4-02` · in progress | Developer account funded through Friendbot; separate bot account funded with 20 XLM Testnet. Keys remain in ignored local `.env`. The second developer's everyday account designation remains pending. |
 | `W1-D4-03` · done locally | Testnet endpoint/passphrase configured and checked; developer and bot key placeholders documented. |
 | `W1-D4-14` · done locally | ESLint and Prettier ignore generated Rust output; repository checks pass with build artifacts present. |
-| `W1-D4-13` · in progress, paused | The separate TTL-boundary experiment is incomplete. Its scripts and observation artifacts remain in local work and are outside this setup publication. |
+| `W1-D4-13` · **done** | **Boundary confirmed:** entry present at ledger **4,529,810** (remaining 0), absent at **4,529,811** (remaining −1). 412 raw responses, offline replay, 11 verifier tests. Confirms the documented inclusive boundary and the `remainingLedgers == 0` trap. |
 
 **Validation:** `pnpm check` passes typecheck, lint, formatting, and the 5 existing placeholder tests. Earlier setup verification passed 3 Rust fixture tests and reproduced Wasm hash `c7e55f0a…bce98bfb`. CLI `ping --send=no` against guinea-pig A returned `"guinea_pig"`.
 
 **Evidence:** two account-funding transactions have full unedited JSON RPC responses and explorer screenshots in [EVIDENCE.md](EVIDENCE.md). The developer and bot public keys are documented in [SETUP.md](SETUP.md).
 
-**Pending Notion sync — `W1-D4-01/02/03/13/14`:** reconcile task notes and publication links after the setup review. Local work is canonical; the mirror has not been updated in this preparation step.
+**Notion:** `W1-D4-13` synced by Rakha via MCP with PR/Issue links, and the Knowledge Base records the verifier. Remaining rows reconciled on merge 2026-09-07.
+
+**2026-09-06 — `W1-D4-13` published for review:** [PR #22](https://github.com/Fatihmaull/evergreen/pull/22) closes [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21). The exact boundary remains confirmed by 412 raw responses. The verifier rejects malformed, unrelated, and duplicate entries; two regression tests failed before the fix and pass after it. `pnpm check` passes typecheck, lint, formatting, 5 existing placeholder tests, and all 11 verifier tests. The PR uses `chore/W1-D4-13-ttl-boundary`, based on `main`, and requests review from @Fatihmaull. Setup PR #20 is unchanged. Notion publication sync completed via MCP: the exact task ID is `Done` with PR/Issue links, and the Knowledge Base links the published evidence and records the 11-test verifier. Both updates were independently fetched and verified.
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|
@@ -35,13 +37,13 @@
 | Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
 | Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | 🟡 local setup verified | F/R | D4-03/14 complete locally; D4-01/02 await confirmation; D4-13 paused |
+| Stellar dev env | 🟢 mostly done | F/R | D4-03/13/14 ✅ · D4-01/02 await second-machine confirmation |
 | Services & accounts | ⬜ not started | F/R | W1-D5-01 → W1-D5-06 |
 | Shared types & harness | ⚠️ **grew 3×** | R/F | W1-D6-01 → W1-D6-04 · **shape inversion, see below** |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | 🟡 account setup captured | S | Two funding transactions with JSON and screenshots; product proofs still pending |
+| Evidence | 🟡 building | S | Setup: 2 funding txs. Boundary: adjacent-ledger proof + 3 tx records. All with JSON + screenshots. First weekly snapshot due W1-D7-03 |
 
 ## Blocked
 
@@ -87,11 +89,12 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 | 16 | **History rewritten on `main` 2026-09-05.** `c8aea7b "test: protection probe"` removed. | An empty commit created while testing branch protection by actually pushing — before `enforce_admins` was on, admin bypass let it through silently. Removed while the window was cheap: zero clones, one contributor. See the note below. |
 | 14 | Root `Evergreen-PRD.md` deleted (byte-identical duplicate of `docs/PRD.md`); bootstrap prompt archived to `docs/archive/BOOTSTRAP-PROMPT.md` with a not-a-source-of-truth header. | A duplicate drifts on first edit. The bootstrap prompt predates the permissionless finding and must never be read as authoritative. |
 
-## ⏱️ Start `W1-D4-13` before the other D4 tasks
+## `W1-D4-13` — exact boundary observed
 
-It is a **timer, not a task**: ~57 minutes elapsed, a few minutes of effort — seed a temporary entry, then poll until the read fails. `W1-D4-01/02/03` are hands-on and will fill the wait, so run the boundary check alongside them rather than behind them.
+The 2026-09-06 temporary entry was present at its final live ledger **4,529,810** (remaining 0) and absent at **4,529,811** (remaining -1). The 412 raw RPC responses confirm the inclusive boundary, consistent with the documented semantics. The [evidence record](evidence/2026-09-06-ttl-boundary/README.md) includes the seed transaction JSON and explorer screenshot. The earlier 189 samples remain unchanged and inconclusive.
 
-Its task number hides this. **`W2-D8-01` (Thu Sep 10) cannot be written correctly until it lands**, so picking it up last converts an hour of waiting into a day of slippage on the week's first real math task.
+The configured minimum is **720 ledgers**; **688** was remaining TTL at an earlier sample. This finding informs `W2-D8-01`. It is a temporary-entry expiry observation; the unattended-bump deliverable remains pending. B/C instance entries and their shared code are unchanged before/after this experiment. No new network transaction was needed during publication review.
+
 
 ## ⚠️ `W1-D6` (Tue Sep 8) matters more than its position suggests
 
