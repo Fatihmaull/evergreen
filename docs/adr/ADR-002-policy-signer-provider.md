@@ -1,6 +1,8 @@
 # ADR-002: Use `stellar/passkey-kit` for the non-custodial policy signer
 
-**Status:** Accepted — amended 2026-09-04 (see Update log). Retained, but moved off the critical path; validation by the Week 3 spike (W3-D15/D16)
+**Status:** Accepted — amended 2026-09-04 (see Update log). Retained, but moved off the critical path; validation by the Week 3 spike, **now `W3-D19` (was D15/D16)**
+
+> **Task IDs in the Context/Options/Consequences sections below are pre-rescope and no longer resolve to the work they name.** The 2026-09-04 amendment restructured Week 3 into two stages and the day contents moved; the IDs themselves were reused. Current mapping: the spike is **`W3-D19-01/02`**, its fund-rejection check is **`W3-D19-02`**, the end-to-end headless submit is **`W3-D19-03`**, the go/no-go is **`W3-D20-01`**, and the setup guide is **`W3-D20-03`**. The body is left as written because an ADR records the reasoning we had at the time — see the update log for what changed.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -58,4 +60,4 @@ Option C is explicitly out of scope for this grant. If both A and B prove insuff
   **Consequence for SOW 2.** Stage 2's machinery — an account the user owns, from which a scoped signer may draw only to pay `extendTTL` fees — is the foundation of a hosted engine that stays non-custodial. See ADR-004.
 
   **Scope note.** The SOW names the capped policy signer in both the Deliverable 2 description and its required evidence, so this is a resequencing, not a drop. Fatih owns raising it with the Ambassador Chapter Lead in Week 1 rather than at review.
-- *(W3-D16-03: record spike outcome — go with A, or fall back to B, and why.)*
+- *(`W3-D20-01`: record spike outcome — go with A, or fall back to B, and why. Was filed here as W3-D16-03 pre-rescope.)*

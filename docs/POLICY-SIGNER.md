@@ -1,6 +1,6 @@
 # Policy signer — setup guide
 
-> 🚧 **Not written yet. Due `W3-D21-02`** (Week 3, Sep 17–23). See [`BACKLOG.md`](../BACKLOG.md).
+> 🚧 **Not written yet. Due `W3-D20-03`** (Week 3, Sep 17–23). See [`BACKLOG.md`](../BACKLOG.md).
 >
 > This stub exists because the README links here and the repo is public. It is a placeholder, not a document.
 

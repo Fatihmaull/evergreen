@@ -60,8 +60,8 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 | Date | Task | What it proves | Contract | Signer | Tx hash | JSON | Screenshot |
 |---|---|---|---|---|---|---|---|
 | | W2-D11-02 | first manual `extendTTL` succeeded | | dev key | | ⬜ | ⬜ |
-| | W3-D16-01 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
-| | **W3-D20-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
+| | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
+| | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
 | | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
 | | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
@@ -103,9 +103,9 @@ One thing worth stating because it is not obvious: B and C were deployed from th
 
 ### The two unattended-bump proofs are not interchangeable
 
-**`W3-D20-02a` — threshold proof (insurance, banked early ~Sep 17).** Set the bump threshold *above* the contract's current TTL and the engine fires on its next scheduled run. Proves the engine detects and bumps, unattended, on a real cron. Cheap, repeatable, available on demand.
+**`W3-D18-02a` — threshold proof (insurance, banked early ~Sep 17).** Set the bump threshold *above* the contract's current TTL and the engine fires on its next scheduled run. Proves the engine detects and bumps, unattended, on a real cron. Cheap, repeatable, available on demand.
 
-**`W3-D20-02b` — natural-decay proof (the compelling one).** Guinea-pig B is deployed on **W1-D4 (Sep 6)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
+**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B is deployed on **W1-D4 (Sep 6)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
 
 Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
 
@@ -151,8 +151,8 @@ Store files in the shared evidence drive (W1-D5-06); link them here.
 | | W1-D7-03 | first working `scan` against testnet | |
 | | W2-D11-03 | TTL before/after a manual extend | |
 | | W2-D14-03 | CLI output (human + `--json`), coverage report | |
-| | W3-D19-03 | alert emails (success + failure) | |
-| | W3-D20-03 | engine run logs on the scheduler | |
+| | W3-D17-03 | alert emails (success + failure) | |
+| | W3-D18-03 | engine run logs on the scheduler | |
 | | W4-D24-02 | dashboard: public scan of an arbitrary contract | |
 | | W4-D24-02 | dashboard: bump history with real data | |
 | | W4-D25-03 | `evergreen-check` failing run + passing run | |
