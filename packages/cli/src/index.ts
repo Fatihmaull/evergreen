@@ -1,18 +1,10 @@
 /**
  * The `evergreen` CLI. Deliberately thin: parse args, call core, format output,
- * map errors to readable messages, set exit codes.
+ * set exit codes. All logic lives in core.
  *
- * Commands (built W1-D7 onward): `scan`, `extend`, `optimize`.
- *
- * Two contracts the rest of the system depends on, so keep both stable once
- * published:
- *   - Exit code is non-zero when a contract is below threshold. The
- *     `evergreen-check` GitHub Action reads nothing else.
- *   - `--json` output shape.
- *
- * Anything that can submit a transaction defaults to dry-run. Live submission
- * requires an explicit flag (CLAUDE.md hard rule 6).
+ * Two contracts the rest of the system depends on — keep both stable once
+ * published, because the `evergreen-check` GitHub Action reads nothing else:
+ *   - the exit code (0 healthy, non-zero below threshold, 2 on error)
+ *   - the `--json` output shape
  */
-
-/** Package marker — replaced by the real command surface at W1-D7-01. */
-export const CLI_PLACEHOLDER = true;
+export { EXIT_BELOW_THRESHOLD, EXIT_ERROR, EXIT_OK, exitCodeFor, formatHuman } from './scan.js';
