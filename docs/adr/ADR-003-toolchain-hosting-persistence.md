@@ -43,6 +43,19 @@ Asked as "where do we keep bump history?", flat JSON committed to the repo looks
 | **Render** | Native cron jobs | Managed Postgres | Near-identical to Railway; choose on account/DX preference rather than capability. |
 | **GitHub Actions cron + hosted DB** (Neon / Turso / Supabase) | Scheduled workflows | External DB provides the lock; Actions alone provides none | Public run logs are easy to review; export the proof logs for grant evidence. **Risk: scheduled workflows are best-effort and can be delayed well past the interval** — the threshold design must tolerate it and a missed run must alert. |
 
+> ### ⚠️ Having a Cloudflare account does not decide persistence
+>
+> Once the account exists for Pages there is an obvious pull toward *"we're on Cloudflare anyway, so D1."* **Resist it.** The two parts are separable and only one is blocked:
+>
+> | Part | Status | Blocked on the SDK question? |
+> |---|---|---|
+> | Dashboard hosting | **Settled — Cloudflare Pages** | No. Pages is static hosting and never touches the Stellar SDK. |
+> | Engine runtime + persistence | **Open** | **Yes, blocking.** |
+>
+> The unanswered question is still *does the Stellar SDK run in the Workers runtime?* If it does not, the engine is not on Cloudflare — and reaching D1 from another platform is awkward enough to be a bad default arrived at by momentum rather than by decision.
+>
+> Answer the SDK question on its own merits, timeboxed to one afternoon. If it stays ambiguous past that, **the ambiguity is the answer** and the Actions cron floor carries us.
+
 ### Dashboard hosting is a *separate, much smaller* question
 
 Worth separating explicitly, because the shortlist above is about running the **engine** and it does not apply here.

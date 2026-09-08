@@ -224,7 +224,7 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 | Service | Purpose | Account/owner | Status |
 |---|---|---|---|
 | GitHub | repo, CI, Action publishing | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ public, MIT, CI green |
-| npm | `evergreen` packages | *(reserve W1-D5-01)* | ⬜ |
+| npm | `evergreen` packages | *(W1-D5-01 — see below)* | ⬜ |
 | Hosting (Vercel/Netlify/Cloudflare) | dashboard | *(W1-D5-02)* | ⬜ |
 | GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | ✅ manual and genuine scheduled Testnet reads verified; evidence published in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), awaiting merge |
 | Resend | local email smoke; engine alerts later | `W1-D5-04` | ✅ one local email accepted (HTTP 200) and inbox receipt confirmed; [evidence](evidence/2026-09-07-email-smoke/README.md) |
@@ -286,6 +286,35 @@ gh api -X DELETE repos/Fatihmaull/evergreen/branches/main/protection/enforce_adm
 # ... do the thing, then immediately:
 gh api -X POST   repos/Fatihmaull/evergreen/branches/main/protection/enforce_admins
 ```
+
+## Service accounts — the durable record
+
+The click-by-click walkthroughs live in their task issues and die with them. What belongs here is the **outcome**: what a person setting this up again in six months would need.
+
+### npm (`W1-D5-01`)
+
+| | |
+|---|---|
+| Account owner | *(pending)* |
+| Published package names | *(pending — `evergreen` is taken)* |
+| Why not `evergreen` | Squatted by an abandoned MongoDB build-platform client, last published **2016-04-28**. Not obtainable. |
+| Scope `@evergreen` claimable? | *(pending — npm returns 403 unauthenticated, so it can only be answered while signed in)* |
+| Command name | **`evergreen` regardless.** A package published under any name declares `"bin": { "evergreen": … }`, so `npm i -g <name>` still gives users `evergreen scan`. Only `npx <name>` and the install line depend on the package name. |
+| If redone | Check availability *before* any doc or screenshot quotes the name. The cost of this task is not the signup, it is every place the name appears. |
+
+### Dashboard hosting (`W1-D5-02`)
+
+| | |
+|---|---|
+| Provider | Cloudflare Pages |
+| Account owner | *(pending)* |
+| Project name | *(pending)* |
+| Deploy URL | *(pending)* |
+| Framework preset | **None** |
+| Build command | **empty** |
+| Output directory | **`apps/dashboard/public`** |
+| Why Cloudflare | Not on hosting merit — the P0 dashboard is static, so Vercel/Netlify/Pages are identical. Chosen because the same account can answer whether the Stellar SDK runs on Workers, which is the blocking unknown in ADR-003 Part 2. |
+| If redone | Any static host works. **Do not infer that the engine or its persistence lives on Cloudflare** — see the warning in ADR-003. |
 
 ## Common commands
 
