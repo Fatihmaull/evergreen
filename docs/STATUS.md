@@ -249,7 +249,36 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
+## ✅ ADR-005 accepted · `W1-D6-02` merged · W2–W4 carry-forward confirmed
+
+**W1 is 45/50 done.** Only the review-gate tasks remain, and Rakha has them drafted.
+
+### ADR-005 — accepted, with what was actually endorsed
+
+Three things carried it, recorded in the ADR so a future reader does not re-derive them:
+
+- **Money as integer decimal text.** Stroop values above `Number.MAX_SAFE_INTEGER` round *silently* as JSON numbers, and a rent estimate that is quietly wrong is worse than one that fails. The cost — consumers must convert before arithmetic — is the right trade: an explicit conversion is visible, a silent rounding is not.
+- **Explicit variants over sentinels.** `known`/`unavailable`, `simulated`/`submitted`/`succeeded`/`failed`. This is what keeps "no TTL" structurally distinct from "expiring now" — they collapse into `0` under any nullable-number model, and that collapse is the exact bug class this project keeps finding.
+- **The signer seam is explicitly NOT a security boundary.** A seam described as security but not enforced as security is worse than no seam, because it invites trust it cannot carry.
+
+Its **downstream sweep** says plainly that this decision changed no dependency — stated rather than left blank, because an unconsidered sweep and an empty one look identical.
+
+### Carry-forward — the temporary-entry question was entangled, so it is split
+
+`W3-D15-02b` **stays in Week 3** rather than being settled early. But two decisions were riding on one ID:
+
+- **Reporting** a temporary entry near deletion is a **W2** concern and is **not open**. Deletion is unrecoverable, so imminent deletion is high severity **whether or not we ever auto-bump.** W2 must not wait on this.
+- **Auto-bumping** one is genuinely open and stays in W3, because the threshold work is what makes the trade concrete.
+
+Nothing in W2 depends on the second, which is why settling it early buys nothing — and separating them is what stops W2 stalling on a decision it does not need.
+
+### The two dates that matter now
+
+Both before **Fri Sep 18**, and both exist because a silent skip is the dominant failure mode:
+- **`W2-D10-04`** — the run exits non-zero when it sees an entry below threshold and did not bump it.
+- **`W3-D17-05`** — Stage 1 failure modes (RPC timeout, insufficient balance, missed run) each alert rather than failing silently.
+
+## 🔍 `pnpm check:task-ids`## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
 
 Rakha's W1 closeout noted that guinea-pig C's evidence row pointed at *"an unregistered alias."* He was right: **`W3-D18-02c` existed in `EVIDENCE.md` and had no task behind it** — I invented it when adding C's row.
 
