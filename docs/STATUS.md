@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · persistence spike artifact published as PR #52; architecture planning next
+**Last updated:** 2026-09-08 · W1-D6-02 published in PR #53; synchronized with merged PR #52
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,22 @@
 ---
 
 ## Right now
+
+**2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
+
+**Outcome:** three Mermaid diagrams show dependencies, the actual instance scan and the planned engine flow. The document names the real shared-type fields and producer/consumer boundaries, a synthetic two-consumer/one-entry example, inclusive TTL semantics, optional rent, per-payer signer resolution, and simulated/submitted/succeeded/failed records. It records the accepted W3 Actions history / W4 Neon split and adoption prerequisites. Current limitations are explicit: scans read instances only; repeated input IDs remain repeated consumer references; unavailable TTL is skipped by the current CLI threshold helper. Broader discovery/consumer deduplication remain W2-D8-03/04, and future engine decisions must handle incomplete observations. No new product decision, runtime implementation or shared-type change is claimed.
+
+**Initial validation:** `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **63 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email). That pre-sync count excluded the seven persistence tests subsequently merged in PR #52. All 22 document links were checked for valid local targets where applicable, and all 11 explicit task IDs resolve in BACKLOG. Final review parsed and rendered all three diagrams with Mermaid 11 in local Chromium and inspected their screenshots; rendering passed. **After integrating PR #52, a frozen-lockfile install and `pnpm check` passed all 70 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting and conflict detection. Runtime source, workflows, dependency files and original evidence match main; prior branch heads, stash and .env content/permissions are preserved. No new chain read/transaction, database run or email was needed: existing fixture-based tests and the merged scan proof cover the documented behavior.
+
+**Mirror:** D6-02 is Done in both channels; its documented outcome and 63-test validation were read back by exact ID before publication. Publication sync records PR #53, the combined 70-test result and its pending review/merge state on the same row; the D6-04 merge outcome is mirrored as well. Earlier OAuth notes below are historical.
+
+**Final review:** two diagram clarifications landed: unit tests enter through the mock reader without calling the network guard/SDK, and the engine resolves the public fee-paying account before envelope preparation/simulation, with signing gated by live opt-in. Existing shared types and code were rechecked; no blocking finding remains within this documentation scope. Temporary Mermaid rendering tools/screenshots are outside the repository; no dependency or runtime changes were added.
+
+**Synchronization:** the earlier STATUS introduction conflict retained both task histories. The follow-up sync with #54/#55 merged cleanly, retaining the npm scope and ADR refinements from main. The architecture diagrams and shared-type mappings are unchanged; the PR diff remains three Markdown files.
+
+**Next:** PR #53 awaits CI and reviewer approval; it has not been merged. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
+
+## Earlier session notes
 
 **W1-D6-04 decision is Done:** PR #48 accepts Actions + Node 24 and PostgreSQL on Neon, adopted in W4 after the Sep 20 proof. PR #49 resequences W3 history/coordination; PR #50 adds the downstream-sweep requirement. PR #51 subsequently corrected Stage 1 alerting deadlines and stale evidence task IDs. Local main was fast-forwarded to `a7d500d`, and PR #48/#49/#50/#51 are integrated into `chore/W1-D6-04-persistence-spike`. This supersedes the earlier plan to complete hosted validation before #32: no W1 hosted database is required, and D6-02 is now unblocked.
 
