@@ -645,6 +645,9 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | 2026-09-05 06:29 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-06 02:20 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+| 2026-09-08 17:25 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+
+Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943. The calibration is holding, and at this point the *absence* of drift is itself the finding: testnet has been closing at a steady 5.000 s/ledger for three days. That is not a licence to stop checking — the eleven days between now and B's crossing are exactly where a validator hiccup would land, and the reading that matters is the one taken after something changes, not the three taken before.
 
 > ⚠️ **B and C can now sit in the engine config early** — calibrated against a threshold, the engine correctly does nothing until the crossing. But that safety depends on the configured threshold matching the calibration, so adding them is a deliberate verified step: add, run **dry-run**, confirm the engine reports **no action needed**, only then run live. A threshold accidentally too high bumps them immediately and destroys both proofs silently. Procedure in `docs/SETUP.md`.
 
