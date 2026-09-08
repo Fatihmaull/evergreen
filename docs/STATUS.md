@@ -243,9 +243,19 @@ It found three more beyond C's:
 
 | ID | Where | Cause |
 |---|---|---|
-| `W3-D18-02` | `ARCHITECTURE`, `CONVENTIONS`, `ADR-001` | Another Week 3 renumbering casualty — the double-bump promise is `W3-D16-02` |
-| `W2-D12-02b` | `PRD` | Renamed to `F-01` when floated; I fixed `STATUS` and missed `PRD` |
+| ~~W3-D18-02~~ | `ARCHITECTURE`, `CONVENTIONS`, `ADR-001` | Another Week 3 renumbering casualty — the double-bump promise is `W3-D16-02` |
+| ~~W2-D12-02b~~ | `PRD` | Renamed to `F-01` when floated; I fixed `STATUS` and missed `PRD` |
 | `W3-D18-02c` | `EVIDENCE` | Now **registered as a real task** — C's spare proof is real work |
+
+### It caught me on its own PR, twice over
+
+CI failed on the very PR that added this check — and the reason is worth recording twice.
+
+**First:** the STATUS table above quotes the retired IDs while explaining them. To the checker that is indistinguishable from a live reference. Fixed with a marker convention: **strikethrough means "retired, quoted deliberately"** — semantically exact, readable to humans, and documented in `CONVENTIONS` with the warning that using it on a *live* reference converts a caught bug into a hidden one.
+
+**Second, and worse:** I had been verifying with `pnpm check && echo PASS`. **On failure that prints nothing**, and I read the silence as noise rather than as failure. I was also on `main` rather than the branch, so what I did check was the wrong tree. CI caught both.
+
+`cmd; echo "exit=$?"` is now the recorded idiom — a number is always printed, so there is no silent case. **Fifth member of the reported-vs-actual family, and this one was my own verification lying to me.**
 
 ### What it catches, and what it deliberately cannot
 

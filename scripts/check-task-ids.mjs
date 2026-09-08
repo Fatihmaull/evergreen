@@ -42,6 +42,19 @@ const REGISTERED = new Set(
 // Any delimiter. Trailing guard stops a prefix matching a longer ID.
 const REF = /\b(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\b(?![-\w])/g;
 
+/**
+ * A RETIRED id, quoted deliberately: ~~W3-D18-02~~
+ *
+ * Documenting a rename necessarily means naming the old id, and that is not a
+ * dangling reference — it is the record of why the new one exists. Strikethrough
+ * says exactly that and reads correctly to a human too.
+ *
+ * Use it ONLY for an id that genuinely no longer exists. Reaching for it to
+ * silence this check on a live reference would convert a caught bug into a
+ * hidden one.
+ */
+const RETIRED = /~~\s*(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\s*~~/g;
+
 function walk(p) {
   if (SKIP.some((s) => p.includes(s))) return [];
   if (statSync(p).isDirectory()) return readdirSync(p).flatMap((c) => walk(join(p, c)));
@@ -59,7 +72,9 @@ for (const file of ROOTS.flatMap(walk)) {
     .forEach((line, i) => {
       if (/^## Session log/.test(line)) inSessionLog = true;
       if (inSessionLog) return;
+      const retired = new Set([...line.matchAll(RETIRED)].map((m) => m[1]));
       for (const m of line.matchAll(REF)) {
+        if (retired.has(m[1])) continue;
         if (!REGISTERED.has(m[1])) dangling.push({ file, line: i + 1, id: m[1] });
       }
     });
