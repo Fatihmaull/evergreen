@@ -317,10 +317,14 @@ The click-by-click walkthroughs live in their task issues and die with them. Wha
 
 | | |
 |---|---|
-| Account owner | *(pending)* |
-| Published package names | *(pending — `evergreen` is taken)* |
+| Account owner | Fatih (`fatihmaull`) — owner of the **org** `evergreen-stellar` |
+| Published package names | **`@evergreen-stellar/cli`**, **`@evergreen-stellar/core`** |
+| Default team | `Developers` — auto-grants read/write across the scope |
 | Why not `evergreen` | Squatted by an abandoned MongoDB build-platform client, last published **2016-04-28**. Not obtainable. |
-| Scope `@evergreen` claimable? | *(pending — npm returns 403 unauthenticated, so it can only be answered while signed in)* |
+| Scope `@evergreen` claimable? | No. Took **`@evergreen-stellar`** instead — and owning an *org* is strictly better than a name: nothing in the scope can ever be squatted, so no placeholder publishes are needed. |
+| ⚠️ `publishConfig` | **`{"access": "public"}` is required in every published package.** Scoped packages default to *private*, and private needs a paid plan — without it a publish either fails outright or silently ships a private package. It lives in `package.json` rather than relying on remembering `--access public` on the day. |
+| 2FA | **Currently DISABLED.** Tracked as `W4-D27-00`, to be enabled before the first publish. A public scope other people install from with an unprotected account is a supply-chain risk. |
+| Org membership | Rakha needs an invite before `W4-D27-02` — publishing moved to him in the Week 4 rebalance. Tracked as `W4-D27-00b`. |
 | Command name | **`evergreen` regardless.** A package published under any name declares `"bin": { "evergreen": … }`, so `npm i -g <name>` still gives users `evergreen scan`. Only `npx <name>` and the install line depend on the package name. |
 | If redone | Check availability *before* any doc or screenshot quotes the name. The cost of this task is not the signup, it is every place the name appears. |
 
@@ -329,14 +333,27 @@ The click-by-click walkthroughs live in their task issues and die with them. Wha
 | | |
 |---|---|
 | Provider | Cloudflare Pages |
-| Account owner | *(pending)* |
-| Project name | *(pending)* |
-| Deploy URL | *(pending)* |
+| Account owner | Fatih |
+| Project name | `evergreen-stellar` |
+| Deploy URL | **https://evergreen-stellar.pages.dev** — verified HTTP 200 |
+| Production branch | `main` — auto-deploys on push |
 | Framework preset | **None** |
 | Build command | **empty** |
 | Output directory | **`apps/dashboard/public`** |
 | Why Cloudflare | Not on hosting merit — the P0 dashboard is static, so Vercel/Netlify/Pages are identical. Chosen because the same account can answer whether the Stellar SDK runs on Workers, which is the blocking unknown in ADR-003 Part 2. |
 | If redone | Any static host works. **Do not infer that the engine or its persistence lives on Cloudflare** — see the warning in ADR-003. |
+
+> ### ⚠️ Verify a deploy by loading the URL, not by reading the dashboard
+>
+> Observed 2026-09-08: the build log reported success at 17:30:06, while Cloudflare's step indicator sat on *"Initializing build environment"* for a further **1 minute 34 seconds**, every later step showing `—`. Reading the dashboard alone you would conclude the deploy had hung or failed. It had not; the URL was already serving.
+>
+> Same family as the testnet guard and the weaker-than-CI local gate: **the reported state and the actual state diverged, and only the actual state was checkable.** Load the URL.
+
+> ### ⚠️ The Cloudflare account is shared — Workers quota is account-wide
+>
+> This is not a fresh account. It already runs the domain `focustudio.online` and a Worker named `focuswebstudio`.
+>
+> Irrelevant to Pages, which is static hosting. **It matters for ADR-003**, because Cloudflare Workers free-tier limits are **per account, not per project** — so an existing Worker already consumes part of any budget a future engine would have. Recorded there as an unaccounted factor for the Week 4 revisit, alongside the unmeasured Neon autoscale ceiling.
 
 ## Common commands
 

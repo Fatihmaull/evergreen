@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ScanResult } from '@evergreen/shared-types';
+import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
   EXIT_BELOW_THRESHOLD,
   EXIT_ERROR,

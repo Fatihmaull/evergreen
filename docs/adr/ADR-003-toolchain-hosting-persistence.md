@@ -87,28 +87,39 @@ Whatever is chosen must not model "the bot account" as a process-wide singleton.
 
 Actions cron is already proven end to end: a genuine `schedule` event read testnet successfully (`W1-D5-03`). A bounded local Workers probe passed SDK import, XDR and testnet reads via `wrangler dev --local`, but deployment, cron, signing and D1 remain unverified. That is enough to stop spending time on Workers, not enough to move to it ten days before a gate.
 
-### Why persistence waits
+### Why persistence waits — the load-bearing reason, and the rest
 
-Three findings, in increasing order of importance.
+**Read the separation before the arguments.** Three of the four reasons originally given for waiting were later narrowed or refuted by the spike author (see *Corrections* below). The decision did not change, because it never rested on them. Stating which leg carries the weight so that **refuting a supporting observation cannot be mistaken for refuting the decision.**
 
-**1. Neon usage needs measurement before adoption.** At four runs/hour over 30 days, 2,880 isolated wake-ups followed by the [five-minute idle window](https://neon.com/docs/introduction/scale-to-zero) imply roughly **240 active compute-hours**, before query runtime or other activity. [Neon meters CU-hours as average compute size multiplied by hours running](https://neon.com/docs/introduction/plans); a configured autoscale ceiling is not the average size consumed. The following are conditional scenarios against the documented 100 CU-hour allowance, not measurements of an Evergreen project.
+#### 🟢 LOAD-BEARING — this alone is sufficient
 
-| Assumed average active size | CU-hours over 30 days | Conditional outcome |
-|---|---|---|
-| 0.25 CU | 60 / 100 | Fits this compute scenario |
-| 1.0 CU | 240 / 100 | Exhausts 100 CU-hours after 12.5 days at this usage rate |
+**The ledger is the durable, idempotent source of truth, and the risk asymmetry is inverted.**
 
-On the Free plan, exhausting the compute allowance suspends compute until the next billing period or an upgrade. No project has been provisioned: its reset date, default autoscale settings, average usage and alert behavior have not been measured. The earlier Sep 20 exhaustion scenario is not a forecast. W4-D26-05 must check those settings and actual usage before migration.
+After a bump, `remainingLedgers` is above threshold, so the next run scans and skips. Before it, the next run scans and resubmits. The bump decision is idempotent *without* any coordination layer, because the operation records itself on chain and the chain is what the next run reads.
 
-**Provider comparison clarification:** the spike uses conditional row writes and short transactions, not session advisory locks. Session-lock restrictions therefore do not demonstrate a failure of this implementation on Supabase. Supabase documents [both session and transaction pooler endpoints](https://supabase.com/docs/guides/database/connecting-to-postgres); actual TLS, permissions and pooler behavior remain untested. The accepted Neon target and W4 timing are unchanged.
+So a fail-closed lock in front of a single-shot, unrepeatable deadline gets the risk backwards. **A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. A stalled lock costs the proof.** Guinea-pig B's 24-hour window is ~96 independent attempts; a held claim converts all 96 into one.
 
-**2. The current smoke workflow serializes its own runs.** `scheduler-smoke.yml` uses the fixed `scheduler-smoke` concurrency group with `cancel-in-progress: false`; GitHub permits at most one running execution in [the same group](https://docs.github.com/en/actions/using-jobs/using-concurrency). Its timeout is five minutes. This does not coordinate another repository, a different group or an independent local engine. `packages/engine` is still a placeholder; W3-D16-02 must verify serialization for the real engine workflow.
+This holds at any provider, any quota, any autoscale ceiling. Nothing measured later can weaken it.
 
-**3. Fresh on-chain state suppresses unnecessary work after confirmation.** Once a successful bump is visible and TTL is above threshold, a fresh scan can skip it. That observation does not by itself reconcile a transaction still in flight after a runner exits or loses an acknowledgement; W3-D16-02 retains that responsibility. No exactly-once submission guarantee is claimed by this spike.
+#### 🟡 SUPPORTING — true enough to mention, individually refutable
+
+- **Neon's free-tier arithmetic.** 2,880 runs × a 300s idle window = 240 compute-hours against a 100-hour allowance, exhausting on the crossing date at a 1.0 CU ceiling. **This is an upper bound assuming ceiling-rate compute, not a prediction** — actual consumption depends on average usage and could be materially lower. It is a reason to *measure before provisioning*, not proof of exhaustion.
+- **Cloudflare Workers quota is account-wide.** The account is shared and already runs another Worker, so published free-tier figures overstate our headroom. Unmeasured.
+- **The scheduler concurrency guard.** `concurrency:` with `cancel-in-progress: false` plus `timeout-minutes: 5` under a 15-minute cron. **This governs runs, not chain state** — see immediately below.
+
+#### The in-flight gap is real, and the ledger already closes it
+
+An earlier draft of this ADR claimed overlap was "structurally impossible." **That was wrong**, and it is on record as wrong, so here is the correct version rather than leaving a reader to rederive it.
+
+A concurrency group serialises *workflow runs*. It says nothing about a transaction already submitted to the network. The real case it skips: **a run submits `extendTTL`, dies before confirming, and the next run has no idea whether it landed.**
+
+The answer is the same mechanism that carries the decision. **The chain is the reconciliation.** The next run scans and reads one of two states — TTL above threshold, so it landed and the run skips; or TTL still below, so it did not and the run resubmits. No stored claim is required to reach either conclusion.
+
+This is precisely why `getTransaction()` reconciliation is the right prerequisite for adopting the spike, and why a lease timer is the wrong fix: a timer guesses at what the chain can be asked.
 
 ### The asymmetry that settles it
 
-A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. The accepted response is to keep the database out of that critical path. The stored-hash protection in this experiment remains fail-closed; publication does not add a bypass or authorize a fresh send while the previous transaction is unresolved.
+Restated for emphasis, because it is the load-bearing half above: a double bump costs stroops; a paused, cold or stalled coordination layer on a Sunday costs the least recoverable proof in the grant. **Any coordination added before Sep 20 must fail *open*.** The spike's — correctly, for its own stated goal of never double-sending — fails closed.
 
 ### ⚠️ Unmeasured assumption — read this before provisioning anything
 
@@ -123,6 +134,22 @@ A double bump costs a few testnet stroops and a duplicate row, and damages no ev
 3. The cost asymmetry runs backwards — a fail-closed lock in front of a one-shot, unrepeatable deadline.
 
 So even at 0.25 CU with room to spare, provisioning before Sep 20 would still be wrong. **If you are reading this in Week 4 and reaching for Neon: the decision was about *when*, and these three reasons are why — re-read them before assuming the wait was only about quota.**
+
+### A second unverified quota assumption — Cloudflare, discovered 2026-09-08
+
+The Cloudflare account created for Pages is **shared, not fresh**: it already runs the domain `focustudio.online` and a Worker named `focuswebstudio`.
+
+Irrelevant to Pages. **Relevant here, because Workers free-tier limits are per *account*, not per project** — an existing Worker already consumes part of any budget a future engine would have. So if Workers is ever revisited, the available headroom is not the published free-tier figure.
+
+**That makes two providers and two unverified quota assumptions** — Neon's autoscale ceiling and Cloudflare's account-wide Workers budget. Both belong to the Week 4 revisit, before anything is provisioned, and neither changes the decision to wait.
+
+### Corrections from the spike author, 2026-09-08
+
+Recorded because they narrow claims made above, and an ADR that only keeps the flattering half of a review is not a record:
+
+- **Neon CU-hours depend on average compute usage, not the ceiling alone.** The 240-hour figure above assumes billing at the ceiling for the full idle window; actual consumption could be materially lower. The arithmetic remains a reason to *measure before provisioning* rather than a proof of exhaustion.
+- **The spike uses conditional row writes, not session advisory locks.** So the Supabase transaction-pooler concern — that a pooler silently breaks session-scoped locks — does **not** apply to this implementation. It remains a real hazard for anyone who reaches for advisory locks later.
+- **A workflow concurrency group only coordinates runs in the same group.** It prevents overlapping *runs*; it does not resolve a transaction already in flight on chain. So "overlap is structurally impossible" is true of the scheduler and not of the chain, which is exactly what the `getTransaction()` reconciliation prerequisite exists to cover.
 
 ### Prerequisites for adopting the spike in Week 4
 

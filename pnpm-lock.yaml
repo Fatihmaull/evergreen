@@ -44,25 +44,25 @@ importers:
 
   apps/dashboard:
     dependencies:
-      '@evergreen/core':
+      '@evergreen-stellar/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@evergreen/shared-types':
+      '@evergreen-stellar/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
 
   packages/cli:
     dependencies:
-      '@evergreen/core':
+      '@evergreen-stellar/core':
         specifier: workspace:*
         version: link:../core
-      '@evergreen/shared-types':
+      '@evergreen-stellar/shared-types':
         specifier: workspace:*
         version: link:../shared-types
 
   packages/core:
     dependencies:
-      '@evergreen/shared-types':
+      '@evergreen-stellar/shared-types':
         specifier: workspace:*
         version: link:../shared-types
       '@stellar/stellar-sdk':
@@ -71,10 +71,10 @@ importers:
 
   packages/engine:
     dependencies:
-      '@evergreen/core':
+      '@evergreen-stellar/core':
         specifier: workspace:*
         version: link:../core
-      '@evergreen/shared-types':
+      '@evergreen-stellar/shared-types':
         specifier: workspace:*
         version: link:../shared-types
 

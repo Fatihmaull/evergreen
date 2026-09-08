@@ -1,5 +1,5 @@
 {
-  "name": "evergreen",
+  "name": "@evergreen-stellar/cli",
   "version": "0.0.0",
   "private": true,
   "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
@@ -17,7 +17,10 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@evergreen/core": "workspace:*",
-    "@evergreen/shared-types": "workspace:*"
+    "@evergreen-stellar/core": "workspace:*",
+    "@evergreen-stellar/shared-types": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

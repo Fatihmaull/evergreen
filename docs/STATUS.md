@@ -11,7 +11,7 @@
 
 ## Right now
 
-**2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), then synchronized with `23dcd1d` after PR #52 merged during publication. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
+**2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
 
 **Outcome:** three Mermaid diagrams show dependencies, the actual instance scan and the planned engine flow. The document names the real shared-type fields and producer/consumer boundaries, a synthetic two-consumer/one-entry example, inclusive TTL semantics, optional rent, per-payer signer resolution, and simulated/submitted/succeeded/failed records. It records the accepted W3 Actions history / W4 Neon split and adoption prerequisites. Current limitations are explicit: scans read instances only; repeated input IDs remain repeated consumer references; unavailable TTL is skipped by the current CLI threshold helper. Broader discovery/consumer deduplication remain W2-D8-03/04, and future engine decisions must handle incomplete observations. No new product decision, runtime implementation or shared-type change is claimed.
 
@@ -21,7 +21,7 @@
 
 **Final review:** two diagram clarifications landed: unit tests enter through the mock reader without calling the network guard/SDK, and the engine resolves the public fee-paying account before envelope preparation/simulation, with signing gated by live opt-in. Existing shared types and code were rechecked; no blocking finding remains within this documentation scope. Temporary Mermaid rendering tools/screenshots are outside the repository; no dependency or runtime changes were added.
 
-**Synchronization:** the only merge conflict was the STATUS introduction. Both task histories were retained, and the architecture note now names PR #52 as merged. The architecture diagrams and shared-type mappings are unchanged.
+**Synchronization:** the earlier STATUS introduction conflict retained both task histories. The follow-up sync with #54/#55 merged cleanly, retaining the npm scope and ADR refinements from main. The architecture diagrams and shared-type mappings are unchanged; the PR diff remains three Markdown files.
 
 **Next:** PR #53 awaits CI and reviewer approval; it has not been merged. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
 
@@ -249,7 +249,57 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
+## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
+
+Rakha's three corrections were all right, and they narrowed **three of the four arguments** originally given for deferring the database. The decision did not change, because it never rested on them — but the ADR did not say that, and a Week 4 reader could have dismantled the decision by refuting the parts that were already weak.
+
+| Argument | Status |
+|---|---|
+| Neon exhausts on Sep 20 | **Overstated** — an upper bound assuming ceiling-rate compute, not a prediction |
+| Supabase pooler breaks advisory locks | **Does not apply** — the spike uses conditional row writes |
+| Overlap is structurally impossible | **Partly wrong** — true of the scheduler, not of chain state |
+| Ledger is idempotent + the cost asymmetry | **Stands** |
+
+ADR-003 now labels them: **🟢 LOAD-BEARING** (the ledger is the idempotent source of truth; a fail-closed lock in front of a single-shot deadline inverts the risk) and **🟡 SUPPORTING — individually refutable** (both unmeasured quotas, and the scheduler guard).
+
+**A decision defended by four arguments where three are weak is more fragile than one defended by a single argument that holds** — because refuting any of the three feels like refuting the decision.
+
+### The in-flight gap is stated, not left to be rederived
+
+"Overlap is structurally impossible" is on record as wrong, so the ADR now says the correct version outright. A concurrency group serialises *runs*, not chain state. The case it skips: **a run submits, dies before confirming, and the next run cannot tell whether it landed.**
+
+The answer is the same mechanism that carries the decision — **the chain is the reconciliation.** The next run scans: TTL above threshold means it landed, skip; still below means it did not, resubmit. Which is exactly why `getTransaction()` reconciliation is the right prerequisite and a lease timer is the wrong fix — **a timer guesses at what the chain can be asked.**
+
+### The divergence family is now a named pattern, not anecdotes
+
+Four instances this sprint, same shape: something reported a state, the real state differed, and only the real state was checkable. `CONVENTIONS` carries them as a table — testnet guard, `pnpm check` vs CI, `.prettierignore`, Cloudflare's deploy UI — with the instruction to **add the fifth there rather than treat it as a fresh surprise.**
+
+The reports are not lying; they measure something adjacent and present it as the answer.
+
+## ✅ `W1-D5` closed — npm org owned, dashboard live## ✅ `W1-D5` closed — npm org owned, dashboard live
+
+**npm: we own the ORG, not just a name.** `evergreen` was squatted, so instead of reserving an unscoped fallback Fatih took the scope: **`evergreen-stellar`**. That is strictly better than the plan — nothing in `@evergreen-stellar/*` can be squatted, no placeholder publishes are needed, and **the Sep 16 deadline pressure is gone.** The name should still land before `W2-D14-03`'s screenshots, but it is no longer a race.
+
+Packages renamed to **`@evergreen-stellar/cli`** and **`@evergreen-stellar/core`**, with `shared-types` moved too — it is private and never published, but it sat in a scope we do *not* own, which is a trap if anyone ever flips `private: false`.
+
+> ⚠️ **`publishConfig: { "access": "public" }` is now set in both published packages.** Scoped packages default to **private**, and private requires a paid plan — without this `W4-D27-02` either fails outright or silently ships a private package. It lives in `package.json` rather than depending on someone remembering `--access public` on the day.
+
+**The command is unchanged.** `bin` maps to `evergreen`, so only the install line moves to `npx @evergreen-stellar/cli`. Propagated to both READMEs, the backlog, and the demo script task.
+
+**Cloudflare Pages: live at https://evergreen-stellar.pages.dev** — verified HTTP 200 serving our page, not the dashboard's word for it. Which turns out to be the point:
+
+### Two operational findings, both recorded in `SETUP.md`
+
+**Cloudflare's deploy UI misreports progress.** The build log showed success at 17:30:06 while the step indicator sat on *"Initializing build environment"* for another **1 minute 34 seconds**, later steps showing `—`. From the dashboard alone you would conclude it had hung. **Verify a deploy by loading the URL, not by reading the dashboard** — the reported state and the actual state diverged, and only the actual state was checkable. Third family member after the testnet guard and the weaker-than-CI local gate.
+
+**The Cloudflare account is shared, and Workers quota is account-wide.** It already runs `focustudio.online` and a Worker called `focuswebstudio`. Irrelevant to Pages; **relevant to ADR-003**, because Workers free-tier limits are per *account*, so an existing Worker already consumes part of any engine budget. **That is now two providers and two unverified quota assumptions** — Neon's autoscale ceiling and this — both belonging to the Week 4 revisit.
+
+### Two new tasks, both sequenced before the first publish
+
+- **`W4-D27-00`** — enable 2FA on the npm account. Currently disabled, and a public scope other people install from with an unprotected account is a supply-chain risk. Cheapest now, while nothing depends on the scope.
+- **`W4-D27-00b`** — invite Rakha to the org. Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership. Blocked on his npm username, tracked so it does not surface on Sep 29.
+
+## 🔴 Orphan sweep found a real sequencing bug## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
 
 The retroactive sweep over W2–W4 was worth running. The headline:
 

@@ -5,7 +5,7 @@ import type {
   LedgerKey,
   ScanIssue,
   ScanResult,
-} from '@evergreen/shared-types';
+} from '@evergreen-stellar/shared-types';
 import type { LedgerEntryReader } from './rpc.js';
 import { instanceKey } from './rpc.js';
 import { observeTTL } from './ttl.js';
