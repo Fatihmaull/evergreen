@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · email follow-up published in PR #40; shared types merged
+**Last updated:** 2026-09-08 · W1-D6-02 architecture documentation in progress
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,12 @@
 ---
 
 ## Right now
+
+**2026-09-08 — architecture data-flow started (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, based on main `a7d500d` (PR #51), tracked in [#32](https://github.com/Fatihmaull/evergreen/issues/32). Repo and Notion agree: D6-02 Pending before starting; D6-03 and D6-04 Done. Scope is ARCHITECTURE.md plus task/status notes: current instance-only scan, planned engine/dashboard flows against the real shared types, one shared-entry example, and the accepted W3/W4 persistence split. No runtime code or shared-type changes. The mock RPC is already merged via #42. The unused persistence artifact remains separately in open [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); this branch does not include it. Local review precedes a new PR.
+
+**Mirror:** Notion MCP is available; D6-02 is being marked In progress with this branch and scope. Earlier OAuth and pending-proposal notes below are historical.
+
+## Earlier session notes
 
 **2026-09-08 — email follow-up published (`W1-D5-04`):** [PR #40](https://github.com/Fatihmaull/evergreen/pull/40) integrates the preserved probe, nine offline tests and original delivery evidence from `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`, with review requested from @Fatihmaull. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The old email branch at `470d41c` remains a checkpoint. Local review is complete; PR #40 closes Issue #37 on merge. The PR is open for review and has not been merged.
 
