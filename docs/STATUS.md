@@ -233,7 +233,40 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
+## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
+
+Rakha's W1 closeout noted that guinea-pig C's evidence row pointed at *"an unregistered alias."* He was right: **`W3-D18-02c` existed in `EVIDENCE.md` and had no task behind it** — I invented it when adding C's row.
+
+**My earlier ad-hoc check missed it because it only matched backtick-delimited IDs, and this one was bold.** Same defect class as the case-sensitive duplication checker: the verification tool failing in the safe-looking direction. So it is a real script now, matching any delimiter, wired into `pnpm check` and CI.
+
+It found three more beyond C's:
+
+| ID | Where | Cause |
+|---|---|---|
+| ~~W3-D18-02~~ | `ARCHITECTURE`, `CONVENTIONS`, `ADR-001` | Another Week 3 renumbering casualty — the double-bump promise is `W3-D16-02` |
+| ~~W2-D12-02b~~ | `PRD` | Renamed to `F-01` when floated; I fixed `STATUS` and missed `PRD` |
+| `W3-D18-02c` | `EVIDENCE` | Now **registered as a real task** — C's spare proof is real work |
+
+### It caught me on its own PR, twice over
+
+CI failed on the very PR that added this check — and the reason is worth recording twice.
+
+**First:** the STATUS table above quotes the retired IDs while explaining them. To the checker that is indistinguishable from a live reference. Fixed with a marker convention: **strikethrough means "retired, quoted deliberately"** — semantically exact, readable to humans, and documented in `CONVENTIONS` with the warning that using it on a *live* reference converts a caught bug into a hidden one.
+
+**Second, and worse:** I had been verifying with `pnpm check && echo PASS`. **On failure that prints nothing**, and I read the silence as noise rather than as failure. I was also on `main` rather than the branch, so what I did check was the wrong tree. CI caught both.
+
+`cmd; echo "exit=$?"` is now the recorded idiom — a number is always printed, so there is no silent case. **Fifth member of the reported-vs-actual family, and this one was my own verification lying to me.**
+
+### What it catches, and what it deliberately cannot
+
+✅ **Dangling** — an ID referenced but not registered.
+❌ **Repurposed** — an ID that exists but now means something *else*.
+
+The second is the more dangerous one and **nothing cheap detects it**, which is exactly why `CONVENTIONS` says retire an ID rather than repurpose it, and why the ADR template demands a downstream sweep. This check is the floor, not the ceiling — and the script says so.
+
+**It skips `STATUS.md`'s session log by design.** A log is an append-only historical record; quoting an ID that has since been retired is *correct* there, and rewriting history to keep a checker quiet would destroy the thing the log is for.
+
+## 🎯 ADR-003 restructured## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
 
 Rakha's three corrections were all right, and they narrowed **three of the four arguments** originally given for deferring the database. The decision did not change, because it never rested on them — but the ADR did not say that, and a Week 4 reader could have dismantled the decision by refuting the parts that were already weak.
 
@@ -305,7 +338,7 @@ Every ID still resolved, so nothing looked broken — while **`EVIDENCE.md` file
 
 - **`W4-D24-03`** claimed *"cut order #3"* while the canonical list in the same file said #4 — the write path took #3 when it was added. Exactly the improvisation the "never improvise the cut order" rule exists to prevent, pointing at the wrong item under pressure.
 - **`W2-D11-01`** said the developer key is *"not the policy signer yet"* — implying a replacement that is no longer coming. It is the signing path Stage 1 ships and the README teaches.
-- **`W1-D4-04c`** still called guinea-pig B the subject for `W3-D20-02b`, an ID that now means something else.
+- **`W1-D4-04c`** still pointed guinea-pig B at the pre-rescope proof ID, which now means something else. Repointed to `W3-D18-02b`.
 - **ADR-002's** body carries pre-rescope IDs. Left as written — an ADR records the reasoning we had at the time — with a mapping note at the top rather than a silent edit.
 
 ## 🧹 "Downstream sweep" is now the last step of every ADR
