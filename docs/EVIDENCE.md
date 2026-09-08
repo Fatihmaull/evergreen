@@ -23,11 +23,19 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 | Deliverable | Evidence required (SOW §6.1) | State |
 |---|---|---|
-| **1 — Core CLI** | Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | ⬜ not started |
-| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | ⬜ not started |
-| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | ⬜ not started |
+| **1 — Core CLI** | Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 W1 instance-scan snapshot captured; full CLI and npm release remain W2/W4 |
+| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 Manual/permissionless foundation evidence recorded; unattended engine proofs remain W3 |
+| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 Hosting placeholder live; functional dashboard, product Action and release artifacts remain W4 |
 
 ## Transaction hashes
+
+### 2026-09-08 — W1 review: scan snapshot and historical transaction recovery
+
+[Evidence snapshot and complete recovered inventory](evidence/2026-09-08-w1-review/README.md), prepared for `W1-D7-03`. The compiled CLI read guinea-pig A at ledger **4,570,079**, with **142,569 ledgers remaining** and final live ledger **4,712,648**. Human and JSON commands both exited 0. [Scan image](evidence/2026-09-08-w1-review/scan-output.png) presents the actual saved stdout with metadata; raw output and commands accompany it.
+
+The review recovered **19 historical Testnet transactions**: two experiment-account funding transactions, Wasm upload, A/B/C deployment and seeding, four permissionless extends, B/C calibration and the shared-code extension. The linked table gives every hash, full unedited RPC response and explorer screenshot. All 19 envelopes hash to their recorded transaction IDs; contract footprints match their labels. With the five earlier funding/boundary bundles below, the W1 inventory contains **24 unique transactions**.
+
+**Capture timing disclosure:** these 19 transactions happened on Sep 5; their RPC responses and explorer pages were captured on Sep 8. They were missing from the evidence bundle and recovered before the data became unavailable. Original older captures are unchanged. No transaction was submitted during this review, and none of these manual calibration transactions is an unattended-engine proof.
 
 ### 2026-09-05 — Testnet account setup (W1-D4-02)
 
@@ -63,13 +71,13 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 | | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
 | | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
 | | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
-| | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
+| | **W3-D18-02b** (C spare) | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
 ### ⚠️ Disclosure: guinea-pig B's TTL was deliberately calibrated
 
-**Read this before the proof, not after.** Guinea-pig B's transaction history shows three transactions: deploy → **a manual extend by us** → the engine's unattended extend. That middle transaction is not staging, and we would rather explain it here than have a reviewer wonder.
+**Read this before the proof, not after.** Guinea-pig B's proof has three stages: deployment/seeding → **manual initial calibration by us** → the future engine's unattended extend. Calibration itself used three separate extend transactions; the shared code was extended again while preparing C. Those calibration transactions are not staging, and we would rather explain it here than have a reviewer wonder.
 
-On **2026-09-05**, immediately after deploying B, we submitted **one** manual extend to place its threshold crossing inside the observation window. Nothing was touched after that.
+On **2026-09-05**, immediately after deploying B, we performed **one calibration round comprising three extend transactions** to place its threshold crossing inside the observation window. Its instance and persistent entries were left to age; the shared code was extended again while preparing C, as recorded below.
 
 | | |
 |---|---|
@@ -79,7 +87,7 @@ On **2026-09-05**, immediately after deploying B, we submitted **one** manual ex
 | Tx hashes | instance `54117bd95783ef3d9f19d6caf9831064243fd85ddece3421bbc3a8606757fbb1` · persistent `a99a93bfc7af5bfd783a53f1f3fb04880c9fa74d3194f827490c3e7f8d7b7390` · code `9731d135f7a0a3c645eafb93efa971f946a6d786355d9c341ee3179364c38554` |
 | Resulting `liveUntilLedgerSeq` | 4,793,687 / 4,793,688 / 4,793,689 |
 | Projected threshold crossing | ledger ≈ 4,776,407 → **2026-09-20 ~12:00 UTC** at a 17,280-ledger (24h) threshold |
-| Interventions after calibration | **none, by design** |
+| Interventions after calibration | B instance/persistent entries were left alone. The shared Wasm was extended again while preparing C on Sep 5; see the recovered inventory. |
 
 **Why this was necessary.** A freshly deployed persistent entry gets ≈120,928 ledgers ≈ 7 days (measured, `W1-D4-04b`). B deployed on Sep 5 would have archived around Sep 12 — roughly eight days *before* the proof it exists for. Left uncalibrated, there would have been nothing to save.
 
@@ -97,7 +105,7 @@ C (`CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL`) was deployed the 
 
 It exists because a single unrecoverable date protecting a never-cut proof is one point of failure. If B's window is missed, C is still ahead of us with room before the Oct 2 deadline. If B's proof lands, C is recorded here as an unused spare.
 
-Same disclosure applies: C carries one calibrating extend on 2026-09-05 and no interventions since. **B and C have different crossing dates — do not read them interchangeably.**
+Same disclosure applies: C was deployed, seeded and calibrated on 2026-09-05, with separate instance and persistent extends plus a shared-code extension; hashes and complete artifacts are in the recovered inventory. No later interventions are claimed. **B and C have different crossing dates — do not read them interchangeably.**
 
 One thing worth stating because it is not obvious: B and C were deployed from the same Wasm and therefore **share a single `ContractCode` ledger entry**. It was extended past the whole sprint (to ~2026-10-19) so it drives neither crossing; each contract's crossing is governed by its own instance and persistent entries.
 
@@ -105,7 +113,7 @@ One thing worth stating because it is not obvious: B and C were deployed from th
 
 **`W3-D18-02a` — threshold proof (insurance, banked early ~Sep 17).** Set the bump threshold *above* the contract's current TTL and the engine fires on its next scheduled run. Proves the engine detects and bumps, unattended, on a real cron. Cheap, repeatable, available on demand.
 
-**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B is deployed on **W1-D4 (Sep 6)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
+**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
 
 Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
 
@@ -121,7 +129,7 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 2026-09-07: genuine scheduled run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199), event `schedule`, also succeeded on the same commit. At 10:30:10 UTC, it read A at ledger **4,550,684**, with **161,964 ledgers** remaining. The same [runtime record](evidence/2026-09-07-scheduler-runs/README.md) includes its full log and GitHub run/job metadata, with event and run ID verified against the script output.
 
-**Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); Issue #23 remains open until merge. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
+**Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); Issue #23 was closed when PR #27 merged. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
 
 ## Email provider readiness — `W1-D5-04`
 
@@ -148,11 +156,11 @@ The original plan called for a shared cloud drive. **In practice we have been co
 
 ## Screenshots
 
-Store files in the shared evidence drive (W1-D5-06); link them here.
+Store ordinary evidence in the repository; use the shared drive only for the large artifacts described above.
 
 | Date | Task | Shot | Link |
 |---|---|---|---|
-| | W1-D7-03 | first working `scan` against testnet | |
+| 2026-09-08 | W1-D7-03 | working instance scan against Testnet; presentation of captured stdout | [Image and raw record](evidence/2026-09-08-w1-review/README.md#working-scan) |
 | | W2-D11-03 | TTL before/after a manual extend | |
 | | W2-D14-03 | CLI output (human + `--json`), coverage report | |
 | | W3-D17-03 | alert emails (success + failure) | |
@@ -165,11 +173,11 @@ Store files in the shared evidence drive (W1-D5-06); link them here.
 
 | Artifact | URL | Published |
 |---|---|---|
-| GitHub repo | | ⬜ |
+| GitHub repo | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ Public |
 | npm — `core` | | ⬜ |
 | npm — `cli` | | ⬜ |
 | GitHub Action | | ⬜ |
-| Dashboard (live) | | ⬜ |
+| Dashboard hosting | [evergreen-stellar.pages.dev](https://evergreen-stellar.pages.dev) | ✅ W1 placeholder; functional dashboard remains W4 |
 | Demo video (3–5 min) | | ⬜ |
 | Docs site / README | | ⬜ |
 
@@ -177,7 +185,7 @@ Store files in the shared evidence drive (W1-D5-06); link them here.
 
 A short review at each week's gate — what exists, what's missing, what's at risk.
 
-- **W1 (Sep 9):** *(pending)*
+- **W1 (prepared Sep 8; gate planned Sep 9):** [Review and handoff](W1-REVIEW.md), [scan snapshot and recovered evidence](evidence/2026-09-08-w1-review/README.md). Shared review remains tracked in #44.
 - **W2 (Sep 16):** *(pending)*
 - **W3 (Sep 23):** *(pending)*
 - **W4 (Sep 30):** *(pending)*
