@@ -123,6 +123,12 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 **Scheduler smoke proof complete:** the hosted read path ran manually and automatically. Exported evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); Issue #23 remains open until merge. No transaction was submitted. A single scheduled read does not prove a guaranteed cadence, engine behavior, or an unattended bump.
 
+## Email provider readiness — `W1-D5-04`
+
+2026-09-07: one Resend email was accepted (HTTP 200) at **2026-09-07T11:28:15.674Z**, email ID **`88711fc1-58ea-4e1a-bfb1-862bdfe32f7e`**. The recipient separately confirmed inbox receipt. The [email record and unchanged sanitized stdout](evidence/2026-09-07-email-smoke/README.md) preserve both parts of that evidence, with their limits stated explicitly. This is one local provider-readiness proof, not engine alerting or delivery reliability.
+
+2026-09-08 follow-up: [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the existing proof. The probe and nine offline tests are integrated from the preserved local branch; [setup instructions](SETUP.md#local-email-smoke--w1-d5-04) describe the preview/send commands. No new email or Stellar transaction is needed for integration. The three-artifact transaction rule does not apply to this email; later engine success/failure alerts require separate evidence.
+
 ## Where evidence lives — resolved 2026-09-07 (`W1-D5-06`)
 
 The original plan called for a shared cloud drive. **In practice we have been committing evidence into the repository under `docs/evidence/<date>-<topic>/`, and that is the better default** — so it is now the rule, not the accident:
