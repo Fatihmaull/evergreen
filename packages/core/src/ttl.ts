@@ -1,4 +1,4 @@
-import type { LedgerEntryTTL, TTLObservation } from '@evergreen/shared-types';
+import type { LedgerEntryTTL, TTLObservation } from '@evergreen-stellar/shared-types';
 
 /**
  * TTL math. Pure — no SDK, no I/O, no clock.

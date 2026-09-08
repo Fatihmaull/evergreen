@@ -1,5 +1,5 @@
 import { Contract, Networks, rpc, xdr } from '@stellar/stellar-sdk';
-import type { ContractId, LedgerKey } from '@evergreen/shared-types';
+import type { ContractId, LedgerKey } from '@evergreen-stellar/shared-types';
 
 /**
  * The only place in the system that talks to the network.

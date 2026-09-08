@@ -11,7 +11,7 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@evergreen/core": "workspace:*",
-    "@evergreen/shared-types": "workspace:*"
+    "@evergreen-stellar/core": "workspace:*",
+    "@evergreen-stellar/shared-types": "workspace:*"
   }
 }

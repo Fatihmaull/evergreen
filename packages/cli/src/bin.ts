@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import process from 'node:process';
 import console from 'node:console';
-import { connectTestnet, scanInstances } from '@evergreen/core';
+import { connectTestnet, scanInstances } from '@evergreen-stellar/core';
 import { EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
 
 /** Default threshold: 17,280 ledgers ≈ 24h at ~5s per ledger. */
