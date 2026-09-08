@@ -205,6 +205,31 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
+
+The retroactive sweep over W2–W4 was worth running. The headline:
+
+**`W3-D20-02` — *"Failure modes: RPC timeout, insufficient balance, policy rejection, scheduler missed run. Each must alert, not fail silently"* — was scheduled for Day 20 (Tue Sep 22).** Guinea-pig B's crossing is Day 18 (**Sun Sep 20**). So the alerting for the failures that can occur unobserved during the Sunday window was scheduled **two days after that window**, inside a block the backlog itself labels *"Stage 2, off the critical path."*
+
+Three of its four failure modes are Stage 1 concerns. Nothing was wrong when written — Day 20 *was* the proof day before the two-stage rescope moved it.
+
+**Fixed:** the three Stage 1 modes are now **`W3-D17-05`, due before Fri Sep 18**. `W3-D20-02` keeps only *policy rejection*, which is genuinely Stage 2 and does not exist at all if the spike goes no-go.
+
+### The root cause is mine, and it has a rule now
+
+Restructuring Week 3 **reused task IDs for different work.** `W3-D16-01` stopped meaning "policy-signer e2e" and started meaning "bump execution"; `W3-D19-03` stopped meaning "alert emails" and started meaning the spike.
+
+Every ID still resolved, so nothing looked broken — while **`EVIDENCE.md` filed six rows against the wrong tasks** and `POLICY-SIGNER.md` claimed a due date belonging to the slack-ledger reconciliation. All repointed.
+
+**A dangling ID is detectable; a repurposed one is not.** A script can check that every referenced ID exists — and one now does, which is how the last stale reference was found. Nothing cheap can check that an ID still *means* what the referrer thought. So `CONVENTIONS` now says: **retire an ID, never repurpose it.** A gap in the sequence costs nothing.
+
+### Also fixed
+
+- **`W4-D24-03`** claimed *"cut order #3"* while the canonical list in the same file said #4 — the write path took #3 when it was added. Exactly the improvisation the "never improvise the cut order" rule exists to prevent, pointing at the wrong item under pressure.
+- **`W2-D11-01`** said the developer key is *"not the policy signer yet"* — implying a replacement that is no longer coming. It is the signing path Stage 1 ships and the README teaches.
+- **`W1-D4-04c`** still called guinea-pig B the subject for `W3-D20-02b`, an ID that now means something else.
+- **ADR-002's** body carries pre-rescope IDs. Left as written — an ADR records the reasoning we had at the time — with a mapping note at the top rather than a silent edit.
+
 ## 🧹 "Downstream sweep" is now the last step of every ADR
 
 The two orphaned Week 3 tasks were not a one-off. **Every decision that changes a dependency leaves orphans downstream** — the decision gets made carefully, gets its ADR, gets synced to both channels, and two tasks three weeks out quietly keep assuming what just changed. Nothing fails. They describe a world that no longer exists, and it surfaces only when someone tries to do them, which here would have been Sep 18.
