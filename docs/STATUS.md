@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · email follow-up complete on branch, ready for local review; shared types merged
+**Last updated:** 2026-09-08 · email follow-up published in PR #40; shared types merged
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,11 +11,11 @@
 
 ## Right now
 
-**2026-09-08 — email follow-up complete on branch (`W1-D5-04`):** integrated the preserved probe, nine offline tests and original delivery evidence on `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The public WIP branch is the active integration branch; the old email branch at `470d41c` remains a checkpoint. Implementation is ready for local review before creating the PR; Issue #37 stays open until merge.
+**2026-09-08 — email follow-up published (`W1-D5-04`):** [PR #40](https://github.com/Fatihmaull/evergreen/pull/40) integrates the preserved probe, nine offline tests and original delivery evidence from `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`, with review requested from @Fatihmaull. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The old email branch at `470d41c` remains a checkpoint. Local review is complete; PR #40 closes Issue #37 on merge. The PR is open for review and has not been merged.
 
 **Validation:** `pnpm check` passed conflict detection, typecheck (including all 17 shared-types negative examples), lint, formatting and **40 offline tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler + 9 email). The configured `pnpm email:smoke` preview returned `status: "dry-run"`, `submitted: false`, and redacted addresses at `2026-09-08T03:24:50.267Z`. The source and tests retain the accepted local implementation; current shared types, their compiler checks and all earlier suites remain intact. Original `send-result.json`, `.env` content/permissions, the RPC fixture, old branches and stash match the preservation snapshot. No new provider request, email, or Stellar transaction occurred during this follow-up.
 
-**Mirror sync pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked. Pending: `W1-D5-04` follow-up completion plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof, and the finished follow-up is now ready for review on the public branch. No merge into main is claimed.
+**Mirror sync pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked, confirmed again during publication. Pending: `W1-D5-04` follow-up completion and PR #40 link plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof; the finished follow-up is published for review in PR #40. No email merge into main is claimed.
 
 **2026-09-07 — shared types published for review:** [PR #36](https://github.com/Fatihmaull/evergreen/pull/36) publishes `W1-D6-01`, `01b`, `01c` from `feat/W1-D6-01-shared-types`, with review requested from @Fatihmaull. It merged as `41b91d3` on 2026-09-07, closing [Issue #29](https://github.com/Fatihmaull/evergreen/issues/29). The reviewed code is `c1c60ec`; its GitHub CI passed. ADR-005 remains Proposed. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37) records the completed local email proof and differences from merged PR #35 for validation; the email branch is still held, with no email PR or branch push. Publication sync completed via Notion MCP: the three shared-types rows link PR #36, the held email row links Issue #37, and Decisions records both publication outcomes. Task IDs, statuses and decision text were read back and verified.
 
