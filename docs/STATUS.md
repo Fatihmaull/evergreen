@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · email follow-up published in PR #40; shared types merged
+**Last updated:** 2026-09-08 · email PR #40 and mirror PR #41 merged; Notion MCP reconnected
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,15 +11,15 @@
 
 ## Right now
 
-**2026-09-08 — email follow-up published (`W1-D5-04`):** [PR #40](https://github.com/Fatihmaull/evergreen/pull/40) integrates the preserved probe, nine offline tests and original delivery evidence from `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`, with review requested from @Fatihmaull. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The old email branch at `470d41c` remains a checkpoint. Local review is complete; PR #40 closes Issue #37 on merge. The PR is open for review and has not been merged.
+**2026-09-08 — email follow-up published (`W1-D5-04`):** [PR #40](https://github.com/Fatihmaull/evergreen/pull/40) integrates the preserved probe, nine offline tests and original delivery evidence from `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`, with review requested from @Fatihmaull. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The old email branch at `470d41c` remains a checkpoint. PR #40 merged on 2026-09-08 as `61fd0da`, closing Issue #37. PR #41 then merged as `dc0a1e0`; CI passed for both merge commits. Local main was fast-forwarded to `dc0a1e0` during this check.
 
 **Validation:** `pnpm check` passed conflict detection, typecheck (including all 17 shared-types negative examples), lint, formatting and **40 offline tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler + 9 email). The configured `pnpm email:smoke` preview returned `status: "dry-run"`, `submitted: false`, and redacted addresses at `2026-09-08T03:24:50.267Z`. The source and tests retain the accepted local implementation; current shared types, their compiler checks and all earlier suites remain intact. Original `send-result.json`, `.env` content/permissions, the RPC fixture, old branches and stash match the preservation snapshot. No new provider request, email, or Stellar transaction occurred during this follow-up.
 
 **Mirror sync — caught up 2026-09-08 from Fatih's session.** `W1-D5-04` and `W1-D6-01/01b/01c` now carry their merge outcomes and PR links in Notion.
 
-> ⚠️ **Rakha's Notion OAuth grant is revoked** (`invalid_grant`), confirmed twice during publication. Fatih's grant still works, which is why the mirror could be brought current — but that is luck, not design. **Rakha should reconnect before his next session**, otherwise every sync silently falls to whoever else happens to have a working grant.
->
-> He handled it correctly: did the work, recorded everything in the repo, noted the pending sync by task ID. That is rule F, and it is the reason the mirror failing cost nothing. Original note follows.
+**OAuth recovery verified later on 2026-09-08:** Rakha reconnected Notion; this session successfully read and updated the mirror via MCP. All 50 W1 IDs are present in both channels, with no missing or extra row. `W1-D1-03` was the only status mismatch (repo Done / Notion Pending); the committed date-confirmation outcome from PR #38 is now mirrored as Done. The email and three shared-types rows, plus Decisions, were updated and fetched again. Fatih concurrently merged PR #40 and refreshed those merge outcomes through PR #41; the final check confirms the email row says merged and Issue #37 is closed. The earlier OAuth failure is resolved. The original failure note below is historical.
+
+**Next work:** [the latest comment on handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171) confirms email is finished, then directs @rakhargo to #30 (`W1-D6-04`, persistence/locking), followed by #32 (`W1-D6-02` data-flow and `W1-D6-03` mock RPC). These tasks remain Pending; no implementation started during this check. BACKLOG and Notion still retain their original owners (`02`: R; `03`/`04`: F); reconcile owner and primary branch when claiming the next task to avoid overlap. ADR-005 remains Proposed; if persistence needs a type change, discuss it on #30 before changing the merged types.
 
 **Mirror sync was pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked, confirmed again during publication. Pending: `W1-D5-04` follow-up completion and PR #40 link plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof; the finished follow-up is published for review in PR #40. No email merge into main is claimed.
 
