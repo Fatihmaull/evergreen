@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1-D6-02 published in PR #53; synchronized with merged PR #52
+**Last updated:** 2026-09-08 · W1 review closeout in progress; architecture PR #53 synchronized
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,10 @@
 ---
 
 ## Right now
+
+**2026-09-08 — W1 review closeout started (`W1-D7-03/04/05/06`):** shared review tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), prepared on `docs/W1-D7-03-week-one-review`, stacked on architecture PR #53 (`bcc41c7`) with main `b0f0d0b` integrated. The four review tasks matched Notion as Pending before starting and are now In progress. Scope: scan evidence snapshot, evidence inventory/recovery, current status and mirror corrections, retrospective/slack report, and concrete W2 handoff. The milestone already passed; no W2 feature implementation or new chain transaction is part of this closeout.
+
+## Architecture publication
 
 **2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
 
