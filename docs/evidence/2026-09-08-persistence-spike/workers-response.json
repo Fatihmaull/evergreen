@@ -1,0 +1,1 @@
+{"status":"passed","checks":["SDK import and instance-key XDR","getNetwork verified Testnet","getLedgerEntries parsed instance XDR and TTL"],"latestLedger":4563980,"liveUntilLedgerSeq":4712648,"submitted":false}

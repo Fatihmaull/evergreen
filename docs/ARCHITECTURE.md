@@ -209,7 +209,7 @@ A lost acknowledgement or unresolved transaction is not sufficient to declare fa
 
 ## Persistence
 
-[ADR-003](adr/ADR-003-toolchain-hosting-persistence.md) accepts **Actions + Node 24, with PostgreSQL on Neon adopted in W4 after the Sep 20 proof**. W1 does not require a hosted database. The unused spike is reviewed separately in [PR #52](https://github.com/Fatihmaull/evergreen/pull/52).
+[ADR-003](adr/ADR-003-toolchain-hosting-persistence.md) accepts **Actions + Node 24, with PostgreSQL on Neon adopted in W4 after the Sep 20 proof**. W1 does not require a hosted database. The unused spike was merged separately in [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); it remains an experiment outside the engine runtime.
 
 | Stage | Coordination and history |
 |---|---|

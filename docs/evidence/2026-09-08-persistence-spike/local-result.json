@@ -1,0 +1,53 @@
+{
+  "task": "W1-D6-04",
+  "recordedAt": "2026-09-08T05:01:02.633Z",
+  "serverVersion": "17.11 (Debian 17.11-1.pgdg13+2)",
+  "status": "passed",
+  "databaseWrites": true,
+  "schema": "evergreen_spike_bddf78ffc9134fec979fd45835545db0",
+  "cleanup": "complete",
+  "checks": [
+    {
+      "name": "two-process contention grants exactly one claim",
+      "passed": true,
+      "processPids": [
+        75516,
+        75517
+      ],
+      "backendPids": [
+        42,
+        43
+      ],
+      "winners": 1
+    },
+    {
+      "name": "different entries can be claimed independently",
+      "passed": true
+    },
+    {
+      "name": "expired pre-send claim is recoverable and fences its old owner",
+      "passed": true
+    },
+    {
+      "name": "pending send survives expiry and blocks another claim",
+      "passed": true
+    },
+    {
+      "name": "history failure rolls back completion",
+      "passed": true
+    },
+    {
+      "name": "confirmation and history commit once and retain payer identities",
+      "passed": true
+    },
+    {
+      "name": "history survives client exit and a new reader process",
+      "passed": true
+    },
+    {
+      "name": "closed database connection refuses new work",
+      "passed": true
+    }
+  ],
+  "proofBoundary": "Real PostgreSQL coordination with synthetic transaction data; no Stellar RPC, signing or send. Not a production exactly-once guarantee."
+}
