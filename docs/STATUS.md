@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · email PR #40 and mirror PR #41 merged; Notion MCP reconnected
+**Last updated:** 2026-09-08 · persistence spike started; email merged and Notion reconnected
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,8 @@
 ---
 
 ## Right now
+
+**2026-09-08 — persistence spike started (`W1-D6-04`):** Rakha owns this task following [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171); primary branch `chore/W1-D6-04-persistence-spike`, based on main `dc0a1e0`, tracked by [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30). All six D6 task IDs and statuses matched Notion before claiming. Scope: platform evaluation, a small PostgreSQL contention/recovery probe, recorded results and ADR-003; hosted provider awaits review. No real engine, shared-type changes or live Stellar transaction. D6-02/03 remain Pending. Earlier email/mirror recovery notes are preserved in a separate documentation commit.
 
 **2026-09-08 — email follow-up published (`W1-D5-04`):** [PR #40](https://github.com/Fatihmaull/evergreen/pull/40) integrates the preserved probe, nine offline tests and original delivery evidence from `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`, with review requested from @Fatihmaull. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this follow-up. The old email branch at `470d41c` remains a checkpoint. PR #40 merged on 2026-09-08 as `61fd0da`, closing Issue #37. PR #41 then merged as `dc0a1e0`; CI passed for both merge commits. Local main was fast-forwarded to `dc0a1e0` during this check.
 
