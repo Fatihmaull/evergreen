@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W2-D8-03 implementation started
+**Last updated:** 2026-09-08 · W2-D8-03 implemented and verified
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W2 — Core CLI
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,7 +11,11 @@
 
 ## Right now
 
-**W2-D8-03 — In progress (Rakha):** user authorized the reviewed four-entry scan plan. Branch `feat/W2-D8-03-scan-entry-types` starts from merged main `321656b`; WIP branch is published for ownership visibility. D8-01/02 remain Fatih's TTL work, D8-04 remains Rakha's next task. Exact-ID Notion validation confirmed all four D8 rows, owners and Pending statuses before starting; D8-03 is now In progress. Scope: instance/code discovery, explicit persistent/temporary key input, truthful coverage, batched reads and fixture-based validation. Preserve inclusive TTL semantics; no transaction path is added.
+**W2-D8-03 — Done (Rakha), review PR/merge pending:** implemented on `feat/W2-D8-03-scan-entry-types` from main `321656b`. `scanContract` discovers instance/Wasm and reads explicit persistent/temporary LedgerKeys through `--keys-file`. It reports known-key coverage, batches at 200 keys, preserves each response's ledger and successful partial results, and diagnoses invalid/missing/unsupported observations. CLI exit 0 applies only to supplied/discovered keys; no data keys or unavailable TTL yields 1, invalid input/response or RPC failure yields 2. Shared types add optional coverage and the `unsupported-executable` issue kind; existing type consumers still compile. No transaction path is added.
+
+**Validation:** `pnpm check` passed conflict/task-ID checks, typecheck (including shared-type examples), lint, formatting and **125 offline tests** (89 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). Initial lint issues were fixed; a sandbox `spawnSync git EPERM` was resolved by running the same offline gate with subprocess permission. [Read-only Testnet evidence](evidence/2026-09-08-scan-entry-types/README.md) captured the compiled CLI returning all four A entry types at ledger 4,572,053, no issues, exit 0. Raw network-check/entry responses and input/output files are retained; each output TTL was compared with the raw response. No B/C changes or new transactions occurred. All 52 local documentation links resolve; all three architecture diagrams parse/render, and the changed scan diagram was visually checked.
+
+**Tracking and next step:** D8-01/02 remain Fatih's TTL work; D8-04 remains Rakha's next Pending task (cross-contract shared-code/consumer deduplication). Exact-ID Notion validation preceded implementation; D8-03 Done and its outcome were written and read back successfully. WIP branch was published at start for ownership visibility; publication as a review PR and merge remain separate. Task Tracker is refreshed at the week gate, not for this task boundary.
 
 **W1 carry-forward:** #53 and #58 are merged; Fatih confirmed the W2 split and reporting policy in [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5587139386). Closeout #57 closed without merging; original remote head `98e62e2` and synchronized local branch at `01a135c` retain the report/evidence. Its W1 completion metadata is separate from this main-based branch. W1 Task Tracker was reconciled to 48 Done / 2 In progress, all 14 Rakha tasks Done. User-confirmed workflow: Evergreen Tasks is the operational Notion backlog; Task Tracker is a dated narrative refreshed per week at week gates. Existing database sync remains at session/merge boundaries. W1-D4-09 drift checks and W1-D7-04 closeout continue; no new drift measurement is claimed.
 

@@ -45,7 +45,7 @@ export type LedgerEntryTTL = EntryLifecycle & {
 };
 
 export interface ScanIssue {
-  readonly kind: 'entry-not-found' | 'rpc-error' | 'invalid-response';
+  readonly kind: 'entry-not-found' | 'rpc-error' | 'invalid-response' | 'unsupported-executable';
   readonly contracts: readonly ContractId[];
   readonly entryKey?: LedgerKey;
   /** Present only when a valid RPC response supplied it. */
@@ -61,6 +61,13 @@ export interface ScanResult {
   readonly entries: Readonly<Record<LedgerKey, LedgerEntryTTL>>;
   /** Absence is not proof of archival/deletion. Consumers must handle partial scans. */
   readonly issues: readonly ScanIssue[];
+  /** Omitted by legacy producers: coverage unknown, never proof of a complete scan. */
+  readonly coverage?: {
+    /** RPC reads specified keys; it does not enumerate arbitrary contract storage. */
+    readonly mode: 'known-keys';
+    /** Unique, validated explicit data keys, not a count of all on-chain storage. */
+    readonly dataKeysSuppliedByContract: Readonly<Record<ContractId, number>>;
+  };
   /** Omitted by a TTL-only scan; missing estimate does not mean zero rent. */
   readonly rentEstimate?: RentEstimate;
 }

@@ -82,6 +82,23 @@ describe('exitCodeFor — the Action contract', () => {
     });
     expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_OK);
   });
+
+  it('does not report a new covered scan healthy when TTL is unavailable', () => {
+    const noTtl = result({
+      entries: { [KEY]: { ...healthy.entries[KEY]!, ttl: { status: 'unavailable' } } },
+      coverage: { mode: 'known-keys', dataKeysSuppliedByContract: { C1: 1 } },
+    });
+    expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_BELOW_THRESHOLD);
+  });
+
+  it('reports malformed responses as errors rather than healthy/low TTL', () => {
+    expect(
+      exitCodeFor(
+        result({ issues: [{ kind: 'invalid-response', contracts: ['C1'], message: 'invalid' }] }),
+        17_280,
+      ),
+    ).toBe(EXIT_ERROR);
+  });
 });
 
 describe('formatHuman', () => {

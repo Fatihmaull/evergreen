@@ -206,7 +206,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
     ```
     A wall-clock estimate is derived at the display edge and never stored. Final naming settles at `W1-D6-01`.
 - [ ] **W2-D8-02** (F) Unit tests incl. edge cases: already-archived entry, entry with no TTL, ledger close-time drift.
-- [~] **W2-D8-03** (R) Scan all entry types for a contract (instance, code/wasm, persistent, temporary) — not just one; each has different archival behavior (see `docs/SOROBAN-PRIMER.md`). **Started 2026-09-08:** `feat/W2-D8-03-scan-entry-types`, based on main `321656b`. Instance/code discovery plus explicit persistent/temporary LedgerKeys via `--keys-file`; report known-key coverage, never imply full storage enumeration. D8-04 cross-contract dedup remains separate.
+- [x] **W2-D8-03** (R) Scan all entry types for a contract (instance, code/wasm, persistent, temporary). **Complete 2026-09-08:** `feat/W2-D8-03-scan-entry-types`, based on main `321656b`. Instance/code discovery plus explicit persistent/temporary LedgerKeys via `--keys-file`; known-key coverage, batched reads and partial/error handling. `pnpm check` passed 125 offline tests; [read-only A capture](docs/evidence/2026-09-08-scan-entry-types/README.md) observed all four types at ledger 4,572,053, exit 0 for supplied/discovered keys. Full storage enumeration is not claimed. D8-04 cross-contract dedup remains separate; review PR/merge pending.
 - [ ] **W2-D8-04** (R) **Deduplicate by ledger key.** Scanning N contracts that share a Wasm surfaces the same `ContractCode` entry N times. `ScanResult` must carry unique entries with the set of contracts each one serves — that set is what severity and reporting both need downstream.
 
 ### Day 9

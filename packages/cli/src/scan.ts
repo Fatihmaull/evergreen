@@ -14,8 +14,16 @@ export function formatHuman(result: ScanResult, now: Date): string {
   const lines: string[] = [];
   const entries = Object.entries(result.entries);
 
+  if (result.coverage) {
+    lines.push('Coverage: known keys only — contract storage has NOT been fully enumerated.');
+    for (const [contract, count] of Object.entries(result.coverage.dataKeysSuppliedByContract)) {
+      lines.push(`  ${contract}: ${count} explicit data key(s)`);
+    }
+    lines.push('');
+  }
+
   if (entries.length === 0 && result.issues.length === 0) {
-    return 'No ledger entries found.';
+    return [...lines, 'No ledger entries found.'].join('\n');
   }
 
   for (const [key, entry] of entries) {
@@ -58,7 +66,16 @@ export function formatHuman(result: ScanResult, now: Date): string {
  * stable once published — it is the Action's entire interface to this system.
  */
 export function exitCodeFor(result: ScanResult, thresholdLedgers: number): number {
-  if (result.issues.some((i) => i.kind === 'rpc-error')) return EXIT_ERROR;
+  if (result.issues.some((i) => i.kind === 'rpc-error' || i.kind === 'invalid-response'))
+    return EXIT_ERROR;
+  if (
+    result.coverage &&
+    (Object.keys(result.entries).length === 0 ||
+      result.contracts.some((c) => !result.coverage?.dataKeysSuppliedByContract[c.id]) ||
+      Object.values(result.entries).some((e) => e.ttl.status === 'unavailable'))
+  ) {
+    return EXIT_BELOW_THRESHOLD;
+  }
   for (const entry of Object.values(result.entries)) {
     if (entry.ttl.status === 'unavailable') continue;
     if (entry.ttl.remainingLedgers < thresholdLedgers) return EXIT_BELOW_THRESHOLD;
