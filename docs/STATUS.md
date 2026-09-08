@@ -205,6 +205,44 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🎯 W1 MILESTONE GATE MET — 2026-09-08, a day early
+
+The gate: *"if `scan` doesn't return real testnet data by end of Sep 9, W2 starts with this task and the first P1 item gets cut."* It does.
+
+```
+$ evergreen scan CANZNTAW7DYM…XL6L
+instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  148,875 ledgers — live
+  ends at:    ledger 4,712,648
+  observed:   ledger 4,563,773
+```
+
+`4,712,648` is exactly what A's instance was extended to on Sep 5 — the number the CLI computes matches independently recorded evidence, which is a stronger check than "it printed something."
+
+**No P1 item is cut.** The cut order is untouched.
+
+### What landed
+
+- **`W1-D7-01`** the vertical slice: CLI → core → real testnet RPC. `core/rpc.ts` is the only file that imports the SDK, behind a `LedgerEntryReader` interface, so everything else tests offline.
+- **`W1-D6-03`** the **mock RPC client** — promised in the docs since day one and never actually built, which the onboarding fresh-eyes test caught. It replays the recorded fixture rather than invented data, returns *only* keys it was asked for, and can be told to omit entries or fail. Absence and transport failure are first-class cases; a mock that only returns happy-path data tests nothing.
+- **`W1-D7-02`** fixture tests against the unedited 2026-09-05 recording, asserting the inclusive boundary from `W1-D4-13` and that an absent `liveUntilLedgerSeq` never arrives as 0.
+- **`W1-D7-07`** duplication check — no drift.
+
+**Exit codes verified in all four directions** (0 healthy / 1 below threshold / 2 error / 2 usage). That contract is the `evergreen-check` Action's entire interface, so it is now locked by tests rather than by intention.
+
+**63 tests** on `main`.
+
+### Two things worth recording honestly
+
+**My first duplication check was wrong.** It used a case-sensitive match and reported `dry-run` missing from both documents. The docs were fine; the *checker* was broken, and it failed in the safe-looking direction — it would have sent someone hunting for a problem that did not exist. A verification tool can have the same defect as the thing it verifies.
+
+**I also mis-measured the exit codes at first**, reading `$?` after a pipe and getting `tail`'s status instead of the CLI's. Both codes were correct all along. Measure the thing, not the pipeline around it.
+
+### Ownership drift corrected
+
+`W1-D6-04` read `(F)` in the backlog while issue #30 assigned it to Rakha; `W1-D6-03` read `(F)` while #32 assigned it to Rakha, and Fatih has now taken it back deliberately. Owners were written into issues without updating `BACKLOG.md` — the same divergence class the dual-channel discipline exists to prevent, caused here inside the repo rather than between repo and mirror.
+
 ## 🔁 New rule in `AGENTS.md`: push the branch as soon as work starts
 
 **On 2026-09-07 the same email task was built twice.** Rakha had `W1-D5-04` working on a local branch; I built `scripts/send-test-email.mjs` a few hours later without knowing, because that branch had never been pushed.

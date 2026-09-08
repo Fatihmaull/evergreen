@@ -1,20 +1,10 @@
 /**
- * Evergreen core — all the logic worth testing.
+ * Evergreen core — TTL math, the RPC seam, and scan assembly.
  *
- *   - RPC client: wraps `getLedgerEntries` + latest-ledger lookup. The only
- *     place in the system that talks to the network.
- *   - TTL math: remaining ledgers, projected archive ledger and date. Ledgers
- *     are the unit of truth; dates are derived for display only.
- *   - Rent model: cost to extend N ledgers. Reads fee parameters from the
- *     network rather than hardcoding constants — a constant validated once in
- *     Week 2 is quietly wrong by Week 4.
- *   - Storage optimizer: flags oversized/duplicated entries and data in the
- *     wrong storage class.
- *   - Decision rules: (ScanResult, thresholds) -> BumpDecision. A pure
- *     function with no I/O, which is what makes the engine testable offline.
- *
- * This package never imports from cli, engine, or dashboard.
+ * The unit of work is the ledger key, not the contract. `core` never imports
+ * from `cli`, `engine`, or `dashboard`.
  */
-
-/** Package marker — replaced by real exports from W1-D7 onward. */
-export const CORE_PLACEHOLDER = true;
+export { SECONDS_PER_LEDGER, estimateEndsAt, isLive, observeTTL, uniqueEntryCount } from './ttl.js';
+export { NotTestnetError, codeKey, connectTestnet, createRpcReader, instanceKey } from './rpc.js';
+export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
+export { scanInstances } from './scan.js';

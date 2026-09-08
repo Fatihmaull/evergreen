@@ -20,6 +20,7 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@evergreen/shared-types": "workspace:*"
+    "@evergreen/shared-types": "workspace:*",
+    "@stellar/stellar-sdk": "17.0.1"
   }
 }
