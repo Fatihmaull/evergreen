@@ -205,6 +205,20 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🔄 Mirror synced 2026-09-08 — one anomaly, and the repo was wrong again
+
+Validated all 50 W1 rows in both directions. **50/50, no presence mismatches**, one status discrepancy:
+
+| Task | Repo | Notion | Resolution |
+|---|---|---|---|
+| `W1-D6-04` | `[ ]` Pending | In progress | **Notion was right.** Rakha's spike branch has three commits pushed. Repo corrected to `[~]`. |
+
+**This is the second time Notion has been right and the repo stale** — `W1-D4-09` was the first. Both times the correct move was repo-first-then-sync rather than mechanically "correcting" the mirror, which is the exception installed in `AGENTS.md` § A after the first occurrence.
+
+Worth noting the pattern rather than just the instance: **both cases were work that had genuinely started but hadn't produced a merge yet.** The repo records state at commit boundaries; work in flight lives in the gap. That is not a flaw in the rule, but it does mean a `[ ]` on an actively-worked task should be read as *"no commit yet,"* not as *"nobody has started."*
+
+Notes brought current on the four rows that changed materially: `W1-D7-01` (the gate), `W1-D6-03` (mock), `W1-D5-01` (deadline correction), `W1-D6-04` (spike + the persistence/hosting caution).
+
 ## 🔴 `W1-D5-01` npm deadline is **Sep 16**, not Week 4 — corrected
 
 I had this wrong. The package name is not just a publish-week concern.
