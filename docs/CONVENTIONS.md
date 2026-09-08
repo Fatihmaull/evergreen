@@ -76,6 +76,21 @@ This belongs in the same family as the testnet guard that refused everything and
 
 So: when restructuring, **retire the old IDs and mint new ones.** A gap in the sequence costs nothing. A silently re-pointed ID costs an evidence row filed against the wrong proof, discovered when someone goes looking for it.
 
+### The reported state and the actual state diverge — check the actual one
+
+Four instances this sprint, same shape every time: **something reported a state, the real state differed, and only the real state was checkable.** Naming it as a pattern rather than collecting anecdotes, because the fifth one will look novel until you have the list.
+
+| What reported | What was true | How it was caught |
+|---|---|---|
+| A testnet guard passing | It refused *everything* | Exercising it in the permitting direction |
+| `pnpm check` green | Weaker than CI — missing `format:check` | Comparing the script against the workflow |
+| `.prettierignore` valid, suite green | Conflict markers made it match nothing | A human reading the file |
+| Cloudflare: *"Initializing build environment"* | Deploy had succeeded 94 seconds earlier | Loading the URL |
+
+**The rule: check the thing, not the report about the thing.** Load the URL, run the command, exercise the guard in both directions, compare the script to the workflow it claims to mirror.
+
+The reports are not lying — they are measuring something adjacent and presenting it as the answer. A green suite means *the checks that ran* passed; it says nothing about checks that silently stopped applying. **If a fourth-shaped thing appears, add it to this table** rather than treating it as a fresh surprise.
+
 ### Run it, don't only read it — execution surfaces intent
 
 Reading a diff tells you what code does. **Running it puts you in the file, next to the comments, in contact with what the author was trying to do.**

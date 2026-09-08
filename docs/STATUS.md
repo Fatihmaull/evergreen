@@ -233,7 +233,34 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## ✅ `W1-D5` closed — npm org owned, dashboard live
+## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
+
+Rakha's three corrections were all right, and they narrowed **three of the four arguments** originally given for deferring the database. The decision did not change, because it never rested on them — but the ADR did not say that, and a Week 4 reader could have dismantled the decision by refuting the parts that were already weak.
+
+| Argument | Status |
+|---|---|
+| Neon exhausts on Sep 20 | **Overstated** — an upper bound assuming ceiling-rate compute, not a prediction |
+| Supabase pooler breaks advisory locks | **Does not apply** — the spike uses conditional row writes |
+| Overlap is structurally impossible | **Partly wrong** — true of the scheduler, not of chain state |
+| Ledger is idempotent + the cost asymmetry | **Stands** |
+
+ADR-003 now labels them: **🟢 LOAD-BEARING** (the ledger is the idempotent source of truth; a fail-closed lock in front of a single-shot deadline inverts the risk) and **🟡 SUPPORTING — individually refutable** (both unmeasured quotas, and the scheduler guard).
+
+**A decision defended by four arguments where three are weak is more fragile than one defended by a single argument that holds** — because refuting any of the three feels like refuting the decision.
+
+### The in-flight gap is stated, not left to be rederived
+
+"Overlap is structurally impossible" is on record as wrong, so the ADR now says the correct version outright. A concurrency group serialises *runs*, not chain state. The case it skips: **a run submits, dies before confirming, and the next run cannot tell whether it landed.**
+
+The answer is the same mechanism that carries the decision — **the chain is the reconciliation.** The next run scans: TTL above threshold means it landed, skip; still below means it did not, resubmit. Which is exactly why `getTransaction()` reconciliation is the right prerequisite and a lease timer is the wrong fix — **a timer guesses at what the chain can be asked.**
+
+### The divergence family is now a named pattern, not anecdotes
+
+Four instances this sprint, same shape: something reported a state, the real state differed, and only the real state was checkable. `CONVENTIONS` carries them as a table — testnet guard, `pnpm check` vs CI, `.prettierignore`, Cloudflare's deploy UI — with the instruction to **add the fifth there rather than treat it as a fresh surprise.**
+
+The reports are not lying; they measure something adjacent and present it as the answer.
+
+## ✅ `W1-D5` closed — npm org owned, dashboard live## ✅ `W1-D5` closed — npm org owned, dashboard live
 
 **npm: we own the ORG, not just a name.** `evergreen` was squatted, so instead of reserving an unscoped fallback Fatih took the scope: **`evergreen-stellar`**. That is strictly better than the plan — nothing in `@evergreen-stellar/*` can be squatted, no placeholder publishes are needed, and **the Sep 16 deadline pressure is gone.** The name should still land before `W2-D14-03`'s screenshots, but it is no longer a race.
 
