@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · PR #42 synchronized into persistence branch; hosted provider deferred
+**Last updated:** 2026-09-08 · PR #45/#47 synchronized; runtime/provider follow-up on #30
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,10 @@
 ---
 
 ## Right now
+
+**2026-09-08 — PR #45/#47 synchronization (`W1-D6-04`):** local `main` is now `1fc9f2d`; the persistence branch integrates both documentation PRs. The only conflict was the D6-04 backlog description: retained In progress, explicit ownership and the completed local checks. ADR-003 keeps Pages hosting separate and narrows the Workers unknown to deployment, cron, signing and D1, using the already recorded local import/XDR/Testnet read result. Actions + Node + PostgreSQL remains Proposed; hosted provider selection and validation remain open. No code, dependency or original evidence changes are part of this synchronization. `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **70 offline tests**. The initial sandbox attempt could not spawn `git` (`EPERM`); rerunning with the required process permission passed. Source/evidence/dependency hashes, `.env` content/permissions and the stash match the pre-sync snapshot.
+
+**Coordination:** the user authorized a follow-up to [Fatih's #30 reply](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5580897401), requesting agreement on the existing runtime proposal and a Neon/Supabase preference before provisioning. At session start all four relevant Notion IDs (D5-01, D5-02, D6-02, D6-04) were present and matched repo statuses/owners. D6-04 stays In progress; D6-02 stays Pending. The user's sequence remains hosted validation and completion of #30 before planning #32. The W1 review must report any unfinished work and its explicit schedule impact; no completion date or W2 cut is claimed here. The public follow-up and mirror outcome will be recorded after publication.
 
 **2026-09-08 — PR #42 synchronized (`W1-D6-04`):** local `main` was fast-forwarded to `c636cf7`; `chore/W1-D6-04-persistence-spike` now integrates [PR #42](https://github.com/Fatihmaull/evergreen/pull/42), including the CLI scan, core reader/TTL logic and offline mock RPC. The only merge conflict was in BACKLOG: retained D6-03 Done from main and D6-04 In progress from the active spike. Both the core SDK dependency and the spike's `pg` dependency are retained. Combined `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **70 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). The initial offline install lacked cached policy metadata; a normal frozen-lockfile install fetched it and passed without changing locked versions. CLI/core match merged main exactly; persistence scripts, original evidence, `.env` content/permissions, shared-types source, local checkpoints and stash are unchanged.
 
@@ -218,6 +222,47 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.nvmrc` pins the major, and pinning a patch buys churn rather than safety. If a patch ever *does* change build output, the hash comparison is what catches it — which is the argument for comparing hashes in the first place.
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
+
+## 🔄 Mirror synced 2026-09-08 — one anomaly, and the repo was wrong again
+
+Validated all 50 W1 rows in both directions. **50/50, no presence mismatches**, one status discrepancy:
+
+| Task | Repo | Notion | Resolution |
+|---|---|---|---|
+| `W1-D6-04` | `[ ]` Pending | In progress | **Notion was right.** Rakha's spike branch has three commits pushed. Repo corrected to `[~]`. |
+
+**This is the second time Notion has been right and the repo stale** — `W1-D4-09` was the first. Both times the correct move was repo-first-then-sync rather than mechanically "correcting" the mirror, which is the exception installed in `AGENTS.md` § A after the first occurrence.
+
+Worth noting the pattern rather than just the instance: **both cases were work that had genuinely started but hadn't produced a merge yet.** The repo records state at commit boundaries; work in flight lives in the gap. That is not a flaw in the rule, but it does mean a `[ ]` on an actively-worked task should be read as *"no commit yet,"* not as *"nobody has started."*
+
+Notes brought current on the four rows that changed materially: `W1-D7-01` (the gate), `W1-D6-03` (mock), `W1-D5-01` (deadline correction), `W1-D6-04` (spike + the persistence/hosting caution).
+
+## 🔴 `W1-D5-01` npm deadline is **Sep 16**, not Week 4 — corrected
+
+I had this wrong. The package name is not just a publish-week concern.
+
+It appears in the README quickstart, `docs/ONBOARDING.md` and the demo script — and **`W2-D14-03` captures CLI screenshots on Sep 16 as evidence snapshot #2.** Screenshots showing `npx evergreen` against a published name of `evergreen-soroban` are wrong evidence, retaken during publish week. That is precisely the expensive version this task exists to prevent, arriving eight days earlier than I said.
+
+**Order matters too: npm before Cloudflare.** Cloudflare will succeed; npm can *fail*, because the name may be unobtainable. Do the thing that can fail while there is still day left to react.
+
+## ⚠️ A Cloudflare account does not decide persistence
+
+Recorded in ADR-003, because the pull is obvious once the account exists.
+
+| Part | Status | Blocked on the SDK question? |
+|---|---|---|
+| Dashboard hosting | **Settled — Cloudflare Pages** | No — Pages is static and never touches the SDK |
+| Engine runtime + persistence | **Open; Actions + Node + PostgreSQL proposed** | Full Workers engine compatibility remains unverified; local SDK reads have passed. |
+
+The [existing local Workers result](evidence/2026-09-08-persistence-spike/README.md#workers-read-path) answers import, instance-key XDR and Testnet reads. Deployment, cron, signing and D1 remain unverified. Fatih's one-afternoon evaluation limit still applies; Actions remains the proven scheduler fallback. This follow-up requests agreement on retaining Actions + Node with PostgreSQL rather than claiming the full Workers path is proven or that the timebox has elapsed.
+
+## 📋 Where W1 actually risks slipping — not the account tasks
+
+The milestone gate is met, so **W1 does not slip on the gate.** Fatih's four remaining items total ~20 minutes.
+
+It slips on two things, both Rakha's: **`W1-D6-04` persistence (ADR-003)**, which blocks Week 3, and **`W1-D6-02` architecture data-flow**, not started, which is what makes `shared-types` legible to whoever touches it next. A spike branch for the first is pushed and in flight.
+
+**At the review, say plainly whether those two close.** If not: name which W2 day absorbs them and what moves out to make room. *"D6-02 slides to Thursday and batch scan goes"* is a decision; letting it ride along quietly is not.
 
 ## 🎯 W1 MILESTONE GATE MET — 2026-09-08, a day early
 

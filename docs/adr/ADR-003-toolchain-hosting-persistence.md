@@ -1,6 +1,6 @@
 # ADR-003: Toolchain, hosting, scheduler, and persistence
 
-**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), with manual and genuine scheduled reads verified 2026-09-07. PostgreSQL persistence is **proposed for review** after the 2026-09-08 local spike (`W1-D6-04`); hosted provider selection and validation remain open. Dashboard hosting remains a separate task (`W1-D5-02`).
+**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), with manual and genuine scheduled reads verified 2026-09-07. Retaining Actions + Node and adding PostgreSQL for the engine is **proposed for review** after the 2026-09-08 local spike (`W1-D6-04`); runtime agreement, hosted provider selection and validation remain open. Dashboard hosting is settled on Cloudflare Pages by PR #45; account setup and deployment remain the separate `W1-D5-02` task.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -43,6 +43,19 @@ Asked as "where do we keep bump history?", flat JSON committed to the repo looks
 | **Render** | Native cron jobs | Managed Postgres | Near-identical to Railway; choose on account/DX preference rather than capability. |
 | **GitHub Actions cron + hosted DB** (Neon / Turso / Supabase) | Scheduled workflows | External DB provides the lock; Actions alone provides none | Public run logs are easy to review; export the proof logs for grant evidence. **Risk: scheduled workflows are best-effort and can be delayed well past the interval** — the threshold design must tolerate it and a missed run must alert. |
 
+> ### ⚠️ Having a Cloudflare account does not decide persistence
+>
+> Once the account exists for Pages there is an obvious pull toward *"we're on Cloudflare anyway, so D1."* **Resist it.** The two parts are separable and only one is blocked:
+>
+> | Part | Status | Blocked on the SDK question? |
+> |---|---|---|
+> | Dashboard hosting | **Settled — Cloudflare Pages** | No. Pages is static hosting and never touches the Stellar SDK. |
+> | Engine runtime + persistence | **Open; Actions + Node + PostgreSQL proposed** | Full SDK compatibility remains unverified for the Workers option; Actions already has a hosted scheduler/read proof. |
+>
+> The compatibility question now has a bounded answer: **SDK import, instance-key XDR and Testnet reads passed in local Workers** (see [the recorded result](../evidence/2026-09-08-persistence-spike/README.md#workers-read-path)). Deployment, cron, signing and D1 remain unverified. This establishes local read compatibility, not full engine compatibility or a reason to select D1. If Workers cannot support the engine, reaching D1 from another platform remains an avoidable coupling.
+>
+> Answer the SDK question on its own merits, timeboxed to one afternoon. If it stays ambiguous past that, **the ambiguity is the answer** and the Actions cron floor carries us.
+
 ### Dashboard hosting is a *separate, much smaller* question
 
 Worth separating explicitly, because the shortlist above is about running the **engine** and it does not apply here.
@@ -51,7 +64,7 @@ Worth separating explicitly, because the shortlist above is about running the **
 
 So the dashboard is a **static site**, and Vercel, Netlify and Cloudflare Pages are functionally identical for it — all free at our scale, all deploy from a GitHub push. **This decision does not deserve deliberation**; it deserves whichever account exists already.
 
-**Recommendation: Cloudflare Pages**, on one non-obvious ground rather than any hosting merit — it comes with the account needed to test whether the Stellar SDK runs on Workers, which is the single blocking unknown left in Part 2 above. One signup answers a hosting question we barely care about *and* unblocks one we care about a lot. If a Vercel or Netlify account already exists, use it and test Workers separately; the dashboard genuinely does not care.
+**Cloudflare Pages selected in PR #45.** The same account can support a deployed Workers probe if that option needs further evaluation; the local SDK read probe required no account. Dashboard account setup and deployment are tracked in [Issue #46](https://github.com/Fatihmaull/evergreen/issues/46) and do not select the engine runtime or database.
 
 ### Evaluation order
 
@@ -124,3 +137,4 @@ Root `pg` is a pinned development dependency for the isolated spike, not an engi
 - 2026-09-06: selected GitHub Actions + Node 24 for the initial scheduler; verified SDK 17.0.1 reads locally. Workflow published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23); merge and scheduled-run proof pending. Hosting and atomicity remain separate tasks.
 - 2026-09-07: PR #24 merged; manual run `34110254224` and genuine scheduled run `34111732199` succeeded. Their full logs and metadata were captured and cross-checked. Runtime proof complete, evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); no change to the platform decision or the separate hosting/atomicity tasks.
 - 2026-09-08: local PostgreSQL contention/recovery spike and local Workers SDK reads verified. Proposed Actions + PostgreSQL; hosted provider explicitly deferred until local review. `W1-D6-04` remains In progress. Corrected the across-run task reference to the frozen `W3-D16-02` ID.
+- 2026-09-08: integrated PR #45's separation of Pages hosting from engine/persistence, then reconciled its Workers question with the existing local read evidence. Runtime/provider agreement is requested through #30; Actions + Node + PostgreSQL remains a proposal. No hosted provisioning or additional compatibility experiment occurred in this follow-up.
