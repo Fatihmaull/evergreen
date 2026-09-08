@@ -4,12 +4,12 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 
 ## Review basis and branch state
 
-- Merged baseline: main `b0f0d0b`, including persistence artifact PR #52, npm/Pages PR #54 and decision rationale PR #55.
-- Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53), synchronized at `bcc41c7`, complete but awaiting review/merge.
-- Closeout: `docs/W1-D7-03-week-one-review`, stacked on #53. Review its incremental diff against `bcc41c7`. The user authorized final review and publication on Sep 8; [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) targets the architecture branch while #53 is open, with review requested from @Fatihmaull. Retarget and synchronize with main after #53 merges.
-- [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch records **48 Done, 2 In progress**. The latter are recurring drift `W1-D4-09` and shared adjustments `W1-D7-04`. Open-branch completion is explicitly distinct from merged main.
+- Current merged baseline: main `321656b`, including task-ID checker PR #56, architecture PR #53 and ADR-005/carry-forward PR #58, in addition to the earlier W1 foundations.
+- Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) merged as `59c3cf8`; its former head branch, used as #57's base, was subsequently deleted.
+- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) closed without a merge when that base was deleted. Its published head `98e62e2` remains preserved; this local synchronization prepares the existing report/evidence against current main. No reopened or replacement PR, push or merge of the closeout into main is claimed.
+- [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch retains **48 Done, 2 In progress**. Recurring drift `W1-D4-09` continues; `W1-D7-04` now awaits review of the synchronized closeout, not ADR-005 acceptance. Completion on this branch remains distinct from integration into main.
 
-**Concurrent cleanup:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) registers C's separate spare-proof task and adds an ID checker. This closeout leaves C's original evidence-row ID intact rather than reassigning it to B. Merge #56 before this closeout reaches main; refresh future-week counts when that additional task lands. The counts below describe this branch, without the unmerged cleanup.
+**Task registration:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) is integrated. C retains its separate `W3-D18-02c` spare-proof task; the backlog now contains 132 tasks (W3: 27). Its Notion row and future-week mirror counts still need catch-up; this synchronization is local codebase work.
 
 ## Foundation checklist — W1-D7-03
 
@@ -21,7 +21,7 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 | Scheduler | Actual manual and scheduled Actions invocations read Testnet | [Runtime evidence](evidence/2026-09-07-scheduler-runs/README.md); no automated bump yet |
 | Email | Resend accepted test send; recipient confirmed inbox delivery; follow-up merged #40 | [EVIDENCE](EVIDENCE.md); engine notifications remain W3-D17-01 |
 | Hosting and package names | Pages placeholder live; npm organization/name reserved | [SETUP](SETUP.md); functional dashboard and package publication remain W4 |
-| Shared contracts and harness | Shared types and mock RPC merged, negative type examples checked | [ARCHITECTURE](ARCHITECTURE.md); ADR-005 acceptance remains open |
+| Shared contracts and harness | Shared types and mock RPC merged, negative type examples checked | [ARCHITECTURE](ARCHITECTURE.md); ADR-005 accepted by Fatih in PR #58 |
 | Persistence | Local experiment/evidence merged #52; Actions + Node selected; Neon deferred to W4 | [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md); hosted validation is W4-D26-05 |
 | CLI milestone | Actual A instance scan succeeds in human and JSON modes | [Snapshot](evidence/2026-09-08-w1-review/README.md); all-entry discovery/deduplication remain W2 |
 
@@ -67,12 +67,12 @@ The earlier onboarding-agent test also found a mock-RPC reference before impleme
 
 ## Decisions and W2 handoff — W1-D7-04
 
-Shared acceptance stays open in #44. The prepared adjustments are:
+Fatih confirmed the carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). Issue #44 remains open for closeout; this synchronized report still needs review and publication. The adjustments are:
 
 1. Reuse the existing inclusive boundary proof and core helpers at W2-D8-01. Remaining TTL 0 is the final live ledger; below zero is beyond it. Temporary data is deleted, persistent data is archived.
 2. Preserve the accepted Actions + Node runtime and W4 Neon adoption. Low TTL is not proof that a prior transaction failed. W3-D16-02 must reconcile known transaction hashes and validity bounds; W3-D16-03 owns the interim history. A timeout or `NOT_FOUND` alone must not be rewritten as success or safe new submission.
-3. Leave ADR-005 **Proposed** until Fatih accepts or amends it. Existing type implementation is merged; this closeout does not invent decision approval.
-4. Keep temporary-entry engine policy in its existing task **W3-D15-02b**. The W1 permissionless experiment proves capability, not a settled product policy for extending disposable data.
+3. ADR-005 is **Accepted**, explicitly authored and merged by Fatih in PR #58. Reuse the existing JSON-compatible shared types; this synchronization does not change their implementation.
+4. Keep temporary-entry auto-bump policy in **W3-D15-02b**. PR #58 settles reporting separately: imminent deletion is high severity in W2 whether or not the engine will auto-bump. The W1 permissionless experiment proves capability, not a product policy for preserving disposable data.
 5. Keep D4-09 drift checks through Sep 20. The last recorded check is Sep 7, not this scan. The instance-only CLI does not yet replace B/C persistent/code drift coverage.
 
 | Next task | Owner | Planned local outcome |
@@ -85,10 +85,18 @@ Before implementing D8-03, verify what the configured RPC can actually enumerate
 
 Fixed dates remain **Sep 18 engine ready**, **Sep 20 ~12:00 UTC B crossing**, **Sep 25 ~12:00 UTC C spare**, **Oct 2 deadline**. Preserve calibration and controlled proof timing; this review has not extended B/C.
 
-## Validation and mirror
+## Original publication validation and mirror
 
 `pnpm check` passed conflict detection, typecheck, lint, formatting and all 70 offline tests (34 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). All 19 recovered RPC/image bundles and 158 local document links passed validation. No configured credential or secret-pattern match was found in the candidate files. `.env`, stash, other prior branch heads and original evidence were preserved. Runtime code, workflows, package manifests, lockfile and original evidence are outside this closeout diff. The only AGENTS change corrects its introductory TTL boundary description; operating policy is unchanged.
 
 The audit found all 50 W1 IDs in Notion, with no presence mismatch. Eleven historical Owner fields differed from BACKLOG (`W1-D4-00/04/04b/07/08/12/11/10/04c/05/06`); formal owners are Fatih except 04b Shared. Correction retained historical executor notes; read-back confirms all 50 IDs, statuses and owners match. Project Brain was refreshed to Sep 8/day 6 with 24 days remaining and current per-week counts, preserving its child pages. Knowledge Base and Decisions were updated and read back. No new task ID is introduced.
 
-**Publication:** #57 opened after final review. Review commit `105ccfb` passed [GitHub CI](https://github.com/Fatihmaull/evergreen/actions/runs/34238108025) and Pages checks. The [publication handoff](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586699923) and Notion publication links were read back; task statuses remain 48 Done / 2 In progress on this branch. No merge or ADR acceptance is claimed.
+**Original publication:** #57 opened after final review. Review commit `105ccfb` passed [GitHub CI](https://github.com/Fatihmaull/evergreen/actions/runs/34238108025) and Pages checks. The [publication handoff](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586699923) and Notion publication links were read back; task statuses remain 48 Done / 2 In progress on this branch. At that publication boundary no merge or ADR acceptance was claimed. The current merge/acceptance state is recorded above.
+
+## Local synchronization — 2026-09-08
+
+Merged main into the existing closeout branch, retaining the W1 report, original raw evidence and the registered C task. The two conflicted files were STATUS and ARCHITECTURE: both task histories, all three diagrams, and main's atomicity explanation are retained. Current wording now reflects ADR-005 acceptance and the separate temporary-entry reporting/policy decisions from #58.
+
+The combined tree passed `pnpm check`: conflict detection, the 132-task ID check, typecheck, lint, formatting and all 70 offline tests. Preservation checks confirmed that original evidence and all three Mermaid diagrams are unchanged, while runtime code, workflows, tooling and dependency files match current main. No unresolved conflicts, whitespace errors or missing local file targets in this review and ARCHITECTURE remain. W1 stays at 48 Done / 2 In progress; W2 stays at 23 Pending.
+
+No new Testnet read or transaction, email, database provisioning, GitHub publication or Notion write is part of this synchronization. Task-state changes and publication remain separate review steps.

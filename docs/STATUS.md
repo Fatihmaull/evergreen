@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1 review published in PR #57; shared review remains open
+**Last updated:** 2026-09-08 · W1 closeout synchronized with merged main and validated locally
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,16 @@
 ---
 
 ## Right now
+
+**2026-09-08 — local closeout synchronization (`W1-D7-04`):** the user requested codebase synchronization before discussing publication or changing Notion. Local main was fast-forwarded from `b0f0d0b` to `321656b`, including merged PRs [#56](https://github.com/Fatihmaull/evergreen/pull/56), [#53](https://github.com/Fatihmaull/evergreen/pull/53) and [#58](https://github.com/Fatihmaull/evergreen/pull/58). The existing `docs/W1-D7-03-week-one-review` branch is now integrated with that main. Both main and the combined closeout tree passed `pnpm check`: conflict detection, the 132-task ID check, typecheck, lint, formatting and all 70 offline tests, after resolving the sandbox's subprocess permission failure. Original evidence and all three architecture diagrams are unchanged; runtime code, workflows, tooling and dependency files match current main. No unresolved conflicts or missing local links in the review and architecture documents remain.
+
+**GitHub publication state:** #53 merged at `59c3cf8`. #57 closed without a merge when its architecture base branch was deleted at 14:51:04 UTC; the closeout head `98e62e2` is still preserved locally and remotely. No human comment, inline review comment or formal review on #57 was returned by GitHub during this check. Its report and recovered evidence are not in main. Reopening/retargeting it, or publishing a replacement linked to it, remains a separate step; no remote write is part of this synchronization.
+
+**Decisions and task state:** Fatih authored and merged #58, accepting ADR-005 and confirming the W2–W4 carry-forward. Temporary-entry near-deletion reporting belongs in W2; auto-bump policy remains W3-D15-02b. These decisions no longer await acceptance. This branch retains 48 Done / 2 In progress in W1: D7-03/05/06 reports are complete, D7-04 awaits review of the synchronized closeout, and recurring D4-09 continues through Sep 20. The integrated backlog has 132 tasks; W2 remains 23 Pending.
+
+**Notion boundary deferred:** the five closeout/drift task IDs, statuses and owners matched the existing work branch before synchronization. Per the user's codebase-first scope, mirror updates remain pending for W1-D6-02 and W1-D7-03/04/05/06, the accepted ADR-005/carry-forward notes, and the Project Brain. The separate Task Tracker is a manual Sep 5 snapshot, unlike the current task database; its stale boxes do not mean the Day 4–6 work is unfinished. Also pending: the missing W3-D18-02c row and the swapped W2-D13-02/03 task descriptions. These are recorded discrepancies, not corrected mirror state.
+
+## Original W1 closeout publication — superseded by the synchronization above
 
 **2026-09-08 — W1 review prepared (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. It is stacked on architecture PR #53 (`bcc41c7`), with main `b0f0d0b` integrated. After user-authorized final review, [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout against the architecture branch, keeping its diff separate from #53. Review is requested from @Fatihmaull. Merge #53 and #56 first, then synchronize and retarget #57 to main before merging it.
 
@@ -25,7 +35,7 @@
 
 **Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. This was the initial WIP handoff. The [publication update](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586699923) now links #57 and records the #53/#56 merge order. Both comments were read back. The published review commit `105ccfb` passed [GitHub CI](https://github.com/Fatihmaull/evergreen/actions/runs/34238108025) and Pages checks. D7-03/04/05/06 plus Project Brain, Knowledge Base and Decisions carry the PR link; MCP read-back confirmed the links and retained statuses. #44 remains open for shared decisions; no merge was performed.
 
-## Architecture publication
+## Architecture publication history — PR #53 has since merged
 
 **2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
 
@@ -262,7 +272,69 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
+## ✅ ADR-005 accepted · `W1-D6-02` merged · W2–W4 carry-forward confirmed
+
+**W1 is 45/50 done.** Only the review-gate tasks remain, and Rakha has them drafted.
+
+### ADR-005 — accepted, with what was actually endorsed
+
+Three things carried it, recorded in the ADR so a future reader does not re-derive them:
+
+- **Money as integer decimal text.** Stroop values above `Number.MAX_SAFE_INTEGER` round *silently* as JSON numbers, and a rent estimate that is quietly wrong is worse than one that fails. The cost — consumers must convert before arithmetic — is the right trade: an explicit conversion is visible, a silent rounding is not.
+- **Explicit variants over sentinels.** `known`/`unavailable`, `simulated`/`submitted`/`succeeded`/`failed`. This is what keeps "no TTL" structurally distinct from "expiring now" — they collapse into `0` under any nullable-number model, and that collapse is the exact bug class this project keeps finding.
+- **The signer seam is explicitly NOT a security boundary.** A seam described as security but not enforced as security is worse than no seam, because it invites trust it cannot carry.
+
+Its **downstream sweep** says plainly that this decision changed no dependency — stated rather than left blank, because an unconsidered sweep and an empty one look identical.
+
+### Carry-forward — the temporary-entry question was entangled, so it is split
+
+`W3-D15-02b` **stays in Week 3** rather than being settled early. But two decisions were riding on one ID:
+
+- **Reporting** a temporary entry near deletion is a **W2** concern and is **not open**. Deletion is unrecoverable, so imminent deletion is high severity **whether or not we ever auto-bump.** W2 must not wait on this.
+- **Auto-bumping** one is genuinely open and stays in W3, because the threshold work is what makes the trade concrete.
+
+Nothing in W2 depends on the second, which is why settling it early buys nothing — and separating them is what stops W2 stalling on a decision it does not need.
+
+### The two dates that matter now
+
+Both before **Fri Sep 18**, and both exist because a silent skip is the dominant failure mode:
+- **`W2-D10-04`** — the run exits non-zero when it sees an entry below threshold and did not bump it.
+- **`W3-D17-05`** — Stage 1 failure modes (RPC timeout, insufficient balance, missed run) each alert rather than failing silently.
+
+## 🔍 `pnpm check:task-ids`## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
+
+Rakha's W1 closeout noted that guinea-pig C's evidence row pointed at *"an unregistered alias."* He was right: **`W3-D18-02c` existed in `EVIDENCE.md` and had no task behind it** — I invented it when adding C's row.
+
+**My earlier ad-hoc check missed it because it only matched backtick-delimited IDs, and this one was bold.** Same defect class as the case-sensitive duplication checker: the verification tool failing in the safe-looking direction. So it is a real script now, matching any delimiter, wired into `pnpm check` and CI.
+
+It found three more beyond C's:
+
+| ID | Where | Cause |
+|---|---|---|
+| ~~W3-D18-02~~ | `ARCHITECTURE`, `CONVENTIONS`, `ADR-001` | Another Week 3 renumbering casualty — the double-bump promise is `W3-D16-02` |
+| ~~W2-D12-02b~~ | `PRD` | Renamed to `F-01` when floated; I fixed `STATUS` and missed `PRD` |
+| `W3-D18-02c` | `EVIDENCE` | Now **registered as a real task** — C's spare proof is real work |
+
+### It caught me on its own PR, twice over
+
+CI failed on the very PR that added this check — and the reason is worth recording twice.
+
+**First:** the STATUS table above quotes the retired IDs while explaining them. To the checker that is indistinguishable from a live reference. Fixed with a marker convention: **strikethrough means "retired, quoted deliberately"** — semantically exact, readable to humans, and documented in `CONVENTIONS` with the warning that using it on a *live* reference converts a caught bug into a hidden one.
+
+**Second, and worse:** I had been verifying with `pnpm check && echo PASS`. **On failure that prints nothing**, and I read the silence as noise rather than as failure. I was also on `main` rather than the branch, so what I did check was the wrong tree. CI caught both.
+
+`cmd; echo "exit=$?"` is now the recorded idiom — a number is always printed, so there is no silent case. **Fifth member of the reported-vs-actual family, and this one was my own verification lying to me.**
+
+### What it catches, and what it deliberately cannot
+
+✅ **Dangling** — an ID referenced but not registered.
+❌ **Repurposed** — an ID that exists but now means something *else*.
+
+The second is the more dangerous one and **nothing cheap detects it**, which is exactly why `CONVENTIONS` says retire an ID rather than repurpose it, and why the ADR template demands a downstream sweep. This check is the floor, not the ceiling — and the script says so.
+
+**It skips `STATUS.md`'s session log by design.** A log is an append-only historical record; quoting an ID that has since been retired is *correct* there, and rewriting history to keep a checker quiet would destroy the thing the log is for.
+
+## 🎯 ADR-003 restructured## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
 
 Rakha's three corrections were all right, and they narrowed **three of the four arguments** originally given for deferring the database. The decision did not change, because it never rested on them — but the ADR did not say that, and a Week 4 reader could have dismantled the decision by refuting the parts that were already weak.
 
@@ -334,7 +406,7 @@ Every ID still resolved, so nothing looked broken — while **`EVIDENCE.md` file
 
 - **`W4-D24-03`** claimed *"cut order #3"* while the canonical list in the same file said #4 — the write path took #3 when it was added. Exactly the improvisation the "never improvise the cut order" rule exists to prevent, pointing at the wrong item under pressure.
 - **`W2-D11-01`** said the developer key is *"not the policy signer yet"* — implying a replacement that is no longer coming. It is the signing path Stage 1 ships and the README teaches.
-- **`W1-D4-04c`** still called guinea-pig B the subject for `W3-D20-02b`, an ID that now means something else.
+- **`W1-D4-04c`** still pointed guinea-pig B at the pre-rescope proof ID, which now means something else. Repointed to `W3-D18-02b`.
 - **ADR-002's** body carries pre-rescope IDs. Left as written — an ADR records the reasoning we had at the time — with a mapping note at the top rather than a silent edit.
 
 ## 🧹 "Downstream sweep" is now the last step of every ADR

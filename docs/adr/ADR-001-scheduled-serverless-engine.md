@@ -26,7 +26,7 @@ Option A: a scheduled serverless job on a 5–15 minute cadence, dry-run by defa
 
 **Easier:** zero infra to maintain during the sprint; each run is a discrete, greppable artifact that doubles as grant evidence; the same trigger model as the CI Action, so one mental model covers both.
 
-**Harder:** worst-case reaction time equals the cron interval — fine for our thresholds, but it must be documented so users set thresholds with the interval in mind. Overlapping runs are possible, so the engine needs idempotency and in-flight handling (W3-D18-02). Cold starts and scheduler reliability become failure modes to alert on (W3-D21-01) — a missed run must be visible, not silent.
+**Harder:** worst-case reaction time equals the cron interval — fine for our thresholds, but it must be documented so users set thresholds with the interval in mind. Overlapping runs are possible, so the engine needs idempotency and in-flight handling (W3-D16-02). Cold starts and scheduler reliability become failure modes to alert on (W3-D21-01) — a missed run must be visible, not silent.
 
 **Committed:** the engine is stateless between runs; all state lives in the bump-history store (ADR-003).
 

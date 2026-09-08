@@ -8,7 +8,7 @@ As of 2026-09-08, the implemented product path is **a Testnet instance scan thro
 
 | Component | Implemented | Planned work |
 |---|---|---|
-| `packages/shared-types` | JSON-compatible interfaces, examples and compiler checks; no runtime I/O | Real producers/adapters validate input and uphold these contracts. ADR-005 remains Proposed despite the type implementation being merged. |
+| `packages/shared-types` | JSON-compatible interfaces, examples and compiler checks; no runtime I/O | Real producers/adapters validate input and uphold these contracts. ADR-005 was accepted by Fatih in PR #58; runtime adapters remain planned. |
 | `packages/core` | Testnet RPC reader, instance-key scan, TTL math, unique-entry count | Code/persistent/temporary discovery and consumer deduplication (`W2-D8-03/04`), rent model, optimizer and decision rules |
 | `packages/cli` | `scan <contract-id> [--json]`, human output and exit codes | Config loading, broader scans, rent output, `extend`, `optimize` and full CLI UX |
 | `packages/engine` | Package placeholder; separate read-only scheduler smoke proof | Scheduled decision/sign/send/reconcile loop and notifications in W3 |
@@ -82,7 +82,7 @@ The user always pays their own extend fees ([ADR-004](adr/ADR-004-payment-model.
 
 ### `packages/shared-types`
 
-[Source declarations](../packages/shared-types/src/index.ts) define the interfaces below; [ADR-005](adr/ADR-005-shared-domain-types.md) records the proposed representation. Runtime code must validate canonical keys, addresses, thresholds and payer references. Types do not validate JSON or enforce signer security.
+[Source declarations](../packages/shared-types/src/index.ts) define the interfaces below; [ADR-005](adr/ADR-005-shared-domain-types.md) records the accepted representation. Runtime code must validate canonical keys, addresses, thresholds and payer references. Types do not validate JSON or enforce signer security.
 
 | Value | Producer → consumer | Meaning |
 |---|---|---|
@@ -190,7 +190,7 @@ flowchart TD
 
 The future loader validates contract-to-payer references and merges threshold overrides. Config contains environment variable names or policy references, never secret values. An omitted `mode` must become `dry-run`; live submission requires explicit opt-in. `extendToLedgers` is the requested lifetime relative to execution, not an absolute ledger number.
 
-Decision rules consume observations/thresholds and an explicitly resolved payer for an extend decision. Shared entries produce one decision, not one per consumer. A skip is a decision with a reason, not automatically a successful engine run: `W2-D10-04` requires a visible nonzero outcome when an observed entry is below threshold and no bump happened. Whether temporary entries should be auto-bumped remains the explicit scope decision `W3-D15-02b`; scanning them does not authorize keeping them forever.
+Decision rules consume observations/thresholds and an explicitly resolved payer for an extend decision. Shared entries produce one decision, not one per consumer. A skip is a decision with a reason, not automatically a successful engine run: `W2-D10-04` requires a visible nonzero outcome when an observed entry is below threshold and no bump happened. Whether temporary entries should be auto-bumped remains the explicit scope decision `W3-D15-02b`; scanning them does not authorize keeping them forever. PR #58 separately confirms that reporting imminent temporary-entry deletion as high severity is W2 work and does not wait on that policy decision.
 
 The engine must resolve the payer's public account before preparing the envelope, even for simulation. A payer ID is a config lookup key, not itself an account address; a resolved signer's public `identity.account` can supply that identity. Resolving identity does not mean a signature has been produced. The exact loader/adapter wiring remains W3 work.
 
@@ -210,6 +210,8 @@ A lost acknowledgement or unresolved transaction is not sufficient to declare fa
 ## Persistence
 
 [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md) accepts **Actions + Node 24, with PostgreSQL on Neon adopted in W4 after the Sep 20 proof**. W1 does not require a hosted database. The unused spike was merged separately in [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); it remains an experiment outside the engine runtime.
+
+**Frame the choice as atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap, and `W3-D16-02` promises we never double-bump an entry. That guarantee needs a durable write the engine can use as a lock or a last-bumped record — so the question is *"what gives a scheduled job an atomic-enough write?"*, not *"where do we keep history?"*. The two questions pick different answers: JSON committed to the repo is adequate history and useless as a lock, which disqualifies it.
 
 | Stage | Coordination and history |
 |---|---|
