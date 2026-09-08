@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · local persistence spike ready for review; hosted provider deferred
+**Last updated:** 2026-09-08 · PR #42 synchronized into persistence branch; hosted provider deferred
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,9 +11,15 @@
 
 ## Right now
 
+**2026-09-08 — PR #42 synchronized (`W1-D6-04`):** local `main` was fast-forwarded to `c636cf7`; `chore/W1-D6-04-persistence-spike` now integrates [PR #42](https://github.com/Fatihmaull/evergreen/pull/42), including the CLI scan, core reader/TTL logic and offline mock RPC. The only merge conflict was in BACKLOG: retained D6-03 Done from main and D6-04 In progress from the active spike. Both the core SDK dependency and the spike's `pg` dependency are retained. Combined `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **70 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). The initial offline install lacked cached policy metadata; a normal frozen-lockfile install fetched it and passed without changing locked versions. CLI/core match merged main exactly; persistence scripts, original evidence, `.env` content/permissions, shared-types source, local checkpoints and stash are unchanged.
+
+**Execution order confirmed by the user:** synchronize first, then settle the provider discussion and complete the hosted database test for #30; only afterward plan #32's remaining architecture documentation. The [Neon/Supabase comparison on #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5579790710) has been posted with a tentative recommendation and the choice explicitly open. No reply was present at this sync check. No provider provisioned or new PR opened. D6-02 remains Pending; D6-03, D7-01, D7-02 and D7-07 are Done through PR #42.
+
+**Mirror catch-up:** all six relevant IDs were present. Four Notion rows were behind merged main (D6-03, D7-01, D7-02, D7-07 still Pending); updated them to Done with the merged outcomes and PR link, then read back all six IDs/statuses. This was a missed mirror update, not unsupported completion. D6-04 stays In progress. D6-04's final synchronization outcome (70 offline tests, PR #42 integrated, hosted testing before planning #32) was mirrored via MCP and read back successfully.
+
 **2026-09-08 — local persistence spike ready for review (`W1-D6-04`):** [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30), owner Rakha, branch `chore/W1-D6-04-persistence-spike`. Eight PostgreSQL checks passed: one winner under two-process contention, independent entries, expired-claim takeover with generation checks, pending-state protection, rollback, idempotent completion/history, preserved payer/signer/fee data, and reads after client/process replacement. A separate stopped-database check refused work and exited nonzero. [Evidence and reproduction](evidence/2026-09-08-persistence-spike/README.md). Local Workers SDK 17.0.1 import/XDR and Testnet A reads also passed; no deployment, cron, signing or D1 proof is claimed.
 
-**Proposal and remaining scope:** retain Actions + Node and use PostgreSQL; [ADR-003 amendment](adr/ADR-003-toolchain-hosting-persistence.md#2026-09-08--local-persistence-spike-proposal-for-review) is Proposed. The user requested **local-result review before choosing Neon or Supabase**. Hosted connection/permissions/pooling validation remains outstanding, so D6-04 stays `[~]` / In progress. No provider provisioned, new PR or Issue created, email sent, or Stellar transaction submitted. WIP branch visibility is separate from PR publication; the next checkpoint is local-result review. D6-02/03 remain Pending for later work via #32.
+**Proposal and remaining scope:** retain Actions + Node and use PostgreSQL; [ADR-003 amendment](adr/ADR-003-toolchain-hosting-persistence.md#2026-09-08--local-persistence-spike-proposal-for-review) is Proposed. The user requested **local-result review before choosing Neon or Supabase**. Hosted connection/permissions/pooling validation remains outstanding, so D6-04 stays `[~]` / In progress. No provider provisioned, new PR or Issue created, email sent, or Stellar transaction submitted. WIP branch visibility is separate from PR publication; the next checkpoint is local-result review. D6-02 remains Pending for later work via #32; D6-03 is now Done through PR #42.
 
 **Validation:** `pnpm check` passed conflict detection, typecheck including 17 negative type examples, lint, formatting and **47 offline tests** (11 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). The dedicated database's temporary schemas were verified removed, and its container/volume and local Workers server were cleaned up. Original `.env` content/permissions, RPC fixture, shared-types source, email evidence and stash match the preservation snapshot. Notion MCP boundary sync completed and read back: exact task ID D6-04 remains In progress with the local outcome and deferred provider decision; Decisions mirrors the ADR-003 proposal and evidence links.
 
@@ -27,7 +33,7 @@
 
 **OAuth recovery verified later on 2026-09-08:** Rakha reconnected Notion; this session successfully read and updated the mirror via MCP. All 50 W1 IDs are present in both channels, with no missing or extra row. `W1-D1-03` was the only status mismatch (repo Done / Notion Pending); the committed date-confirmation outcome from PR #38 is now mirrored as Done. The email and three shared-types rows, plus Decisions, were updated and fetched again. Fatih concurrently merged PR #40 and refreshed those merge outcomes through PR #41; the final check confirms the email row says merged and Issue #37 is closed. The earlier OAuth failure is resolved. The original failure note below is historical.
 
-**Next work:** [the latest comment on handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171) confirms email is finished, then directs @rakhargo to #30 (`W1-D6-04`, persistence/locking), followed by #32 (`W1-D6-02` data-flow and `W1-D6-03` mock RPC). At the earlier merge check these tasks were Pending. D6-04 has since been claimed by Rakha on the branch above; D6-02/03 remain Pending with their original owners (`02`: R; `03`: F). Reconcile owner and primary branch when claiming the later tasks. ADR-005 remains Proposed; if persistence needs a type change, discuss it on #30 before changing the merged types.
+**Next work:** [handoff #43](https://github.com/Fatihmaull/evergreen/issues/43) confirms #30 persistence/locking remains Rakha's task. PR #42 completed the mock RPC; #32 now contains only D6-02 architecture documentation. Per the user's sequence, finish the hosted test and #30 before planning D6-02. ADR-005 remains Proposed; discuss any required shared-type change on #30 before changing the merged types. Shared W1 review follows in [#44](https://github.com/Fatihmaull/evergreen/issues/44).
 
 **Mirror sync was pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked, confirmed again during publication. Pending: `W1-D5-04` follow-up completion and PR #40 link plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof; the finished follow-up is published for review in PR #40. No email merge into main is claimed.
 
@@ -77,8 +83,8 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | 🟡 types merged; persistence local result under review | R/F | W1-D6-01/01b/01c validated; D6-04 In progress, hosted provider deferred; data flow and mock RPC Pending. |
-| CLI | ⬜ not started | F | first slice at W1-D7-01 |
+| Shared types & harness | 🟡 types and mock RPC merged; persistence local result under review | R/F | W1-D6-01/01b/01c and D6-03 complete; D6-04 In progress, hosted provider deferred; D6-02 data flow Pending. |
+| CLI | 🟡 first instance-scan slice merged | F | W1-D7-01/02 complete in PR #42; broader entry coverage remains W2 work. |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
 | Evidence | 🟡 building | S | Setup: 2 funding txs. Boundary: adjacent-ledger proof + 3 tx records. All with JSON + screenshots. First weekly snapshot due W1-D7-03 |
@@ -212,6 +218,44 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.nvmrc` pins the major, and pinning a patch buys churn rather than safety. If a patch ever *does* change build output, the hash comparison is what catches it — which is the argument for comparing hashes in the first place.
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
+
+## 🎯 W1 MILESTONE GATE MET — 2026-09-08, a day early
+
+The gate: *"if `scan` doesn't return real testnet data by end of Sep 9, W2 starts with this task and the first P1 item gets cut."* It does.
+
+```
+$ evergreen scan CANZNTAW7DYM…XL6L
+instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  148,875 ledgers — live
+  ends at:    ledger 4,712,648
+  observed:   ledger 4,563,773
+```
+
+`4,712,648` is exactly what A's instance was extended to on Sep 5 — the number the CLI computes matches independently recorded evidence, which is a stronger check than "it printed something."
+
+**No P1 item is cut.** The cut order is untouched.
+
+### What landed
+
+- **`W1-D7-01`** the vertical slice: CLI → core → real testnet RPC. `core/rpc.ts` is the only file that imports the SDK, behind a `LedgerEntryReader` interface, so everything else tests offline.
+- **`W1-D6-03`** the **mock RPC client** — promised in the docs since day one and never actually built, which the onboarding fresh-eyes test caught. It replays the recorded fixture rather than invented data, returns *only* keys it was asked for, and can be told to omit entries or fail. Absence and transport failure are first-class cases; a mock that only returns happy-path data tests nothing.
+- **`W1-D7-02`** fixture tests against the unedited 2026-09-05 recording, asserting the inclusive boundary from `W1-D4-13` and that an absent `liveUntilLedgerSeq` never arrives as 0.
+- **`W1-D7-07`** duplication check — no drift.
+
+**Exit codes verified in all four directions** (0 healthy / 1 below threshold / 2 error / 2 usage). That contract is the `evergreen-check` Action's entire interface, so it is now locked by tests rather than by intention.
+
+**63 tests** on `main`.
+
+### Two things worth recording honestly
+
+**My first duplication check was wrong.** It used a case-sensitive match and reported `dry-run` missing from both documents. The docs were fine; the *checker* was broken, and it failed in the safe-looking direction — it would have sent someone hunting for a problem that did not exist. A verification tool can have the same defect as the thing it verifies.
+
+**I also mis-measured the exit codes at first**, reading `$?` after a pipe and getting `tail`'s status instead of the CLI's. Both codes were correct all along. Measure the thing, not the pipeline around it.
+
+### Ownership drift corrected
+
+`W1-D6-04` read `(F)` in the backlog while issue #30 assigned it to Rakha; `W1-D6-03` read `(F)` while #32 assigned it to Rakha, and Fatih has now taken it back deliberately. Owners were written into issues without updating `BACKLOG.md` — the same divergence class the dual-channel discipline exists to prevent, caused here inside the repo rather than between repo and mirror.
 
 ## 🔁 New rule in `AGENTS.md`: push the branch as soon as work starts
 
