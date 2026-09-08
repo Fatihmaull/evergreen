@@ -1,8 +1,19 @@
 # W1-D6-04 — local persistence and runtime experiment
 
-**Result:** the local PostgreSQL experiment passed all eight checks. A separate stopped-database check failed as expected, before any schema or work was created. This supports the Actions + PostgreSQL proposal in [ADR-003](../../adr/ADR-003-toolchain-hosting-persistence.md). **Hosted provider selection and testing remain pending, by request, until these results are reviewed.**
+**Status: documented experiment; not used by the engine or scheduler.** [PR #48](https://github.com/Fatihmaull/evergreen/pull/48) accepted Actions + Node 24 and PostgreSQL on Neon, with database adoption deferred to **W4 after the Sep 20 proof**. W1-D6-04 is complete as a decision task; this artifact is retained for later adoption. No hosted database has been provisioned or tested.
 
-The database contained synthetic data only. The script has no RPC, signing or send path. Its synthetic success records and repeated-letter hashes are not evidence of a Stellar transaction. Production recovery and unattended-bump behavior remain Week 3 work.
+**Recorded result:** the local PostgreSQL experiment passed all eight checks. A separate stopped-database check refused work before any schema was created. The implementation and raw outputs below remain unchanged from the original experiment.
+
+The database contained synthetic data only. The script has no RPC, signing or send path. Its synthetic success records and repeated-letter hashes are not evidence of a Stellar transaction. The W3 engine will use Actions concurrency and on-chain observations, with history in summaries/artifacts and same-day committed evidence. The database adapter and its recovery path remain deferred to W4.
+
+## Known limits before adoption
+
+The [review on #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5582108192) independently reproduced these limits using the unchanged store on PostgreSQL 16.15. Its reproduction is attributed to that review; the raw files here record the original PostgreSQL 17.11 run.
+
+1. **Pending work cannot recover after a process dies.** `prepare()` persists a hash and `claim()` never takes over a pending row, even after lease expiry. That refusal intentionally prevents a second send. The spike has no chain reconciliation path; adoption must reconcile the exact hash and handle confirmed success, definitive failure and uncertain status. Lease expiry alone must not authorize a fresh send. The original expiry-protection check already exercises the refusal; the review reports 100 refused attempts.
+2. **History stores successful outcomes only.** The `history.record` CHECK rejects `failed` (and other non-success outcomes). The original rollback check deliberately uses that rejection. This is narrower than `BumpRecord`; the adopted history writer must represent failures without routing them through success-only `complete()`.
+
+These are recorded adoption prerequisites under W3-D16-03, whose database work is deferred to W4. They are not repaired in this artifact publication. Other limits remain: one claim cycle per entry, synthetic confirmation, no real chain send, and no coordination between independent installations. The SQL uses conditional row writes and short transactions, not session advisory locks; hosted pooler compatibility still requires testing.
 
 ## Database checks
 
@@ -58,4 +69,4 @@ Wrangler was temporary tooling and was not added to the repository dependencies.
 
 `pnpm check` passed conflict detection, typecheck (including 17 shared-types negative examples), lint, formatting and **47 offline tests**: 11 workspace, 11 TTL, 9 scheduler, 9 email and 7 persistence. The database integration above is explicit and separate from CI. The original `.env`, RPC fixture, shared-types source, email receipt evidence and stash were preserved.
 
-Task #30 remains **In progress**. Next: review the local result, select Neon or Supabase, run the hosted database check, then finalize the ADR and prepare the PR. There is no provider-specific implementation or PR yet.
+**Publication scope:** preserve the executable spike, seven offline safety tests and original evidence with the limitations above. W1-D6-04 is Done through the accepted ADR; #30 stays open until the artifact PR is resolved. Hosted tests move to W4, beginning with W4-D26-05 before migration. W1-D6-02 (#32) is unblocked. Current publication checks are recorded in [STATUS.md](../../STATUS.md); the 47-test count above belongs to the original local run.

@@ -1,6 +1,6 @@
 # ADR-003: Toolchain, hosting, scheduler, and persistence
 
-**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), with manual and genuine scheduled reads verified 2026-09-07. Retaining Actions + Node and adding PostgreSQL for the engine is **proposed for review** after the 2026-09-08 local spike (`W1-D6-04`); runtime agreement, hosted provider selection and validation remain open. Dashboard hosting is settled on Cloudflare Pages by PR #45; account setup and deployment remain the separate `W1-D5-02` task.
+**Status:** Accepted for W1-D6-04 in PR #48, with follow-ups in PR #49: Actions + Node 24; PostgreSQL on Neon adopted in W4 after the Sep 20 proof. The local spike is an unused experiment with adoption prerequisites below. W1 requires no hosted database. Dashboard hosting is separately settled on Pages; deployment remains W1-D5-02.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -14,7 +14,9 @@ Four infrastructure choices were left open at planning time. Toolchain was settl
 
 **Test runner: Vitest, not Jest.** Native ESM and TypeScript with no transform layer to configure, first-class workspace support matching our pnpm layout, and `vitest --coverage` via v8 needs no extra plumbing for the coverage report the SOW requires as evidence. Jest is the more familiar default and would work; it costs a `ts-jest`/babel transform config in every package, which is exactly the kind of setup tax a 30-day sprint should not pay. Reversible if it disappoints — the test API surface we use is nearly identical.
 
-## Part 2 — Hosting, scheduler, and persistence
+## Part 2 — Evaluation history
+
+The following records the options and scheduler proof considered before the [accepted decision](#part-2--decided-2026-09-08). Earlier open/proposed wording is historical.
 
 ### Scheduler choice — local, manual GitHub, and scheduled verification complete
 
@@ -77,6 +79,62 @@ So the dashboard is a **static site**, and Vercel, Netlify and Cloudflare Pages 
 
 Whatever is chosen must not model "the bot account" as a process-wide singleton. The schema needs `BumpRecord.payer` distinct from the contract, and config shaped as N contracts × M payers. v1 need not implement multi-tenancy — it must not foreclose it.
 
+## Part 2 — DECIDED 2026-09-08
+
+**Runtime: GitHub Actions cron + Node 24. Persistence: PostgreSQL on Neon — adopted in Week 4, deliberately NOT before the Sep 20 proof.**
+
+### Runtime
+
+Actions cron is already proven end to end: a genuine `schedule` event read testnet successfully (`W1-D5-03`). A bounded local Workers probe passed SDK import, XDR and testnet reads via `wrangler dev --local`, but deployment, cron, signing and D1 remain unverified. That is enough to stop spending time on Workers, not enough to move to it ten days before a gate.
+
+### Why persistence waits
+
+Three findings, in increasing order of importance.
+
+**1. Neon usage needs measurement before adoption.** At four runs/hour over 30 days, 2,880 isolated wake-ups followed by the [five-minute idle window](https://neon.com/docs/introduction/scale-to-zero) imply roughly **240 active compute-hours**, before query runtime or other activity. [Neon meters CU-hours as average compute size multiplied by hours running](https://neon.com/docs/introduction/plans); a configured autoscale ceiling is not the average size consumed. The following are conditional scenarios against the documented 100 CU-hour allowance, not measurements of an Evergreen project.
+
+| Assumed average active size | CU-hours over 30 days | Conditional outcome |
+|---|---|---|
+| 0.25 CU | 60 / 100 | Fits this compute scenario |
+| 1.0 CU | 240 / 100 | Exhausts 100 CU-hours after 12.5 days at this usage rate |
+
+On the Free plan, exhausting the compute allowance suspends compute until the next billing period or an upgrade. No project has been provisioned: its reset date, default autoscale settings, average usage and alert behavior have not been measured. The earlier Sep 20 exhaustion scenario is not a forecast. W4-D26-05 must check those settings and actual usage before migration.
+
+**Provider comparison clarification:** the spike uses conditional row writes and short transactions, not session advisory locks. Session-lock restrictions therefore do not demonstrate a failure of this implementation on Supabase. Supabase documents [both session and transaction pooler endpoints](https://supabase.com/docs/guides/database/connecting-to-postgres); actual TLS, permissions and pooler behavior remain untested. The accepted Neon target and W4 timing are unchanged.
+
+**2. The current smoke workflow serializes its own runs.** `scheduler-smoke.yml` uses the fixed `scheduler-smoke` concurrency group with `cancel-in-progress: false`; GitHub permits at most one running execution in [the same group](https://docs.github.com/en/actions/using-jobs/using-concurrency). Its timeout is five minutes. This does not coordinate another repository, a different group or an independent local engine. `packages/engine` is still a placeholder; W3-D16-02 must verify serialization for the real engine workflow.
+
+**3. Fresh on-chain state suppresses unnecessary work after confirmation.** Once a successful bump is visible and TTL is above threshold, a fresh scan can skip it. That observation does not by itself reconcile a transaction still in flight after a runner exits or loses an acknowledgement; W3-D16-02 retains that responsibility. No exactly-once submission guarantee is claimed by this spike.
+
+### The asymmetry that settles it
+
+A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. The accepted response is to keep the database out of that critical path. The stored-hash protection in this experiment remains fail-closed; publication does not add a bypass or authorize a fresh send while the previous transaction is unresolved.
+
+### ⚠️ Unmeasured assumption — read this before provisioning anything
+
+**We have not provisioned or measured a Neon project.** W4-D26-05 must verify its autoscale range, actual average compute use, active time and quota/reset settings. The 0.25/1.0 CU calculations above assume sustained average use at those levels; the ceiling alone does not establish a consumption rate or exhaustion date.
+
+**Measuring it is the first step of Week 4 adoption, before any migration runs** — not a detail to resolve while wiring things up. An unmeasured assumption written down is a task; left in a comment it is a trap.
+
+**And it is not the load-bearing argument.** The decision to wait rests on three things that hold at *any* ceiling:
+
+1. The current smoke workflow already serializes its runs; the real engine workflow must verify the same bounded guarantee.
+2. Confirmed on-chain TTL lets a fresh scan skip unnecessary work; uncertain submissions still require reconciliation.
+3. The cost asymmetry runs backwards — a fail-closed lock in front of a one-shot, unrepeatable deadline.
+
+So even at 0.25 CU with room to spare, provisioning before Sep 20 would still be wrong. **If you are reading this in Week 4 and reaching for Neon: the decision was about *when*, and these three reasons are why — re-read them before assuming the wait was only about quota.**
+
+### Prerequisites for adopting the spike in Week 4
+
+Both were reproduced against the spike's own code on local Postgres 16.15, 2026-09-08. **Neither may be inherited silently.**
+
+1. **`pending` is terminal with no reconciliation path.** `claim()` takes over only `WHERE current.phase = 'claimed'`; `prepare()` sets `'pending'`. A process dying between `prepare()` and `complete()` strands the entry permanently. Measured: **0 non-null returns from 100 `claim()` attempts** past lease expiry. This is deliberate and fail-closed — `prepare()`'s comment reads *"Pending work never expires into a new send"* — so the fix is **not** a timer, which would reintroduce the double-send it prevents. It is reconciliation: resolve the stored `transaction_hash` with `getTransaction()` and let the chain decide.
+2. **Failed outcomes are unstorable.** `history` carries `CHECK (record->>'outcome' = 'succeeded')`. A `failed` record is rejected by the constraint while `succeeded` inserts — verified both directions. `BumpRecord` already distinguishes simulated/submitted/succeeded/failed, so the schema is narrower than the type it stores.
+
+### What ships instead, before Sep 18
+
+`W2-D10-04`: **the run exits non-zero when it observes an entry below threshold and did not bump it** — including when a claim is held. This converts the silent-skip failure into a loud one and matters more than the provider choice.
+
 ## Consequences
 
 - The scheduler preparation adds a root development dependency for the standalone smoke script; it does not yet change the engine or core package APIs.
@@ -86,7 +144,7 @@ Whatever is chosen must not model "the bot account" as a process-wide singleton.
 
 ## 2026-09-08 — Local persistence spike: proposal for review
 
-**Propose retaining GitHub Actions + Node 24 and adding standard PostgreSQL for claims and history.** The [local evidence](../evidence/2026-09-08-persistence-spike/README.md) demonstrates contention, lease recovery, pending-transaction protection and transactional history writes. This amendment is not accepted yet. The user explicitly deferred Neon/Supabase selection until reviewing these results; no hosted account, database or engine was provisioned.
+**Historical proposal, superseded by the accepted decision above.** The [local evidence](../evidence/2026-09-08-persistence-spike/README.md) informed the choice of Actions + Node and PostgreSQL on Neon, with adoption deferred to W4. The experiment remains unused and no hosted database was provisioned. Its local checks establish contention, lease fencing, pending protection and successful-history writes; they do not establish a production recovery protocol.
 
 ### What the local experiment establishes
 
@@ -106,7 +164,7 @@ Before a send could occur, the current owner must persist its known transaction 
 
 Two synthetic `BumpRecord`-shaped payloads round-trip through `jsonb`, retaining separate payer/signer identities and the exact string amount `9007199254740993` stroops. The real database persists these records across client exit and a new reader process. Shared types and payer-selection policy are unchanged.
 
-**Scope limits:** this is a database protocol experiment, not the engine adapter. Its `complete` function receives synthetic confirmation and does not query a chain. It covers one claim cycle per entry; completed rows are not yet rearmed for a later TTL cycle. W3 still implements fresh TTL checks, exact-hash reconciliation after uncertain sends, safe terminal-failure handling, payer sequence coordination, batching, migrations and the actual unattended-bump proof (`W3-D16-02`, `02b`, `03`). Coordination applies only to cooperating runs sharing this database; it cannot prevent independent self-hosted installations from acting on the same entry. SQL and Stellar are not one atomic transaction, so this result is not an end-to-end exactly-once guarantee.
+**Scope limits:** this is a database protocol experiment, not the engine adapter. Its `complete` function receives synthetic confirmation and does not query a chain. It covers one claim cycle per entry; completed rows are not yet rearmed for a later TTL cycle. W3 still implements fresh TTL checks, uncertain-send handling, payer sequence coordination, per-key deduplication and the unattended-bump proof. Database migrations, the production claim adapter and its reconciliation/history prerequisites move to W4; W3-D16-03 records the interim artifact-based history path. Coordination applies only to cooperating runs sharing this database; it cannot prevent independent self-hosted installations from acting on the same entry. SQL and Stellar are not one atomic transaction, so this result is not an end-to-end exactly-once guarantee.
 
 ### Workers compatibility outcome
 
@@ -114,7 +172,9 @@ A bounded local `wrangler dev --local` experiment using Wrangler **4.129.1**, co
 
 [Workers supports a subset of Node APIs](https://developers.cloudflare.com/workers/runtime-apis/nodejs/); its current compatibility date enables Node support without a flag. Passing two read methods cannot establish the rest of the engine. Workers is not rejected as incompatible, but this result gives no reason to replace the already proven Actions scheduler or implement a second database dialect during W1.
 
-### Hosted choice after local review
+### Hosted evaluation deferred to W4
+
+Neon is the accepted target. The original comparison below is retained as evaluation context; it does not reopen provider selection or authorize provisioning before the proof.
 
 Both shortlisted providers offer PostgreSQL. The SQL uses short transactions and qualified table names, avoiding session-level locks and a provider SDK. Connection-mode compatibility remains a hosted test, not a conclusion from localhost.
 
@@ -129,7 +189,17 @@ Provider cost is a later selection input, not measured by this probe. Check [Neo
 
 The engine writes using a server-side database credential. The public dashboard receives only a read-only history projection/API or static export, never that credential. A public history artifact may be useful evidence but cannot serve as the coordination lock. Dashboard implementation and deployment remain their own tasks.
 
-Root `pg` is a pinned development dependency for the isolated spike, not an engine package dependency. Ordinary tests stay offline; the database experiment requires `--run`, writes only a generated temporary schema, and attempts cleanup even after failure. A stopped local database was explicitly tested: connection failed, no work proceeded, and the command exited nonzero. The remaining W1 step is review, hosted provider selection and validation, then acceptance/publication of this decision.
+Root `pg` is a pinned development dependency for the isolated spike, not an engine package dependency. Ordinary tests stay offline; the database experiment requires `--run`, writes only a generated temporary schema, and attempts cleanup even after failure. A stopped local database was explicitly tested: connection failed, no work proceeded, and the command exited nonzero. W1 publication retains this experiment and its known limits. Hosted validation/adoption is deferred to W4; the accepted decision already unblocks W1-D6-02.
+
+## Downstream sweep — artifact publication
+
+This publication implements the accepted timing from PR #48/#49; it introduces no new runtime dependency for the engine.
+
+- W1-D6-04 remains Done; W1-D6-02 is unblocked and can describe the interim history path without a hosted test.
+- W2-D10-04 remains the visible-failure requirement; W3-D16-02 verifies engine workflow serialization and uncertain-send handling.
+- W3-D16-03 records summaries, uploaded artifacts and same-day committed evidence in W3, plus database adoption prerequisites for W4.
+- W4-D26-05 remains the pre-migration hosted-settings check. The broader backlog sweep announced in PR #50 is being handled separately; this artifact does not implement or claim those future tasks.
+- SETUP, EVIDENCE, this ADR's index and the spike README now distinguish the accepted decision from the historical proposal and unused implementation.
 
 ## Update log
 
@@ -138,3 +208,5 @@ Root `pg` is a pinned development dependency for the isolated spike, not an engi
 - 2026-09-07: PR #24 merged; manual run `34110254224` and genuine scheduled run `34111732199` succeeded. Their full logs and metadata were captured and cross-checked. Runtime proof complete, evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); no change to the platform decision or the separate hosting/atomicity tasks.
 - 2026-09-08: local PostgreSQL contention/recovery spike and local Workers SDK reads verified. Proposed Actions + PostgreSQL; hosted provider explicitly deferred until local review. `W1-D6-04` remains In progress. Corrected the across-run task reference to the frozen `W3-D16-02` ID.
 - 2026-09-08: integrated PR #45's separation of Pages hosting from engine/persistence, then reconciled its Workers question with the existing local read evidence. Runtime/provider agreement is requested through #30; Actions + Node + PostgreSQL remains a proposal. No hosted provisioning or additional compatibility experiment occurred in this follow-up.
+
+- 2026-09-08: integrated PR #48/#49/#50; retained the unused experiment and review findings, deferred hosted validation to W4, and clarified that row claims do not use session advisory locks and quota scenarios depend on measured average usage. Runtime/provider/timing decisions are unchanged.

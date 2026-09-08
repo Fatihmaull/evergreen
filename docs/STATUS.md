@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · PR #45/#47 synchronized; runtime/provider follow-up on #30
+**Last updated:** 2026-09-08 · accepted persistence deferral synchronized; spike artifact prepared for publication
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,16 @@
 ---
 
 ## Right now
+
+**W1-D6-04 decision is Done:** PR #48 accepts Actions + Node 24 and PostgreSQL on Neon, adopted in W4 after the Sep 20 proof. PR #49 resequences W3 history/coordination; PR #50 adds the downstream-sweep requirement. Local main was fast-forwarded to `1875222`, and all three PRs are integrated into `chore/W1-D6-04-persistence-spike`. This supersedes the earlier plan to complete hosted validation before #32: no W1 hosted database is required, and D6-02 is now unblocked.
+
+**Artifact publication:** per [the review on #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5582108192), retain the original executable spike and evidence as an experiment unused by the engine/scheduler. The README and setup instructions now name its limits: pending work needs chain reconciliation; history currently accepts successful outcomes only. Original scripts and raw outputs are preserved. ADR-003 keeps the accepted runtime/provider/timing, clarifies the conditional Neon usage scenarios and row-claim pooling scope, and records the affected future task IDs. No hosted provisioning, engine implementation or live Stellar transaction is part of this publication. `pnpm check` passed all 70 offline tests plus conflict detection, typecheck (including 17 negative type examples), lint and formatting. Original source/dependency/evidence hashes and environment match the preservation snapshot. PR publication is pending.
+
+**Mirror check:** D6-04 Done and D6-02 Pending both agree with merged main. A wider sample found W4-D26-05 absent from Notion and W3-D16-03's Owner Shared rather than main's F; the broader downstream sweep is already active in Fatih's PR #50 context. These out-of-scope rows will be rechecked at publication rather than overwritten during concurrent work. The task row and Decisions will receive this artifact's publication outcome.
+
+**Next:** finish review/publication of this artifact, then plan only D6-02's architecture data-flow work in #32. The mock RPC task D6-03 is already Done through PR #42; no duplicate harness work. Implementation of #32 has not started.
+
+## Recent history — superseded states are dated below
 
 **2026-09-08 — PR #45/#47 synchronization (`W1-D6-04`):** local `main` is now `1fc9f2d`; the persistence branch integrates both documentation PRs. The only conflict was the D6-04 backlog description: retained In progress, explicit ownership and the completed local checks. ADR-003 keeps Pages hosting separate and narrows the Workers unknown to deployment, cron, signing and D1, using the already recorded local import/XDR/Testnet read result. Actions + Node + PostgreSQL remains Proposed; hosted provider selection and validation remain open. No code, dependency or original evidence changes are part of this synchronization. `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **70 offline tests**. The initial sandbox attempt could not spawn `git` (`EPERM`); rerunning with the required process permission passed. Source/evidence/dependency hashes, `.env` content/permissions and the stash match the pre-sync snapshot.
 
@@ -222,6 +232,72 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.nvmrc` pins the major, and pinning a patch buys churn rather than safety. If a patch ever *does* change build output, the hash comparison is what catches it — which is the argument for comparing hashes in the first place.
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
+
+## 🧹 "Downstream sweep" is now the last step of every ADR
+
+The two orphaned Week 3 tasks were not a one-off. **Every decision that changes a dependency leaves orphans downstream** — the decision gets made carefully, gets its ADR, gets synced to both channels, and two tasks three weeks out quietly keep assuming what just changed. Nothing fails. They describe a world that no longer exists, and it surfaces only when someone tries to do them, which here would have been Sep 18.
+
+So it is a step rather than an instinct. Added to the ADR template in `docs/adr/README.md`:
+
+> **Downstream sweep.** List every task in `BACKLOG.md` whose description assumes what this decision changed. Update their wording, or record why each still stands.
+
+Cheap at the moment of decision, when the changed assumption is fresh. Expensive at every other moment.
+
+**A retroactive sweep is running now** over W2–W4 and the Buffer, one lens per superseded decision — the Week 3 two-stage rescope, the dashboard P0/P1 split, the database deferral, and the permissionless/payment-model finding — plus a completeness critic for the decision or task class the lenses miss. We caught the database orphans; there is no reason to assume the earlier three were clean.
+
+## 🔧 The deferral broke two Week 3 tasks — resequenced
+
+Deferring the database to Week 4 left `W3-D16-02` and `W3-D16-03` assuming a store that will not exist on Sep 20. Caught while recording the decision, not after.
+
+- **`W3-D16-02`** no longer means *"build a lock."* Overlap is already structurally impossible via `concurrency:` + `timeout-minutes: 5` under a 15-minute cron, so Week 3's job is to **verify that guarantee for the real engine workflow, in both directions** — that a second run genuinely queues rather than races.
+- **`W3-D16-03`** persists **without a database**: `BumpRecord` to the Actions step summary and an uploaded artifact, plus the tx hash into `EVIDENCE.md` the same day. Evidence-grade, no service, cannot be cold on a Sunday.
+
+## ⚠️ The unmeasured Neon ceiling — written down as a task, not left as a comment
+
+The arithmetic swings entirely on the autoscale ceiling: **0.25 CU fits (60/100), 1.0 CU exhausts on the crossing date.** We never measured it.
+
+**Deliberately not measuring it now** — it cannot change the decision, and spending the five minutes would imply it might. The decision rests on three things that hold at any ceiling: the lock guards a case that cannot occur, the ledger is already the idempotent store, and the asymmetry runs backwards.
+
+But it is now `W4-D26-05`, sequenced **before any migration runs**, and ADR-003 carries a warning addressed to whoever reads it in Week 4: *the deferral was about when, and the reasons were never only about quota.* An unmeasured assumption written down is a task; left in a comment it is a trap.
+
+## 📖 New convention: run it, don't only read it
+
+Recorded in `CONVENTIONS` because of how this week's finding actually happened.
+
+Static reading said `claim()` can never take over a `pending` row — true, and reported as a deadlock bug. **Executing it meant being inside `persistence-store.mjs`, next to `prepare()`'s comment: *"Pending work never expires into a new send."*** The behaviour was deliberate and fail-closed, working exactly as designed.
+
+Running it was requested so the finding would be undeniable rather than arguable. It turned out to reveal the finding was **mis-framed** — which is a stronger argument for the practice than the one it was requested under. *Executing code puts you in contact with intent that reading a diff does not.*
+
+Three things changed: accuracy (*"you missed line 116"* would have been wrong), the **kind** of fix (a lease timer — the obvious repair for a deadlock — would reintroduce the exact double-send the design prevents), and how it lands on a person.
+
+## ✅ ADR-003 decided — and the database waits until after Sep 20
+
+**Runtime: Actions cron + Node 24. Persistence: PostgreSQL on Neon, adopted Week 4, deliberately not before the crossing.**
+
+Rakha's spike asked for a provider choice. Independent analysis said the question was slightly wrong — the issue is *when*, not *which*.
+
+**The arithmetic.** Cron is 4×/hour = 2,880 runs/month. Neon's free plan suspends after a 300s idle window that cannot be disabled, so every run bills the full window: **240 compute-hours against a 100-hour allowance.** At a 1.0 CU ceiling that exhausts on **day 12.5 — Sep 20 itself**, as a hard stop, with no free-plan warning and no reset until after the deadline. It would remove Sep 20 and Sep 25 together. The outcome depends on the autoscale ceiling, which we never measured — **and that uncertainty is the argument**, not a detail to resolve later.
+
+**The deeper reason.** The lock guards a case that cannot currently occur: `scheduler-smoke.yml` already has `concurrency:` with `cancel-in-progress: false` and `timeout-minutes: 5` under a 15-minute cron, and `packages/engine` is still a placeholder. More fundamentally, **the ledger is already the durable atomic store** — after a bump, `remainingLedgers` is above threshold, so the next run skips naturally. The decision is idempotent without a lock.
+
+**The asymmetry that settles it.** A double bump costs a few testnet stroops and damages no evidence. A cold or paused database on a Sunday costs the grant's least recoverable proof. B's 24-hour window is ~96 independent attempts; a held claim converts all 96 into one. **The scheme is fail-closed where our risk demands fail-open.**
+
+### Two defects reproduced, not just read
+
+Run against the spike's own code on local Postgres 16.15:
+
+| | Finding | Measured |
+|---|---|---|
+| 1 | `pending` is terminal — `claim()` takes over only `phase='claimed'`, `prepare()` sets `'pending'` | **0 non-null returns from 100 `claim()` attempts** past lease expiry |
+| 2 | `history` CHECK forbids `outcome != 'succeeded'` | `failed` rejected by constraint; `succeeded` inserts |
+
+**Defect 1 is deliberate, and reporting it as a slip would have been wrong.** `prepare()`'s comment reads *"Pending work never expires into a new send"* — it is fail-closed on purpose and works against that goal. The consequence he had not traced is that `pending` has no reconciliation path, so the fix is `getTransaction()` reconciliation rather than a timer, which would reintroduce the double-send it prevents.
+
+Both are recorded on `W3-D16-03` as adoption prerequisites so they cannot be inherited quietly in Week 4.
+
+### What ships instead — `W2-D10-04`, before Sep 18
+
+**The run exits non-zero when it observes an entry below threshold and did not bump it**, including a held claim. The dominant failure mode is a run that does nothing and looks exactly like a run that succeeded; this makes it loud. It now outranks everything in W2 that is not the CLI.
 
 ## 🔄 Mirror synced 2026-09-08 — one anomaly, and the repo was wrong again
 
