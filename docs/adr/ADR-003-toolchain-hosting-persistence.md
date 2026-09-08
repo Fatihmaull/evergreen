@@ -1,6 +1,6 @@
 # ADR-003: Toolchain, hosting, scheduler, and persistence
 
-**Status:** Partially decided — toolchain settled 2026-09-04 (W1-D3); GitHub Actions + Node 24 selected for the scheduler smoke test on 2026-09-06 (`W1-D5-03`), with manual and genuine scheduled reads verified 2026-09-07. Dashboard hosting (`W1-D5-02`) and persistence/locking (`W1-D6-04`) remain open.
+**Status:** Accepted for W1-D6-04 in PR #48, with follow-ups in PR #49: Actions + Node 24; PostgreSQL on Neon adopted in W4 after the Sep 20 proof. The local spike is an unused experiment with adoption prerequisites below. W1 requires no hosted database. Dashboard hosting is separately settled on Pages; deployment remains W1-D5-02.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -14,7 +14,9 @@ Four infrastructure choices were left open at planning time. Toolchain was settl
 
 **Test runner: Vitest, not Jest.** Native ESM and TypeScript with no transform layer to configure, first-class workspace support matching our pnpm layout, and `vitest --coverage` via v8 needs no extra plumbing for the coverage report the SOW requires as evidence. Jest is the more familiar default and would work; it costs a `ts-jest`/babel transform config in every package, which is exactly the kind of setup tax a 30-day sprint should not pay. Reversible if it disappoints — the test API surface we use is nearly identical.
 
-## Part 2 — Hosting, scheduler, and persistence
+## Part 2 — Evaluation history
+
+The following records the options and scheduler proof considered before the [accepted decision](#part-2--decided-2026-09-08). Earlier open/proposed wording is historical.
 
 ### Scheduler choice — local, manual GitHub, and scheduled verification complete
 
@@ -30,7 +32,7 @@ This workflow only reads public Testnet data. It needs no signing secret, accoun
 
 ### The question to ask
 
-Frame persistence as **atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap; `W3-D18-02` promises the engine never double-bumps an entry. That guarantee needs a durable write usable as a lock or a last-bumped record.
+Frame persistence as **atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap; `W3-D16-02` covers in-flight transactions across runs. That requires a durable write usable as a lock and a persisted pending-transaction record; a last-bumped timestamp alone cannot close the gap between sending and recording success.
 
 Asked as "where do we keep bump history?", flat JSON committed to the repo looks adequate. Asked as "what gives a scheduled job an atomic-enough write?", it is disqualified. Same decision, different answers — ask the second question.
 
@@ -50,9 +52,9 @@ Asked as "where do we keep bump history?", flat JSON committed to the repo looks
 > | Part | Status | Blocked on the SDK question? |
 > |---|---|---|
 > | Dashboard hosting | **Settled — Cloudflare Pages** | No. Pages is static hosting and never touches the Stellar SDK. |
-> | Engine runtime + persistence | **Open** | **Yes, blocking.** |
+> | Engine runtime + persistence | **Open; Actions + Node + PostgreSQL proposed** | Full SDK compatibility remains unverified for the Workers option; Actions already has a hosted scheduler/read proof. |
 >
-> The unanswered question is still *does the Stellar SDK run in the Workers runtime?* If it does not, the engine is not on Cloudflare — and reaching D1 from another platform is awkward enough to be a bad default arrived at by momentum rather than by decision.
+> The compatibility question now has a bounded answer: **SDK import, instance-key XDR and Testnet reads passed in local Workers** (see [the recorded result](../evidence/2026-09-08-persistence-spike/README.md#workers-read-path)). Deployment, cron, signing and D1 remain unverified. This establishes local read compatibility, not full engine compatibility or a reason to select D1. If Workers cannot support the engine, reaching D1 from another platform remains an avoidable coupling.
 >
 > Answer the SDK question on its own merits, timeboxed to one afternoon. If it stays ambiguous past that, **the ambiguity is the answer** and the Actions cron floor carries us.
 
@@ -64,7 +66,7 @@ Worth separating explicitly, because the shortlist above is about running the **
 
 So the dashboard is a **static site**, and Vercel, Netlify and Cloudflare Pages are functionally identical for it — all free at our scale, all deploy from a GitHub push. **This decision does not deserve deliberation**; it deserves whichever account exists already.
 
-**Recommendation: Cloudflare Pages**, on one non-obvious ground rather than any hosting merit — it comes with the account needed to test whether the Stellar SDK runs on Workers, which is the single blocking unknown left in Part 2 above. One signup answers a hosting question we barely care about *and* unblocks one we care about a lot. If a Vercel or Netlify account already exists, use it and test Workers separately; the dashboard genuinely does not care.
+**Cloudflare Pages selected in PR #45.** The same account can support a deployed Workers probe if that option needs further evaluation; the local SDK read probe required no account. Dashboard account setup and deployment are tracked in [Issue #46](https://github.com/Fatihmaull/evergreen/issues/46) and do not select the engine runtime or database.
 
 ### Evaluation order
 
@@ -89,38 +91,35 @@ Actions cron is already proven end to end: a genuine `schedule` event read testn
 
 Three findings, in increasing order of importance.
 
-**1. Neon's free-tier arithmetic can land on the crossing date.** The cron is `7,22,37,52` — 4×/hour, 2,880 runs/month. Neon's free plan suspends after a 300s idle window that cannot be disabled, so every run bills that window: **240 compute-hours/month against a 100-hour allowance.**
+**1. Neon usage needs measurement before adoption.** At four runs/hour over 30 days, 2,880 isolated wake-ups followed by the [five-minute idle window](https://neon.com/docs/introduction/scale-to-zero) imply roughly **240 active compute-hours**, before query runtime or other activity. [Neon meters CU-hours as average compute size multiplied by hours running](https://neon.com/docs/introduction/plans); a configured autoscale ceiling is not the average size consumed. The following are conditional scenarios against the documented 100 CU-hour allowance, not measurements of an Evergreen project.
 
-| Autoscale ceiling | CU-hours | Outcome |
+| Assumed average active size | CU-hours over 30 days | Conditional outcome |
 |---|---|---|
-| 0.25 CU | 60 / 100 | fits |
-| 1.0 CU | 240 / 100 | **exhausts day 12.5 — 2026-09-20** |
+| 0.25 CU | 60 / 100 | Fits this compute scenario |
+| 1.0 CU | 240 / 100 | Exhausts 100 CU-hours after 12.5 days at this usage rate |
 
-Exhaustion is a hard stop, not degradation; there is no free-plan warning email, and the allowance resets on the billing period (~Oct 8 for an account opened Sep 8) — after the deadline. It would remove Sep 20 and Sep 25 together. **The outcome depends on the autoscale ceiling, which we have not measured — and that uncertainty is itself the argument.**
+On the Free plan, exhausting the compute allowance suspends compute until the next billing period or an upgrade. No project has been provisioned: its reset date, default autoscale settings, average usage and alert behavior have not been measured. The earlier Sep 20 exhaustion scenario is not a forecast. W4-D26-05 must check those settings and actual usage before migration.
 
-Supabase was worse for this shape: un-pausing is a manual dashboard action with no connection-triggered resume, and the IPv4 pooler in transaction mode silently breaks session-scoped advisory locks — passing on a direct local connection and failing only in production.
+**Provider comparison clarification:** the spike uses conditional row writes and short transactions, not session advisory locks. Session-lock restrictions therefore do not demonstrate a failure of this implementation on Supabase. Supabase documents [both session and transaction pooler endpoints](https://supabase.com/docs/guides/database/connecting-to-postgres); actual TLS, permissions and pooler behavior remain untested. The accepted Neon target and W4 timing are unchanged.
 
-**2. The lock protects against something that cannot currently happen.** `scheduler-smoke.yml` already carries `concurrency:` with `cancel-in-progress: false` and `timeout-minutes: 5` under a 15-minute cron, so overlapping runs are structurally impossible. `packages/engine` is still a placeholder.
+**2. The current smoke workflow serializes its own runs.** `scheduler-smoke.yml` uses the fixed `scheduler-smoke` concurrency group with `cancel-in-progress: false`; GitHub permits at most one running execution in [the same group](https://docs.github.com/en/actions/using-jobs/using-concurrency). Its timeout is five minutes. This does not coordinate another repository, a different group or an independent local engine. `packages/engine` is still a placeholder; W3-D16-02 must verify serialization for the real engine workflow.
 
-**3. The ledger is already the durable atomic store.** After a successful bump, `remainingLedgers` sits above threshold, so the next run skips naturally. The bump decision is idempotent *without* a lock, because the operation records itself on chain.
+**3. Fresh on-chain state suppresses unnecessary work after confirmation.** Once a successful bump is visible and TTL is above threshold, a fresh scan can skip it. That observation does not by itself reconcile a transaction still in flight after a runner exits or loses an acknowledgement; W3-D16-02 retains that responsibility. No exactly-once submission guarantee is claimed by this spike.
 
 ### The asymmetry that settles it
 
-A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. Any coordination layer added before Sep 20 must therefore fail *open*, and the spike's — correctly, for its own stated goal — fails closed.
+A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. The accepted response is to keep the database out of that critical path. The stored-hash protection in this experiment remains fail-closed; publication does not add a bypass or authorize a fresh send while the previous transaction is unresolved.
 
 ### ⚠️ Unmeasured assumption — read this before provisioning anything
 
-**We never measured the Neon project's default autoscale ceiling.** The arithmetic above swings entirely on it:
-
-- at **0.25 CU** → 60 of 100 CU-hours, fits with room;
-- at **1.0 CU** → 240 of 100, exhausts on the crossing date.
+**We have not provisioned or measured a Neon project.** W4-D26-05 must verify its autoscale range, actual average compute use, active time and quota/reset settings. The 0.25/1.0 CU calculations above assume sustained average use at those levels; the ceiling alone does not establish a consumption rate or exhaustion date.
 
 **Measuring it is the first step of Week 4 adoption, before any migration runs** — not a detail to resolve while wiring things up. An unmeasured assumption written down is a task; left in a comment it is a trap.
 
 **And it is not the load-bearing argument.** The decision to wait rests on three things that hold at *any* ceiling:
 
-1. The lock solves a problem that cannot currently occur — `concurrency` plus `timeout-minutes: 5` under a 15-minute cron already makes overlap structurally impossible.
-2. The ledger is already the idempotent store — after a bump, `remainingLedgers` is above threshold and the next run skips naturally.
+1. The current smoke workflow already serializes its runs; the real engine workflow must verify the same bounded guarantee.
+2. Confirmed on-chain TTL lets a fresh scan skip unnecessary work; uncertain submissions still require reconciliation.
 3. The cost asymmetry runs backwards — a fail-closed lock in front of a one-shot, unrepeatable deadline.
 
 So even at 0.25 CU with room to spare, provisioning before Sep 20 would still be wrong. **If you are reading this in Week 4 and reaching for Neon: the decision was about *when*, and these three reasons are why — re-read them before assuming the wait was only about quota.**
@@ -143,8 +142,71 @@ Both were reproduced against the spike's own code on local Postgres 16.15, 2026-
 - The first successful manual and scheduled run URLs, event types, commit SHAs, and full logs are captured and published in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), keeping the record available independently of GitHub log retention.
 - Dashboard hosting, durable locking, and the real unattended-bump proof remain open under their own task IDs.
 
+## 2026-09-08 — Local persistence spike: proposal for review
+
+**Historical proposal, superseded by the accepted decision above.** The [local evidence](../evidence/2026-09-08-persistence-spike/README.md) informed the choice of Actions + Node and PostgreSQL on Neon, with adoption deferred to W4. The experiment remains unused and no hosted database was provisioned. Its local checks establish contention, lease fencing, pending protection and successful-history writes; they do not establish a production recovery protocol.
+
+### What the local experiment establishes
+
+Two independent Node processes start together and attempt the same `(network, canonical ledger key)` claim. PostgreSQL's [conditional `INSERT ... ON CONFLICT`](https://www.postgresql.org/docs/17/sql-insert.html) grants one claim. The persisted row, rather than a session advisory lock, protects the entry after the statement commits. Different ledger keys remain independent. Payer is deliberately excluded from the lock key, so two configured payers cannot bypass coordination for a shared entry in the same database.
+
+The prototype uses three phases:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Claimed: atomic claim
+    Claimed --> Claimed: expired lease, increment generation
+    Claimed --> Pending: current owner + generation, persist hash before send
+    Pending --> Completed: confirm exact hash, commit history together
+```
+
+Before a send could occur, the current owner must persist its known transaction hash through an unexpired, generation-checked update. An expired pre-send claim can be taken over, while the old generation cannot progress. **Pending work never becomes available merely because its lease expires.** A retry must reconcile the known transaction, not construct another payment on a timer. If database confirmation is uncertain, do not send; reconcile persistence first. After confirmed chain success, history insertion and the completion marker belong in one SQL transaction. The probe deliberately rejects one history insert and verifies both writes roll back.
+
+Two synthetic `BumpRecord`-shaped payloads round-trip through `jsonb`, retaining separate payer/signer identities and the exact string amount `9007199254740993` stroops. The real database persists these records across client exit and a new reader process. Shared types and payer-selection policy are unchanged.
+
+**Scope limits:** this is a database protocol experiment, not the engine adapter. Its `complete` function receives synthetic confirmation and does not query a chain. It covers one claim cycle per entry; completed rows are not yet rearmed for a later TTL cycle. W3 still implements fresh TTL checks, uncertain-send handling, payer sequence coordination, per-key deduplication and the unattended-bump proof. Database migrations, the production claim adapter and its reconciliation/history prerequisites move to W4; W3-D16-03 records the interim artifact-based history path. Coordination applies only to cooperating runs sharing this database; it cannot prevent independent self-hosted installations from acting on the same entry. SQL and Stellar are not one atomic transaction, so this result is not an end-to-end exactly-once guarantee.
+
+### Workers compatibility outcome
+
+A bounded local `wrangler dev --local` experiment using Wrangler **4.129.1**, compatibility date **2026-09-08** and SDK **17.0.1** succeeded at SDK import, instance-key XDR, `getNetwork()` and `getLedgerEntries()` against Testnet A. [Source, response and reproduction steps](../evidence/2026-09-08-persistence-spike/README.md#workers-read-path) are preserved. The earlier “Workers unknown” note now narrows to **local reads verified; deployment, cron, signing, D1 and full engine unverified**. There was no Cloudflare deployment or transaction.
+
+[Workers supports a subset of Node APIs](https://developers.cloudflare.com/workers/runtime-apis/nodejs/); its current compatibility date enables Node support without a flag. Passing two read methods cannot establish the rest of the engine. Workers is not rejected as incompatible, but this result gives no reason to replace the already proven Actions scheduler or implement a second database dialect during W1.
+
+### Hosted evaluation deferred to W4
+
+Neon is the accepted target. The original comparison below is retained as evaluation context; it does not reopen provider selection or authorize provisioning before the proof.
+
+Both shortlisted providers offer PostgreSQL. The SQL uses short transactions and qualified table names, avoiding session-level locks and a provider SDK. Connection-mode compatibility remains a hosted test, not a conclusion from localhost.
+
+| Option | Fit for this task | Hosted check still needed |
+|---|---|---|
+| Neon | Focused PostgreSQL service; no extra application services needed. [Connection pooling](https://neon.com/docs/connect/connection-pooling) uses PgBouncer transaction mode. | TLS, chosen endpoint, role permissions, contention, reconnect/cold-start behavior and current quotas. |
+| Supabase | PostgreSQL works for the same protocol; Auth/Storage/Realtime are not required for this task. [Connection guide](https://supabase.com/docs/guides/database/connecting-to-postgres) distinguishes direct and pooler endpoints. | Choose an endpoint reachable from the runner: direct uses IPv6 by default; the shared pooler supports IPv4. Verify the same database checks. |
+
+Provider cost is a later selection input, not measured by this probe. Check [Neon pricing](https://neon.com/pricing) and [Supabase pricing](https://supabase.com/pricing) at selection time, including idle/suspend behavior. Keep a small cap on compute and retention; no paid plan has been selected. If a provider's connectivity or pooling fails the same probe, try its documented compatible endpoint or the other PostgreSQL provider without rewriting the claim protocol.
+
+### History access and operational boundary
+
+The engine writes using a server-side database credential. The public dashboard receives only a read-only history projection/API or static export, never that credential. A public history artifact may be useful evidence but cannot serve as the coordination lock. Dashboard implementation and deployment remain their own tasks.
+
+Root `pg` is a pinned development dependency for the isolated spike, not an engine package dependency. Ordinary tests stay offline; the database experiment requires `--run`, writes only a generated temporary schema, and attempts cleanup even after failure. A stopped local database was explicitly tested: connection failed, no work proceeded, and the command exited nonzero. W1 publication retains this experiment and its known limits. Hosted validation/adoption is deferred to W4; the accepted decision already unblocks W1-D6-02.
+
+## Downstream sweep — artifact publication
+
+This publication implements the accepted timing from PR #48/#49; it introduces no new runtime dependency for the engine.
+
+- W1-D6-04 remains Done; W1-D6-02 is unblocked and can describe the interim history path without a hosted test.
+- W2-D10-04 remains the visible-failure requirement; W3-D16-02 verifies engine workflow serialization and uncertain-send handling.
+- W3-D16-03 records summaries, uploaded artifacts and same-day committed evidence in W3, plus database adoption prerequisites for W4.
+- W4-D26-05 remains the pre-migration hosted-settings check. The broader backlog sweep landed separately in PR #51; this artifact does not implement or claim those future tasks.
+- SETUP, EVIDENCE, this ADR's index and the spike README now distinguish the accepted decision from the historical proposal and unused implementation.
+
 ## Update log
 
 - 2026-09-04: created. Toolchain decided; hosting/scheduler/persistence deferred to W1-D5-03 with the shortlist and evaluation order above.
 - 2026-09-06: selected GitHub Actions + Node 24 for the initial scheduler; verified SDK 17.0.1 reads locally. Workflow published for review in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24), tracking [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23); merge and scheduled-run proof pending. Hosting and atomicity remain separate tasks.
 - 2026-09-07: PR #24 merged; manual run `34110254224` and genuine scheduled run `34111732199` succeeded. Their full logs and metadata were captured and cross-checked. Runtime proof complete, evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27); no change to the platform decision or the separate hosting/atomicity tasks.
+- 2026-09-08: local PostgreSQL contention/recovery spike and local Workers SDK reads verified. Proposed Actions + PostgreSQL; hosted provider explicitly deferred until local review. `W1-D6-04` remains In progress. Corrected the across-run task reference to the frozen `W3-D16-02` ID.
+- 2026-09-08: integrated PR #45's separation of Pages hosting from engine/persistence, then reconciled its Workers question with the existing local read evidence. Runtime/provider agreement is requested through #30; Actions + Node + PostgreSQL remains a proposal. No hosted provisioning or additional compatibility experiment occurred in this follow-up.
+
+- 2026-09-08: integrated PR #48/#49/#50; retained the unused experiment and review findings, deferred hosted validation to W4, and clarified that row claims do not use session advisory locks and quota scenarios depend on measured average usage. Runtime/provider/timing decisions are unchanged.

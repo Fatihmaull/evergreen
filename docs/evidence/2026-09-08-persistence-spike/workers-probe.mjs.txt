@@ -1,0 +1,27 @@
+import { Contract, Networks, rpc } from '@stellar/stellar-sdk';
+
+// Read-only compatibility probe; no environment variables, signer or send path.
+export default {
+  async fetch() {
+    const checks = [];
+    try {
+      const contractId = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+      const key = new Contract(contractId).getFootprint();
+      if (!key.toXDR('base64')) throw new Error('XDR missing');
+      checks.push('SDK import and instance-key XDR');
+      const server = new rpc.Server('https://soroban-testnet.stellar.org/');
+      server.httpClient.defaults.timeout = 10000;
+      const network = await server.getNetwork();
+      if (network.passphrase !== Networks.TESTNET) throw new Error('Wrong network');
+      checks.push('getNetwork verified Testnet');
+      const result = await server.getLedgerEntries(key);
+      const entry = result.entries[0];
+      if (result.entries.length !== 1 || entry.key.toXDR('base64') !== key.toXDR('base64')) throw new Error('Unexpected entry');
+      if (!Number.isSafeInteger(entry.liveUntilLedgerSeq)) throw new Error('Missing TTL');
+      checks.push('getLedgerEntries parsed instance XDR and TTL');
+      return Response.json({ status: 'passed', checks, latestLedger: result.latestLedger, liveUntilLedgerSeq: entry.liveUntilLedgerSeq, submitted: false });
+    } catch (error) {
+      return Response.json({ status: 'failed', checks, error: error.message, submitted: false }, {status: 500});
+    }
+  }
+};

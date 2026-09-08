@@ -1,0 +1,17 @@
+{
+  "task": "W1-D6-04",
+  "date": "2026-09-08",
+  "node": "24.13.0",
+  "pg": "8.23.0",
+  "postgres": "17.11",
+  "containerRuntime": "rootless Podman 5.8.4",
+  "postgresImage": "docker.io/library/postgres:17",
+  "postgresImageDigest": "sha256:d13db94ae661d517c5ed57c509a578d5ea64aae639871ba25294f4f42d83de28",
+  "databaseScope": "disposable loopback-only database, synthetic rows, no provider credentials",
+  "wrangler": "4.129.1",
+  "workersCompatibilityDate": "2026-09-08",
+  "stellarSdk": "17.0.1",
+  "workersScope": "wrangler dev --local, public Testnet reads only, no deployment",
+  "baseCommit": "dc0a1e0d1e4a26cc911c1dbd2107f59d2ba04bcc",
+  "hostedProvider": "not selected; user requested local-result review first"
+}

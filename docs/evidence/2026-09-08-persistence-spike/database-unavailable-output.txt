@@ -1,0 +1,16 @@
+{
+  "task": "W1-D6-04",
+  "recordedAt": "2026-09-08T04:56:25.185Z",
+  "status": "failed",
+  "databaseWrites": false,
+  "schema": "evergreen_spike_37d0879c8acc4562877ecbfac655f92d",
+  "cleanup": "not-needed",
+  "checks": [
+    {
+      "name": "connect",
+      "passed": false
+    }
+  ],
+  "proofBoundary": "Real PostgreSQL coordination with synthetic transaction data; no Stellar RPC, signing or send. Not a production exactly-once guarantee."
+}
+[ELIFECYCLE] Command failed with exit code 1.

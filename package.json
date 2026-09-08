@@ -16,7 +16,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run && pnpm test:ttl && pnpm test:scheduler && pnpm test:email",
+    "test": "vitest run && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -27,7 +27,9 @@
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
     "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json",
     "email:smoke": "node --env-file-if-exists=.env scripts/send-test-email.mjs",
-    "test:email": "node --test --test-isolation=none scripts/send-test-email.test.mjs"
+    "test:email": "node --test --test-isolation=none scripts/send-test-email.test.mjs",
+    "persistence:spike": "node --env-file-if-exists=.env scripts/persistence-spike.mjs",
+    "test:persistence": "node --test --test-isolation=none scripts/persistence-spike.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -36,6 +38,7 @@
     "@vitest/coverage-v8": "5.0.0",
     "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",
+    "pg": "8.23.0",
     "prettier": "3.9.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.69.0",

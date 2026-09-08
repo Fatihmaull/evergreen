@@ -1,0 +1,10 @@
+{
+  "scripts/persistence-store.mjs": "04c033709b881236c0a60a38e3b1109159a44f774ae472835f757b76f7cc74b5",
+  "scripts/persistence-contender.mjs": "5abbb371a19c775d083a2fd2b36e723fcfc0007081fae395c53bcac2c1e8de82",
+  "scripts/persistence-spike.mjs": "3a3afaaf1c3a7f5ec7554a097f78db412af13890783d1005efa1667d6b81f753",
+  "scripts/persistence-spike.test.mjs": "d0bcfd15cc116011489ad0cef1827f4020f2b23fad391952eee80a10ebaac81f",
+  "package.json": "add978064f510be6bc82dda3d2beae05c7f7e485ebdbc2b4d5f48ab4f659a8b5",
+  "pnpm-lock.yaml": "bbadb1121c97d6b66f6673e7bc4ed7529ee658ae1318d367ed5cd8a16ee62ea2",
+  "docs/evidence/2026-09-08-persistence-spike/workers-probe.mjs.txt": "0aa42f1f99a0571722e79f39fe37e70c8af6cfa87377229ad5bfe071fb309b25",
+  "docs/evidence/2026-09-08-persistence-spike/workers-wrangler.jsonc": "b891a7898004d923a2cdb35bfea9cbea3490ca1a598361e777af0f88e272eb6e"
+}
