@@ -205,6 +205,18 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🧹 "Downstream sweep" is now the last step of every ADR
+
+The two orphaned Week 3 tasks were not a one-off. **Every decision that changes a dependency leaves orphans downstream** — the decision gets made carefully, gets its ADR, gets synced to both channels, and two tasks three weeks out quietly keep assuming what just changed. Nothing fails. They describe a world that no longer exists, and it surfaces only when someone tries to do them, which here would have been Sep 18.
+
+So it is a step rather than an instinct. Added to the ADR template in `docs/adr/README.md`:
+
+> **Downstream sweep.** List every task in `BACKLOG.md` whose description assumes what this decision changed. Update their wording, or record why each still stands.
+
+Cheap at the moment of decision, when the changed assumption is fresh. Expensive at every other moment.
+
+**A retroactive sweep is running now** over W2–W4 and the Buffer, one lens per superseded decision — the Week 3 two-stage rescope, the dashboard P0/P1 split, the database deferral, and the permissionless/payment-model finding — plus a completeness critic for the decision or task class the lenses miss. We caught the database orphans; there is no reason to assume the earlier three were clean.
+
 ## 🔧 The deferral broke two Week 3 tasks — resequenced
 
 Deferring the database to Week 4 left `W3-D16-02` and `W3-D16-03` assuming a store that will not exist on Sep 20. Caught while recording the decision, not after.
