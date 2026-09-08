@@ -129,6 +129,7 @@ The planned published Action wraps CLI `scan` and consumes its exit code and JSO
 flowchart TD
     Input[CLI contract ID] --> Guard[connectTestnet - verify network]
     Guard --> Scan[scanInstances - derive unique instance keys]
+    Tests[Unit test inputs] -.-> Scan
     Scan --> Read[LedgerEntryReader.read]
     Read -->|SDK adapter| RPC[getLedgerEntries]
     Read -.-> Mock[Offline mock reader]
@@ -138,6 +139,8 @@ flowchart TD
     TTL --> Result[ScanResult - entries and issues]
     Result --> Output[Human or JSON output and exit code]
 ```
+
+Unit tests call `scanInstances()` directly with the mock reader. They bypass `connectTestnet()` and the SDK adapter; neither `getNetwork` nor `getLedgerEntries` is called on that path.
 
 1. `connectTestnet()` calls `getNetwork()` and checks the returned passphrase before constructing the reader. A wrong network is refused before any entry read.
 2. `scanInstances(reader, contracts)` derives canonical instance keys and groups requests by key. Invalid contract IDs become `invalid-response` issues. With no valid keys, no entry request is made.
@@ -165,9 +168,10 @@ flowchart TD
     Config[Load and validate EvergreenConfig] --> Scan[Scan unique entries and observe TTL]
     Scan --> Decide[BumpDecision per key - explicit payer]
     Decide --> Skip[Skip with reason]
-    Decide --> Prepare[Prepare and simulate extendTTL]
+    Decide --> Account[Resolve public fee-paying account]
+    Account --> Prepare[Prepare and simulate extendTTL]
     Prepare --> Simulated[BumpRecord simulated - dry-run]
-    Prepare --> Signer[Live opt-in - resolve Signer per payer]
+    Prepare --> Signer[Live opt-in - Signer.signExtendTTL]
     Signer --> Signed[Signed transaction envelope]
     Signed --> Send[Engine submits and reconciles transaction]
     Send --> Confirm[Confirmation and post-bump TTL read]
@@ -175,6 +179,7 @@ flowchart TD
     Send --> Pending[BumpRecord submitted - still uncertain]
     Pending -.->|Reconcile same hash| Confirm
     Prepare -.-> Failure[BumpRecord failed - definitive error]
+    Account -.-> Failure
     Signer -.-> Failure
     Send -.-> Failure
     Record --> Consumers[History and notification channel]
@@ -186,6 +191,8 @@ flowchart TD
 The future loader validates contract-to-payer references and merges threshold overrides. Config contains environment variable names or policy references, never secret values. An omitted `mode` must become `dry-run`; live submission requires explicit opt-in. `extendToLedgers` is the requested lifetime relative to execution, not an absolute ledger number.
 
 Decision rules consume observations/thresholds and an explicitly resolved payer for an extend decision. Shared entries produce one decision, not one per consumer. A skip is a decision with a reason, not automatically a successful engine run: `W2-D10-04` requires a visible nonzero outcome when an observed entry is below threshold and no bump happened. Whether temporary entries should be auto-bumped remains the explicit scope decision `W3-D15-02b`; scanning them does not authorize keeping them forever.
+
+The engine must resolve the payer's public account before preparing the envelope, even for simulation. A payer ID is a config lookup key, not itself an account address; a resolved signer's public `identity.account` can supply that identity. Resolving identity does not mean a signature has been produced. The exact loader/adapter wiring remains W3 work.
 
 `Signer.signExtendTTL({ networkPassphrase, transactionXdr })` returns a signed XDR envelope. It **does not submit**. The engine orchestrates transaction preparation, simulation, signing, submission and reconciliation through adapters. Stage 1 and Stage 2 change the signer implementation, not the data contract.
 

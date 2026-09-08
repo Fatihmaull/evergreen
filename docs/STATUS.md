@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1-D6-02 documentation complete; awaiting user review before PR
+**Last updated:** 2026-09-08 · W1-D6-02 final review complete; ready for PR publication
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -15,11 +15,13 @@
 
 **Outcome:** three Mermaid diagrams show dependencies, the actual instance scan and the planned engine flow. The document names the real shared-type fields and producer/consumer boundaries, a synthetic two-consumer/one-entry example, inclusive TTL semantics, optional rent, per-payer signer resolution, and simulated/submitted/succeeded/failed records. It records the accepted W3 Actions history / W4 Neon split and adoption prerequisites. Current limitations are explicit: scans read instances only; repeated input IDs remain repeated consumer references; unavailable TTL is skipped by the current CLI threshold helper. Broader discovery/consumer deduplication remain W2-D8-03/04, and future engine decisions must handle incomplete observations. No new product decision, runtime implementation or shared-type change is claimed.
 
-**Validation:** `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **63 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email). The count excludes the seven persistence tests still in PR #52. All 22 document links were checked for valid local targets where applicable, and all 11 explicit task IDs resolve in BACKLOG. The three diagrams passed structural checks; browser rendering was not exercised. Runtime source, workflows, dependency files and original evidence match main; prior branch heads, stash and .env content/permissions are preserved. No new chain read/transaction, database run or email was needed: existing fixture-based tests and the merged scan proof cover the documented behavior.
+**Validation:** `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **63 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email). The count excludes the seven persistence tests still in PR #52. All 22 document links were checked for valid local targets where applicable, and all 11 explicit task IDs resolve in BACKLOG. Final review parsed and rendered all three diagrams with Mermaid 11 in local Chromium and inspected their screenshots; rendering passed. The runtime/test tree is unchanged from the 63-test check, so that result remains applicable without rerunning the same suites. Runtime source, workflows, dependency files and original evidence match main; prior branch heads, stash and .env content/permissions are preserved. No new chain read/transaction, database run or email was needed: existing fixture-based tests and the merged scan proof cover the documented behavior.
 
 **Mirror:** D6-02 was set to Done via Notion MCP with the documented outcome, 63-test validation and explicit pending user-review/PR boundary; queried again by exact ID to verify status and notes. Earlier OAuth notes below are historical.
 
-**Next:** review the documentation locally, then decide PR publication for #32. The shared W1 review gate in #44 remains separate.
+**Final review:** two diagram clarifications landed: unit tests enter through the mock reader without calling the network guard/SDK, and the engine resolves the public fee-paying account before envelope preparation/simulation, with signing gated by live opt-in. Existing shared types and code were rechecked; no blocking finding remains within this documentation scope. Temporary Mermaid rendering tools/screenshots are outside the repository; no dependency or runtime changes were added.
+
+**Next:** PR publication for #32 is ready for user authorization. No new PR/Issue was created during review. The shared W1 review gate in #44 remains separate.
 
 ## Earlier session notes
 
