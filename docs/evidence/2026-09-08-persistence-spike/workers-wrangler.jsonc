@@ -1,0 +1,5 @@
+{
+  "name": "evergreen-w1-sdk-local-probe",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-08"
+}

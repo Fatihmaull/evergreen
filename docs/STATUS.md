@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · persistence spike started; email merged and Notion reconnected
+**Last updated:** 2026-09-08 · local persistence spike ready for review; hosted provider deferred
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -10,6 +10,12 @@
 ---
 
 ## Right now
+
+**2026-09-08 — local persistence spike ready for review (`W1-D6-04`):** [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30), owner Rakha, branch `chore/W1-D6-04-persistence-spike`. Eight PostgreSQL checks passed: one winner under two-process contention, independent entries, expired-claim takeover with generation checks, pending-state protection, rollback, idempotent completion/history, preserved payer/signer/fee data, and reads after client/process replacement. A separate stopped-database check refused work and exited nonzero. [Evidence and reproduction](evidence/2026-09-08-persistence-spike/README.md). Local Workers SDK 17.0.1 import/XDR and Testnet A reads also passed; no deployment, cron, signing or D1 proof is claimed.
+
+**Proposal and remaining scope:** retain Actions + Node and use PostgreSQL; [ADR-003 amendment](adr/ADR-003-toolchain-hosting-persistence.md#2026-09-08--local-persistence-spike-proposal-for-review) is Proposed. The user requested **local-result review before choosing Neon or Supabase**. Hosted connection/permissions/pooling validation remains outstanding, so D6-04 stays `[~]` / In progress. No provider provisioned, new PR or Issue created, email sent, or Stellar transaction submitted. WIP branch visibility is separate from PR publication; the next checkpoint is local-result review. D6-02/03 remain Pending for later work via #32.
+
+**Validation:** `pnpm check` passed conflict detection, typecheck including 17 negative type examples, lint, formatting and **47 offline tests** (11 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). The dedicated database's temporary schemas were verified removed, and its container/volume and local Workers server were cleaned up. Original `.env` content/permissions, RPC fixture, shared-types source, email evidence and stash match the preservation snapshot. Notion MCP boundary sync completed and read back: exact task ID D6-04 remains In progress with the local outcome and deferred provider decision; Decisions mirrors the ADR-003 proposal and evidence links.
 
 **2026-09-08 — persistence spike started (`W1-D6-04`):** Rakha owns this task following [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171); primary branch `chore/W1-D6-04-persistence-spike`, based on main `dc0a1e0`, tracked by [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30). All six D6 task IDs and statuses matched Notion before claiming. Scope: platform evaluation, a small PostgreSQL contention/recovery probe, recorded results and ADR-003; hosted provider awaits review. No real engine, shared-type changes or live Stellar transaction. D6-02/03 remain Pending. Earlier email/mirror recovery notes are preserved in a separate documentation commit.
 
@@ -21,7 +27,7 @@
 
 **OAuth recovery verified later on 2026-09-08:** Rakha reconnected Notion; this session successfully read and updated the mirror via MCP. All 50 W1 IDs are present in both channels, with no missing or extra row. `W1-D1-03` was the only status mismatch (repo Done / Notion Pending); the committed date-confirmation outcome from PR #38 is now mirrored as Done. The email and three shared-types rows, plus Decisions, were updated and fetched again. Fatih concurrently merged PR #40 and refreshed those merge outcomes through PR #41; the final check confirms the email row says merged and Issue #37 is closed. The earlier OAuth failure is resolved. The original failure note below is historical.
 
-**Next work:** [the latest comment on handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171) confirms email is finished, then directs @rakhargo to #30 (`W1-D6-04`, persistence/locking), followed by #32 (`W1-D6-02` data-flow and `W1-D6-03` mock RPC). These tasks remain Pending; no implementation started during this check. BACKLOG and Notion still retain their original owners (`02`: R; `03`/`04`: F); reconcile owner and primary branch when claiming the next task to avoid overlap. ADR-005 remains Proposed; if persistence needs a type change, discuss it on #30 before changing the merged types.
+**Next work:** [the latest comment on handoff #39](https://github.com/Fatihmaull/evergreen/issues/39#issuecomment-5579179171) confirms email is finished, then directs @rakhargo to #30 (`W1-D6-04`, persistence/locking), followed by #32 (`W1-D6-02` data-flow and `W1-D6-03` mock RPC). At the earlier merge check these tasks were Pending. D6-04 has since been claimed by Rakha on the branch above; D6-02/03 remain Pending with their original owners (`02`: R; `03`: F). Reconcile owner and primary branch when claiming the later tasks. ADR-005 remains Proposed; if persistence needs a type change, discuss it on #30 before changing the merged types.
 
 **Mirror sync was pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked, confirmed again during publication. Pending: `W1-D5-04` follow-up completion and PR #40 link plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof; the finished follow-up is published for review in PR #40. No email merge into main is claimed.
 
@@ -71,7 +77,7 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | 🟡 types merged in PR #36; other D6 tasks pending | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
+| Shared types & harness | 🟡 types merged; persistence local result under review | R/F | W1-D6-01/01b/01c validated; D6-04 In progress, hosted provider deferred; data flow and mock RPC Pending. |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |

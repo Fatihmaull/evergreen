@@ -264,6 +264,28 @@ The script uses the public Testnet endpoint and guinea-pig A instance ID embedde
 
 If Testnet resets or A expires, the probe fails visibly. Reconcile the fixture through the existing setup task before changing its ID; the probe itself only reads.
 
+## Local persistence experiment — `W1-D6-04`
+
+The [ADR-003 proposal](adr/ADR-003-toolchain-hosting-persistence.md#2026-09-08--local-persistence-spike-proposal-for-review) uses PostgreSQL for durable per-entry claims and bump history. The hosted provider is **not selected**; review the [local results](evidence/2026-09-08-persistence-spike/README.md) first.
+
+`pnpm persistence:spike` previews the checks without connecting. `pnpm test:persistence` runs offline tests. To run the integration experiment, use a **dedicated disposable PostgreSQL database** and set `PERSISTENCE_DATABASE_URL` in the ignored `.env` or the command environment, then run `pnpm persistence:spike --run`. The database role must be allowed to create a temporary schema and tables. The script creates a unique `evergreen_spike_<random ID>` schema, writes synthetic claims/history, and drops only that schema afterward. It never imports a Stellar signer or submits a transaction.
+
+For a local-only container (Docker or rootless Podman):
+
+```bash
+podman run --name evergreen-persistence-probe --detach \
+  --publish 127.0.0.1::5432 --env POSTGRES_HOST_AUTH_METHOD=trust \
+  docker.io/library/postgres:17
+podman port evergreen-persistence-probe 5432
+# Substitute the assigned loopback port in this disposable, passwordless URL:
+PERSISTENCE_DATABASE_URL=postgresql://postgres@127.0.0.1:<port>/postgres pnpm persistence:spike --run
+podman rm -f -v evergreen-persistence-probe
+```
+
+Loopback uses no TLS solely for this disposable setup. Remote connections verify the server certificate; use a standard provider connection string with `sslmode=require` or `verify-full`. `channel_binding=require` enables pg's channel-binding support when the server offers it; certificate verification remains mandatory. Other URI options are refused. No connection string or raw database error is printed. A failed check exits nonzero; `cleanup: "failed"` identifies a schema requiring cleanup after connectivity returns. If schema creation's outcome is uncertain, `databaseWrites` is `"unknown"`, not a claim that no write happened. An interrupted process can also leave its generated schema behind.
+
+The local result verifies PostgreSQL semantics, not hosted credentials, networking, pooling, cold starts or service quotas. Those require the same explicit probe on the provider selected after review. Database credentials must never reach the browser; dashboard history will use a read-only projection/API or exported artifact. Production schema migrations, transaction reconciliation and real engine behavior remain Week 3 work.
+
 ## Branch protection on `main`
 
 Set 2026-09-05 (`W1-D3-05`). `main` accepts changes **only through a pull request**:

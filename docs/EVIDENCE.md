@@ -129,6 +129,10 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 2026-09-08 follow-up: [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the existing proof. The probe and nine offline tests are integrated from the preserved local branch; [setup instructions](SETUP.md#local-email-smoke--w1-d5-04) describe the preview/send commands. No new email or Stellar transaction is needed for integration. The three-artifact transaction rule does not apply to this email; later engine success/failure alerts require separate evidence.
 
+## Local persistence and Workers compatibility — `W1-D6-04`
+
+2026-09-08: [local experiment record](evidence/2026-09-08-persistence-spike/README.md) preserves eight successful PostgreSQL checks plus a controlled database-unavailable failure. Separate processes contend for the same entry; one receives the claim. Lease generation, pending-state protection, rollback and durable history are verified with synthetic data. A bounded local Workers runtime also imported SDK 17.0.1 and read Testnet A successfully. These are database and read-path proofs, not an unattended bump, hosted database test or Cloudflare deployment. No transaction was signed or submitted; synthetic hashes are not chain evidence. Provider selection awaits local-result review.
+
 ## Where evidence lives — resolved 2026-09-07 (`W1-D5-06`)
 
 The original plan called for a shared cloud drive. **In practice we have been committing evidence into the repository under `docs/evidence/<date>-<topic>/`, and that is the better default** — so it is now the rule, not the accident:
