@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-07 · shared types published for review; email coordination issue open
-**Sprint day:** 5 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-08 · email follow-up integration in progress; shared types merged
+**Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
 ## Right now
+
+**2026-09-08 — email follow-up in progress (`W1-D5-04`):** Rakha is integrating the preserved probe, nine offline tests and original delivery evidence on `chore/W1-D5-04-email-follow-up`, based on main `cdbbb77`. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the local implementation and delivery proof; [handoff #39](https://github.com/Fatihmaull/evergreen/issues/39) requests this small follow-up first. The old email branch remains a checkpoint at `470d41c`. One active integration branch; no additional live email or engine implementation. The WIP branch will be pushed for visibility; PR creation follows local review.
+
+**Mirror sync pending (2026-09-08):** Notion MCP rejected OAuth refresh with `invalid_grant` / grant revoked. Pending: `W1-D5-04` follow-up progress plus merge outcomes for `W1-D6-01`, `01b`, `01c` (PR #36 merged, Issue #29 closed; ADR-005 remains Proposed). Repo work continues; reconnect Notion before retrying the mirror. The existing Done email row reflects the accepted local delivery proof, while this follow-up integrates its code/tests/evidence into current main.
 
 **2026-09-07 — shared types published for review:** [PR #36](https://github.com/Fatihmaull/evergreen/pull/36) publishes `W1-D6-01`, `01b`, `01c` from `feat/W1-D6-01-shared-types`, with review requested from @Fatihmaull. It closes [Issue #29](https://github.com/Fatihmaull/evergreen/issues/29) on merge; both remain open. The reviewed code is `c1c60ec`; its GitHub CI passed. ADR-005 remains Proposed. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37) records the completed local email proof and differences from merged PR #35 for validation; the email branch is still held, with no email PR or branch push. Publication sync completed via Notion MCP: the three shared-types rows link PR #36, the held email row links Issue #37, and Decisions records both publication outcomes. Task IDs, statuses and decision text were read back and verified.
 
@@ -21,7 +25,7 @@
 
 **Validation:** final `pnpm check` passed conflict-marker detection, typecheck (including the new test tsconfig), lint, formatting and all **31 tests** (7 shared-types + 4 other workspace + 11 TTL + 9 scheduler). The unmodified recorded Testnet A fixture fits all four entry kinds; synthetic cases cover shared consumers, unavailable TTL, multiple payers and outcome variants. Seventeen negative type examples are compiler-checked; the simulation/hash check now isolates that restriction from the separate after-state restriction. No live RPC read, signing, transaction submission or email was needed for this type-only task. Full data flow (`W1-D6-02`), mock RPC (`03`) and persistence (`04`) remain Pending. Final local review is complete; PR #36 is open for review and Issue #29 stays open until merge. Notion final-review sync completed via MCP: `W1-D6-01`, `01b`, `01c` are Done with the updated outcomes, and ADR-005 records the review correction. Read-back confirms all three IDs and the decision text; D6-02/03/04 remain Pending. The proposal remains Proposed for human review. Local `.env` content/permissions, the recorded fixture, held email branch and existing stash match the preservation snapshot; the reviewed 15-file scope contains no configured credentials or secret-pattern matches.
 
-**Email remains on hold:** the completed local `W1-D5-04` proof and integration are preserved on `chore/W1-D5-04-email-smoke` at `470d41c` (implementation `699a699`). The email code/evidence from that branch is not included here. Earlier preparation notes below describe main before that local completion. Issue #37 now records the overlap for validation; no email code or evidence files were published, and no additional email was sent.
+**Email hold history (superseded by the 2026-09-08 follow-up above):** the completed local `W1-D5-04` proof and integration are preserved on `chore/W1-D5-04-email-smoke` at `470d41c` (implementation `699a699`). The email code/evidence from that branch is not included here. Earlier preparation notes below describe main before that local completion. Issue #37 now records the overlap for validation; no email code or evidence files were published, and no additional email was sent.
 
 **2026-09-07 — `W1-D5-03` runtime proof complete:** PR #24 is merged on `main`. Manual run [34110254224](https://github.com/Fatihmaull/evergreen/actions/runs/34110254224) and genuine `schedule` run [34111732199](https://github.com/Fatihmaull/evergreen/actions/runs/34111732199) both succeeded on `5509c44`. Node 24.20.0 / SDK 17.0.1 read A's Testnet instance, with **162,169** and **161,964 ledgers** remaining respectively. Both events and run IDs match the structured output; full logs and GitHub metadata are saved in the [runtime evidence](evidence/2026-09-07-scheduler-runs/README.md) on branch `chore/W1-D5-03-scheduler-evidence`. `pnpm check` passes all 25 tests. Task **Done**; evidence is published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), with review requested from @Fatihmaull. [Issue #23](https://github.com/Fatihmaull/evergreen/issues/23) remains **open** until merge. No implementation/workflow edit, signing key, or transaction was needed. A single scheduled read proves automatic invocation, not a cadence guarantee or unattended bump. Notion publication sync completed via MCP: both exact task IDs are Done with PR/Issue links; the Decisions page links the published evidence. All updates were fetched again and verified.
 
@@ -57,7 +61,7 @@
 | Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
 | Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
 | Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | 🟡 types published in PR #36; awaiting review | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
+| Shared types & harness | 🟡 types merged in PR #36; other D6 tasks pending | R/F | W1-D6-01/01b/01c validated; data flow, mock RPC and persistence remain Pending. |
 | CLI | ⬜ not started | F | first slice at W1-D7-01 |
 | Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
 | Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
