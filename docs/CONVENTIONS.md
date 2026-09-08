@@ -4,13 +4,13 @@ Rules an agent or human can follow without asking. If something here blocks good
 
 ## Git
 
-**Branches:** `<type>/<task-id>-<slug>` — e.g. `feat/W2-D8-01-ttl-math`, `fix/W3-D18-02-idempotency`.
+**Branches:** `<type>/<task-id>-<slug>` — e.g. `feat/W2-D8-01-ttl-math`, `fix/W3-D16-02-idempotency`.
 
 **Commits:** Conventional Commits, with the task ID in the subject.
 
 ```
 feat(cli): add scan command [W1-D7-01]
-fix(engine): prevent double-bump across overlapping runs [W3-D18-02]
+fix(engine): prevent double-bump across overlapping runs [W3-D16-02]
 docs(primer): add getLedgerEntries response fixture [W1-D4-05]
 chore(repo): pin node version [W1-D3-02]
 ```
@@ -66,6 +66,20 @@ SELECT "userDefined:ID" AS task_id, Status FROM "collection://..." WHERE Week = 
 
 This belongs in the same family as the testnet guard that refused everything and the local gate that was weaker than CI: **a check that fails in the safe-looking direction, silently.** Anyone writing an ad-hoc query later will hit it.
 
+### Quoting a retired task ID — strike it through
+
+`pnpm check:task-ids` fails on any doc reference to a task ID not registered in `BACKLOG.md`. But documenting a rename *necessarily* names the old ID, and that is not a dangling reference — it is the record of why the new one exists.
+
+Mark it with strikethrough:
+
+```markdown
+| ~~W3-D18-02~~ | superseded by `W3-D16-02` when Week 3 was restructured |
+```
+
+Semantically exact — "this no longer applies" — and it reads correctly to a human as well as to the checker.
+
+**Only for an ID that genuinely no longer exists.** Reaching for the marker to silence the check on a *live* reference converts a caught bug into a hidden one, which is worse than never having the check.
+
 ### Retire a task ID, never repurpose it
 
 `BACKLOG.md` says IDs are frozen. The rule has a second half that only became visible when it was broken: **an ID must keep meaning the same work, not merely keep existing.**
@@ -86,6 +100,9 @@ Four instances this sprint, same shape every time: **something reported a state,
 | `pnpm check` green | Weaker than CI — missing `format:check` | Comparing the script against the workflow |
 | `.prettierignore` valid, suite green | Conflict markers made it match nothing | A human reading the file |
 | Cloudflare: *"Initializing build environment"* | Deploy had succeeded 94 seconds earlier | Loading the URL |
+| `pnpm check && echo PASS` printing nothing | The check had **failed**; `&&` short-circuited | CI failing on a branch that "passed" locally |
+
+> **Never verify with `cmd && echo PASS`.** On failure it prints *nothing*, and absence reads as noise rather than as failure. Use `cmd; echo "exit=$?"` — a number is always printed, so there is no silent case. *(This exact idiom hid a real failure on 2026-09-08; CI caught what the local run had reported as nothing at all.)*
 
 **The rule: check the thing, not the report about the thing.** Load the URL, run the command, exercise the guard in both directions, compare the script to the workflow it claims to mirror.
 
