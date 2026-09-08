@@ -77,6 +77,48 @@ So the dashboard is a **static site**, and Vercel, Netlify and Cloudflare Pages 
 
 Whatever is chosen must not model "the bot account" as a process-wide singleton. The schema needs `BumpRecord.payer` distinct from the contract, and config shaped as N contracts × M payers. v1 need not implement multi-tenancy — it must not foreclose it.
 
+## Part 2 — DECIDED 2026-09-08
+
+**Runtime: GitHub Actions cron + Node 24. Persistence: PostgreSQL on Neon — adopted in Week 4, deliberately NOT before the Sep 20 proof.**
+
+### Runtime
+
+Actions cron is already proven end to end: a genuine `schedule` event read testnet successfully (`W1-D5-03`). A bounded local Workers probe passed SDK import, XDR and testnet reads via `wrangler dev --local`, but deployment, cron, signing and D1 remain unverified. That is enough to stop spending time on Workers, not enough to move to it ten days before a gate.
+
+### Why persistence waits
+
+Three findings, in increasing order of importance.
+
+**1. Neon's free-tier arithmetic can land on the crossing date.** The cron is `7,22,37,52` — 4×/hour, 2,880 runs/month. Neon's free plan suspends after a 300s idle window that cannot be disabled, so every run bills that window: **240 compute-hours/month against a 100-hour allowance.**
+
+| Autoscale ceiling | CU-hours | Outcome |
+|---|---|---|
+| 0.25 CU | 60 / 100 | fits |
+| 1.0 CU | 240 / 100 | **exhausts day 12.5 — 2026-09-20** |
+
+Exhaustion is a hard stop, not degradation; there is no free-plan warning email, and the allowance resets on the billing period (~Oct 8 for an account opened Sep 8) — after the deadline. It would remove Sep 20 and Sep 25 together. **The outcome depends on the autoscale ceiling, which we have not measured — and that uncertainty is itself the argument.**
+
+Supabase was worse for this shape: un-pausing is a manual dashboard action with no connection-triggered resume, and the IPv4 pooler in transaction mode silently breaks session-scoped advisory locks — passing on a direct local connection and failing only in production.
+
+**2. The lock protects against something that cannot currently happen.** `scheduler-smoke.yml` already carries `concurrency:` with `cancel-in-progress: false` and `timeout-minutes: 5` under a 15-minute cron, so overlapping runs are structurally impossible. `packages/engine` is still a placeholder.
+
+**3. The ledger is already the durable atomic store.** After a successful bump, `remainingLedgers` sits above threshold, so the next run skips naturally. The bump decision is idempotent *without* a lock, because the operation records itself on chain.
+
+### The asymmetry that settles it
+
+A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. Any coordination layer added before Sep 20 must therefore fail *open*, and the spike's — correctly, for its own stated goal — fails closed.
+
+### Prerequisites for adopting the spike in Week 4
+
+Both were reproduced against the spike's own code on local Postgres 16.15, 2026-09-08. **Neither may be inherited silently.**
+
+1. **`pending` is terminal with no reconciliation path.** `claim()` takes over only `WHERE current.phase = 'claimed'`; `prepare()` sets `'pending'`. A process dying between `prepare()` and `complete()` strands the entry permanently. Measured: **0 non-null returns from 100 `claim()` attempts** past lease expiry. This is deliberate and fail-closed — `prepare()`'s comment reads *"Pending work never expires into a new send"* — so the fix is **not** a timer, which would reintroduce the double-send it prevents. It is reconciliation: resolve the stored `transaction_hash` with `getTransaction()` and let the chain decide.
+2. **Failed outcomes are unstorable.** `history` carries `CHECK (record->>'outcome' = 'succeeded')`. A `failed` record is rejected by the constraint while `succeeded` inserts — verified both directions. `BumpRecord` already distinguishes simulated/submitted/succeeded/failed, so the schema is narrower than the type it stores.
+
+### What ships instead, before Sep 18
+
+`W2-D10-04`: **the run exits non-zero when it observes an entry below threshold and did not bump it** — including when a claim is held. This converts the silent-skip failure into a loud one and matters more than the provider choice.
+
 ## Consequences
 
 - The scheduler preparation adds a root development dependency for the standalone smoke script; it does not yet change the engine or core package APIs.

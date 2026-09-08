@@ -205,6 +205,35 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## ✅ ADR-003 decided — and the database waits until after Sep 20
+
+**Runtime: Actions cron + Node 24. Persistence: PostgreSQL on Neon, adopted Week 4, deliberately not before the crossing.**
+
+Rakha's spike asked for a provider choice. Independent analysis said the question was slightly wrong — the issue is *when*, not *which*.
+
+**The arithmetic.** Cron is 4×/hour = 2,880 runs/month. Neon's free plan suspends after a 300s idle window that cannot be disabled, so every run bills the full window: **240 compute-hours against a 100-hour allowance.** At a 1.0 CU ceiling that exhausts on **day 12.5 — Sep 20 itself**, as a hard stop, with no free-plan warning and no reset until after the deadline. It would remove Sep 20 and Sep 25 together. The outcome depends on the autoscale ceiling, which we never measured — **and that uncertainty is the argument**, not a detail to resolve later.
+
+**The deeper reason.** The lock guards a case that cannot currently occur: `scheduler-smoke.yml` already has `concurrency:` with `cancel-in-progress: false` and `timeout-minutes: 5` under a 15-minute cron, and `packages/engine` is still a placeholder. More fundamentally, **the ledger is already the durable atomic store** — after a bump, `remainingLedgers` is above threshold, so the next run skips naturally. The decision is idempotent without a lock.
+
+**The asymmetry that settles it.** A double bump costs a few testnet stroops and damages no evidence. A cold or paused database on a Sunday costs the grant's least recoverable proof. B's 24-hour window is ~96 independent attempts; a held claim converts all 96 into one. **The scheme is fail-closed where our risk demands fail-open.**
+
+### Two defects reproduced, not just read
+
+Run against the spike's own code on local Postgres 16.15:
+
+| | Finding | Measured |
+|---|---|---|
+| 1 | `pending` is terminal — `claim()` takes over only `phase='claimed'`, `prepare()` sets `'pending'` | **0 non-null returns from 100 `claim()` attempts** past lease expiry |
+| 2 | `history` CHECK forbids `outcome != 'succeeded'` | `failed` rejected by constraint; `succeeded` inserts |
+
+**Defect 1 is deliberate, and reporting it as a slip would have been wrong.** `prepare()`'s comment reads *"Pending work never expires into a new send"* — it is fail-closed on purpose and works against that goal. The consequence he had not traced is that `pending` has no reconciliation path, so the fix is `getTransaction()` reconciliation rather than a timer, which would reintroduce the double-send it prevents.
+
+Both are recorded on `W3-D16-03` as adoption prerequisites so they cannot be inherited quietly in Week 4.
+
+### What ships instead — `W2-D10-04`, before Sep 18
+
+**The run exits non-zero when it observes an entry below threshold and did not bump it**, including a held claim. The dominant failure mode is a run that does nothing and looks exactly like a run that succeeded; this makes it loud. It now outranks everything in W2 that is not the CLI.
+
 ## 🔄 Mirror synced 2026-09-08 — one anomaly, and the repo was wrong again
 
 Validated all 50 W1 rows in both directions. **50/50, no presence mismatches**, one status discrepancy:
