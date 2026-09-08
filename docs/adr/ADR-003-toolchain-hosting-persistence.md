@@ -198,7 +198,7 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 - W1-D6-04 remains Done; W1-D6-02 is unblocked and can describe the interim history path without a hosted test.
 - W2-D10-04 remains the visible-failure requirement; W3-D16-02 verifies engine workflow serialization and uncertain-send handling.
 - W3-D16-03 records summaries, uploaded artifacts and same-day committed evidence in W3, plus database adoption prerequisites for W4.
-- W4-D26-05 remains the pre-migration hosted-settings check. The broader backlog sweep announced in PR #50 is being handled separately; this artifact does not implement or claim those future tasks.
+- W4-D26-05 remains the pre-migration hosted-settings check. The broader backlog sweep landed separately in PR #51; this artifact does not implement or claim those future tasks.
 - SETUP, EVIDENCE, this ADR's index and the spike README now distinguish the accepted decision from the historical proposal and unused implementation.
 
 ## Update log

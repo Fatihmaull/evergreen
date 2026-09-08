@@ -66,6 +66,16 @@ SELECT "userDefined:ID" AS task_id, Status FROM "collection://..." WHERE Week = 
 
 This belongs in the same family as the testnet guard that refused everything and the local gate that was weaker than CI: **a check that fails in the safe-looking direction, silently.** Anyone writing an ad-hoc query later will hit it.
 
+### Retire a task ID, never repurpose it
+
+`BACKLOG.md` says IDs are frozen. The rule has a second half that only became visible when it was broken: **an ID must keep meaning the same work, not merely keep existing.**
+
+*Learned 2026-09-08.* Restructuring Week 3 into two stages moved the day contents but reused the IDs. `W3-D16-01` stopped meaning "policy-signer e2e" and started meaning "bump execution"; `W3-D19-03` stopped meaning "alert emails" and started meaning the spike. Every ID still resolved, so nothing looked broken — while `EVIDENCE.md` quietly filed six rows against the wrong tasks, and `POLICY-SIGNER.md` claimed a due date belonging to the slack-ledger reconciliation.
+
+**This is worse than a dangling reference, because a dangling ID is detectable and a repurposed one is not.** A script can check that every referenced ID exists; nothing cheap can check that it still means what the referrer thought.
+
+So: when restructuring, **retire the old IDs and mint new ones.** A gap in the sequence costs nothing. A silently re-pointed ID costs an evidence row filed against the wrong proof, discovered when someone goes looking for it.
+
 ### Run it, don't only read it — execution surfaces intent
 
 Reading a diff tells you what code does. **Running it puts you in the file, next to the comments, in contact with what the author was trying to do.**

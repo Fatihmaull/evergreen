@@ -11,11 +11,11 @@
 
 ## Right now
 
-**W1-D6-04 decision is Done:** PR #48 accepts Actions + Node 24 and PostgreSQL on Neon, adopted in W4 after the Sep 20 proof. PR #49 resequences W3 history/coordination; PR #50 adds the downstream-sweep requirement. Local main was fast-forwarded to `1875222`, and all three PRs are integrated into `chore/W1-D6-04-persistence-spike`. This supersedes the earlier plan to complete hosted validation before #32: no W1 hosted database is required, and D6-02 is now unblocked.
+**W1-D6-04 decision is Done:** PR #48 accepts Actions + Node 24 and PostgreSQL on Neon, adopted in W4 after the Sep 20 proof. PR #49 resequences W3 history/coordination; PR #50 adds the downstream-sweep requirement. PR #51 subsequently corrected Stage 1 alerting deadlines and stale evidence task IDs. Local main was fast-forwarded to `a7d500d`, and PR #48/#49/#50/#51 are integrated into `chore/W1-D6-04-persistence-spike`. This supersedes the earlier plan to complete hosted validation before #32: no W1 hosted database is required, and D6-02 is now unblocked.
 
 **Artifact publication:** per [the review on #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5582108192), retain the original executable spike and evidence as an experiment unused by the engine/scheduler. The README and setup instructions now name its limits: pending work needs chain reconciliation; history currently accepts successful outcomes only. Original scripts and raw outputs are preserved. ADR-003 keeps the accepted runtime/provider/timing, clarifies the conditional Neon usage scenarios and row-claim pooling scope, and records the affected future task IDs. No hosted provisioning, engine implementation or live Stellar transaction is part of this publication. `pnpm check` passed all 70 offline tests plus conflict detection, typecheck (including 17 negative type examples), lint and formatting. Original source/dependency/evidence hashes and environment match the preservation snapshot. PR publication is pending.
 
-**Mirror check:** D6-04 Done and D6-02 Pending both agree with merged main. A wider sample found W4-D26-05 absent from Notion and W3-D16-03's Owner Shared rather than main's F; the broader downstream sweep is already active in Fatih's PR #50 context. These out-of-scope rows will be rechecked at publication rather than overwritten during concurrent work. The task row and Decisions will receive this artifact's publication outcome.
+**Mirror check:** D6-04 Done and D6-02 Pending agree with merged main. Repo-to-mirror catch-up created the missing W4-D26-05 row from its exact frozen backlog ID. **Sync anomaly (2026-09-08, W3-D16-03):** Notion retained an obsolete task title and Owner Shared while main assigns the current history task to F; corrected its title/owner and added the canonical scope, preserving the original review notes. Both future tasks remain Pending. D6-04 and Decisions will receive the artifact PR link at publication; no future implementation is claimed.
 
 **Next:** finish review/publication of this artifact, then plan only D6-02's architecture data-flow work in #32. The mock RPC task D6-03 is already Done through PR #42; no duplicate harness work. Implementation of #32 has not started.
 
@@ -232,6 +232,31 @@ Recorded here deliberately alongside the cost. The sync runs **~3–4 minutes pe
 Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.nvmrc` pins the major, and pinning a patch buys churn rather than safety. If a patch ever *does* change build output, the hash comparison is what catches it — which is the argument for comparing hashes in the first place.
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
+
+## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
+
+The retroactive sweep over W2–W4 was worth running. The headline:
+
+**`W3-D20-02` — *"Failure modes: RPC timeout, insufficient balance, policy rejection, scheduler missed run. Each must alert, not fail silently"* — was scheduled for Day 20 (Tue Sep 22).** Guinea-pig B's crossing is Day 18 (**Sun Sep 20**). So the alerting for the failures that can occur unobserved during the Sunday window was scheduled **two days after that window**, inside a block the backlog itself labels *"Stage 2, off the critical path."*
+
+Three of its four failure modes are Stage 1 concerns. Nothing was wrong when written — Day 20 *was* the proof day before the two-stage rescope moved it.
+
+**Fixed:** the three Stage 1 modes are now **`W3-D17-05`, due before Fri Sep 18**. `W3-D20-02` keeps only *policy rejection*, which is genuinely Stage 2 and does not exist at all if the spike goes no-go.
+
+### The root cause is mine, and it has a rule now
+
+Restructuring Week 3 **reused task IDs for different work.** `W3-D16-01` stopped meaning "policy-signer e2e" and started meaning "bump execution"; `W3-D19-03` stopped meaning "alert emails" and started meaning the spike.
+
+Every ID still resolved, so nothing looked broken — while **`EVIDENCE.md` filed six rows against the wrong tasks** and `POLICY-SIGNER.md` claimed a due date belonging to the slack-ledger reconciliation. All repointed.
+
+**A dangling ID is detectable; a repurposed one is not.** A script can check that every referenced ID exists — and one now does, which is how the last stale reference was found. Nothing cheap can check that an ID still *means* what the referrer thought. So `CONVENTIONS` now says: **retire an ID, never repurpose it.** A gap in the sequence costs nothing.
+
+### Also fixed
+
+- **`W4-D24-03`** claimed *"cut order #3"* while the canonical list in the same file said #4 — the write path took #3 when it was added. Exactly the improvisation the "never improvise the cut order" rule exists to prevent, pointing at the wrong item under pressure.
+- **`W2-D11-01`** said the developer key is *"not the policy signer yet"* — implying a replacement that is no longer coming. It is the signing path Stage 1 ships and the README teaches.
+- **`W1-D4-04c`** still called guinea-pig B the subject for `W3-D20-02b`, an ID that now means something else.
+- **ADR-002's** body carries pre-rescope IDs. Left as written — an ADR records the reasoning we had at the time — with a mapping note at the top rather than a silent edit.
 
 ## 🧹 "Downstream sweep" is now the last step of every ADR
 
