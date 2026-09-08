@@ -205,7 +205,32 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## ✅ ADR-003 decided — and the database waits until after Sep 20
+## 🔧 The deferral broke two Week 3 tasks — resequenced
+
+Deferring the database to Week 4 left `W3-D16-02` and `W3-D16-03` assuming a store that will not exist on Sep 20. Caught while recording the decision, not after.
+
+- **`W3-D16-02`** no longer means *"build a lock."* Overlap is already structurally impossible via `concurrency:` + `timeout-minutes: 5` under a 15-minute cron, so Week 3's job is to **verify that guarantee for the real engine workflow, in both directions** — that a second run genuinely queues rather than races.
+- **`W3-D16-03`** persists **without a database**: `BumpRecord` to the Actions step summary and an uploaded artifact, plus the tx hash into `EVIDENCE.md` the same day. Evidence-grade, no service, cannot be cold on a Sunday.
+
+## ⚠️ The unmeasured Neon ceiling — written down as a task, not left as a comment
+
+The arithmetic swings entirely on the autoscale ceiling: **0.25 CU fits (60/100), 1.0 CU exhausts on the crossing date.** We never measured it.
+
+**Deliberately not measuring it now** — it cannot change the decision, and spending the five minutes would imply it might. The decision rests on three things that hold at any ceiling: the lock guards a case that cannot occur, the ledger is already the idempotent store, and the asymmetry runs backwards.
+
+But it is now `W4-D26-05`, sequenced **before any migration runs**, and ADR-003 carries a warning addressed to whoever reads it in Week 4: *the deferral was about when, and the reasons were never only about quota.* An unmeasured assumption written down is a task; left in a comment it is a trap.
+
+## 📖 New convention: run it, don't only read it
+
+Recorded in `CONVENTIONS` because of how this week's finding actually happened.
+
+Static reading said `claim()` can never take over a `pending` row — true, and reported as a deadlock bug. **Executing it meant being inside `persistence-store.mjs`, next to `prepare()`'s comment: *"Pending work never expires into a new send."*** The behaviour was deliberate and fail-closed, working exactly as designed.
+
+Running it was requested so the finding would be undeniable rather than arguable. It turned out to reveal the finding was **mis-framed** — which is a stronger argument for the practice than the one it was requested under. *Executing code puts you in contact with intent that reading a diff does not.*
+
+Three things changed: accuracy (*"you missed line 116"* would have been wrong), the **kind** of fix (a lease timer — the obvious repair for a deadlock — would reintroduce the exact double-send the design prevents), and how it lands on a person.
+
+## ✅ ADR-003 decided — and the database waits until after Sep 20## ✅ ADR-003 decided — and the database waits until after Sep 20
 
 **Runtime: Actions cron + Node 24. Persistence: PostgreSQL on Neon, adopted Week 4, deliberately not before the crossing.**
 

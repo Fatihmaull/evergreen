@@ -108,6 +108,23 @@ Supabase was worse for this shape: un-pausing is a manual dashboard action with 
 
 A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. **A paused or cold database on a Sunday costs the least recoverable proof in the grant.** Guinea-pig B's 24-hour window gives ~96 independent attempts; a held claim converts all 96 into one. Any coordination layer added before Sep 20 must therefore fail *open*, and the spike's — correctly, for its own stated goal — fails closed.
 
+### ⚠️ Unmeasured assumption — read this before provisioning anything
+
+**We never measured the Neon project's default autoscale ceiling.** The arithmetic above swings entirely on it:
+
+- at **0.25 CU** → 60 of 100 CU-hours, fits with room;
+- at **1.0 CU** → 240 of 100, exhausts on the crossing date.
+
+**Measuring it is the first step of Week 4 adoption, before any migration runs** — not a detail to resolve while wiring things up. An unmeasured assumption written down is a task; left in a comment it is a trap.
+
+**And it is not the load-bearing argument.** The decision to wait rests on three things that hold at *any* ceiling:
+
+1. The lock solves a problem that cannot currently occur — `concurrency` plus `timeout-minutes: 5` under a 15-minute cron already makes overlap structurally impossible.
+2. The ledger is already the idempotent store — after a bump, `remainingLedgers` is above threshold and the next run skips naturally.
+3. The cost asymmetry runs backwards — a fail-closed lock in front of a one-shot, unrepeatable deadline.
+
+So even at 0.25 CU with room to spare, provisioning before Sep 20 would still be wrong. **If you are reading this in Week 4 and reaching for Neon: the decision was about *when*, and these three reasons are why — re-read them before assuming the wait was only about quota.**
+
 ### Prerequisites for adopting the spike in Week 4
 
 Both were reproduced against the spike's own code on local Postgres 16.15, 2026-09-08. **Neither may be inherited silently.**
