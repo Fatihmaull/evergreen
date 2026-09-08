@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1-D6-02 architecture documentation in progress
+**Last updated:** 2026-09-08 · W1-D6-02 documentation complete; awaiting user review before PR
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,9 +11,15 @@
 
 ## Right now
 
-**2026-09-08 — architecture data-flow started (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, based on main `a7d500d` (PR #51), tracked in [#32](https://github.com/Fatihmaull/evergreen/issues/32). Repo and Notion agree: D6-02 Pending before starting; D6-03 and D6-04 Done. Scope is ARCHITECTURE.md plus task/status notes: current instance-only scan, planned engine/dashboard flows against the real shared types, one shared-entry example, and the accepted W3/W4 persistence split. No runtime code or shared-type changes. The mock RPC is already merged via #42. The unused persistence artifact remains separately in open [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); this branch does not include it. Local review precedes a new PR.
+**2026-09-08 — architecture data-flow complete (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, based on main `a7d500d` (PR #51), tracked in [#32](https://github.com/Fatihmaull/evergreen/issues/32). Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. The WIP branch is visible for coordination; no new PR or Issue has been opened. User review precedes PR publication. The unused persistence artifact remains separately in open [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); this branch does not include it.
 
-**Mirror:** Notion MCP is available; D6-02 is being marked In progress with this branch and scope. Earlier OAuth and pending-proposal notes below are historical.
+**Outcome:** three Mermaid diagrams show dependencies, the actual instance scan and the planned engine flow. The document names the real shared-type fields and producer/consumer boundaries, a synthetic two-consumer/one-entry example, inclusive TTL semantics, optional rent, per-payer signer resolution, and simulated/submitted/succeeded/failed records. It records the accepted W3 Actions history / W4 Neon split and adoption prerequisites. Current limitations are explicit: scans read instances only; repeated input IDs remain repeated consumer references; unavailable TTL is skipped by the current CLI threshold helper. Broader discovery/consumer deduplication remain W2-D8-03/04, and future engine decisions must handle incomplete observations. No new product decision, runtime implementation or shared-type change is claimed.
+
+**Validation:** `pnpm check` passed conflict detection, typecheck (including 17 negative type examples), lint, formatting and **63 offline tests** (34 workspace + 11 TTL + 9 scheduler + 9 email). The count excludes the seven persistence tests still in PR #52. All 22 document links were checked for valid local targets where applicable, and all 11 explicit task IDs resolve in BACKLOG. The three diagrams passed structural checks; browser rendering was not exercised. Runtime source, workflows, dependency files and original evidence match main; prior branch heads, stash and .env content/permissions are preserved. No new chain read/transaction, database run or email was needed: existing fixture-based tests and the merged scan proof cover the documented behavior.
+
+**Mirror:** D6-02 was set to Done via Notion MCP with the documented outcome, 63-test validation and explicit pending user-review/PR boundary; queried again by exact ID to verify status and notes. Earlier OAuth notes below are historical.
+
+**Next:** review the documentation locally, then decide PR publication for #32. The shared W1 review gate in #44 remains separate.
 
 ## Earlier session notes
 
