@@ -66,6 +66,20 @@ SELECT "userDefined:ID" AS task_id, Status FROM "collection://..." WHERE Week = 
 
 This belongs in the same family as the testnet guard that refused everything and the local gate that was weaker than CI: **a check that fails in the safe-looking direction, silently.** Anyone writing an ad-hoc query later will hit it.
 
+### Run it, don't only read it — execution surfaces intent
+
+Reading a diff tells you what code does. **Running it puts you in the file, next to the comments, in contact with what the author was trying to do.**
+
+*Learned 2026-09-08.* Static reading of the persistence spike said `claim()` can never take over a `pending` row — true, and reported as a deadlock bug. Executing it against a local Postgres meant opening `persistence-store.mjs`, where `prepare()`'s own comment reads *"Pending work never expires into a new send."* The non-reclaimability was **deliberate and fail-closed**, working exactly as designed against its own goal.
+
+That changed the finding in three ways, and every one of them mattered:
+
+- **Accuracy** — "you missed line 116" would have been wrong.
+- **The fix changes kind** — a lease timer, the obvious repair for a deadlock, would reintroduce precisely the double-send the design prevents. Only `getTransaction()` reconciliation respects the intent.
+- **How it lands on a person** — it would have made a teammate defend a decision they made on purpose.
+
+Same family as the testnet guard that refused everything and the local gate weaker than CI: **the mistake is trusting a reading over an observation.** Run the thing before you report on it, especially when the report will redirect someone's work.
+
 ### A divergent ID is worse than a wrong status
 
 A wrong status is a **visible mismatch** — the diff catches it and someone fixes it. A divergent ID does not fail; it **quietly stops matching.** The row falls out of scope entirely while the diff still reads green, so the one row that most needed checking is the one no longer being checked.
