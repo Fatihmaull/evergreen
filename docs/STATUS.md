@@ -205,6 +205,33 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
+## 🔴 `W1-D5-01` npm deadline is **Sep 16**, not Week 4 — corrected
+
+I had this wrong. The package name is not just a publish-week concern.
+
+It appears in the README quickstart, `docs/ONBOARDING.md` and the demo script — and **`W2-D14-03` captures CLI screenshots on Sep 16 as evidence snapshot #2.** Screenshots showing `npx evergreen` against a published name of `evergreen-soroban` are wrong evidence, retaken during publish week. That is precisely the expensive version this task exists to prevent, arriving eight days earlier than I said.
+
+**Order matters too: npm before Cloudflare.** Cloudflare will succeed; npm can *fail*, because the name may be unobtainable. Do the thing that can fail while there is still day left to react.
+
+## ⚠️ A Cloudflare account does not decide persistence
+
+Recorded in ADR-003, because the pull is obvious once the account exists.
+
+| Part | Status | Blocked on the SDK question? |
+|---|---|---|
+| Dashboard hosting | **Settled — Cloudflare Pages** | No — Pages is static and never touches the SDK |
+| Engine runtime + persistence | **Open** | **Yes, blocking** |
+
+*Does the Stellar SDK run in the Workers runtime?* is still unanswered. If it does not, the engine is not on Cloudflare, and reaching D1 from elsewhere is awkward enough to be a bad default arrived at by momentum rather than decision. Timeboxed to one afternoon; past that, the ambiguity **is** the answer and the Actions cron floor carries us.
+
+## 📋 Where W1 actually risks slipping — not the account tasks
+
+The milestone gate is met, so **W1 does not slip on the gate.** Fatih's four remaining items total ~20 minutes.
+
+It slips on two things, both Rakha's: **`W1-D6-04` persistence (ADR-003)**, which blocks Week 3, and **`W1-D6-02` architecture data-flow**, not started, which is what makes `shared-types` legible to whoever touches it next. A spike branch for the first is pushed and in flight.
+
+**At the review, say plainly whether those two close.** If not: name which W2 day absorbs them and what moves out to make room. *"D6-02 slides to Thursday and batch scan goes"* is a decision; letting it ride along quietly is not.
+
 ## 🎯 W1 MILESTONE GATE MET — 2026-09-08, a day early
 
 The gate: *"if `scan` doesn't return real testnet data by end of Sep 9, W2 starts with this task and the first P1 item gets cut."* It does.
