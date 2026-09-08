@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1-D6-02 published in PR #53; synchronized with merged PR #52
+**Last updated:** 2026-09-08 · W2-D8-03 implementation started
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
-**Current week:** W1 — Foundation
+**Current week:** W2 — Core CLI
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
 ## Right now
+
+**W2-D8-03 — In progress (Rakha):** user authorized the reviewed four-entry scan plan. Branch `feat/W2-D8-03-scan-entry-types` starts from merged main `321656b`; WIP branch is published for ownership visibility. D8-01/02 remain Fatih's TTL work, D8-04 remains Rakha's next task. Exact-ID Notion validation confirmed all four D8 rows, owners and Pending statuses before starting; D8-03 is now In progress. Scope: instance/code discovery, explicit persistent/temporary key input, truthful coverage, batched reads and fixture-based validation. Preserve inclusive TTL semantics; no transaction path is added.
+
+**W1 carry-forward:** #53 and #58 are merged; Fatih confirmed the W2 split and reporting policy in [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5587139386). Closeout #57 closed without merging; original remote head `98e62e2` and synchronized local branch at `01a135c` retain the report/evidence. Its W1 completion metadata is separate from this main-based branch. W1 Task Tracker was reconciled to 48 Done / 2 In progress, all 14 Rakha tasks Done. User-confirmed workflow: Evergreen Tasks is the operational Notion backlog; Task Tracker is a dated narrative refreshed per week at week gates. Existing database sync remains at session/merge boundaries. W1-D4-09 drift checks and W1-D7-04 closeout continue; no new drift measurement is claimed.
+
+## Earlier architecture publication (since merged)
 
 **2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
 
