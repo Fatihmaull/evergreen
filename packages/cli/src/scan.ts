@@ -1,5 +1,5 @@
-import type { ScanResult } from '@evergreen/shared-types';
-import { estimateEndsAt, isLive } from '@evergreen/core';
+import type { ScanResult } from '@evergreen-stellar/shared-types';
+import { estimateEndsAt, isLive } from '@evergreen-stellar/core';
 
 /**
  * Format a scan for humans. The CLI is thin: it parses, calls core, formats,

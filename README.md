@@ -32,7 +32,7 @@ The engine's signing key is a hot key that sits on a server with lumens on it â€
 *(Available once packages are published â€” W4-D27.)*
 
 ```bash
-npx evergreen scan <contract-id>
+npx @evergreen-stellar/cli scan <contract-id>
 ```
 
 ## Documentation

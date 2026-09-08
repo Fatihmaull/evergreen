@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import type { LedgerKey } from '@evergreen/shared-types';
+import type { LedgerKey } from '@evergreen-stellar/shared-types';
 import type { LedgerEntryReader, RawLedgerEntry } from '../src/rpc.js';
 
 /**

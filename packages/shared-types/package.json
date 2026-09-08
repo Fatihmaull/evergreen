@@ -1,5 +1,5 @@
 {
-  "name": "@evergreen/shared-types",
+  "name": "@evergreen-stellar/shared-types",
   "version": "0.0.0",
   "private": true,
   "description": "The types every Evergreen module speaks. Changing one ripples across every workstream.",

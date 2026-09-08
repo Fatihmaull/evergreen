@@ -233,7 +233,30 @@ Node differs by patch (Rakha 24.13.0, Fatih 24.20.0) and that is deliberate: `.n
 
 Fatih's everyday account `fatih-dev` — `GA66NAB6SLNZY737IXYHSZCO53EX5R3INKGJW34VRH3RNLAVIA456TJW` — is funded and verified live on Horizon. Secrets stay in each machine's `~/.config/stellar/` and have never entered the repo.
 
-## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
+## ✅ `W1-D5` closed — npm org owned, dashboard live
+
+**npm: we own the ORG, not just a name.** `evergreen` was squatted, so instead of reserving an unscoped fallback Fatih took the scope: **`evergreen-stellar`**. That is strictly better than the plan — nothing in `@evergreen-stellar/*` can be squatted, no placeholder publishes are needed, and **the Sep 16 deadline pressure is gone.** The name should still land before `W2-D14-03`'s screenshots, but it is no longer a race.
+
+Packages renamed to **`@evergreen-stellar/cli`** and **`@evergreen-stellar/core`**, with `shared-types` moved too — it is private and never published, but it sat in a scope we do *not* own, which is a trap if anyone ever flips `private: false`.
+
+> ⚠️ **`publishConfig: { "access": "public" }` is now set in both published packages.** Scoped packages default to **private**, and private requires a paid plan — without this `W4-D27-02` either fails outright or silently ships a private package. It lives in `package.json` rather than depending on someone remembering `--access public` on the day.
+
+**The command is unchanged.** `bin` maps to `evergreen`, so only the install line moves to `npx @evergreen-stellar/cli`. Propagated to both READMEs, the backlog, and the demo script task.
+
+**Cloudflare Pages: live at https://evergreen-stellar.pages.dev** — verified HTTP 200 serving our page, not the dashboard's word for it. Which turns out to be the point:
+
+### Two operational findings, both recorded in `SETUP.md`
+
+**Cloudflare's deploy UI misreports progress.** The build log showed success at 17:30:06 while the step indicator sat on *"Initializing build environment"* for another **1 minute 34 seconds**, later steps showing `—`. From the dashboard alone you would conclude it had hung. **Verify a deploy by loading the URL, not by reading the dashboard** — the reported state and the actual state diverged, and only the actual state was checkable. Third family member after the testnet guard and the weaker-than-CI local gate.
+
+**The Cloudflare account is shared, and Workers quota is account-wide.** It already runs `focustudio.online` and a Worker called `focuswebstudio`. Irrelevant to Pages; **relevant to ADR-003**, because Workers free-tier limits are per *account*, so an existing Worker already consumes part of any engine budget. **That is now two providers and two unverified quota assumptions** — Neon's autoscale ceiling and this — both belonging to the Week 4 revisit.
+
+### Two new tasks, both sequenced before the first publish
+
+- **`W4-D27-00`** — enable 2FA on the npm account. Currently disabled, and a public scope other people install from with an unprotected account is a supply-chain risk. Cheapest now, while nothing depends on the scope.
+- **`W4-D27-00b`** — invite Rakha to the org. Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership. Blocked on his npm username, tracked so it does not surface on Sep 29.
+
+## 🔴 Orphan sweep found a real sequencing bug## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
 
 The retroactive sweep over W2–W4 was worth running. The headline:
 

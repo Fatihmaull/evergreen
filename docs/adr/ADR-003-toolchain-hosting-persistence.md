@@ -124,6 +124,22 @@ A double bump costs a few testnet stroops and a duplicate row, and damages no ev
 
 So even at 0.25 CU with room to spare, provisioning before Sep 20 would still be wrong. **If you are reading this in Week 4 and reaching for Neon: the decision was about *when*, and these three reasons are why — re-read them before assuming the wait was only about quota.**
 
+### A second unverified quota assumption — Cloudflare, discovered 2026-09-08
+
+The Cloudflare account created for Pages is **shared, not fresh**: it already runs the domain `focustudio.online` and a Worker named `focuswebstudio`.
+
+Irrelevant to Pages. **Relevant here, because Workers free-tier limits are per *account*, not per project** — an existing Worker already consumes part of any budget a future engine would have. So if Workers is ever revisited, the available headroom is not the published free-tier figure.
+
+**That makes two providers and two unverified quota assumptions** — Neon's autoscale ceiling and Cloudflare's account-wide Workers budget. Both belong to the Week 4 revisit, before anything is provisioned, and neither changes the decision to wait.
+
+### Corrections from the spike author, 2026-09-08
+
+Recorded because they narrow claims made above, and an ADR that only keeps the flattering half of a review is not a record:
+
+- **Neon CU-hours depend on average compute usage, not the ceiling alone.** The 240-hour figure above assumes billing at the ceiling for the full idle window; actual consumption could be materially lower. The arithmetic remains a reason to *measure before provisioning* rather than a proof of exhaustion.
+- **The spike uses conditional row writes, not session advisory locks.** So the Supabase transaction-pooler concern — that a pooler silently breaks session-scoped locks — does **not** apply to this implementation. It remains a real hazard for anyone who reaches for advisory locks later.
+- **A workflow concurrency group only coordinates runs in the same group.** It prevents overlapping *runs*; it does not resolve a transaction already in flight on chain. So "overlap is structurally impossible" is true of the scheduler and not of the chain, which is exactly what the `getTransaction()` reconciliation prerequisite exists to cover.
+
 ### Prerequisites for adopting the spike in Week 4
 
 Both were reproduced against the spike's own code on local Postgres 16.15, 2026-09-08. **Neither may be inherited silently.**
