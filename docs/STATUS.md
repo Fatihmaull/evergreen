@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1 closeout synchronized with merged main and validated locally
+**Last updated:** 2026-09-08 · W1 Task Tracker reconciled; weekly narrative workflow confirmed
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,13 +11,17 @@
 
 ## Right now
 
+**2026-09-08 — W1 narrative mirror refreshed (`W1-D4-11`):** user confirmed Evergreen Tasks as the operational backlog in Notion and Task Tracker as a weekly narrative, refreshed at each week's closing review. All 50 W1 database IDs, owners and statuses matched the local canonical backlog. Updated the [Task Tracker W1 section](https://www.notion.so/3d2e2030b2ce81c48b03ebbe4f27e4b5), its snapshot summary and reading guidance via Notion MCP. Read-back confirms 50 unique task rows: 48 Done / 2 In progress, including **all 14 Rakha-owned tasks Done**. Recurring W1-D4-09 and shared closeout W1-D7-04 remain In progress; PR #57 is not represented as merged. Twelve missing rows were added, C's legacy alias was corrected to W1-D4-07, and formal owners were reconciled. Future-week sections are unchanged and explicitly labeled as unreviewed drafts. Database statuses were already correct and were not rewritten; no fresh drift measurement or Testnet transaction was performed.
+
+**Mirror anomaly / workflow concern:** the manual W1 snapshot retained an obsolete C ID and owner assignments even after the database had been corrected. This is another manifestation of the recorded metadata drift: multiple manually maintained surfaces can preserve stale claims independently. The agreed boundary is now explicit in CONVENTIONS and the Notion page: operational database at session/merge boundaries, dated narrative snapshots at week gates, with presence/owner/status validation.
+
 **2026-09-08 — local closeout synchronization (`W1-D7-04`):** the user requested codebase synchronization before discussing publication or changing Notion. Local main was fast-forwarded from `b0f0d0b` to `321656b`, including merged PRs [#56](https://github.com/Fatihmaull/evergreen/pull/56), [#53](https://github.com/Fatihmaull/evergreen/pull/53) and [#58](https://github.com/Fatihmaull/evergreen/pull/58). The existing `docs/W1-D7-03-week-one-review` branch is now integrated with that main. Both main and the combined closeout tree passed `pnpm check`: conflict detection, the 132-task ID check, typecheck, lint, formatting and all 70 offline tests, after resolving the sandbox's subprocess permission failure. Original evidence and all three architecture diagrams are unchanged; runtime code, workflows, tooling and dependency files match current main. No unresolved conflicts or missing local links in the review and architecture documents remain.
 
 **GitHub publication state:** #53 merged at `59c3cf8`. #57 closed without a merge when its architecture base branch was deleted at 14:51:04 UTC; the closeout head `98e62e2` is still preserved locally and remotely. No human comment, inline review comment or formal review on #57 was returned by GitHub during this check. Its report and recovered evidence are not in main. Reopening/retargeting it, or publishing a replacement linked to it, remains a separate step; no remote write is part of this synchronization.
 
 **Decisions and task state:** Fatih authored and merged #58, accepting ADR-005 and confirming the W2–W4 carry-forward. Temporary-entry near-deletion reporting belongs in W2; auto-bump policy remains W3-D15-02b. These decisions no longer await acceptance. This branch retains 48 Done / 2 In progress in W1: D7-03/05/06 reports are complete, D7-04 awaits review of the synchronized closeout, and recurring D4-09 continues through Sep 20. The integrated backlog has 132 tasks; W2 remains 23 Pending.
 
-**Notion boundary deferred:** the five closeout/drift task IDs, statuses and owners matched the existing work branch before synchronization. Per the user's codebase-first scope, mirror updates remain pending for W1-D6-02 and W1-D7-03/04/05/06, the accepted ADR-005/carry-forward notes, and the Project Brain. The separate Task Tracker is a manual Sep 5 snapshot, unlike the current task database; its stale boxes do not mean the Day 4–6 work is unfinished. Also pending: the missing W3-D18-02c row and the swapped W2-D13-02/03 task descriptions. These are recorded discrepancies, not corrected mirror state.
+**Remaining Notion catch-up:** W1 Task Tracker is now refreshed as described above. Database outcome/publication notes remain pending for W1-D6-02 and W1-D7-03/04/05/06, alongside the accepted ADR-005/carry-forward knowledge notes and the Project Brain; these were outside the requested W1 Task Tracker correction. Also pending: the missing W3-D18-02c database row and the swapped W2-D13-02/03 database task descriptions. The W1 database statuses and owners already match the repo. These remaining discrepancies are recorded, not claimed corrected.
 
 ## Original W1 closeout publication — superseded by the synchronization above
 
