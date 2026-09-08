@@ -193,7 +193,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ---
 
-**Review outcome (2026-09-08):** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md). `W1-D7-04` remains In progress for shared acceptance in #44; no unrecorded cut or new task ownership is assumed.
+**Review outcome (2026-09-08):** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md), published in [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after final review. `W1-D7-04` remains In progress for shared acceptance in #44; no unrecorded cut or new task ownership is assumed.
 
 ## Week 2 — Core CLI, Deliverable 1 (Sep 10 – Sep 16)
 

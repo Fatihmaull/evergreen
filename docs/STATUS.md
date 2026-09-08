@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1 final publication review complete; shared review remains open
+**Last updated:** 2026-09-08 · W1 review published in PR #57; shared review remains open
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,7 +11,7 @@
 
 ## Right now
 
-**2026-09-08 — W1 review prepared (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. It is stacked on architecture PR #53 (`bcc41c7`), with main `b0f0d0b` integrated. Final review and PR publication were authorized on Sep 8. The closeout PR is prepared against the architecture branch so that its diff stays separate from #53.
+**2026-09-08 — W1 review prepared (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. It is stacked on architecture PR #53 (`bcc41c7`), with main `b0f0d0b` integrated. After user-authorized final review, [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout against the architecture branch, keeping its diff separate from #53. Review is requested from @Fatihmaull. Merge #53 and #56 first, then synchronize and retarget #57 to main before merging it.
 
 **Evidence:** a fresh instance scan passed against A on Sep 8. Nineteen historical Sep 5 bootstrap transactions were recovered as full RPC responses plus actual explorer screenshots, including A/B/C deployment, seeding and calibration. With the five unchanged setup/boundary records, the indexed W1 inventory contains 24 unique transactions. Late capture dates are explicit. No new transaction was submitted. See the [snapshot and recovery manifest](evidence/2026-09-08-w1-review/README.md).
 
@@ -23,7 +23,7 @@
 
 **Validation:** final `pnpm check` passed conflict detection, typecheck (including negative type examples), lint, formatting and 70 offline tests. Verified all 19 recovered transaction bundles, 158 local documentation links and the new task references. Final publication review found [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) registers the separate C spare-proof task. The earlier fallback reassignment was removed from this diff; retain the existing C row and merge #56's task registration before closeout reaches main. Runtime/workflows/dependencies and original evidence match the baseline; .env content/permissions, stash and other prior branch heads are preserved. PR #53 at bcc41c7 has passing CI and Pages checks and remains open.
 
-**Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. This was the initial WIP handoff; the user subsequently authorized final review and PR publication. Merge remains a separate review action.
+**Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. This was the initial WIP handoff. The [publication update](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586699923) now links #57 and records the #53/#56 merge order. Both comments were read back. The published review commit `105ccfb` passed [GitHub CI](https://github.com/Fatihmaull/evergreen/actions/runs/34238108025) and Pages checks. D7-03/04/05/06 plus Project Brain, Knowledge Base and Decisions carry the PR link; MCP read-back confirmed the links and retained statuses. #44 remains open for shared decisions; no merge was performed.
 
 ## Architecture publication
 
