@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1 evidence and reports prepared; shared review remains open
+**Last updated:** 2026-09-08 · W1 final publication review complete; shared review remains open
 **Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,7 +11,7 @@
 
 ## Right now
 
-**2026-09-08 — W1 review prepared (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. It is stacked on architecture PR #53 (`bcc41c7`), with main `b0f0d0b` integrated. The closeout branch is a coordination/review draft; no closeout PR has been opened.
+**2026-09-08 — W1 review prepared (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. It is stacked on architecture PR #53 (`bcc41c7`), with main `b0f0d0b` integrated. Final review and PR publication were authorized on Sep 8. The closeout PR is prepared against the architecture branch so that its diff stays separate from #53.
 
 **Evidence:** a fresh instance scan passed against A on Sep 8. Nineteen historical Sep 5 bootstrap transactions were recovered as full RPC responses plus actual explorer screenshots, including A/B/C deployment, seeding and calibration. With the five unchanged setup/boundary records, the indexed W1 inventory contains 24 unique transactions. Late capture dates are explicit. No new transaction was submitted. See the [snapshot and recovery manifest](evidence/2026-09-08-w1-review/README.md).
 
@@ -21,10 +21,9 @@
 
 **Notion sync anomaly (2026-09-08):** all 50 W1 IDs were present and statuses matched before this closeout. Eleven historical Owner fields differed from BACKLOG: `W1-D4-00/04/04b/07/08/12/11/10/04c/05/06`. The repo assigns Fatih to ten and Shared to 04b; Notion had Agent, Shared or Rakha. Owner metadata was corrected to the formal backlog assignment while retaining historical executor notes. This repeated metadata drift shows that status-only validation is insufficient; compare IDs, status and owner at handoff boundaries. Final MCP read-back confirms all 50 W1 IDs, statuses and owners match. Project Brain now shows Sep 8/day 6, 24 days to deadline and 48/50 W1 tasks complete; Knowledge Base and Decisions link the review and recovered evidence.
 
+**Validation:** final `pnpm check` passed conflict detection, typecheck (including negative type examples), lint, formatting and 70 offline tests. Verified all 19 recovered transaction bundles, 158 local documentation links and the new task references. Final publication review found [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) registers the separate C spare-proof task. The earlier fallback reassignment was removed from this diff; retain the existing C row and merge #56's task registration before closeout reaches main. Runtime/workflows/dependencies and original evidence match the baseline; .env content/permissions, stash and other prior branch heads are preserved. PR #53 at bcc41c7 has passing CI and Pages checks and remains open.
 
-**Validation:** final `pnpm check` passed conflict detection, typecheck (including negative type examples), lint, formatting and 70 offline tests. Verified all 19 recovered transaction bundles, 158 local documentation links and the new task references. Corrected C's spare-proof row to existing W3-D18-02b instead of an unregistered task alias. Runtime/workflows/dependencies and original evidence match the baseline; .env content/permissions, stash and other prior branch heads are preserved. PR #53 at bcc41c7 has passing CI and Pages checks and remains open.
-
-**Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. No new closeout PR or merge was performed; the draft is ready for the user's final review before PR publication.
+**Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. This was the initial WIP handoff; the user subsequently authorized final review and PR publication. Merge remains a separate review action.
 
 ## Architecture publication
 
@@ -40,7 +39,7 @@
 
 **Synchronization:** the earlier STATUS introduction conflict retained both task histories. The follow-up sync with #54/#55 merged cleanly, retaining the npm scope and ADR refinements from main. The architecture diagrams and shared-type mappings are unchanged; the PR diff remains three Markdown files.
 
-**Next:** PR #53 awaits CI and reviewer approval; it has not been merged. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
+**Next:** PR #53 has passing CI and awaits reviewer approval/merge. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
 
 ## Earlier session notes
 

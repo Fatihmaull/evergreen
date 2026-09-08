@@ -6,8 +6,10 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 
 - Merged baseline: main `b0f0d0b`, including persistence artifact PR #52, npm/Pages PR #54 and decision rationale PR #55.
 - Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53), synchronized at `bcc41c7`, complete but awaiting review/merge.
-- Closeout: `docs/W1-D7-03-week-one-review`, stacked on #53. Review its incremental diff against `bcc41c7`. A pushed coordination branch is not a reviewed or merged PR.
+- Closeout: `docs/W1-D7-03-week-one-review`, stacked on #53. Review its incremental diff against `bcc41c7`. The user authorized final review and PR publication on Sep 8; the PR targets the architecture branch while #53 is open. Retarget and synchronize with main after #53 merges.
 - [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch records **48 Done, 2 In progress**. The latter are recurring drift `W1-D4-09` and shared adjustments `W1-D7-04`. Open-branch completion is explicitly distinct from merged main.
+
+**Concurrent cleanup:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) registers C's separate spare-proof task and adds an ID checker. This closeout leaves C's original evidence-row ID intact rather than reassigning it to B. Merge #56 before this closeout reaches main; refresh future-week counts when that additional task lands. The counts below describe this branch, without the unmerged cleanup.
 
 ## Foundation checklist — W1-D7-03
 
