@@ -211,6 +211,8 @@ A lost acknowledgement or unresolved transaction is not sufficient to declare fa
 
 [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md) accepts **Actions + Node 24, with PostgreSQL on Neon adopted in W4 after the Sep 20 proof**. W1 does not require a hosted database. The unused spike was merged separately in [PR #52](https://github.com/Fatihmaull/evergreen/pull/52); it remains an experiment outside the engine runtime.
 
+**Frame the choice as atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap, and `W3-D16-02` promises we never double-bump an entry. That guarantee needs a durable write the engine can use as a lock or a last-bumped record — so the question is *"what gives a scheduled job an atomic-enough write?"*, not *"where do we keep history?"*. The two questions pick different answers: JSON committed to the repo is adequate history and useless as a lock, which disqualifies it.
+
 | Stage | Coordination and history |
 |---|---|
 | Current W1 | Read-only smoke workflow; no engine history writer. The smoke uses one `scheduler-smoke` concurrency group and does not cancel an active run. |

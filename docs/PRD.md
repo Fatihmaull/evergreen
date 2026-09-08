@@ -130,7 +130,7 @@ Reads from the same data the CLI/engine produce. `evergreen-check` GitHub Action
 - `evergreen-check` GitHub Action published and usable in a real repo. *(Deliverable 3)*
 - Docs + 3–5 min demo video + published npm packages. *(Deliverable 3)*
 
-### Candidate headline capability — pending measurement (`W2-D12-02b`)
+### Candidate headline capability — pending measurement (`F-01`)
 
 **Shared code-entry detection.** Contracts deployed from identical Wasm share a single `ContractCode` ledger entry (`docs/SOROBAN-PRIMER.md`). That is the factory pattern — per-user vaults, per-pair pools, per-market instances — so one entry expiring breaks every instance at once, while a per-contract scan reports them all healthy right up to the outage.
 
