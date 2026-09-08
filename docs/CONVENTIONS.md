@@ -4,13 +4,13 @@ Rules an agent or human can follow without asking. If something here blocks good
 
 ## Git
 
-**Branches:** `<type>/<task-id>-<slug>` — e.g. `feat/W2-D8-01-ttl-math`, `fix/W3-D18-02-idempotency`.
+**Branches:** `<type>/<task-id>-<slug>` — e.g. `feat/W2-D8-01-ttl-math`, `fix/W3-D16-02-idempotency`.
 
 **Commits:** Conventional Commits, with the task ID in the subject.
 
 ```
 feat(cli): add scan command [W1-D7-01]
-fix(engine): prevent double-bump across overlapping runs [W3-D18-02]
+fix(engine): prevent double-bump across overlapping runs [W3-D16-02]
 docs(primer): add getLedgerEntries response fixture [W1-D4-05]
 chore(repo): pin node version [W1-D3-02]
 ```

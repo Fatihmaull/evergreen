@@ -29,6 +29,10 @@ jobs:
       # stops the file meaning what it says. Cheapest check we have; runs first.
       - run: pnpm check:conflicts
 
+      # A doc referencing a task ID that is not in BACKLOG is work nobody tracks.
+      # Catches dangling IDs, NOT repurposed ones — see docs/CONVENTIONS.md.
+      - run: pnpm check:task-ids
+
       - run: pnpm typecheck
 
       - run: pnpm lint

@@ -118,7 +118,7 @@ Wraps the CLI's `scan` and fails a CI job when any contract is below threshold. 
 
 Bump history is written by the engine and read by the dashboard. The concrete choice is ADR-003, pending the Week 1 hosting decision (W1-D5-03 → W1-D6-04).
 
-**Frame the choice as atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap, and `W3-D18-02` promises we never double-bump an entry. That guarantee needs a durable write the engine can use as a lock or a last-bumped record — so the question is *"what gives a scheduled job an atomic-enough write?"*, not *"where do we keep history?"*. The two questions pick different answers: JSON committed to the repo is adequate history and useless as a lock, which disqualifies it.
+**Frame the choice as atomicity, not storage.** ADR-001 accepts that scheduled runs can overlap, and `W3-D16-02` promises we never double-bump an entry. That guarantee needs a durable write the engine can use as a lock or a last-bumped record — so the question is *"what gives a scheduled job an atomic-enough write?"*, not *"where do we keep history?"*. The two questions pick different answers: JSON committed to the repo is adequate history and useless as a lock, which disqualifies it.
 
 A `BumpRecord` carries: contract ID, entry key, ledger before/after, tx hash, timestamp, decision reason, outcome, **payer**, and **which signer produced it** (Stage 1 or Stage 2) — the last so evidence captured before and after the policy signer lands reads as a progression rather than a contradiction.
 
