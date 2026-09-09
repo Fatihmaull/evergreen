@@ -6,7 +6,7 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 
 - Current merged baseline: main `321656b`, including task-ID checker PR #56, architecture PR #53 and ADR-005/carry-forward PR #58, in addition to the earlier W1 foundations.
 - Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) merged as `59c3cf8`; its former head branch, used as #57's base, was subsequently deleted.
-- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 local follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; follow-up publication is pending Rakha review. The PR is open and has not merged.
+- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 local follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; Rakha reviewed and authorized publication, and the follow-up is now pushed to #57. The PR is open and has not merged.
 - [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch retains **48 Done, 2 In progress**. Recurring drift `W1-D4-09` continues; `W1-D7-04` now awaits review of the synchronized closeout, not ADR-005 acceptance. Completion on this branch remains distinct from integration into main.
 
 **Task registration:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) is integrated. C retains its separate `W3-D18-02c` spare-proof task; the backlog now contains 132 tasks (W3: 27). Its Notion row and future-week mirror counts still need catch-up; this synchronization is local codebase work.
@@ -67,7 +67,7 @@ The earlier onboarding-agent test also found a mock-RPC reference before impleme
 
 ## Decisions and W2 handoff — W1-D7-04
 
-Fatih confirmed the carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). Issue #44 remains open for closeout; this synchronized report still needs review and publication. The adjustments are:
+Fatih confirmed the carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). Issue #44 remains open for closeout; this synchronized report is published for shared review. The adjustments are:
 
 1. Reuse the existing inclusive boundary proof and core helpers at W2-D8-01. Remaining TTL 0 is the final live ledger; below zero is beyond it. Temporary data is deleted, persistent data is archived.
 2. Preserve the accepted Actions + Node runtime and W4 Neon adoption. Low TTL is not proof that a prior transaction failed. W3-D16-02 must reconcile known transaction hashes and validity bounds; W3-D16-03 owns the interim history. A timeout or `NOT_FOUND` alone must not be rewritten as success or safe new submission.
@@ -105,4 +105,4 @@ No new Testnet read or transaction, email, database provisioning, GitHub publica
 
 Preserved Fatih's recovery of #57 and the local weekly Task Tracker policy, corrected stale current-state wording in STATUS/BACKLOG and this report, and retained main's architecture diagrams and atomicity explanation. ADR-005 is accepted; D7-04 remains In progress for shared closeout acceptance. The combined W1 tree passed `pnpm check` with all 70 offline tests; the final follow-up edits only update Markdown status/reporting. Runtime, dependencies, workflows, the evidence index and raw evidence match remote #57.
 
-PR #59 remains separately open. Its rounded drift observation is useful; the claim of an exact 5.000 s cadence is stronger than the script's one-decimal drift output establishes. This follow-up records that review finding without importing or changing Fatih's PR. No new transaction or drift measurement was made. Follow-up commits remain local pending Rakha's review; no PR update or GitHub response has been sent.
+PR #59 remains separately open. Its rounded drift observation is useful; the claim of an exact 5.000 s cadence is stronger than the script's one-decimal drift output establishes. This follow-up records that review finding without importing or changing Fatih's PR. No new transaction or drift measurement was made. Rakha reviewed and authorized publication; follow-up commit `9454df4` is now pushed to #57. Shared closeout acceptance remains pending in #44.
