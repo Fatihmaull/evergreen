@@ -683,7 +683,28 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-08 17:25 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 
-Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943. The calibration is holding, and at this point the *absence* of drift is itself the finding: testnet has been closing at a steady 5.000 s/ledger for three days. That is not a licence to stop checking — the eleven days between now and B's crossing are exactly where a validator hiccup would land, and the reading that matters is the one taken after something changes, not the three taken before.
+Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943.
+
+**What a zero reading does and does not establish.** Rakha's review note argued that `+0.0h` cannot say anything about the real cadence, because the script assumes 5.000 s/ledger — so a zero would just be the assumption echoed back. Worth checking rather than conceding, and the script's own arithmetic settles it:
+
+```python
+seconds_away = (crossing_ledger - current) * SECONDS_PER_LEDGER
+projected    = now + seconds_away
+```
+
+`crossing_ledger` is fixed on chain, but `current` and `now` are both observed independently. Between two readings the projection moves by `T − 5N` (wall seconds elapsed, minus five times the ledgers elapsed). **If the chain ran slower than 5.000 s/ledger, `N` would lag `T/5` and the projection would slide later; faster, and it slides earlier.** The assumption multiplies a measured delta rather than replacing it, so a real deviation cannot hide behind it. Drift printed to one decimal bounds it: `|drift| < 0.05h` over the ~59,800 ledgers between the first and fourth readings puts the **average** cadence within ≈0.003 s/ledger of 5.000.
+
+Confirmed outside the script — two `getLatestLedger` observations, 16.3 hours apart:
+
+```
+2026-09-08 17:25 UTC  ledger 4,572,943
+2026-09-09 09:40 UTC  ledger 4,584,643
+58,510 s / 11,700 ledgers = 5.0008 s/ledger
+```
+
+So the correction runs the other way: the finding is real, but my original wording claimed more than the method supports. **A zero reading measures the average over the interval, not steadiness within it** — excursions that cancel are invisible to it, which is precisely how a validator hiccup could pass unnoticed between two checks. *(Recorded because the reflex on receiving a correction is to accept it; this one was half right, and the half that was wrong would have discarded a genuine measurement.)*
+
+None of which is a licence to stop checking. The eleven days before B's crossing are exactly where a hiccup would land, and the reading that matters is the one taken after something changes, not the four taken before.
 
 > ⚠️ **B and C can now sit in the engine config early** — calibrated against a threshold, the engine correctly does nothing until the crossing. But that safety depends on the configured threshold matching the calibration, so adding them is a deliberate verified step: add, run **dry-run**, confirm the engine reports **no action needed**, only then run live. A threshold accidentally too high bumps them immediately and destroys both proofs silently. Procedure in `docs/SETUP.md`.
 
