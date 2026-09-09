@@ -95,7 +95,7 @@ Actions cron is already proven end to end: a genuine `schedule` event read testn
 
 **The ledger is the durable, idempotent source of truth, and the risk asymmetry is inverted.**
 
-After a bump, `remainingLedgers` is above threshold, so the next run scans and skips. Before it, the next run scans and resubmits. The bump decision is idempotent *without* any coordination layer, because the operation records itself on chain and the chain is what the next run reads.
+After a confirmed bump that raises `remainingLedgers` above threshold, the next run scans and skips. If TTL is still low, a previously submitted transaction may still be pending: reconcile its hash and validity bounds before preparing a new send. The ledger is the source of current need; it is not by itself a no-double-submit guarantee. See **Reconcile in-flight transactions with chain data** below.
 
 So a fail-closed lock in front of a single-shot, unrepeatable deadline gets the risk backwards. **A double bump costs a few testnet stroops and a duplicate row, and damages no evidence. A stalled lock costs the proof.** Guinea-pig B's 24-hour window is ~96 independent attempts; a held claim converts all 96 into one.
 
@@ -107,13 +107,15 @@ This holds at any provider, any quota, any autoscale ceiling. Nothing measured l
 - **Cloudflare Workers quota is account-wide.** The account is shared and already runs another Worker, so published free-tier figures overstate our headroom. Unmeasured.
 - **The scheduler concurrency guard.** `concurrency:` with `cancel-in-progress: false` plus `timeout-minutes: 5` under a 15-minute cron. **This governs runs, not chain state** — see immediately below.
 
-#### The in-flight gap is real, and the ledger already closes it
+#### Reconcile in-flight transactions with chain data
 
 An earlier draft of this ADR claimed overlap was "structurally impossible." **That was wrong**, and it is on record as wrong, so here is the correct version rather than leaving a reader to rederive it.
 
 A concurrency group serialises *workflow runs*. It says nothing about a transaction already submitted to the network. The real case it skips: **a run submits `extendTTL`, dies before confirming, and the next run has no idea whether it landed.**
 
-The answer is the same mechanism that carries the decision. **The chain is the reconciliation.** The next run scans and reads one of two states — TTL above threshold, so it landed and the run skips; or TTL still below, so it did not and the run resubmits. No stored claim is required to reach either conclusion.
+**Chain observations answer two different questions.** A fresh TTL above the threshold means no new extend is needed for that entry at that observation; it does not prove that a particular transaction succeeded, because another party can also extend it. TTL still below the threshold does not prove that an earlier submission failed: it may still be in flight.
+
+Resolve a known transaction hash with `getTransaction()` and its validity bounds before deciding whether to construct a replacement. `NOT_FOUND` alone is not a final failure. Resending the same signed envelope and constructing a new transaction with another sequence number are different actions. Keep uncertain outcomes `submitted`; only confirmation plus an after observation justifies `succeeded`. See the [RPC reference](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getTransaction) and [transaction error handling](https://developers.stellar.org/docs/data/apis/horizon/api-reference/errors/error-handling). This clarification preserves the database deferral; it does not implement the W3 recovery path.
 
 This is precisely why `getTransaction()` reconciliation is the right prerequisite for adopting the spike, and why a lease timer is the wrong fix: a timer guesses at what the chain can be asked.
 
@@ -228,6 +230,8 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 - W4-D26-05 remains the pre-migration hosted-settings check. The broader backlog sweep landed separately in PR #51; this artifact does not implement or claim those future tasks.
 - SETUP, EVIDENCE, this ADR's index and the spike README now distinguish the accepted decision from the historical proposal and unused implementation.
 
+**W1 review clarification (`W1-D7-04`):** W3-D16-02 still owns uncertain-send handling, W3-D16-03 still owns the interim history, and W4-D26-05 still gates database adoption. ARCHITECTURE and the shared `BumpRecord` variants already require confirmation before success; their contracts remain unchanged. STATUS and the W1 review now use the same distinction between current TTL and transaction outcome. No provider, timing, dependency or task ownership changed.
+
 ## Update log
 
 - 2026-09-04: created. Toolchain decided; hosting/scheduler/persistence deferred to W1-D5-03 with the shortlist and evaluation order above.
@@ -237,3 +241,5 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 - 2026-09-08: integrated PR #45's separation of Pages hosting from engine/persistence, then reconciled its Workers question with the existing local read evidence. Runtime/provider agreement is requested through #30; Actions + Node + PostgreSQL remains a proposal. No hosted provisioning or additional compatibility experiment occurred in this follow-up.
 
 - 2026-09-08: integrated PR #48/#49/#50; retained the unused experiment and review findings, deferred hosted validation to W4, and clarified that row claims do not use session advisory locks and quota scenarios depend on measured average usage. Runtime/provider/timing decisions are unchanged.
+
+- 2026-09-08: W1 review clarified current TTL versus transaction outcome and propagated the distinction to STATUS and the W2–W4 handoff. No change to runtime, provider, adoption timing or shared interfaces.

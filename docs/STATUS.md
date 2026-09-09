@@ -2,14 +2,36 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W1-D6-02 published in PR #53; synchronized with merged PR #52
-**Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-09 · W1 closeout (#57) restored and retargeted to main; shared review remains open
+**Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
 **Current week:** W1 — Foundation
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
 ## Right now
+
+**2026-09-09 — published follow-up to Fatih's review (`W1-D7-04`):** reconciled remote recovery commit `1e08aeb` with local synchronization and weekly Task Tracker notes at `01a135c`. The architecture retains main's stage/atomicity content plus the local corrections recording ADR-005 acceptance and the W2 temporary-reporting boundary. Corrected the stale current task-state paragraph below. The weekly narrative policy remains in CONVENTIONS. The combined W1 tree passed `pnpm check` (70 offline tests); final follow-up edits only update Markdown. Rakha reviewed and authorized publication; the follow-up is pushed to PR #57, which remains open and unmerged. D7-04 remains In progress, with its outcome mirrored to Notion at this session boundary.
+
+**PR #59 review:** its two-file scope documents the stacked-PR recovery and Fatih's fourth drift reading. Neither is merged here. The reported +0.0h drift is rounded to one decimal by the script; it does not establish an exact 5.000 s cadence for every ledger. Preserve the observation while qualifying that explanatory sentence in review. No new drift run is claimed.
+
+**2026-09-09 — W1 closeout in review (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout. #53 and #56 are merged; #57 is now based on `main` and synchronized with it.
+
+**⚠️ #57 was auto-closed by GitHub, not rejected.** It was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR — silently, and attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7` (reopen is refused while the base is missing, and the base cannot be changed while the PR is closed), reopening, retargeting to `main`, then deleting the temporary branch again. **Rule for stacked PRs from here: retarget the child to `main` *before* merging the parent.** The child's own reviewed content was never at risk — only its PR record.
+
+**Evidence:** a fresh instance scan passed against A on Sep 8. Nineteen historical Sep 5 bootstrap transactions were recovered as full RPC responses plus actual explorer screenshots, including A/B/C deployment, seeding and calibration. With the five unchanged setup/boundary records, the indexed W1 inventory contains 24 unique transactions. Late capture dates are explicit. No new transaction was submitted. See the [snapshot and recovery manifest](evidence/2026-09-08-w1-review/README.md).
+
+**Task state:** 48 of 50 W1 tasks are Done on this review branch, including the architecture document merged in PR #53. `W1-D7-03`, `05`, `06` have concrete reports; the onboarding report explicitly does not claim unaided comprehension. `W1-D7-04` remains In progress for shared acceptance of the closeout in #44. ADR-005 and the W2–W4 carry-forward were already accepted in merged PR #58; temporary-entry auto-bump policy remains the separate W3 decision. `W1-D4-09` remains In progress through Sep 20. The scan milestone passed; W2 can start without treating those continuing items as finished.
+
+**Review corrections:** aligned the inclusive TTL boundary in AGENTS/ONBOARDING, removed the obsolete W2 boundary experiment, reconciled setup/evidence descriptions, and clarified ADR-003: low TTL alone does not establish that an earlier transaction failed. Reconcile the known hash and validity bounds before constructing another transaction; uncertain outcomes remain submitted. Runtime/provider/timing and shared types are unchanged.
+
+**Notion sync anomaly (2026-09-08):** all 50 W1 IDs were present and statuses matched before this closeout. Eleven historical Owner fields differed from BACKLOG: `W1-D4-00/04/04b/07/08/12/11/10/04c/05/06`. The repo assigns Fatih to ten and Shared to 04b; Notion had Agent, Shared or Rakha. Owner metadata was corrected to the formal backlog assignment while retaining historical executor notes. This repeated metadata drift shows that status-only validation is insufficient; compare IDs, status and owner at handoff boundaries. Final MCP read-back confirms all 50 W1 IDs, statuses and owners match. Project Brain now shows Sep 8/day 6, 24 days to deadline and 48/50 W1 tasks complete; Knowledge Base and Decisions link the review and recovered evidence.
+
+**Validation:** final `pnpm check` passed conflict detection, typecheck (including negative type examples), lint, formatting and 70 offline tests. Verified all 19 recovered transaction bundles, 158 local documentation links and the new task references. Final publication review found [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) registers the separate C spare-proof task. The earlier fallback reassignment was removed from this diff; the existing C row is retained and #56 is merged. Runtime/workflows/dependencies and original evidence match the baseline; .env content/permissions, stash and other prior branch heads are preserved.
+
+**Coordination:** closeout commit `b490b0f` is pushed on the dedicated review branch. The [handoff comment on #44](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586317710) mentions @Fatihmaull, links the report and evidence, and requests architecture review plus the remaining shared decisions. The comment was read back. This was the initial WIP handoff. The [publication update](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5586699923) now links #57 and records the #53/#56 merge order. Both comments were read back. The published review commit `105ccfb` passed [GitHub CI](https://github.com/Fatihmaull/evergreen/actions/runs/34238108025) and Pages checks. D7-03/04/05/06 plus Project Brain, Knowledge Base and Decisions carry the PR link; MCP read-back confirmed the links and retained statuses. #44 remains open for shared decisions; no merge was performed.
+
+## Architecture publication
 
 **2026-09-08 — architecture data-flow published (`W1-D6-02`):** owner Rakha, branch `docs/W1-D6-02-architecture-flow`, initially based on main `a7d500d` (PR #51), now synchronized with main `b0f0d0b` including merged PRs #52/#54/#55. [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) publishes the reviewed documentation, with review requested from @Fatihmaull, and closes [#32](https://github.com/Fatihmaull/evergreen/issues/32) on merge. That issue's D6-03 mock RPC portion is already merged in #42. Repo and Notion matched before starting: D6-02 Pending; D6-03 and D6-04 Done. Changes are limited to ARCHITECTURE.md, this status entry and the D6-02 backlog row. Publication followed final local review and user authorization. The unused persistence artifact is now merged through [PR #52](https://github.com/Fatihmaull/evergreen/pull/52). Its source, dependency and evidence files match main; PR #53 still changes only the three documentation files.
 
@@ -23,9 +45,26 @@
 
 **Synchronization:** the earlier STATUS introduction conflict retained both task histories. The follow-up sync with #54/#55 merged cleanly, retaining the npm scope and ADR refinements from main. The architecture diagrams and shared-type mappings are unchanged; the PR diff remains three Markdown files.
 
-**Next:** PR #53 awaits CI and reviewer approval; it has not been merged. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
+**Next:** merged as [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) on Sep 8; the conflict with main was resolved by keeping **both** the staged coordination table and the atomicity framing. No duplicate Issue was opened. The shared W1 review gate in #44 remains separate.
 
 ## Earlier session notes
+
+### Sep 8 local synchronization and mirror notes — historical snapshot
+
+The PR-closed and pending-sync statements in this dated record describe that earlier check; the current publication state is recorded above.
+
+**2026-09-08 — W1 narrative mirror refreshed (`W1-D4-11`):** user confirmed Evergreen Tasks as the operational backlog in Notion and Task Tracker as a weekly narrative, refreshed at each week's closing review. All 50 W1 database IDs, owners and statuses matched the local canonical backlog. Updated the [Task Tracker W1 section](https://www.notion.so/3d2e2030b2ce81c48b03ebbe4f27e4b5), its snapshot summary and reading guidance via Notion MCP. Read-back confirms 50 unique task rows: 48 Done / 2 In progress, including **all 14 Rakha-owned tasks Done**. Recurring W1-D4-09 and shared closeout W1-D7-04 remain In progress; PR #57 is not represented as merged. Twelve missing rows were added, C's legacy alias was corrected to W1-D4-07, and formal owners were reconciled. Future-week sections are unchanged and explicitly labeled as unreviewed drafts. Database statuses were already correct and were not rewritten; no fresh drift measurement or Testnet transaction was performed.
+
+**Mirror anomaly / workflow concern:** the manual W1 snapshot retained an obsolete C ID and owner assignments even after the database had been corrected. This is another manifestation of the recorded metadata drift: multiple manually maintained surfaces can preserve stale claims independently. The agreed boundary is now explicit in CONVENTIONS and the Notion page: operational database at session/merge boundaries, dated narrative snapshots at week gates, with presence/owner/status validation.
+
+**2026-09-08 — local closeout synchronization (`W1-D7-04`):** the user requested codebase synchronization before discussing publication or changing Notion. Local main was fast-forwarded from `b0f0d0b` to `321656b`, including merged PRs [#56](https://github.com/Fatihmaull/evergreen/pull/56), [#53](https://github.com/Fatihmaull/evergreen/pull/53) and [#58](https://github.com/Fatihmaull/evergreen/pull/58). The existing `docs/W1-D7-03-week-one-review` branch is now integrated with that main. Both main and the combined closeout tree passed `pnpm check`: conflict detection, the 132-task ID check, typecheck, lint, formatting and all 70 offline tests, after resolving the sandbox's subprocess permission failure. Original evidence and all three architecture diagrams are unchanged; runtime code, workflows, tooling and dependency files match current main. No unresolved conflicts or missing local links in the review and architecture documents remain.
+
+**GitHub publication state:** #53 merged at `59c3cf8`. #57 closed without a merge when its architecture base branch was deleted at 14:51:04 UTC; the closeout head `98e62e2` is still preserved locally and remotely. No human comment, inline review comment or formal review on #57 was returned by GitHub during this check. Its report and recovered evidence are not in main. Reopening/retargeting it, or publishing a replacement linked to it, remains a separate step; no remote write is part of this synchronization.
+
+**Decisions and task state:** Fatih authored and merged #58, accepting ADR-005 and confirming the W2–W4 carry-forward. Temporary-entry near-deletion reporting belongs in W2; auto-bump policy remains W3-D15-02b. These decisions no longer await acceptance. This branch retains 48 Done / 2 In progress in W1: D7-03/05/06 reports are complete, D7-04 awaits review of the synchronized closeout, and recurring D4-09 continues through Sep 20. The integrated backlog has 132 tasks; W2 remains 23 Pending.
+
+**Remaining Notion catch-up:** W1 Task Tracker is now refreshed as described above. Database outcome/publication notes remain pending for W1-D6-02 and W1-D7-03/04/05/06, alongside the accepted ADR-005/carry-forward knowledge notes and the Project Brain; these were outside the requested W1 Task Tracker correction. Also pending: the missing W3-D18-02c database row and the swapped W2-D13-02/03 database task descriptions. The W1 database statuses and owners already match the repo. These remaining discrepancies are recorded, not claimed corrected.
+
 
 **W1-D6-04 decision is Done:** PR #48 accepts Actions + Node 24 and PostgreSQL on Neon, adopted in W4 after the Sep 20 proof. PR #49 resequences W3 history/coordination; PR #50 adds the downstream-sweep requirement. PR #51 subsequently corrected Stage 1 alerting deadlines and stale evidence task IDs. Local main was fast-forwarded to `a7d500d`, and PR #48/#49/#50/#51 are integrated into `chore/W1-D6-04-persistence-spike`. This supersedes the earlier plan to complete hosted validation before #32: no W1 hosted database is required, and D6-02 is now unblocked.
 
@@ -107,17 +146,14 @@
 
 | Workstream | State | Owner | Task |
 |---|---|---|---|
-| Product definition | ✅ done | S | PRD, backlog, agent docs (W1-D2) |
-| Phase 0 alignment | ✅ closed | S | Vision, scope, payment model, risks agreed 2026-09-04 |
-| Doc reconciliation | ✅ done | S | 12 documents updated to match the permissionless finding |
-| Repo & toolchain | ✅ done | F | W1-D3 closed — repo public, CI green on GitHub, `main` protected |
-| Stellar dev env | ✅ **W1-D4 complete** | F/R | all D4 tasks done — reproducible build confirmed on both machines |
-| Services & accounts | 🟡 scheduler proof complete; other services open | F/R | W1-D5-03 manual + scheduled GitHub reads verified; exported evidence published for review in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27). Other D5 tasks remain open. |
-| Shared types & harness | 🟡 types and mock RPC merged; persistence local result under review | R/F | W1-D6-01/01b/01c and D6-03 complete; D6-04 In progress, hosted provider deferred; D6-02 data flow Pending. |
-| CLI | 🟡 first instance-scan slice merged | F | W1-D7-01/02 complete in PR #42; broader entry coverage remains W2 work. |
-| Engine | ⬜ not started | R | Stage 1 starts W3-D15 |
-| Dashboard | ⬜ not started | F | starts W4; wallet spike at W2-D13-02 |
-| Evidence | 🟡 building | S | Setup: 2 funding txs. Boundary: adjacent-ledger proof + 3 tx records. All with JSON + screenshots. First weekly snapshot due W1-D7-03 |
+| Product, repo and tooling | Done | F/R/S | W1-D1/02/03; both-machine setup confirmed |
+| Stellar foundation | Done; drift continues | F/R | A/B/C, permissionless proof, inclusive boundary; D4-09 through Sep 20 |
+| Services and accounts | Done | F/R | npm namespace, Pages placeholder, Actions schedule, email delivery |
+| Types, mock and persistence decision | Done | R/F | Shared types/mock merged; unused persistence spike merged #52; Neon adoption deferred to W4 |
+| Architecture | Complete; PR open | R | #53 awaits review/merge |
+| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; broader entry coverage remains W2 |
+| Engine and dashboard | Future implementation | R/F | Stage 1 engine W3; functional dashboard W4 |
+| W1 review and evidence | Reports complete; shared review open | S | 24 indexed txs and fresh scan; D7-04/#44 remains In progress |
 
 ## Blocked
 
@@ -278,7 +314,7 @@ Both before **Fri Sep 18**, and both exist because a silent skip is the dominant
 - **`W2-D10-04`** — the run exits non-zero when it sees an entry below threshold and did not bump it.
 - **`W3-D17-05`** — Stage 1 failure modes (RPC timeout, insufficient balance, missed run) each alert rather than failing silently.
 
-## 🔍 `pnpm check:task-ids`## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
+## 🔍 `pnpm check:task-ids` — the ID checker is now mechanical, and found four more
 
 Rakha's W1 closeout noted that guinea-pig C's evidence row pointed at *"an unregistered alias."* He was right: **`W3-D18-02c` existed in `EVIDENCE.md` and had no task behind it** — I invented it when adding C's row.
 
@@ -311,7 +347,7 @@ The second is the more dangerous one and **nothing cheap detects it**, which is 
 
 **It skips `STATUS.md`'s session log by design.** A log is an append-only historical record; quoting an ID that has since been retired is *correct* there, and rewriting history to keep a checker quiet would destroy the thing the log is for.
 
-## 🎯 ADR-003 restructured## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
+## 🎯 ADR-003 restructured — the decision rests on one leg, and now says so
 
 Rakha's three corrections were all right, and they narrowed **three of the four arguments** originally given for deferring the database. The decision did not change, because it never rested on them — but the ADR did not say that, and a Week 4 reader could have dismantled the decision by refuting the parts that were already weak.
 
@@ -330,7 +366,7 @@ ADR-003 now labels them: **🟢 LOAD-BEARING** (the ledger is the idempotent sou
 
 "Overlap is structurally impossible" is on record as wrong, so the ADR now says the correct version outright. A concurrency group serialises *runs*, not chain state. The case it skips: **a run submits, dies before confirming, and the next run cannot tell whether it landed.**
 
-The answer is the same mechanism that carries the decision — **the chain is the reconciliation.** The next run scans: TTL above threshold means it landed, skip; still below means it did not, resubmit. Which is exactly why `getTransaction()` reconciliation is the right prerequisite and a lease timer is the wrong fix — **a timer guesses at what the chain can be asked.**
+**W1 review clarification:** current TTL answers whether another extend is needed, not whether a specific transaction landed. A low TTL can coexist with a pending send. Reconcile the known hash and its validity bounds before constructing a new transaction; `NOT_FOUND` alone is not a terminal result. Uncertain work remains submitted. See ADR-003 for the distinction between resending the same envelope and creating a new transaction.
 
 ### The divergence family is now a named pattern, not anecdotes
 
@@ -338,7 +374,7 @@ Four instances this sprint, same shape: something reported a state, the real sta
 
 The reports are not lying; they measure something adjacent and present it as the answer.
 
-## ✅ `W1-D5` closed — npm org owned, dashboard live## ✅ `W1-D5` closed — npm org owned, dashboard live
+## ✅ `W1-D5` closed — npm org owned, dashboard live
 
 **npm: we own the ORG, not just a name.** `evergreen` was squatted, so instead of reserving an unscoped fallback Fatih took the scope: **`evergreen-stellar`**. That is strictly better than the plan — nothing in `@evergreen-stellar/*` can be squatted, no placeholder publishes are needed, and **the Sep 16 deadline pressure is gone.** The name should still land before `W2-D14-03`'s screenshots, but it is no longer a race.
 
@@ -361,7 +397,7 @@ Packages renamed to **`@evergreen-stellar/cli`** and **`@evergreen-stellar/core`
 - **`W4-D27-00`** — enable 2FA on the npm account. Currently disabled, and a public scope other people install from with an unprotected account is a supply-chain risk. Cheapest now, while nothing depends on the scope.
 - **`W4-D27-00b`** — invite Rakha to the org. Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership. Blocked on his npm username, tracked so it does not surface on Sep 29.
 
-## 🔴 Orphan sweep found a real sequencing bug## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
+## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
 
 The retroactive sweep over W2–W4 was worth running. The headline:
 
@@ -647,7 +683,28 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-08 17:25 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 
-Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943. The calibration is holding, and at this point the *absence* of drift is itself the finding: testnet has been closing at a steady 5.000 s/ledger for three days. That is not a licence to stop checking — the eleven days between now and B's crossing are exactly where a validator hiccup would land, and the reading that matters is the one taken after something changes, not the three taken before.
+Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943.
+
+**What a zero reading does and does not establish.** Rakha's review note argued that `+0.0h` cannot say anything about the real cadence, because the script assumes 5.000 s/ledger — so a zero would just be the assumption echoed back. Worth checking rather than conceding, and the script's own arithmetic settles it:
+
+```python
+seconds_away = (crossing_ledger - current) * SECONDS_PER_LEDGER
+projected    = now + seconds_away
+```
+
+`crossing_ledger` is fixed on chain, but `current` and `now` are both observed independently. Between two readings the projection moves by `T − 5N` (wall seconds elapsed, minus five times the ledgers elapsed). **If the chain ran slower than 5.000 s/ledger, `N` would lag `T/5` and the projection would slide later; faster, and it slides earlier.** The assumption multiplies a measured delta rather than replacing it, so a real deviation cannot hide behind it. Drift printed to one decimal bounds it: `|drift| < 0.05h` over the ~59,800 ledgers between the first and fourth readings puts the **average** cadence within ≈0.003 s/ledger of 5.000.
+
+Confirmed outside the script — two `getLatestLedger` observations, 16.3 hours apart:
+
+```
+2026-09-08 17:25 UTC  ledger 4,572,943
+2026-09-09 09:40 UTC  ledger 4,584,643
+58,510 s / 11,700 ledgers = 5.0008 s/ledger
+```
+
+So the correction runs the other way: the finding is real, but my original wording claimed more than the method supports. **A zero reading measures the average over the interval, not steadiness within it** — excursions that cancel are invisible to it, which is precisely how a validator hiccup could pass unnoticed between two checks. *(Recorded because the reflex on receiving a correction is to accept it; this one was half right, and the half that was wrong would have discarded a genuine measurement.)*
+
+None of which is a licence to stop checking. The eleven days before B's crossing are exactly where a hiccup would land, and the reading that matters is the one taken after something changes, not the four taken before.
 
 > ⚠️ **B and C can now sit in the engine config early** — calibrated against a threshold, the engine correctly does nothing until the crossing. But that safety depends on the configured threshold matching the calibration, so adding them is a deliberate verified step: add, run **dry-run**, confirm the engine reports **no action needed**, only then run live. A threshold accidentally too high bumps them immediately and destroys both proofs silently. Procedure in `docs/SETUP.md`.
 

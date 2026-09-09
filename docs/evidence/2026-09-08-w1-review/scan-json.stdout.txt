@@ -1,0 +1,24 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "observedAtLedger": 4570079,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4712648,
+        "remainingLedgers": 142569
+      }
+    }
+  },
+  "issues": []
+}

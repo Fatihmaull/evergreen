@@ -12,7 +12,7 @@ Budget about ten minutes. There's a self-test at the end.
 
 ## What Evergreen is
 
-Soroban contract data lives in ledger entries, each with a **TTL measured in ledgers**. Every closed ledger decrements it. At zero the entry is **archived** — the contract stops working until someone pays to restore it. Stellar has no dedicated tooling for this, so developers track it by hand and production contracts die because somebody forgot.
+Soroban contract data lives in ledger entries, each with a **TTL measured in ledgers**. Every closed ledger decrements the remaining lifetime. An entry is still live at `liveUntilLedgerSeq` (remaining TTL zero); after that ledger, persistent entries are archived and temporary entries are deleted. Archived state must be restored before use. The observed inclusive boundary is recorded in `SOROBAN-PRIMER.md` and the W1 evidence.
 
 Evergreen is three things that stop that: a **CLI** that reports TTL health and rent cost, a **scheduled engine** that extends TTL before expiry, and a **public dashboard + CI check** so a non-technical reviewer can see it working.
 
@@ -34,6 +34,8 @@ Two consequences that constrain code you might write:
 ## Where things stand
 
 **Read [`docs/STATUS.md`](STATUS.md).** It is the living board and it is rewritten most sessions; anything restated here would be wrong by tomorrow. Read it first, every session, before `BACKLOG.md`.
+
+For the foundation-to-CLI transition, the [W1 review and W2 handoff](W1-REVIEW.md) records the completed foundation, evidence, remaining review decisions and first task split. The [architecture diagrams](ARCHITECTURE.md#current-path-testnet-instance-scan) distinguish working paths from planned components.
 
 ---
 
@@ -130,6 +132,8 @@ The definition of done says *works against the guinea-pig testnet contract*. Tha
 **"Evidence recorded if applicable" means: applicable when your work produced a testnet transaction.** A read-only or pure-logic task produces none, needs no `EVIDENCE.md` row, and should say so explicitly in the PR body rather than leaving it blank — an omission and a deliberate "none" look identical otherwise.
 
 ### Opening a PR
+
+Keep the stages explicit in the session: agree the task scope, work locally, review the result, then publish the PR. Push the WIP branch early so the other contributor can see ownership; that coordination push does not mean the work is review-ready. A commit, push, Issue, PR and merge are distinct states. Update an existing coordination Issue when it already covers the task, and name the remaining reviewer or decision rather than treating a new note as an ownership transfer.
 
 One task per PR. `main` is protected — no direct pushes, and CI must be green.
 

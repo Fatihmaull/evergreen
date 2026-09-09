@@ -59,6 +59,12 @@ Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLO
 
 **Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
 
+### Notion operational backlog and weekly narrative
+
+**User-confirmed 2026-09-08:** Evergreen Tasks is the primary operational backlog in Notion; repo `BACKLOG.md` and `docs/STATUS.md` remain the source for synchronization. The separate [Task Tracker](https://www.notion.so/3d2e2030b2ce81c48b03ebbe4f27e4b5) is a readable narrative snapshot, refreshed **one week at a time at that week's closing review**, not on every commit. Preserve the existing database sync at session/merge boundaries.
+
+Each weekly snapshot states its refresh date, outcomes, task IDs, formal owners, statuses and remaining work. Validate presence as well as owner/status against the repo and Evergreen Tasks. Distinguish finished work from pending publication, and retain In progress for recurring work. Future-week drafts are labeled as unreviewed; readers use Evergreen Tasks for current operational state. A completed personal allocation does not imply all shared week-gate tasks are Done.
+
 ### Identifiers in documentation — precision goes where it is acted on
 
 **An identifier a reader must act on has to be complete and exact. An identifier a reader must avoid can be abbreviated.**

@@ -12,7 +12,7 @@ Read this file every session. It tells you what this project is, how to pick up 
 
 ## What Evergreen is
 
-An open-source toolkit that stops Soroban smart contracts from being archived. Soroban ledger entries have a TTL measured in ledgers; if it hits zero the entry is archived and the contract is unusable until someone pays to restore it. Evergreen monitors TTL, predicts archival, estimates rent cost, and automatically extends TTL before expiry — non-custodially.
+An open-source toolkit that stops Soroban smart contracts from being archived. Soroban ledger entries have a TTL measured in ledgers; remaining TTL zero is the final live ledger. After it, persistent entries are archived and temporary entries are deleted. Archived state must be restored before use. Evergreen monitors TTL, predicts archival, estimates rent cost, and automatically extends TTL before expiry — non-custodially.
 
 Three components: a CLI, a scheduled auto-bump engine, and a public read-only dashboard + CI check.
 

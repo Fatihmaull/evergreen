@@ -102,6 +102,8 @@ Source: [Smart contract state archival — Stellar Docs](https://developers.stel
 | Persistent | 4,633,569 | 4,712,658 | +79,089 | `b0bf79efa1421cfe9d6cfef763b572a05909fa7a38553c1b89c101a30a9375ae` |
 | Temporary | 4,513,329 | 4,712,659 | +199,330 | `e796eb55c16839c25a9e20b5899ea5df4bab68aceb99d1a82ca88d098792a2b3` |
 
+The [W1 recovered evidence](evidence/2026-09-08-w1-review/README.md#recovered-transaction-evidence) now includes full RPC responses and explorer captures for all four extends, plus the distinct deployer/extender funding and deployment records. Transactions occurred Sep 5; the missing artifacts were recovered Sep 8.
+
 Verified properly, not by trusting a success code:
 
 - **Before and after were read from `getLedgerEntries`**, not inferred from the transaction succeeding.

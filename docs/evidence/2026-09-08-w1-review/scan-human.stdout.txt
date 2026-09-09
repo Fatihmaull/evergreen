@@ -1,0 +1,6 @@
+instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  142,569 ledgers — live
+  ends at:    ledger 4,712,648
+  approx:     2026-09-16T19:27:07.258Z (estimate — ledgers are the truth)
+  observed:   ledger 4,570,079
