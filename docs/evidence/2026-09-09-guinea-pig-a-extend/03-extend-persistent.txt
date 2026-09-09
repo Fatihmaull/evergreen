@@ -1,0 +1,6 @@
+ℹ️  Simulating transaction…
+ℹ️  Signing transaction: f48b7e796f9727758de59b8864320033265daf4eff72a70dc9db7183350af787
+🌎 Sending transaction…
+✅ Transaction submitted successfully!
+🔗 https://stellar.expert/explorer/testnet/tx/f48b7e796f9727758de59b8864320033265daf4eff72a70dc9db7183350af787
+New ttl ledger: 6025595

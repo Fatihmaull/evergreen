@@ -109,6 +109,30 @@ Semantically exact — "this no longer applies" — and it reads correctly to a 
 
 So: when restructuring, **retire the old IDs and mint new ones.** A gap in the sequence costs nothing. A silently re-pointed ID costs an evidence row filed against the wrong proof, discovered when someone goes looking for it.
 
+## 🔍 The report named no subject — the pattern, and its five members
+
+**Every one of these was a report that stated a result without saying what the result was *about*.** Not a wrong answer — an answer to an unasked question, read as the answer to the one being asked. They looked like five unrelated incidents until the fifth arrived; they are one failure, and it recurs because the safe-looking direction is silence or a stale green.
+
+| The report | What it named | What was actually being asked | How it was caught |
+|---|---|---|---|
+| A testnet guard passing | *that it ran* | whether it permits valid input | exercising it in the permitting direction |
+| `pnpm check` green | four gates | whether it matches CI's six | comparing the script against the workflow |
+| `pnpm check && echo PASS` printing nothing | *nothing at all* | pass or fail | CI failing on a branch that "passed" |
+| Cloudflare: *"Initializing build environment"* | a build from minutes ago | whether the deploy is live | loading the URL |
+| `gh pr view` reporting CI SUCCESS | **a commit no longer being merged** | whether *this head* is green | comparing the check's SHA to the PR head |
+
+**The rule, in the general form: a result is only about the subject it names.** Before acting on any green, bind it to the thing you are about to act on — the commit, the URL, the input, the gate list. If the report does not name its subject, it is not evidence about yours.
+
+Concretely, before every merge:
+
+```bash
+gh pr view <n> --json state,headRefOid,statusCheckRollup
+```
+
+**Check `state` is `OPEN` and that the check you are trusting ran on `headRefOid`.** Not `mergeable` — `mergeable` was `MERGEABLE` throughout the Sep 9 incident, while `state` was `CLOSED`, the head was two commits stale, and the green belonged to someone else's commit. A closed PR receives no `synchronize` webhook, so pushes to it run no CI at all and the last green stands unchallenged.
+
+*(The narrower rule this replaces — "re-check state after any merge that deletes a branch" — described only the path that happened to bite us. Any code path can serve a result about the wrong subject.)*
+
 ### The reported state and the actual state diverge — check the actual one
 
 Four instances this sprint, same shape every time: **something reported a state, the real state differed, and only the real state was checkable.** Naming it as a pattern rather than collecting anecdotes, because the fifth one will look novel until you have the list.

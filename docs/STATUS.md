@@ -11,22 +11,24 @@
 
 ## Right now
 
-### 🔴 Guinea-pig A archives Wed Sep 16 ~19:27 UTC — the one thing to act on this week
+### ✅ Guinea-pig A extended past the sprint (`W1-D7-08`) — one clock still running
 
-**Measured 2026-09-09 at ledger 4,584,770**, by running the built CLI against testnet, not by reading a record:
+A's instance, persistent and temporary entries were all nine days from expiry, which nothing in the repo recorded. **Extended 2026-09-09, authorized by Fatih, read back from the chain:**
 
-| Entry | Ends at ledger | Remaining | Projected | On expiry |
+| Entry | Before | After | Projected expiry | On expiry |
 |---|---|---|---|---|
-| instance | 4,712,648 | 127,845 | **2026-09-16 19:27 UTC** | archived |
-| persistent | 4,712,658 | 127,855 | 2026-09-16 19:28 UTC | archived |
-| temporary | 4,712,659 | 127,856 | 2026-09-16 19:28 UTC | **deleted — unrecoverable** |
-| code | 5,290,829 | 706,026 | 2026-10-20 06:28 UTC | archived |
+| instance | 4,712,648 | **6,025,589** | 2026-12-01 19:18 UTC | archived |
+| persistent | 4,712,658 | **6,025,595** | 2026-12-01 19:18 UTC | archived |
+| temporary | 4,712,659 | **6,025,598** | 2026-12-01 19:18 UTC | **deleted — unrecoverable** |
+| code *(shared A+B+C)* | 5,290,829 | 5,290,829 | 🔴 **2026-10-20 06:38 UTC** | archived |
 
-A is not a decay-proof subject — B (Sep 20) and C (Sep 25) are, deliberately. **A is the working contract**: the `W1-D7-01` milestone target, every live scan, `#60`'s reproduction instructions, and `W3-D17-04`'s *"trigger a real bump on guinea-pig A"* which is due **before Fri Sep 18**. On Sep 17 that task is not executable as written: `extendTTL` does not work on an archived entry, it needs `RestoreFootprintOp` first, and the primer records that **Evergreen v1 deliberately does not automate restores — it exists to avoid needing them.** A's temporary entry is *deleted*, not archived, so that one does not come back at any price.
+Three transactions from `evergreen-b`, permissionlessly, **318,803 stroops ≈ 0.032 XLM total** for ~83 days. Hashes and Horizon confirmations in the [evidence bundle](evidence/2026-09-09-guinea-pig-a-extend/README.md). B and C verified untouched afterwards — both still crossing Sep 20 and Sep 25 at +0.0h.
 
-Nothing in the repo recorded this. Every mention of `4,712,648` treats it as a number to match a scan against; none treats it as a deadline. The tool that exists to stop a contract archiving unwatched was about to let its own demo contract archive unwatched — which is the failure mode, not an irony to enjoy.
+**Targeted December, not Sep 19, deliberately.** A backs the `W1-D7-01` record, every live scan, #60's reproduction command, `W3-D17-04`'s real bump and the evidence screenshots. All of those stop being verifiable the moment A archives, and evidence has to outlive the sprint that produced it — extending to just past the immediate deadline would have re-created this in three weeks with nobody watching.
 
-**Fix is cheap and needs a decision, not a discussion:** extend A before Sep 16 using `evergreen-b` (funded, 9,999.9 XLM; `extendTTL` is permissionless so no authority over A is needed). That is a live testnet transaction, so it waits on Fatih's go-ahead. **Do not extend B or C** — that destroys both decay proofs.
+**🔴 The shared code entry is the remaining clock.** All three guinea-pigs were built from one Wasm (verified by fetching and hashing each), so they share **one** `ContractCode` entry — "extending A's code" would have extended B's and C's, which `SETUP` forbids while the proofs are live. A contract is only as alive as its code entry, so **all three become unusable 2026-10-20** regardless of the December dates above. Registered as `W3-D18-02d`: extend it **after Sep 25**, once both proofs are captured, at which point it costs nothing.
+
+**The asymmetry is the real finding.** B and C had a drift check twice a week; A had nobody — the contracts designed to be at risk were monitored, the one everything depends on daily was not, because it was never *supposed* to be at risk. That assumption is what expired quietly. Rescued by hand here; handed to the engine at `W3-D15-01b`, which is the only version of the fix that outlives the sprint.
 
 ### W1 closed
 
@@ -702,6 +704,9 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | 2026-09-06 02:20 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-08 17:25 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+| 2026-09-09 11:00 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+
+The fifth reading was taken **immediately after** the `W1-D7-08` extends on guinea-pig A, and doubles as the check that they touched nothing else. Both crossings unmoved.
 
 Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943.
 

@@ -112,10 +112,27 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 | Contract ID | `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` |
 | Deployed | 2026-09-05, by account A (`GBRGOJUA…MWLZ`) |
 | Remaining TTL at initial sample | instance/code/persistent ≈ 120,927 ledgers · temporary 688 ledgers; these are sampled remainders, not network minimums — see [the correction](SOROBAN-PRIMER.md#measured-ttl-floors) |
-| Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 |
+| Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 · **2026-09-09 during `W1-D7-08`, to ~6,025,590** |
 | Redeploy script | `./scripts/deploy-guinea-pig.sh A` |
 
-> Deployed during `W1-D4-06` and already used for the permissionless verification, so its TTL has been extended once. That is fine — A is the working subject and is expected to be bumped, broken, and redeployed.
+> Deployed during `W1-D4-06` and already used for the permissionless verification, so its TTL has been extended twice. That is fine — A is the working subject and is expected to be bumped, broken, and redeployed.
+
+#### A's horizon — the dates that matter
+
+| Entry | Live until ledger | Projected expiry | On expiry |
+|---|---|---|---|
+| instance | **6,025,589** | 2026-12-01 19:18 UTC | archived |
+| persistent | **6,025,595** | 2026-12-01 19:18 UTC | archived |
+| temporary | **6,025,598** | 2026-12-01 19:18 UTC | **deleted — unrecoverable** |
+| code *(shared with B and C)* | 5,290,829 | **2026-10-20 06:38 UTC** | archived |
+
+> ### ⚠️ A's code entry is the one still on a clock — and it is not A's alone
+>
+> All three guinea-pigs were built from the same Wasm (`c7e55f0a…98bfb`, verified by fetching and hashing each contract independently on 2026-09-09), so **they share a single `ContractCode` ledger entry.** "Extending A's code" is not a thing that can be done — it extends B's and C's at the same time, which is why the three extends on Sep 9 named every ledger key explicitly with `--key-xdr` instead of relying on `--id` alone.
+>
+> **A contract is only as alive as its code entry**, so A becomes unusable on **2026-10-20** regardless of the three dates above. That is deliberate for now: both decay proofs are still live, and `SETUP` forbids touching the shared entry while they are. **Extend it after Sep 25**, once B's and C's proofs are captured — at which point the shared entry is nobody's constraint. Tracked as `W3-D18-02d`.
+>
+> Full record, including before/after RPC and Horizon confirmations: [`W1-D7-08` evidence](evidence/2026-09-09-guinea-pig-a-extend/README.md).
 
 ### B — the natural-decay subject ⚠️
 

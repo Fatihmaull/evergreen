@@ -61,3 +61,17 @@ This is cheap at the moment of decision, when the changed assumption is fresh, a
 every other moment. *(Learned 2026-09-08: deferring the database to Week 4 left `W3-D16-02` and
 `W3-D16-03` describing a store that would not exist on Sep 20 — the day they came due. Neither
 was wrong when written.)*
+
+**Sweep corrected *facts* too, not only changed decisions.** Same discipline, wider subject: when a
+domain fact is corrected in one document, find everywhere else it is asserted. Decisions live in a
+countable place — ADRs, with tasks pointing at them — so their sweep is mechanical. Facts are
+restated in prose, in files that never cite the ADR, which is exactly why they are missed.
+
+*(Learned 2026-09-09, twice over in one day. The inclusive TTL boundary was pinned and corrected in
+`AGENTS.md` and `ONBOARDING.md` during the W1 review — and `README.md` and `PRD.md`, the two
+documents a stranger reads first, went on saying that TTL zero means archived and always restorable.
+Wrong on the boundary, and wrong that temporary entries can be restored at all, in the public
+description of our own core domain. `ONBOARDING.md` names that exact conflation as a serious UX bug:
+we shipped the bug we had documented. Separately, the ADR-003 database deferral's own sweep was run
+against ADR-005 and missed three prerequisite tasks that existed only as prose. The rule worked; its
+scope did not.)*
