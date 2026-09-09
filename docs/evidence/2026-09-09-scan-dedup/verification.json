@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-09-09T12:15:43.178Z",
+  "sourceCommit": "f5065b52b775c26ae5ab9940812492ae21005111",
+  "sourceHashes": {
+    "packages/core/src/scan-contract.ts": "4dabe8417948f4941410461e7510bb93b4e48c2812e384d2d79ce19924510b85",
+    "packages/core/dist/scan-contract.js": "8bd7565823854c864020ef2ad774a7afe996ad5633f7be89b2dba448e4467a19"
+  },
+  "testnetOnly": true,
+  "transactionSubmitted": false,
+  "inputCount": 3,
+  "uniqueContracts": 2,
+  "uniqueEntries": 3,
+  "ledgerEntryRequestSizes": [
+    2,
+    1
+  ],
+  "sharedCodeKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+  "sharedCodeConsumers": [
+    "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+    "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+  ],
+  "exitCodeForAt17280": 3,
+  "allOutputTTLsMatchedRawResponses": true,
+  "note": "Core scanContracts invocation, not a CLI batch command. Human output is an offline rendering of the same observation. Zero supplied data keys is unknown coverage, not proof of empty storage."
+}

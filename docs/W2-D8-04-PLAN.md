@@ -1,6 +1,6 @@
 # W2-D8-04 — Ledger-key and consumer deduplication plan
 
-Status: implementation approved and in progress, 2026-09-09. Owner: Rakha.
+Status: implemented and validated locally, 2026-09-09; user result review/PR pending. Owner: Rakha.
 Branch: `feat/W2-D8-04-ledger-key-dedup`, based on PR #60 at `567089c`.
 The existing preparation commit is retained. Implementation starts after integrating local parent follow-up `cad029e` and merged W1 baseline `88372ec`.
 
@@ -63,4 +63,8 @@ CLI multi-contract syntax/configuration, severity ranking, rent, payer selection
 
 Fatih endorsed the PR #60 exit scheme and requested documentation consequences; those are prepared locally in `cad029e`, pending final acceptance/publication. Planning and isolated implementation can proceed on this dependent branch, but integration follows the accepted parent. If a child PR exists, retarget it to main before merging/deleting the parent branch; synchronize and rerun affected checks as needed. W1 closeout #57/#59 is now merged. Audit #61 and A-extension evidence #62 are open at implementation start; Fatih reports A instance/data extended and shared code/B/C unchanged. No A maintenance transaction belongs to this task.
 
-The branch is visible as WIP for coordination. This plan is not a completed implementation or a ready-for-review PR. Task Tracker remains the weekly narrative; Evergreen Tasks receives task-boundary status updates.
+The remote branch is visible as WIP for coordination. The completed local implementation and evidence await Rakha's result review before PR publication. Task Tracker remains the weekly narrative; Evergreen Tasks receives task-boundary status updates.
+
+## Completion evidence
+
+Implementation `f5065b5` passed all 170 offline tests and the full repository gate. The [read-only B/C capture](evidence/2026-09-09-scan-dedup/README.md) validates repeated input, unique key reads and shared consumers against Testnet. Additional-data scope remains unknown. Runtime and evidence remain local for Rakha's result review before PR publication.

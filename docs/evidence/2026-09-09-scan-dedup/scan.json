@@ -1,0 +1,61 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+    },
+    {
+      "id": "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4586511,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4793687,
+        "remainingLedgers": 207176
+      }
+    },
+    "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "observedAtLedger": 4586511,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4880097,
+        "remainingLedgers": 293586
+      }
+    },
+    "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+      "kind": "code",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "observedAtLedger": 4586511,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 5290829,
+        "remainingLedgers": 704318
+      }
+    }
+  },
+  "issues": [],
+  "coverage": {
+    "mode": "known-keys",
+    "dataKeysSuppliedByContract": {
+      "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": 0,
+      "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": 0
+    }
+  }
+}

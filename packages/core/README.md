@@ -45,3 +45,5 @@ Instances are deduplicated and read first; their valid Wasm hashes populate one 
 A shared-key error names all known affected consumers; a failed batch names the union of that batch's consumers. Missing/invalid instances do not invent shared-code associations, but their valid explicit data can still be read. Each successful observation retains its response ledger; this is not an atomic snapshot across batches. Duplicate RPC observations are discarded, not reconciled by taking the newest-looking value. Coverage counts/assertions remain per contract, and unknown coverage is never promoted by another contract's declaration.
 
 The legacy `scanInstances` now removes duplicate input consumers; it remains instance-only with unspecified coverage. Multi-contract CLI UX, rent and engine decisions are separate tasks.
+
+[Read-only shared-Wasm evidence](../../docs/evidence/2026-09-09-scan-dedup/README.md) verifies B, C, B becomes two unique contracts and three entries, using two instance keys and one code-key read.
