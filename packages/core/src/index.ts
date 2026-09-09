@@ -8,4 +8,5 @@ export { SECONDS_PER_LEDGER, estimateEndsAt, isLive, observeTTL, uniqueEntryCoun
 export { NotTestnetError, codeKey, connectTestnet, createRpcReader, instanceKey } from './rpc.js';
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
-export { scanContract } from './scan-contract.js';
+export type { ContractScanRequest } from './scan-contract.js';
+export { scanContract, scanContracts } from './scan-contract.js';
