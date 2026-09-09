@@ -4,6 +4,12 @@
 **Team:** F = Fatih Maulana · R = Rakha · S = shared
 **Capacity:** planned against **24 effective days, not 30.** See the slack ledger below.
 
+> ## 🎯 This file is the means. [`docs/READY.md`](docs/READY.md) is the end.
+>
+> Everything below exists to make **four things** true for a stranger by Oct 2: install the CLI and scan a contract in under five minutes; open the dashboard and check any contract's TTL with no wallet and no signup; add `evergreen-check` to their own CI and see it pass **and** fail; self-host the engine against their own contract.
+>
+> **A completed task list and a working product are not the same thing.** When they diverge, `READY.md` wins and a P1 gets cut — that trade is pre-approved. Checked at `W3-D21-01d`, the Week 3 gate, while there is still a week to act on the answer.
+
 ## ⚠️ The D-number is a sequence position, not a date
 
 **`W2-D8` means "the eighth task-day in sequence." It is not a promise about Sep 10.** Each day-block carries a separate *Planned* date that is allowed to slip; the ID never moves.
@@ -255,6 +261,8 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 *Planned: Wed Sep 16 — may slip; the D-number does not.*
 - [ ] **W2-D14-01** (S) Coverage pass; get `packages/core` meaningfully covered (target ~80% on the math/cost modules, not vanity 100% everywhere).
 - [ ] **W2-D14-02** (F) `packages/cli/README.md` quickstart good enough for a stranger to install and run.
+- [ ] **W2-D14-02b** (F) 🔴 **Pack-and-install rehearsal — the real front door, thirteen days early.** `npm pack` all three packages, install the tarballs into an empty directory outside the repo, and run `evergreen scan` there. **This is not hypothetical: run on 2026-09-09 it FAILED**, `npm error code E404 … '@evergreen-stellar/shared-types@0.0.0' … not found`, because both `cli` and `core` declare `shared-types` as a runtime dependency and only two packages were ever going to be published. Every stranger's first command would have 404'd. *(Fixed the same day — `publishConfig` added to `shared-types`, `W4-D27-02` corrected to publish three — and re-verified: install exit 0, CLI runs from a directory that never saw the repo.)* **Keep the rehearsal anyway.** `npm publish --dry-run` at `W4-D27-01` cannot catch this class, because it packs without resolving; only an install does. The old plan's first real test was `W4-D27-02` on **Sep 29, day 27 of 30**, leaving one already-full day to fix whatever it found — and the fix needed publishing a third package into a scope Rakha still cannot publish to.
+- [ ] **W2-D14-02c** (F) **Unblock the npm admin now, not on Sep 29.** Get Rakha's npm username and invite him to the `evergreen-stellar` org (`W4-D27-00b`), and enable 2FA (`W4-D27-00`). Both are pure admin with no code dependency, both currently sit on the same day as the publish they gate, and one is already marked *blocked* — so the publish has a blocked prerequisite scheduled for the day it is needed. Doing them in Week 2 costs minutes and removes the only non-technical way `W4-D27-02` can fail.
 - [ ] **W2-D14-03** (S) **Week 2 review** + evidence snapshot #2 (CLI screenshots, coverage report, extend tx hash).
 - **Milestone gate:** Deliverable 1 is feature-complete. Publishing to npm happens in W4, but no CLI *features* should be built after this date.
 
@@ -344,6 +352,9 @@ The old plan spent the riskiest week's first two days on a spike the whole deliv
 ### Day 21 · W3 review
 *Planned: Wed Sep 23 — may slip; the D-number does not.*
 - [ ] **W3-D21-01** (S) **Week 3 review** + evidence snapshot #3. Confirm every transaction row carries all three artifacts.
+- [ ] **W3-D21-01b** (S) 🎯 **Fresh-machine dry run — expect it to fail, that is the point.** On a directory that has never seen this repo, follow **only** [`docs/READY.md`](docs/READY.md)'s four outcomes against whatever exists on Sep 23: install the CLI from packed tarballs and scan; open the deployed dashboard; add the Action to a scratch repo; and **stand up the engine against a contract that is not a guinea-pig, using only the setup guide as it exists that day.** Record what broke, in `STATUS.md`, without fixing it in the same sitting. **Failing on Sep 23 is information; failing on Oct 1 is a crisis** — `B-D29-03` is currently the first and only time anyone tries, one day before submission. *The engine leg matters most: it is the only one of the four outcomes with no other independent check anywhere in the sprint, and `W4-D26-02` writes its guide on Sep 28, five days after this run would have told us what the guide must cover.*
+- [ ] **W3-D21-01c** (F) **Draft the README quickstart before `W4-D26-01`.** It does not have to be good on Sep 23; it has to exist, so `W3-D21-01b` and the Week 4 repeats test the real front door rather than a placeholder. A fresh-machine test against an unwritten README measures nothing and reports success.
+- [ ] **W3-D21-01d** (S) 🔴 **Gate check: state plainly whether each of the four `READY.md` outcomes will be true on Oct 2.** Not a status colour — a yes or a no per outcome, with the specific task each depends on. **If any is a no, cut a P1 to protect it now**, per the cut order below. That trade is pre-approved: a shipped P1 is worth less than any one of the four. Do this at the Week 3 gate, while four working days of Week 4 remain, rather than discovering it in the buffer.
 - [ ] **W3-D21-02** (S) Reconcile the slack ledger: how many of the six are gone, and what took them.
 - **Milestone gate:** unattended non-custodial bump proven with reset-proof evidence (Stage 1), and Stage 2 either shipped or explicitly, honestly documented as partial.
 
@@ -376,7 +387,13 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **W4-D24-04** (F) Wallet-connect + user-signed "extend now" *(P1 — the DX feature; ship only if the `W2-D13-02` spike said it fits. Wallet-connect authorizes a **payment**, never access — check the UI copy says so.)*
 
 ### Day 25 · `evergreen-check` Action — **owner: R**
-*Planned: Sun Sep 27 — may slip; the D-number does not.*
+*Planned: **Fri Sep 25–Sat Sep 26** — moved later 2026-09-09; the D-number does not move.*
+
+> ⚠️ **Day 25 now runs AFTER Day 27's publish. This is deliberate and the D-numbers are unchanged** — the backlog's own rule is that the sequence position is the identifier and the planned date is what slips.
+>
+> **Why:** `W4-D25-02` proves the Action works "for someone who isn't us", which means a throwaway repo running `npx @evergreen-stellar/cli`. On the old dates that happened **Sun Sep 27, two days before `W4-D27-02` publishes the package it wraps** — so the task could not have succeeded on the day it was scheduled, and the failure would have surfaced on a Sunday with the recovery gated behind two admin tasks sitting on Sep 29.
+>
+> Rakha owned **nothing at all** on Sep 24, 25 and 26 and then carried 10 of his 11 Week 4 tasks across Sep 27 and Sep 29. Publishing first is a straight reorder inside his own empty days, costs nothing, and has a second payoff: it puts the Action's **red run** back inside the window where guinea-pig C is below threshold but still live (C crosses ~Sep 25 12:00 UTC and archives ~24h later), which is the only contract that can produce a genuine failing screenshot.
 - [ ] **W4-D25-01** (R) `evergreen-check` GitHub Action: `action.yml`, wraps the CLI, fails the job below threshold.
 - [ ] **W4-D25-02** (R) Test it in a **separate** throwaway repo — proving it works for someone who isn't us.
 - [ ] **W4-D25-03** (R) Publish/tag the Action so it's referenceable as **`Fatihmaull/evergreen-check@v1`**; screenshot a red run and a green run. *Corrected 2026-09-09: this said `apex/evergreen-check@v1`, but a GitHub Action reference is `owner/repo@ref` and **"Apex" is our team name, not a GitHub org** — nothing in W1–W4 creates one. The string as written carried an unscheduled account-creation prerequisite onto a Sunday that already holds three tasks. If a real `apex` org is wanted, that needs its own task before Sep 27; otherwise ship under the account that actually owns the code.*
@@ -389,6 +406,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **W4-D26-04** (S) `CONTRIBUTING.md` + roadmap naming SOW 2 candidates (hosted engine per ADR-004, mainnet, Telegram channel, always-on mode, dashboard write path if it slipped).
 
 ### Day 27 · Publish — **owner: R**
+*Publish tasks `W4-D27-01/02/03` moved earlier to **Thu Sep 24–Fri Sep 25** on 2026-09-09, so Day 25's Action work has a real published package to wrap. The database tasks in this block keep their Sep 29 date. The D-numbers do not move.*
 *Planned: Tue Sep 29 — may slip; the D-number does not.*
 - [ ] **W4-D26-05** (R) **Measure the Neon project's default autoscale ceiling BEFORE any migration runs.** ADR-003's arithmetic swings entirely on it: at 0.25 CU the free allowance fits (60/100 CU-hours), at 1.0 CU it exhausts in 12.5 days. It was never measured, and this is the first step of adoption rather than something to discover while wiring up. Also re-read ADR-003's three non-quota reasons for waiting before provisioning — the deferral was never only about quota.
 
@@ -397,10 +415,10 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **W4-D26-06** (R) **Provision the Neon project and run migrations — only after `W4-D26-05`'s measurement.** Verify hosted connection, permissions and pooling behaviour against the persistence spike's guards rather than assuming they carry over from local Postgres.
 - [ ] **W4-D26-07** (R) 🔴 **Prerequisite 1: reconciliation for stranded `pending` work.** `claim()` takes over only `phase='claimed'` while `prepare()` sets `'pending'`, so a process dying between them strands the entry permanently — **measured: 0 non-null returns from 100 `claim()` attempts past lease expiry.** That is deliberate fail-closed design, so the fix is reconciliation via `getTransaction()` on the recorded hash. **Not a lease timer** — a timer reintroduces exactly the double-send the current design prevents.
 - [ ] **W4-D26-08** (R) **Prerequisite 2: widen the `history` outcome constraint.** `CHECK (record->>'outcome' = 'succeeded')` makes a failed bump unstorable, which is narrower than `BumpRecord`, which already distinguishes simulated/submitted/succeeded/failed. A store that can only record successes cannot answer the question the history exists for. Persist the full `BumpRecord` including **payer** and **which signer produced it**.
-- [ ] **W4-D27-01** (R) `npm publish --dry-run`, verify package contents (no secrets, no junk, correct files field).
+- [ ] **W4-D27-01** (R) `npm publish --dry-run`, verify package contents (no secrets, no junk, correct files field). ⚠️ **A dry-run cannot catch the failure found on 2026-09-09** — it packs, it does not resolve from the registry. The pack-and-install rehearsal is `W2-D14-02b`, and it must have passed before this task means anything.
 - [ ] **W4-D27-00** (F) 🔒 **Enable 2FA on the npm account — before the first publish.** Currently disabled. `@evergreen-stellar/*` is a public scope other people will install from, so an unprotected account is a supply-chain risk and the kind of thing a grant reviewer or ecosystem partner reasonably asks about. **Cheapest now, while nothing depends on the scope.**
 - [ ] **W4-D27-00b** (F) **Invite Rakha to the `evergreen-stellar` npm org before `W4-D27-02`.** Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership; the default `Developers` team grants the right access automatically. **Blocked on getting his npm username** — tracked here so it does not surface on Sep 29.
-- [ ] **W4-D27-02** (R) Publish `@evergreen-stellar/core` + `@evergreen-stellar/cli` to npm; verify a clean `npx @evergreen-stellar/cli scan ...` works on a machine that never saw the repo. **Requires `W4-D27-00b`** (org membership) and `publishConfig.access=public`, already set.
+- [ ] **W4-D27-02** (R) Publish **three** packages to npm — `@evergreen-stellar/shared-types`, `@evergreen-stellar/core`, `@evergreen-stellar/cli`, in that order — then verify a clean `npx @evergreen-stellar/cli scan ...` works on a machine that never saw the repo. **Requires `W4-D27-00b`** (org membership) and `publishConfig.access=public`, now set on all three. 🔴 **`shared-types` is not optional and was missing from this list until 2026-09-09** — both `cli` and `core` declare it as a **runtime** dependency, so publishing only two produces a hard 404 for every user. Remove `"private": true` from all three at publish time.
 - [ ] **W4-D27-03** (R) Git tag + GitHub release with notes.
 
 ### Day 28 · Demo + W4 review

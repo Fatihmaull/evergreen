@@ -133,6 +133,7 @@ AGENTS.md               this file — canonical operating manual for any agent
 CLAUDE.md               thin pointer to AGENTS.md (Claude Code reads it by name)
 docs/ONBOARDING.md      orientation for an agent arriving cold
 docs/
+  READY.md              ⭐ the product's definition of done — four things a stranger must be able to do
   PRD.md                what we're building and why; scope boundaries
   STATUS.md             living board — current state of every workstream
   ARCHITECTURE.md       modules, data flow, shared types
@@ -179,5 +180,7 @@ New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) a
 - Behavior works against the guinea-pig testnet contract (ID in `docs/SETUP.md`).
 - Unit tests cover the logic, using fixtures rather than live RPC.
 - `pnpm check` green — it runs exactly what CI runs. Don't substitute a subset here: `pnpm typecheck && pnpm lint && pnpm test` skips three of the six gates, and a local gate weaker than the remote one is worse than no local gate. *(That exact gap shipped once already — `format:check` was in CI but not in `check`.)*
+
+**This is when a *task* is done. [`docs/READY.md`](docs/READY.md) is when the *product* is done** — four things a stranger must be able to do by Oct 2. Every task above can pass and the product can still fail that, which is the failure this project is actually exposed to. *(Demonstrated 2026-09-09: every gate was green while `npx @evergreen-stellar/cli` would have 404'd for every user, because nothing in the plan installed the package from outside the monorepo until day 27.)*
 - Docs updated if user-facing behavior changed.
 - BACKLOG.md checkbox flipped, STATUS.md updated, evidence recorded if applicable.
