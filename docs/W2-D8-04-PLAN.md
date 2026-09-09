@@ -1,8 +1,8 @@
 # W2-D8-04 — Ledger-key and consumer deduplication plan
 
-Status: planning in progress, 2026-09-09. Owner: Rakha.
+Status: implementation approved and in progress, 2026-09-09. Owner: Rakha.
 Branch: `feat/W2-D8-04-ledger-key-dedup`, based on PR #60 at `567089c`.
-The existing preparation commit is retained. No runtime implementation has started.
+The existing preparation commit is retained. Implementation starts after integrating local parent follow-up `cad029e` and merged W1 baseline `88372ec`.
 
 ## Outcome
 
@@ -61,6 +61,6 @@ Coverage remains `known-keys`, keyed per contract. An empty keys file or unspeci
 
 CLI multi-contract syntax/configuration, severity ranking, rent, payer selection and engine execution retain their existing tasks and owners. No new transaction path or shared-domain schema is planned. If implementation reveals a required change to that boundary, document it before expanding scope.
 
-PR #60 and ADR-006 still await Fatih/shared review. Planning and isolated implementation can proceed on this dependent branch, but integration follows the accepted parent. If a child PR exists, retarget it to main before merging/deleting the parent branch; synchronize and rerun affected checks as needed. W1 closeout remains separate: at the planning refresh #59 has merged, #57 reports Closed without merge, and its preserved remote branch is at `8631a7e`; #44 remains the coordination thread. Do not infer rejection or completion from that closure.
+Fatih endorsed the PR #60 exit scheme and requested documentation consequences; those are prepared locally in `cad029e`, pending final acceptance/publication. Planning and isolated implementation can proceed on this dependent branch, but integration follows the accepted parent. If a child PR exists, retarget it to main before merging/deleting the parent branch; synchronize and rerun affected checks as needed. W1 closeout #57/#59 is now merged. Audit #61 and A-extension evidence #62 are open at implementation start; Fatih reports A instance/data extended and shared code/B/C unchanged. No A maintenance transaction belongs to this task.
 
 The branch is visible as WIP for coordination. This plan is not a completed implementation or a ready-for-review PR. Task Tracker remains the weekly narrative; Evergreen Tasks receives task-boundary status updates.

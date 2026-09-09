@@ -30,6 +30,19 @@ Commits made before 2026-09-05 carry the old trailer. They stay as they are: thr
 
 **PRs:** one task (or one tight cluster) per PR. Title = commit subject. Body must state: what changed, how it was verified, and any evidence captured. CI must be green before merge. `main` is protected — no direct pushes.
 
+**Stacked PRs: retarget the child to `main` *before* merging the parent.** Stacking is fine and we do it — a child PR based on a parent's branch keeps the child's diff readable. But GitHub deletes the parent's branch on merge, and **deleting a branch silently closes every PR that was targeting it.** The close is attributed to whoever clicked merge, so it reads like a rejection rather than an accident.
+
+Recovering one is worse than it sounds, because the two repair paths block each other: GitHub refuses to reopen a PR whose base branch is missing, and refuses to change the base of a closed PR. The way out is to push the deleted base back to its old commit, reopen, retarget to `main`, then delete the temporary branch again:
+
+```bash
+git push origin <old-base-sha>:refs/heads/<deleted-base-branch>
+gh pr reopen <n>
+gh pr edit <n> --base main
+git push origin --delete <deleted-base-branch>
+```
+
+Nothing is ever lost — the child's commits live on its own branch, untouched — but the PR record, its review comments and its CI history are only recoverable by the sequence above. Retargeting first costs one command and avoids all of it. *(Learned the expensive way on [#57](https://github.com/Fatihmaull/evergreen/pull/57), which merging [#53](https://github.com/Fatihmaull/evergreen/pull/53) closed.)*
+
 ## Task status — one meaning in both channels
 
 Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLOG.md` checkbox and the Notion `Status` select must mean **exactly** the same thing, or they will agree syntactically while diverging semantically.
@@ -45,6 +58,12 @@ Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLO
 **"Done" never means "code written."** If the definition of done is not fully met, it is `In progress`. Fatih and Rakha trust Notion's "Done" without checking, so it must never overstate.
 
 **Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
+
+### Notion operational backlog and weekly narrative
+
+**User-confirmed 2026-09-08:** Evergreen Tasks is the primary operational backlog in Notion; repo `BACKLOG.md` and `docs/STATUS.md` remain the source for synchronization. The separate [Task Tracker](https://www.notion.so/3d2e2030b2ce81c48b03ebbe4f27e4b5) is a readable narrative snapshot, refreshed **one week at a time at that week's closing review**, not on every commit. Preserve the existing database sync at session/merge boundaries.
+
+Each weekly snapshot states its refresh date, outcomes, task IDs, formal owners, statuses and remaining work. Validate presence as well as owner/status against the repo and Evergreen Tasks. Distinguish finished work from pending publication, and retain In progress for recurring work. Future-week drafts are labeled as unreviewed; readers use Evergreen Tasks for current operational state. A completed personal allocation does not imply all shared week-gate tasks are Done.
 
 ### Identifiers in documentation — precision goes where it is acted on
 
