@@ -19,7 +19,7 @@
 
 **W1 review:** [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) is open against main, with the reviewed follow-up published through `e736dbf`. Its combined tree passed 70 offline tests; only Markdown publication tracking changed afterward. The updated PR description removes the obsolete stacked-base instructions and records ADR-005 acceptance. D7-04 remains In progress for shared closeout acceptance; this branch's stale Pending row is corrected accordingly. #59 remains separate; the Issue reply requests qualifying its exact-cadence wording. No fresh B/C measurement is claimed.
 
-**Mirror:** publication sync is pending for D8-03, D7-04 and the ADR-006 Decisions entry. Task Tracker remains a weekly snapshot.
+**Mirror:** publication sync completed and was read back for exact IDs D8-03 (Rakha) and D7-04 (Shared), both In progress, plus the Proposed ADR-006 Decisions entry. Notes link PR #60/#57 and the Issue #44 response, distinguishing implementation from shared acceptance and merge. GitHub CI and Pages passed on implementation `0c1bff9` and W1 publication `e736dbf`; final Markdown tracking is checked on its own head. Task Tracker remains a weekly snapshot.
 
 ## Initial D8-03 implementation — Sep 8 snapshot
 
