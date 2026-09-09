@@ -126,6 +126,12 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 | temporary | **6,025,598** | 2026-12-01 19:18 UTC | **deleted — unrecoverable** |
 | code *(shared with B and C)* | 5,290,829 | **2026-10-20 06:38 UTC** | archived |
 
+> ### 🔴 One ledger entry is the real expiry date of everything we built
+>
+> **Ledger `5,290,829` ≈ 2026-10-20 06:38 UTC is not "A's code entry". It is the expiry of the whole project's demonstrable state.** A, B and C share it, so on that date all three contracts become unusable at once — and with them every artifact that points at any of them: both decay proofs, all four evidence snapshots, the scan screenshots, the demo video's contract, the README's reproduction command, and PR #60's four-entry capture. The three December dates in the table above do not protect any of that; this one number governs it.
+>
+> That date is **eighteen days after the sprint ends**, and attention stops on Oct 2. Scheduled as `W3-D18-02d` on **Sat Sep 26** — the first day the decay proofs are captured and the constraint lifts, and the last day everyone is still looking. Extend to `max_entry_ttl` (180 days, reaching ~2027-03-25, the protocol ceiling) and take A's other three entries to the same date while you are there.
+>
 > ### ⚠️ A's code entry is the one still on a clock — and it is not A's alone
 >
 > All three guinea-pigs were built from the same Wasm (`c7e55f0a…98bfb`, verified by fetching and hashing each contract independently on 2026-09-09), so **they share a single `ContractCode` ledger entry.** "Extending A's code" is not a thing that can be done — it extends B's and C's at the same time, which is why the three extends on Sep 9 named every ledger key explicitly with `--key-xdr` instead of relying on `--id` alone.

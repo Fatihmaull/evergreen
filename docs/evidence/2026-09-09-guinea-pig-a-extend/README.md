@@ -47,7 +47,23 @@ One hash, therefore one `ContractCode` ledger key, therefore extending "A's code
 
 All three `successful: true`, all sourced from `GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE` (`evergreen-b`), confirmed through Horizon rather than trusted from the CLI's output.
 
-**Total: 318,803 stroops ≈ 0.0319 XLM for ~83 days across three entries.** That is the product's whole economic argument in one number — and note the spread: the instance cost 2.8× the temporary entry, because rent is priced per entry size, not per extension.
+**Total: 318,803 stroops ≈ 0.0319 XLM for ~83 days across three entries.** That is the product's whole economic argument in one number.
+
+### What the fees actually say
+
+`fee_charged` bundles the base fee, the non-refundable resource fee and rent. Isolating `rentFeeCharged` from each transaction's `resultMetaXdr` gives the real breakdown:
+
+| Entry | Data bytes | Key bytes | Ledgers | **Rent** | Non-refundable | Total | Rent share |
+|---|---|---|---|---|---|---|---|
+| instance | 136 | 48 | 1,312,941 | **154,503** | 2,237 | 156,840 | 98.5% |
+| persistent | 88 | 76 | 1,312,937 | **103,849** | 2,359 | 106,308 | 97.7% |
+| temporary | 88 | 76 | 1,312,939 | **53,196** | 2,359 | 55,655 | 95.6% |
+
+**Durability is a first-order price term.** The persistent and temporary entries are byte-for-byte identical and were extended by the same number of ledgers to within two — the only variable is durability, and persistent cost **1.95×** temporary. That is the actionable finding: *"move this to temporary storage"* is *"halve this entry's rent"*, which is what `W2-D12-01` needs to turn a lint into a reason to act. It is not free — temporary entries are deleted rather than archived, and unrecoverable.
+
+**Correction.** An earlier version of this note said the instance cost 2.8× the temporary entry *"because rent is priced per entry size, not per extension"*. The 2.8× is real, but the mechanism was wrong and the numbers above are what showed it: persistent and temporary are the *same size* and still differ by ~2×, so durability was doing most of the work I attributed to size. Size does matter and does not explain it alone either — the instance is 1.12× the persistent entry's total bytes and 1.49× its rent. **Three points do not determine the size coefficient, and fitting one to them would produce a model that matches these rows and nothing else.** Recorded as a gap rather than an answer in the fixture.
+
+Wired into `packages/core` as [`extendTTL-fees-guinea-pig-a.json`](../../../packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json) — the anchor `W2-D9-02` validates against, with `rent-fixture.test.ts` pinning the relationships rather than a formula.
 
 ## B and C were not touched
 

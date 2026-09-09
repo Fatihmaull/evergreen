@@ -1,0 +1,91 @@
+{
+  "_README": [
+    "Recorded 2026-09-09 during W1-D7-08, from three real ExtendFootprintTTLOp transactions on",
+    "public Stellar Testnet against guinea-pig A. Source account evergreen-b, which holds no",
+    "authority over A and needs none.",
+    "",
+    "This is the empirical anchor W2-D9-02 validates the rent model against. It exists because the",
+    "extends had to happen anyway - A was nine days from archival - so the validation data was a",
+    "by-product rather than something to manufacture.",
+    "",
+    "rentFeeCharged is isolated from resultMetaXdr's SorobanTransactionMetaExtV1, NOT inferred from",
+    "fee_charged. fee_charged bundles the base fee and the non-refundable resource fee with rent;",
+    "quoting it as 'the rent' overstates rent by 1.5-4.4% here and by more on entries with real",
+    "read/write footprints.",
+    "",
+    "Sizes are byte lengths of the base64-decoded XDR from the pre-extend getLedgerEntries response",
+    "(docs/evidence/2026-09-09-guinea-pig-a-extend/01-before-response.json). entryDataBytes is the",
+    "'xdr' field; ledgerKeyBytes is the 'key' field.",
+    "",
+    "Ledger numbers are historical and testnet resets. The FEE RELATIONSHIPS are the durable part."
+  ],
+  "recordedAt": "2026-09-09T10:58:52Z",
+  "network": "testnet",
+  "contract": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+  "sourceAccount": "GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE",
+  "observedAtLedger": 4585583,
+  "extends": [
+    {
+      "kind": "instance",
+      "durability": "persistent",
+      "txHash": "f15efca7bfabed10df9ec61f5b2bcb2a8bdfdd53c16d574e0f56766b81db77c0",
+      "ledger": 4585589,
+      "entryDataBytes": 136,
+      "ledgerKeyBytes": 48,
+      "liveUntilBefore": 4712648,
+      "liveUntilAfter": 6025589,
+      "ledgersExtended": 1312941,
+      "rentFeeCharged": 154503,
+      "nonRefundableResourceFeeCharged": 2237,
+      "feeCharged": 156840
+    },
+    {
+      "kind": "persistent",
+      "durability": "persistent",
+      "txHash": "f48b7e796f9727758de59b8864320033265daf4eff72a70dc9db7183350af787",
+      "ledger": 4585595,
+      "entryDataBytes": 88,
+      "ledgerKeyBytes": 76,
+      "liveUntilBefore": 4712658,
+      "liveUntilAfter": 6025595,
+      "ledgersExtended": 1312937,
+      "rentFeeCharged": 103849,
+      "nonRefundableResourceFeeCharged": 2359,
+      "feeCharged": 106308
+    },
+    {
+      "kind": "temporary",
+      "durability": "temporary",
+      "txHash": "2963ac1e4cf818fe979dafba009d8d281424638779b0873df1a84e877f90d4fb",
+      "ledger": 4585598,
+      "entryDataBytes": 88,
+      "ledgerKeyBytes": 76,
+      "liveUntilBefore": 4712659,
+      "liveUntilAfter": 6025598,
+      "ledgersExtended": 1312939,
+      "rentFeeCharged": 53196,
+      "nonRefundableResourceFeeCharged": 2359,
+      "feeCharged": 55655
+    }
+  ],
+  "observations": [
+    {
+      "id": "durability-dominates",
+      "claim": "Durability class is a first-order price term, independent of size.",
+      "basis": "The persistent and temporary entries are byte-for-byte the same size (88B data, 76B key) and were extended by 1,312,937 and 1,312,939 ledgers - a two-ledger difference. Persistent rent was 1.952x temporary.",
+      "confidence": "high - the only variable that differs is durability"
+    },
+    {
+      "id": "rent-dominates-the-bill",
+      "claim": "Rent is 95.6-98.5% of the fee; the non-refundable component is roughly flat.",
+      "basis": "nonRefundableResourceFeeCharged was 2,237-2,359 stroops across all three, while rent ranged 53,196-154,503. A model that estimates only rent is within ~4.4% here.",
+      "confidence": "high for extend-only transactions - a bump with a real read/write footprint will not behave this way"
+    },
+    {
+      "id": "size-scaling-unresolved",
+      "claim": "Rent grows with size, but three points do not determine how.",
+      "basis": "instance vs persistent is 1.545x the entry data (136B vs 88B) but 1.488x the rent, and 1.122x the key+data total. Neither total bytes nor data bytes predicts it exactly. Do NOT fit a coefficient to this.",
+      "confidence": "low - stated so W2-D9-02 knows this is the gap, not an answer"
+    }
+  ]
+}
