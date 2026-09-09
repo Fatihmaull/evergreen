@@ -1,6 +1,6 @@
 # ADR-006: Separate incomplete scan information from observed low TTL
 
-**Status:** Proposed — Rakha approved this implementation on 2026-09-09; shared review with Fatih remains pending before merge.
+**Status:** Proposed — Rakha approved this implementation on 2026-09-09; Fatih endorsed the scheme on 2026-09-09; the requested documentation follow-up is prepared for final acceptance before merge.
 **Date:** 2026-09-09
 **Deciders:** Fatih, Rakha
 
@@ -34,6 +34,10 @@ JSON retains every successful observation and issue. For low TTL plus missing in
 
 ## Consequences
 
+The bare `evergreen scan <id>` milestone invocation now returns 3 when data-key coverage is unspecified, even with healthy instance/code. W1-D7-01's recorded exits describe the earlier implementation and remain historical evidence, not a current CLI contract. Reproduction should explain this change rather than altering old recordings.
+
+An incomplete default scan can teach callers to add `--no-data-keys` reflexively. Do not present that flag as a way to silence exit 3: first explain missing coverage and supply the actual known data keys; declare no additional keys only when the caller knows that assertion is correct. A successful exit under a false assertion is not independently verified whole-contract health. Final CLI UX remains W2-D10-01.
+
 Healthy instance/code-only contracts can pass when the caller explicitly declares that scope. Known-key scans still cannot prove whole-contract health. The caller can make an incorrect assertion; the UI and JSON expose its provenance rather than presenting it as measured completeness.
 
 Exit status summarizes health; **it never authorizes or requests a transaction**. The future engine must examine structured observations, issues, policy, payer, budgets and execution mode. Zero available information must never trigger a speculative extension. This proposal changes no signer, transaction, threshold arithmetic or temporary-entry auto-bump policy.
@@ -53,3 +57,5 @@ CLI callers relying on legacy results without coverage returning 0 must migrate.
 ## Update log
 
 - 2026-09-09: recorded the reviewed branch finding and Rakha-approved local implementation proposal; Fatih acceptance and publication remain pending.
+
+- 2026-09-09: Fatih endorsed the scheme in Issue #44; added his requested milestone migration and assertion-misuse consequences. Final ADR acceptance/merge remains separate.

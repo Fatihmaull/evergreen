@@ -95,7 +95,7 @@ The public source account is enough for this simulation; no secret is passed on 
 
 The bot starts with a fixed **20 XLM Testnet allocation**; no automatic replenishment or engine job is active. This is an operational balance limit, not the Stage 2 policy signer. The bot was created from the developer's faucet balance to avoid placing the full 10,000 XLM faucet allocation in the hot account. [Transaction evidence](EVIDENCE.md#2026-09-05--testnet-account-setup-w1-d4-02) records both funding steps.
 
-The local developer and bot keys were generated fresh and stored only in ignored `.env` with mode `0600`. The second developer's everyday account designation remains unconfirmed; the existing experiment accounts are recorded separately above. `W1-D4-02` stays in progress until that designation is resolved on the corresponding machine.
+The local developer and bot keys were generated fresh and stored only in ignored `.env` with mode `0600`. Both developers' everyday accounts are now designated in the table above; the separate experiment accounts retain their recorded roles. `W1-D4-02` is complete.
 
 ## Guinea-pig contracts
 
@@ -119,7 +119,7 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 
 ### B — the natural-decay subject ⚠️
 
-Deployed on **W1-D4 (Sep 6)** and then left alone to age, so its TTL decays on its own toward the threshold. It exists for exactly one moment: `W3-D18-02b`, the proof that a contract *which would otherwise have been archived* was saved unattended. That is the strongest single piece of evidence in the grant.
+Deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and then left alone to age, so its TTL decays on its own toward the threshold. It exists for exactly one moment: `W3-D18-02b`, the proof that a contract *which would otherwise have been archived* was saved unattended. The [W1 recovered transaction bundle](evidence/2026-09-08-w1-review/README.md) records deployment, seeding and calibration separately, including the later shared-code extension made while preparing C.
 
 | Field | Value |
 |---|---|

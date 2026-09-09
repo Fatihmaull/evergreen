@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "301cb3683871a7267e11b394c2f5767f9eab02c4",
+  "runtimeSourceMatchesMain": "b0f0d0b",
+  "runs": [
+    {
+      "mode": "human",
+      "command": [
+        "node",
+        "packages/cli/dist/bin.js",
+        "scan",
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "rpcUrl": "https://soroban-testnet.stellar.org",
+      "startedAt": "2026-09-08T13:26:21.056721+00:00",
+      "exitCode": 0,
+      "stdoutSha256": "cbe2fb380f792ac16f8c936619323e01bf2624c092780df633212ceec69cab13"
+    },
+    {
+      "mode": "json",
+      "command": [
+        "node",
+        "packages/cli/dist/bin.js",
+        "scan",
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+        "--json"
+      ],
+      "rpcUrl": "https://soroban-testnet.stellar.org",
+      "startedAt": "2026-09-08T13:26:22.280924+00:00",
+      "exitCode": 0,
+      "stdoutSha256": "c6214e72882ed5a6417e681dc88ee0c7fd0d13c3f26e2fafefb72add2070aed3"
+    }
+  ]
+}

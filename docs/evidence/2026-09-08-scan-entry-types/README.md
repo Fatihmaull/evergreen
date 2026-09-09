@@ -29,6 +29,8 @@ Requests and responses were captured at the SDK fetch boundary while running the
 
 ## Reproduce the read
 
+**Sep 9 update:** Fatih extended A's instance, persistent and temporary entries; see [PR #62](https://github.com/Fatihmaull/evergreen/pull/62). Reproduction now returns newer TTLs. This Sep 8 four-entry discovery capture remains a dated observation, not a promise of current TTL values; its raw files are unchanged. The shared code entry was not extended.
+
 From the repository root, after dependency installation:
 
 ```bash
