@@ -2,8 +2,8 @@ import { scanContract } from '@evergreen-stellar/core';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import { EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
 
-const USAGE = 'usage: evergreen scan <contract-id> [--keys-file <path>] [--json]';
-const HELP = `${USAGE}\n\nReads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.\nKeys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }\nScanning known keys does not enumerate all contract storage.`;
+const USAGE = 'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--json]';
+const HELP = `${USAGE}\n\nReads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.\nKeys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }\n--no-data-keys asserts this contract has no additional data keys; it is not independently verified.\nScanning known keys does not enumerate all contract storage.\nExit: 0 healthy declared scope; 1 observed low TTL; 2 error; 3 incomplete information.\nPrecedence: 2 > 3 > 1 > 0. Exit status never authorizes a transaction.`;
 
 export interface CliDependencies {
   connect(): Promise<LedgerEntryReader>;
@@ -36,14 +36,18 @@ export async function runCli(
   const contractId = args[1];
   if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);
   let asJson = false;
+  let noDataKeys = false;
   let keysPath: string | undefined;
   for (let i = 2; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
+    else if (args[i] === '--no-data-keys' && !noDataKeys) noDataKeys = true;
     else if (args[i] === '--keys-file' && keysPath === undefined) {
       keysPath = args[++i];
       if (!keysPath || keysPath.startsWith('-')) return fail(`--keys-file needs a path.\n${USAGE}`);
     } else return fail(`Unknown or repeated argument.\n${USAGE}`);
   }
+  if (noDataKeys && keysPath !== undefined)
+    return fail('--keys-file and --no-data-keys are mutually exclusive.');
 
   let dataKeys: string[] = [];
   if (keysPath !== undefined) {
@@ -73,7 +77,7 @@ export async function runCli(
       'Could not connect to Stellar Testnet. Check the RPC endpoint and network configuration.',
     );
   }
-  const result = await scanContract(reader, { id: contractId }, dataKeys);
+  const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
   return {
     stdout: asJson ? JSON.stringify(result, null, 2) : formatHuman(result, dependencies.now()),
     stderr: '',

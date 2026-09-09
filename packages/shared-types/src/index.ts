@@ -67,6 +67,8 @@ export interface ScanResult {
     readonly mode: 'known-keys';
     /** Unique, validated explicit data keys, not a count of all on-chain storage. */
     readonly dataKeysSuppliedByContract: Readonly<Record<ContractId, number>>;
+    /** Caller assertion of no additional data keys, not verified storage enumeration. */
+    readonly noDataKeysDeclaredByContract?: Readonly<Record<ContractId, boolean>>;
   };
   /** Omitted by a TTL-only scan; missing estimate does not mean zero rent. */
   readonly rentEstimate?: RentEstimate;

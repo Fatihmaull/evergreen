@@ -54,6 +54,20 @@ describe('scanContract — recorded four-entry scan', () => {
     expect(result.coverage?.dataKeysSuppliedByContract[A]).toBe(0);
   });
 
+  it('records an explicit empty-data declaration without enumerating storage', async () => {
+    const result = await scanContract(reader(), { id: A }, [], { noDataKeys: true });
+    expect(result.coverage?.noDataKeysDeclaredByContract).toEqual({ [A]: true });
+    expect(Object.keys(result.entries).sort()).toEqual([INSTANCE, CODE].sort());
+  });
+
+  it('rejects a declaration that contradicts supplied keys before reading RPC', async () => {
+    const rpc = reader();
+    const read = vi.spyOn(rpc, 'read');
+    const result = await scanContract(rpc, { id: A }, DATA_KEYS, { noDataKeys: true });
+    expect(result.issues[0]?.kind).toBe('invalid-response');
+    expect(read).not.toHaveBeenCalled();
+  });
+
   it('normalizes whitespace and counts each explicit data key once', async () => {
     const result = await scanContract(reader(), { id: A }, [DATA_KEYS[0]!, ` ${DATA_KEYS[0]!}\n`]);
     expect(result.coverage?.dataKeysSuppliedByContract[A]).toBe(1);

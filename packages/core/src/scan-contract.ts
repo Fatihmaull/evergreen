@@ -55,6 +55,7 @@ export async function scanContract(
   reader: LedgerEntryReader,
   contract: ContractRef,
   dataKeys: readonly LedgerKey[] = [],
+  options: { readonly noDataKeys?: boolean } = {},
 ): Promise<ScanResult> {
   const entries: Record<LedgerKey, LedgerEntryTTL> = {};
   const issues: ScanIssue[] = [];
@@ -64,7 +65,13 @@ export async function scanContract(
     contracts: [contract],
     entries,
     issues,
-    coverage: { mode: 'known-keys', dataKeysSuppliedByContract: supplied },
+    coverage: {
+      mode: 'known-keys',
+      dataKeysSuppliedByContract: supplied,
+      ...(options.noDataKeys === true
+        ? { noDataKeysDeclaredByContract: { [contract.id]: true } }
+        : {}),
+    },
   };
   function issue(
     kind: ScanIssue['kind'],
@@ -91,6 +98,10 @@ export async function scanContract(
   const data = new Map<LedgerKey, LedgerEntryTTL['kind']>();
   if (!Array.isArray(dataKeys)) {
     issue('invalid-response', 'dataKeys must be an array of serialized LedgerKeys.');
+    return result;
+  }
+  if (options.noDataKeys === true && dataKeys.length > 0) {
+    issue('invalid-response', 'Cannot declare no data keys while supplying data keys.');
     return result;
   }
   for (const input of dataKeys) {

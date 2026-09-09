@@ -9,7 +9,7 @@ One file per non-trivial decision. Numbered, immutable in spirit: if a decision 
 | [ADR-003](ADR-003-toolchain-hosting-persistence.md) | Toolchain, hosting, scheduler, and persistence | Actions + Node 24 and Pages selected; Neon/PostgreSQL adoption deferred to W4 after Sep 20; spike retained as unused experiment |
 | [ADR-004](ADR-004-payment-model.md) | The user always pays their own extend fees; Apex never subsidises rent | Accepted |
 | [ADR-005](ADR-005-shared-domain-types.md) | JSON-compatible shared domain types: ledger-key-keyed results, money as integer decimal text, explicit variants | **Accepted 2026-09-08** |
-| [ADR-005](ADR-005-shared-domain-types.md) | JSON-compatible shared domain types | Proposed — W1-D6-01/01b/01c local implementation for review |
+| [ADR-006](ADR-006-scan-health-exit-codes.md) | Distinguish incomplete scan information from observed low TTL; explicit empty-data assertion | Proposed — Rakha approved implementation; Fatih/shared review pending |
 
 ## When to write one
 

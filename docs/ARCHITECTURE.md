@@ -10,7 +10,7 @@ As of 2026-09-08, the implemented product path is **a Testnet scan of instance/c
 |---|---|---|
 | `packages/shared-types` | JSON-compatible interfaces, examples and compiler checks; no runtime I/O | Real producers/adapters validate input and uphold these contracts. ADR-005 remains Proposed despite the type implementation being merged. |
 | `packages/core` | Testnet RPC reader, four-entry known-key scan, TTL math, unique-entry count | Cross-contract consumer deduplication (`W2-D8-04`), rent model, optimizer and decision rules |
-| `packages/cli` | `scan <contract-id> [--keys-file <path>] [--json]`, coverage, human output and exit codes | Config loading, multi-contract scans, rent output, `extend`, `optimize` and full CLI UX |
+| `packages/cli` | `scan <contract-id> [--keys-file <path> | --no-data-keys] [--json]`, coverage, human output and exit codes | Config loading, multi-contract scans, rent output, `extend`, `optimize` and full CLI UX |
 | `packages/engine` | Package placeholder; separate read-only scheduler smoke proof | Scheduled decision/sign/send/reconcile loop and notifications in W3 |
 | `apps/dashboard` | Static placeholder for the Pages deploy task | Public scan/history UI in W4; user-signed extension is P1 |
 | `evergreen-check` | CLI exit-code contract available | Published Action wrapping the CLI in W4; repository CI currently runs offline tests |
@@ -158,10 +158,11 @@ Current CLI exit behavior, in precedence order:
 | Condition | Exit |
 |---|---|
 | Invalid input/response, RPC failure or network refusal | `2` |
-| No explicit data keys, unavailable TTL, missing/unsupported entries, or known TTL below 17,280 ledgers | `1` |
+| Unknown coverage, unavailable TTL, missing/unsupported entries or no observations | `3` |
+| All observations are available and any TTL is below 17,280 ledgers | `1` |
 | All supplied/discovered entries have known TTL at or above threshold and no issues | `0` |
 
-Zero covers only the supplied/discovered keys, never all contract storage. The legacy helper behavior for old `ScanResult` producers without coverage remains compatible; coverage omission must not be interpreted as complete. Future engine decisions must handle incomplete observations before authorizing a bump. Cross-contract consumer merging remains `W2-D8-04`; severity presentation remains `W2-D10-01`.
+Zero covers only the supplied/discovered keys, never all contract storage. Precedence is 2 > 3 > 1 > 0. Legacy results without coverage now return 3. `--no-data-keys` is a caller assertion stored in `coverage.noDataKeysDeclaredByContract`, mutually exclusive with a keys file; an empty keys file is not that assertion. JSON retains low-TTL observations even when incomplete/error takes precedence. Exit status is a CI health summary, never authorization to spend. The engine consumes structured observations and policy/payer/budget inputs before deciding to bump. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) records this proposal for shared review. Cross-contract consumer merging remains `W2-D8-04`; severity presentation remains `W2-D10-01`.
 
 ### Planned path: decide, pay, confirm, record
 

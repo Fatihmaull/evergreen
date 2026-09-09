@@ -43,7 +43,7 @@ describe('scan CLI', () => {
     const deps = dependencies();
     const result = await runCli(['scan', A], deps);
     expect(deps.readKeysFile).not.toHaveBeenCalled();
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(3);
     expect(result.stdout).toContain('NOT been fully enumerated');
     expect(result.stdout).toContain('0 explicit data key(s)');
   });
@@ -55,6 +55,31 @@ describe('scan CLI', () => {
     );
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('known keys only');
+  });
+
+  it('accepts caller-declared no data keys and marks the assertion in JSON', async () => {
+    const deps = dependencies();
+    const output = await runCli(['scan', A, '--no-data-keys', '--json'], deps);
+    const parsed = JSON.parse(output.stdout) as {
+      coverage: { noDataKeysDeclaredByContract: Record<string, boolean> };
+      entries: Record<string, unknown>;
+    };
+    expect(output.exitCode).toBe(0);
+    expect(parsed.coverage.noDataKeysDeclaredByContract[A]).toBe(true);
+    expect(Object.keys(parsed.entries)).toHaveLength(2);
+    expect(deps.readKeysFile).not.toHaveBeenCalled();
+    // The fixture still contains data: this flag is a caller assertion, not proof of absence.
+    const human = await runCli(['scan', A, '--no-data-keys'], deps);
+    expect(human.stdout).toContain('declared by caller; not independently verified');
+  });
+
+  it('does not silently treat an empty keys file as the no-data assertion', async () => {
+    const output = await runCli(
+      ['scan', A, '--keys-file', 'empty.json'],
+      dependencies('{"dataKeys":[]}'),
+    );
+    expect(output.exitCode).toBe(3);
+    expect(output.stdout).toContain('Data-key coverage unknown');
   });
 
   it.each([['--help'], ['scan', '--help']])('help performs no I/O: %j', async (...args) => {
@@ -73,6 +98,9 @@ describe('scan CLI', () => {
     ['scan', A, '--wrong'],
     ['scan', A, '--json', '--json'],
     ['scan', A, 'extra'],
+    ['scan', A, '--no-data-keys', '--no-data-keys'],
+    ['scan', A, '--no-data-keys', '--keys-file', 'keys.json'],
+    ['scan', A, '--keys-file', 'keys.json', '--no-data-keys'],
   ])('rejects bad arguments without connection: %j', async (...args) => {
     const deps = dependencies();
     const result = await runCli(args, deps);

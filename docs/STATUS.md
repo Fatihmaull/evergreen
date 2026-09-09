@@ -2,14 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-08 · W2-D8-03 implemented and verified
-**Sprint day:** 6 of 30 · **Deadline:** 2026-10-02
+**Last updated:** 2026-09-09 · W2-D8-03 review follow-up In progress
+**Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
 **Current week:** W2 — Core CLI
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
 ## Right now
+
+**W2-D8-03 — In progress: local follow-up implemented, shared review/publication pending.** Rakha approved distinct incomplete-information exit 3 and explicit `--no-data-keys`, following Fatih's [Issue #44 review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5589189730). Precedence is error 2, incomplete 3, observed low TTL 1, healthy declared scope 0. The assertion is caller-provided and mutually exclusive with a keys file; an empty file or legacy result without coverage stays unknown (3). JSON retains mixed findings. No exit code authorizes a transaction. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) is Proposed, pending Fatih/shared review; it includes the downstream sweep. Existing Issue #44 covers this correction; no new task or duplicate Issue is introduced.
+
+**Validation:** `pnpm check` passed **143 offline tests** (107 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting, conflict and task-ID checks. An initial direct Vitest run used stale W1 build output after branch switching; rebuilding through typecheck resolved it. [Sep 9 read-only capture](evidence/2026-09-09-scan-coverage/README.md) verifies real CLI exit 3 at ledger 4,580,470 for A without data keys, with healthy instance/code. Offline replay of the unchanged Sep 8 four-entry JSON still returns 0; declared-empty and mixed/error cases are covered by fixtures. No transaction or B/C read/change was made.
+
+**Review boundary:** follow-up stays local until Rakha reviews the result. GitHub still has D8-03 at `0ad2880`; no new push, PR, comment or merge was made. Notion D8-03 remains In progress with the outcome, and Decisions records ADR-006 as a proposal. Task Tracker remains a weekly snapshot.
+
+**W1 review:** #57 is restored/open on main at `1e08aeb`; local closeout branch now preserves both histories at `9454df4`, with stale current statements corrected and weekly Task Tracker policy retained. Its 70-test gate passed. Follow-up commits await Rakha review before push. #59 remains open separately; review notes distinguish rounded drift from an exact cadence measurement. No fresh B/C measurement is claimed.
+
+## Initial D8-03 implementation — Sep 8 snapshot
 
 **W2-D8-03 — Done (Rakha), review PR/merge pending:** implemented on `feat/W2-D8-03-scan-entry-types` from main `321656b`. `scanContract` discovers instance/Wasm and reads explicit persistent/temporary LedgerKeys through `--keys-file`. It reports known-key coverage, batches at 200 keys, preserves each response's ledger and successful partial results, and diagnoses invalid/missing/unsupported observations. CLI exit 0 applies only to supplied/discovered keys; no data keys or unavailable TTL yields 1, invalid input/response or RPC failure yields 2. Shared types add optional coverage and the `unsupported-executable` issue kind; existing type consumers still compile. No transaction path is added.
 
