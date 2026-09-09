@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-09 · W2-D8-03 review follow-up In progress
+**Last updated:** 2026-09-09 · W2-D8-03 published in PR #60; shared review In progress
 **Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
 **Current week:** W2 — Core CLI
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
@@ -11,13 +11,15 @@
 
 ## Right now
 
-**W2-D8-03 — In progress: local follow-up implemented, shared review/publication pending.** Rakha approved distinct incomplete-information exit 3 and explicit `--no-data-keys`, following Fatih's [Issue #44 review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5589189730). Precedence is error 2, incomplete 3, observed low TTL 1, healthy declared scope 0. The assertion is caller-provided and mutually exclusive with a keys file; an empty file or legacy result without coverage stays unknown (3). JSON retains mixed findings. No exit code authorizes a transaction. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) is Proposed, pending Fatih/shared review; it includes the downstream sweep. Existing Issue #44 covers this correction; no new task or duplicate Issue is introduced.
+**W2-D8-03 — In progress: published for shared review in [PR #60](https://github.com/Fatihmaull/evergreen/pull/60).** Rakha approved distinct incomplete-information exit 3 and explicit `--no-data-keys`, following Fatih's [Issue #44 review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5589189730). Precedence is error 2, incomplete 3, observed low TTL 1, healthy declared scope 0. The assertion is caller-provided and mutually exclusive with a keys file; an empty file or legacy result without coverage stays unknown (3). JSON retains mixed findings. No exit code authorizes a transaction. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) is Proposed, pending Fatih/shared review; it includes the downstream sweep. Existing Issue #44 covers this correction; no new task or duplicate Issue is introduced.
 
 **Validation:** `pnpm check` passed **143 offline tests** (107 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting, conflict and task-ID checks. An initial direct Vitest run used stale W1 build output after branch switching; rebuilding through typecheck resolved it. [Sep 9 read-only capture](evidence/2026-09-09-scan-coverage/README.md) verifies real CLI exit 3 at ledger 4,580,470 for A without data keys, with healthy instance/code. Offline replay of the unchanged Sep 8 four-entry JSON still returns 0; declared-empty and mixed/error cases are covered by fixtures. No transaction or B/C read/change was made.
 
-**Review boundary:** follow-up stays local until Rakha reviews the result. GitHub still has D8-03 at `0ad2880`; no new push, PR, comment or merge was made. Notion D8-03 remains In progress with the outcome, and Decisions records ADR-006 as a proposal. Task Tracker remains a weekly snapshot.
+**Publication:** Rakha reviewed the result and authorized publication. The implementation is pushed at `0c1bff9` in PR #60 against main, with review requested from @Fatihmaull. The [Issue #44 reply](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5595727891) addresses the W1 recovery, coverage/exit-code proposal, rounded drift interpretation and release timing. ADR-006 remains Proposed; both PRs and the shared Issue remain open. GitHub CI is checked separately on the final publication commits; the 143-test result above is local validation. No merge or release is claimed.
 
-**W1 review:** #57 is restored/open on main at `1e08aeb`; local closeout branch now preserves both histories at `9454df4`, with stale current statements corrected and weekly Task Tracker policy retained. Its 70-test gate passed. Follow-up commits await Rakha review before push. #59 remains open separately; review notes distinguish rounded drift from an exact cadence measurement. No fresh B/C measurement is claimed.
+**W1 review:** [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) is open against main, with the reviewed follow-up published through `e736dbf`. Its combined tree passed 70 offline tests; only Markdown publication tracking changed afterward. The updated PR description removes the obsolete stacked-base instructions and records ADR-005 acceptance. D7-04 remains In progress for shared closeout acceptance; this branch's stale Pending row is corrected accordingly. #59 remains separate; the Issue reply requests qualifying its exact-cadence wording. No fresh B/C measurement is claimed.
+
+**Mirror:** publication sync is pending for D8-03, D7-04 and the ADR-006 Decisions entry. Task Tracker remains a weekly snapshot.
 
 ## Initial D8-03 implementation — Sep 8 snapshot
 
