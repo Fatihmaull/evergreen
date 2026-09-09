@@ -193,7 +193,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ---
 
-**Review outcome (2026-09-08):** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md), originally published in [PR #57](https://github.com/Fatihmaull/evergreen/pull/57), which closed without merging when its base branch was deleted. Fatih accepted ADR-005 and confirmed the W2–W4 carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). `W1-D7-04` remains In progress for review of the synchronized closeout in #44; the decisions no longer await acceptance. No cut or task ownership change is introduced.
+**Review outcome (2026-09-08):** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md), originally published in [PR #57](https://github.com/Fatihmaull/evergreen/pull/57), which was auto-closed when its base branch was deleted and restored by Fatih on Sep 9, now open against main. Fatih accepted ADR-005 and confirmed the W2–W4 carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). `W1-D7-04` remains In progress for review of the synchronized closeout in #44; the decisions no longer await acceptance. No cut or task ownership change is introduced.
 
 ## Week 2 — Core CLI, Deliverable 1 (Sep 10 – Sep 16)
 

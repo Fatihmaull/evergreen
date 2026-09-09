@@ -6,7 +6,7 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 
 - Current merged baseline: main `321656b`, including task-ID checker PR #56, architecture PR #53 and ADR-005/carry-forward PR #58, in addition to the earlier W1 foundations.
 - Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) merged as `59c3cf8`; its former head branch, used as #57's base, was subsequently deleted.
-- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) closed without a merge when that base was deleted. Its published head `98e62e2` remains preserved; this local synchronization prepares the existing report/evidence against current main. No reopened or replacement PR, push or merge of the closeout into main is claimed.
+- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 local follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; follow-up publication is pending Rakha review. The PR is open and has not merged.
 - [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch retains **48 Done, 2 In progress**. Recurring drift `W1-D4-09` continues; `W1-D7-04` now awaits review of the synchronized closeout, not ADR-005 acceptance. Completion on this branch remains distinct from integration into main.
 
 **Task registration:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) is integrated. C retains its separate `W3-D18-02c` spare-proof task; the backlog now contains 132 tasks (W3: 27). Its Notion row and future-week mirror counts still need catch-up; this synchronization is local codebase work.
@@ -73,7 +73,7 @@ Fatih confirmed the carry-forward in [PR #58](https://github.com/Fatihmaull/ever
 2. Preserve the accepted Actions + Node runtime and W4 Neon adoption. Low TTL is not proof that a prior transaction failed. W3-D16-02 must reconcile known transaction hashes and validity bounds; W3-D16-03 owns the interim history. A timeout or `NOT_FOUND` alone must not be rewritten as success or safe new submission.
 3. ADR-005 is **Accepted**, explicitly authored and merged by Fatih in PR #58. Reuse the existing JSON-compatible shared types; this synchronization does not change their implementation.
 4. Keep temporary-entry auto-bump policy in **W3-D15-02b**. PR #58 settles reporting separately: imminent deletion is high severity in W2 whether or not the engine will auto-bump. The W1 permissionless experiment proves capability, not a product policy for preserving disposable data.
-5. Keep D4-09 drift checks through Sep 20. The last recorded check is Sep 7, not this scan. The instance-only CLI does not yet replace B/C persistent/code drift coverage.
+5. Keep D4-09 drift checks through Sep 20. Fatih recorded a fourth reading on Sep 8 at 17:25 UTC in open PR #59 (B/C +0.0h, rounded); that is separate from this report's A scan. The instance-only CLI does not yet replace B/C persistent/code drift coverage.
 
 | Next task | Owner | Planned local outcome |
 |---|---|---|
@@ -100,3 +100,9 @@ Merged main into the existing closeout branch, retaining the W1 report, original
 The combined tree passed `pnpm check`: conflict detection, the 132-task ID check, typecheck, lint, formatting and all 70 offline tests. Preservation checks confirmed that original evidence and all three Mermaid diagrams are unchanged, while runtime code, workflows, tooling and dependency files match current main. No unresolved conflicts, whitespace errors or missing local file targets in this review and ARCHITECTURE remain. W1 stays at 48 Done / 2 In progress; W2 stays at 23 Pending.
 
 No new Testnet read or transaction, email, database provisioning, GitHub publication or Notion write is part of this synchronization. Task-state changes and publication remain separate review steps.
+
+## Local review follow-up — 2026-09-09
+
+Preserved Fatih's recovery of #57 and the local weekly Task Tracker policy, corrected stale current-state wording in STATUS/BACKLOG and this report, and retained main's architecture diagrams and atomicity explanation. ADR-005 is accepted; D7-04 remains In progress for shared closeout acceptance. The combined W1 tree passed `pnpm check` with all 70 offline tests; the final follow-up edits only update Markdown status/reporting. Runtime, dependencies, workflows, the evidence index and raw evidence match remote #57.
+
+PR #59 remains separately open. Its rounded drift observation is useful; the claim of an exact 5.000 s cadence is stronger than the script's one-decimal drift output establishes. This follow-up records that review finding without importing or changing Fatih's PR. No new transaction or drift measurement was made. Follow-up commits remain local pending Rakha's review; no PR update or GitHub response has been sent.
