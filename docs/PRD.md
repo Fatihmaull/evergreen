@@ -13,7 +13,7 @@
 
 Soroban contract data lives in ledger entries that each carry a **Time-To-Live (TTL)**, measured in ledgers remaining, not wall-clock time. Every ledger that passes decrements it. Contracts prepay **rent** in XLM to keep entries alive; extending TTL means topping up that rent via an `ExtendFootprintTTLOp` operation ("extendTTL").[^1]
 
-If TTL hits zero, the entry doesn't just vanish — behavior depends on entry type, but functionally the data is **archived** to off-chain cold storage and becomes unusable until someone submits a `RestoreFootprintOp` to bring it back. Restoring is slower and more expensive than a normal read, because archived entries are treated as disk-based data during recovery.[^1]
+An entry is still live on its final ledger — **remaining TTL zero means one ledger left, not expired**; expiry begins at −1. After that ledger, behaviour depends on the entry type, and the difference matters enough that the two must never be reported the same way. **Persistent, instance and code entries are archived**: unusable until someone submits a `RestoreFootprintOp`, and restoring is slower and more expensive than a normal read because archived entries are treated as disk-based data during recovery. **Temporary entries are deleted outright** and cannot be restored at any price.[^1]
 
 Developers currently track and extend TTLs manually. There's no dedicated automation layer for this on Stellar today — that's the gap Evergreen fills.
 
@@ -170,7 +170,7 @@ The open question is only one of *positioning*, and it is answered empirically r
 
 | Week | Dates | Focus | Output |
 |---|---|---|---|
-| 1 | Sep 3 – Sep 9 | Monorepo setup (Jest, ESLint), Soroban TTL/rent/RPC research, initial scan command + cost model | Working monorepo, first scan command on testnet, first tech spec draft |
+| 1 | Sep 3 – Sep 9 | Monorepo setup (Vitest, ESLint), Soroban TTL/rent/RPC research, initial scan command + cost model | Working monorepo, first scan command on testnet, first tech spec draft |
 | 2 | Sep 10 – Sep 16 | Manual `extendTTL`, refine prediction model, storage optimizer, unit tests | Successful testnet TTL extension w/ tx hash proof, optimizer recommendations |
 | 3 | Sep 17 – Sep 23 | Auto-bump service (Day 1–2: `passkey-kit` headless-signer spike, see §6.2.1), threshold rules, alerts, end-to-end testnet validation | Fully functional auto-bump workflow, tx proofs, alert notifications |
 | 4 | Sep 24 – Oct 2 | Dashboard (public read-only; wallet-connect at P1), `evergreen-check` Action, docs, demo video, npm publish, evidence packaging | Live testnet dashboard, published Action + packages, docs, demo, evidence bundle submitted to Ambassador |

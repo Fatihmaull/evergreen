@@ -152,11 +152,11 @@ Deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and then left al
 >
 > If Sep 12–13 arrives with genuine slack, deploying a pure third contract as a bonus is cheap, and whichever reads better can be used. That is opportunistic — **B is the plan.**
 
-> ### ⚠️ Guinea-pig B must stay OUT of the engine's watched-contract config
+> ### ⚠️ An accidental bump of B or C destroys the proof
 >
-> If B ends up in `evergreen.config.json` during Week 3 testing, the engine will dutifully bump it — and destroy the very thing it was deployed to demonstrate. Weeks of aging, gone, with no way to get them back inside the sprint.
+> If B ends up watched by an engine whose threshold is wrong, the engine will dutifully bump it — and destroy the very thing it was deployed to demonstrate. Weeks of aging, gone, with no way to get them back inside the sprint.
 >
-> The config file carries a comment saying so. **Do not add B to it until the moment of proof.** Losing this to an accidental bump would be an entirely self-inflicted way to lose the grant's best evidence.
+> **This is not "keep B out of the config".** That was the rule before calibration existed, and it is superseded — see [§ Putting B and C into the engine config](#putting-b-and-c-into-the-engine-config) below, which is the procedure to follow. Calibrated against a matching threshold, the engine correctly does nothing until the crossing; the danger is a *mismatched threshold*, not the config entry. Adding them is a deliberate, verified step: add, dry-run, confirm no action needed, only then run live.
 
 ### Building and deploying them
 
@@ -224,9 +224,9 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 | Service | Purpose | Account/owner | Status |
 |---|---|---|---|
 | GitHub | repo, CI, Action publishing | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ public, MIT, CI green |
-| npm | `evergreen` packages | *(W1-D5-01 — see below)* | ⬜ |
-| Hosting (Vercel/Netlify/Cloudflare) | dashboard | *(W1-D5-02)* | ⬜ |
-| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | ✅ manual and genuine scheduled Testnet reads verified; evidence published in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), awaiting merge |
+| npm | `@evergreen-stellar/cli` + `/core` | org **`evergreen-stellar`** owned (`W1-D5-01`) | ✅ scope owned, so nothing in it can be squatted; `publishConfig.access=public` set. Publication itself is `W4-D27-02`, **not** Sep 16 |
+| Cloudflare Pages | dashboard | `evergreen-stellar` (`W1-D5-02`) | ✅ live, HTTP 200 verified |
+| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | ✅ manual and genuine scheduled Testnet reads verified; evidence merged in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27) on Sep 7 |
 | Resend | local email smoke; engine alerts later | `W1-D5-04` | ✅ one local email accepted (HTTP 200) and inbox receipt confirmed; [evidence](evidence/2026-09-07-email-smoke/README.md) |
 | Shared drive | evidence (screenshots, video) | *(W1-D5-06)* | ⬜ |
 

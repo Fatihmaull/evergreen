@@ -2,20 +2,39 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-09 · W1 closeout (#57) restored and retargeted to main; shared review remains open
+**Last updated:** 2026-09-09 · **W1 CLOSED** — closeout merged in #57, ADR-005 accepted, 49/50 done
 **Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
-**Current week:** W1 — Foundation
-**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
+**Current week:** W1 — Foundation (closed) → **W2 — Core CLI starts Thu Sep 10**
+**Health:** 🟡 on track with one dated risk · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🔴 **guinea-pig A archives Wed Sep 16 ~19:27 UTC**
 
 ---
 
 ## Right now
 
-**2026-09-09 — published follow-up to Fatih's review (`W1-D7-04`):** reconciled remote recovery commit `1e08aeb` with local synchronization and weekly Task Tracker notes at `01a135c`. The architecture retains main's stage/atomicity content plus the local corrections recording ADR-005 acceptance and the W2 temporary-reporting boundary. Corrected the stale current task-state paragraph below. The weekly narrative policy remains in CONVENTIONS. The combined W1 tree passed `pnpm check` (70 offline tests); final follow-up edits only update Markdown. Rakha reviewed and authorized publication; the follow-up is pushed to PR #57, which remains open and unmerged. D7-04 remains In progress, with its outcome mirrored to Notion at this session boundary.
+### 🔴 Guinea-pig A archives Wed Sep 16 ~19:27 UTC — the one thing to act on this week
 
-**PR #59 review:** its two-file scope documents the stacked-PR recovery and Fatih's fourth drift reading. Neither is merged here. The reported +0.0h drift is rounded to one decimal by the script; it does not establish an exact 5.000 s cadence for every ledger. Preserve the observation while qualifying that explanatory sentence in review. No new drift run is claimed.
+**Measured 2026-09-09 at ledger 4,584,770**, by running the built CLI against testnet, not by reading a record:
 
-**2026-09-09 — W1 closeout in review (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout. #53 and #56 are merged; #57 is now based on `main` and synchronized with it.
+| Entry | Ends at ledger | Remaining | Projected | On expiry |
+|---|---|---|---|---|
+| instance | 4,712,648 | 127,845 | **2026-09-16 19:27 UTC** | archived |
+| persistent | 4,712,658 | 127,855 | 2026-09-16 19:28 UTC | archived |
+| temporary | 4,712,659 | 127,856 | 2026-09-16 19:28 UTC | **deleted — unrecoverable** |
+| code | 5,290,829 | 706,026 | 2026-10-20 06:28 UTC | archived |
+
+A is not a decay-proof subject — B (Sep 20) and C (Sep 25) are, deliberately. **A is the working contract**: the `W1-D7-01` milestone target, every live scan, `#60`'s reproduction instructions, and `W3-D17-04`'s *"trigger a real bump on guinea-pig A"* which is due **before Fri Sep 18**. On Sep 17 that task is not executable as written: `extendTTL` does not work on an archived entry, it needs `RestoreFootprintOp` first, and the primer records that **Evergreen v1 deliberately does not automate restores — it exists to avoid needing them.** A's temporary entry is *deleted*, not archived, so that one does not come back at any price.
+
+Nothing in the repo recorded this. Every mention of `4,712,648` treats it as a number to match a scan against; none treats it as a deadline. The tool that exists to stop a contract archiving unwatched was about to let its own demo contract archive unwatched — which is the failure mode, not an irony to enjoy.
+
+**Fix is cheap and needs a decision, not a discussion:** extend A before Sep 16 using `evergreen-b` (funded, 9,999.9 XLM; `extendTTL` is permissionless so no authority over A is needed). That is a live testnet transaction, so it waits on Fatih's go-ahead. **Do not extend B or C** — that destroys both decay proofs.
+
+### W1 closed
+
+**2026-09-09 — W1 closeout merged (`W1-D7-03/04/05/06`):** the [review and W2 handoff](W1-REVIEW.md) is on `main` via [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) (`88372ec`); the closeout branch is deleted. Merging it *is* the shared acceptance, so `W1-D7-04` is Done and W1 closes at **49/50**, the one open item being `W1-D4-09`'s recurring drift check through Sep 20. [#44](https://github.com/Fatihmaull/evergreen/issues/44) stays open as the discussion thread only.
+
+**[PR #59](https://github.com/Fatihmaull/evergreen/pull/59) merged (`3a76075`):** the stacked-PR rule now in CONVENTIONS § Git, and the fourth drift reading in the drift log below. Rakha's review note on the drift wording was half right and is answered in place — see the drift log.
+
+**#57 was auto-closed by GitHub twice, not rejected.** The first time it was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR silently, attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7`, reopening, retargeting to `main`, then deleting the temporary branch again — reopen is refused while the base is missing, and the base cannot be changed while the PR is closed. **It then closed a second time when #59 merged**, even though #59's branch was unrelated and #57 was by then based on `main`. That second close also suppressed the `synchronize` webhook, so two pushes to the branch ran no CI at all while `gh pr view` still reported the *previous* head as green. Rule, stronger than the one #59 recorded: **after any merge that deletes a branch, re-check the `state` of every other open PR — not just its mergeability.** Querying `mergeable` alone is what hid this for half an hour.
 
 **⚠️ #57 was auto-closed by GitHub, not rejected.** It was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR — silently, and attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7` (reopen is refused while the base is missing, and the base cannot be changed while the PR is closed), reopening, retargeting to `main`, then deleting the temporary branch again. **Rule for stacked PRs from here: retarget the child to `main` *before* merging the parent.** The child's own reviewed content was never at risk — only its PR record.
 
@@ -150,8 +169,9 @@ The PR-closed and pending-sync statements in this dated record describe that ear
 | Stellar foundation | Done; drift continues | F/R | A/B/C, permissionless proof, inclusive boundary; D4-09 through Sep 20 |
 | Services and accounts | Done | F/R | npm namespace, Pages placeholder, Actions schedule, email delivery |
 | Types, mock and persistence decision | Done | R/F | Shared types/mock merged; unused persistence spike merged #52; Neon adoption deferred to W4 |
-| Architecture | Complete; PR open | R | #53 awaits review/merge |
-| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; broader entry coverage remains W2 |
+| Architecture | Done | R | `W1-D6-02` merged in #53 (`59c3cf8`); broader discovery remains W2-D8-03/04 |
+| W1 closeout | Done | R/F | `W1-D7-03/04/05/06` merged in #57 (`88372ec`); merging it *is* the shared acceptance |
+| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; four-entry coverage in review, PR #60 |
 | Engine and dashboard | Future implementation | R/F | Stage 1 engine W3; functional dashboard W4 |
 | W1 review and evidence | Reports complete; shared review open | S | 24 indexed txs and fresh scan; D7-04/#44 remains In progress |
 
@@ -747,7 +767,9 @@ Reordered after Phase 0 — the Week 3 spike risk has been largely defused; Week
 
 ## Evidence captured so far
 
-See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published artifacts.** First evidence expected W1-D7-03.
+See [`docs/EVIDENCE.md`](EVIDENCE.md), which is the index. Count as of the W1 close: **24 unique testnet transactions** — 19 Sep 5 bootstrap transactions recovered on Sep 8, plus 5 setup/boundary records — each with full RPC JSON and an explorer screenshot, alongside the `W1-D7-03` scan snapshot. One published artifact: the Cloudflare Pages dashboard placeholder.
+
+**Re-count at every week gate.** This line read `0 · 0 · 0` until Sep 9, four days after the first evidence landed — a standing summary nobody re-derives is worth less than no summary, because it is read as current.
 
 ## Session log
 
