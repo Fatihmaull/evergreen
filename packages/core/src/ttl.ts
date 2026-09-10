@@ -63,10 +63,19 @@ export function observeTTL(args: {
  * the chain works differently than it does.
  */
 
+/**
+ * Has the entry passed its final live ledger? The primitive both predicates
+ * below are built from, so the boundary is written down in exactly one place.
+ * Everything else CALLS this — nothing restates `remaining < 0`.
+ */
+export function hasExpired(remainingLedgers: number): boolean {
+  return remainingLedgers < 0;
+}
+
 /** Is the entry still live? Zero remaining is its final live ledger, not death. */
 export function isLive(ttl: TTLObservation): boolean | undefined {
   if (ttl.status === 'unavailable') return undefined;
-  return ttl.remainingLedgers >= 0;
+  return !hasExpired(ttl.remainingLedgers);
 }
 
 /**
@@ -293,7 +302,7 @@ export function projectEnd(
     endsAtLedger,
     remainingLedgers,
     endBehavior: entry.endBehavior,
-    isLive: remainingLedgers >= 0,
+    isLive: !hasExpired(remainingLedgers),
     isRestorableAfterEnd,
     estimatedEndsAt: new Date(estimate),
     earliestEndsAt: new Date(Math.min(slow, fast)),

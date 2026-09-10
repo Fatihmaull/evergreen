@@ -6,7 +6,7 @@ import type {
   LedgerKey,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { needsAction } from './ttl.js';
+import { hasExpired, needsAction } from './ttl.js';
 
 /**
  * The liveness assertion (`W2-D10-04`).
@@ -213,8 +213,9 @@ export function assertLiveness(args: {
     if (forEntry.some(confirmedBump)) continue;
 
     // Expiry is the protocol boundary, not the policy one: live AT zero, dead
-    // below it. `extendTTL` cannot reach an entry past this line.
-    const isExpired = remainingLedgers < 0;
+    // below it. `extendTTL` cannot reach an entry past this line. Calls the
+    // predicate rather than restating it — see CONVENTIONS § one home.
+    const isExpired = hasExpired(remainingLedgers);
 
     const candidates = forEntry.map((record): { reason: LivenessReason; note?: string } => {
       switch (record.outcome) {
