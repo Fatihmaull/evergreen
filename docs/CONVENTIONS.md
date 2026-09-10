@@ -195,7 +195,7 @@ Two rules follow, both in [`AGENTS.md`](../AGENTS.md) § Dual-channel sync:
 - **Row IDs come from `BACKLOG.md`, never inferred from a naming pattern.** The repo registers the ID; Notion copies it.
 - **Diff on presence, not only on status.** A divergent ID appears as a phantom on one side and a missing row on the other, which a status-only diff will not see.
 
-*(Learned the hard way on 2026-09-05: guinea-pig C existed as `W1-D4-04d` in Notion and `W1-D4-07` in the repo — a divergence in the join key created on the same day the key was declared frozen.)*
+*(Learned the hard way on 2026-09-05: guinea-pig C existed as ~~W1-D4-04d~~ in Notion and `W1-D4-07` in the repo — a divergence in the join key created on the same day the key was declared frozen.)*
 
 Full workflow, including the session-start validation and the discrepancy rules, is in [`AGENTS.md`](../AGENTS.md) § Dual-channel sync.
 

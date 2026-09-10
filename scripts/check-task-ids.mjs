@@ -31,8 +31,35 @@ const ROOTS = ['docs', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
 const SKIP = ['archive', 'node_modules'];
 
 // A registered task is one with a checkbox in BACKLOG...
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ TRIGGER REACHED 2026-09-10 — read before adding another pattern here.
+//
+// Fatih's rule: "if the checker grows a THIRD rule that pattern-matches
+// formatting, replace all three with a machine-readable marker." That count was
+// reached and passed in one sitting. This file encoded meaning in presentation
+// four separate times:
+//
+//   1. registered   = has a checkbox        (broke when W1-D4-09 became recurring)
+//   2. retired      = wrapped in ~~ ~~      (its own hardcoded id pattern)
+//   3. ID  suffixes = [0-9a-c]              (W3-D21-01d/e silently untracked)
+//   4. REF suffixes = [a-c]?                (a SECOND copy of 3, widened separately,
+//                                            which left `...01z` undetected)
+//
+// 3 and 4 are the instructive pair: one concept, two hand-kept regexes, and
+// fixing one made the checker *look* fixed while the other still let a dangling
+// id through. All three patterns now derive from `ID` below — one source.
+//
+// NEXT CHANGE TO THIS FILE: do not add a fifth pattern. Move the metadata out of
+// the prose — a `retired-ids` list or frontmatter the checker reads as DATA —
+// so that changing how a document looks stops changing what the checker believes.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const backlog = readFileSync(BACKLOG, 'utf8');
-const ID = String.raw`W\d-D\d+-[0-9a-c]+|F-\d+|B-D\d+-\d+`;
+// Suffix letters are open-ended. This was [0-9a-c] until 2026-09-10, which made
+// W3-D21-01d and W3-D21-01e invisible in BOTH directions: not registered, and
+// references to them not flagged. Silently untracked work, from a character class
+// that encoded "how many sub-tasks we happened to have" as a rule.
+const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+`;
 
 // ...or a row in § Recurring obligations. A standing obligation is tracked work
 // with a closing condition rather than a weekly checkbox, so it is registered
@@ -49,7 +76,11 @@ const REGISTERED = new Set([
 ]);
 
 // Any delimiter. Trailing guard stops a prefix matching a longer ID.
-const REF = /\b(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\b(?![-\w])/g;
+// Built from the SAME `ID` source as REGISTERED. It used to be a second, hand-kept
+// copy of the pattern, which is how W3-D21-01d/e ended up invisible in both
+// directions and how widening only one of the two left a dangling `...01z`
+// undetected. One concept, one pattern.
+const REF = new RegExp(String.raw`\b(${ID})\b(?![-\w])`, 'g');
 
 /**
  * A RETIRED id, quoted deliberately: ~~W3-D18-02~~
@@ -62,7 +93,7 @@ const REF = /\b(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\b(?![-\w])/g;
  * silence this check on a live reference would convert a caught bug into a
  * hidden one.
  */
-const RETIRED = /~~\s*(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\s*~~/g;
+const RETIRED = new RegExp(String.raw`~~\s*(${ID})\s*~~`, 'g');
 
 function walk(p) {
   if (SKIP.some((s) => p.includes(s))) return [];
