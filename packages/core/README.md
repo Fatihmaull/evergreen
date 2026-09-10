@@ -14,14 +14,36 @@ Rules that are easy to get wrong:
 
 Decision rules are a pure function — `(ScanResult, thresholds) => BumpDecision` — with no I/O, so the engine can be tested without a network.
 
-## Current scan API (`W2-D8-03`)
+## Current scan API (`W2-D8-03/04`)
 
 `scanContract(reader, { id, label? }, dataKeys?, { noDataKeys? })` returns a `ScanResult` for one contract. It reads the instance, derives a Wasm code key from its executable, then reads code and explicit persistent/temporary data keys in batches of at most 200. The supplied keys must be canonical base64 XDR `ContractData` keys belonging to that contract. A non-Wasm executable produces `unsupported-executable`; it never produces an invented code key.
 
 `LedgerEntryReader` carries the serialized entry payload as `entryXdr` in addition to optional TTL. The production adapter preserves SDK `val` as XDR. Payload/key mismatches, duplicates, unrequested rows, invalid TTL and malformed responses are diagnosed. A failing batch does not erase successful batches, and each observation keeps its response's `latestLedger`.
 
-Coverage is always `known-keys`, including the unique validated supplied data-key count. Neither a missing entry nor unavailable TTL proves expiry. This API does not enumerate all storage or merge consumers across contracts; the latter remains `W2-D8-04`. Legacy `scanInstances` is still exported, but the CLI uses `scanContract`.
+Coverage is always `known-keys`, including the unique validated supplied data-key count. Neither a missing entry nor unavailable TTL proves expiry. This API does not enumerate all storage. Legacy `scanInstances` is still exported, but the CLI uses `scanContract`.
 
 The [CLI guide](../cli/README.md) describes the input file and exit policy. The [read-only Testnet capture](../../docs/evidence/2026-09-08-scan-entry-types/README.md) complements offline fixtures; no transaction path is added.
 
 An explicit `{ noDataKeys: true }` with an empty key list records a caller assertion, not verified enumeration. Supplying any key at the same time is rejected before RPC reads. Omission leaves coverage unknown when no data keys were supplied. CLI health/exit policy is documented in ADR-006; core returns observations, not spending instructions.
+
+
+### Multiple contracts and shared entries
+
+`scanContracts(reader, requests)` accepts an array of `ContractScanRequest` from core:
+
+```ts
+const scan = await scanContracts(reader, [
+  { contract: { id: firstId }, dataKeys: firstDataKeys },
+  { contract: { id: secondId }, dataKeys: secondDataKeys },
+]);
+```
+
+Each request has `contract: ContractRef`, optional `dataKeys: readonly LedgerKey[]`, and optional `noDataKeys: boolean`. `scanContract` delegates to this same path with one request; CLI syntax is unchanged. No shared-domain schema or SDK adapter change is needed.
+
+Instances are deduplicated and read first; their valid Wasm hashes populate one map of code/data keys for the second phase. Every canonical key is requested once, in batches of at most 200. A shared code entry lists every unique **known input** consumer, never all consumers on the network. Repeated contract IDs union validated data keys and keep the first supplied label. An empty-data assertion contradicting any nonempty input for that ID is an error; that contract is excluded from reads while independent contracts continue. Malformed scope arrays/flags also exclude that contract.
+
+A shared-key error names all known affected consumers; a failed batch names the union of that batch's consumers. Missing/invalid instances do not invent shared-code associations, but their valid explicit data can still be read. Each successful observation retains its response ledger; this is not an atomic snapshot across batches. Duplicate RPC observations are discarded, not reconciled by taking the newest-looking value. Coverage counts/assertions remain per contract, and unknown coverage is never promoted by another contract's declaration.
+
+The legacy `scanInstances` now removes duplicate input consumers; it remains instance-only with unspecified coverage. Multi-contract CLI UX, rent and engine decisions are separate tasks.
+
+[Read-only shared-Wasm evidence](../../docs/evidence/2026-09-09-scan-dedup/README.md) verifies B, C, B becomes two unique contracts and three entries, using two instance keys and one code-key read.

@@ -1,0 +1,26 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ: 0 explicit data key(s)
+  Data-key coverage unknown: supply keys, or --no-data-keys only if applicable.
+  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL: 0 explicit data key(s)
+  Data-key coverage unknown: supply keys, or --no-data-keys only if applicable.
+
+instance  AAAABgAAAA…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+  remaining:  207,176 ledgers — live
+  ends at:    ledger 4,793,687
+  approx:     2026-09-21T12:00:23.178Z (estimate — ledgers are the truth)
+  observed:   ledger 4,586,511
+
+instance  AAAABgAAAA…
+  contracts:  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  remaining:  293,586 ledgers — live
+  ends at:    ledger 4,880,097
+  approx:     2026-09-26T12:01:13.178Z (estimate — ledgers are the truth)
+  observed:   ledger 4,586,511
+
+code  AAAAB8flXw…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ, CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  remaining:  704,318 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:53.178Z (estimate — ledgers are the truth)
+  observed:   ledger 4,586,511

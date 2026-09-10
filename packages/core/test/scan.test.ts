@@ -21,17 +21,18 @@ describe('scanInstances', () => {
     expect(result.issues).toEqual([]);
   });
 
-  it('records one entry, not two, when two contracts share a ledger key', async () => {
-    // The shared-ContractCode case in miniature: the same key requested twice
-    // must produce a single entry with both consumers. Duplicating it here is
-    // where the rent double-count and duplicate-bump bugs originate.
+  it('deduplicates repeated input consumers as well as instance keys', async () => {
+    // Repeated input is one consumer. Distinct shared-Wasm consumers are
+    // covered by the scanContracts tests.
     const keyA = instanceKey(A);
     const reader = createMockReader(4_500_000, [{ key: keyA, liveUntilLedgerSeq: 4_600_000 }]);
 
     const result = await scanInstances(reader, [{ id: A }, { id: A, label: 'again' }]);
 
     expect(Object.keys(result.entries)).toHaveLength(1);
-    expect(result.entries[keyA]?.contracts).toEqual([A, A]);
+    expect(result.entries[keyA]?.contracts).toEqual([A]);
+    expect(result.contracts).toHaveLength(1);
+    expect(result.coverage).toBeUndefined();
   });
 
   it('marks an entry unavailable rather than expired when TTL metadata is missing', async () => {

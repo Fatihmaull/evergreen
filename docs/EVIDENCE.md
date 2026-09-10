@@ -214,3 +214,7 @@ Written at B-D29-02. One page, non-technical, letting Kenny verify all three del
 ### W1 scan exit-code migration — 2026-09-09
 
 The W1-D7-01 milestone exit-code checks record the implementation at capture time. Under W2-D8-03 / [ADR-006](adr/ADR-006-scan-health-exit-codes.md), bare `evergreen scan <id>` without data-key coverage returns 3 even when instance/code are healthy. The historical captures are unchanged; their exit values are not the current interface. `--no-data-keys` is an unverified caller assertion and must not be used merely to silence incomplete coverage.
+
+### W2-D8-04 — Unique ledger keys and known consumers (2026-09-09)
+
+[Read-only B/C evidence](evidence/2026-09-09-scan-dedup/README.md) captures input B, C, B at ledger 4,586,511 and returns two unique contracts, two instances and one shared code entry with both consumers. Entry requests contain 2 keys then 1 key, with no duplicate read. Raw requests/responses, compiled/source hashes, output and checksums are retained. Additional-data coverage remains unknown (health helper 3); no transaction or calibration change occurred. This is core API evidence, not a multi-contract CLI feature or a new drift run.
