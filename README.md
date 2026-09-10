@@ -2,7 +2,7 @@
 
 **A Soroban state-archival autopilot.** Monitor contract TTL, predict archival, estimate rent cost, and extend TTL automatically — non-custodially.
 
-Soroban ledger entries expire. When a contract's TTL hits zero, its state is archived and the contract stops working until someone pays to restore it. Stellar has no dedicated tooling to automate this today, so developers track TTL by hand. Evergreen fixes that.
+Soroban ledger entries expire. An entry is still live on its final ledger — remaining TTL zero means one ledger left, not expired. After that, what happens depends on the entry type: **persistent, instance and code entries are archived** and the contract stops working until someone pays to restore them, while **temporary entries are deleted outright and cannot be recovered at all.** Stellar has no dedicated tooling to automate this today, so developers track TTL by hand. Evergreen fixes that.
 
 > 🚧 **In active development.** Built by [Apex](#team) during a 30-day Stellar Instawards engagement (2026-09-03 → 2026-10-02). Testnet only for now.
 

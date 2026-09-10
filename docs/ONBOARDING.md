@@ -117,7 +117,7 @@ Full rules in [`CONVENTIONS.md`](CONVENTIONS.md). The ones that are non-obvious 
 - **Anything that can submit a transaction defaults to dry-run.** Live submission needs an explicit flag.
 - **Never invent a Soroban API.** Check `SOROBAN-PRIMER.md`, then the official Stellar docs. Say "I need to verify this" rather than guessing — a plausible-looking hallucinated RPC method costs hours.
 
-Before you call anything done: **`pnpm check`** — which runs `typecheck && lint && format:check && test`, exactly matching CI. Run the whole thing, not a subset: a local gate weaker than the remote one is worse than no local gate, because it manufactures trust in a green that means nothing.
+Before you call anything done: **`pnpm check`** — it runs exactly what CI runs, six gates, enumerated once in [`CONVENTIONS.md` § Formatting](CONVENTIONS.md). Run the whole thing, not a subset: a local gate weaker than the remote one is worse than no local gate, because it manufactures trust in a green that means nothing. *(Deliberately not re-listed here — a second copy of the list is a second thing to keep current, and both copies had already drifted by Sep 9.)*
 
 ### What "verified against testnet" means for your task
 
@@ -193,11 +193,11 @@ Some of these must stay *possible* without being *built* — the data model must
 
 ## Decisions already made
 
-Four ADRs in [`docs/adr/`](adr/), plus the Decisions page in Notion where the humans go for "why".
+Five accepted ADRs in [`docs/adr/`](adr/) and one proposed, plus the Decisions page in Notion where the humans go for "why".
 
 **These are settled.** Reopening one needs an ADR amendment with a reason — not a fresh argument in a PR. Amend, never rewrite: the reasoning we had at the time is the valuable part.
 
-Currently: the engine is a scheduled job not a daemon; the policy signer is `passkey-kit` with an amendment moving it off the critical path; toolchain decided with hosting still open; and the user always pays their own fees.
+Currently: the engine is a scheduled job, not a daemon; the policy signer is `passkey-kit`, amended to sit off the critical path; the toolchain, the scheduler (GitHub Actions cron) and hosting (Cloudflare Pages, live) are all decided, with PostgreSQL on Neon accepted but deferred to Week 4; the user always pays their own fees; and the shared domain types are JSON-compatible with money as decimal text rather than `number`. **ADR-006 is still Proposed** — the `scan` exit-code scheme — so don't build on it yet.
 
 ---
 

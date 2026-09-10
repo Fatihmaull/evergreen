@@ -6,8 +6,8 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 
 - Current merged baseline: main `321656b`, including task-ID checker PR #56, architecture PR #53 and ADR-005/carry-forward PR #58, in addition to the earlier W1 foundations.
 - Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) merged as `59c3cf8`; its former head branch, used as #57's base, was subsequently deleted.
-- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 local follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; Rakha reviewed and authorized publication, and the follow-up is now pushed to #57. The PR is open and has not merged.
-- [BACKLOG](../BACKLOG.md): 50 W1 tasks; this branch retains **48 Done, 2 In progress**. Recurring drift `W1-D4-09` continues; `W1-D7-04` now awaits review of the synchronized closeout, not ADR-005 acceptance. Completion on this branch remains distinct from integration into main.
+- Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; Rakha reviewed and authorized publication. **The PR merged on 2026-09-09 as `88372ec`, which is how this file reached `main`;** its head branch is deleted.
+- [BACKLOG](../BACKLOG.md): 50 W1 tasks, **49 Done, 1 In progress** on main. Merging #57 *is* the shared acceptance, so `W1-D7-04` is Done. The one open item is the recurring drift check `W1-D4-09`, which runs until Sep 20 and is correctly `[~]` rather than incomplete.
 
 **Task registration:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) is integrated. C retains its separate `W3-D18-02c` spare-proof task; the backlog now contains 132 tasks (W3: 27). Its Notion row and future-week mirror counts still need catch-up; this synchronization is local codebase work.
 
@@ -106,3 +106,23 @@ No new Testnet read or transaction, email, database provisioning, GitHub publica
 Preserved Fatih's recovery of #57 and the local weekly Task Tracker policy, corrected stale current-state wording in STATUS/BACKLOG and this report, and retained main's architecture diagrams and atomicity explanation. ADR-005 is accepted; D7-04 remains In progress for shared closeout acceptance. The combined W1 tree passed `pnpm check` with all 70 offline tests; the final follow-up edits only update Markdown status/reporting. Runtime, dependencies, workflows, the evidence index and raw evidence match remote #57.
 
 PR #59 remains separately open. Its rounded drift observation is useful; the claim of an exact 5.000 s cadence is stronger than the script's one-decimal drift output establishes. This follow-up records that review finding without importing or changing Fatih's PR. No new transaction or drift measurement was made. Rakha reviewed and authorized publication; follow-up commit `9454df4` is now pushed to #57. Shared closeout acceptance remains pending in #44.
+
+## Post-close audit — 2026-09-09
+
+W1 closed with #57, then an audit of merged `main` across five lenses — every finding put to two independent refuters — confirmed 35 defects and refuted 24. Fixed in #61. Two are worth recording as *review findings* rather than as a list of edits, because both say something about how the process failed rather than what was wrong.
+
+### The most serious finding was public, and it was ours
+
+`README.md` and `docs/PRD.md` both said that when TTL hits zero the entry is archived and a `RestoreFootprintOp` brings it back. That is wrong twice: **zero is the final live ledger, not expiry**, and **temporary entries are deleted outright and cannot be restored at any price.** Rank this above the `CODEOWNERS` and `SETUP.md` findings — those are internal and cost us time; this one is public, factually wrong about our own core domain, and sits in the two documents a stranger evaluating the tool reads first.
+
+`docs/ONBOARDING.md` names that exact conflation as a serious UX bug: *"Reporting 'gone' for restorable data, or 'recoverable' for deleted data."* **We shipped the bug we had documented.**
+
+**How it survived:** the boundary was pinned during `W1-D4-13`, and the correction was propagated to `AGENTS.md`, `ONBOARDING.md` and `SOROBAN-PRIMER.md` — the files that *teach* the domain. `README.md` and `PRD.md` *restate* the domain in prose, cite no ADR, and were never on anyone's list. A fact corrected in one document has to be swept for wherever else it is asserted, and prose restatements are exactly the copies that get missed, because nothing links them back to the correction.
+
+The rule now lives in `docs/adr/README.md`: **sweep corrected facts, not only changed decisions.** The same day supplied the second half of that lesson from the other direction — ADR-003's database deferral had a downstream sweep, it was run against decisions, and it still missed three prerequisite tasks that existed only as prose. The rule worked; its scope did not.
+
+### What was still watching, and what was not
+
+The audit did not find the largest problem. Running the CLI against testnet did: guinea-pig **A** was nine days from archival, and nothing in the repo recorded it — every mention of ledger `4,712,648` treated it as a number to match a scan against, never as a deadline.
+
+The asymmetry is the finding. **B and C had a drift check running twice a week; A had nobody.** The two contracts deliberately designed to be at risk were monitored, and the one every scan, screenshot and milestone record depends on was not — because it was never *supposed* to be at risk, which is precisely the assumption that expires quietly. Rescued by hand in `W1-D7-08`; handed to the engine in `W3-D15-01b`, which is the only version of the fix that survives the sprint.

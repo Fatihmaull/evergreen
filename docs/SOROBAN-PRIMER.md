@@ -155,9 +155,7 @@ Original snapshot, retained as measured on 2026-09-05 (protocol 28, testnet). Wa
 1. **A 5–15 minute engine cadence (ADR-001) is adequate but not generous for temporary entries.** With about 720 ledgers in a fresh entry's lifetime, the reaction-time argument in ADR-001 ("TTL headroom is measured in days") holds for persistent/instance/code and does **not** hold for temporary. Thresholds for temporary entries must be expressed in ledgers with that in mind, and the CLI should probably warn when a temporary entry's remaining TTL is within a couple of cron intervals.
 2. **It makes temporary entries a fast, cheap test loop** — an entry that expires in an hour is a far quicker way to exercise expiry handling than waiting a week.
 
-> **Fixture placeholder — fill in during W1-D4-05.** Paste a real, unedited `getLedgerEntries` response for our guinea-pig contract here, and mirror it into `packages/core/test/fixtures`. Every unit test should run against real observed shapes, not invented ones.
-
-Recorded 2026-09-05 from the guinea-pig A contract, unedited, and mirrored into
+**Every unit test runs against real observed shapes, not invented ones.** Recorded 2026-09-05 from the guinea-pig A contract, unedited, and mirrored into
 [`packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json`](../packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json).
 
 Note the actual entry shape — `key`, `xdr`, `lastModifiedLedgerSeq`, `liveUntilLedgerSeq`, and an `extXdr` field the plan didn't anticipate:

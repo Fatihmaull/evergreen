@@ -9,7 +9,7 @@ As of 2026-09-08, the implemented product path is **a Testnet scan of instance/c
 | Component | Implemented | Planned work |
 |---|---|---|
 | `packages/shared-types` | JSON-compatible interfaces, examples and compiler checks; no runtime I/O | Real producers/adapters validate input and uphold these contracts. ADR-005 was accepted in PR #58; runtime adapters remain planned. |
-| `packages/core` | Testnet RPC reader, four-entry known-key scan, TTL math, unique-entry count | Cross-contract consumer deduplication (`W2-D8-04`), rent model, optimizer and decision rules |
+| `packages/core` | Testnet RPC reader, multi-contract known-key scan with unique keys/consumer sets, TTL math, unique-entry count | Rent model, optimizer and decision rules |
 | `packages/cli` | `scan <contract-id> [--keys-file <path> | --no-data-keys] [--json]`, coverage, human output and exit codes | Config loading, multi-contract scans, rent output, `extend`, `optimize` and full CLI UX |
 | `packages/engine` | Package placeholder; separate read-only scheduler smoke proof | Scheduled decision/sign/send/reconcile loop and notifications in W3 |
 | `apps/dashboard` | Static placeholder for the Pages deploy task | Public scan/history UI in W4; user-signed extension is P1 |
@@ -43,7 +43,7 @@ This is a dependency diagram. The following diagrams show data movement.
 
 The full scanner must canonicalize and deduplicate keys **before** rent calculation and decisions, merge unique consumer IDs, and handle conflicting observations. Rent is summed once per unique entry. Severity considers the number of affected consumers; the exact ranking remains decision/UX work. The engine must act once per unique key within a run (`W3-D16-02b`).
 
-**Current limit:** `scanContract()` discovers code and reads explicit data keys for one contract. It canonicalizes duplicate supplied keys but does not combine consumers across contracts (`W2-D8-04`). Legacy `scanInstances()` remains exported; it deduplicates requested instance keys while retaining repeated input consumer IDs. The type shape alone cannot enforce consumer uniqueness.
+**Current implementation (`W2-D8-04`):** `scanContracts(reader, requests)` merges repeated contract inputs, reads unique instance keys, derives shared Wasm consumers, then reads unique code and explicit data keys. `scanContract()` is a one-request wrapper used by the CLI. Consumers are unique known input IDs; a missing or malformed instance cannot establish a code association. Legacy `scanInstances()` also deduplicates input IDs but remains instance-only with unspecified coverage. No new CLI batch command or shared-domain type is introduced.
 
 ### Example: two contracts, one code entry
 
@@ -103,7 +103,7 @@ The [RPC adapter](../packages/core/src/rpc.ts) isolates SDK entry reads behind `
 
 ### `packages/cli` — `evergreen`
 
-The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package name and install/`npx` instructions remain subject to the npm setup decision (`W1-D5-01`); the executable can remain `evergreen` through its `bin` mapping.
+The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package is **`@evergreen-stellar/cli`** (`W1-D5-01`, org owned), installed as `npx @evergreen-stellar/cli`; the executable stays `evergreen` through its `bin` mapping. Publication is `W4-D27-02`.
 
 ### `packages/engine`
 
@@ -128,11 +128,11 @@ The planned published Action wraps CLI `scan` and consumes its exit code and JSO
 ```mermaid
 flowchart TD
     Input[CLI contract ID and optional data keys] --> Guard[connectTestnet - verify network]
-    Guard --> Scan[scanContract - validate and derive instance key]
+    Guard --> Scan[scanContract wrapper - scanContracts validates and deduplicates]
     Tests[Unit test inputs] -.-> Scan
-    Scan --> Read[Read instance through LedgerEntryReader]
-    Read --> Code[Decode instance executable and derive Wasm key]
-    Code --> Batches[Read code and explicit data keys - up to 200 per batch]
+    Scan --> Read[Read unique instances through LedgerEntryReader]
+    Read --> Code[Derive unique Wasm keys and merge consumers]
+    Code --> Batches[Read unique code and data keys - up to 200 per batch]
     Read --> RPC[getLedgerEntries via SDK adapter]
     Batches --> RPC
     Read -.-> Mock[Offline mock reader]
@@ -147,9 +147,9 @@ flowchart TD
 Scanner/CLI unit tests inject a mock reader. Separate adapter tests stub SDK methods; neither path contacts the network.
 
 1. The CLI validates arguments and the optional keys-file shape. `connectTestnet()` checks `getNetwork()`'s passphrase before any entry read.
-2. `scanContract(reader, contract, dataKeys)` validates the contract and supplied keys. Only persistent/temporary `ContractData` keys for that contract are accepted. Whitespace is normalized, duplicate keys count once, and invalid input becomes an issue.
-3. The instance is read first; its payload supplies the Wasm hash used to derive the code key. Non-Wasm executables produce `unsupported-executable`. If the instance is missing, explicit data keys can still be read, but no code key is invented.
-4. Code and explicit data keys are read in batches of at most 200. The adapter retains payload XDR, key and optional TTL. The scanner validates payload/key correspondence and discards duplicate or malformed observations. Failed batches leave earlier successful results available.
+2. `scanContract(reader, contract, dataKeys)` wraps one request for `scanContracts(reader, requests)`, which validates contracts and supplied keys. Repeated IDs merge data-key sets and keep the first supplied label; contradictory empty-data declarations reject that contract. Only persistent/temporary `ContractData` keys for that contract are accepted. Whitespace is normalized, duplicate keys count once, and invalid input becomes an issue.
+3. Unique instances are read first, at most 200 per batch; their payloads supply Wasm hashes for unique code keys and known consumer sets. Non-Wasm executables produce `unsupported-executable`. If the instance is missing, explicit data keys can still be read, but no code key is invented.
+4. Code and explicit data keys are deduplicated before reads, in batches of at most 200. Shared entries retain each known input consumer once; shared-key errors name all affected consumers, and batch errors name only that batch's consumers. The adapter retains payload XDR, key and optional TTL. The scanner validates payload/key correspondence and discards duplicate or malformed observations. Failed batches leave earlier successful results available.
 5. `observedAtLedger` comes from each batch's own `latestLedger`. Remaining TTL is `liveUntilLedgerSeq - observedAtLedger`: zero is still live, negative is expired. Missing metadata becomes `unavailable`. A missing requested entry produces `entry-not-found`, not proof of archival, deletion or prior existence.
 6. Human output and JSON state `known-keys` coverage, with the unique validated explicit data-key count. The scanner never claims to enumerate contract storage. Approximate dates remain display projections. Issues produce a PARTIAL warning.
 
@@ -162,7 +162,7 @@ Current CLI exit behavior, in precedence order:
 | All observations are available and any TTL is below 17,280 ledgers | `1` |
 | All supplied/discovered entries have known TTL at or above threshold and no issues | `0` |
 
-Zero covers only the supplied/discovered keys, never all contract storage. Precedence is 2 > 3 > 1 > 0. Legacy results without coverage now return 3. `--no-data-keys` is a caller assertion stored in `coverage.noDataKeysDeclaredByContract`, mutually exclusive with a keys file; an empty keys file is not that assertion. JSON retains low-TTL observations even when incomplete/error takes precedence. Exit status is a CI health summary, never authorization to spend. The engine consumes structured observations and policy/payer/budget inputs before deciding to bump. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) records this proposal for shared review. Cross-contract consumer merging remains `W2-D8-04`; severity presentation remains `W2-D10-01`.
+Zero covers only the supplied/discovered keys, never all contract storage. Precedence is 2 > 3 > 1 > 0. Legacy results without coverage now return 3. `--no-data-keys` is a caller assertion stored in `coverage.noDataKeysDeclaredByContract`, mutually exclusive with a keys file; an empty keys file is not that assertion. JSON retains low-TTL observations even when incomplete/error takes precedence. Exit status is a CI health summary, never authorization to spend. The engine consumes structured observations and policy/payer/budget inputs before deciding to bump. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) records this proposal for shared review. Cross-contract consumer merging is implemented in `W2-D8-04`; severity presentation remains `W2-D10-01`.
 
 ### Planned path: decide, pay, confirm, record
 

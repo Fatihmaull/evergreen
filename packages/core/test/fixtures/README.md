@@ -2,7 +2,12 @@
 
 Unit tests never hit the network (CLAUDE.md hard rule 9). They run against **real observed shapes** recorded here, not invented ones.
 
-**To be filled at `W1-D4-05`:** paste the unedited `getLedgerEntries` response for guinea-pig A, and mirror it into `docs/SOROBAN-PRIMER.md`.
+## What is here
+
+| Fixture | Recorded | Anchors |
+|---|---|---|
+| `getLedgerEntries-guinea-pig-a.json` | 2026-09-05 (`W1-D4-05`) | TTL parsing and the inclusive boundary. Mirrored in `docs/SOROBAN-PRIMER.md`. |
+| `extendTTL-fees-guinea-pig-a.json` | 2026-09-09 (`W1-D7-08`) | The rent model at `W2-D9-02` and the optimizer's pricing at `W2-D12-01`. Three real extends with `rentFeeCharged` isolated from `resultMetaXdr`. |
 
 Rules for anything added here:
 

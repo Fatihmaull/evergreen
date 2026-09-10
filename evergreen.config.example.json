@@ -3,10 +3,13 @@
     "Example Evergreen config. Copy to evergreen.config.json and edit.",
     "Shared by the CLI and the engine so their behaviour cannot drift.",
     "",
-    "⚠️  DO NOT ADD GUINEA-PIG B TO 'contracts'. It is the natural-decay subject",
-    "for W3-D18-02b and must age untouched until the moment of proof. If the",
-    "engine sees it, it will bump it and destroy weeks of ageing that cannot be",
-    "recovered inside the sprint. See docs/SETUP.md and scripts/deploy-guinea-pig.sh.",
+    "⚠️  GUINEA-PIGS B AND C ARE THE NATURAL-DECAY SUBJECTS for W3-D18-02b/02c.",
+    "An early bump destroys weeks of ageing that cannot be recovered inside the",
+    "sprint. They MAY sit in 'contracts' once calibrated — the engine correctly",
+    "does nothing until the crossing — but only via the verified add / dry-run /",
+    "confirm-no-action / go-live procedure. The danger is a mismatched threshold,",
+    "not the config entry. Never add either one casually. See docs/SETUP.md",
+    "§ Putting B and C into the engine config, and scripts/deploy-guinea-pig.sh.",
     "",
     "Shape checked against EvergreenConfig in packages/shared-types. Underscore-prefixed fields are documentation only; ignored by the future loader."
   ],
@@ -28,8 +31,8 @@
   ],
   "_doNotWatch": [
     {
-      "_warning": "GUINEA-PIG B — NEVER MOVE THIS INTO 'contracts' BEFORE W3-D18-02b.",
-      "_why": "It is deliberately ageing so the engine can save it unattended. Bumping it early destroys the grant's strongest evidence.",
+      "_warning": "GUINEA-PIG B — move into 'contracts' only via the verified procedure in docs/SETUP.md.",
+      "_why": "It is deliberately ageing so the engine can save it unattended, crossing ~2026-09-20 12:00 UTC. Bumping it early destroys the grant's strongest evidence. Calibrated at bumpWhenRemainingLedgersBelow 17280, the engine declines to act until the crossing — so verify that threshold in dry-run before it ever runs live against B.",
       "id": "REPLACE_WITH_GUINEA_PIG_B_ID",
       "label": "guinea-pig-B-natural-decay"
     }

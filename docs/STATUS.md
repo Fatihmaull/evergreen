@@ -2,14 +2,29 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · [S2] #60 merged; #63 queued; `W2-D8-01/02` shipped
+**Last updated:** 2026-09-10 · #60–#63 merged; ADR-006 live but **not yet accepted**; `W2-D8-01/02` in review (#65)
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
-**Current week:** W2 — Core CLI, Deliverable 1 · 🔴 **milestone gate Wed Sep 16**
-**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
+**Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed 49/50) · 🔴 **milestone gate Wed Sep 16**
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
 ## Right now
+
+**2026-09-09 — W2-D8-04 Done (Rakha), published for review in [PR #63](https://github.com/Fatihmaull/evergreen/pull/63):** `scanContracts(reader, requests)` now reads unique instance/code/data keys, retains unique consumer IDs and per-contract coverage, and attributes partial failures to affected consumers. `scanContract` wraps the same implementation; legacy `scanInstances` removes repeated input consumers. The approved [plan](W2-D8-04-PLAN.md) is implemented on `feat/W2-D8-04-ledger-key-dedup`, local runtime commit `f5065b5`. No new shared-domain schema, CLI syntax, rent or transaction path.
+
+**Validation:** `pnpm check` passed **170 offline tests** (134 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting, conflict and task-ID checks. The new tests first failed before implementation; coverage includes shared/distinct Wasm, duplicate/contradictory inputs, malformed scope and RPC data, per-contract coverage, partial batches and 201 instance keys. An initial TypeScript narrowing error was corrected before the passing gate. [Read-only Testnet proof](evidence/2026-09-09-scan-dedup/README.md) at ledger 4,586,511: input B/C/B → two unique contracts and three unique entries; entry reads of 2 then 1 keys; both consumers on one Wasm. No additional-data declaration was made, so the health helper correctly returns 3. Output TTLs match raw responses. Capture rendering was completed offline after correcting the helper name; original live responses are preserved. No transaction, B/C calibration change or drift-check claim.
+
+**Review/publication boundary:** Rakha authorized review and publication. Review found no blocking code issue; the full gate passed again with 170 offline tests on 8f0ade8. Parent documentation follow-up is published in PR #60 at 8100d83, including merged W1 main and Fatih's requested notes. D8-04 is published as [PR #63](https://github.com/Fatihmaull/evergreen/pull/63), based on #60, with Fatih requested as reviewer; retarget that child to main before merging/deleting the parent. No merge or new transaction. Audit #61/#62 remain separate. The [Issue #44 follow-up](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5601813974) requests final ADR acceptance and records the integration order. GitHub CI and Pages passed on parent 8100d83 and child 5d19800. This final publication-tracking edit changes Markdown only; final-head CI is checked separately. Notion publication links/status/outcomes for D8-03/D8-04 and the ADR-006 Decisions update were written and read back; W1-D7-04 Done was already verified.
+
+**2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Those documentation corrections are published in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent passed `pnpm check` with all 143 offline tests; W1-D7-04 Done is mirrored. D8-03 follow-up outcome is mirrored and verified; the follow-up is published at 8100d83.
+### ⚠️ ADR-006 is merged but not accepted — amendment proposed 2026-09-10
+
+**Correction to the entry below:** it records that "Fatih accepted the exit-code scheme". He did not. He said he would accept it once two consequences were written down, and #60 merged before that acceptance was given. The scheme is therefore **live in the CLI while still Proposed**, which is a state worth naming rather than letting the ADR's status field quietly disagree with the shipped binary.
+
+The open question is whether `--no-data-keys` asserts something a caller can actually know. For a contract you wrote, yes — it is a static property of your own source. For a contract you did not write, **no**: RPC cannot enumerate storage (`scan-contract.ts`: *"RPC cannot enumerate arbitrary storage"*), so there is no way to establish the absence of data keys, and third-party scanning is not an edge case — `W4-D22-02` promises "paste any contract ID". ADR-006 anticipates this exactly and mitigates it with a documentation note telling callers not to use the flag reflexively. **A doc note is not a mechanism.** Amendment under discussion; see the reply on #64.
+
+### ✅ Guinea-pig A extended past the sprint (`W1-D7-08`) — one clock still running
 
 **2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
 
@@ -28,7 +43,9 @@
 
 The sample also justified a design decision after the fact: **every one of the ten intervals closed in exactly 10,000 s**, so the observed per-interval spread was zero and the reported ±0.000050 is precisely the `1/N` quantization floor. Without that floor this measurement would have claimed **±0 uncertainty from real data** — a falsely exact projection arrived at honestly, which is the failure family this repo keeps meeting. Recorded as `packages/core/test/fixtures/ledger-closes-testnet-2026-09-10.json` and pinned by two tests; the fixture is labelled a *derived extract* rather than a raw response, because it is one. The agreement test states in its own comment that a future disagreement is a **finding**, not a reason to widen the band. Read-only; no transaction, and B, C and the shared code entry were not touched.
 
-**2026-09-10 — merge-order handling (S2).** PR #63 was retargeted to `main` **before** #60 merged, per the stacked-PR rule; it survived #60's merge instead of being auto-closed. Squashing #60 then left #63 conflicting in seven files. Resolution was verified rather than trusted: every conflicted file on `main` is byte-identical to #60's head, which is an ancestor of #63, so the branch side is a provable superset. The merged tree is byte-identical to #63's tip and `pnpm check` passes with 170 tests. **The push to Rakha's branch was blocked by this session's sandbox and is pending Fatih.**
+**2026-09-10 — merge-order handling (S2).** PR #63 was retargeted to `main` **before** #60 merged, per the stacked-PR rule; it survived #60's merge instead of being auto-closed. Squashing #60 then left #63 conflicting in seven files. Resolution was verified rather than trusted: every conflicted file on `main` is byte-identical to #60's head, which is an ancestor of #63, so the branch side is a provable superset. The merged tree is byte-identical to #63's tip and `pnpm check` passes with 170 tests. The push to Rakha's branch was sandbox-blocked here and Fatih ran it; #63 merged as `ee60d7c`. In the interval, S1 merged #61 and #62, so the branch needed a second sync against a main that had moved twice — the cross-session collision flagged that morning, arriving on schedule. S1 had already pushed that second sync; theirs was verified and accepted rather than overwritten with an equivalent local merge.
+
+**Correction against S2 (2026-09-10).** S2 twice stated it would land a follow-up flipping ADR-006 to **Accepted**, on the reasoning that Fatih's instruction to merge #60 *was* the acceptance. **That was wrong, and S1 caught it.** Fatih had said he would accept once two consequences were written down; #60 merged before that acceptance was given, so the scheme is live in the CLI while still Proposed. Flipping the status would have manufactured a record of a decision nobody made — the same class of error as a mirror asserting something the repo does not support, except authored into the canonical side where it is harder to detect. S2 dropped the follow-up; the open `--no-data-keys` amendment on #64 is S1's to carry. Recorded here rather than quietly abandoned, because the reasoning that produced it (an instruction to merge implies acceptance of everything in the diff) will look reasonable again the next time.
 
 **Notion anomaly (2026-09-10, S2).** All 23 W2 IDs present with owners matching `BACKLOG.md`. `W2-D8-04` read **Done** in Notion while PR #63 was open and unmerged — the mirror asserting something the repo did not support. Not corrected by editing the mirror: #60 is merged and #63 is queued, so the fix is to make the claim true. `W2-D8-03` read In progress against a Pending repo row — an ordinary missed write. Recorded here because status-only validation keeps proving insufficient; this is the third boundary at which the mirror and the repo disagreed on something other than status alone.
 
@@ -66,9 +83,30 @@ The sample also justified a design decision after the fact: **every one of the t
 
 **2026-09-09 — published follow-up to Fatih's review (`W1-D7-04`):** reconciled remote recovery commit `1e08aeb` with local synchronization and weekly Task Tracker notes at `01a135c`. The architecture retains main's stage/atomicity content plus the local corrections recording ADR-005 acceptance and the W2 temporary-reporting boundary. Corrected the stale current task-state paragraph below. The weekly narrative policy remains in CONVENTIONS. The combined W1 tree passed `pnpm check` (70 offline tests); final follow-up edits only update Markdown. Rakha reviewed and authorized publication; the follow-up is pushed to PR #57, which remains open and unmerged. D7-04 remains In progress, with its outcome mirrored to Notion at this session boundary.
 
-**PR #59 review:** its two-file scope documents the stacked-PR recovery and Fatih's fourth drift reading. Neither is merged here. The reported +0.0h drift is rounded to one decimal by the script; it does not establish an exact 5.000 s cadence for every ledger. Preserve the observation while qualifying that explanatory sentence in review. No new drift run is claimed.
+A's instance, persistent and temporary entries were all nine days from expiry, which nothing in the repo recorded. **Extended 2026-09-09, authorized by Fatih, read back from the chain:**
 
-**2026-09-09 — W1 closeout in review (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout. #53 and #56 are merged; #57 is now based on `main` and synchronized with it.
+| Entry | Before | After | Projected expiry | On expiry |
+|---|---|---|---|---|
+| instance | 4,712,648 | **6,025,589** | 2026-12-01 19:18 UTC | archived |
+| persistent | 4,712,658 | **6,025,595** | 2026-12-01 19:18 UTC | archived |
+| temporary | 4,712,659 | **6,025,598** | 2026-12-01 19:18 UTC | **deleted — unrecoverable** |
+| code *(shared A+B+C)* | 5,290,829 | 5,290,829 | 🔴 **2026-10-20 06:38 UTC** | archived |
+
+Three transactions from `evergreen-b`, permissionlessly, **318,803 stroops ≈ 0.032 XLM total** for ~83 days. Hashes and Horizon confirmations in the [evidence bundle](evidence/2026-09-09-guinea-pig-a-extend/README.md). B and C verified untouched afterwards — both still crossing Sep 20 and Sep 25 at +0.0h.
+
+**Targeted December, not Sep 19, deliberately.** A backs the `W1-D7-01` record, every live scan, #60's reproduction command, `W3-D17-04`'s real bump and the evidence screenshots. All of those stop being verifiable the moment A archives, and evidence has to outlive the sprint that produced it — extending to just past the immediate deadline would have re-created this in three weeks with nobody watching.
+
+**🔴 The shared code entry is the remaining clock.** All three guinea-pigs were built from one Wasm (verified by fetching and hashing each), so they share **one** `ContractCode` entry — "extending A's code" would have extended B's and C's, which `SETUP` forbids while the proofs are live. A contract is only as alive as its code entry, so **all three become unusable 2026-10-20** regardless of the December dates above. Registered as `W3-D18-02d`: extend it **after Sep 25**, once both proofs are captured, at which point it costs nothing.
+
+**The asymmetry is the real finding.** B and C had a drift check twice a week; A had nobody — the contracts designed to be at risk were monitored, the one everything depends on daily was not, because it was never *supposed* to be at risk. That assumption is what expired quietly. Rescued by hand here; handed to the engine at `W3-D15-01b`, which is the only version of the fix that outlives the sprint.
+
+### W1 closed
+
+**2026-09-09 — W1 closeout merged (`W1-D7-03/04/05/06`):** the [review and W2 handoff](W1-REVIEW.md) is on `main` via [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) (`88372ec`); the closeout branch is deleted. Merging it *is* the shared acceptance, so `W1-D7-04` is Done and W1 closes at **49/50**, the one open item being `W1-D4-09`'s recurring drift check through Sep 20. [#44](https://github.com/Fatihmaull/evergreen/issues/44) stays open as the discussion thread only.
+
+**[PR #59](https://github.com/Fatihmaull/evergreen/pull/59) merged (`3a76075`):** the stacked-PR rule now in CONVENTIONS § Git, and the fourth drift reading in the drift log below. Rakha's review note on the drift wording was half right and is answered in place — see the drift log.
+
+**#57 was auto-closed by GitHub twice, not rejected.** The first time it was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR silently, attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7`, reopening, retargeting to `main`, then deleting the temporary branch again — reopen is refused while the base is missing, and the base cannot be changed while the PR is closed. **It then closed a second time when #59 merged**, even though #59's branch was unrelated and #57 was by then based on `main`. That second close also suppressed the `synchronize` webhook, so two pushes to the branch ran no CI at all while `gh pr view` still reported the *previous* head as green. Rule, stronger than the one #59 recorded: **after any merge that deletes a branch, re-check the `state` of every other open PR — not just its mergeability.** Querying `mergeable` alone is what hid this for half an hour.
 
 **⚠️ #57 was auto-closed by GitHub, not rejected.** It was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR — silently, and attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7` (reopen is refused while the base is missing, and the base cannot be changed while the PR is closed), reopening, retargeting to `main`, then deleting the temporary branch again. **Rule for stacked PRs from here: retarget the child to `main` *before* merging the parent.** The child's own reviewed content was never at risk — only its PR record.
 
@@ -203,8 +241,9 @@ The PR-closed and pending-sync statements in this dated record describe that ear
 | Stellar foundation | Done; drift continues | F/R | A/B/C, permissionless proof, inclusive boundary; D4-09 through Sep 20 |
 | Services and accounts | Done | F/R | npm namespace, Pages placeholder, Actions schedule, email delivery |
 | Types, mock and persistence decision | Done | R/F | Shared types/mock merged; unused persistence spike merged #52; Neon adoption deferred to W4 |
-| Architecture | Complete; PR open | R | #53 awaits review/merge |
-| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; broader entry coverage remains W2 |
+| Architecture | Done | R | `W1-D6-02` merged in #53 (`59c3cf8`); broader discovery remains W2-D8-03/04 |
+| W1 closeout | Done | R/F | `W1-D7-03/04/05/06` merged in #57 (`88372ec`); merging it *is* the shared acceptance |
+| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; four-entry coverage in review, PR #60 |
 | Engine and dashboard | Future implementation | R/F | Stage 1 engine W3; functional dashboard W4 |
 | W1 review and evidence | Reports complete; shared review open | S | 24 indexed txs and fresh scan; D7-04/#44 remains In progress |
 
@@ -735,6 +774,9 @@ So it is checked, not assumed: `python3 scripts/check-decay-drift.py`, **twice w
 | 2026-09-06 02:20 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-07 05:13 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
 | 2026-09-08 17:25 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+| 2026-09-09 11:00 | 2026-09-20 12:00 | +0.0h | 2026-09-25 12:01 | +0.0h |
+
+The fifth reading was taken **immediately after** the `W1-D7-08` extends on guinea-pig A, and doubles as the check that they touched nothing else. Both crossings unmoved.
 
 Four readings, four zeros, across ledgers 4,4xx,xxx → 4,572,943.
 
@@ -800,7 +842,9 @@ Reordered after Phase 0 — the Week 3 spike risk has been largely defused; Week
 
 ## Evidence captured so far
 
-See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published artifacts.** First evidence expected W1-D7-03.
+See [`docs/EVIDENCE.md`](EVIDENCE.md), which is the index. Count as of the W1 close: **24 unique testnet transactions** — 19 Sep 5 bootstrap transactions recovered on Sep 8, plus 5 setup/boundary records — each with full RPC JSON and an explorer screenshot, alongside the `W1-D7-03` scan snapshot. One published artifact: the Cloudflare Pages dashboard placeholder.
+
+**Re-count at every week gate.** This line read `0 · 0 · 0` until Sep 9, four days after the first evidence landed — a standing summary nobody re-derives is worth less than no summary, because it is read as current.
 
 ## Session log
 
