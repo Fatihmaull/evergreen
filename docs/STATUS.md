@@ -28,6 +28,24 @@ The open question is whether `--no-data-keys` asserts something a caller can act
 
 **2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
 
+## [S2] `W2-D10-01` display — blast radius, and what a scan cannot see
+
+**2026-09-10 (S2).** Severity now weights by blast radius, in `packages/core/src/health.ts` so the CLI and the future dashboard grade identically. Identical remaining ledgers produce `warning` on a lone archived entry and `critical` once the entry is shared, temporary (deleted, unrecoverable) or expired.
+
+**Four states, not the three the task named.** `unknown` is its own state: an entry whose TTL could not be read is *unread*, not healthy, not warning, not critical. Forcing it into one of three is the collapse this codebase keeps refusing.
+
+**Not taken from `assertLiveness`, and the reason is worth recording.** The instruction was to source severity there rather than restate it. Its severity answers *"how bad is it that this RUN did not act?"* — a property of a run. Display needs *"how bad is this ENTRY's state?"* — a property of the chain. Feeding a scan to `assertLiveness` with `records: []` would grade every low entry `no-action-recorded`/critical, which is true of a run and nonsense as a description of a contract someone just asked about. **The shared inputs are not restated:** both call `needsAction` and `hasExpired`, and the blast-radius rule has one home the display calls.
+
+**Running it found something reading the diff could not.** A scan of guinea-pig A shows its `code` entry with **one** contract, so it graded HEALTHY with no sharing warning — reading as *"this code entry serves only this contract."* It does not: A, B and C all share it, and `LedgerEntryTTL.contracts` is documented as *"not a global usage census."* A single-contract scan structurally cannot see who else built from that Wasm, and silence would have read as proof of exclusivity — the confidently-green-before-total-outage failure, in the display layer.
+
+A lone `code` entry now says so explicitly: *"code entries are shared by every contract built from the same Wasm. This scan saw 1. Others may depend on this entry and are invisible here."* Instance entries, which genuinely are per-contract, get no such caveat.
+
+**Verified against the real chain, read-only.** Scanning B and C together returns one shared code entry naming both, key `AAAAB8flXw…` — the same key A's scan returns, confirming all three share it. B's instance projects to expire 2026-09-21 12:00 UTC, so its threshold crossing is **2026-09-20 12:00 UTC**, matching the calibration exactly. `getLedgerEntries` only; no transaction, and B and C were not touched.
+
+**Colour is opt-in and never load-bearing.** Off unless an interactive TTY with `NO_COLOR` unset, so piped output, CI logs and captured evidence stay clean. The state **word** always prints; a test asserts the coloured and plain outputs differ only by escape codes, so a colour-blind reader, a log file and a screenshot all carry the same information.
+
+**Not done unilaterally:** the backlog also asks blast radius to reach the **exit code**. ADR-006 defines 0/1/2/3 and was amended and accepted hours ago; adding or re-meaning a code is an ADR decision, not a display change. Flagged for Fatih rather than invented.
+
 ## 🔴 Session scope boundary — one session writes implementation this week
 
 **Set by Fatih 2026-09-10, after `#66` landed tagged `[W2-D10-01]`.** Read this before starting work.
