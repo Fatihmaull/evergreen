@@ -67,14 +67,39 @@ There is deliberately no `projectedArchiveDate`. That name is wrong twice: *arch
 
 ## The liveness assertion (`W2-D10-04`)
 
-`assertLiveness({ scan, thresholds, records })` answers one question: **did this run establish that everything it watches is healthy?** If not, it returns `isAlarm: true` and the engine must exit non-zero.
+`assertLiveness({ scan, thresholds, records, decisions? })` answers one question: **did this run establish that everything it watches is healthy?** If not, `isAlarm` is true and the engine must exit non-zero.
 
-The rule is deliberately blunt — *an entry seen below threshold that this run did not verifiably extend means the run is not healthy, whatever the reason.* "Whatever the reason" is the load-bearing part. A claim held by another runner, a lock lookup that threw, a dry-run, an unconfirmed submission, a decision skipped by policy: all legitimate reasons not to bump, none of them a reason to report health.
+**When it fires is strict. What it says is graded.**
 
-**Only `outcome: 'succeeded'` counts as having acted.** `submitted` is explicitly *"never treated as successful yet"*, `simulated` never touched the chain, and `failed` speaks for itself. Since dry-run is the safety **default**, a scheduled job silently left in dry-run is a likely failure, not an exotic one — and it alarms.
+The rule: *an entry that needs action and was not verifiably extended by this run means the run is not healthy, whatever the reason.* A held claim, a lock lookup that threw, a dry-run, an unconfirmed submission, a policy skip — all legitimate reasons not to bump, none of them a reason to report health. The asymmetry is deliberate: a false alarm costs an email, a missed alarm costs the Sep 20 proof.
 
-An entry whose TTL could not be read alarms too. Unknown and fine must never collapse into the same answer.
+Only `outcome: 'succeeded'` buys silence. `submitted` is *"never treated as successful yet"* by its own type comment, `simulated` never touched the chain.
 
-Why it exists: a run that does nothing looks exactly like a run that succeeded. `claim()` returning null is the *ordinary* skip path, so ~96 clean exit-0 runs could pass across guinea-pig B's 24-hour window while B archives unattended. `liveness.test.ts` simulates that window run-by-run and pins the result — 49 quiet, then 47 consecutive alarms, and zero alarms across the same window when the engine actually did its job. The second half matters as much as the first: an alarm that cries wolf gets muted, and then it is worth nothing.
+| Situation | Fires | Severity | Says |
+|---|---|---|---|
+| `succeeded` | no | — | — |
+| dry-run | **yes** | `info` | *Would have acted; dry-run mode.* |
+| submitted, unconfirmed | **yes** | `warn` | *Submitted, could not confirm within this run.* |
+| attempted, failed | **yes** | `critical` | *Attempted and failed: `<reason>`.* |
+| skipped, claim held | **yes** | `critical` | *Skipped: another run holds the claim.* |
+| TTL unreadable | **yes** | `critical` | *Absence of an observation is not evidence of health.* |
 
-The rule is pure and has no engine dependency, which is why it lands before the run loop. Wiring it into the run is `W3-D15-01`.
+**Severity grades the message; it never gates the firing.** Dry-run is `info` because it is not an emergency — but suppressing it would train you to skim the channel, and then the alarm that matters on Sep 20 goes unread too. A test pins that specifically: making `info` suppress the alarm fails.
+
+The unconfirmed case is worded as **uncertainty, not failure**. A run that cannot confirm its own work genuinely does not know whether it landed, which is different information from either outcome. Silence there would claim success it has not earned.
+
+### `remediation` — because the required action changes at expiry
+
+An entry at `remaining = -5` is past `extendTTL` and needs `RestoreFootprintOp`. It still alarms, but `remediation` reads `restore` rather than `extend` and the detail says so. Pointing someone at the wrong operation while they are acting under pressure is its own failure.
+
+### The threshold is a floor, not a line to sit on
+
+`needsAction` fires at `remaining <= threshold`. Read the threshold as **"act once remaining reaches this number."** Touching the margin is already the failure the margin exists to prevent.
+
+**This does not match the inclusive TTL boundary, and that is correct.** `isLive` is inclusive at zero; `needsAction` is inclusive at the threshold; the same `==` case falls on opposite sides. They answer different questions and are governed by different authorities — see the comparison block in `ttl.ts`. One is a protocol fact owned by the chain; the other is a policy choice owned by us. Agreement between them was never the property to preserve.
+
+### Why it exists
+
+A run that does nothing looks exactly like a run that succeeded. `claim()` returning null is the *ordinary* skip path, so ~96 clean exit-0 runs could pass across guinea-pig B's 24-hour window while B archives unattended. `liveness.test.ts` simulates that window run-by-run and pins **48 quiet runs, then 48 consecutive alarms** — and **zero** alarms across the same window when the engine acts. The second half matters as much as the first: an alarm that cries wolf gets muted, and is then worth nothing.
+
+The rule is pure and has no engine dependency, which is why it lands before the run loop. Wiring it in is `W3-D15-01`.

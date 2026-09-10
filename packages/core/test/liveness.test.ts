@@ -6,6 +6,7 @@ import type {
   ScanResult,
 } from '@evergreen-stellar/shared-types';
 import { assertLiveness } from '../src/liveness.js';
+import { needsAction } from '../src/ttl.js';
 
 const KEY = 'AAAAB0NvZGVLZXk=';
 const SHARED = 'AAAAB1NoYXJlZEs=';
@@ -69,10 +70,10 @@ describe('assertLiveness — it PERMITS what it should', () => {
     expect(v.isAlarm).toBe(false);
   });
 
-  it('treats an entry exactly AT the threshold as healthy, not below it', () => {
-    // The threshold is "bump when remaining is BELOW this". Equal is not below.
+  it('stays quiet one ledger ABOVE the threshold', () => {
+    // The margin is untouched here, so there is nothing to say.
     const v = assertLiveness({
-      scan: scan({ [KEY]: entry(17_280) }),
+      scan: scan({ [KEY]: entry(17_281) }),
       thresholds: THRESHOLDS,
       records: [],
     });
@@ -83,6 +84,21 @@ describe('assertLiveness — it PERMITS what it should', () => {
     expect(assertLiveness({ scan: scan({}), thresholds: THRESHOLDS, records: [] }).isAlarm).toBe(
       false,
     );
+  });
+});
+
+describe('assertLiveness — the threshold is a floor, not a line to sit on', () => {
+  it('🔴 alarms when remaining is EXACTLY the threshold', () => {
+    // Policy decided 2026-09-10: touching the margin is already the failure we
+    // exist to prevent, so `<=` fires. This deliberately does NOT match the
+    // inclusive TTL boundary, where zero is still live — see the comparison
+    // block in ttl.ts. One is a protocol fact, this is a policy choice.
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(17_280) }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.isAlarm).toBe(true);
   });
 });
 
@@ -231,7 +247,7 @@ describe('assertLiveness — reporting', () => {
       thresholds: THRESHOLDS,
       records: [],
     });
-    expect(v.findings[0]?.detail).toContain('recorded no action');
+    expect(v.findings[0]?.detail).toContain('recorded nothing for it');
     expect(v.findings[0]?.detail).not.toMatch(/Error:|at .*\.ts:/);
   });
 
@@ -277,12 +293,14 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
     const alarms = results.filter((r) => r.isAlarm).length;
 
     expect(quiet + alarms).toBe(RUNS);
-    // 49 quiet, not 48: the run that lands EXACTLY on the threshold is still
-    // healthy, because the rule is "below", not "at or below". Same inclusive
-    // boundary as remainingLedgers === 0 being live, one layer up. Asserting a
-    // round 48/48 here would have been asserting a bug.
-    expect(quiet).toBe(49);
-    expect(alarms).toBe(47);
+    // 48/48. This number MOVED, and the move was a policy change, not a
+    // loosened test: under the original `<` rule the split was 49/47, because
+    // the run landing exactly on the threshold stayed quiet. On 2026-09-10 the
+    // threshold was redefined as a floor we refuse to touch, so `<=` fires and
+    // that boundary run now alarms. Both numbers were correct under their own
+    // rule; do not "restore" 49/47 without reversing the policy in ttl.ts.
+    expect(quiet).toBe(48);
+    expect(alarms).toBe(48);
     // And once it fires it must not stop firing — a single alert is missable.
     const firstAlarm = results.findIndex((r) => r.isAlarm);
     expect(results.slice(firstAlarm).every((r) => r.isAlarm)).toBe(true);
@@ -295,7 +313,10 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
     const results: boolean[] = [];
     let remaining = THRESHOLD + (RUNS / 2) * LEDGERS_PER_RUN;
     for (let i = 0; i < RUNS; i += 1) {
-      const bumped = remaining < THRESHOLD;
+      // Derived from the rule itself, not restated as `<`. When the policy
+      // moved from `<` to `<=`, a hand-written copy of it here silently
+      // disagreed with the engine it was modelling — and this test caught it.
+      const bumped = needsAction(remaining, THRESHOLD);
       const v = assertLiveness({
         scan: scan({ [KEY]: entry(bumped ? 518_400 : remaining, ['GUINEA_PIG_B']) }),
         thresholds: { bumpWhenRemainingLedgersBelow: THRESHOLD },
@@ -305,5 +326,165 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
       remaining -= LEDGERS_PER_RUN;
     }
     expect(results.some(Boolean)).toBe(false);
+  });
+});
+
+describe('assertLiveness — one bad entry among healthy ones', () => {
+  it('🔴 alarms when a SINGLE entry needs action and everything else is fine', () => {
+    // Confirming the requested property: health is not a majority vote.
+    const v = assertLiveness({
+      scan: scan({
+        AAAAB0hlYWx0aHkx: entry(200_000, ['CONTRACT_A']),
+        AAAAB0hlYWx0aHky: entry(180_000, ['CONTRACT_B']),
+        [KEY]: entry(100, ['CONTRACT_C']),
+        AAAAB0hlYWx0aHkz: entry(150_000, ['CONTRACT_D']),
+      }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.isAlarm).toBe(true);
+    expect(v.findings).toHaveLength(1);
+    expect(v.findings[0]?.entryKey).toBe(KEY);
+  });
+
+  it('🔴 one shared code entry at risk means every contract it serves is at risk', () => {
+    // A, B and C share one ContractCode entry. Three healthy instances plus one
+    // sick shared entry is not three-quarters healthy — it is N contracts down.
+    const shared = { ...entry(100, ['A', 'B', 'C']), kind: 'code' as const };
+    const v = assertLiveness({
+      scan: scan({
+        AAAAB0luc3RBAA: entry(200_000, ['A']),
+        AAAAB0luc3RCAA: entry(200_000, ['B']),
+        AAAAB0luc3RDAA: entry(200_000, ['C']),
+        [SHARED]: shared,
+      }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.isAlarm).toBe(true);
+    expect(v.findings).toHaveLength(1);
+    expect(v.findings[0]?.contracts).toEqual(['A', 'B', 'C']);
+    expect(v.severity).toBe('critical');
+  });
+});
+
+describe('assertLiveness — expired is not the same as low', () => {
+  it('🔴 sends an expired entry to RESTORE, not to extend', () => {
+    // extendTTL cannot reach an archived entry. Someone acting under pressure
+    // must not be pointed at the wrong operation.
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(-5) }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.isAlarm).toBe(true);
+    expect(v.findings[0]?.isExpired).toBe(true);
+    expect(v.findings[0]?.remediation).toBe('restore');
+    expect(v.findings[0]?.detail).toContain('RestoreFootprintOp');
+    expect(v.findings[0]?.detail).not.toContain('ledgers remain');
+  });
+
+  it('sends a merely-low entry to EXTEND', () => {
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100) }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.findings[0]?.isExpired).toBe(false);
+    expect(v.findings[0]?.remediation).toBe('extend');
+    expect(v.findings[0]?.detail).not.toContain('RestoreFootprintOp');
+  });
+
+  it('treats the entry on its final live ledger as low, not expired', () => {
+    // remaining === 0 is still live (protocol), but it needs action (policy).
+    // Both rules apply at once and they do not contradict each other.
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(0) }),
+      thresholds: THRESHOLDS,
+      records: [],
+    });
+    expect(v.isAlarm).toBe(true);
+    expect(v.findings[0]?.isExpired).toBe(false);
+    expect(v.findings[0]?.remediation).toBe('extend');
+  });
+});
+
+describe('assertLiveness — severity grades the message, never the firing', () => {
+  it('grades a dry-run as info but still fires it', () => {
+    const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100) }),
+      thresholds: THRESHOLDS,
+      records: [simulated],
+    });
+    expect(v.isAlarm).toBe(true); // never suppressed
+    expect(v.findings[0]?.severity).toBe('info');
+    expect(v.findings[0]?.detail).toContain('dry-run mode');
+  });
+
+  it('grades an unconfirmed submission as warn and words it as uncertainty', () => {
+    const submitted: BumpRecord = {
+      ...attempt,
+      outcome: 'submitted',
+      mode: 'live',
+      signer,
+      transactionHash: 'pending',
+    };
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100) }),
+      thresholds: THRESHOLDS,
+      records: [submitted],
+    });
+    expect(v.findings[0]?.severity).toBe('warn');
+    expect(v.findings[0]?.detail).toContain('could not confirm');
+    // Uncertainty, not failure — the run does not know either way.
+    expect(v.findings[0]?.detail).not.toContain('failed');
+  });
+
+  it('grades a failure as critical and carries the underlying reason', () => {
+    const failed: BumpRecord = {
+      ...attempt,
+      outcome: 'failed',
+      mode: 'live',
+      error: { code: 'tx_insufficient_balance', message: 'underfunded' },
+    };
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100) }),
+      thresholds: THRESHOLDS,
+      records: [failed],
+    });
+    expect(v.findings[0]?.severity).toBe('critical');
+    expect(v.findings[0]?.detail).toContain('underfunded');
+  });
+
+  it('🔴 grades a held claim as critical and names it — the Sunday scenario', () => {
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100) }),
+      thresholds: THRESHOLDS,
+      records: [],
+      decisions: [
+        {
+          entryKey: KEY,
+          contracts: ['CONTRACT_A'],
+          reason: 'another run holds the claim',
+          action: 'skip',
+        },
+      ],
+    });
+    expect(v.findings[0]?.reason).toBe('skipped');
+    expect(v.findings[0]?.severity).toBe('critical');
+    expect(v.findings[0]?.detail).toContain('holds the claim');
+  });
+
+  it('reports the loudest severity present across mixed findings', () => {
+    const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
+    const v = assertLiveness({
+      scan: scan({ [KEY]: entry(100), AAAAB090aGVyMQ: entry(50, ['CONTRACT_B']) }),
+      thresholds: THRESHOLDS,
+      records: [simulated],
+    });
+    // One info dry-run and one critical silent skip must not average to warn.
+    expect(v.severity).toBe('critical');
+    expect(v.findings.map((f) => f.severity).sort()).toEqual(['critical', 'info']);
   });
 });

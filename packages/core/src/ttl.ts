@@ -38,9 +38,46 @@ export function observeTTL(args: {
   };
 }
 
+/**
+ * ── Two comparisons, deliberately different. Do not "fix" one to match. ──────
+ *
+ * These sit next to each other on purpose. `isLive` is inclusive at zero and
+ * `needsAction` is inclusive at the threshold, so the same `==` case falls on
+ * opposite sides. That looks like an off-by-one and is not:
+ *
+ *   isLive(remaining >= 0)              PROTOCOL FACT. Stellar defines the TTL
+ *                                       boundary as inclusive — an entry is
+ *                                       live AT liveUntilLedgerSeq. The chain
+ *                                       decides this; we only report it.
+ *
+ *   needsAction(remaining <= threshold) POLICY CHOICE. How much margin we
+ *                                       insist on. Decided 2026-09-10: the
+ *                                       threshold is a safety margin, and
+ *                                       TOUCHING the margin is already the
+ *                                       failure we exist to prevent. One step
+ *                                       from danger is not margin.
+ *
+ * They answer different questions — *"is this entry alive?"* versus *"should
+ * we act?"* — so agreement between them was never the property to preserve.
+ * Changing `needsAction` is a product decision. Changing `isLive` is claiming
+ * the chain works differently than it does.
+ */
+
+/** Is the entry still live? Zero remaining is its final live ledger, not death. */
 export function isLive(ttl: TTLObservation): boolean | undefined {
   if (ttl.status === 'unavailable') return undefined;
   return ttl.remainingLedgers >= 0;
+}
+
+/**
+ * Should we act now? True once remaining *reaches* the threshold, not after it
+ * drops past. Read the threshold as **"act once remaining reaches this
+ * number"** — it is the floor we refuse to touch, not a line we tolerate
+ * sitting on. Costs at most one cron interval of earliness; buys a margin that
+ * is never touched rather than merely rarely crossed.
+ */
+export function needsAction(remainingLedgers: number, thresholdLedgers: number): boolean {
+  return remainingLedgers <= thresholdLedgers;
 }
 
 /**
