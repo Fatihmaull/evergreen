@@ -57,6 +57,43 @@ export const EXIT_INCOMPLETE = 3;
 /** Matches evergreen.config.example.json; pinned by scripts/check-policy-constants.mjs. */
 export const DEFAULT_THRESHOLD_LEDGERS = 17_280;
 
+/**
+ * The `--json` health block.
+ *
+ * Additive to `ScanResult`, never a mutation of it: `ScanResult` is
+ * ADR-005-accepted and consumed by the engine and dashboard, and existing
+ * readers of `entries`/`issues` must keep working untouched.
+ *
+ * This is where blast radius lives. ADR-006 § *Considered and declined*
+ * settles that it must NOT reach the exit code: exit codes signal category,
+ * not magnitude, and a new code silently breaks every consumer matching the
+ * old set. Magnitude belongs in output, and this is the machine-readable half.
+ */
+export interface ScanHealthReport {
+  readonly thresholdLedgers: number;
+  /** Worst state across all entries. Absent when nothing was observed. */
+  readonly worst?: EntryHealth;
+  /** Count of entries serving more than one known contract. */
+  readonly sharedEntryCount: number;
+  readonly byEntry: Readonly<Record<string, EntryAssessment>>;
+}
+
+/** Grade every entry once, for whichever renderer wants it. */
+export function healthReport(result: ScanResult, thresholdLedgers: number): ScanHealthReport {
+  const byEntry: Record<string, EntryAssessment> = {};
+  for (const [key, entry] of Object.entries(result.entries)) {
+    byEntry[key] = assessEntry(entry, thresholdLedgers);
+  }
+  const assessments = Object.values(byEntry);
+  const worst = worstHealth(assessments);
+  return {
+    thresholdLedgers,
+    ...(worst === undefined ? {} : { worst }),
+    sharedEntryCount: assessments.filter((a) => a.isShared).length,
+    byEntry,
+  };
+}
+
 export function formatHuman(result: ScanResult, now: Date, options: FormatOptions = {}): string {
   const color = options.color === true;
   const thresholdLedgers = options.thresholdLedgers ?? DEFAULT_THRESHOLD_LEDGERS;
