@@ -26,7 +26,6 @@ The [CLI guide](../cli/README.md) describes the input file and exit policy. The 
 
 An explicit `{ noDataKeys: true }` with an empty key list records a caller assertion, not verified enumeration. Supplying any key at the same time is rejected before RPC reads. Omission leaves coverage unknown when no data keys were supplied. CLI health/exit policy is documented in ADR-006; core returns observations, not spending instructions.
 
-
 ### Multiple contracts and shared entries
 
 `scanContracts(reader, requests)` accepts an array of `ContractScanRequest` from core:
@@ -47,3 +46,21 @@ A shared-key error names all known affected consumers; a failed batch names the 
 The legacy `scanInstances` now removes duplicate input consumers; it remains instance-only with unspecified coverage. Multi-contract CLI UX, rent and engine decisions are separate tasks.
 
 [Read-only shared-Wasm evidence](../../docs/evidence/2026-09-09-scan-dedup/README.md) verifies B, C, B becomes two unique contracts and three entries, using two instance keys and one code-key read.
+
+## TTL projection and cadence (`W2-D8-01`)
+
+`projectEnd(entry, now, cadence?)` answers three questions the CLI, dashboard and engine all ask, and keeps them apart because they genuinely are apart:
+
+| Field | Meaning |
+|---|---|
+| `endsAtLedger` | The final **live** ledger, inclusive. The truth — store this. |
+| `endBehavior` | `archived` or `deleted`. Which fate, not when. |
+| `isRestorableAfterEnd` | Machine-readable so no display path re-derives it and calls a deletion an archival. |
+| `estimatedEndsAt` | Wall clock, display edge only. **Never store it.** |
+| `earliestEndsAt` / `latestEndsAt` | The band implied by cadence uncertainty. |
+
+There is deliberately no `projectedArchiveDate`. That name is wrong twice: *archive* is false for temporary entries, which are deleted, and *date* invites storing a wall-clock value where the truth is a ledger number.
+
+**Cadence carries its own uncertainty.** `LedgerCadence` bundles the rate with its provenance and a `±` band, because "about five seconds" is doing real work: across `max_entry_ttl` (3,110,400 ledgers = 180 days), the recorded ±0.0008 s/ledger band is over an hour wide. A projection that reports a bare instant at that horizon is precise-looking and wrong.
+
+`measureCadence(samples)` derives a cadence from observed closes and is **pure** — callers fetch the samples, this does the arithmetic, so a measurement is testable without a network. It never reports zero uncertainty: close times are whole seconds, so a window of N ledgers cannot resolve cadence more finely than `1/N` s/ledger, and a single interval cannot bound drift at all. Drifting closes widen the band; that is the intended signal, not noise.
