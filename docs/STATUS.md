@@ -44,6 +44,8 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **Colour is opt-in and never load-bearing.** Off unless an interactive TTY with `NO_COLOR` unset, so piped output, CI logs and captured evidence stay clean. The state **word** always prints; a test asserts the coloured and plain outputs differ only by escape codes, so a colour-blind reader, a log file and a screenshot all carry the same information.
 
+**Self-caught before it shipped:** this section first cited the display PR as **#73**, guessed from the previous PR number rather than read from the create output. #73 is S1's ID-pattern fix; the display is **#74**. The CI wait then polled #73 and reported green — for someone else's branch. That is the stale-CI hazard exactly as recorded, arrived at from a new direction: not a stale result for the right PR, but a fresh result for the wrong one. Verified the head SHA against #74 before trusting it. **A PR number is an identifier that gets acted on, so it must be read, never inferred.**
+
 **Not done unilaterally:** the backlog also asks blast radius to reach the **exit code**. ADR-006 defines 0/1/2/3 and was amended and accepted hours ago; adding or re-meaning a code is an ADR decision, not a display change. Flagged for Fatih rather than invented.
 
 ## 🔴 Session scope boundary — one session writes implementation this week
