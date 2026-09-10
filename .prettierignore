@@ -4,6 +4,15 @@ node_modules/
 target/
 pnpm-lock.yaml
 
+# Agent worktrees. Claude Code checks out git worktrees here, so this directory
+# holds a whole second copy of the repo — evidence JSON, cargo snapshots and all.
+# It is git-excluded, but Prettier walks the FILESYSTEM rather than the index, so
+# without this line `pnpm check` fails locally for anyone with a worktree open
+# while CI, which checks out clean, passes. A local gate that fails where the
+# remote one passes trains you to ignore local failures, which is the same
+# corrosion as a local gate that is weaker than CI — just pointing the other way.
+.claude/worktrees/
+
 # Markdown is hand-formatted here on purpose. Prettier reflows tables and
 # rewrites emphasis markers, which buries real docs changes under churn — and
 # this repo's docs are read by a grant reviewer, not just by us.

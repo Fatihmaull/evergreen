@@ -1,0 +1,30 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 2 explicit data key(s)
+
+instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  140,595 ledgers — live
+  ends at:    ledger 4,712,648
+  approx:     2026-09-16T19:27:09.129Z (estimate — ledgers are the truth)
+  observed:   ledger 4,572,053
+
+persistent  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  140,605 ledgers — live
+  ends at:    ledger 4,712,658
+  approx:     2026-09-16T19:27:59.129Z (estimate — ledgers are the truth)
+  observed:   ledger 4,572,053
+
+temporary  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  140,606 ledgers — live
+  ends at:    ledger 4,712,659
+  approx:     2026-09-16T19:28:04.129Z (estimate — ledgers are the truth)
+  observed:   ledger 4,572,053
+
+code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  718,776 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:54.129Z (estimate — ledgers are the truth)
+  observed:   ledger 4,572,053

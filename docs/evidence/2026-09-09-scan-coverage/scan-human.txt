@@ -1,0 +1,17 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  Data-key coverage unknown: supply keys, or --no-data-keys only if applicable.
+
+instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  132,178 ledgers — live
+  ends at:    ledger 4,712,648
+  approx:     2026-09-16T19:27:10.911Z (estimate — ledgers are the truth)
+  observed:   ledger 4,580,470
+
+code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  710,359 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:55.911Z (estimate — ledgers are the truth)
+  observed:   ledger 4,580,470

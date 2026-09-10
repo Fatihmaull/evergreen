@@ -43,6 +43,9 @@ This structure permits correct deduplication; it does not implement or prove the
 - Missing TTL metadata is `{ status: 'unavailable' }`, with no fabricated numbers. Consumers must narrow this union before using TTL arithmetic.
 - Absent entries and request/response failures are in `ScanResult.issues`; absence alone does not prove archival, deletion, or even prior existence. Consumers must handle issues and unavailable TTL before reporting health or deciding to extend.
 - A TTL-only scan omits `rentEstimate`. Omission does not mean zero rent.
+- Optional `coverage` records `mode: 'known-keys'` and `dataKeysSuppliedByContract`, counting unique validated explicit data keys. It never asserts full storage enumeration. Optional `noDataKeysDeclaredByContract[id]: true` records a caller assertion of no extra data keys; it is valid only with a zero supplied count. Absence of that assertion with zero keys remains unknown. Omission of coverage by an older producer also means unknown; the CLI health helper now returns exit 3 for either case (ADR-006).
+- `ScanIssue.kind: 'unsupported-executable'` reports a non-Wasm instance whose code cannot be discovered by this scanner. Consumers with exhaustive issue switches must handle this additional kind (`W2-D8-03`).
+
 
 ## Rent, payer and signer
 

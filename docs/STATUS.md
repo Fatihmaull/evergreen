@@ -2,39 +2,48 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-09 · **W1 CLOSED** — closeout merged in #57, ADR-005 accepted, 49/50 done
+**Last updated:** 2026-09-09 · W2-D8-03 published in PR #60; shared review In progress
 **Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
-**Current week:** W1 — Foundation (closed) → **W2 — Core CLI starts Thu Sep 10**
-**Health:** 🟡 on track with one dated risk · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🔴 **guinea-pig A archives Wed Sep 16 ~19:27 UTC**
+**Current week:** W2 — Core CLI
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
 
 ## Right now
 
-### 🔴 Guinea-pig A archives Wed Sep 16 ~19:27 UTC — the one thing to act on this week
+**2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
 
-**Measured 2026-09-09 at ledger 4,584,770**, by running the built CLI against testnet, not by reading a record:
+## Earlier D8-03 publication snapshot
 
-| Entry | Ends at ledger | Remaining | Projected | On expiry |
-|---|---|---|---|---|
-| instance | 4,712,648 | 127,845 | **2026-09-16 19:27 UTC** | archived |
-| persistent | 4,712,658 | 127,855 | 2026-09-16 19:28 UTC | archived |
-| temporary | 4,712,659 | 127,856 | 2026-09-16 19:28 UTC | **deleted — unrecoverable** |
-| code | 5,290,829 | 706,026 | 2026-10-20 06:28 UTC | archived |
+**W2-D8-03 — In progress: published for shared review in [PR #60](https://github.com/Fatihmaull/evergreen/pull/60).** Rakha approved distinct incomplete-information exit 3 and explicit `--no-data-keys`, following Fatih's [Issue #44 review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5589189730). Precedence is error 2, incomplete 3, observed low TTL 1, healthy declared scope 0. The assertion is caller-provided and mutually exclusive with a keys file; an empty file or legacy result without coverage stays unknown (3). JSON retains mixed findings. No exit code authorizes a transaction. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) is Proposed, pending Fatih/shared review; it includes the downstream sweep. Existing Issue #44 covers this correction; no new task or duplicate Issue is introduced.
 
-A is not a decay-proof subject — B (Sep 20) and C (Sep 25) are, deliberately. **A is the working contract**: the `W1-D7-01` milestone target, every live scan, `#60`'s reproduction instructions, and `W3-D17-04`'s *"trigger a real bump on guinea-pig A"* which is due **before Fri Sep 18**. On Sep 17 that task is not executable as written: `extendTTL` does not work on an archived entry, it needs `RestoreFootprintOp` first, and the primer records that **Evergreen v1 deliberately does not automate restores — it exists to avoid needing them.** A's temporary entry is *deleted*, not archived, so that one does not come back at any price.
+**Validation:** `pnpm check` passed **143 offline tests** (107 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting, conflict and task-ID checks. An initial direct Vitest run used stale W1 build output after branch switching; rebuilding through typecheck resolved it. [Sep 9 read-only capture](evidence/2026-09-09-scan-coverage/README.md) verifies real CLI exit 3 at ledger 4,580,470 for A without data keys, with healthy instance/code. Offline replay of the unchanged Sep 8 four-entry JSON still returns 0; declared-empty and mixed/error cases are covered by fixtures. No transaction or B/C read/change was made.
 
-Nothing in the repo recorded this. Every mention of `4,712,648` treats it as a number to match a scan against; none treats it as a deadline. The tool that exists to stop a contract archiving unwatched was about to let its own demo contract archive unwatched — which is the failure mode, not an irony to enjoy.
+**Publication:** Rakha reviewed the result and authorized publication. The implementation is pushed at `0c1bff9` in PR #60 against main, with review requested from @Fatihmaull. The [Issue #44 reply](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5595727891) addresses the W1 recovery, coverage/exit-code proposal, rounded drift interpretation and release timing. ADR-006 remains Proposed; both PRs and the shared Issue remain open. GitHub CI is checked separately on the final publication commits; the 143-test result above is local validation. No merge or release is claimed.
 
-**Fix is cheap and needs a decision, not a discussion:** extend A before Sep 16 using `evergreen-b` (funded, 9,999.9 XLM; `extendTTL` is permissionless so no authority over A is needed). That is a live testnet transaction, so it waits on Fatih's go-ahead. **Do not extend B or C** — that destroys both decay proofs.
+**W1 review:** [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) is open against main, with the reviewed follow-up published through `e736dbf`. Its combined tree passed 70 offline tests; only Markdown publication tracking changed afterward. The updated PR description removes the obsolete stacked-base instructions and records ADR-005 acceptance. D7-04 remains In progress for shared closeout acceptance; this branch's stale Pending row is corrected accordingly. #59 remains separate; the Issue reply requests qualifying its exact-cadence wording. No fresh B/C measurement is claimed.
 
-### W1 closed
+**Mirror:** publication sync completed and was read back for exact IDs D8-03 (Rakha) and D7-04 (Shared), both In progress, plus the Proposed ADR-006 Decisions entry. Notes link PR #60/#57 and the Issue #44 response, distinguishing implementation from shared acceptance and merge. GitHub CI and Pages passed on implementation `0c1bff9` and W1 publication `e736dbf`; final Markdown tracking is checked on its own head. Task Tracker remains a weekly snapshot.
 
-**2026-09-09 — W1 closeout merged (`W1-D7-03/04/05/06`):** the [review and W2 handoff](W1-REVIEW.md) is on `main` via [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) (`88372ec`); the closeout branch is deleted. Merging it *is* the shared acceptance, so `W1-D7-04` is Done and W1 closes at **49/50**, the one open item being `W1-D4-09`'s recurring drift check through Sep 20. [#44](https://github.com/Fatihmaull/evergreen/issues/44) stays open as the discussion thread only.
+## Initial D8-03 implementation — Sep 8 snapshot
 
-**[PR #59](https://github.com/Fatihmaull/evergreen/pull/59) merged (`3a76075`):** the stacked-PR rule now in CONVENTIONS § Git, and the fourth drift reading in the drift log below. Rakha's review note on the drift wording was half right and is answered in place — see the drift log.
+**W2-D8-03 — Done (Rakha), review PR/merge pending:** implemented on `feat/W2-D8-03-scan-entry-types` from main `321656b`. `scanContract` discovers instance/Wasm and reads explicit persistent/temporary LedgerKeys through `--keys-file`. It reports known-key coverage, batches at 200 keys, preserves each response's ledger and successful partial results, and diagnoses invalid/missing/unsupported observations. CLI exit 0 applies only to supplied/discovered keys; no data keys or unavailable TTL yields 1, invalid input/response or RPC failure yields 2. Shared types add optional coverage and the `unsupported-executable` issue kind; existing type consumers still compile. No transaction path is added.
 
-**#57 was auto-closed by GitHub twice, not rejected.** The first time it was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR silently, attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7`, reopening, retargeting to `main`, then deleting the temporary branch again — reopen is refused while the base is missing, and the base cannot be changed while the PR is closed. **It then closed a second time when #59 merged**, even though #59's branch was unrelated and #57 was by then based on `main`. That second close also suppressed the `synchronize` webhook, so two pushes to the branch ran no CI at all while `gh pr view` still reported the *previous* head as green. Rule, stronger than the one #59 recorded: **after any merge that deletes a branch, re-check the `state` of every other open PR — not just its mergeability.** Querying `mergeable` alone is what hid this for half an hour.
+**Validation:** `pnpm check` passed conflict/task-ID checks, typecheck (including shared-type examples), lint, formatting and **125 offline tests** (89 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). Initial lint issues were fixed; a sandbox `spawnSync git EPERM` was resolved by running the same offline gate with subprocess permission. [Read-only Testnet evidence](evidence/2026-09-08-scan-entry-types/README.md) captured the compiled CLI returning all four A entry types at ledger 4,572,053, no issues, exit 0. Raw network-check/entry responses and input/output files are retained; each output TTL was compared with the raw response. No B/C changes or new transactions occurred. All 52 local documentation links resolve; all three architecture diagrams parse/render, and the changed scan diagram was visually checked.
+
+**Tracking and next step:** D8-01/02 remain Fatih's TTL work; D8-04 remains Rakha's next Pending task (cross-contract shared-code/consumer deduplication). Exact-ID Notion validation preceded implementation; D8-03 Done and its outcome were written and read back successfully. WIP branch was published at start for ownership visibility; publication as a review PR and merge remain separate. Task Tracker is refreshed at the week gate, not for this task boundary.
+
+**W1 carry-forward:** #53 and #58 are merged; Fatih confirmed the W2 split and reporting policy in [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5587139386). Closeout #57 closed without merging; original remote head `98e62e2` and synchronized local branch at `01a135c` retain the report/evidence. Its W1 completion metadata is separate from this main-based branch. W1 Task Tracker was reconciled to 48 Done / 2 In progress, all 14 Rakha tasks Done. User-confirmed workflow: Evergreen Tasks is the operational Notion backlog; Task Tracker is a dated narrative refreshed per week at week gates. Existing database sync remains at session/merge boundaries. W1-D4-09 drift checks and W1-D7-04 closeout continue; no new drift measurement is claimed.
+
+## Earlier architecture publication (since merged)
+
+## Merged W1 closeout snapshot — superseded by the current state above
+
+**2026-09-09 — published follow-up to Fatih's review (`W1-D7-04`):** reconciled remote recovery commit `1e08aeb` with local synchronization and weekly Task Tracker notes at `01a135c`. The architecture retains main's stage/atomicity content plus the local corrections recording ADR-005 acceptance and the W2 temporary-reporting boundary. Corrected the stale current task-state paragraph below. The weekly narrative policy remains in CONVENTIONS. The combined W1 tree passed `pnpm check` (70 offline tests); final follow-up edits only update Markdown. Rakha reviewed and authorized publication; the follow-up is pushed to PR #57, which remains open and unmerged. D7-04 remains In progress, with its outcome mirrored to Notion at this session boundary.
+
+**PR #59 review:** its two-file scope documents the stacked-PR recovery and Fatih's fourth drift reading. Neither is merged here. The reported +0.0h drift is rounded to one decimal by the script; it does not establish an exact 5.000 s cadence for every ledger. Preserve the observation while qualifying that explanatory sentence in review. No new drift run is claimed.
+
+**2026-09-09 — W1 closeout in review (`W1-D7-03/04/05/06`):** [review and W2 handoff](W1-REVIEW.md), tracked in [#44](https://github.com/Fatihmaull/evergreen/issues/44), on `docs/W1-D7-03-week-one-review`. [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) publishes the closeout. #53 and #56 are merged; #57 is now based on `main` and synchronized with it.
 
 **⚠️ #57 was auto-closed by GitHub, not rejected.** It was stacked on #53, so merging #53 deleted its base branch and GitHub closed the dependent PR — silently, and attributed to the merger. Restoring it took recreating the deleted base at `bcc41c7` (reopen is refused while the base is missing, and the base cannot be changed while the PR is closed), reopening, retargeting to `main`, then deleting the temporary branch again. **Rule for stacked PRs from here: retarget the child to `main` *before* merging the parent.** The child's own reviewed content was never at risk — only its PR record.
 
@@ -169,9 +178,8 @@ The PR-closed and pending-sync statements in this dated record describe that ear
 | Stellar foundation | Done; drift continues | F/R | A/B/C, permissionless proof, inclusive boundary; D4-09 through Sep 20 |
 | Services and accounts | Done | F/R | npm namespace, Pages placeholder, Actions schedule, email delivery |
 | Types, mock and persistence decision | Done | R/F | Shared types/mock merged; unused persistence spike merged #52; Neon adoption deferred to W4 |
-| Architecture | Done | R | `W1-D6-02` merged in #53 (`59c3cf8`); broader discovery remains W2-D8-03/04 |
-| W1 closeout | Done | R/F | `W1-D7-03/04/05/06` merged in #57 (`88372ec`); merging it *is* the shared acceptance |
-| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; four-entry coverage in review, PR #60 |
+| Architecture | Complete; PR open | R | #53 awaits review/merge |
+| CLI | Initial instance scan complete | F | W1-D7-01/02/07 merged; broader entry coverage remains W2 |
 | Engine and dashboard | Future implementation | R/F | Stage 1 engine W3; functional dashboard W4 |
 | W1 review and evidence | Reports complete; shared review open | S | 24 indexed txs and fresh scan; D7-04/#44 remains In progress |
 
@@ -767,9 +775,7 @@ Reordered after Phase 0 — the Week 3 spike risk has been largely defused; Week
 
 ## Evidence captured so far
 
-See [`docs/EVIDENCE.md`](EVIDENCE.md), which is the index. Count as of the W1 close: **24 unique testnet transactions** — 19 Sep 5 bootstrap transactions recovered on Sep 8, plus 5 setup/boundary records — each with full RPC JSON and an explorer screenshot, alongside the `W1-D7-03` scan snapshot. One published artifact: the Cloudflare Pages dashboard placeholder.
-
-**Re-count at every week gate.** This line read `0 · 0 · 0` until Sep 9, four days after the first evidence landed — a standing summary nobody re-derives is worth less than no summary, because it is read as current.
+See `docs/EVIDENCE.md`. Count: **0 tx hashes · 0 screenshots · 0 published artifacts.** First evidence expected W1-D7-03.
 
 ## Session log
 

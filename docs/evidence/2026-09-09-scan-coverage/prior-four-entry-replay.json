@@ -1,0 +1,6 @@
+{
+  "source": "../2026-09-08-scan-entry-types/scan.json",
+  "method": "offline evaluation with revised exitCodeFor; not a fresh chain read",
+  "thresholdLedgers": 17280,
+  "exitCode": 0
+}

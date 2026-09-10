@@ -4,7 +4,15 @@
  *
  * Two contracts the rest of the system depends on — keep both stable once
  * published, because the `evergreen-check` GitHub Action reads nothing else:
- *   - the exit code (0 healthy, non-zero below threshold, 2 on error)
+ *   - the health exit code (0 healthy scope, 1 low TTL, 2 error, 3 incomplete)
  *   - the `--json` output shape
+ * Neither authorizes a transaction; structured observations drive future engine decisions.
  */
-export { EXIT_BELOW_THRESHOLD, EXIT_ERROR, EXIT_OK, exitCodeFor, formatHuman } from './scan.js';
+export {
+  EXIT_BELOW_THRESHOLD,
+  EXIT_ERROR,
+  EXIT_INCOMPLETE,
+  EXIT_OK,
+  exitCodeFor,
+  formatHuman,
+} from './scan.js';

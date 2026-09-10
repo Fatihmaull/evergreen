@@ -185,6 +185,12 @@ Two things in this response that the plan did not anticipate:
 - **`latestLedger` arrives in the same response**, and it is what `remainingLedgers` is computed against. One round trip, not two — the RPC client should exploit this rather than fetching the latest ledger separately out of habit. Across a batch scan that is the difference between a scan that feels instant and one that does not.
 - **`extXdr`** is present on each entry and was not in any of our planning docs. We do not currently use it. Whoever needs it later should know it was not designed for — read the current Stellar docs before relying on its shape.
 
+### Known-key coverage (`W2-D8-03`)
+
+The RPC [`getLedgerEntries` reference](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries) accepts explicit base64 XDR ledger keys, at most **200 per request**, and returns entries it finds. It provides no contract-storage enumeration parameter. Evergreen therefore derives the instance key from the contract ID, derives a Wasm code key from the instance executable, and requires explicit persistent/temporary data keys (`evergreen scan --keys-file`). An omitted key has not been inspected.
+
+The scanner labels this `known-keys` coverage. It validates each returned payload against its key, keeps each batch's observation ledger, and reports missing keys without inferring archival/deletion. Non-Wasm executables are diagnosed rather than guessed. A live instance/code pair alone cannot establish data-entry health. Full four-type decoding is tested with the recorded A fixture; live observations are captured separately.
+
 ## Non-custodial authorization
 
 Soroban **smart wallets** (contract accounts) enforce authorization in `__check_auth` rather than with a single secret key. Signers can be WebAuthn passkeys (secp256r1), Ed25519 keys, or **policy signers** — and policies can scope *what* a signer is allowed to do: spending limits, allowlists, thresholds.
