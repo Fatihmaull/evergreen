@@ -45,7 +45,20 @@ export type LedgerEntryTTL = EntryLifecycle & {
 };
 
 export interface ScanIssue {
-  readonly kind: 'entry-not-found' | 'rpc-error' | 'invalid-response' | 'unsupported-executable';
+  /**
+   * `coverage-limited` and `sharing-undetermined` are not read FAILURES — they
+   * are bounds on what a successful read can establish. They live here anyway,
+   * so that a consumer asking the obvious question (`issues.length === 0`) gets
+   * a correct answer. A schema with no representation for "I don't know" makes
+   * the machine channel confident exactly where the human channel is careful.
+   */
+  readonly kind:
+    | 'entry-not-found'
+    | 'rpc-error'
+    | 'invalid-response'
+    | 'unsupported-executable'
+    | 'coverage-limited'
+    | 'sharing-undetermined';
   readonly contracts: readonly ContractId[];
   readonly entryKey?: LedgerKey;
   /** Present only when a valid RPC response supplied it. */
