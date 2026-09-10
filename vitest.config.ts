@@ -1,6 +1,35 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    /**
+     * Unit tests read SOURCE, not `dist`.
+     *
+     * Without this, a cross-package test resolves `@evergreen-stellar/core`
+     * through `main` to the built output, so a change to `core/src` is
+     * invisible until a build runs. Demonstrated 2026-09-10: mutating
+     * `coverageIssues` to return `[]` — which should break three tests —
+     * reported 9 passed against a stale `dist`.
+     *
+     * The sharp version of the hazard is that it corrupts mutation testing
+     * across the package boundary: a mutation that never reaches `dist` reads
+     * as "no test covers this", which is the reassuring answer and the wrong
+     * one. Building before `test` closed the hole; this removes it, and takes
+     * the build out of the inner loop.
+     *
+     * **What this gives up:** unit tests no longer exercise the artifact that
+     * ships. `packages/cli/test/artifact.integration.test.ts` covers that — the
+     * bundled CLI, run as a user runs it — so speed and truthfulness are split
+     * deliberately rather than traded.
+     */
+    alias: {
+      '@evergreen-stellar/core': new URL('./packages/core/src/index.ts', import.meta.url).pathname,
+      '@evergreen-stellar/shared-types': new URL(
+        './packages/shared-types/src/index.ts',
+        import.meta.url,
+      ).pathname,
+    },
+  },
   test: {
     // docs/CONVENTIONS.md § Testing — the default run never touches the network.
     // Integration tests live in *.integration.test.ts and are excluded here on

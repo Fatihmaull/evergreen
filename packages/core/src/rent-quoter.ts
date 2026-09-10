@@ -66,6 +66,20 @@ export function createSimulatingQuoter(
     extendToLedgers: number;
   }): Promise<readonly QuoteBreakdown[]>;
 } {
+  // ⚠️ SEAM: this is the QUOTING path. SUBMISSION is different and must stay
+  // different.
+  //
+  // A simulation is never submitted, so its source account is a formality the
+  // simulator does not check — verified 2026-09-10, a freshly generated key
+  // prices identically to a real one. That is why the hardcoded account could
+  // be deleted, and why no `getAccount` round trip happens here.
+  //
+  // **A real `extendTTL` needs a real account with its real sequence number.**
+  // The submit path (`W2-D11-01`) must resolve one and must NOT be simplified
+  // to match this function, however much the inconsistency looks like an
+  // oversight. Doing so builds a transaction against sequence 0, which is
+  // rejected — with an error about sequence numbers that nobody will connect
+  // to a bundle-hygiene change made the day before.
   // One synthetic identity per quoter. Never signs, never funded, never fetched.
   const sourceAccountId = options.sourceAccountId ?? Keypair.random().publicKey();
 

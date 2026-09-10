@@ -258,6 +258,40 @@ Two things follow. **Dead code cannot leak**, which is a real and useful propert
 
 The sharper version of the hazard is that it corrupts *mutation testing across the package boundary*: a mutation that does not reach `dist` reads as "no test covers this", which is the reassuring answer and the wrong one.
 
+### A "not caught" result is a hypothesis about the instrument
+
+**Every negative mutation result this project has produced has been an instrument failure. Five for five.**
+
+| What was mutated | Why it reported "not caught" |
+|---|---|
+| `check-policy-constants` renames | unescaped parens in the `perl` regex — the mutation never applied |
+| bundle-gate secret plants ×2 | esbuild tree-shook the unused constants — they never reached the bundle |
+| `coverageIssues` → `[]` | CLI tests resolved `core` to a stale `dist` |
+
+Zero real coverage gaps. That inverts the default reading.
+
+**So: when a mutation is not caught, suspect the mutation before suspecting the tests.** Confirm the change actually reached the code under test — grep the mutated file, check the build, check the resolution path — and only then conclude that nothing covers it.
+
+The asymmetry is what makes this safe to adopt: **a "caught" result is still trustworthy**, because something genuinely failed. Only negatives are suspect. So an audit after discovering a broken instrument only has to re-check the negatives, which is a much smaller job than redoing the work.
+
+*(Audited 2026-09-10 after the stale-`dist` discovery: every `packages/core/test/*` file imports `../src/`, so all in-package mutation results — including the `W2-D13-01` config-loader guards — stand unchanged. Only the four CLI tests that import `@evergreen-stellar/core` were affected, and they have since been re-commissioned.)*
+
+### Publish exactly one package
+
+`core` and `shared-types` are **bundled into the CLI and never published**. They stay `private: true` permanently and live in the CLI's `devDependencies`, not its `dependencies`.
+
+Three defects in two days came from workspace packages reaching a published artifact:
+
+| | Defect | What a user would have got |
+|---|---|---|
+| Sep 9 | `shared-types` declared at runtime, never published | `E404` |
+| Sep 10 | `npm pack` left `workspace:*` literal | `EUNSUPPORTEDPROTOCOL` |
+| Sep 10 | the rehearsal supplied `core` from a sibling tarball | a false pass over both |
+
+Publishing `core` obliges publishing `shared-types` — three packages, three immutable version numbers, and a two-step publish window that leaves someone 404ing whichever order is chosen. **Bundling removes the class rather than sequencing around it.**
+
+`scripts/check-publish-safety.mjs` asserts it in `pnpm check`, because a decision in a document is one somebody can undo without noticing. The runtime dependency is pinned exactly: the SDK is now the only thing between the CLI and the outside world, and a loose range lets someone else's release break installs of a version of ours that worked yesterday.
+
 ### A check that has never failed has not been shown to be a check
 
 *Observed 2026-09-10, in the guard built to catch the previous instance.* The pack-and-install rehearsal reported success twice while **supplying a dependency the registry does not have** — all three tarballs were installed together, so the CLI's `core@0.0.0` resolved from a sibling file rather than from npm. The stranger it existed to simulate would have got a 404.
