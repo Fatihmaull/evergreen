@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · Rakha implementing W2-D11-01
+**Last updated:** 2026-09-10 · D11 result review; #84/#85 integrated
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,8 @@
 ---
 
 ## Current — W2-D11-01 implementation, 2026-09-10
+
+**Review correction:** reproduced a P1 confirmation-binding defect: SDK 17.0.1 synthesizes `getTransaction().txHash` from the request. A matching echo could accept a different returned transaction envelope. `confirmExtension` now recomputes the Testnet transaction hash from the returned envelope for SUCCESS and FAILED and refuses absent/mismatched envelopes. The regression failed before the fix and passes after it; the existing executor keeps rejected confirmations submitted/unconfirmed and never sends a replacement. No public submit/dry-run CLI interface changed. #84's new quickstart and #85's task closure notes are integrated; overlapping docs retain the manual-extension instructions and current D11 status. Full gate/coverage verification follows this integration. No PR or live transaction.
 
 **Implementation ready for Rakha review; task remains In progress.** The WIP branch `feat/W2-D11-01-manual-extend` implements instance/default and explicit-key extension, public-payer simulation, per-entry capped targets, aggregate fee limits, local guarded signing, one-shot submission, bounded exact-hash polling and TTL post-verification. Live execution needs explicit submit/key-variable/budget flags. Main #82/#83 (config and coverage) is integrated at `25ed1fc`; the manual command keeps explicit payer selection. No PR, merge, real signature or live submission is claimed.
 
@@ -139,6 +141,20 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 **Exercised in both directions.** The ID validator must *permit* a well-formed ID as well as refuse a malformed one; a validator that refuses everything is the `W1-D4-00` testnet guard wearing a new hat. Every failure path asserts no stack frame, file path or SDK internal reaches the user, and a malformed keys file is proven not to echo its contents — a secret pasted there by mistake must not be published in a diagnostic.
 
 **And the pipe trap caught me again, minutes after I documented it.** The first exit-code reading said `exit=0` for a failing command, because `$?` after `| tail` reports `tail`'s status. Re-measured without the pipe: 2, correctly. Writing the rule down did not stop me using the broken instrument; noticing the implausible answer did.
+
+## Day 8 close — what is done, what is Rakha's, what is blocked
+
+**Done and merged today:** `W2-D8-01/02/03/04`, `W2-D9-01/02/03`, `W2-D10-01/02/03`, `W2-D13-01`, `W2-D14-01`, `W2-D14-02`. `W2-D10-04` stays `[~]` — the rule landed, the wiring is `W3-D15-01`, and there is still no run.
+
+**Two rows closed on a condition rather than on new work.** `W2-D8-03` and `W2-D10-02` were open pending *final ADR acceptance*, not pending code. ADR-006 was accepted as amended today, so both close on the condition they actually named. Recorded with the reason, because a row that flips to Done with no visible cause is indistinguishable from one flipped carelessly.
+
+**Rakha's, in progress:** `W2-D11-01` (started today on `feat/W2-D11-01-manual-extend`, confirmed on #69), then `W2-D11-02/03`. `W2-D12-01/02` remains his, cut to basic flags.
+
+**Blocked behind him:** `W2-D11-04` dry-run — his boundary proposal accepted, it needs the `--submit` gate published first so the `--dry-run` interface sits on the same execution seam. And `W2-D14-03`, the week review, which needs the week.
+
+**Repo tidied.** 17 branches → 3: 15 merged branches deleted plus six `tmp*` left over from conflict work, checked by **PR state** rather than `git merge-base`, which lies under squash-merge. `delete_branch_on_merge` is now on, so this does not recur — verified by watching a branch delete itself on the next merge.
+
+**Deliverable 1 after today:** Row 1 repo ✅. Row 2 npm ❌ and correctly so, W4. **Row 3 unblocked** — TTL, archive prediction and cost now all print from one command. **Row 4 ✅** — coverage report committed at 93%. The one part of Row 3 that cannot be done from this session is the terminal screenshot itself: the outputs can be produced, but §6.1 says *screenshots*, and an agent running commands through tooling cannot photograph a terminal. That needs Fatih.
 
 ## ✂️ Week 2 cuts taken 2026-09-10 — and cut #3 reverses something Fatih asked for
 

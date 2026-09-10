@@ -1,20 +1,107 @@
 # `evergreen` (CLI)
 
-Read-only TTL scans on Stellar Testnet. The current command discovers the contract instance and its Wasm code, and reads explicit persistent/temporary data keys. It reports remaining ledgers, approximate expiry dates, lifecycle and incomplete observations. `scan --cost` estimates extension fees. The new manual `extend` command prepares and simulates by default; submitting requires explicit flags. Its live Testnet proof remains pending review.
+**Find out when your Soroban contract's data expires, and what keeping it alive costs.**
 
-## Run from this repository
+Soroban ledger entries have a TTL measured in ledgers, not seconds. Every closed ledger decrements it. When it runs out the entry is **archived** — or for temporary entries **deleted outright** — and your contract stops working until someone pays to restore it. `evergreen scan` tells you how long you have, what happens when time runs out, and what an extension would cost.
 
-After installing dependencies with the pinned Node/pnpm toolchain:
+`scan` is read-only: it never signs or submits. [Manual extension](#manual-extension-testnet) simulates by default and requires explicit flags before signing or submitting.
+
+## Quickstart
+
+> **Not on npm yet.** Publication is scheduled for Week 4. Until then, run it from a clone — the command and output are identical.
 
 ```bash
-pnpm typecheck
-node packages/cli/dist/bin.js scan <contract-id> --keys-file keys.json
-node packages/cli/dist/bin.js scan <contract-id> --keys-file keys.json --json
-# Only if the contract genuinely has no additional data keys:
-node packages/cli/dist/bin.js scan <contract-id> --no-data-keys
+git clone https://github.com/Fatihmaull/evergreen.git
+cd evergreen
+pnpm install --frozen-lockfile
+pnpm build
 ```
 
-`SOROBAN_RPC_URL` optionally overrides the default public Testnet RPC. The live network passphrase is checked before reading entries. `--help` prints usage without connecting.
+Then scan any Testnet contract — you do not need to own it, and no wallet or signup is involved:
+
+```bash
+pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+```
+
+That contract is our public test subject, so the command works before you have one of your own.
+
+```
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  No data keys were supplied, so any further entries are unread.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,424,255 ledgers — live
+  ends at:    ledger 6,025,589
+  approx:     2026-12-01T18:58:54Z (estimate — ledgers are the truth)
+  observed:   ledger 4,601,334
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  …
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+```
+
+**That coverage block is the first thing printed, deliberately.** A scan reads the keys it is given and cannot enumerate a contract's storage, so `HEALTHY` means *"everything I was asked to check is healthy"* and never *"this contract is healthy"*. Ledger numbers drift between runs; yours will differ.
+
+### What will it cost to keep alive?
+
+```bash
+pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L --cost --ledgers 518400
+```
+
+```
+Cost to extend 2 entries by 518,400 more ledgers
+  total   about 0.82 XLM  (8,212,414 stroops) — what leaves the account
+    rent  about 0.82 XLM  (8,188,798 stroops)
+    fees  about 0.0024 XLM  (23,616 stroops) — non-refundable resource + base fee
+
+  99% of that rent is one entry (AAAAB8flXw…). Code entries hold the
+  Wasm and are usually the expensive one — and the one shared between contracts.
+```
+
+Prices come from simulating the real operation against the network, not from a formula. **They are estimates**: rent pricing moves with network state and has differed ~18% between days, which is why the figures are rounded and labelled "about".
+
+### For CI
+
+```bash
+pnpm cli scan <contract-id> --json
+```
+
+Exit code `0` healthy, `1` low TTL, `2` error, `3` incomplete scan. See [Coverage and exit codes](#coverage-and-exit-codes) — the distinction between `1` and `3` matters more than it looks.
+
+## The two things people get wrong
+
+**Archived is not deleted.** Instance, code and persistent entries are *archived* and can be restored. **Temporary entries are deleted and cannot be.** The output always says which, because telling someone their recoverable data is gone — or that their unrecoverable data can be restored — is worse than saying nothing.
+
+**Contracts built from the same Wasm share ONE code entry.** If you deploy 40 vaults from one Wasm, that is 40 contracts and one `ContractCode` entry. When it expires, all 40 stop working at the same moment — and a per-contract scan shows 40 healthy contracts right up until they die together. `evergreen` deduplicates by ledger key, tells you when an entry is shared, and grades severity by how many contracts an entry takes down.
+
+A scan of a single contract says so explicitly, because it *cannot* know who else built from that Wasm:
+
+```
+⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+            This scan saw 1. Others may depend on this entry and are invisible here —
+            pass them together to see the real blast radius.
+```
+
+## Options
+
+```
+--json                     machine-readable output; the complete record
+--cost [--ledgers N]       estimate the cost of N more ledgers (default 518,400 ≈ 30 days)
+--keys-file <path>         supply explicit persistent/temporary data keys
+--no-data-keys             assert this contract has none beyond its instance
+--require-declared-scope   also exit 3 when scope was not declared (for CI on a contract you own)
+--help                     usage, without connecting
+```
+
+`SOROBAN_RPC_URL` overrides the default public Testnet RPC. The live network passphrase is checked before anything is read: pointed at mainnet, the command refuses and says so.
+
+`--ledgers N` means **"give me N more ledgers."** The protocol wants an absolute target rather than an increment, so the CLI computes that for you and caps it at the protocol maximum, saying so when it does.
+
+## Data keys
 
 The optional keys file contains only this property:
 
