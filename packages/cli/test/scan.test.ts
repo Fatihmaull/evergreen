@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScanResult } from '@evergreen-stellar/shared-types';
+import { isLive } from '@evergreen-stellar/core';
 import {
   EXIT_BELOW_THRESHOLD,
   EXIT_ERROR,
@@ -56,9 +57,17 @@ describe('exitCodeFor — the Action contract', () => {
     expect(exitCodeFor(low, 17_280)).toBe(EXIT_BELOW_THRESHOLD);
   });
 
-  it('returns 0 on the final live ledger — remaining 0 is not below threshold 0', () => {
-    // The inclusive boundary reaching the exit code. A `<= 0` guard anywhere in
-    // this path would fail a contract that is still alive.
+  it('flags the final live ledger at threshold 0 — still alive, but out of margin', () => {
+    // UPDATED 2026-09-10 with the floor policy. This previously asserted EXIT_OK,
+    // correctly, under the old `remaining < threshold` rule.
+    //
+    // The two boundaries are both visible here and they do not contradict:
+    // remaining 0 is still LIVE (protocol — `isLive` is inclusive at zero), and
+    // it also NEEDS ACTION (policy — `needsAction` is inclusive at the
+    // threshold). A threshold of 0 means "act once remaining reaches 0", which
+    // is the last ledger anything can still be done. Under the old rule this
+    // configuration only acted at remaining < 0, i.e. after the entry was
+    // already gone — a threshold that fires exclusively when it is too late.
     const lastLedger = result({
       entries: {
         [KEY]: {
@@ -67,7 +76,9 @@ describe('exitCodeFor — the Action contract', () => {
         },
       },
     });
-    expect(exitCodeFor(lastLedger, 0)).toBe(EXIT_OK);
+    expect(exitCodeFor(lastLedger, 0)).toBe(EXIT_BELOW_THRESHOLD);
+    // Still live, though: the exit code says "act", never "already dead".
+    expect(isLive(lastLedger.entries[KEY]!.ttl)).toBe(true);
   });
 
   it('returns 2 for a transport failure, distinct from below-threshold', () => {

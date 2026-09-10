@@ -45,6 +45,30 @@ The sample also justified a design decision after the fact: **every one of the t
 
 **2026-09-10 — merge-order handling (S2).** PR #63 was retargeted to `main` **before** #60 merged, per the stacked-PR rule; it survived #60's merge instead of being auto-closed. Squashing #60 then left #63 conflicting in seven files. Resolution was verified rather than trusted: every conflicted file on `main` is byte-identical to #60's head, which is an ancestor of #63, so the branch side is a provable superset. The merged tree is byte-identical to #63's tip and `pnpm check` passes with 170 tests. The push to Rakha's branch was sandbox-blocked here and Fatih ran it; #63 merged as `ee60d7c`. In the interval, S1 merged #61 and #62, so the branch needed a second sync against a main that had moved twice — the cross-session collision flagged that morning, arriving on schedule. S1 had already pushed that second sync; theirs was verified and accepted rather than overwritten with an equivalent local merge.
 
+**2026-09-10 — the threshold policy had a THIRD home, and it was shipping a wrong CI answer (S2).** Fatih asked for a grep after the simulation's copied rule was caught: *"if `needsAction` had two copies, there may be a third."* There was.
+
+`exitCodeFor` in the CLI carried a longhand `remainingLedgers < thresholdLedgers`. When the threshold became a floor (`<=`), the copy did not move. **At exactly the threshold the engine alarmed while `evergreen-check` reported a clean CI pass** — the Action's entire contract with the outside world, wrong, silently. Verified by executing both gates side by side rather than by reading, output preserved below:
+
+```
+remaining= 17281  needsAction=false  engine.isAlarm=false  cli.exit=0  agree
+remaining= 17280  needsAction=true   engine.isAlarm=true   cli.exit=0  *** DIVERGE ***
+remaining= 17279  needsAction=true   engine.isAlarm=true   cli.exit=1  agree
+```
+
+**The distinction that matters: the test copy failed loudly, this one did not fail at all.** Nothing compared the two gates, so the divergence was invisible and would have shipped. It was found only because the first copy had just surfaced and prompted the grep — detection by luck twice over.
+
+Fixed by routing every consumer through the predicate. Added `hasExpired(remaining)` as the primitive so `isLive`, `projectEnd` and `assertLiveness` all call one boundary instead of three copies of `remaining < 0`. Added `packages/cli/test/gate-agreement.test.ts`, which walks across the boundary asserting the CLI gate and the engine give the same answer **and** that both match the predicate — two consumers agreeing on a wrong answer is still a wrong answer.
+
+**One existing CLI test encoded the old policy and had to change**, which turned out to be clarifying rather than awkward: with `threshold = 0` the old `<` rule fired only at `remaining < 0`, i.e. *after* the entry was already gone — a threshold that fires exclusively when it is too late. Under the floor rule it fires on the final live ledger, the last moment anything can be done. That case now asserts both boundaries at once: the entry is **live** and **needs action**, which is the clearest available proof they are independent rather than contradictory.
+
+**Written into `CONVENTIONS` as two rules**, since this is the report-named-no-subject family with a new surface: *one home for a policy — call the predicate, never restate it*, and *a test must call the thing it tests, never restate it*. The second names the sharp part: a test that reimplements its subject is not a weak test, it is a test of a different thing that happens to usually agree, and it only ever fails by luck.
+
+**Two forward dependencies recorded so they cannot quietly rot.** `W3-D15-01` must always pass `decisions` and should make the parameter required once it does — an optional parameter the single real caller omits is a distinction that exists only in tests, and without it a held claim is indistinguishable from nothing happening. `W3-D19-01` must route `NotificationChannel` on `LivenessVerdict.severity`; until something consumes it the grading is decoration and every alarm arrives at one urgency, which is exactly what the grades exist to prevent.
+
+**`W2-D10-01` resolved to `[~]` in both channels.** #66 (S1) landed its exit-code half while accepting the ADR-006 amendment; the display half is still open and is S2's. The cause is structural, not careless — accepting an ADR that changes behaviour necessarily lands the code for that behaviour, so S1 could not amend the exit-code scheme without touching `exitCodeFor`. The row now names what #66 covered and what remains, so it means something rather than sitting ambiguous.
+
+**Also corrected: the `W2-D10-04` row contradicted itself.** It opened with the pre-policy 49/47 split while explaining further down that the policy had changed to `<=`. Now 48/48, with the earlier number noted as correct under the rule it replaced.
+
 **2026-09-10 — two liveness semantics decided (Fatih), implemented (S2).** Both were genuinely product calls, not technical ones, and both changed the code.
 
 **The threshold is a floor, not a line to sit on.** `needsAction` now fires at `remaining <= threshold`. Reasoning: the threshold is a safety margin and *touching* it is already the failure the margin exists to prevent — one step from danger is not margin. Costs at most one cron interval of earliness; buys a margin never touched rather than merely rarely crossed. The threshold's meaning is now documented as **"act once remaining reaches this number."**
