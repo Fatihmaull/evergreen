@@ -82,6 +82,12 @@
       "confidence": "high for extend-only transactions - a bump with a real read/write footprint will not behave this way"
     },
     {
+      "id": "corrected-mechanism",
+      "claim": "A wrong mechanism that predicts the right number is worse than no mechanism.",
+      "basis": "These fees were first reported as 'the instance cost 2.8x the temporary entry, because rent is priced per entry size'. The 2.8x is real - 156,840 / 55,655 - and the sentence survives casual checking because its number is right. The mechanism is not: the persistent and temporary entries are byte-identical and still differ by 1.95x, so durability was doing the work attributed to size. Isolating rentFeeCharged is what exposed it; fee_charged alone would have left the wrong explanation standing.",
+      "confidence": "recorded as process, not as a measurement - it is why this fixture asserts relationships instead of a formula"
+    },
+    {
       "id": "size-scaling-unresolved",
       "claim": "Rent grows with size, but three points do not determine how.",
       "basis": "instance vs persistent is 1.545x the entry data (136B vs 88B) but 1.488x the rent, and 1.122x the key+data total. Neither total bytes nor data bytes predicts it exactly. Do NOT fit a coefficient to this.",

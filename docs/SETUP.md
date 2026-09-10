@@ -132,6 +132,14 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 >
 > That date is **eighteen days after the sprint ends**, and attention stops on Oct 2. Scheduled as `W3-D18-02d` on **Sat Sep 26** — the first day the decay proofs are captured and the constraint lifts, and the last day everyone is still looking. Extend to `max_entry_ttl` (180 days, reaching ~2027-03-25, the protocol ceiling) and take A's other three entries to the same date while you are there.
 >
+> ### 📅 Reading this in early 2027? The engine should already have handled it.
+>
+> **~2027-03-25 is a real deadline with nobody watching**, six months past any horizon a person is holding in their head — which is the exact failure that produced this whole section. Extending to the ceiling does not remove that problem; it postpones it by 180 days, because 180 days is all the protocol allows in one operation.
+>
+> **The fix is not a longer extend, it is `W3-D15-01b`:** guinea-pig A is the engine's first monitored contract, and B and C join it once their proofs are captured. Once that ships, **the next extend is the product's job rather than a human's** — the engine watches the shared code entry like any other ledger key and bumps it before the threshold, without anyone remembering to.
+>
+> So if you are here in February 2027 wondering whether to extend by hand: **first check whether the engine is running and A/B/C are in its watched config.** If they are, this is already handled and the entry will show a fresh `liveUntilLedgerSeq`. If they are not, extend by hand *and* fix that, because the manual extend buys another 180 days of the same exposure.
+>
 > ### ⚠️ A's code entry is the one still on a clock — and it is not A's alone
 >
 > All three guinea-pigs were built from the same Wasm (`c7e55f0a…98bfb`, verified by fetching and hashing each contract independently on 2026-09-09), so **they share a single `ContractCode` ledger entry.** "Extending A's code" is not a thing that can be done — it extends B's and C's at the same time, which is why the three extends on Sep 9 named every ledger key explicitly with `--key-xdr` instead of relying on `--id` alone.

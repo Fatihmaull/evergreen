@@ -109,9 +109,9 @@ Semantically exact — "this no longer applies" — and it reads correctly to a 
 
 So: when restructuring, **retire the old IDs and mint new ones.** A gap in the sequence costs nothing. A silently re-pointed ID costs an evidence row filed against the wrong proof, discovered when someone goes looking for it.
 
-## 🔍 The report named no subject — the pattern, and its five members
+## 🔍 The report named no subject — the pattern, and its six members
 
-**Every one of these was a report that stated a result without saying what the result was *about*.** Not a wrong answer — an answer to an unasked question, read as the answer to the one being asked. They looked like five unrelated incidents until the fifth arrived; they are one failure, and it recurs because the safe-looking direction is silence or a stale green.
+**Every one of these was a report that stated a result without saying what the result was *about*.** Not a wrong answer — an answer to an unasked question, read as the answer to the one being asked. They looked like unrelated incidents until enough of them accumulated to show the shape; they are one failure, and it recurs because the safe-looking direction is silence or a stale green.
 
 | The report | What it named | What was actually being asked | How it was caught |
 |---|---|---|---|
@@ -120,6 +120,13 @@ So: when restructuring, **retire the old IDs and mint new ones.** A gap in the s
 | `pnpm check && echo PASS` printing nothing | *nothing at all* | pass or fail | CI failing on a branch that "passed" |
 | Cloudflare: *"Initializing build environment"* | a build from minutes ago | whether the deploy is live | loading the URL |
 | `gh pr view` reporting CI SUCCESS | **a commit no longer being merged** | whether *this head* is green | comparing the check's SHA to the PR head |
+| Six green gates + `npm publish --dry-run` | **the monorepo, where `workspace:*` resolves** | whether a stranger can install it | packing and installing into an empty directory |
+
+**The last one is the most expensive of the six, because unlike the others it would have shipped.** `npx @evergreen-stellar/cli` would have returned a hard 404 for every user: `cli` and `core` both declare `@evergreen-stellar/shared-types` as a runtime dependency, and only two packages were going to be published. Every local gate was green throughout, and `--dry-run` would not have caught it either — **it packs without resolving.** Scheduled discovery was `W4-D27-02` on Sep 29, day 27 of 30, with the fix requiring a third package published into a scope we could not publish to yet. Actual discovery: day 7, by running the install.
+
+> **A check that never leaves the monorepo cannot answer a question about strangers.** `workspace:*` is the specific trap — it resolves silently in development and is rewritten to a version that may not exist at publish time — but the shape is general. Anything verified only from inside the thing being verified is measuring the inside.
+
+That is also the argument for moving verification earlier, settled empirically rather than by preference: the same check, thirteen days sooner, paid for itself within hours of being written.
 
 **The rule, in the general form: a result is only about the subject it names.** Before acting on any green, bind it to the thing you are about to act on — the commit, the URL, the input, the gate list. If the report does not name its subject, it is not evidence about yours.
 

@@ -167,6 +167,53 @@ Already decided — do not relitigate without a reason and an ADR amendment:
 
 New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) and link it from STATUS.md.
 
+## Token efficiency
+
+Default to sequential work in a single thread. Sub-agents are a deliberate
+tool for defined moments, not a reflex.
+
+**Sub-agents**
+
+- Do not spawn sub-agents for routine work, or automatically for
+  "comprehensive" audits.
+- Spawn them only at week gates, before merging a high-risk change, or when
+  explicitly asked.
+- Cap at 3 per invocation. Five lenses plus three refuters is an audit
+  someone asked for, not a default.
+- State up front what each one is for and roughly what it will cost.
+
+**Models**
+
+- Sonnet or lower for reading, context-gathering, delegation, and routine
+  implementation.
+- Opus only for a named high-stakes decision — an architectural trade-off, a
+  security-relevant review, a finding that would change the plan. Say why
+  before using it.
+
+**Scope**
+
+- Audit only what the current task or branch touches. No global sweeps
+  unless asked.
+- Read targeted line ranges, not whole files, unless the whole file is the
+  subject.
+- Prefer one well-aimed grep over loading a directory.
+
+**Reporting**
+
+- Report roughly what a session cost when it was unusually large, and why.
+  Cost that stays invisible cannot be managed.
+
+### What this rule deliberately does not cut
+
+**Not a ban, and the distinction matters.** Two Sep 8–9 audits cost ~9.3M and ~7.1M sub-agent tokens between them, which is what prompted this section — but they are also what found the packaging defect that would have 404'd for every user, the public README error about our own domain, a `CODEOWNERS` that had never routed a review, and two contradictory `SETUP.md` rules about the contract we cannot replace. **A rule that would have prevented the npm fix is a bad rule.** Cut the breadth; keep the rigor.
+
+Two things survive this section unchanged, and are not "audits" for the purposes of the caps above:
+
+- **Fresh-machine and stranger-facing checks stay.** They are cheap — a pack, an install, a scan — and they catch what internal gates structurally cannot. Six green gates said nothing about whether a stranger could install the package, because *a check that never leaves the monorepo cannot answer a question about strangers.*
+- **Verifying a finding before acting on it stays.** Running the reproduction costs a few hundred tokens and has corrected three claims this week, including two of Fatih's own and one of mine. Reading code to decide whether a claim is true is the expensive path *and* the unreliable one.
+
+The proportionality test: **would this have caught something a targeted check could not?** A fan-out over the whole doc tree at a week gate, yes. A fan-out to answer a question one grep answers, no.
+
 ## Working style expected here
 
 - Small, reviewable commits tied to task IDs. See `docs/CONVENTIONS.md`.
