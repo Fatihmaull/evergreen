@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · D12 review complete; awaiting publication instruction
+**Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,12 @@
 ---
 
 ## Current — W2-D12-01 implementation
+
+**Published in [PR #88](https://github.com/Fatihmaull/evergreen/pull/88)** after Rakha approved publication; Fatih is requested as reviewer. Reviewed implementation `7a5a99c`, base main `ed16bc2`. D12-01 remains Done for verified implementation, not merged; D12-02 remains Pending. No new live read, quote, signing or transaction. Full local check passed 362 tests; coverage passed unchanged thresholds. Final-head GitHub checks are verified separately.
+
+**Integration coordination:** [Issue #89](https://github.com/Fatihmaull/evergreen/issues/89), assigned to and mentioning Fatih, tracks the concrete overlap with D11 PR #86 in CLI dispatch/wiring and core exports. Preserve both paths, synchronize the second PR after the first merge, and validate the combined tree. This is coordination, not a fabricated current blocker or new task ID. D11-04's existing handoff stays in #87; ownership is unchanged.
+
+### Pre-publication review record
 
 **Review complete:** [D12 review report](W2-D12-01-REVIEW.md). No blocking correctness finding identified against refreshed main `ed16bc2`; clarified “1.95x higher” to “1.95 times the temporary rent” without changing numerical data or behavior. Fresh full `pnpm check` passed 326 Vitest + 36 Node = 362 tests. D12-01 remains Done on its verified branch, not merged; D12-02 remains Pending. Ready for PR publication after Rakha's instruction; no new live read or transaction during review. D11 #86/#87 remain separate.
 
