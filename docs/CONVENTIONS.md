@@ -226,6 +226,26 @@ Neither was caught by the suite — a green suite is exactly what an unfailable 
 
 Special suspicion for assertions involving **float literals, `.not.toBe(...)`, and any value the language may coerce before comparing** — those are where an assertion most easily becomes a tautology while reading as a claim.
 
+### A test can defend a bug — say whether it asserts intent or behaviour
+
+An unfailable test asserts nothing. A test that **faithfully encodes current behaviour** is worse in one specific way: it turns a defect into a requirement, so every future change that fixes it arrives as a regression.
+
+*Observed 2026-09-10.* Five tests asserted `isShared: false` and `blastRadius: 1` for a code entry seen from a single contract. That is unknowable by construction — the chain does not index reverse dependencies from one contract query — so the suite was not silent about the defect. **It was defending it.** 318 green tests, and the green was the problem.
+
+**The habit, since there is no tool for this:** when a test is updated to match a change, state in the diff whether it was asserting *intent* or asserting *behaviour*. A test written from the observed output is a description, not a claim, and should never be cited as evidence that behaviour is correct.
+
+Its tell is the shape of the update: if fixing a bug required changing a test's expected value, ask why the old value was there. Sometimes the answer is "the behaviour changed on purpose" — the `<` to `<=` threshold move, where the test was corrected and said so. Sometimes it is "nobody had asked whether that value was right."
+
+### A check that has never failed has not been shown to be a check
+
+*Observed 2026-09-10, in the guard built to catch the previous instance.* The pack-and-install rehearsal reported success twice while **supplying a dependency the registry does not have** — all three tarballs were installed together, so the CLI's `core@0.0.0` resolved from a sibling file rather than from npm. The stranger it existed to simulate would have got a 404.
+
+It was only trusted because it had passed. Passing was the whole of its evidence.
+
+**So: before relying on a new check, produce the failure it is meant to catch and watch it fail.** For an install rehearsal that means the isolated case — top-level package only, fresh directory, clean cache, no siblings, no workspace above it. For anything else it means the same shape: construct the bad input on purpose.
+
+This generalises the mutation-testing habit from code to *procedures*, which is where it had not been applied.
+
 ### Rules catch patterns you are looking for; implausibility catches the ones you are not
 
 Documented rules do not fire at the moment of action. **Attention does.**
