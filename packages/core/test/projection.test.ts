@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   MEASURED_TESTNET_CADENCE,
@@ -196,5 +197,39 @@ describe('measureCadence', () => {
     expect(Math.abs(c.secondsPerLedger - MEASURED_TESTNET_CADENCE.secondsPerLedger)).toBeLessThan(
       MEASURED_TESTNET_CADENCE.uncertaintySecondsPerLedger + c.uncertaintySecondsPerLedger,
     );
+  });
+});
+
+describe('measureCadence — against real recorded testnet closes', () => {
+  // Docs are not the network. The cadence constant restates measurements taken
+  // on 2026-09-05; this pins it against closes actually observed on 2026-09-10
+  // and recorded as a fixture, so the claim is re-checked rather than repeated.
+  const recorded = JSON.parse(
+    readFileSync(
+      new URL('./fixtures/ledger-closes-testnet-2026-09-10.json', import.meta.url),
+      'utf8',
+    ),
+  ) as { samples: LedgerCloseSample[] };
+
+  it('reproduces the recorded constant from live-observed closes', () => {
+    const observed = measureCadence(recorded.samples);
+    const gap = Math.abs(observed.secondsPerLedger - MEASURED_TESTNET_CADENCE.secondsPerLedger);
+    const combined =
+      observed.uncertaintySecondsPerLedger + MEASURED_TESTNET_CADENCE.uncertaintySecondsPerLedger;
+    // If this ever fails, the constant has drifted away from the chain and the
+    // disagreement is the finding — do not widen the band to make it pass.
+    expect(gap).toBeLessThanOrEqual(combined);
+  });
+
+  it('would have claimed ZERO uncertainty without the quantization floor', () => {
+    // Every 2,000-ledger interval in this sample closed in exactly 10,000 s, so
+    // the observed per-interval spread is 0. The floor is the only thing
+    // standing between a clean sample and a falsely exact projection — which is
+    // precisely why it exists.
+    const observed = measureCadence(recorded.samples);
+    const span =
+      recorded.samples[recorded.samples.length - 1]!.ledgerSeq - recorded.samples[0]!.ledgerSeq;
+    expect(observed.uncertaintySecondsPerLedger).toBeCloseTo(1 / span, 12);
+    expect(observed.uncertaintySecondsPerLedger).toBeGreaterThan(0);
   });
 });
