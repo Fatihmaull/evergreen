@@ -1,0 +1,55 @@
+{
+  "_provenance": {
+    "recordedAt": "2026-09-10T01:39Z",
+    "source": "https://horizon-testnet.stellar.org/ledgers/{sequence}",
+    "network": "testnet",
+    "note": "DERIVED EXTRACT, not a raw response: sequence and closed_at were taken from 11 individual Horizon ledger responses, 2000 ledgers apart, and closed_at was converted to epoch seconds. Recorded this way because measureCadence consumes exactly these two fields; the raw responses carry ~40 unrelated fields each. The conversion is the only transformation applied.",
+    "task": "W2-D8-01"
+  },
+  "samples": [
+    {
+      "ledgerSeq": 4576156,
+      "closeTimeSeconds": 1788904367
+    },
+    {
+      "ledgerSeq": 4578156,
+      "closeTimeSeconds": 1788914367
+    },
+    {
+      "ledgerSeq": 4580156,
+      "closeTimeSeconds": 1788924367
+    },
+    {
+      "ledgerSeq": 4582156,
+      "closeTimeSeconds": 1788934367
+    },
+    {
+      "ledgerSeq": 4584156,
+      "closeTimeSeconds": 1788944367
+    },
+    {
+      "ledgerSeq": 4586156,
+      "closeTimeSeconds": 1788954367
+    },
+    {
+      "ledgerSeq": 4588156,
+      "closeTimeSeconds": 1788964367
+    },
+    {
+      "ledgerSeq": 4590156,
+      "closeTimeSeconds": 1788974367
+    },
+    {
+      "ledgerSeq": 4592156,
+      "closeTimeSeconds": 1788984367
+    },
+    {
+      "ledgerSeq": 4594156,
+      "closeTimeSeconds": 1788994367
+    },
+    {
+      "ledgerSeq": 4596156,
+      "closeTimeSeconds": 1789004367
+    }
+  ]
+}
