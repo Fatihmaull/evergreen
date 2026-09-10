@@ -84,8 +84,17 @@ Update the Notion row(s) for every task ID in that PR: `Status`, plus a one-line
 2. Notion: set `Status` on every task touched, and write the outcome into `Notes` — what happened, not just that something happened. Link the PR or Issue.
 
    > **When creating a Notion row, take the ID from `BACKLOG.md`. Never infer it from a naming pattern.** Guessing ~~W1-D4-04d~~ because `04b` and `04c` exist is how the join key diverges — and a divergent ID does not fail, it silently stops matching. The row falls out of every future diff while the diff still reads green. The repo registers the ID first; Notion copies it.
-3. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
-4. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
+3. **Create a Notion row for every task ID you ADDED to `BACKLOG.md` this session — worked on or not.** Creating a task and touching a task are different events, and only the second used to trigger a write. A task added on a day nobody works it never reached the mirror.
+4. **Run the presence diff across ALL rows, every session end.** Not on demand, not scoped to the current week. Compare every registered ID in `BACKLOG.md` against every Notion row, both directions.
+
+   > **This is the only check that catches absence, and absence is the failure mode that hides.** Status, owner and title comparisons can only compare rows that exist on both sides — a missing row passes all three, forever. The same blind spot appeared in the title sweep, where a similarity score could not see that `W4-D24-04` had no row at all.
+   >
+   > *Three separate discoveries, one mechanism, 2026-09-09/10:* `W1-D7-08`, then `W4-D24-04`, then **thirteen more** — every one a task created and then not touched again. Had this run at session end from Sep 5, none would have survived a day.
+
+   > **Reasoning goes in the repo first, then mirrors. Never only into a Notion `Notes` field.** A note living only in the mirror has no canonical home, and the next repo→Notion sync can overwrite it — the exact inverse of a missing row, and just as invisible. If it is worth writing into a row, it is worth a line in `BACKLOG.md`, `docs/STATUS.md` or `docs/CONVENTIONS.md` first. *(Caught 2026-09-10 on three items written to Notion only: a Sep 16 slack recheck, the provenance test for phantom rows, and the rule that a retired ID stays visible in the mirror. All three now live in the repo — see `docs/CONVENTIONS.md` § the provenance test.)*
+
+5. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
+6. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
 
 ### E. Status vocabulary — identical meaning in both channels
 

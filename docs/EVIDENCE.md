@@ -27,6 +27,64 @@ This costs about a minute per transaction if done at capture time and is unrecov
 | **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 Manual/permissionless foundation evidence recorded; unattended engine proofs remain W3 |
 | **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 Hosting placeholder live; functional dashboard, product Action and release artifacts remain W4 |
 
+## Deliverable 1 — readiness at the Sep 16 gate
+
+**Handover, 2026-09-10.** Session 1 assembled D1 evidence through this date; Session 2 owns it from here. This section is the complete picture, including the requirements that are fine, so it can be picked up without asking anyone.
+
+**SOW §6.1 requires, for Deliverable 1:** *"Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report."* Four requirements, quoted rather than paraphrased, and treated below as four separate rows because two are met and two are not.
+
+| # | Requirement | State | Blocked behind | Unblocked by / when |
+|---|---|---|---|---|
+| 1 | Public repo | ✅ **Met** | — | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen), MIT, CI green |
+| 2 | Published npm package | ❌ **Not met — and not a Sep 16 concern** | `W4-D27-02` | Rakha, ~Sep 29 |
+| 3 | Screenshots: TTL / archive prediction / cost | ⚠️ **Partial** | `W2-D9-01/02` | Rakha, Week 2 |
+| 4 | Test coverage report | ❌ **Not met** | `W2-D14-01` | Shared, Sep 16 itself |
+
+### 1 — Public repo ✅
+
+Met and stable. Nothing to do.
+
+### 2 — Published npm package ❌, and **nobody should panic at the gate**
+
+All three packages are still `"private": true` at `0.0.0`. Publication is `W4-D27-02`, planned ~Sep 29.
+
+**This is correct, not late.** The Sep 16 gate is the *CLI feature* gate; **Deliverable 1 is submitted on Oct 2**, and Sep 29 precedes that. A red row here on Sep 16 is the plan working. What *would* be a problem is the two admin tasks that gate it — `W4-D27-00` (npm 2FA) and `W4-D27-00b` (invite Rakha to the org, still **blocked on his npm username**) — which both sit on the same day as the publish they gate. `W2-D14-02c` pulls them into Week 2 for that reason.
+
+The install path itself is proven: `W2-D14-02b`'s pack-and-install rehearsal found that `npx @evergreen-stellar/cli` would have returned a hard 404 for every user, because `cli` and `core` both declare `@evergreen-stellar/shared-types` as a runtime dependency while only two packages were going to be published. Fixed and re-verified on 2026-09-09. **`W4-D27-02` publishes three packages, in order.**
+
+### 3 — Screenshots showing TTL, archive prediction and cost ⚠️
+
+Three sub-parts, and they are not in the same state:
+
+| Sub-part | Exists? | Where / why not |
+|---|---|---|
+| **TTL** | Yes, but **stale** | [`2026-09-08-w1-review/`](evidence/2026-09-08-w1-review/README.md) captures the W1 **instance-only** scan. The CLI now reads four entry types, prints coverage, and its exit codes changed twice (ADR-006, then its amendment in #66). The artifact shows a CLI that no longer behaves that way. |
+| **Archive prediction** | Yes, **uncaptured** | Landed in #65 (`projectEnd` / `measureCadence`). The CLI prints `approx:` today. It has never been in a screenshot. |
+| **Cost** | **No — does not exist** | The CLI emits no rent figure at all. Blocked on `W2-D9-01/02`, Rakha, not started. |
+
+**Cost is the binding item for this whole requirement.** Without it there is no screenshot showing cost, ever — which is why `W2-D13-03` batch scan was cut on 2026-09-10 to protect it. The validation data `W2-D9-02` needs already exists: [`extendTTL-fees-guinea-pig-a.json`](../packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json), three measured extends with `rentFeeCharged` isolated from `resultMetaXdr`.
+
+#### The recapture — once, and only once
+
+**Do not recapture before `W2-D9` lands.** Capturing now produces a *third* superseded artifact.
+
+Conditions, all four:
+
+1. **After `W2-D9-01/02` lands**, so cost is actually in the output, and **after the exit codes settle** on #66's amendment.
+2. **A real terminal screenshot** — not a rendered image of saved stdout. The current artifact is honestly labelled *"not a screenshot of a terminal application"*, which is to its credit, but **§6.1 says screenshots and a reviewer comparing the wording to the artifact should not have to accept a substitution.** It costs nothing to do properly once the CLI is final.
+3. **Both `--json` and human-readable**, since the SOW names both output modes.
+4. **Against guinea-pig A** (`CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L`), which now runs to ~2026-12-01 and will not archive under the reviewer.
+
+### 4 — Test coverage report ❌
+
+No artifact exists. `pnpm test:coverage` is wired (`vitest run --coverage`) but has never been run into a committed report. `W2-D14-01` targets ~80% on the math/cost modules and is scheduled for **Sep 16 itself — no slack.** If Week 2 slips a day, this is the requirement that slips with it.
+
+### What "yes or no at the gate" means
+
+On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a projection, not a percentage, not "on track". **A "nearly" is a no.** Rows 1 and 2 are already decided — 1 is yes, 2 is a no that is expected and fine. Rows 3 and 4 are the live ones.
+
+---
+
 ## Transaction hashes
 
 ### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)
