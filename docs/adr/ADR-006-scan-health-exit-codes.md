@@ -1,6 +1,6 @@
 # ADR-006: Separate incomplete scan information from observed low TTL
 
-**Status:** Proposed — Rakha approved this implementation on 2026-09-09; Fatih endorsed the scheme on 2026-09-09; the requested documentation follow-up is prepared for final acceptance before merge.
+**Status:** **Accepted 2026-09-10 as amended** by Fatih. The scheme merged in #60 before acceptance was given and ran as originally written for one day; the amendment below is what is accepted. Rakha approved the original implementation on 2026-09-09.
 **Date:** 2026-09-09
 **Deciders:** Fatih, Rakha
 
@@ -24,7 +24,7 @@ Implement the final option for review. The health gate has precedence **2 > 3 > 
 | Exit | Meaning |
 |---|---|
 | 2 | Invalid input/response, connection/network refusal or RPC failure |
-| 3 | Coverage unspecified/unknown, unavailable TTL, missing/unsupported entries, or no observations |
+| 3 | ~~Coverage unspecified/unknown,~~ unavailable TTL, missing/unsupported entries, or no observations — **see the amendment: undeclared coverage no longer belongs here by default** |
 | 1 | Observations and declared scope are available, with at least one TTL below threshold |
 | 0 | All observed keys within the declared scope have known TTL at or above threshold, without issues |
 
@@ -59,3 +59,62 @@ CLI callers relying on legacy results without coverage returning 0 must migrate.
 - 2026-09-09: recorded the reviewed branch finding and Rakha-approved local implementation proposal; Fatih acceptance and publication remain pending.
 
 - 2026-09-09: Fatih endorsed the scheme in Issue #44; added his requested milestone migration and assertion-misuse consequences. Final ADR acceptance/merge remains separate.
+
+---
+
+## Amendment — 2026-09-10: undeclared scope is not the same as a degraded scan
+
+**Accepted as amended.** The four codes and the `2 > 3 > 1 > 0` precedence stand, and so does the load-bearing sentence — *exit status summarises health and never authorises a transaction*. One thing changed.
+
+### What was wrong
+
+The original decision made `3` cover two different things: **a scan that came back degraded**, and **a caller who has not declared their data-key scope.** The second is not a defect in the read, and for most callers it is not fixable.
+
+Whether a contract has data keys beyond its instance is knowable **only from its source**. `scan-contract.ts` states the constraint plainly — *"RPC cannot enumerate arbitrary storage"* — so there is no observation that establishes absence. Therefore:
+
+- **If you wrote the contract, `--no-data-keys` is a claim you can make truthfully.** Your storage schema is a static property of your own code.
+- **If you did not, you cannot know, at all.** Not "with difficulty" — there is no procedure.
+
+And the second case is not marginal. Extending TTL is permissionless, `W4-D22-02` promises *"paste any contract ID"*, and the dashboard's whole premise is scanning contracts nobody on this team owns. For those callers the original scheme made `3` **permanent**, with the only escape being a flag that asserts something unverifiable.
+
+**An exit code that users routinely silence with a flag has stopped being a signal** — and here the silencing would be a false statement about the chain. This ADR anticipated exactly that (*"can teach callers to add `--no-data-keys` reflexively"*) and answered it with a paragraph telling people not to. **A documentation note is not a mechanism.** It does not survive contact with someone who wants a green build.
+
+### What changes
+
+1. **`3` now means the scan itself came back degraded** — an entry not returned, a TTL unavailable, an executable that cannot be followed, or nothing observed. These are genuinely unknown, genuinely uncommon, and therefore still informative.
+2. **A bare `evergreen scan <id>` exits `0`** when everything it was asked to check is healthy. Coverage is printed on every scan, so the limit is stated where a human reads it rather than encoded in a code they cannot act on.
+3. **The completeness demand becomes opt-in: `--require-declared-scope`**, which restores the original behaviour exactly. `evergreen-check` sets it by default (`W4-D25-01`), because the Action is the CI surface and its user is almost always the contract's author — the one party who can satisfy it.
+
+`--no-data-keys` survives unchanged as the author's declaration, and is still never independently verified. An empty keys file still does not assert emptiness.
+
+### What this deliberately does not do
+
+**It does not abandon fail-closed.** Fail-closed is right wherever the caller can satisfy the demand, and `--require-declared-scope` keeps it verbatim for them. The amendment says only that the demand should be made of the party who can meet it, rather than of everyone. Two callers with opposite needs now get the default each one actually wants, instead of one default that is correct for CI and wrong at a terminal.
+
+**It does not make `0` mean more than it did.** `0` has always meant *"everything I was asked to check is healthy"* and never *"this contract is fully healthy"*. That was true before the amendment and is true after; what changed is that the CLI now says so in words rather than through a code the reader cannot interpret.
+
+### Verified
+
+Against guinea-pig A on live Testnet, not fixtures:
+
+```
+bare                                   -> 0
+--require-declared-scope               -> 3
+--no-data-keys                         -> 0
+--no-data-keys --require-declared-scope-> 0
+--keys-file <two keys> --require-...   -> 0
+```
+
+143 offline tests pass. Rakha's original coverage assertions were **moved behind the flag rather than deleted** — every case he wrote still fails closed for the CI caller.
+
+## Downstream sweep (amendment)
+
+- `W2-D10-01` — CLI UX and exit codes: this is where the final wording lives; the amendment supplies the shape, not the finished UX.
+- `W4-D25-01` — `evergreen-check` must pass `--require-declared-scope`. **Without it the Action inherits the permissive default and a CI user gets a green on an undeclared scope**, which is the one place the original instinct was right.
+- `W2-D13-01` — config loading still preserves a caller's coverage declaration; unchanged.
+- `W1-D7-01` — its "exit codes verified in all four directions" record is historical and already labelled as such.
+- `W3-D15-01`/`W3-D16-*` — unaffected. No exit code has ever authorised a transaction and none does now.
+
+## Update log (amendment)
+
+- 2026-09-10: accepted as amended. `3` narrowed to a degraded scan; the completeness demand moved to `--require-declared-scope`, on by default in the Action. Recorded because the original shipped in #60 before acceptance and ran unamended for one day.

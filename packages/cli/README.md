@@ -33,13 +33,17 @@ Supply `ContractData` keys for the requested contract, with persistent or tempor
 | Exit | Meaning, in precedence order |
 |---|---|
 | `2` | Invalid arguments/input/response, network refusal or RPC failure |
-| `3` | Unknown data-key coverage, unavailable TTL, missing/unsupported entries, or no observations |
+| `3` | The scan came back **degraded** — an entry not returned, a TTL unavailable, an executable that cannot be followed, or nothing observed |
 | `1` | All observations are available and at least one TTL is below 17,280 ledgers |
-| `0` | All requested/discovered keys have known TTL at or above the threshold, with no issues |
+| `0` | Everything the command was asked to check has known TTL at or above the threshold |
 
-`--no-data-keys` explicitly asserts that this contract has no data keys beyond its instance. It is mutually exclusive with `--keys-file`. The scanner still reads instance/code and records `coverage.noDataKeysDeclaredByContract[id]: true`. This assertion comes from the caller, not an on-chain completeness check. Do not use it merely to make CI pass. An empty keys file alone remains unknown coverage (exit `3`).
+**`0` means "everything I was asked to check is healthy", never "this contract is healthy".** The command reads the keys it is given and cannot enumerate storage, so coverage is printed on every scan and belongs in how you read the result.
 
-Precedence is **2 > 3 > 1 > 0**. If a low TTL is observed alongside a missing entry, exit is `3` and JSON still contains both findings. Every unhealthy/incomplete case stays nonzero. Exit `1` reports low TTL; it never requests or authorizes an extension. A future engine must evaluate observations, issues, policy, payer and budgets itself. Old programmatic results that omit coverage now return `3`, rather than the prior helper's `0`; migrate to explicit coverage. See [ADR-006](../../docs/adr/ADR-006-scan-health-exit-codes.md), proposed for shared review.
+`--no-data-keys` asserts that this contract has no data keys beyond its instance, and is mutually exclusive with `--keys-file`. **Only the contract's author can know that** — it is a caller declaration recorded as `coverage.noDataKeysDeclaredByContract[id]: true`, never an on-chain completeness check. An empty keys file says "here are my keys: none"; only this flag says "there are none".
+
+`--require-declared-scope` additionally exits `3` when a contract's scope was not declared. **Use it in CI on a contract you own** — `evergreen-check` sets it by default. It is off otherwise, because scanning a contract you did not write makes declaring scope impossible, and an exit code every default invocation triggers is not a signal. Programmatic callers get the same choice through `exitCodeFor(result, threshold, { requireDeclaredScope })`.
+
+Precedence is **2 > 3 > 1 > 0**. If a low TTL is observed alongside a missing entry, exit is `3` and JSON still contains both findings. Exit `1` reports low TTL; it never requests or authorizes an extension — a future engine must evaluate observations, issues, policy, payer and budgets itself. See [ADR-006](../../docs/adr/ADR-006-scan-health-exit-codes.md), accepted 2026-09-10 as amended.
 
 Zero applies only to the supplied/discovered keys; it never guarantees complete storage coverage. Missing entries are reported as issues, not asserted to be archived or deleted. Temporary entries expire by deletion; other supported entry types archive. Zero remaining ledgers is still the final live ledger.
 
