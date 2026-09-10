@@ -81,6 +81,42 @@ export interface EntryAssessment {
  * A single archived entry that is merely low is `warning`: it needs action, it
  * is recoverable, and it takes nothing else with it.
  */
+/**
+ * Two horizons, because a warning and an action answer different questions.
+ *
+ * Decided by Fatih 2026-09-10. A single threshold forced a choice between
+ * missing things and crying wolf: at 17,280 ledgers (~24 h) an entry crosses
+ * into trouble with **exactly one scheduled run left** to act on it, so one
+ * missed run — a rate limit, a bad deploy, a network hiccup — leaves no second
+ * chance. That does not serve "100% uptime" with strict alerting; it is the
+ * tightest value that still technically warns.
+ *
+ * So the tight value is kept and demoted to the URGENT tier, where its
+ * tightness is a feature, and a wider horizon is added above it:
+ *
+ *   WARNING   120,960 ledgers (~7 days)  — six failed daily runs of margin
+ *   CRITICAL   17,280 ledgers (~1 day)   — act now
+ *
+ * Separating them is also what resolves the false-alarm tension: the noisy
+ * level and the urgent level stop being the same number.
+ */
+export interface HealthThresholds {
+  /** Below this, say something. Wide enough to survive several failed runs. */
+  readonly warnBelowLedgers: number;
+  /** Below this, act now. Deliberately tight. */
+  readonly criticalBelowLedgers: number;
+}
+
+/** ~7 days at the measured cadence. Six daily runs of margin. */
+export const DEFAULT_WARN_LEDGERS = 120_960;
+/** ~1 day. The previous single threshold, kept where tightness is the point. */
+export const DEFAULT_CRITICAL_LEDGERS = 17_280;
+
+export const DEFAULT_THRESHOLDS: HealthThresholds = {
+  warnBelowLedgers: DEFAULT_WARN_LEDGERS,
+  criticalBelowLedgers: DEFAULT_CRITICAL_LEDGERS,
+};
+
 export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): EntryAssessment {
   if (!isValidThreshold(thresholdLedgers)) {
     throw new Error('thresholdLedgers must be a non-negative integer of ledgers');

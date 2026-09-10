@@ -144,6 +144,31 @@ Blast radius is reported, not encoded:
 
 Grading itself lives in `packages/core/src/health.ts` (`assessEntry`), so the CLI and the future dashboard cannot diverge. It is deliberately **separate from `LivenessVerdict.severity`**, which answers a different question — *how bad is it that this run did not act* (a property of a run) versus *how bad is this entry's state* (a property of the chain). The shared inputs are not restated: both call `needsAction` and `hasExpired`.
 
+## Amendment — 2026-09-10: two threshold tiers, not one
+
+**Decided by Fatih.** The health threshold becomes two horizons:
+
+| Tier | Ledgers | Roughly | Question it answers |
+|---|---|---|---|
+| `WARNING` | **120,960** | ~7 days | *should someone look?* |
+| `CRITICAL` | **17,280** | ~1 day | *act now* |
+
+The tight value is **kept**, not replaced — demoted to the urgent tier, where its tightness is a feature.
+
+### Why one number could not work
+
+At 17,280 ledgers an entry crosses into trouble with **exactly one scheduled run left** to act on it. One missed run — a rate limit, a bad deploy, a network hiccup — and there is no second chance. That does not serve *"100% uptime"* with strict alerting; it is the tightest value that still technically warns.
+
+**A warning horizon and an action horizon answer different questions, and collapsing them into one number is what forced the choice between missing things and crying wolf.** Separating them resolves the false-alarm tension too: the noisy level and the urgent level stop being the same number.
+
+Seven days gives **six failed daily runs of margin**. That is the property the number encodes, and `packages/core/test/thresholds.test.ts` pins the arithmetic rather than the constants — a future change may move the values, but the warning tier must stay strictly wider, with a margin of more than one run.
+
+### What this does not change
+
+**No new exit code.** Blast radius was declined for the exit set on 2026-09-10 and severity tiers are declined for the same reasons: exit codes signal category, not magnitude, and a new code silently breaks consumers matching the old set. Both tiers map onto the existing `1` — a build that should not pass, either way. **How fast a human should move is read from the output**, which is where magnitude already lives.
+
+If a caller ever needs to gate on tier, the mechanism is an **input** — `--fail-on=critical` — not a wider output set. Still SOW 2.
+
 ## Update log (amendment)
 
 - 2026-09-10: accepted as amended. `3` narrowed to a degraded scan; the completeness demand moved to `--require-declared-scope`, on by default in the Action. Recorded because the original shipped in #60 before acceptance and ran unamended for one day.
