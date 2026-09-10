@@ -70,11 +70,26 @@ function assertStroops(value: string, entryKey: LedgerKey): Stroops {
  */
 export async function estimateRent(
   scan: ScanResult,
-  args: { readonly extendToLedgers: number },
+  args: {
+    /**
+     * One absolute target for every entry, or a per-entry map.
+     *
+     * **Per-entry is the correct shape for a delta request**, and getting this
+     * wrong is not theoretical: a single `max` target across entries quoted the
+     * shared code entry (690k remaining) up to 1.94M — a 1.25M-ledger
+     * extension when 518k was asked for, and a bill of 2 XLM instead of 0.6.
+     * Caught 2026-09-10 because the total was implausible, not because a test
+     * failed. `extendTo` is absolute, so entries with different remaining TTL
+     * need different targets to receive the same increment.
+     */
+    readonly extendToLedgers: number | Readonly<Record<LedgerKey, number>>;
+  },
   quoter: RentQuoter,
 ): Promise<RentEstimateResult> {
-  const { extendToLedgers } = args;
-  if (!Number.isInteger(extendToLedgers) || extendToLedgers <= 0) {
+  const uniform = typeof args.extendToLedgers === 'number' ? args.extendToLedgers : undefined;
+  const perEntry = typeof args.extendToLedgers === 'number' ? undefined : args.extendToLedgers;
+  const targetFor = (entryKey: LedgerKey): number | undefined => uniform ?? perEntry?.[entryKey];
+  if (uniform !== undefined && (!Number.isInteger(uniform) || uniform <= 0)) {
     throw new Error('extendToLedgers must be a positive integer of ledgers');
   }
 
@@ -101,8 +116,22 @@ export async function estimateRent(
     quotable.push(entryKey);
   }
 
-  const quotes =
-    quotable.length === 0 ? [] : await quoter.quote({ entryKeys: quotable, extendToLedgers });
+  // Group by target so entries sharing one are quoted together, and entries
+  // with different targets are never blended into a single request.
+  const byTarget = new Map<number, LedgerKey[]>();
+  for (const entryKey of quotable) {
+    const target = targetFor(entryKey);
+    if (target === undefined || !Number.isInteger(target) || target <= 0) {
+      throw new Error(`No positive extend target supplied for ${entryKey}`);
+    }
+    const group = byTarget.get(target);
+    if (group) group.push(entryKey);
+    else byTarget.set(target, [entryKey]);
+  }
+  const quotes: RentQuote[] = [];
+  for (const [target, entryKeys] of byTarget) {
+    quotes.push(...(await quoter.quote({ entryKeys, extendToLedgers: target })));
+  }
 
   const byKey = new Map<LedgerKey, Stroops>();
   for (const quote of quotes) {
@@ -135,7 +164,9 @@ export async function estimateRent(
   return {
     estimate: {
       estimatedAtLedger,
-      extendToLedgers,
+      // The shared type carries one number; report the largest target when
+      // they differ, and the per-entry prices below are authoritative.
+      extendToLedgers: uniform ?? Math.max(...byTarget.keys(), 0),
       estimatedRentStroopsByEntry,
       totalEstimatedRentStroops: total.toString() as Stroops,
     },

@@ -1,4 +1,5 @@
 import { NotTestnetError, isValidContractId, scanContract } from '@evergreen-stellar/core';
+import { formatCost, type CostLine } from './cost.js';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import {
   DEFAULT_THRESHOLD_LEDGERS,
@@ -8,8 +9,11 @@ import {
   healthReport,
 } from './scan.js';
 
+/** Matches evergreen.config.example.json's defaults.extendToLedgers (~30 days). */
+const DEFAULT_EXTEND_LEDGERS = 518_400;
+
 const USAGE =
-  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json]';
+  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]]';
 const HELP = `${USAGE}
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
@@ -32,6 +36,15 @@ so a clean exit means "everything I was asked to check is healthy" and never
                       a contract you own; evergreen-check sets it by default.
 --json                machine-readable output. The human view is a summary; JSON
                       is the complete record, including every issue.
+--cost [--ledgers N]  estimate what extending every entry by N more ledgers
+                      would cost, priced by simulating against the network.
+                      Default N is 518,400 (~30 days). Nothing is submitted.
+
+                      "--ledgers N" means "give me N MORE ledgers". The protocol
+                      wants an absolute target, so the CLI computes it for you
+                      and caps it at max_entry_ttl, saying so when it does.
+                      Costs are estimates: rent pricing varies with network
+                      state and has differed ~18% between days.
 
 Health states, printed per entry and as a worst-of summary:
   HEALTHY   above threshold.
@@ -46,6 +59,11 @@ word always prints, so piped output and screenshots lose nothing.`;
 
 export interface CliDependencies {
   connect(): Promise<LedgerEntryReader>;
+  /** Optional: supplied only when --cost is requested, so a plain scan stays one round trip. */
+  priceExtend?(args: {
+    readonly scan: import('@evergreen-stellar/shared-types').ScanResult;
+    readonly additionalLedgers: number;
+  }): Promise<CostLine>;
   readKeysFile(path: string): Promise<string>;
   now(): Date;
   /** True only for an interactive TTY with NO_COLOR unset. Decided in bin.ts. */
@@ -87,12 +105,22 @@ export async function runCli(
     );
   }
   let asJson = false;
+  let withCost = false;
+  let additionalLedgers = DEFAULT_EXTEND_LEDGERS;
   let noDataKeys = false;
   let requireDeclaredScope = false;
   let keysPath: string | undefined;
   for (let i = 2; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
-    else if (args[i] === '--no-data-keys' && !noDataKeys) noDataKeys = true;
+    else if (args[i] === '--cost' && !withCost) withCost = true;
+    else if (args[i] === '--ledgers') {
+      const raw = args[++i];
+      const parsed = Number(raw);
+      if (!raw || !/^\d+$/.test(raw) || !Number.isInteger(parsed) || parsed <= 0) {
+        return fail(`--ledgers needs a positive whole number of ledgers.\n${USAGE}`);
+      }
+      additionalLedgers = parsed;
+    } else if (args[i] === '--no-data-keys' && !noDataKeys) noDataKeys = true;
     else if (args[i] === '--require-declared-scope' && !requireDeclaredScope)
       requireDeclaredScope = true;
     else if (args[i] === '--keys-file' && keysPath === undefined) {
@@ -145,19 +173,51 @@ export async function runCli(
     );
   }
   const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
+
+  let cost: CostLine | undefined;
+  if (withCost) {
+    if (dependencies.priceExtend === undefined) {
+      return fail('--cost is unavailable: no pricing backend was configured.');
+    }
+    try {
+      cost = await dependencies.priceExtend({ scan: result, additionalLedgers });
+    } catch {
+      // A failed quote must not take the scan down with it — the TTL answer is
+      // still correct and still worth printing.
+      return {
+        stdout: asJson
+          ? JSON.stringify(
+              { ...result, health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS) },
+              null,
+              2,
+            )
+          : `${formatHuman(result, dependencies.now(), {
+              color: dependencies.color === true,
+              thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
+            })}\n\n! Could not price an extend: the network declined to simulate it.\n  The TTL results above are unaffected.`,
+        stderr: '',
+        exitCode: exitCodeFor(result, DEFAULT_THRESHOLD_LEDGERS, { requireDeclaredScope }),
+      };
+    }
+  }
+
   return {
     stdout: asJson
       ? // Additive envelope: every existing key of ScanResult is untouched, so
         // a consumer reading `entries` or `issues` is unaffected by `health`.
         JSON.stringify(
-          { ...result, health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS) },
+          {
+            ...result,
+            health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS),
+            ...(cost === undefined ? {} : { cost }),
+          },
           null,
           2,
         )
       : formatHuman(result, dependencies.now(), {
           color: dependencies.color === true,
           thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
-        }),
+        }) + (cost === undefined ? '' : `\n\n${formatCost(cost).join('\n')}`),
     stderr: '',
     // Same constant the display grades against, so the printed health and the
     // exit code can never describe different thresholds.
