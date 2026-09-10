@@ -85,6 +85,10 @@ On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a project
 
 ---
 
+## Storage advice — W2-D12-01
+
+2026-09-10: [read-only A report](evidence/2026-09-10-storage-advice/README.md), actual CLI human and JSON runs, exit 0. Four entries produced three scoped recommendations; temporary TTL remained over 1.4 million ledgers despite its configured minimum of 720. Both output modes preserve that distinction and label historical rent separately from unavailable current quotes. Exact RPC responses are saved; no simulation or transaction. Broader D12-02 validation remains Pending.
+
 ## Transaction hashes
 
 ### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)

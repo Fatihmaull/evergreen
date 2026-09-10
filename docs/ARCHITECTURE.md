@@ -105,6 +105,12 @@ The [RPC adapter](../packages/core/src/rpc.ts) isolates SDK entry reads behind `
 
 The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package is **`@evergreen-stellar/cli`** (`W1-D5-01`, org owned), installed as `npx @evergreen-stellar/cli`; the executable stays `evergreen` through its `bin` mapping. Publication is `W4-D27-02`.
 
+### Storage advice (D12 implementation branch)
+
+`core/optimizer.ts` is a pure consumer of ScanResult, optional network minimum lifetimes and optional per-key rent quotes. It emits conditional retention/durability/shared-code advice without changing health grades or transaction policy. Bundled metadata in `optimizer-evidence.ts` is verified against fixtures by tests; production imports no fixture files. No payload/size analysis or shared-types change is introduced.
+
+CLI `scan --optimize` adds one optional settings read after the Testnet scan connection and an additive `optimization` report. It reuses the existing optional pricing result once; settings/pricing failures are qualified without losing scan output. Existing scan exits still describe scan health/coverage, not an optimization guarantee. D11's signing/submission path is separate and is not part of this branch.
+
 ### `packages/engine`
 
 A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-scheduled-serverless-engine.md), [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md)). The real loop is planned for W3. The existing [scheduler smoke workflow](../.github/workflows/scheduler-smoke.yml) reads A's instance only and never signs or sends a transaction.

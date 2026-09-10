@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · Rakha planning D12; D11 remains published separately
+**Last updated:** 2026-09-10 · D12-01 implemented and verified; ready for Rakha review
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,14 @@
 ---
 
 ## Current — W2-D12-01 implementation
+
+**D12-01 Done on its implementation branch, not merged:** `scan --optimize` is implemented and verified on `feat/W2-D12-01-basic-storage-advice`, based on main #85 independently of D11. It adds evidence-qualified temporary retention, persistent durability and shared-code recommendations, optional existing cost quotes, and labelled partial context. No shared-types change, payload-size/duplicate-content heuristic or transaction path. It preserves scan exits and non-optimize behavior. Rakha result review is the next checkpoint; no D12 PR exists.
+
+**Validation:** full `pnpm check` passed 326 Vitest + 36 Node tests (362 total on this D12-only branch); coverage passed unchanged thresholds: 94.41% statements, 88.01% branches, 96.84% functions, 95.78% lines. The initial tests failed before implementation; a null/missing quote-context test reproduced an exception and passed after sanitization. Build artifacts loaded with bundled evidence from an empty directory without repo fixtures. [Actual read-only A evidence](evidence/2026-09-10-storage-advice/README.md) includes human/JSON output and raw RPC: four entries, three appropriate recommendations, current settings 720/120960, temporary remaining over 1.4M ledgers. Only getNetwork/getLedgerEntries were permitted; no pricing, payer lookup, signing or submission. Current prices were correctly unavailable.
+
+**Coordination:** [D12 scan-only boundary notice](https://github.com/Fatihmaull/evergreen/issues/87#issuecomment-5616743484) was sent to Fatih. #86/#87 stay separate; no D11 code was removed from its branch. The broader D12-02 guinea-pig/third-party validation remains Pending. D12-01's Done means this branch meets its implementation definition of done, not that it is published as a PR or merged to main.
+
+### Implementation start record
 
 Rakha approved execution. Work starts on `feat/W2-D12-01-basic-storage-advice` from the reviewed D12 plan and main #85. D12-01 is In progress for implementation; D12-02 remains Pending. New core/CLI advice modules and scan-only opt-in integration; no D11 signing/submission code is changed. Review precedes PR publication.
 

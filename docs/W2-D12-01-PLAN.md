@@ -12,6 +12,10 @@
 
 **Base and branch:** `origin/main` at `ed16bc2` (#85), planning branch `docs/W2-D12-01-optimizer-plan`. Use `feat/W2-D12-01-basic-storage-advice` from this reviewed plan when implementation starts. D11's branch/PR #86 stays separate, and #87 stays Fatih's D11-04 handoff. D12 does not import or reimplement D11 signing, submission or confirmation. Check current main and coordinate the shared CLI dispatch before editing it; consume D11's changes only once merged or explicitly coordinated, never silently replace them.
 
+## Execution status — 2026-09-10
+
+Rakha approved execution. Analyzer, bundled evidence and CLI integration are implemented on `feat/W2-D12-01-basic-storage-advice`. Full 362-test gate, unchanged coverage thresholds, isolated built-module check and actual read-only A human/JSON runs passed. The remaining workflow checkpoint is Rakha result review before PR publication; D12-02 remains Pending. The checkboxes below retain the original execution recipe, including future publication and broader validation steps. No transaction was performed.
+
 ## Scope and what this adds
 
 The current `health.ts` already grades expiry, temporary deletion severity and sharing; `scan.ts` prints health and coverage, and `cost.ts` prints estimates and cost concentration. D12 adds **what to consider doing and why**, with the limits of the available evidence. It does not add another health grading system or another rent model.
