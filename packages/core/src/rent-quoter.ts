@@ -1,5 +1,6 @@
 import {
   Account,
+  Keypair,
   Operation,
   SorobanDataBuilder,
   TransactionBuilder,
@@ -35,8 +36,18 @@ export interface QuoteBreakdown extends RentQuote {
 }
 
 export interface SimulatingQuoterOptions {
-  /** Public key only. Never a secret — simulation does not sign. */
-  readonly sourceAccountId: string;
+  /**
+   * Optional. Simulation does not sign, does not consume a sequence number,
+   * and — verified 2026-09-10 — **does not require the account to exist on
+   * chain**: a freshly generated, never-funded key prices identically.
+   *
+   * So this defaults to a random synthetic key rather than a real identity.
+   * The earlier version hardcoded our own testnet account, which a bundle
+   * inspection found baked into the publishable artifact: not a secret, but it
+   * put our account in every user's traffic and would have broken `--cost` for
+   * everyone the day that account went away.
+   */
+  readonly sourceAccountId?: string;
   readonly networkPassphrase: string;
 }
 
@@ -55,9 +66,13 @@ export function createSimulatingQuoter(
     extendToLedgers: number;
   }): Promise<readonly QuoteBreakdown[]>;
 } {
+  // One synthetic identity per quoter. Never signs, never funded, never fetched.
+  const sourceAccountId = options.sourceAccountId ?? Keypair.random().publicKey();
+
   async function simulateFee(entryKey: LedgerKey, extendTo: number): Promise<bigint> {
-    const account = await server.getAccount(options.sourceAccountId);
-    const source = new Account(account.accountId(), account.sequenceNumber());
+    // Sequence number is irrelevant to a simulation that is never submitted, so
+    // this skips a `getAccount` round trip per quote as well.
+    const source = new Account(sourceAccountId, '0');
     const sorobanData = new SorobanDataBuilder()
       .setReadOnly([xdr.LedgerKey.fromXDR(entryKey, 'base64')])
       .build();

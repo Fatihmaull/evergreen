@@ -236,6 +236,28 @@ An unfailable test asserts nothing. A test that **faithfully encodes current beh
 
 Its tell is the shape of the update: if fixing a bug required changing a test's expected value, ask why the old value was there. Sometimes the answer is "the behaviour changed on purpose" — the `<` to `<=` threshold move, where the test was corrected and said so. Sometimes it is "nobody had asked whether that value was right."
 
+### The published artifact is its own security surface
+
+Source rules do not cover it. The repo forbids secrets in source and the config loader refuses a seed anywhere in a config file — but **a bundle is a new artifact class: a tarball strangers download**, and a bundler ships whatever the import graph reaches. A fixture read at module scope, a constant added while debugging, a helper pulled in through a barrel export.
+
+*First inspection, 2026-09-10, was not clean.* It found our own testnet account hardcoded as the `--cost` simulation source. Not a secret — but it put our account in every user's traffic and would have broken `--cost` for everyone the day that account went away. Removed entirely: simulation turns out not to need a real account at all, so the artifact carries no identity now.
+
+`scripts/check-bundle-secrets.mjs` runs in `pnpm check` and **fails closed** — an artifact that cannot be built for inspection is not assumed clean.
+
+**Commissioning it produced a lesson of its own.** The first two mutations — planting a public key, planting a seed — both *passed*, and the gate looked broken. It was not: esbuild **tree-shakes**, the planted constants were unused, and they never reached the bundle. The instrument was wrong again.
+
+Two things follow. **Dead code cannot leak**, which is a real and useful property of bundling. And **a bundle gate must be commissioned with live code** — plant the secret somewhere reachable, or the test proves nothing. Re-run that way, both mutations fired.
+
+### Cross-package tests read `dist`, not `src`
+
+`packages/cli/test/*` imports `@evergreen-stellar/core`, which resolves through `package.json` `main` to **`dist/`**. So a change to `core/src` is invisible to CLI tests until a build runs.
+
+*Demonstrated 2026-09-10:* `coverageIssues` was mutated to return `[]` — a change that should break three tests — and `vitest run` reported **9 passed**. Rebuilt, the same mutation failed three tests correctly.
+
+`pnpm check` was always safe, because `typecheck` runs `tsc --build --force` ahead of the tests. **The inner loop was not**: `pnpm test` and a bare `vitest run` could both pass against stale `core`. `test` now builds first.
+
+The sharper version of the hazard is that it corrupts *mutation testing across the package boundary*: a mutation that does not reach `dist` reads as "no test covers this", which is the reassuring answer and the wrong one.
+
 ### A check that has never failed has not been shown to be a check
 
 *Observed 2026-09-10, in the guard built to catch the previous instance.* The pack-and-install rehearsal reported success twice while **supplying a dependency the registry does not have** — all three tarballs were installed together, so the CLI's `core@0.0.0` resolved from a sibling file rather than from npm. The stranger it existed to simulate would have got a 404.
