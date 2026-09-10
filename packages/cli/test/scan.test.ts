@@ -3,15 +3,27 @@ import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
   EXIT_BELOW_THRESHOLD,
   EXIT_ERROR,
+  EXIT_INCOMPLETE,
   EXIT_OK,
   exitCodeFor,
   formatHuman,
-} from '../src/scan.js';
+} from '../src/index.js';
 
 const KEY = 'AAAABgAAAAEbase64key';
 
 function result(over: Partial<ScanResult> = {}): ScanResult {
-  return { network: 'testnet', contracts: [{ id: 'C1' }], entries: {}, issues: [], ...over };
+  return {
+    network: 'testnet',
+    contracts: [{ id: 'C1' }],
+    entries: {},
+    issues: [],
+    coverage: {
+      mode: 'known-keys',
+      dataKeysSuppliedByContract: { C1: 0 },
+      noDataKeysDeclaredByContract: { C1: true },
+    },
+    ...over,
+  };
 }
 
 const healthy = result({
@@ -26,10 +38,7 @@ const healthy = result({
   },
 });
 
-// The exit code is the GitHub Action's entire interface to this system
-// (docs/ARCHITECTURE.md). These assert it in both directions: it must return
-// zero when healthy AND non-zero when not. A code only ever observed passing
-// has not been tested.
+// Exit codes summarize health for CI. JSON retains mixed findings; neither authorizes a bump.
 describe('exitCodeFor — the Action contract', () => {
   it('returns 0 for a healthy scan above threshold', () => {
     expect(exitCodeFor(healthy, 17_280)).toBe(EXIT_OK);
@@ -74,13 +83,107 @@ describe('exitCodeFor — the Action contract', () => {
     expect(exitCodeFor(partial, 17_280)).not.toBe(EXIT_OK);
   });
 
-  it('ignores entries with no TTL rather than treating them as expiring', () => {
+  it('reports unavailable TTL as incomplete, not as healthy or low TTL', () => {
     const noTtl = result({
       entries: {
         [KEY]: { ...healthy.entries[KEY]!, ttl: { status: 'unavailable' } },
       },
     });
-    expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_OK);
+    expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_INCOMPLETE);
+  });
+
+  it('does not report a new covered scan healthy when TTL is unavailable', () => {
+    const noTtl = result({
+      entries: { [KEY]: { ...healthy.entries[KEY]!, ttl: { status: 'unavailable' } } },
+      coverage: { mode: 'known-keys', dataKeysSuppliedByContract: { C1: 1 } },
+    });
+    expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_INCOMPLETE);
+  });
+
+  it('requires coverage metadata from legacy producers too', () => {
+    const legacy: ScanResult = {
+      network: healthy.network,
+      contracts: healthy.contracts,
+      entries: healthy.entries,
+      issues: [],
+    };
+    expect(exitCodeFor(legacy, 17_280)).toBe(EXIT_INCOMPLETE);
+  });
+
+  it.each([undefined, -1, 1.5, NaN, 0])(
+    'rejects unknown or invalid data-key count %s as incomplete',
+    (count) => {
+      const coverage = {
+        mode: 'known-keys' as const,
+        dataKeysSuppliedByContract: count === undefined ? {} : { C1: count },
+      };
+      expect(exitCodeFor({ ...healthy, coverage }, 17_280)).toBe(EXIT_INCOMPLETE);
+    },
+  );
+
+  it('does not accept an empty assertion contradicting a positive count', () => {
+    expect(
+      exitCodeFor(
+        {
+          ...healthy,
+          coverage: {
+            mode: 'known-keys',
+            dataKeysSuppliedByContract: { C1: 1 },
+            noDataKeysDeclaredByContract: { C1: true },
+          },
+        },
+        17_280,
+      ),
+    ).toBe(EXIT_INCOMPLETE);
+  });
+
+  it.each(['entry-not-found', 'unsupported-executable'] as const)(
+    'reports %s as incomplete',
+    (kind) => {
+      expect(
+        exitCodeFor(
+          { ...healthy, issues: [{ kind, contracts: ['C1'], message: 'unobserved' }] },
+          17_280,
+        ),
+      ).toBe(EXIT_INCOMPLETE);
+    },
+  );
+
+  it('prioritizes incomplete over low TTL, and errors over both without erasing findings', () => {
+    const mixed = result({
+      entries: {
+        [KEY]: {
+          ...healthy.entries[KEY]!,
+          ttl: { status: 'known', endsAtLedger: 1_000_001, remainingLedgers: 1 },
+        },
+      },
+      issues: [{ kind: 'entry-not-found', contracts: ['C1'], message: 'absent' }],
+    });
+    const saved = JSON.stringify(mixed);
+    expect(exitCodeFor(mixed, 17_280)).toBe(EXIT_INCOMPLETE);
+    expect(JSON.stringify(mixed)).toBe(saved);
+    expect(
+      exitCodeFor(
+        {
+          ...mixed,
+          issues: [...mixed.issues, { kind: 'rpc-error', contracts: ['C1'], message: 'failed' }],
+        },
+        17_280,
+      ),
+    ).toBe(EXIT_ERROR);
+  });
+
+  it('empty observations stay incomplete even with an explicit empty declaration', () => {
+    expect(exitCodeFor(result(), 17_280)).toBe(EXIT_INCOMPLETE);
+  });
+
+  it('reports malformed responses as errors rather than healthy/low TTL', () => {
+    expect(
+      exitCodeFor(
+        result({ issues: [{ kind: 'invalid-response', contracts: ['C1'], message: 'invalid' }] }),
+        17_280,
+      ),
+    ).toBe(EXIT_ERROR);
   });
 });
 

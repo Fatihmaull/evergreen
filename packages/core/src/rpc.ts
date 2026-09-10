@@ -11,6 +11,8 @@ import type { ContractId, LedgerKey } from '@evergreen-stellar/shared-types';
 
 export interface RawLedgerEntry {
   readonly key: LedgerKey;
+  /** Serialized LedgerEntryData. Optional only for legacy TTL-only readers. */
+  readonly entryXdr?: string;
   /** Absent for entry types that carry no TTL — never coerce to a number. */
   readonly liveUntilLedgerSeq: number | undefined;
 }
@@ -38,7 +40,7 @@ export function instanceKey(contractId: ContractId): LedgerKey {
 }
 
 /** Canonical base64 XDR LedgerKey for a contract's Wasm code entry. */
-export function codeKey(wasmHash: Buffer): LedgerKey {
+export function codeKey(wasmHash: Uint8Array): LedgerKey {
   return xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: wasmHash })).toXDR(
     'base64',
   );
@@ -54,6 +56,7 @@ export function createRpcReader(server: rpc.Server): LedgerEntryReader {
         latestLedger: res.latestLedger,
         entries: res.entries.map((e) => ({
           key: e.key.toXDR('base64'),
+          entryXdr: e.val.toXDR('base64'),
           liveUntilLedgerSeq: e.liveUntilLedgerSeq,
         })),
       };

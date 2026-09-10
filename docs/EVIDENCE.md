@@ -196,3 +196,7 @@ Written at B-D29-02. One page, non-technical, letting Kenny verify all three del
 
 - [ ] Draft written
 - [ ] Tested on someone who hasn't seen the project
+
+### W1 scan exit-code migration — 2026-09-09
+
+The W1-D7-01 milestone exit-code checks record the implementation at capture time. Under W2-D8-03 / [ADR-006](adr/ADR-006-scan-health-exit-codes.md), bare `evergreen scan <id>` without data-key coverage returns 3 even when instance/code are healthy. The historical captures are unchanged; their exit values are not the current interface. `--no-data-keys` is an unverified caller assertion and must not be used merely to silence incomplete coverage.
