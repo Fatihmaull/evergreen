@@ -8,6 +8,7 @@ export {
   MEASURED_TESTNET_CADENCE,
   SECONDS_PER_LEDGER,
   estimateEndsAt,
+  hasExpired,
   isLive,
   measureCadence,
   needsAction,

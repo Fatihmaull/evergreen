@@ -1,5 +1,5 @@
 import type { ScanResult } from '@evergreen-stellar/shared-types';
-import { estimateEndsAt, isLive } from '@evergreen-stellar/core';
+import { estimateEndsAt, isLive, needsAction } from '@evergreen-stellar/core';
 
 /**
  * Format a scan for humans. The CLI is thin: it parses, calls core, formats,
@@ -137,9 +137,15 @@ export function exitCodeFor(
   // Undeclared scope is `3` only when the caller asked to be held to it.
   if (options.requireDeclaredScope === true && scopeIsUndeclared(result)) return EXIT_INCOMPLETE;
 
+  // CALLS the shared predicate; never restates it. This line previously read
+  // `remainingLedgers < thresholdLedgers`, a longhand copy of the policy. When
+  // the threshold became a floor (`<=`) on 2026-09-10, the copy did not move
+  // with it — so at EXACTLY the threshold the engine alarmed while the Action
+  // reported a clean CI pass. A gate that disagrees with the engine it gates
+  // is worse than no gate. See CONVENTIONS § one home for a policy.
   for (const entry of Object.values(result.entries)) {
     if (entry.ttl.status === 'unavailable') continue;
-    if (entry.ttl.remainingLedgers < thresholdLedgers) return EXIT_BELOW_THRESHOLD;
+    if (needsAction(entry.ttl.remainingLedgers, thresholdLedgers)) return EXIT_BELOW_THRESHOLD;
   }
   return EXIT_OK;
 }

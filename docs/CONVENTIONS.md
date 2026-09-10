@@ -209,6 +209,35 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - Coverage target: meaningful coverage on `core` math/cost/decision logic (~80%). Don't chase 100% on glue code.
 - Test names describe behavior: `keeps an entry live at zero remaining ledgers`.
 
+### One home for a policy — call the predicate, never restate it
+
+**A rule lives in exactly one function. Every other place calls it.** Writing `remaining < threshold` by hand where `needsAction(remaining, threshold)` exists creates a *copy*, and copies do not move when the original does.
+
+This is a member of the [report-named-no-subject family](#-the-report-named-no-subject--the-pattern-and-its-six-members) with a different surface. The copy agrees with the original right up until they diverge, and agreement is exactly what makes it invisible until then.
+
+**Observed twice on 2026-09-10, from one policy change.** When the threshold became a floor (`<=`):
+
+1. A test simulating the engine carried its own `remaining < THRESHOLD`. It failed, loudly, and was fixed.
+2. `exitCodeFor` in the CLI carried the same longhand. It did **not** fail, because nothing compared the two. At exactly the threshold the engine alarmed while `evergreen-check` reported a clean CI pass — the Action's entire contract with the outside world, wrong, silently.
+
+The second was found by grepping for longhand comparisons *because the first had just happened*. Without that prompt it would have shipped.
+
+**The rule:**
+
+- A boundary, threshold, or policy comparison gets a named predicate — `isLive`, `hasExpired`, `needsAction` — and every consumer calls it.
+- When two modules consume one policy, **pin their agreement in a test**, not by inspection. `packages/cli/test/gate-agreement.test.ts` walks across the boundary asserting the CLI gate and the engine give the same answer, *and* that both match the predicate — two consumers agreeing on a wrong answer is still wrong.
+- Reach for a grep whenever a policy changes. If a rule had two homes, it may have three.
+
+### A test must call the thing it tests, never restate it
+
+A test that reimplements its subject is **not a weak test — it is a test of a different thing that happens to usually agree.** It validates its own copy and asserts nothing about the code.
+
+The guinea-pig B simulation computed *when the engine acts* as `remaining < THRESHOLD` rather than calling `needsAction`. It passed for as long as the two matched.
+
+**It failed only because the policy changed.** Had `<` stayed, that duplicated logic would have sat green indefinitely, asserting nothing. The failure was luck, not detection — which is the part worth remembering, because next time the policy may not change.
+
+Its cousin is already here: the [rent fixture](../packages/core/test/fixtures/README.md) pins *relationships* rather than a formula, and a test asserts that so nobody fits a coefficient to three points. Same instinct — the test must not encode the answer it is checking for.
+
 ## Secrets and keys
 
 - `.env` is gitignored. `.env.example` is committed with placeholder values and a comment per variable.
