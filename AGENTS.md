@@ -93,8 +93,16 @@ Update the Notion row(s) for every task ID in that PR: `Status`, plus a one-line
 
    > **Reasoning goes in the repo first, then mirrors. Never only into a Notion `Notes` field.** A note living only in the mirror has no canonical home, and the next repo→Notion sync can overwrite it — the exact inverse of a missing row, and just as invisible. If it is worth writing into a row, it is worth a line in `BACKLOG.md`, `docs/STATUS.md` or `docs/CONVENTIONS.md` first. *(Caught 2026-09-10 on three items written to Notion only: a Sep 16 slack recheck, the provenance test for phantom rows, and the rule that a retired ID stays visible in the mirror. All three now live in the repo — see `docs/CONVENTIONS.md` § the provenance test.)*
 
-5. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
-6. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
+5. **Verify every claim about repo state against `origin/main` — not against local state, and never against memory of having made the change.** Before reporting work as done, confirm it is on the remote: `git log origin/main`, or `git show origin/main:<path> | grep`. A change that was made and then discarded by a `reset --hard`, a stash, or a failed push **reads as done to whoever made it.**
+
+   > *Installed 2026-09-10 after a session reported the § D sync rules as done when they had never reached `main`.* A later `reset --hard` had discarded them while uncommitted, and the report was written from memory of having made the edit. It surfaced only by accident, while investigating a different commit thought lost — had nobody gone looking, the rules would have stayed reported-done and never existed.
+   >
+   > **This is the reported-state family reaching the one surface with no automated check.** The Notion mirror has a presence diff. The repo has CI. **A report to a human has nothing** — it is believed. The same rule already applies to deploys (load the URL, don't read the dashboard) and to CI status (check the head SHA); this is the third surface, and the only one that reaches a person directly.
+
+   > 🪤 **`git merge-base --is-ancestor` answers a different question here and will tell you no about work that is present.** This repo squash-merges every PR, so a merged branch's commits are **never** ancestors of `main` by design — the squash creates a new commit with the same content and different identity. Verified 2026-09-10: a commit whose file is demonstrably on `origin/main` reported `NO`. Ask about **content** — `git show origin/main:<path>` or `git log origin/main --oneline | grep '(#NN)'` — never about ancestry. The question recurs, and the tool looks right while answering something else.
+
+6. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
+7. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
 
 ### E. Status vocabulary — identical meaning in both channels
 
@@ -243,7 +251,15 @@ A cost with nothing to compare against cannot be judged. Measured on this repo, 
 
 Read that as a price, not as waste. The two audits bought the packaging defect, the public README domain error, the inert `CODEOWNERS` and the contradictory `SETUP` rules — the first of which would otherwise have shipped. **The point of the baseline is that "was this finding worth 7M tokens?" becomes a question with an answer**, instead of a cost nobody can see.
 
-## Log the doc gaps as you hit them — standing, both sessions
+## Single session — the two-session rules are historical
+
+**2026-09-10: Session 1 ended. There is one session.** The parallel-session protocol that ran Sep 10 is retired: the `[S2]` prefix on `docs/STATUS.md` entries, `git pull` before every write to a shared file, split ownership between W1 evaluation and W2 execution, and "sync Notion only for tasks you own."
+
+Existing `[S2]` entries stay as written — they are an accurate record of who wrote what — but nothing new needs the prefix.
+
+**One rule from that period survives on its own merits**, because it was never really about having two sessions: [coordination belongs in the repo, not in messages between agents](docs/CONVENTIONS.md#coordination-between-sessions-belongs-in-the-repo-not-in-messages-between-agents). A directive living only in a context window expires silently. That applies to a single session across restarts exactly as it did across sessions.
+
+## Log the doc gaps as you hit them — standing
 
 **When you do something the docs describe, follow the docs rather than your memory of the repo.** Then log every point where you had to guess, look somewhere else, or already knew something the doc did not say. Append it to the gap list in [`docs/W1-REVIEW.md`](docs/W1-REVIEW.md) § Doc gap log — one line, at the moment it happens, before you resolve it. *A question answered is a question forgotten.*
 

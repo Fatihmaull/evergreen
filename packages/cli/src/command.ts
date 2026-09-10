@@ -1,4 +1,4 @@
-import { scanContract } from '@evergreen-stellar/core';
+import { NotTestnetError, isValidContractId, scanContract } from '@evergreen-stellar/core';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import {
   DEFAULT_THRESHOLD_LEDGERS,
@@ -76,6 +76,16 @@ export async function runCli(
   }
   const contractId = args[1];
   if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);
+  // Validate shape BEFORE connecting. A typo should cost a one-line message,
+  // not a network round trip that surfaces as a scan report full of coverage
+  // boilerplate about a contract that cannot exist.
+  if (!isValidContractId(contractId)) {
+    return fail(
+      `Not a Stellar contract ID: ${contractId}\n` +
+        'Contract IDs start with C and are 56 characters (StrKey-encoded).\n' +
+        'Check for a truncated paste or an account address (G…) used by mistake.',
+    );
+  }
   let asJson = false;
   let noDataKeys = false;
   let requireDeclaredScope = false;
@@ -116,9 +126,22 @@ export async function runCli(
   let reader: LedgerEntryReader;
   try {
     reader = await dependencies.connect();
-  } catch {
+  } catch (error) {
+    // A wrong-network refusal and an unreachable endpoint are different
+    // problems with different fixes, and collapsing them into one message hid
+    // the more important of the two: the testnet guard firing means you are
+    // pointed at another network, most likely MAINNET, which is a safety event
+    // rather than a connectivity one.
+    if (error instanceof NotTestnetError) {
+      return fail(
+        `${error.message}\n` +
+          'Evergreen only runs against Stellar Testnet. Point SOROBAN_RPC_URL at a\n' +
+          'testnet endpoint — the default is https://soroban-testnet.stellar.org.',
+      );
+    }
     return fail(
-      'Could not connect to Stellar Testnet. Check the RPC endpoint and network configuration.',
+      'Could not reach the Stellar RPC endpoint. Check SOROBAN_RPC_URL, the URL\n' +
+        'syntax, and your network connection. Nothing was read and nothing was changed.',
     );
   }
   const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
