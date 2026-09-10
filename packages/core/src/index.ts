@@ -10,6 +10,7 @@ export {
   estimateEndsAt,
   hasExpired,
   isLive,
+  isValidThreshold,
   measureCadence,
   needsAction,
   observeTTL,

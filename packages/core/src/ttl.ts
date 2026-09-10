@@ -79,11 +79,38 @@ export function isLive(ttl: TTLObservation): boolean | undefined {
 }
 
 /**
+ * Is this a usable threshold at all? Validation, not policy — it asks whether
+ * the number is well-formed, never whether an entry is in trouble. Named so
+ * callers do not hand-write a bounds check and trip the one-home lint rule
+ * with a comparison that was never a copy of anything.
+ */
+export function isValidThreshold(thresholdLedgers: number): boolean {
+  return Number.isInteger(thresholdLedgers) && thresholdLedgers >= 0;
+}
+
+/**
  * Should we act now? True once remaining *reaches* the threshold, not after it
  * drops past. Read the threshold as **"act once remaining reaches this
  * number"** — it is the floor we refuse to touch, not a line we tolerate
  * sitting on. Costs at most one cron interval of earliness; buys a margin that
  * is never touched rather than merely rarely crossed.
+ *
+ * IF YOU ARE HERE TO CHANGE `<=` BACK TO `<`, READ THIS FIRST.
+ *
+ * The strongest argument for `<=` was not reasoned out, it fell out of an
+ * existing test. Under `<`, a threshold of **0** fires only at `remaining < 0`
+ * — that is, once the entry is already gone. A zero threshold meant "act after
+ * death": a setting that fires exclusively when it is too late to do anything.
+ * Nobody would have found that by reading the code; it surfaced because a test
+ * had pinned the old behaviour and had to be re-examined. Under `<=` the same
+ * setting fires on the final live ledger, which is the last moment an
+ * `extendTTL` can still land. See `packages/cli/test/scan.test.ts`.
+ *
+ * This comparison also has EXACTLY ONE HOME, enforced by lint: `eslint.config.js`
+ * exempts this file and forbids hand-written TTL threshold comparisons
+ * everywhere else. That is not stylistic. A longhand copy in `exitCodeFor`
+ * survived this policy change and made `evergreen-check` pass CI at the exact
+ * ledger the engine alarmed.
  */
 export function needsAction(remainingLedgers: number, thresholdLedgers: number): boolean {
   return remainingLedgers <= thresholdLedgers;
