@@ -31,8 +31,10 @@ describe('assessEntry — blast radius changes what critical means', () => {
   it('grades a lone low archived entry as WARNING — recoverable, affects one contract', () => {
     const a = assessEntry(entry({ remaining: 100 }), THRESHOLD);
     expect(a.health).toBe('warning');
-    expect(a.blastRadius).toBe(1);
-    expect(a.isShared).toBe(false);
+    expect(a.blastRadiusAtLeast).toBe(1);
+    // 'exclusive', not false: a persistent entry's key derives from the
+    // contract, so one contract IS the whole census here.
+    expect(a.sharingStatus).toBe('exclusive');
   });
 
   it('🔴 grades the SAME TTL as CRITICAL once the entry is shared', () => {
@@ -44,7 +46,8 @@ describe('assessEntry — blast radius changes what critical means', () => {
       THRESHOLD,
     );
     expect(shared.health).toBe('critical');
-    expect(shared.blastRadius).toBe(4);
+    expect(shared.sharingStatus).toBe('shared');
+    expect(shared.blastRadiusAtLeast).toBe(4);
     expect(shared.reason).toContain('4 contracts');
   });
 
@@ -104,7 +107,8 @@ describe('assessEntry — unknown is its own state', () => {
   it('still reports blast radius for an unknown entry', () => {
     // How many contracts depend on it does not require reading its TTL.
     expect(
-      assessEntry(entry({ remaining: undefined, contracts: ['A', 'B'] }), THRESHOLD).blastRadius,
+      assessEntry(entry({ remaining: undefined, contracts: ['A', 'B'] }), THRESHOLD)
+        .blastRadiusAtLeast,
     ).toBe(2);
   });
 });

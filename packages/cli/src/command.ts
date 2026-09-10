@@ -1,5 +1,6 @@
 import {
   NotTestnetError,
+  coverageIssues,
   isValidContractId,
   scanContract,
   analyzeStorage,
@@ -185,7 +186,11 @@ export async function runCli(
         'syntax, and your network connection. Nothing was read and nothing was changed.',
     );
   }
-  const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
+  const scanned = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
+  // `issues.length === 0` is the question a consumer will actually ask, so it
+  // has to be answerable. Caveats are merged in for that reason — a scan that
+  // told a human it was incomplete must not hand a machine an empty array.
+  const result = { ...scanned, issues: [...scanned.issues, ...coverageIssues(scanned)] };
 
   let settings: StorageSettings | undefined;
   if (withOptimize) {

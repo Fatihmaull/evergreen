@@ -31,13 +31,13 @@ const BASE_FEE_STROOPS = 100n;
  */
 async function priceExtend(
   rpcUrl: string,
-  sourceAccountId: string,
+  sourceAccountId: string | undefined,
   args: { scan: ScanResult; additionalLedgers: number },
 ): Promise<CostLine> {
   const server = new rpc.Server(rpcUrl);
   const settings = await readStateArchivalSettings(server);
   const quoter = createSimulatingQuoter(server, {
-    sourceAccountId,
+    ...(sourceAccountId === undefined ? {} : { sourceAccountId }),
     networkPassphrase: Networks.TESTNET,
   });
 
@@ -99,13 +99,10 @@ async function main(): Promise<number> {
     color,
     // Public key only; simulation never signs. Falls back to the well-known
     // testnet identity so `--cost` works without configuration.
-    priceExtend: (args) =>
-      priceExtend(
-        rpcUrl,
-        process.env.EVERGREEN_SOURCE_ACCOUNT ??
-          'GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE',
-        args,
-      ),
+    // No account is passed: simulation neither signs nor needs one to exist.
+    // EVERGREEN_SOURCE_ACCOUNT stays available for anyone who wants a specific
+    // identity in their own RPC logs.
+    priceExtend: (args) => priceExtend(rpcUrl, process.env.EVERGREEN_SOURCE_ACCOUNT, args),
   });
   if (output.stdout) console.log(output.stdout);
   if (output.stderr) console.error(output.stderr);
