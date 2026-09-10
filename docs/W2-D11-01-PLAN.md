@@ -52,6 +52,6 @@ Do not extend B, C, or the shared A/B/C Wasm while the decay proofs are pending.
 
 #60/#63 merged; ADR-006 accepted as amended in #66. D8-03 and D10-02 tracking was stale and is reconciled in this planning branch. D10-04 remains In progress because engine integration is absent. D9 ownership remains Fatih. W1 is closed; the recurring drift obligation remains active.
 
-Notion tools are unavailable in this turn. Repo edits are canonical branch work, not merged main; mirror sync and the all-row presence check remain pending for the next connected session. Task Tracker stays a weekly snapshot.
+Notion sync recovered 2026-09-10: task outcomes were written and read back, including D11-01 as planning only. All 145 registered IDs are present; one additional Dropped predecessor is intentionally retained. Repo tracking corrections remain branch work, not merged main. Task Tracker stays a weekly snapshot.
 
 Validation of synchronized base: full `pnpm check` passed 280 Vitest + 36 Node tests after #80 integration. This verifies the inherited implementation, not the unbuilt D11 path. Planning edits are Markdown only.

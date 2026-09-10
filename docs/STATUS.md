@@ -19,7 +19,7 @@ Local `main` was synchronized to remote `ad18ad4` (#80, merged during this turn)
 
 **Avoid duplicate work:** Fatih's D9-01/02/03 is merged in #78 and remains his ownership; CLI cost wiring merged in #80 during planning and is now included. Rakha has no local rent implementation to reconcile. D12-01/02 follows D11; W1 is closed apart from the separately tracked recurring obligation. Existing npm admin requests in Issue #64 remain unchanged.
 
-**Mirror pending:** Notion tools are unavailable this turn. Sync D8-03 (Done), D8-04 (merged outcome), D10-02 (Done), and D11-01 (In progress, planning only) after the branch correction is available; validate D9 ownership and D11-02/03/04 unchanged. The required all-row presence diff could not run and is pending, not assumed clean. Task Tracker remains a week-gate snapshot. No new task IDs were added.
+**Mirror recovered, 2026-09-10:** Notion MCP schema fetch and data queries succeeded. Updated and fetched back exact IDs D8-03 (Done), D8-04 (merged outcome), D10-02 (Done), D11-01 (In progress, planning only); Notes distinguish branch tracking corrections from merged runtime. Confirmed D9-01/02/03 remain Done/Fatih, D11-02/03 Pending/Rakha and D11-04 Pending/Fatih. Full presence comparison: 145 registered repo IDs, all present; 146 Notion rows including the intentionally retained Dropped predecessor ~~W3-D18-02~~. No missing active IDs or unexplained extra rows in this query. Recurring W1-D4-09 is included through its table registration, not only checkbox parsing. Task Tracker stays a week-gate snapshot. No new task IDs, runtime edits or transactions.
 
 ## Historical handover and execution log
 
