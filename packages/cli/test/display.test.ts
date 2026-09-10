@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
-import { formatHuman } from '../src/scan.js';
+import { EXIT_BELOW_THRESHOLD, exitCodeFor, formatHuman, healthReport } from '../src/scan.js';
 
 const NOW = new Date('2026-09-10T00:00:00Z');
 const THRESHOLD = 17_280;
@@ -108,5 +108,61 @@ describe('display — the summary never overstates', () => {
 
   it('states the threshold it graded against', () => {
     expect(fmt(scan({ K: entry({ remaining: 100_000 }) }))).toContain('threshold 17,280 ledgers');
+  });
+});
+
+describe('--json health block — magnitude lives here, not in the exit code', () => {
+  // ADR-006 § Considered and declined: blast radius must NOT reach the exit
+  // code. Exit codes signal category, not magnitude, and a new code silently
+  // breaks consumers matching the old set. These tests pin both halves — the
+  // data is present in JSON, and the exit code stays inside the agreed set.
+  const sharedScan = scan({
+    lone: entry({ remaining: 100 }),
+    sharedKey: entry({ remaining: 100, kind: 'code', contracts: ['A', 'B', 'C'] }),
+  });
+
+  it('reports blastRadius and isShared per entry', () => {
+    const report = healthReport(sharedScan, THRESHOLD);
+    expect(report.byEntry.sharedKey?.blastRadius).toBe(3);
+    expect(report.byEntry.sharedKey?.isShared).toBe(true);
+    expect(report.byEntry.lone?.blastRadius).toBe(1);
+    expect(report.byEntry.lone?.isShared).toBe(false);
+  });
+
+  it('grades the shared entry critical and the lone one warning at identical TTL', () => {
+    const report = healthReport(sharedScan, THRESHOLD);
+    expect(report.byEntry.sharedKey?.health).toBe('critical');
+    expect(report.byEntry.lone?.health).toBe('warning');
+    expect(report.worst).toBe('critical');
+    expect(report.sharedEntryCount).toBe(1);
+  });
+
+  it('states the threshold it graded against, so the report is self-describing', () => {
+    expect(healthReport(sharedScan, THRESHOLD).thresholdLedgers).toBe(THRESHOLD);
+  });
+
+  it('omits `worst` rather than claiming health for an empty scan', () => {
+    const report = healthReport(scan({}), THRESHOLD);
+    expect(report.worst).toBeUndefined();
+    expect(report.sharedEntryCount).toBe(0);
+  });
+
+  it('🔴 does NOT change the exit code for a shared entry — same category, same code', () => {
+    // The declined design would have returned a distinct code here. Both of
+    // these are "below threshold"; the difference is urgency, which the output
+    // carries. A consumer matching `-eq 1` must keep seeing both.
+    const loneScan = scan({ lone: entry({ remaining: 100 }) });
+    expect(exitCodeFor(sharedScan, THRESHOLD)).toBe(exitCodeFor(loneScan, THRESHOLD));
+    expect(exitCodeFor(sharedScan, THRESHOLD)).toBe(EXIT_BELOW_THRESHOLD);
+  });
+
+  it('keeps every ScanResult key untouched — the block is additive', () => {
+    // An existing consumer reading `entries` or `issues` must be unaffected.
+    const envelope = { ...sharedScan, health: healthReport(sharedScan, THRESHOLD) };
+    for (const key of Object.keys(sharedScan)) {
+      expect(envelope[key as keyof typeof envelope]).toEqual(
+        sharedScan[key as keyof typeof sharedScan],
+      );
+    }
   });
 });
