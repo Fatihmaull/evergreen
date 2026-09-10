@@ -1,0 +1,47 @@
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import assert from 'node:assert/strict';
+const mode=process.argv[2];assert(['d11','d12','combined'].includes(mode));
+const repo=process.cwd();const root=mkdtempSync(`/tmp/evergreen-${mode}-artifact-`);
+const tarballs=join(root,'tarballs');const installed=join(root,'installed');mkdirSync(tarballs);mkdirSync(installed);
+function run(file,args,options={}){return execFileSync(file,args,{encoding:'utf8',timeout:180000,...options});}
+for (const name of ['core','shared-types','cli']) { const dist=join(repo,'packages',name,'dist'); if(existsSync(dist))run('mv',[dist,join(root,`${name}-dist-backup`)]); }
+writeFileSync(join(root,'build.log'),run('pnpm',[mode==='combined'?'check':'typecheck']));
+writeFileSync(join(root,'pack.log'),run('pnpm',['--filter','@evergreen-stellar/cli','pack','--pack-destination',tarballs]));
+const tarball=join(tarballs,readdirSync(tarballs).find(n=>n.endsWith('.tgz')));
+writeFileSync(join(installed,'package.json'),' {"private":true} ');
+writeFileSync(join(root,'install.log'),run('npm',['install','--ignore-scripts','--package-lock=false','--no-audit','--no-fund','--registry=https://registry.npmjs.org','--userconfig=/dev/null','--cache',join(root,'fresh-cache'),tarball],{cwd:installed}));
+const cli=join(installed,'node_modules/@evergreen-stellar/cli');
+const manifest=JSON.parse(readFileSync(join(cli,'package.json'),'utf8'));
+assert.deepEqual(manifest.dependencies,{'@stellar/stellar-sdk':'17.0.1'});
+assert(!existsSync(join(installed,'node_modules/@evergreen-stellar/core')));
+assert(!existsSync(join(installed,'node_modules/@evergreen-stellar/shared-types')));
+const binary=join(cli,manifest.bin.evergreen);assert.equal(manifest.bin.evergreen,'./dist/evergreen.mjs');
+const fixture=JSON.parse(readFileSync(join(repo,'packages/core/test/fixtures/getLedgerEntries-guinea-pig-a.json'),'utf8'));
+const settings=JSON.parse(readFileSync(join(repo,'packages/core/test/fixtures/state-archival-settings-2026-09-05.json'),'utf8'));
+const replay=join(root,'replay.mjs');
+writeFileSync(replay,`const fixture=${JSON.stringify(fixture)}; const settings=${JSON.stringify(settings)};
+globalThis.fetch=async(input,init)=>{
+ const request=JSON.parse(init.body);let result;
+ if(request.method==='getNetwork')result={passphrase:'Test SDF Network ; September 2015'};
+ else if(request.method==='getLedgerEntries'){
+  const keys=request.params.keys;
+  if(keys.includes('AAAACAAAAAo='))result=settings.result;
+  else result={...fixture.result,entries:fixture.result.entries.filter(e=>keys.includes(e.key))};
+ }else throw new Error('Offline artifact check refuses '+request.method);
+ return new Response(JSON.stringify({jsonrpc:'2.0',id:request.id,result}),{status:200,headers:{'content-type':'application/json'}});
+};`);
+const env={...process.env,NO_COLOR:'1'};
+function cliRun(args,expectedStatus=0){const r=spawnSync('node',['--import',replay,binary,...args],{cwd:installed,env,encoding:'utf8',timeout:20000});assert.equal(r.status,expectedStatus,r.stderr);return r.stdout;}
+const help=cliRun(['--help']);assert(help.includes('HEALTHY'));
+if(mode!=='d12'){const extend=cliRun(['extend','--help']);assert(extend.includes('--submit'));assert(extend.includes('--max-fee-stroops'));}
+const keysPath=join(root,'keys.json');writeFileSync(keysPath,JSON.stringify({dataKeys:fixture.result.entries.slice(2).map(e=>e.key)}));
+const args=['scan','CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L','--keys-file',keysPath,'--json'];
+if(mode!=='d11')args.push('--optimize');
+const report=JSON.parse(cliRun(args,1));writeFileSync(join(root,'report.json'),JSON.stringify(report,null,2));
+assert(report.issues.some(i=>i.kind==='sharing-undetermined'));
+assert(Object.values(report.health.byEntry).some(e=>e.sharingStatus==='undetermined'));
+if(mode!=='d11')assert.equal(report.optimization.findings.length,3);
+const summary={mode,tarball,installDirectory:installed,binary:manifest.bin.evergreen,runtimeDependencies:manifest.dependencies,workspaceSiblingsInstalled:false,scanEntries:Object.keys(report.entries).length,scanExit:1,sharingCaveat:true,adviceCount:report.optimization?.findings.length??null,extendHelp:mode!=='d12',network:'registry install only; CLI used offline fixture replay'};
+writeFileSync(`/tmp/sync-${mode}-artifact.json`,JSON.stringify(summary,null,2));console.log(JSON.stringify(summary));
