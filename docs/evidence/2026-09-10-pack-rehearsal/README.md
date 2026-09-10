@@ -31,7 +31,48 @@ The tarballs produced by `npm pack` carry the literal workspace protocol:
 
 **So `W4-D27-02` must publish with `pnpm publish`, never `npm publish`.** That is now written onto the task rather than left as folklore, because the two commands look interchangeable and only one of them works.
 
-## Rehearsal with `pnpm pack` — passes
+## ⛔ CORRECTION — the `pnpm pack` rehearsal below PASSED WHILE TESTING THE WRONG THING
+
+**Added the same day, after Fatih asked the question this rehearsal exists to answer: what did `0.0.0` resolve from?**
+
+It resolved from a local file. The rehearsal installed all three tarballs at once, so npm satisfied the CLI's `@evergreen-stellar/core@0.0.0` dependency from a sibling tarball on disk:
+
+```
+node_modules/@evergreen-stellar/core
+   resolved: file:.../packtest/tar/evergreen-stellar-core-0.0.0.tgz
+```
+
+**A stranger's machine supplies no such file.** `@evergreen-stellar/core@0.0.0` has never been published, so their resolution goes to the registry and 404s — the Sep 9 failure arriving one resolution step later.
+
+### The conclusive rehearsal, run afterwards
+
+Only the CLI tarball. Fresh directory. No sibling tarballs. Clean cache. No workspace above it.
+
+```
+npm install --cache <fresh> ../evergreen-stellar-cli-0.0.0.tgz
+```
+
+```
+404 Not Found - GET https://registry.npmjs.org/@evergreen-stellar%2fcore - Not found
+```
+
+**That is the stranger, and that is what they get.**
+
+### Why this correction matters more than the defect
+
+The rehearsal reported success twice — Sep 9 after its fix, and Sep 10 — while supplying something no user has. **A check that has never been observed failing has not been shown to be a check.** It now has: the failing case above was produced deliberately, so the rehearsal has a demonstrated ability to detect the thing it was built for.
+
+This is the third instance of the family in two days, and the sharpest, because the false answer came from the guard itself.
+
+**The rehearsal procedure is corrected accordingly:** install ONLY the top-level package, in a fresh directory with a clean cache and no siblings. Any passing run that supplies a dependency the registry does not have is not a rehearsal.
+
+---
+
+## Original entry — the `pnpm pack` run (valid for the `workspace:*` finding, invalid as an install proof)
+
+The `workspace:*` finding below stands: it was observed directly in the tarball's own `package.json`, independent of how the install resolved. What does **not** stand is the "passes" claim.
+
+## Rehearsal with `pnpm pack` — passes *(see correction above)*
 
 Three tarballs installed into an empty directory outside the repo, no monorepo, no workspace links, `npm install` from local tarballs:
 
