@@ -18,5 +18,7 @@ export type { EndProjection, LedgerCadence, LedgerCloseSample } from './ttl.js';
 export { NotTestnetError, codeKey, connectTestnet, createRpcReader, instanceKey } from './rpc.js';
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
+export { assertLiveness } from './liveness.js';
+export type { LivenessFinding, LivenessReason, LivenessVerdict } from './liveness.js';
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';

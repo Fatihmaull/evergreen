@@ -64,3 +64,17 @@ There is deliberately no `projectedArchiveDate`. That name is wrong twice: *arch
 **Cadence carries its own uncertainty.** `LedgerCadence` bundles the rate with its provenance and a `±` band, because "about five seconds" is doing real work: across `max_entry_ttl` (3,110,400 ledgers = 180 days), the recorded ±0.0008 s/ledger band is over an hour wide. A projection that reports a bare instant at that horizon is precise-looking and wrong.
 
 `measureCadence(samples)` derives a cadence from observed closes and is **pure** — callers fetch the samples, this does the arithmetic, so a measurement is testable without a network. It never reports zero uncertainty: close times are whole seconds, so a window of N ledgers cannot resolve cadence more finely than `1/N` s/ledger, and a single interval cannot bound drift at all. Drifting closes widen the band; that is the intended signal, not noise.
+
+## The liveness assertion (`W2-D10-04`)
+
+`assertLiveness({ scan, thresholds, records })` answers one question: **did this run establish that everything it watches is healthy?** If not, it returns `isAlarm: true` and the engine must exit non-zero.
+
+The rule is deliberately blunt — *an entry seen below threshold that this run did not verifiably extend means the run is not healthy, whatever the reason.* "Whatever the reason" is the load-bearing part. A claim held by another runner, a lock lookup that threw, a dry-run, an unconfirmed submission, a decision skipped by policy: all legitimate reasons not to bump, none of them a reason to report health.
+
+**Only `outcome: 'succeeded'` counts as having acted.** `submitted` is explicitly *"never treated as successful yet"*, `simulated` never touched the chain, and `failed` speaks for itself. Since dry-run is the safety **default**, a scheduled job silently left in dry-run is a likely failure, not an exotic one — and it alarms.
+
+An entry whose TTL could not be read alarms too. Unknown and fine must never collapse into the same answer.
+
+Why it exists: a run that does nothing looks exactly like a run that succeeded. `claim()` returning null is the *ordinary* skip path, so ~96 clean exit-0 runs could pass across guinea-pig B's 24-hour window while B archives unattended. `liveness.test.ts` simulates that window run-by-run and pins the result — 49 quiet, then 47 consecutive alarms, and zero alarms across the same window when the engine actually did its job. The second half matters as much as the first: an alarm that cries wolf gets muted, and then it is worth nothing.
+
+The rule is pure and has no engine dependency, which is why it lands before the run loop. Wiring it into the run is `W3-D15-01`.
