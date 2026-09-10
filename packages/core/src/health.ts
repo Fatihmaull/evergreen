@@ -1,4 +1,4 @@
-import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
+import type { LedgerEntryTTL, ScanIssue, ScanResult } from '@evergreen-stellar/shared-types';
 import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
 
 /**
@@ -27,17 +27,39 @@ import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
  */
 export type EntryHealth = 'healthy' | 'warning' | 'critical' | 'unknown';
 
+/**
+ * Whether this entry is shared — including the case where that **cannot be
+ * known**.
+ *
+ * `undetermined` exists because a single-contract scan can never establish that
+ * a `ContractCode` entry is unshared: the chain does not index reverse
+ * dependencies from one contract query. So `false` there is not merely
+ * unverified, it is **unverifiable by construction on this code path**, and
+ * reporting it would be an unknown rendered as a negative — in the channel the
+ * engine and dashboard consume, while the human channel says "invisible here".
+ *
+ * `exclusive` IS assertable for instance, persistent and temporary entries:
+ * those ledger keys are derived from the contract itself, so one contract is
+ * the whole census rather than a floor.
+ */
+export type SharingStatus = 'shared' | 'exclusive' | 'undetermined';
+
 export interface EntryAssessment {
   readonly health: EntryHealth;
   readonly needsAction: boolean;
   readonly isExpired: boolean;
   /**
-   * How many contracts this entry takes down with it. 1 for an ordinary entry;
-   * N for a `ContractCode` entry shared across a factory deployment.
+   * Contracts KNOWN to use this entry — the ones this scan was handed. A floor,
+   * never a census.
    */
-  readonly blastRadius: number;
-  /** True when more than one contract depends on this single entry. */
-  readonly isShared: boolean;
+  readonly observedContractCount: number;
+  /**
+   * Lower bound on how many contracts this entry takes down with it. **Named as
+   * a bound because it is one**: for a code entry seen from a single contract
+   * the true radius may be any number, and `1` would read as a measurement.
+   */
+  readonly blastRadiusAtLeast: number;
+  readonly sharingStatus: SharingStatus;
   /** Printable justification. Never a raw error. */
   readonly reason: string;
 }
@@ -64,16 +86,22 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
     throw new Error('thresholdLedgers must be a non-negative integer of ledgers');
   }
 
-  const blastRadius = entry.contracts.length;
-  const isShared = blastRadius > 1;
+  const observedContractCount = entry.contracts.length;
+  // A code entry belongs to the Wasm, not the contract, so one observed
+  // consumer proves nothing about the rest. Every other entry kind is keyed
+  // from the contract itself, where one consumer IS the whole census.
+  const sharingStatus: SharingStatus =
+    observedContractCount > 1 ? 'shared' : entry.kind === 'code' ? 'undetermined' : 'exclusive';
+  const shared = sharingStatus === 'shared';
 
   if (entry.ttl.status === 'unavailable') {
     return {
       health: 'unknown',
       needsAction: false,
       isExpired: false,
-      blastRadius,
-      isShared,
+      observedContractCount,
+      blastRadiusAtLeast: observedContractCount,
+      sharingStatus,
       reason: 'No TTL metadata was returned, so this entry’s health is unread — not healthy.',
     };
   }
@@ -87,8 +115,9 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
       health: 'critical',
       needsAction: true,
       isExpired: true,
-      blastRadius,
-      isShared,
+      observedContractCount,
+      blastRadiusAtLeast: observedContractCount,
+      sharingStatus,
       reason:
         entry.endBehavior === 'deleted'
           ? 'Already deleted. Temporary entries are not recoverable.'
@@ -101,8 +130,9 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
       health: 'healthy',
       needsAction: false,
       isExpired: false,
-      blastRadius,
-      isShared,
+      observedContractCount,
+      blastRadiusAtLeast: observedContractCount,
+      sharingStatus,
       reason: 'Above threshold.',
     };
   }
@@ -112,20 +142,22 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
       health: 'critical',
       needsAction: true,
       isExpired: false,
-      blastRadius,
-      isShared,
+      observedContractCount,
+      blastRadiusAtLeast: observedContractCount,
+      sharingStatus,
       reason: 'Low, and temporary — this data is DELETED at expiry, not archived. Unrecoverable.',
     };
   }
 
-  if (isShared) {
+  if (shared) {
     return {
       health: 'critical',
       needsAction: true,
       isExpired: false,
-      blastRadius,
-      isShared,
-      reason: `Low, and shared by ${blastRadius} contracts — every one of them fails together.`,
+      observedContractCount,
+      blastRadiusAtLeast: observedContractCount,
+      sharingStatus,
+      reason: `Low, and shared by ${observedContractCount} contracts — every one of them fails together.`,
     };
   }
 
@@ -133,9 +165,13 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
     health: 'warning',
     needsAction: true,
     isExpired: false,
-    blastRadius,
-    isShared,
-    reason: 'Low, recoverable, and affects only this contract.',
+    observedContractCount,
+    blastRadiusAtLeast: observedContractCount,
+    sharingStatus,
+    reason:
+      sharingStatus === 'undetermined'
+        ? 'Low. This scan saw one contract on it, but a code entry may serve others it cannot see.'
+        : 'Low, recoverable, and affects only this contract.',
   };
 }
 
@@ -153,4 +189,53 @@ export function worstHealth(assessments: readonly EntryAssessment[]): EntryHealt
     (worst, a) => (HEALTH_RANK[a.health] < HEALTH_RANK[worst] ? a.health : worst),
     'healthy',
   );
+}
+
+/**
+ * The caveats a scan must state, produced ONCE and consumed by every renderer.
+ *
+ * These are not read failures — they are bounds on what a successful read can
+ * establish. They are returned as `ScanIssue`s so that a consumer asking the
+ * obvious question, `issues.length === 0`, gets a correct answer.
+ *
+ * **The bug this exists to prevent:** the human channel printed two caveats
+ * while the JSON reported `issues: []`, `isShared: false` and `blastRadius: 1`.
+ * The code that ACTS got the confident version and the person who does not act
+ * got the honest one — backwards, and in the field the product exists to
+ * surface. Deriving both channels from this function is what makes the two
+ * unable to disagree, rather than merely agreeing today.
+ */
+export function coverageIssues(
+  scan: Pick<ScanResult, 'entries' | 'coverage'>,
+): readonly ScanIssue[] {
+  const issues: ScanIssue[] = [];
+
+  for (const [entryKey, entry] of Object.entries(scan.entries)) {
+    if (assessEntry(entry, 0).sharingStatus !== 'undetermined') continue;
+    issues.push({
+      kind: 'sharing-undetermined',
+      contracts: entry.contracts,
+      entryKey,
+      observedAtLedger: entry.observedAtLedger,
+      message:
+        'Code entries are shared by every contract built from the same Wasm. This scan saw ' +
+        `${entry.contracts.length}. Whether others depend on this entry cannot be determined from ` +
+        'a single-contract scan — pass them together to see the real blast radius.',
+    });
+  }
+
+  const supplied = scan.coverage?.dataKeysSuppliedByContract ?? {};
+  for (const [contract, count] of Object.entries(supplied)) {
+    if (count > 0) continue;
+    if (scan.coverage?.noDataKeysDeclaredByContract?.[contract] === true) continue;
+    issues.push({
+      kind: 'coverage-limited',
+      contracts: [contract],
+      message:
+        'No data keys were supplied, so any further entries are unread. A clean result covers ' +
+        'only what was asked for, never the whole contract.',
+    });
+  }
+
+  return issues;
 }

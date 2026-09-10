@@ -74,12 +74,12 @@ describe('display — sharing is stated, never left to inference', () => {
     // entry, and a scan of A alone sees exactly one contract on it.
     const out = fmt(scan({ K: entry({ remaining: 500_000, kind: 'code', contracts: ['A'] }) }));
     expect(out).toContain('shared by every contract built from the same Wasm');
-    expect(out).toContain('invisible here');
+    expect(out).toContain('cannot be');
   });
 
   it('does not add that caveat to instance entries, which are per-contract', () => {
     const out = fmt(scan({ K: entry({ remaining: 500_000, kind: 'instance', contracts: ['A'] }) }));
-    expect(out).not.toContain('invisible here');
+    expect(out).not.toContain('shared by every contract built from the same Wasm');
   });
 });
 
@@ -121,12 +121,13 @@ describe('--json health block — magnitude lives here, not in the exit code', (
     sharedKey: entry({ remaining: 100, kind: 'code', contracts: ['A', 'B', 'C'] }),
   });
 
-  it('reports blastRadius and isShared per entry', () => {
+  it('reports blast radius as a BOUND and sharing as a three-valued status', () => {
     const report = healthReport(sharedScan, THRESHOLD);
-    expect(report.byEntry.sharedKey?.blastRadius).toBe(3);
-    expect(report.byEntry.sharedKey?.isShared).toBe(true);
-    expect(report.byEntry.lone?.blastRadius).toBe(1);
-    expect(report.byEntry.lone?.isShared).toBe(false);
+    expect(report.byEntry.sharedKey?.blastRadiusAtLeast).toBe(3);
+    expect(report.byEntry.sharedKey?.sharingStatus).toBe('shared');
+    expect(report.byEntry.lone?.blastRadiusAtLeast).toBe(1);
+    // A persistent entry is genuinely exclusive; only code entries are unknowable.
+    expect(report.byEntry.lone?.sharingStatus).toBe('exclusive');
   });
 
   it('grades the shared entry critical and the lone one warning at identical TTL', () => {

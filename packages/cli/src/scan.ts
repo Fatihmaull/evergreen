@@ -1,6 +1,7 @@
 import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
   assessEntry,
+  coverageIssues,
   estimateEndsAt,
   isLive,
   needsAction,
@@ -73,8 +74,14 @@ export interface ScanHealthReport {
   readonly thresholdLedgers: number;
   /** Worst state across all entries. Absent when nothing was observed. */
   readonly worst?: EntryHealth;
-  /** Count of entries serving more than one known contract. */
+  /** Entries KNOWN to serve more than one contract. A floor. */
   readonly sharedEntryCount: number;
+  /**
+   * Entries whose sharing could not be determined. **Non-zero means
+   * `sharedEntryCount` is a lower bound, not a count** — do not read a zero
+   * shared count as "nothing is shared" while this is above zero.
+   */
+  readonly undeterminedSharingCount: number;
   readonly byEntry: Readonly<Record<string, EntryAssessment>>;
 }
 
@@ -89,7 +96,8 @@ export function healthReport(result: ScanResult, thresholdLedgers: number): Scan
   return {
     thresholdLedgers,
     ...(worst === undefined ? {} : { worst }),
-    sharedEntryCount: assessments.filter((a) => a.isShared).length,
+    sharedEntryCount: assessments.filter((a) => a.sharingStatus === 'shared').length,
+    undeterminedSharingCount: assessments.filter((a) => a.sharingStatus === 'undetermined').length,
     byEntry,
   };
 }
@@ -101,18 +109,20 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
   const entries = Object.entries(result.entries);
   const assessments: EntryAssessment[] = [];
 
+  // Every caveat the human sees comes from `coverageIssues`, which is also what
+  // the JSON emits. One source of truth, so the two channels cannot disagree.
+  const caveats = coverageIssues(result);
   if (result.coverage) {
     lines.push('Coverage: known keys only — contract storage has NOT been fully enumerated.');
     for (const [contract, count] of Object.entries(result.coverage.dataKeysSuppliedByContract)) {
       lines.push(`  ${contract}: ${count} explicit data key(s)`);
       if (result.coverage.noDataKeysDeclaredByContract?.[contract] === true) {
         lines.push('  No additional data keys declared by caller; not independently verified.');
-      } else if (count === 0) {
-        // Stated as a limit of the read, not as a demand on the reader. Only the
-        // contract's author can know whether there are further keys; telling
-        // everyone else to "supply keys" invites an assertion they cannot make.
-        lines.push('  No data keys were supplied, so any further entries are unread.');
       }
+    }
+    for (const caveat of caveats) {
+      if (caveat.kind !== 'coverage-limited') continue;
+      lines.push(`  ${caveat.message}`);
     }
     lines.push('');
   } else {
@@ -136,25 +146,21 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
     // confidently-green-before-total-outage direction: a per-contract view that
     // never mentions sharing shows N healthy contracts whose one common entry
     // is about to take all of them down together.
-    if (assessment.isShared) {
-      const others = assessment.blastRadius - 1;
+    if (assessment.sharingStatus === 'shared') {
+      const others = assessment.observedContractCount - 1;
       lines.push(
         `  ⚠ shared:   this ${entry.kind} entry is shared with ${others} other contract${others === 1 ? '' : 's'} — they fail together`,
       );
-    } else if (entry.kind === 'code') {
-      // A code entry belongs to the Wasm, not to the contract. Every contract
-      // deployed from the same Wasm shares THIS entry, and a scan only knows
-      // the contracts it was handed — `contracts` is documented as "not a
-      // global usage census". Rendering that as "not shared" would be the
-      // confidently-green-before-total-outage failure: silence reading as
-      // proof of exclusivity. Say what the scan cannot see.
+    } else if (assessment.sharingStatus === 'undetermined') {
+      // Rendered from the SAME sharingStatus the JSON reports, so the two
+      // channels cannot say different things about the same entry.
       lines.push(
         '  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.',
       );
       lines.push(
-        '              This scan saw 1. Others may depend on this entry and are invisible here —',
+        `              This scan saw ${assessment.observedContractCount}. Whether others depend on this entry cannot be`,
       );
-      lines.push('              pass them together to see the real blast radius.');
+      lines.push('              determined from a single-contract scan — pass them together.');
     }
 
     if (entry.ttl.status === 'unavailable') {
@@ -190,7 +196,7 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
 
   const worst = worstHealth(assessments);
   if (worst !== undefined) {
-    const shared = assessments.filter((a) => a.isShared).length;
+    const shared = assessments.filter((a) => a.sharingStatus === 'shared').length;
     lines.push(
       `Worst entry health: ${paint(worst, LABEL[worst], color)}` +
         ` (threshold ${thresholdLedgers.toLocaleString()} ledgers)` +
