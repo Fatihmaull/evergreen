@@ -5,6 +5,7 @@ import { createMockReader } from './mock-rpc.js';
 import { scanContract } from '../src/scan-contract.js';
 import { instanceKey } from '../src/rpc.js';
 import { planExtension, executeExtensions } from '../src/extend.js';
+import { coverageIssues } from '../src/health.js';
 
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const fixture = JSON.parse(
@@ -46,6 +47,18 @@ async function atRemaining(remaining = 100): Promise<ScanResult> {
   };
 }
 describe('manual extension selection', () => {
+  it('accepts advisory sharing/coverage issues while preserving explicit selection', async () => {
+    const s = await atRemaining();
+    const advisory = {
+      ...s,
+      coverage: { mode: 'known-keys' as const, dataKeysSuppliedByContract: { [A]: 0 } },
+    };
+    const report = { ...advisory, issues: coverageIssues(advisory) };
+    expect(planExtension(report, options).entries).toHaveLength(1);
+    expect(
+      planExtension(report, { ...options, includeCode: true }).entries.map((e) => e.kind),
+    ).toEqual(['instance', 'code']);
+  });
   it('selects only the instance by default and adds a delta to its current TTL', async () => {
     const p = planExtension(await atRemaining(), options);
     expect(p.entries).toHaveLength(1);

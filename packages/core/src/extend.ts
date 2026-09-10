@@ -83,7 +83,10 @@ export function planExtension(scan: ScanResult, options: ExtensionOptions): Exte
       !entry.contracts.includes(contractId) ||
       entry.ttl.status !== 'known' ||
       scan.issues.some(
-        (i) => i.entryKey === entryKey || (!i.entryKey && i.contracts.includes(contractId)),
+        (i) =>
+          i.kind !== 'coverage-limited' &&
+          i.kind !== 'sharing-undetermined' &&
+          (i.entryKey === entryKey || (!i.entryKey && i.contracts.includes(contractId))),
       )
     )
       throw new Error('A selected entry is missing or unreadable');
