@@ -50,7 +50,7 @@ Match task rows by the `ID` property (`userDefined:ID`), never by title.
 
 1. Read the repo first, always: `docs/STATUS.md`, then `BACKLOG.md`, then open PRs, open Issues, and any comments or mentions addressed to you.
 2. **Then validate Notion against it.** Compare the task rows you are about to touch against their repo state.
-   **Diff on presence, not only on status.** Report rows present in one channel and absent in the other, as well as rows whose status disagrees. A divergent ID looks exactly like that — a phantom on one side, a missing row on the other — and a status-only diff will read green while the row it should have caught has silently fallen out of scope.
+   **Diff on presence, not only on status.** Report rows present in one channel and absent in the other, as well as rows whose status disagrees. A divergent ID looks exactly like that — a phantom on one side, a missing row on the other — and a status-only diff will read green while the row it should have caught has silently fallen out of scope. *(Caught `W1-D7-08` on 2026-09-10: the repo had 51 W1 rows, Notion 50, and every row present in both agreed on status **and** owner — a status-only check would have read green. See the anomaly log in `docs/STATUS.md`.)*
 3. Resolve any discrepancy **before writing code**:
    - **Notion asserts something the repo does not support** → escalate. This covers a wrong status, a phantom row, and a divergent ID alike; do not narrow it to "claimed a completion." Correct Notion to match the repo, and log it in `docs/STATUS.md` as a sync anomaly with the date and task ID. If this happens twice, say the workflow itself is suspect.
    - **Repo ahead of Notion** → a missed write. Correct Notion. No escalation needed.
@@ -233,6 +233,16 @@ A cost with nothing to compare against cannot be judged. Measured on this repo, 
 **An audit turn costs roughly 250–300× an ordinary one.** Both figures are ±10% and exclude cache effects.
 
 Read that as a price, not as waste. The two audits bought the packaging defect, the public README domain error, the inert `CODEOWNERS` and the contradictory `SETUP` rules — the first of which would otherwise have shipped. **The point of the baseline is that "was this finding worth 7M tokens?" becomes a question with an answer**, instead of a cost nobody can see.
+
+## Log the doc gaps as you hit them — standing, both sessions
+
+**When you do something the docs describe, follow the docs rather than your memory of the repo.** Then log every point where you had to guess, look somewhere else, or already knew something the doc did not say. Append it to the gap list in [`docs/W1-REVIEW.md`](docs/W1-REVIEW.md) § Doc gap log — one line, at the moment it happens, before you resolve it. *A question answered is a question forgotten.*
+
+**Why this is standing behaviour and not a scheduled task.** Two independent observations say the same thing about our docs, and nobody had connected them until the W1 closeout: `W1-D4-12`'s fresh-eyes agent scored **7/7 on the self-test and still could not start `W2-D8-01`**, and `W1-D7-06`'s ramp report recorded seven questions Rakha had to ask — while stating plainly that *what he understood unaided was not measured*. Both point at docs that **transmit facts without enabling action**. Both sets of gaps were then fixed. **Whether the fixes worked has never been tested.**
+
+`W3-D21-01e` on Sep 23 is the formal test — but **the docs get used before they get tested**: the engine is built solo from about Sep 17, so if the fixes did not work we would find out in the week least able to absorb it. This costs nothing, runs continuously, and turns a single measurement thirteen days out into a stream starting today. It does not replace `W3-D21-01e`; it stops it being the *first* signal.
+
+You are the least qualified person to judge whether a doc is clear, because you already know what it is trying to say. The log is not an opinion about the writing — it is a record of the moments you did not get what you needed from it.
 
 ## Working style expected here
 

@@ -413,10 +413,13 @@ Workflow is in `AGENTS.md` § Dual-channel sync; the status vocabulary is in `do
 
 ### Sync anomaly log
 
-Notion-ahead-of-repo discrepancies get logged here with date and task ID. **Two in one week means the workflow itself is suspect.**
+Discrepancies in **either** direction get logged here with date and task ID. **Two in one week means the workflow itself is suspect** — we are now at three, one authored by each session and one by the repo session on Sep 10.
+
+> **Why the presence diff exists, with a real catch attached.** `AGENTS.md` § A step 2 says to *"diff on presence, not only on status"*. On 2026-09-10 that rule caught `W1-D7-08`, and **a status-only check would have reported green** — all 50 rows present in both channels agreed on status and owner. The divergence was not a wrong row; it was a missing one, and a status comparison can only compare rows that exist on both sides. *Cited here rather than left as a rationale, because a rule with a catch attached survives review in a way a rule with an argument does not.*
 
 | Date | Task | What | Resolution |
 |---|---|---|---|
+| 2026-09-10 | `W1-D7-08` | **Repo ahead of Notion — a missed write, and the third anomaly this week.** The task was added to `BACKLOG.md` on Sep 9 as unplanned corrective work and the mirror row was never created. Repo 51 W1 rows, Notion 50. **A status-only check would have read green:** every one of the 50 shared rows agreed on status *and* owner, so nothing was wrong with any row that existed — the divergence was a row that did not. | Row created and **read back**: Notion now returns 51 W1 rows, 50 Done, 1 In progress, matching the repo on ID, status and owner with zero phantoms. Authored by the repo session, recorded rather than backfilled silently. |
 | 2026-09-05 | `W1-D4-04d` → `W1-D4-07` | **ID divergence, not a false claim.** Notion had guinea-pig C as `W1-D4-04d` (following the 04b/04c pattern); the repo calls it `W1-D4-07`. Same work, genuinely done, two identifiers. | Notion renamed to `W1-D4-07`. Repo canonical. **This is the more dangerous failure than a wrong status** — the ID is the join key, so a divergent ID silently breaks every future sync on that row rather than showing up as a visible mismatch. |
 | 2026-09-05 | `W1-D4-09` | Notion "In progress", repo `[ ]`. | **The repo was wrong, not Notion.** The drift check has started and runs until Sep 20. Repo corrected to `[~]`, and `CONVENTIONS` now states that recurring work is `[~]`. *Repo-canonical means the repo is where truth is authored — not that it is always right. When the mirror reveals a repo error, fix the repo, then sync.* |
 
