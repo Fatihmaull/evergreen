@@ -104,6 +104,32 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **And the pipe trap caught me again, minutes after I documented it.** The first exit-code reading said `exit=0` for a failing command, because `$?` after `| tail` reports `tail`'s status. Re-measured without the pipe: 2, correctly. Writing the rule down did not stop me using the broken instrument; noticing the implausible answer did.
 
+## 🔴 `W2-D9` was taken from Rakha — told him, and the reasoning
+
+**2026-09-10.** `W2-D9-01/02` were `Pending` with **no branch and no PR**, and they are the sole blocker on SOW §6.1's cost screenshot. Four build days to the gate, `W2-D13-03` already cut to protect it, Session 1 ended so nobody chasing it. Waiting for an answer would have cost a day on the critical path, so it was taken and reported loudly rather than asked about.
+
+**The rule this sits under, now explicit:** *if the alternative to deciding is losing a day on the critical path, decide and report loudly; if a decision is expensive to reverse or has no deadline pressure, ask.*
+
+**The unpaid part, now paid.** No branch and no PR is **good evidence, not proof** — uncommitted local work looks exactly like nothing from outside. [Told Rakha on #69](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5614771215) with what was built, why, and what is left, and offered him the remaining CLI wiring. If he had been working offline, every further hour would have been wasted twice. `W2-D9-01/02` reassigned to Fatih in **both** channels — a row whose recorded owner is not the person who did the work is the kind of stale fact that misleads someone in Week 4.
+
+## 🔴 `extendTo` is a target, not a delta — written into W3 before the code exists
+
+**The most consequential thing found on 2026-09-10, and it is not about cost.**
+
+The engine's job is to compute *"this entry needs N more ledgers"* and extend it. **If the bump path passes that N as `extendTo`, the operation succeeds, costs the fixed fee, and extends nothing.** A run reporting success while doing nothing — the Sunday failure mode in a different disguise, and it would pass every test written against a mock.
+
+Verified on chain: targets at or below an entry's current remaining priced *identically* to one another; only targets above it did anything.
+
+`W3-D18-01` has not been built yet, so this landed **before** the code that needs it. That was luck, and luck is not a delivery mechanism — so it is written in the imperative onto `W3-D18-01`, `W3-D16-01` and `W2-D11-01`, and into `docs/SOROBAN-PRIMER.md` at the point of use. `W2-D11-01`'s `--ledgers N` flag gets a specific note: **the flag reads as a delta and the operation is not one**; resolve it to a target or rename it.
+
+**The tell, recorded because it is checkable at the keyboard:** a near-zero cost figure means the target was computed wrong, not that you found a bargain. Fixed operation cost is ~11,700 stroops with no rent in it; a real 1.68M-ledger extend cost 227,398. Nothing already written assumed delta semantics — checked, and `W2-D11-01` has not shipped.
+
+## Two limits recorded in CONVENTIONS
+
+**A test that cannot fail is worse than no test** — it occupies the slot a real test would sit in and reports success from it. Two this week, both in assertions written to demonstrate correct behaviour: a float literal compared against the value it rounds to, and the simulation restating its own rule. **Neither was caught by the suite**, because a green suite is precisely what an unfailable test produces.
+
+**Rules catch patterns you are looking for; implausibility catches the ones you are not.** The `$?`-after-a-pipe trap was written into `CONVENTIONS` and then repeated *within the hour*. Writing the rule down changed nothing at the keyboard — what caught it was the answer being implausible for a command already known to have failed. That is a real limit on every rule in this repo, and its practical form is: **report the numbers that surprise you, and stop when one does.** Surprise is the only detector that works on failure modes nobody has enumerated yet.
+
 ## 🔴 Session scope boundary — one session writes implementation this week
 
 **Set by Fatih 2026-09-10, after `#66` landed tagged `[W2-D10-01]`.** Read this before starting work.

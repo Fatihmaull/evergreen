@@ -118,6 +118,8 @@ Verified properly, not by trusting a success code:
 ## The operations we care about
 
 - **`ExtendFootprintTTLOp`** ("extendTTL") — extends the live-until ledger of entries in the read-only set of the transaction footprint. This is the write operation the auto-bump engine performs, and the *only* one the policy signer may authorize.
+  - 🔴 **Its `extendTo` parameter is an absolute TARGET remaining-TTL, not a delta.** Observed on testnet 2026-09-10: targets at or below an entry's current remaining priced identically and changed nothing; only targets above it took effect. **A delta passed as `extendTo` produces an operation that succeeds, costs the fixed fee, and extends nothing.** Compute `target = currentRemainingLedgers + increment`, never the increment alone.
+  - **Near-zero cost is the tell.** The fixed operation cost was ~11,700 stroops with zero rent in it, while a real 1.68M-ledger extend cost 227,398. If a quote comes back tiny, the target was computed wrong. Measurements: [rent model validation](evidence/2026-09-10-rent-model-validation/README.md).
 - **`RestoreFootprintOp`** — brings archived entries back to live state. Evergreen v1 does not automate restores; it exists to *avoid* needing them. (Candidate for SOW 2.)
 
 ## RPC

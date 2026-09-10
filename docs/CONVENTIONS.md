@@ -213,6 +213,31 @@ That is the more dangerous version, because staleness at least has a timestamp t
 
 Its cousin, same day: `$?` read after a pipe reports the **last** command's status. `node check.mjs | tail -2` followed by `$?` gives `tail`'s exit code, not the checker's — a result about a subject you did not name. A real bug was nearly diagnosed from that broken instrument, and it would have been wrong in the reassuring direction.
 
+### A test that cannot fail is worse than no test
+
+An unfailable test **occupies the slot a real test would sit in, and reports success from it.** No test at all is at least honest about the gap.
+
+**Two this week, both in assertions written to demonstrate a correct behaviour:**
+
+- A lossless-sum test asserted `Number(total) !== 18014398509481986`. The literal itself parses to `…984`, so both sides were the same float and the assertion could never fail. Rewritten to compare **strings**, where the difference is real.
+- The guinea-pig B simulation computed its own `remaining < THRESHOLD` instead of calling `needsAction`, so it agreed with itself. It only failed later, and only because the policy moved.
+
+Neither was caught by the suite — a green suite is exactly what an unfailable test produces. **Both were caught by mutation testing or by looking closely at what the assertion actually compares.** So: when an assertion exists to prove a subtle property, break the code on purpose and watch that specific test go red. If it stays green, it was never testing what its name says.
+
+Special suspicion for assertions involving **float literals, `.not.toBe(...)`, and any value the language may coerce before comparing** — those are where an assertion most easily becomes a tautology while reading as a claim.
+
+### Rules catch patterns you are looking for; implausibility catches the ones you are not
+
+Documented rules do not fire at the moment of action. **Attention does.**
+
+*Observed 2026-09-10, sharply.* The `$?`-after-a-pipe trap was written into this file, and then repeated **within the hour** while measuring a CLI exit code. Having written the rule down changed nothing at the keyboard. What actually caught it was the answer being **implausible** — `exit=0` for a command already known to have failed.
+
+That is a real limit on every rule in this document, and it has a practical consequence rather than a counsel of despair:
+
+**Report the numbers that surprise you, and stop when one does.** Surprise is the only detector that works on failure modes nobody has enumerated — including the ones no rule here covers yet. A result that is merely *wrong* looks like every other result; a result that is *implausible* announces itself, but only to someone who has a prior about what it should be.
+
+Which is also the argument for stating expected values before running something, rather than reading the output and deciding it looks fine.
+
 ### Guards get written by someone already thinking about the pattern — elsewhere
 
 **A guard built to detect a failure mode frequently contains that same failure mode.** This has now recurred four or five times in one week, each instance sitting inside the guard for the previous one:
