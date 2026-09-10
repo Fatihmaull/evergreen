@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · D11 result review; #84/#85 integrated
+**Last updated:** 2026-09-10 · D11 published for review in PR #86
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,10 @@
 ---
 
 ## Current — W2-D11-01 implementation, 2026-09-10
+
+**Published for review in [PR #86](https://github.com/Fatihmaull/evergreen/pull/86)** after Rakha approved publication. Base main `ed16bc2`; reviewed implementation `f162fc0`. Fatih is requested as reviewer. The PR contains the D11 command, guarded signing/submission, confirmation-envelope fix, unsigned simulation evidence and review report. D11-01 remains In progress; D11-02/03 remain Pending for the separately reviewed live proof. No merge or live transaction. D11-04 stays Fatih-owned on the agreed seam; Issue #69 remains the coordination thread. Local full check passed 414 tests and coverage passed unchanged thresholds. GitHub checks are verified against the PR's final head separately; this publication update changes tracking Markdown only.
+
+### Pre-publication review record
 
 **Review complete, ready for publication approval:** [D11 review report](W2-D11-01-REVIEW.md). One P1 confirmation-binding finding was reproduced and fixed; no remaining blocking code finding identified in scope. Final full `pnpm check`: 378 Vitest + 36 Node = 414 tests, all gates passed. Coverage: 92.46% statements / 86.60% branches / 92.03% functions / 94.22% lines, unchanged thresholds. All-ID mirror presence remains 145 registered / 146 rows, only the intentional retired predecessor extra. #84/#85 are integrated at `ed16bc2`. No PR, merge or live transaction; D11-01 remains In progress pending full live evidence.
 
