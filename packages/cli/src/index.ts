@@ -16,5 +16,6 @@ export {
   EXIT_OK,
   exitCodeFor,
   formatHuman,
+  healthReport,
 } from './scan.js';
-export type { FormatOptions } from './scan.js';
+export type { FormatOptions, ScanHealthReport } from './scan.js';

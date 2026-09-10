@@ -115,6 +115,35 @@ bare                                   -> 0
 - `W1-D7-01` — its "exit codes verified in all four directions" record is historical and already labelled as such.
 - `W3-D15-01`/`W3-D16-*` — unaffected. No exit code has ever authorised a transaction and none does now.
 
+## Considered and declined — 2026-09-10: blast radius does not reach the exit code
+
+**Proposed:** `W2-D10-01` says severity by blast radius "must be reflected in both the colour states **and the exit code** the Action depends on." A shared code entry serving twelve contracts is a bigger problem than a lone entry at the same TTL, so the exit code could distinguish them — a new `4`, or a re-meaning of `1`.
+
+**Declined by Fatih, 2026-09-10.** Blast radius stays out of the exit-code set entirely. **No new code, and no re-meaning of an existing one.** It belongs in the output: a `--json` field and a human-readable line, which is where magnitude lives.
+
+Recorded here rather than left as a judgement call, because the backlog line reads as a requirement and would otherwise be re-proposed in Week 4 by someone following it literally.
+
+### Three reasons, in order of weight
+
+**1. Exit codes signal category, not magnitude.** "Below threshold" is a category. "Below threshold, affecting twelve contracts" is the same category with a number attached. Encoding the number in the code conflates *what happened* with *how much it matters*, and the second is what output is for.
+
+**2. Every new code is a breaking change to the Action's contract.** Consumers write `if [ $? -eq 1 ]`. Adding a `4` means anyone matching the old set silently stops seeing the new case — **a green pipeline where there should be a red one.** That is the failure family this repo has spent a week cataloguing, and shipping it would author a fresh instance into the single interface strangers depend on.
+
+**3. CI has no degrees of failure.** A job fails or it does not. A shared entry below threshold and a lone entry below threshold both mean *this build should not pass*. The difference is how fast a human should move, which they learn by reading the output — not from a number compared against a constant.
+
+### If callers later need to discriminate, the mechanism is an INPUT
+
+Not a wider output set. Something like `--fail-on=critical` lets a caller declare their own bar while the tool keeps reporting the same facts. Cleaner than growing the code set, and **SOW 2 territory** rather than this sprint's.
+
+### What ships instead
+
+Blast radius is reported, not encoded:
+
+- **Human output** — `⚠ shared: this code entry is shared with N other contracts — they fail together`, plus a worst-of summary line naming the count of shared entries.
+- **`--json`** — a `health` block carrying `blastRadius`, `isShared`, the graded state and its reason per entry, additive to `ScanResult` so existing consumers are unaffected.
+
+Grading itself lives in `packages/core/src/health.ts` (`assessEntry`), so the CLI and the future dashboard cannot diverge. It is deliberately **separate from `LivenessVerdict.severity`**, which answers a different question — *how bad is it that this run did not act* (a property of a run) versus *how bad is this entry's state* (a property of the chain). The shared inputs are not restated: both call `needsAction` and `hasExpired`.
+
 ## Update log (amendment)
 
 - 2026-09-10: accepted as amended. `3` narrowed to a degraded scan; the completeness demand moved to `--require-declared-scope`, on by default in the Action. Recorded because the original shipped in #60 before acceptance and ran unamended for one day.

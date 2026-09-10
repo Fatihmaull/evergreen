@@ -123,7 +123,7 @@ Semantically exact — "this no longer applies" — and it reads correctly to a 
 
 So: when restructuring, **retire the old IDs and mint new ones.** A gap in the sequence costs nothing. A silently re-pointed ID costs an evidence row filed against the wrong proof, discovered when someone goes looking for it.
 
-## 🔍 The report named no subject — the pattern, and its six members
+## 🔍 The report named no subject — the pattern, and its members
 
 **Every one of these was a report that stated a result without saying what the result was *about*.** Not a wrong answer — an answer to an unasked question, read as the answer to the one being asked. They looked like unrelated incidents until enough of them accumulated to show the shape; they are one failure, and it recurs because the safe-looking direction is silence or a stale green.
 
@@ -186,6 +186,32 @@ That changed the finding in three ways, and every one of them mattered:
 
 Same family as the testnet guard that refused everything and the local gate weaker than CI: **the mistake is trusting a reading over an observation.** Run the thing before you report on it, especially when the report will redirect someone's work.
 
+### A green result about the wrong subject — the variant staleness does not cover
+
+The recorded stale-CI rule says: *before merging, verify the green result is for the head SHA you are about to merge.* That covers a **stale** result for the **right** subject. There is a second shape it does not cover.
+
+**A result can be fresh, green, and about someone else's work entirely.**
+
+*Observed 2026-09-10.* A PR number was **inferred** from the previous one rather than read from the create output. The real PR was `#74`; `#73` belonged to the other session. The CI wait then polled `#73` and reported two green checks — genuinely green, genuinely current, and about a completely different branch. Caught by verifying the head SHA against the intended PR.
+
+That is the more dangerous version, because staleness at least has a timestamp to interrogate. A fresh green result offers nothing to be suspicious of.
+
+**The rule:** a PR number, run ID, job URL or commit SHA is an identifier **you act on**, so it must be **read from the tool that created it, never inferred from a neighbour.** Identifier precision goes where it is acted on — and "which PR am I merging" is as load-bearing as any contract address.
+
+Its cousin, same day: `$?` read after a pipe reports the **last** command's status. `node check.mjs | tail -2` followed by `$?` gives `tail`'s exit code, not the checker's — a result about a subject you did not name. A real bug was nearly diagnosed from that broken instrument, and it would have been wrong in the reassuring direction.
+
+### Guards get written by someone already thinking about the pattern — elsewhere
+
+**A guard built to detect a failure mode frequently contains that same failure mode.** This has now recurred four or five times in one week, each instance sitting inside the guard for the previous one:
+
+- `check-policy-constants.mjs`, written to catch a copied constant, **threw an uncaught stack trace when a constant was renamed** — a check that stops matching rather than failing. The divergent-ID failure, inside the guard against divergence.
+- The guinea-pig B simulation, written to prove the liveness alarm fires, **restated the rule it was testing** — validating its own copy.
+- The `no-restricted-syntax` rule, written to forbid hand-written comparisons, **fired on `threshold < 0`** — validation, not policy.
+
+At some point that stops being coincidence and becomes a property of how guards get written: **the guard is code, and code written to detect a pattern is written by someone currently thinking about that pattern in a different place.** Attention is spent on the thing being guarded, not on the guard.
+
+**So: exercise a new guard in its failing direction before trusting it**, including its degenerate cases — a renamed input, a missing file, an empty collection. A guard only ever observed passing is indistinguishable from one that cannot fail.
+
 ### A divergent ID is worse than a wrong status
 
 A wrong status is a **visible mismatch** — the diff catches it and someone fixes it. A divergent ID does not fail; it **quietly stops matching.** The row falls out of scope entirely while the diff still reads green, so the one row that most needed checking is the one no longer being checked.
@@ -231,7 +257,7 @@ That is the divergent-ID failure again: a check that stops checking rather than 
 
 **A rule lives in exactly one function. Every other place calls it.** Writing `remaining < threshold` by hand where `needsAction(remaining, threshold)` exists creates a *copy*, and copies do not move when the original does.
 
-This is a member of the [report-named-no-subject family](#-the-report-named-no-subject--the-pattern-and-its-six-members) with a different surface. The copy agrees with the original right up until they diverge, and that agreement is exactly what makes it invisible until then.
+This is a member of the [report-named-no-subject family](#-the-report-named-no-subject--the-pattern-and-its-members) with a different surface. The copy agrees with the original right up until they diverge, and that agreement is exactly what makes it invisible until then.
 
 **Enforced by lint, not by discipline.** `eslint.config.js` forbids hand-written TTL threshold and expiry comparisons everywhere except `packages/core/src/ttl.ts`, which is the one home. A copy is now a CI failure at the moment it is typed, rather than a defect found by whoever thinks to grep.
 

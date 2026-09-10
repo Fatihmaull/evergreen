@@ -1,6 +1,12 @@
 import { scanContract } from '@evergreen-stellar/core';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
-import { DEFAULT_THRESHOLD_LEDGERS, EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
+import {
+  DEFAULT_THRESHOLD_LEDGERS,
+  EXIT_ERROR,
+  exitCodeFor,
+  formatHuman,
+  healthReport,
+} from './scan.js';
 
 const USAGE =
   'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json]';
@@ -118,7 +124,13 @@ export async function runCli(
   const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
   return {
     stdout: asJson
-      ? JSON.stringify(result, null, 2)
+      ? // Additive envelope: every existing key of ScanResult is untouched, so
+        // a consumer reading `entries` or `issues` is unaffected by `health`.
+        JSON.stringify(
+          { ...result, health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS) },
+          null,
+          2,
+        )
       : formatHuman(result, dependencies.now(), {
           color: dependencies.color === true,
           thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
