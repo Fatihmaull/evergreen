@@ -9,6 +9,7 @@
  * Neither authorizes a transaction; structured observations drive future engine decisions.
  */
 export {
+  DEFAULT_THRESHOLD_LEDGERS,
   EXIT_BELOW_THRESHOLD,
   EXIT_ERROR,
   EXIT_INCOMPLETE,
@@ -16,3 +17,4 @@ export {
   exitCodeFor,
   formatHuman,
 } from './scan.js';
+export type { FormatOptions } from './scan.js';
