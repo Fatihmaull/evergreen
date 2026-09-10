@@ -16,6 +16,19 @@
  *
  * This is that inspection turned into a gate, which is the same move as the
  * config loader: a rule that runs beats a rule that is remembered.
+ *
+ * ⚠️ WHAT THIS DOES **NOT** COVER, so a green result is not misread:
+ *
+ *   - It sees only what is REACHABLE. esbuild tree-shakes, so a secret in an
+ *     imported-but-eliminated module passes cleanly while remaining fully
+ *     present in the repository and in git history.
+ *   - It does not scan source, tests, fixtures, `.env`, or history.
+ *   - It knows the shapes listed below and nothing else. A credential in an
+ *     unfamiliar format walks straight past it.
+ *
+ * It protects the published artifact. That is all it protects, and that is what
+ * it was built for — but a green bundle gate must never be read as
+ * "no secrets anywhere".
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, mkdtempSync } from 'node:fs';
@@ -23,8 +36,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
-
-const ENTRY = 'packages/cli/src/bin.ts';
 
 const FORBIDDEN = [
   {
@@ -52,12 +63,16 @@ const FORBIDDEN = [
 let bundle;
 try {
   const out = join(mkdtempSync(join(tmpdir(), 'evergreen-bundle-')), 'bundle.mjs');
+  // The workspace's own pinned esbuild, not `npx`: deterministic, offline, and
+  // the same binary that produces the artifact this gate inspects.
   execFileSync(
-    'npx',
+    'pnpm',
     [
-      '--yes',
-      'esbuild@0.25.0',
-      ENTRY,
+      '--filter',
+      '@evergreen-stellar/cli',
+      'exec',
+      'esbuild',
+      'src/bin.ts',
       '--bundle',
       '--platform=node',
       '--format=esm',

@@ -22,8 +22,5 @@
   "dependencies": {
     "@stellar/stellar-sdk": "17.0.1",
     "@evergreen-stellar/shared-types": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

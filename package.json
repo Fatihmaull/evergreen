@@ -18,12 +18,12 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm build && vitest run && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence",
+    "test": "vitest run && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "check": "pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm check:bundle && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "check": "pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm check:bundle && pnpm check:publish && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
@@ -34,7 +34,8 @@
     "test:persistence": "node --test --test-isolation=none scripts/persistence-spike.test.mjs",
     "check:task-ids": "node scripts/check-task-ids.mjs",
     "check:policy": "node scripts/check-policy-constants.mjs",
-    "check:bundle": "node scripts/check-bundle-secrets.mjs"
+    "check:bundle": "node scripts/check-bundle-secrets.mjs",
+    "check:publish": "node scripts/check-publish-safety.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
