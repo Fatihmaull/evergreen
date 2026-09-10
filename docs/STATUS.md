@@ -9,7 +9,11 @@
 
 ---
 
-## Current — W2-D12-01 planning only
+## Current — W2-D12-01 implementation
+
+Rakha approved execution. Work starts on `feat/W2-D12-01-basic-storage-advice` from the reviewed D12 plan and main #85. D12-01 is In progress for implementation; D12-02 remains Pending. New core/CLI advice modules and scan-only opt-in integration; no D11 signing/submission code is changed. Review precedes PR publication.
+
+### Earlier planning record
 
 Rakha requested the next-task plan. [D12 basic storage advice](W2-D12-01-PLAN.md) is on `docs/W2-D12-01-optimizer-plan`, created directly from `origin/main` `ed16bc2` (#85), not stacked on D11. D12-01 is In progress for planning; D12-02 remains Pending. No runtime edit, optimizer implementation, new live read, quote or transaction. The plan proposes opt-in `scan --optimize`, pure core recommendations, optional reuse of existing per-key cost quotes, and unchanged scan exits.
 
