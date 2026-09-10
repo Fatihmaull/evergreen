@@ -113,6 +113,19 @@ Semantically exact — "this no longer applies" — and it reads correctly to a 
 
 **Only for an ID that genuinely no longer exists.** Reaching for the marker to silence the check on a *live* reference converts a caught bug into a hidden one, which is worse than never having the check.
 
+### A row in the mirror with no task in the repo — the provenance test
+
+Two different things look identical in Notion, and they need opposite handling. **Ask one question: did this ID ever exist in `BACKLOG.md`?** `git log --all -S'<ID>' -- BACKLOG.md` answers it.
+
+| Answer | Treatment |
+|---|---|
+| **Yes** — it existed and was retired | **Mark it `Dropped`, do not delete.** Put the retirement reason in the row. |
+| **No** — it never existed | **Delete it.** There is no history to preserve, and preserving a fiction is not preserving a record. |
+
+**Why a retired ID stays visible in the mirror.** The whole point of *retire, never repurpose* is that a retired ID remains legible so nobody reuses it. If the repo shows a retired ID and the mirror shows nothing, the mirror has stopped mirroring — and it has removed the very warning the retire rule exists to display. A `Dropped` row carrying its reason is the mirror doing its job.
+
+*(Applied 2026-09-10 to three rows. ~~W3-D18-02~~ had six commits behind it and was kept as `Dropped`; ~~W3-D21-03~~ and ~~W4-D23-04~~ had zero commits ever and are build errors, marked for deletion. Deleting is the correct treatment for those two and the Notion integration exposes no delete capability, so they were retitled unmistakably and left for a human — a partial execution reported as partial, not quietly recorded as done.)*
+
 ### Retire a task ID, never repurpose it
 
 `BACKLOG.md` says IDs are frozen. The rule has a second half that only became visible when it was broken: **an ID must keep meaning the same work, not merely keep existing.**

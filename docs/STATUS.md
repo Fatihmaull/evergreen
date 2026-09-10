@@ -2,12 +2,34 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · #60–#63 merged; ADR-006 live but **not yet accepted**; `W2-D8-01/02` in review (#65)
+**Last updated:** 2026-09-10 · **Session 1 closed.** ADR-006 accepted as amended (#66); mirror reconciled 145 = 145 on four fields
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
-**Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed 49/50) · 🔴 **milestone gate Wed Sep 16**
+**Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
+
+## 🔚 Session 1 ends here — 2026-09-10
+
+**Session 2 owns everything from now.** There is no work waiting on Session 1 and no handoff message to chase: what it produced is in the repo.
+
+**Where Session 1's output lives**
+
+| What | Where |
+|---|---|
+| Week 1 closeout, 51/51 | `BACKLOG.md` § Week 1 review outcome, [`W1-REVIEW.md`](W1-REVIEW.md) |
+| Deliverable 1 readiness and the recapture instruction | [`EVIDENCE.md`](EVIDENCE.md) § Deliverable 1 — readiness at the Sep 16 gate |
+| The recurring drift obligation | `BACKLOG.md` § Recurring obligations — closes when B crosses ~Sep 20 |
+| Product definition of done | [`READY.md`](READY.md) — four things a stranger must be able to do |
+| Five mirror anomalies and their causes | § Sync anomaly log below |
+
+**The two-session rules are historical from this point — marked, not deleted.** The `[S2]` prefixes on headings below, the split ownership note in § Week 2 execution log, and the pull-before-write discipline all describe an arrangement that ended on 2026-09-10. **They stay because a reader opening a Sep 10 commit needs to know why those prefixes are there**; deleting them would leave the prefixes unexplained and invite someone to re-derive the arrangement from scratch. Read them as history. Do not follow them as current process, and do not add new `[S2]` prefixes.
+
+**What outlives the arrangement, and is not historical:** [`CONVENTIONS.md` § Coordination between sessions belongs in the repo, not in messages between agents](CONVENTIONS.md). That rule was written by Session 2 when it was told to message Session 1 and instead wrote the boundary into a file — four indistinguishable peers were listed and none could be identified with enough confidence to message. **It applies whenever this happens again**, with any number of sessions, and it earned its place: a directive in a context window expires silently, cannot be read by a session that joins later, and can be misdelivered.
+
+**Open, with Fatih:** two Notion rows need manual deletion — ~~W3-D21-03~~ and ~~W4-D23-04~~, both marked `Dropped` and retitled `DELETE THIS ROW`. They never existed in the repo, so per the provenance test in `CONVENTIONS.md` deletion is the correct treatment; the Notion integration exposes no delete capability, so this is a partial execution reported as partial.
+
+**Final state at handover:** W1 51/51 · mirror 145 repo IDs = 145 Notion live rows, agreeing on ID, status, owner and title, zero phantoms beyond those two · `pnpm check` green.
 
 ## Right now
 
