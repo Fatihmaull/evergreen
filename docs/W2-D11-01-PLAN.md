@@ -1,7 +1,25 @@
-# W2-D11-01 — Manual extension, plan for review
+# W2-D11-01 — Manual extension implementation plan
+
+> For agentic workers: use `superpowers:executing-plans` sequentially in this session, with the review checkpoints below. No sub-agent fan-out. The checkboxes are implementation steps within W2-D11-01, not new backlog IDs.
+
+**Goal:** provide a manual Testnet TTL extension command whose transaction path can be reused by the W3 engine.
+
+**Architecture:** core selects and prepares explicit entry operations, validates/signs envelopes, and reconciles exact transaction hashes. CLI owns arguments, environment resolution and human/JSON presentation. Keep the existing shared `Signer` and `BumpRecord` contracts.
+
+**Tech stack:** TypeScript 5.9.3, Node 24, pnpm 11.25.0, Stellar SDK 17.0.1, Vitest; no new dependency planned.
+
+**Spec:** BACKLOG.md § Day 11; docs/PRD.md § 6; docs/ARCHITECTURE.md shared interfaces; ADR-004/005/006; the command contract and acceptance checks below.
 
 2026-09-10. Owner: Rakha. Planning only; no implementation, signing or submission.
-Base: `origin/main` at `ad18ad4` (#80, merged during planning). Planning branch: `docs/W2-D11-01-plan-and-sync`.
+Base: `origin/main` at `ebe8e15` (#81), integrated into the existing planning branch `docs/W2-D11-01-plan-and-sync`. #80 supplies the cost helpers. Implementation branch, once execution starts: `feat/W2-D11-01-manual-extend`, retaining the reviewed planning changes.
+
+## Current coordination and scope
+
+#81 is merged. D11 remains critical path; D12 is reduced to basic flags and is outside this implementation. The dashboard write path and its wallet spike were cut; neither is a dependency of manual CLI extension.
+
+Fatih's [latest #69 comment](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615382737) asks whether D11-01 implementation will be on a branch by Monday morning, Sep 14. A planning branch is not that deliverable. The user requested this plan, not a calendar commitment. Reply before implementation to avoid a competing takeover; the draft below has not been sent. Owner remains Rakha. D11-04 remains Fatih's, with the proposed boundary below requiring coordination before shared CLI edits.
+
+Draft coordination message, to send once Rakha confirms execution: “@Fatihmaull — I am taking W2-D11-01. The plan is on docs/W2-D11-01-plan-and-sync; implementation will use feat/W2-D11-01-manual-extend and be pushed at start. I will reuse resolveExtendTarget with a network ceiling before simulation. Proposed boundary: D11-01 provides default simulation and explicit submit; D11-04 remains yours for the explicit --dry-run interface/help and independent no-sign/no-send acceptance checks. Please coordinate through this issue before editing the same CLI dispatch. This is a plan/ownership update, not a claim that implementation is already available.” Answer the Monday availability question explicitly with Rakha's actual commitment; do not infer it from the existence of this document.
 
 ## Outcome and ownership
 
@@ -21,7 +39,16 @@ Simulation and inclusion can happen at different ledgers. State the read-to-subm
 
 Proposed scope: instance by default; `--keys-file` adds explicit persistent/temporary data keys belonging to the requested contract. Code needs explicit `--include-code`. Print the full selected key set and kinds, unique known consumers, payer, target, mode, simulation fee and coverage before any send. A narrow selection is never reported as whole-contract protection. Data-key absence is not storage enumeration. A code key can have consumers outside the scanned inputs; show that limitation.
 
-Use a public payer account for simulation. The live signer resolves a Testnet-only key from an ignored local environment source; no secret command-line argument, output, JSON or committed file. Final option names for payer selection and fee cap are implementation-review items; reuse the existing payer/Signer types. `--submit` with `--dry-run` is a conflicting request, not a precedence rule that can unexpectedly send.
+Use `--source-account G...` or the existing `EVERGREEN_SOURCE_ACCOUNT` for the public payer, required even for simulation; the write command must not inherit the cost command's fallback account. For live mode, `--secret-env NAME` identifies an already-exported environment variable, never the secret itself. Require `--max-fee-stroops N` with `--submit`: positive integer decimal text, an aggregate upper bound across the command's transactions. Simulations may omit it. Compare against the complete prepared envelope fees, retaining consumed/committed budget if a transaction is submitted. Reject a later envelope if it exceeds the remaining budget; never silently raise the cap. No `.env` auto-loading, secret argument, key generation, funding or platform provisioning in this task. Reuse existing payer/Signer types; full config-file resolution stays W2-D13-01. `--submit` with `--dry-run` is a conflicting request, not a precedence rule that can unexpectedly send.
+
+Command examples (proposed interface, not yet executable):
+
+```text
+evergreen extend <contract-id> --ledgers 1000 --source-account <public-account>
+evergreen extend <contract-id> --ledgers 1000 --source-account <public-account> --submit --secret-env EVERGREEN_SECRET_KEY --max-fee-stroops <reviewed-cap>
+```
+
+Return 0 for a complete simulation, justified no-op, or fully confirmed and post-verified live result; 2 for invalid input, rejected/failed operations, partial completion, or submitted-but-unconfirmed results. These are extend-command exits; scan's 2 > 3 > 1 > 0 semantics remain untouched. JSON always distinguishes mode and per-entry outcome, with hashes for any attempted sends. A zero simulation exit means simulation succeeded, never that protection changed.
 
 ## Implementation slices
 
@@ -42,6 +69,73 @@ Keep transaction mechanics in core and parsing/presentation in CLI. Integrate wi
 - Post-read verifies the selected entries' TTL change; use recorded fixtures plus controlled Testnet evidence for the strongest check the slice permits. Run full `pnpm check` on the implementation tree.
 - Update help, core/CLI docs and task tracking, then present the local result for Rakha review before the implementation PR.
 
+## File map and ordered execution
+
+Use the existing plan file as the single plan; do not create a second plan in a generic skill directory. Each step below is an independently reviewable slice of the same task.
+
+| File | Responsibility |
+|---|---|
+| New `packages/core/src/extend.ts` and `packages/core/test/extend.test.ts` | Pure selection/target plan, per-entry outcomes and orchestration through injected transport/signer |
+| New `packages/core/src/extend-rpc.ts` and `packages/core/test/extend-rpc.test.ts` | Actual envelope construction, simulation, assembly, fee checks, send and exact-hash confirmation |
+| New `packages/core/src/ed25519-signer.ts` and `packages/core/test/ed25519-signer.test.ts` | Local signer adapter and its transaction allowlist |
+| New `packages/cli/src/extend.ts` and `packages/cli/test/extend.test.ts` | Extend parser, dependency-injected execution, human/JSON output |
+| Existing `packages/core/src/index.ts`, `packages/cli/src/command.ts`, `packages/cli/src/bin.ts` | Exports, minimal command dispatch, environment and dependency wiring |
+| Existing `packages/cli/README.md`, `docs/ARCHITECTURE.md`, `BACKLOG.md`, `docs/STATUS.md` | User instructions, actual module boundaries and truthful task state |
+
+### 1. Coordinate, select and calculate
+
+- [ ] Re-read #69 and open PRs; confirm D11 ownership and D11-04 boundary before touching overlapping files. Revalidate relevant Notion rows, carry #81 into the implementation branch, mark implementation In progress, and push the WIP branch immediately. A branch that contains only this plan must still say planning only.
+- [ ] In `extend.test.ts`, write a failing test for the proposed `planExtension(scan, { contractId, additionalLedgers, maxEntryTtl, includeCode })`. Use the existing recorded A fixture/mock to produce `ScanResult`; the supplied scan request carries the explicit data keys. Produce a selection with canonical key, kind, consumers, before observation, resolved target and capped/no-op reason. Keep this type core-local; no shared-types change.
+- [ ] Pin target arithmetic before implementation, including distinct current TTLs, capping, unsafe integers and inclusive zero. For the selected instance the key assertion is:
+
+```ts
+expect(resolveExtendTarget({
+  currentRemainingLedgers: 100,
+  additionalLedgers: 20,
+  maxEntryTtl: 1000,
+}).extendToLedgers).toBe(120);
+expect(resolveExtendTarget({
+  currentRemainingLedgers: 990,
+  additionalLedgers: 20,
+  maxEntryTtl: 1000,
+}).extendToLedgers).toBe(1000);
+```
+
+- [ ] Add selection failures for foreign data keys, absent/expired/unreadable selected entries and malformed config. A failure on an unselected code entry must not prohibit an otherwise valid instance-only extension; selection validity and whole-contract coverage are separate. Shared code is excluded unless explicitly selected and its warning remains visible.
+- [ ] Run `pnpm exec vitest run packages/core/test/extend.test.ts`, observe the missing-planner failure, implement pure selection in `extend.ts`, and rerun green. Commit with subject `feat(core): plan explicit TTL extensions [W2-D11-01]`.
+
+### 2. Prepare a real unsigned envelope
+
+- [ ] In `extend-rpc.test.ts`, record a failing adapter test using an injected fake transport: one selected key, one extend operation, exact resolved target, no writable keys. Follow the installed SDK 17.0.1 declarations for simulation/assembly and compare the decoded resulting envelope, not a parallel object created by the test. Verify the exact SDK assembly API against installed code and official documentation before implementing it.
+- [ ] Implement `prepareExtension` in `extend-rpc.ts`: consume one planned entry and a public payer; obtain current account sequence, construct the transaction following `rent-quoter.ts`'s footprint pattern, simulate, assemble and validate the complete unsigned envelope. Return its XDR, locally calculated hash, full fee in stroops, and captured before/simulation observations. Do not reuse a quote total as the envelope fee. Reject absent/malformed fees, simulation errors, unexpected footprint/operation changes, or expired time bounds.
+- [ ] Add ceiling-before-simulation and low-balance/error cases. A server response with no usable resource estimate must fail, never become zero fee. Tests must decode the built transaction to check what would actually be signed.
+- [ ] Run `pnpm exec vitest run packages/core/test/extend-rpc.test.ts`, first red then green; commit `feat(core): prepare simulated extension envelopes [W2-D11-01]`.
+
+### 3. Sign and reconcile without duplicate submission
+
+- [ ] Write `ed25519-signer.test.ts` using throwaway test-generated keys that never leave the test process. Accept the intended one-key extend; reject payment, restore, invocation, fee-bump envelopes, additional operations, another payer/source, nonempty writable footprint, changed target/key, wrong passphrase, already-signed envelopes and fees above policy. Compare the envelope against the expected prepared selection before signing. The adapter is software validation, not the W3 policy-signer security boundary.
+- [ ] Implement the existing `Signer` interface: `signExtendTTL({ networkPassphrase, transactionXdr }): Promise<string>`. Secret retrieval is an injected callback invoked only in the live path. Public identity must match the actual key; never return raw provider/SDK errors that can include input material.
+- [ ] Add injected orchestration tests in `extend.test.ts`: default mode never invokes the secret callback, signer or sender; explicit live mode does. Capture a local hash before sending so transport failure can report the possibly-submitted attempt even without a server response. Verify returned send hash against the local hash. `NOT_FOUND`, timeout and transport uncertainty do not cause a second send. Stop later transactions after an uncertain outcome; preserve previous records and do not reuse their fee budget.
+- [ ] Require confirmed success plus a fresh post-read for `BumpRecord.outcome = 'succeeded'`. Compare absolute `endsAtLedger` before/after, not just remaining TTL (which decreases as time passes). Check the resolved target against the inclusion ledger and the documented inclusive boundary; an increased value below that bound is an unverified/shortfall result, not success. If an independent extension raced ours, report the observed improvement without claiming exclusive causation.
+- [ ] Test different inclusion/read ledgers and `SUCCESS` with unchanged TTL. For an unconfirmed attempt retain `outcome: 'submitted'` and its hash; do not invent a successful `after`. All selected transactions use fresh sequences and independent preparation, sequentially; never prepare a batch using one sequence.
+- [ ] Run `pnpm exec vitest run packages/core/test/extend.test.ts packages/core/test/extend-rpc.test.ts packages/core/test/ed25519-signer.test.ts`; commit `feat(core): sign and verify manual extensions [W2-D11-01]` only when green.
+
+### 4. Connect the CLI
+
+- [ ] Start `packages/cli/test/extend.test.ts` with default/live argument tests, positive safe integer increments, public payer validation, duplicate/unknown/conflicting options and decimal fee caps. Inject a stub runner returning per-entry records; assert both exit category and emitted mode/outcome. Invalid arguments must not connect or load secrets.
+- [ ] Implement `runExtendCli(args, dependencies): Promise<CliOutput>` in `packages/cli/src/extend.ts`, reusing the existing `CliOutput` shape. Dispatch `extend` from `runCli` without changing the existing scan parser or tests. Keep dependencies distinct so importing help/scan never resolves the signer. Wire exported core adapters in `bin.ts`; preserve the current RPC URL convention and Testnet network check. Validate the endpoint's network before account/simulation operations.
+- [ ] Render selected entries, payer, requested/resolved/capped lifetimes, fee budget and mode before submission. Use stderr for progress/preview when JSON is requested so stdout remains one valid final JSON document. State scope limitations and partial outcomes explicitly. Do not print secret environment values or raw error stacks.
+- [ ] Coordinate Fatih's `--dry-run` wrapper/tests over this same default simulation path. Until that flag lands, unknown flags already fail safely; never accept `--submit --dry-run` as a live request. Do not mark D11-04 Done based on D11-01's tests.
+- [ ] Run `pnpm exec vitest run packages/cli/test/extend.test.ts packages/cli/test/command.test.ts packages/cli/test/scan.test.ts packages/cli/test/cost.test.ts`; commit `feat(cli): expose manual Testnet extension [W2-D11-01]` after green.
+
+### 5. Review checkpoint and publication boundary
+
+- [ ] Update CLI help/README with simulation and explicit submission examples, account/environment setup, aggregate fee budget, code-sharing warning and submitted-but-unconfirmed recovery instructions. Update only the architecture sections describing this new path; preserve historical decision records.
+- [ ] Run full `pnpm check`, then a separate explicit Testnet **simulation-only** check of A's instance using a public payer. Store the dated raw read/simulation outputs and exact command in a new D11 evidence folder; no secret or transaction submission. Independently inspect the prepared XDR scope/target/fees. If Testnet simulation cannot be verified, report that limitation and retain In progress.
+- [ ] Present Rakha with the diff summary, test results, simulation scope/fee, known limitations and any unresolved D11-04 boundary. Implementation is not Done just because code exists. Review must precede a ready PR and a real transaction.
+- [ ] After publication authorization, push the reviewed implementation and open the PR with W2-D11-01 in its title; request Fatih's review and link #69. Do not merge automatically. If a code blocker requires Fatih, document it in an Issue before requesting routine PR review.
+- [ ] Keep the row In progress until its full definition of done, including applicable Testnet behavior, is met. D11-02/03 are the following separately reviewed evidence checkpoint; never imply a simulation fulfilled them. At the session boundary update repo and Notion, compare all registered IDs both ways, and distinguish branch work from content verified on `origin/main`.
+
 ## Controlled proof after implementation review
 
 For W2-D11-02/03, use A's **instance only** first. Choose an additional-ledger increment whose per-entry resolved target exceeds A's freshly observed remaining TTL and fits current limits, then review the exact resolved target and fee. A's December headroom means passing a small delta directly as the target may do nothing; an inexpensive quote alone neither proves a bug nor proves a useful extension.
@@ -54,4 +148,4 @@ Do not extend B, C, or the shared A/B/C Wasm while the decay proofs are pending.
 
 Notion sync recovered 2026-09-10: task outcomes were written and read back, including D11-01 as planning only. All 145 registered IDs are present; one additional Dropped predecessor is intentionally retained. Repo tracking corrections remain branch work, not merged main. Task Tracker stays a weekly snapshot.
 
-Validation of synchronized base: full `pnpm check` passed 280 Vitest + 36 Node tests after #80 integration. This verifies the inherited implementation, not the unbuilt D11 path. Planning edits are Markdown only.
+Validation: full `pnpm check` passed 280 Vitest + 36 Node tests on this #81-integrated planning tree. This verifies the inherited implementation and repository gates, not the unbuilt D11 path. Final edits only record validation; planning changes are Markdown only. Refreshed all-ID mirror check found 145 registered IDs and 146 rows, with no missing IDs or duplicates and only the intentionally retired predecessor extra. D11 status/ownership remains planning In progress/Rakha, with D11-02/03 Pending/Rakha and D11-04 Pending/Fatih.
