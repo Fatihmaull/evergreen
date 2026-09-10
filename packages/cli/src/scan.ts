@@ -22,9 +22,10 @@ export function formatHuman(result: ScanResult, now: Date): string {
       if (result.coverage.noDataKeysDeclaredByContract?.[contract] === true) {
         lines.push('  No additional data keys declared by caller; not independently verified.');
       } else if (count === 0) {
-        lines.push(
-          '  Data-key coverage unknown: supply keys, or --no-data-keys only if applicable.',
-        );
+        // Stated as a limit of the read, not as a demand on the reader. Only the
+        // contract's author can know whether there are further keys; telling
+        // everyone else to "supply keys" invites an assertion they cannot make.
+        lines.push('  No data keys were supplied, so any further entries are unread.');
       }
     }
     lines.push('');
@@ -76,28 +77,66 @@ export function formatHuman(result: ScanResult, now: Date): string {
  * Precedence: error (2), incomplete (3), observed low TTL (1), healthy scope (0).
  * Mixed results keep their observations/issues in JSON even when one exit wins.
  */
-export function exitCodeFor(result: ScanResult, thresholdLedgers: number): number {
+export interface ExitCodeOptions {
+  /**
+   * Demand that every contract declare its data-key scope, and report `3` when
+   * one has not. **Off by default, and that default is the whole point of the
+   * ADR-006 amendment** (2026-09-10).
+   *
+   * Whether a contract has data keys beyond its instance is knowable only from
+   * its source. RPC cannot enumerate storage, so a caller scanning a contract
+   * they did not write *cannot* declare scope truthfully — and for them the
+   * original default made `3` permanent, with the only escape being a flag
+   * asserting something they cannot check. A signal that fires on every default
+   * invocation has stopped being a signal.
+   *
+   * So the demand moved to the caller who can actually satisfy it: the contract's
+   * author, in CI. `evergreen-check` turns this on (`W4-D25-01`); a human at a
+   * terminal scanning someone else's contract does not get it.
+   */
+  readonly requireDeclaredScope?: boolean;
+}
+
+/** True when the scan itself came back degraded — as opposed to merely un-declared. */
+function scanIsDegraded(result: ScanResult): boolean {
+  return (
+    Object.keys(result.entries).length === 0 ||
+    result.issues.some(
+      (i) => i.kind === 'entry-not-found' || i.kind === 'unsupported-executable',
+    ) ||
+    Object.values(result.entries).some((e) => e.ttl.status === 'unavailable')
+  );
+}
+
+/** True when a contract's data-key scope was never stated, or was stated inconsistently. */
+function scopeIsUndeclared(result: ScanResult): boolean {
+  if (!result.coverage || result.contracts.length === 0) return true;
+  return result.contracts.some((c) => {
+    const count = result.coverage?.dataKeysSuppliedByContract[c.id];
+    const empty = result.coverage?.noDataKeysDeclaredByContract?.[c.id] === true;
+    if (count === undefined || !Number.isInteger(count) || count < 0) return true;
+    // Zero supplied keys means something only if the caller said it meant something,
+    // and a non-empty list alongside an emptiness claim is a contradiction.
+    return count === 0 ? !empty : empty;
+  });
+}
+
+export function exitCodeFor(
+  result: ScanResult,
+  thresholdLedgers: number,
+  options: ExitCodeOptions = {},
+): number {
   if (result.issues.some((i) => i.kind === 'rpc-error' || i.kind === 'invalid-response'))
     return EXIT_ERROR;
-  if (
-    !result.coverage ||
-    result.contracts.length === 0 ||
-    Object.keys(result.entries).length === 0 ||
-    result.issues.length > 0 ||
-    result.contracts.some((c) => {
-      const count = result.coverage?.dataKeysSuppliedByContract[c.id];
-      const empty = result.coverage?.noDataKeysDeclaredByContract?.[c.id] === true;
-      return (
-        count === undefined ||
-        !Number.isInteger(count) ||
-        count < 0 ||
-        (count === 0 ? !empty : empty)
-      );
-    }) ||
-    Object.values(result.entries).some((e) => e.ttl.status === 'unavailable')
-  ) {
-    return EXIT_INCOMPLETE;
-  }
+
+  // `3` means the read came back degraded: an entry missing, a TTL unavailable,
+  // an executable we cannot follow, nothing observed at all. Rare, and therefore
+  // still informative.
+  if (scanIsDegraded(result)) return EXIT_INCOMPLETE;
+
+  // Undeclared scope is `3` only when the caller asked to be held to it.
+  if (options.requireDeclaredScope === true && scopeIsUndeclared(result)) return EXIT_INCOMPLETE;
+
   for (const entry of Object.values(result.entries)) {
     if (entry.ttl.status === 'unavailable') continue;
     if (entry.ttl.remainingLedgers < thresholdLedgers) return EXIT_BELOW_THRESHOLD;

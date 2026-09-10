@@ -2,8 +2,28 @@ import { scanContract } from '@evergreen-stellar/core';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import { EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
 
-const USAGE = 'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--json]';
-const HELP = `${USAGE}\n\nReads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.\nKeys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }\n--no-data-keys asserts this contract has no additional data keys; it is not independently verified.\nScanning known keys does not enumerate all contract storage.\nExit: 0 healthy declared scope; 1 observed low TTL; 2 error; 3 incomplete information.\nPrecedence: 2 > 3 > 1 > 0. Exit status never authorizes a transaction.`;
+const USAGE =
+  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json]';
+const HELP = `${USAGE}
+
+Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
+Keys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }
+
+Exit: 0 everything scanned is healthy; 1 observed low TTL; 2 error;
+      3 the scan came back incomplete (entry missing, TTL unavailable,
+        executable not followable, or nothing observed).
+Precedence: 2 > 3 > 1 > 0. Exit status never authorizes a transaction.
+
+Scanning reads the keys it is given; it cannot enumerate a contract's storage,
+so a clean exit means "everything I was asked to check is healthy" and never
+"this contract is fully healthy". Coverage is printed with every scan.
+
+--no-data-keys        assert this contract has no data keys beyond its instance.
+                      Only its author can know that; it is a caller declaration
+                      and is never independently verified.
+--require-declared-scope
+                      also exit 3 when scope was not declared. Intended for CI on
+                      a contract you own; evergreen-check sets it by default.`;
 
 export interface CliDependencies {
   connect(): Promise<LedgerEntryReader>;
@@ -37,10 +57,13 @@ export async function runCli(
   if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);
   let asJson = false;
   let noDataKeys = false;
+  let requireDeclaredScope = false;
   let keysPath: string | undefined;
   for (let i = 2; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
     else if (args[i] === '--no-data-keys' && !noDataKeys) noDataKeys = true;
+    else if (args[i] === '--require-declared-scope' && !requireDeclaredScope)
+      requireDeclaredScope = true;
     else if (args[i] === '--keys-file' && keysPath === undefined) {
       keysPath = args[++i];
       if (!keysPath || keysPath.startsWith('-')) return fail(`--keys-file needs a path.\n${USAGE}`);
@@ -81,6 +104,6 @@ export async function runCli(
   return {
     stdout: asJson ? JSON.stringify(result, null, 2) : formatHuman(result, dependencies.now()),
     stderr: '',
-    exitCode: exitCodeFor(result, 17_280),
+    exitCode: exitCodeFor(result, 17_280, { requireDeclaredScope }),
   };
 }
