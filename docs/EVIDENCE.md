@@ -37,7 +37,7 @@ This costs about a minute per transaction if done at capture time and is unrecov
 |---|---|---|---|---|
 | 1 | Public repo | ✅ **Met** | — | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen), MIT, CI green |
 | 2 | Published npm package | ❌ **Not met — and not a Sep 16 concern** | `W4-D27-02` | Rakha, ~Sep 29 |
-| 3 | Screenshots: TTL / archive prediction / cost | ⚠️ **Partial** | `W2-D9-01/02` | Rakha, Week 2 |
+| 3 | Screenshots: TTL / archive prediction / cost | ⚠️ **Unblocked — all three now in the CLI; the capture itself remains** | — | Recapture once the CLI is final |
 | 4 | Test coverage report | ❌ **Not met** | `W2-D14-01` | Shared, Sep 16 itself |
 
 ### 1 — Public repo ✅
@@ -60,7 +60,7 @@ Three sub-parts, and they are not in the same state:
 |---|---|---|
 | **TTL** | Yes, but **stale** | [`2026-09-08-w1-review/`](evidence/2026-09-08-w1-review/README.md) captures the W1 **instance-only** scan. The CLI now reads four entry types, prints coverage, and its exit codes changed twice (ADR-006, then its amendment in #66). The artifact shows a CLI that no longer behaves that way. |
 | **Archive prediction** | Yes, **uncaptured** | Landed in #65 (`projectEnd` / `measureCadence`). The CLI prints `approx:` today. It has never been in a screenshot. |
-| **Cost** | **Model exists; CLI wiring is the remaining step** | `W2-D9-01/02` landed 2026-09-10 — `estimateRent` prices via `simulateTransaction` and is [validated to within ~18%](evidence/2026-09-10-rent-model-validation/README.md) of a real recorded fee. The CLI does not yet print a rent figure; that is what remains before a cost screenshot exists. |
+| **Cost** | **Yes — `evergreen scan <id> --cost` prints it** | `W2-D9` landed 2026-09-10, CLI wiring included. Total leads (*what leaves the account*), rent breaks out beneath, [validated to within ~18%](evidence/2026-09-10-rent-model-validation/README.md) of a real recorded fee and labelled as an estimate rather than a quote. **All three sub-parts of Row 3 now exist in one command** — the recapture is unblocked. |
 
 **Cost was the binding item for this whole requirement, and the model half is now done.** `W2-D9` was Pending with nothing in flight on 2026-09-10 and was taken over rather than left, because without it there is no screenshot showing cost, ever — the same reason `W2-D13-03` batch scan was cut to protect it. **What remains is CLI wiring**: `estimateRent` needs a `--cost` path so a rent figure appears in human and `--json` output. Until that lands there is still nothing to screenshot. The validation data used: [`extendTTL-fees-guinea-pig-a.json`](../packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json), three measured extends with `rentFeeCharged` isolated from `resultMetaXdr`.
 
