@@ -166,6 +166,9 @@ describe('extension RPC envelope', () => {
     const p = await prepareExtension(server, ENTRY, SOURCE);
     const tx = TransactionBuilder.fromXDR(p.transactionXdr, Networks.TESTNET);
     expect(tx.operations).toEqual([{ type: 'extendFootprintTtl', extendTo: 120 }]);
+    expect(server.getAccount).toHaveBeenCalledWith(SOURCE);
+    // Quote-only synthetic sequence 0 must never replace the real payer sequence.
+    expect('sequence' in tx ? tx.sequence : undefined).toBe('13');
     expect(tx.fee).toBe('600');
     expect(p.feeStroops).toBe('600');
     expect(p.transactionHash).toBe(Buffer.from(tx.hash()).toString('hex'));
