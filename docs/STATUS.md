@@ -2,16 +2,52 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-09 · **W1 CLOSED** — closeout merged in #57, ADR-005 accepted, 49/50 done
-**Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
-**Current week:** W1 — Foundation (closed) → **W2 — Core CLI starts Thu Sep 10**
-**Health:** 🟡 on track with one dated risk · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🔴 **guinea-pig A archives Wed Sep 16 ~19:27 UTC**
+**Last updated:** 2026-09-10 · W2 open · #60 merged, ADR-006 live but **not yet accepted**
+**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02
+**Current week:** **W2 — Core CLI** (W1 closed 49/50)
+**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
 ## Right now
 
+### ⚠️ ADR-006 is merged but not accepted — amendment proposed 2026-09-10
+
+**Correction to the entry below:** it records that "Fatih accepted the exit-code scheme". He did not. He said he would accept it once two consequences were written down, and #60 merged before that acceptance was given. The scheme is therefore **live in the CLI while still Proposed**, which is a state worth naming rather than letting the ADR's status field quietly disagree with the shipped binary.
+
+The open question is whether `--no-data-keys` asserts something a caller can actually know. For a contract you wrote, yes — it is a static property of your own source. For a contract you did not write, **no**: RPC cannot enumerate storage (`scan-contract.ts`: *"RPC cannot enumerate arbitrary storage"*), so there is no way to establish the absence of data keys, and third-party scanning is not an edge case — `W4-D22-02` promises "paste any contract ID". ADR-006 anticipates this exactly and mitigates it with a documentation note telling callers not to use the flag reflexively. **A doc note is not a mechanism.** Amendment under discussion; see the reply on #64.
+
 ### ✅ Guinea-pig A extended past the sprint (`W1-D7-08`) — one clock still running
+
+**2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
+
+## Earlier D8-03 publication snapshot
+
+**W2-D8-03 — In progress: published for shared review in [PR #60](https://github.com/Fatihmaull/evergreen/pull/60).** Rakha approved distinct incomplete-information exit 3 and explicit `--no-data-keys`, following Fatih's [Issue #44 review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5589189730). Precedence is error 2, incomplete 3, observed low TTL 1, healthy declared scope 0. The assertion is caller-provided and mutually exclusive with a keys file; an empty file or legacy result without coverage stays unknown (3). JSON retains mixed findings. No exit code authorizes a transaction. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) is Proposed, pending Fatih/shared review; it includes the downstream sweep. Existing Issue #44 covers this correction; no new task or duplicate Issue is introduced.
+
+**Validation:** `pnpm check` passed **143 offline tests** (107 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence), typecheck, lint, formatting, conflict and task-ID checks. An initial direct Vitest run used stale W1 build output after branch switching; rebuilding through typecheck resolved it. [Sep 9 read-only capture](evidence/2026-09-09-scan-coverage/README.md) verifies real CLI exit 3 at ledger 4,580,470 for A without data keys, with healthy instance/code. Offline replay of the unchanged Sep 8 four-entry JSON still returns 0; declared-empty and mixed/error cases are covered by fixtures. No transaction or B/C read/change was made.
+
+**Publication:** Rakha reviewed the result and authorized publication. The implementation is pushed at `0c1bff9` in PR #60 against main, with review requested from @Fatihmaull. The [Issue #44 reply](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5595727891) addresses the W1 recovery, coverage/exit-code proposal, rounded drift interpretation and release timing. ADR-006 remains Proposed; both PRs and the shared Issue remain open. GitHub CI is checked separately on the final publication commits; the 143-test result above is local validation. No merge or release is claimed.
+
+**W1 review:** [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) is open against main, with the reviewed follow-up published through `e736dbf`. Its combined tree passed 70 offline tests; only Markdown publication tracking changed afterward. The updated PR description removes the obsolete stacked-base instructions and records ADR-005 acceptance. D7-04 remains In progress for shared closeout acceptance; this branch's stale Pending row is corrected accordingly. #59 remains separate; the Issue reply requests qualifying its exact-cadence wording. No fresh B/C measurement is claimed.
+
+**Mirror:** publication sync completed and was read back for exact IDs D8-03 (Rakha) and D7-04 (Shared), both In progress, plus the Proposed ADR-006 Decisions entry. Notes link PR #60/#57 and the Issue #44 response, distinguishing implementation from shared acceptance and merge. GitHub CI and Pages passed on implementation `0c1bff9` and W1 publication `e736dbf`; final Markdown tracking is checked on its own head. Task Tracker remains a weekly snapshot.
+
+## Initial D8-03 implementation — Sep 8 snapshot
+
+**W2-D8-03 — Done (Rakha), review PR/merge pending:** implemented on `feat/W2-D8-03-scan-entry-types` from main `321656b`. `scanContract` discovers instance/Wasm and reads explicit persistent/temporary LedgerKeys through `--keys-file`. It reports known-key coverage, batches at 200 keys, preserves each response's ledger and successful partial results, and diagnoses invalid/missing/unsupported observations. CLI exit 0 applies only to supplied/discovered keys; no data keys or unavailable TTL yields 1, invalid input/response or RPC failure yields 2. Shared types add optional coverage and the `unsupported-executable` issue kind; existing type consumers still compile. No transaction path is added.
+
+**Validation:** `pnpm check` passed conflict/task-ID checks, typecheck (including shared-type examples), lint, formatting and **125 offline tests** (89 workspace + 11 TTL + 9 scheduler + 9 email + 7 persistence). Initial lint issues were fixed; a sandbox `spawnSync git EPERM` was resolved by running the same offline gate with subprocess permission. [Read-only Testnet evidence](evidence/2026-09-08-scan-entry-types/README.md) captured the compiled CLI returning all four A entry types at ledger 4,572,053, no issues, exit 0. Raw network-check/entry responses and input/output files are retained; each output TTL was compared with the raw response. No B/C changes or new transactions occurred. All 52 local documentation links resolve; all three architecture diagrams parse/render, and the changed scan diagram was visually checked.
+
+**Tracking and next step:** D8-01/02 remain Fatih's TTL work; D8-04 remains Rakha's next Pending task (cross-contract shared-code/consumer deduplication). Exact-ID Notion validation preceded implementation; D8-03 Done and its outcome were written and read back successfully. WIP branch was published at start for ownership visibility; publication as a review PR and merge remain separate. Task Tracker is refreshed at the week gate, not for this task boundary.
+
+**W1 carry-forward:** #53 and #58 are merged; Fatih confirmed the W2 split and reporting policy in [Issue #30](https://github.com/Fatihmaull/evergreen/issues/30#issuecomment-5587139386). Closeout #57 closed without merging; original remote head `98e62e2` and synchronized local branch at `01a135c` retain the report/evidence. Its W1 completion metadata is separate from this main-based branch. W1 Task Tracker was reconciled to 48 Done / 2 In progress, all 14 Rakha tasks Done. User-confirmed workflow: Evergreen Tasks is the operational Notion backlog; Task Tracker is a dated narrative refreshed per week at week gates. Existing database sync remains at session/merge boundaries. W1-D4-09 drift checks and W1-D7-04 closeout continue; no new drift measurement is claimed.
+
+## Earlier architecture publication (since merged)
+
+## Merged W1 closeout snapshot — superseded by the current state above
+
+**2026-09-09 — published follow-up to Fatih's review (`W1-D7-04`):** reconciled remote recovery commit `1e08aeb` with local synchronization and weekly Task Tracker notes at `01a135c`. The architecture retains main's stage/atomicity content plus the local corrections recording ADR-005 acceptance and the W2 temporary-reporting boundary. Corrected the stale current task-state paragraph below. The weekly narrative policy remains in CONVENTIONS. The combined W1 tree passed `pnpm check` (70 offline tests); final follow-up edits only update Markdown. Rakha reviewed and authorized publication; the follow-up is pushed to PR #57, which remains open and unmerged. D7-04 remains In progress, with its outcome mirrored to Notion at this session boundary.
 
 A's instance, persistent and temporary entries were all nine days from expiry, which nothing in the repo recorded. **Extended 2026-09-09, authorized by Fatih, read back from the chain:**
 

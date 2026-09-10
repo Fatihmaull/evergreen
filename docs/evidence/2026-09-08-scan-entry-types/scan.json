@@ -1,0 +1,69 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "observedAtLedger": 4572053,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4712648,
+        "remainingLedgers": 140595
+      }
+    },
+    "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "observedAtLedger": 4572053,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4712658,
+        "remainingLedgers": 140605
+      }
+    },
+    "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==": {
+      "kind": "temporary",
+      "endBehavior": "deleted",
+      "contracts": [
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "observedAtLedger": 4572053,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4712659,
+        "remainingLedgers": 140606
+      }
+    },
+    "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+      "kind": "code",
+      "endBehavior": "archived",
+      "contracts": [
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      ],
+      "observedAtLedger": 4572053,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 5290829,
+        "remainingLedgers": 718776
+      }
+    }
+  },
+  "issues": [],
+  "coverage": {
+    "mode": "known-keys",
+    "dataKeysSuppliedByContract": {
+      "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 2
+    }
+  }
+}

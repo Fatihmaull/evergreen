@@ -50,8 +50,8 @@ export function readerFromFixture(path: string, options: MockOptions = {}): Ledg
   const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
   const result = (parsed as { result: { latestLedger: number; entries: unknown[] } }).result;
   const entries: RawLedgerEntry[] = result.entries.map((e) => {
-    const entry = e as { key: string; liveUntilLedgerSeq?: number };
-    return { key: entry.key, liveUntilLedgerSeq: entry.liveUntilLedgerSeq };
+    const entry = e as { key: string; xdr: string; liveUntilLedgerSeq?: number };
+    return { key: entry.key, entryXdr: entry.xdr, liveUntilLedgerSeq: entry.liveUntilLedgerSeq };
   });
   return createMockReader(result.latestLedger, entries, options);
 }
