@@ -17,6 +17,8 @@ Rakha requested the next-task plan. [D12 basic storage advice](W2-D12-01-PLAN.md
 
 **D11 remains separate:** PR #86 is open with implementation review completed and prior final checks green; Issue #87 is assigned to Fatih for D11-04 handoff, with no reply at this check. D11 runtime is not present on this planning branch because it is not merged. Its task status is In progress in its published branch/Notion even where main's checkbox still says Pending. Preserve both branches; address a concrete D11 review blocker first if one arrives. Shared CLI edits must be reconciled with #86/#87 before D12 implementation.
 
+**Planning validation:** conflict-marker and registered-task-ID checks passed (145 registered IDs); diff whitespace check passed. No runtime tests are claimed for a Markdown-only plan. Notion D12-01 was updated to In progress/planning only and D12-02 remains Pending. Full presence comparison: 145 repo IDs / 146 Notion rows, no missing IDs; sole extra is the intentionally retired Dropped predecessor ~~W3-D18-02~~. The plan is published on its branch, with no PR or merge.
+
 ## Earlier main snapshots
 
 ## 🔚 Session 1 ends here — 2026-09-10

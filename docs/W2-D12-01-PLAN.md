@@ -101,6 +101,10 @@ The report is added as `optimization` to CLI JSON, alongside the unchanged `entr
 Required behavioral assertions on fixture-built reports include:
 
 ```ts
+// scan is produced from the recorded four-entry fixture via the existing mock reader.
+const report = analyzeStorage(scan, {});
+const persistentKey = Object.keys(scan.entries).find(key => scan.entries[key]?.kind === 'persistent')!;
+const instanceKey = Object.keys(scan.entries).find(key => scan.entries[key]?.kind === 'instance')!;
 expect(report.scope).toBe('observed-keys-only');
 expect(report.findings.filter(f => f.code === 'shared-code-dependency')).toHaveLength(1);
 expect(report.findings.find(f => f.entryKey === persistentKey)?.currentRent)
