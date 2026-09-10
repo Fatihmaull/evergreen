@@ -11,6 +11,18 @@
 
 ## Current — W2-D11-01 implementation, 2026-09-10
 
+**Implementation ready for Rakha review; task remains In progress.** The WIP branch `feat/W2-D11-01-manual-extend` implements instance/default and explicit-key extension, public-payer simulation, per-entry capped targets, aggregate fee limits, local guarded signing, one-shot submission, bounded exact-hash polling and TTL post-verification. Live execution needs explicit submit/key-variable/budget flags. Main #82/#83 (config and coverage) is integrated at `25ed1fc`; the manual command keeps explicit payer selection. No PR, merge, real signature or live submission is claimed.
+
+**Verified evidence:** actual unsigned CLI simulation on A's instance at ledger 4,601,296 resolved 1,424,293 + 1,000 to target 1,425,293 with a 15,073-stroop envelope fee. [Raw RPC and CLI bundle](evidence/2026-09-10-manual-extend-simulation/README.md) records the allowlisted read/simulation methods; shared Wasm was only read, not selected for extension. D11-02/03 remain Pending for a separately reviewed live request.
+
+**Coordination:** Fatih accepted the D11-04 boundary in [#69](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615849537). His task waits for the published stable seam: `runExtendCli` delegates to `executeExtensions`, where only `submit === true` can resolve a signer. D11-04 owns explicit dry-run flag/help and independent no-sign/no-send acceptance checks. A branch handoff is enough; no ready PR is required to start his work.
+
+**Source-verified correction within D11:** Stellar core rejects extendTo above maxEntryTTL minus one, and uses inclusionLedger plus extendTo as the new expiry floor. The shared target helper, cost cap display and primer are corrected together; regression tests distinguish the setting from the operation ceiling. No transaction at the ceiling was sent.
+
+**Validation:** final `pnpm check` passed on the #82/#83-integrated tree: 375 Vitest + 36 Node tests (411 total), typecheck, lint, formatting and repo guards. `pnpm test:coverage` also passed: 92.41% statements, 86.47% branches, 92.03% functions, 94.19% lines, with #83 thresholds unchanged. The first coverage run found branches at 83.93%, below 84%; added tests cover confirmed/failed/malformed responses, unsigned sends, missing budgets and actual CLI dispatch. All-ID mirror presence is 145 registered / 146 rows: no missing IDs or duplicates, only the intentionally retired Dropped predecessor ~~W3-D18-02~~. This final tracking edit records verified results; the implementation remains unmerged branch work.
+
+### Implementation start record
+
 Rakha approved execution of the reviewed plan. Implementation starts on `feat/W2-D11-01-manual-extend` from the #81-integrated plan. D11-01 is In progress; D11-02/03 remain Pending and no live transaction is authorized by this step. D11-04 remains Fatih-owned: the core default simulation belongs in D11-01; his explicit dry-run flag/help and independent acceptance checks will use the same execution seam. A #69 start notice answers that work begins now, ahead of Monday; it is not a completion/merge promise.
 
 ### Earlier planning snapshots

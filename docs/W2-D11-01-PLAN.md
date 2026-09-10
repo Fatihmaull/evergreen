@@ -15,7 +15,11 @@
 Execution correction: the largest operation target is `maxEntryTtl - 1`, not the setting itself. The shared helper is corrected at its single source; see the primer for the Stellar core validation rule. Existing checkboxes remain the original execution checklist; the delivery record in STATUS distinguishes implemented behavior, validation and pending live evidence.
 Base: `origin/main` at `ebe8e15` (#81), integrated into the existing planning branch `docs/W2-D11-01-plan-and-sync`. #80 supplies the cost helpers. Implementation branch, once execution starts: `feat/W2-D11-01-manual-extend`, retaining the reviewed planning changes.
 
-## Current coordination and scope
+## Execution status — 2026-09-10
+
+The user approved implementation and [the start notice is published in #69](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615613217). [Fatih accepted the ownership boundary](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615849537). Steps 1–4 are implemented; the unsigned A simulation, full 411-test check and coverage gate pass. The implementation branch incorporates #82/#83. Step 5 is at Rakha result review; no PR or live transaction has been performed. The checklist below is the original execution recipe, not a claim that its publication/live steps have occurred.
+
+## Planning snapshot — coordination and scope
 
 #81 is merged. D11 remains critical path; D12 is reduced to basic flags and is outside this implementation. The dashboard write path and its wallet spike were cut; neither is a dependency of manual CLI extension.
 

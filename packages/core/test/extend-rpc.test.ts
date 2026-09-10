@@ -39,6 +39,37 @@ function fakeServer() {
   };
 }
 describe('extension RPC envelope', () => {
+  it('distinguishes confirmed success from a failed transaction', async () => {
+    const hash = 'a'.repeat(64);
+    const server = {
+      getTransaction: vi.fn(async () => ({ status: 'SUCCESS', txHash: hash, ledger: 1002 })),
+    };
+    expect(await confirmExtension(server, hash)).toEqual({ status: 'confirmed', ledger: 1002 });
+    server.getTransaction.mockResolvedValue({ status: 'FAILED', txHash: hash, ledger: 1002 });
+    expect(await confirmExtension(server, hash)).toEqual({ status: 'failed' });
+  });
+  it('refuses malformed confirmation status/ledger and invalid poll bounds', async () => {
+    const hash = 'a'.repeat(64);
+    const server = {
+      getTransaction: vi.fn(async () => ({ status: 'SUCCESS', txHash: hash, ledger: NaN })),
+    };
+    await expect(confirmExtension(server, hash)).rejects.toThrow('inclusion ledger');
+    server.getTransaction.mockResolvedValue({ status: 'PENDING', txHash: hash, ledger: 1002 });
+    await expect(confirmExtension(server, hash)).rejects.toThrow('Unknown');
+    await expect(confirmExtension(server, hash, { attempts: 0 })).rejects.toThrow('bound');
+  });
+  it('refuses a payer account mismatch before simulation', async () => {
+    const server = fakeServer();
+    server.getAccount.mockResolvedValue(new Account(Keypair.random().publicKey(), '12'));
+    await expect(prepareExtension(server, ENTRY, SOURCE)).rejects.toThrow('payer');
+    expect(server.simulateTransaction).not.toHaveBeenCalled();
+  });
+  it('refuses unsigned submission before any network send', async () => {
+    const server = fakeServer();
+    const p = await prepareExtension(server, ENTRY, SOURCE);
+    await expect(submitExtension(server, p, p.transactionXdr)).rejects.toThrow('Signed envelope');
+    expect(server.sendTransaction).not.toHaveBeenCalled();
+  });
   it('refuses a selection that expired before simulation completed', async () => {
     const server = fakeServer();
     const value = await server.simulateTransaction();

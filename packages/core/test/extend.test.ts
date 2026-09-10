@@ -144,6 +144,42 @@ function executionDependencies() {
   };
 }
 describe('extension execution safety', () => {
+  it('does not turn an unconfirmed hash into success or attempt the next entry', async () => {
+    const deps = {
+      ...executionDependencies(),
+      confirm: vi.fn(async () => ({ status: 'unconfirmed' as const })),
+    };
+    const p = planExtension(await atRemaining(), { ...options, dataKeys: [dataKeys[0]!] });
+    const result = await executeExtensions(
+      p,
+      { payer: 'manual', submit: true, maxFeeStroops: '1200' },
+      deps,
+    );
+    expect(result.records[0]?.outcome).toBe('submitted');
+    expect(result.unattempted).toEqual([dataKeys[0]]);
+    expect(deps.readAfter).not.toHaveBeenCalled();
+    expect(deps.submit).toHaveBeenCalledTimes(1);
+  });
+  it('does not start a live request without a fee budget', async () => {
+    const deps = executionDependencies();
+    const p = planExtension(await atRemaining(), options);
+    await expect(executeExtensions(p, { payer: 'manual', submit: true }, deps)).rejects.toThrow(
+      'fee budget',
+    );
+    expect(deps.prepare).not.toHaveBeenCalled();
+    expect(deps.signer).not.toHaveBeenCalled();
+  });
+  it('records a rejected submission as failure while preserving its known hash', async () => {
+    const deps = executionDependencies();
+    deps.submit.mockResolvedValue({ status: 'ERROR', hash: 'a'.repeat(64) });
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual', submit: true, maxFeeStroops: '600' },
+      deps,
+    );
+    expect(result.records[0]).toMatchObject({ outcome: 'failed', transactionHash: 'a'.repeat(64) });
+    expect(deps.confirm).not.toHaveBeenCalled();
+  });
   it('defaults to simulation without resolving any signer or sending', async () => {
     const deps = executionDependencies();
     const p = planExtension(await atRemaining(), options);

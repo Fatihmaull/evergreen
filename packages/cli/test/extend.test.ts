@@ -23,6 +23,31 @@ function dependencies() {
   };
 }
 describe('extend CLI contract', () => {
+  it('routes extend through the real top-level dispatcher without starting scan', async () => {
+    const connect = vi.fn(async () => {
+      throw new Error('scan must not connect');
+    });
+    const extend = dependencies();
+    const result = await runCli(['extend', A, '--ledgers', '20', '--json'], {
+      connect,
+      readKeysFile: async () => '',
+      now: () => new Date(),
+      extend,
+    });
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout).result.mode).toBe('dry-run');
+    expect(connect).not.toHaveBeenCalled();
+    expect(extend.run).toHaveBeenCalledTimes(1);
+  });
+  it('shows extend-specific help without requiring runtime dependencies', async () => {
+    const connect = vi.fn(async () => {
+      throw new Error('must not connect');
+    });
+    const deps = { connect, readKeysFile: async () => '', now: () => new Date() };
+    expect((await runCli(['extend', '--help'], deps)).stdout).toContain('--max-fee-stroops');
+    expect((await runCli(['extend', A], deps)).exitCode).toBe(2);
+    expect(connect).not.toHaveBeenCalled();
+  });
   it('advertises extension help without connecting', async () => {
     const connect = vi.fn(async () => {
       throw new Error('must not connect');
