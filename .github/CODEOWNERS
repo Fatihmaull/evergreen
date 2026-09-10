@@ -1,17 +1,21 @@
+# Handles are the GitHub logins, not display names — GitHub silently ignores a
+# CODEOWNERS line naming a user who is not a collaborator, so a typo here does
+# nothing visible and routes no reviews. Both handles were wrong until Sep 9.
+
 # Default: both of us.
-*                       @fatihmaulana @rakha
+*                       @Fatihmaull @rakhargo
 
 # Fatih owns product, CLI, dashboard, and the docs a stranger reads first.
-/packages/cli/          @fatihmaulana
-/apps/dashboard/        @fatihmaulana
-/docs/PRD.md            @fatihmaulana
-/README.md              @fatihmaulana
+/packages/cli/          @Fatihmaull
+/apps/dashboard/        @Fatihmaull
+/docs/PRD.md            @Fatihmaull
+/README.md              @Fatihmaull
 
 # Rakha owns the engine, the signer path, and their setup guides.
-/packages/engine/       @rakha
-/docs/POLICY-SIGNER.md  @rakha
+/packages/engine/       @rakhargo
+/docs/POLICY-SIGNER.md  @rakhargo
 
 # The seams. Changing these ripples across both workstreams, so both review.
-/packages/shared-types/ @fatihmaulana @rakha
-/docs/adr/              @fatihmaulana @rakha
-/CLAUDE.md              @fatihmaulana @rakha
+/packages/shared-types/ @Fatihmaull @rakhargo
+/docs/adr/              @Fatihmaull @rakhargo
+/CLAUDE.md              @Fatihmaull @rakhargo

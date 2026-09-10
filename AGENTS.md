@@ -141,7 +141,7 @@ docs/
   SETUP.md              environment, accounts, service config, contract IDs
   EVIDENCE.md           grant evidence tracker (tx hashes, screenshots, links)
   POLICY-SIGNER.md      (W3) the hardened signer path for self-hosters
-  adr/                  architecture decision records (001–004)
+  adr/                  architecture decision records (001–006; 006 is Proposed)
   archive/              historical snapshots; provenance only, never authoritative
 packages/
   shared-types/         the types every module speaks
@@ -159,8 +159,10 @@ Already decided — do not relitigate without a reason and an ADR amendment:
 - **ADR-001:** the auto-bump engine is a *scheduled serverless job* (5–15 min cadence), not an always-on service.
 - **ADR-002:** policy-signer path is `stellar/passkey-kit` (Ed25519 signer + policy scoping), with OpenZeppelin smart accounts as the fallback if the Week 3 spike fails. Building a custom signer contract is out of scope for this grant.
 - **ADR-002 amendment (2026-09-04):** `extendTTL` is permissionless, so the policy signer is *not* what makes Evergreen non-custodial. Week 3 splits into Stage 1 (plain funded account, critical path) and Stage 2 (policy signer, off the critical path, still SOW-committed).
-- **ADR-003:** toolchain decided (Node 24, pnpm, Vitest); hosting, scheduler, and persistence pending W1-D5-03. Frame persistence as *atomicity*, not storage — the no-double-bump guarantee needs a real lock.
+- **ADR-003:** all three parts decided. Toolchain Node 24 / pnpm / Vitest; scheduler **GitHub Actions cron**; hosting **Cloudflare Pages** (live); persistence **PostgreSQL on Neon, deferred to W4** behind the Sep 20 proof. Frame persistence as *atomicity*, not storage — the no-double-bump guarantee needs a real lock, and repo-committed JSON is adequate history but useless as one. Only one of its three arguments is load-bearing; the ADR labels which.
 - **ADR-004:** the user always pays their own extend fees. Apex never subsidises rent. `BumpRecord` carries payer distinct from contract; config is N contracts × M payers; `Signer` is an interface resolved per payer — v1 implements no multi-tenancy but must not foreclose it.
+- **ADR-005 (accepted 2026-09-08):** shared domain types are JSON-compatible. Money is decimal text, not `number` — stroops above `MAX_SAFE_INTEGER` round silently. Explicit variants over sentinels, so "no TTL known" stays distinct from "expiring now". The `Signer` seam is **not** a security boundary.
+- **ADR-006 (Proposed, in PR #60):** `evergreen scan` exit codes separate *incomplete information* (3) from *observed low TTL* (1), precedence 2 > 3 > 1 > 0. Exit status summarises health and **never authorises a transaction.** Awaiting Fatih's acceptance.
 
 New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) and link it from STATUS.md.
 
@@ -176,6 +178,6 @@ New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) a
 
 - Behavior works against the guinea-pig testnet contract (ID in `docs/SETUP.md`).
 - Unit tests cover the logic, using fixtures rather than live RPC.
-- `pnpm typecheck && pnpm lint && pnpm test` green.
+- `pnpm check` green — it runs exactly what CI runs. Don't substitute a subset here: `pnpm typecheck && pnpm lint && pnpm test` skips three of the six gates, and a local gate weaker than the remote one is worse than no local gate. *(That exact gap shipped once already — `format:check` was in CI but not in `check`.)*
 - Docs updated if user-facing behavior changed.
 - BACKLOG.md checkbox flipped, STATUS.md updated, evidence recorded if applicable.
