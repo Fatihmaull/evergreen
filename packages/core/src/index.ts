@@ -28,6 +28,8 @@ export {
 } from './rpc.js';
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
+export { ConfigError, TESTNET_PASSPHRASE, loadConfig } from './config.js';
+export type { ConfigLoadResult } from './config.js';
 export { assessEntry, worstHealth } from './health.js';
 export { estimateRent, stroopsToXlm } from './rent.js';
 export { createSimulatingQuoter } from './rent-quoter.js';

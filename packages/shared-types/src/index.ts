@@ -207,6 +207,20 @@ export interface EvergreenConfig {
   readonly contracts: readonly (ContractRef & {
     readonly payer: PayerId;
     readonly thresholds?: Partial<BumpThresholds>;
+    /**
+     * Explicit known data keys for this contract. Additive, optional, and
+     * carried so a caller's coverage scope survives config round-tripping —
+     * ADR-006 makes coverage part of the health answer, and a config that
+     * silently dropped it would downgrade every configured scan to unknown.
+     */
+    readonly dataKeys?: readonly LedgerKey[];
+    /**
+     * Caller assertion that this contract has no data keys beyond its
+     * instance. **A declaration, never verified emptiness** (ADR-006). Only
+     * the contract's author can know it; preserved here rather than re-asserted
+     * per run so the claim has one recorded home.
+     */
+    readonly noDataKeys?: boolean;
   })[];
   /** Validate every contract's payer reference at the input boundary. */
   readonly payers: Readonly<Record<PayerId, PayerConfig>>;
