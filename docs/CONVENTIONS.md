@@ -214,6 +214,10 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - Money/fee values carry the unit too: `estimatedRentStroops`, never bare `cost`.
 - Booleans read as assertions: `isArchived`, `shouldBump`, `hasPolicySigner`.
 
+**⚠️ `remainingLedgers` and `threshold*` are matched by a lint rule.** `eslint.config.js` identifies hand-written TTL policy comparisons by *identifier name*. Renaming these silently disables a safety guard — the rename succeeds, every test passes, and the rule simply stops matching anything.
+
+That is the divergent-ID failure again: a check that stops checking rather than failing. If you rename them, update the selectors in `eslint.config.js` in the same commit, and confirm the rule still fires by planting a deliberate copy and watching lint reject it.
+
 ## Testing
 
 - Test runner is **Vitest** (ADR-003). `pnpm test` runs unit tests only.
@@ -248,6 +252,14 @@ remaining= 17279  needsAction=true   engine.isAlarm=true   cli.exit=1  agree
 At exactly the threshold, `evergreen-check` reported a **clean CI pass** while the engine alarmed. That exit code is the Action's entire contract with strangers' CI: someone else's pipeline would have gone green while their contract sat on the last ledger of its margin, and green is the answer nobody investigates. Same shape as the npm packaging defect — wrong in the direction nobody checks.
 
 **The honest tally: one caught by accident of a policy change, one caught by a grep prompted by that accident. Neither by design.** That is why the rule is now a lint rule. Grep found the third copy; grep cannot prove there is no fourth.
+
+### An `eslint-disable` for a policy rule needs the same bar as changing the policy
+
+The policy modules carry **zero** inline disables today. That property does not survive a deadline unless it is written down, because every individual disable looks justified at the moment someone writes it — and a rule with scattered disables has decayed into documentation that happens to run.
+
+**So: silencing the one-home rule requires the same scrutiny as changing the threshold semantics itself.** Not a reviewer's shrug; a decision, with a reason recorded in `STATUS.md`.
+
+The rule already fired once on legitimate code — `threshold < 0` in `assertLiveness`, which was *validation, not policy*. The right response was not a disable. It was `isValidThreshold`, which is clearer code and left the exception count at zero. **Expect that to be the usual outcome:** when this rule fires on something legitimate, the code generally wants to be clearer anyway.
 
 ### Agreement is not correctness
 
