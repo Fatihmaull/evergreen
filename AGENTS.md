@@ -172,6 +172,14 @@ New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) a
 Default to sequential work in a single thread. Sub-agents are a deliberate
 tool for defined moments, not a reflex.
 
+### The test, before the rules
+
+**Would this have caught something a targeted check could not?**
+
+That is the primary test and it decides most cases on its own. A fan-out over the whole doc tree at a week gate, yes — no grep finds "these two files contradict each other about a contract we cannot replace." A fan-out to answer what one grep answers, no.
+
+It is deliberately about the *finding*, not the procedure: the caps below are a proxy for proportionality, and a proxy is worth less than the thing it stands for. **When the test gives a clear answer, follow it. Use the caps as the fallback for when it is genuinely ambiguous** — and when you invoke a cap instead of the test, say which, because that is a signal the test needs sharpening.
+
 **Sub-agents**
 
 - Do not spawn sub-agents for routine work, or automatically for
@@ -212,7 +220,19 @@ Two things survive this section unchanged, and are not "audits" for the purposes
 - **Fresh-machine and stranger-facing checks stay.** They are cheap — a pack, an install, a scan — and they catch what internal gates structurally cannot. Six green gates said nothing about whether a stranger could install the package, because *a check that never leaves the monorepo cannot answer a question about strangers.*
 - **Verifying a finding before acting on it stays.** Running the reproduction costs a few hundred tokens and has corrected three claims this week, including two of Fatih's own and one of mine. Reading code to decide whether a claim is true is the expensive path *and* the unreliable one.
 
-The proportionality test: **would this have caught something a targeted check could not?** A fan-out over the whole doc tree at a week gate, yes. A fan-out to answer a question one grep answers, no.
+### Baseline, so the numbers mean something
+
+A cost with nothing to compare against cannot be judged. Measured on this repo, main-thread tokens from the session counter and sub-agent tokens as the workflow tool reports them:
+
+| Turn | Main thread | Sub-agents | Total |
+|---|---|---|---|
+| Ordinary sequential turn (multi-file edits, checks, commit, PR) | **~30k** | 0 | **~30k** |
+| Week-gate doc audit (5 lenses × 2 refuters, 123 agents) | ~125k | 9.26M | **~9.4M** |
+| Readiness audit (5 lenses × 2 refuters, 73 agents) | ~94k | 7.11M | **~7.2M** |
+
+**An audit turn costs roughly 250–300× an ordinary one.** Both figures are ±10% and exclude cache effects.
+
+Read that as a price, not as waste. The two audits bought the packaging defect, the public README domain error, the inert `CODEOWNERS` and the contradictory `SETUP` rules — the first of which would otherwise have shipped. **The point of the baseline is that "was this finding worth 7M tokens?" becomes a question with an answer**, instead of a cost nobody can see.
 
 ## Working style expected here
 
