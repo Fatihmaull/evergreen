@@ -11,6 +11,8 @@
 
 ## Current — W2-D11-01 implementation, 2026-09-10
 
+**Dedicated D11 handoff:** [Issue #87](https://github.com/Fatihmaull/evergreen/issues/87) now tracks W2-D11-04, assigned to and mentioning Fatih, at Rakha's request. Earlier coordination was only in the broad #69 thread. The previously missing prerequisite (published D11-01 seam) is available in PR #86; Fatih is asked to confirm start or identify the precise remaining blocker. D11-04 stays Pending, ownership unchanged. #87 tracks handoff resolution rather than automatically declaring the implementation Done; #69 remains the broad W2 discussion.
+
 **Published for review in [PR #86](https://github.com/Fatihmaull/evergreen/pull/86)** after Rakha approved publication. Base main `ed16bc2`; reviewed implementation `f162fc0`. Fatih is requested as reviewer. The PR contains the D11 command, guarded signing/submission, confirmation-envelope fix, unsigned simulation evidence and review report. D11-01 remains In progress; D11-02/03 remain Pending for the separately reviewed live proof. No merge or live transaction. D11-04 stays Fatih-owned on the agreed seam; Issue #69 remains the coordination thread. Local full check passed 414 tests and coverage passed unchanged thresholds. GitHub checks are verified against the PR's final head separately; this publication update changes tracking Markdown only.
 
 ### Pre-publication review record

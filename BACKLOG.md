@@ -259,7 +259,7 @@ Follow-up audit [#61](https://github.com/Fatihmaull/evergreen/pull/61) and A-ext
   - **The `--ledgers N` flag reads as a delta and the operation is not one.** Either resolve it to a target before building the operation (`target = currentRemaining + N`), or rename the flag. Do not pass `N` through to `extendTo`. **This is the same signing path Stage 1 ships** (`W3-D16-01`) and the one the README quickstart teaches — the capped policy signer is the Stage 2 *hardened* path (`W3-D19`), not a later replacement for it.
 - [ ] **W2-D11-02** (R) Execute on the guinea-pig contract; **capture the tx hash into `docs/EVIDENCE.md`** — this is required SOW evidence for Deliverable 2.
 - [ ] **W2-D11-03** (R) Verify TTL actually increased by re-running `scan` before/after; screenshot both.
-- [ ] **W2-D11-04** (F) Dry-run mode (`--dry-run`) that simulates without submitting. This becomes the engine's safety default in W3.
+- [ ] **W2-D11-04** (F) Dry-run mode (`--dry-run`) that simulates without submitting. This becomes the engine's safety default in W3. **Handoff: [Issue #87](https://github.com/Fatihmaull/evergreen/issues/87), assigned to Fatih.** Previously waiting for D11-01 publication; the execution seam is now available in PR #86. Pending start confirmation or a concrete remaining blocker, not marked Done or assumed still blocked.
 
 ### Day 12
 *Planned: Mon Sep 14 — may slip; the D-number does not.*
