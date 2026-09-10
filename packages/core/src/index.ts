@@ -18,7 +18,14 @@ export {
   uniqueEntryCount,
 } from './ttl.js';
 export type { EndProjection, LedgerCadence, LedgerCloseSample } from './ttl.js';
-export { NotTestnetError, codeKey, connectTestnet, createRpcReader, instanceKey } from './rpc.js';
+export {
+  NotTestnetError,
+  codeKey,
+  connectTestnet,
+  createRpcReader,
+  instanceKey,
+  isValidContractId,
+} from './rpc.js';
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
 export { assessEntry, worstHealth } from './health.js';

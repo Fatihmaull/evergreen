@@ -34,6 +34,22 @@ export class NotTestnetError extends Error {
   }
 }
 
+/**
+ * Is this a well-formed Stellar contract address?
+ *
+ * Named so callers validate at the input boundary instead of discovering a typo
+ * as an RPC issue three layers down. Answers shape only — a well-formed ID for
+ * a contract that was never deployed is still well-formed.
+ */
+export function isValidContractId(contractId: string): boolean {
+  try {
+    new Contract(contractId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Canonical base64 XDR LedgerKey for a contract's instance entry. */
 export function instanceKey(contractId: ContractId): LedgerKey {
   return new Contract(contractId).getFootprint().toXDR('base64');

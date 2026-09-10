@@ -90,6 +90,20 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **Not done unilaterally:** the backlog also asks blast radius to reach the **exit code**. ADR-006 defines 0/1/2/3 and was amended and accepted hours ago; adding or re-meaning a code is an ADR decision, not a display change. Flagged for Fatih rather than invented.
 
+## `W2-D10-03` error handling — the wrong-network message was the defect
+
+**2026-09-10.** All four named failures already exited 2 with no stack traces, so the work was not "add error handling" — it was finding which of them lied. Running each path rather than reading it found one that did.
+
+**Network mismatch and RPC-down emitted the identical sentence.** Both said *"Could not connect to Stellar Testnet. Check the RPC endpoint and network configuration."* Those are different problems with different fixes, and collapsing them hid the more important one: the testnet guard firing means you are **pointed at another network, most likely mainnet**. That is a safety event wearing a connectivity message. `NotTestnetError` already carried the actual passphrase; the CLI was swallowing it in a bare `catch`. A mainnet RPC now reports *"Refusing to run: RPC network is Public Global Stellar Network ; September 2015"* with the remedy.
+
+**Bad contract ID now fails before any network call** — a typo costs a message, not a round trip — and names the two plausible mistakes rather than only restating the rule: a truncated paste, or a `G…` account address pasted where a contract belongs. That second case is a well-formed StrKey of the wrong kind, which a length check would wave through.
+
+**An absent entry names both causes.** Archived and never-deployed are indistinguishable to a scan — RPC returns nothing either way — so the output says so explicitly and offers both remedies. Implying one would be wrong precisely when someone is trying to act.
+
+**Exercised in both directions.** The ID validator must *permit* a well-formed ID as well as refuse a malformed one; a validator that refuses everything is the `W1-D4-00` testnet guard wearing a new hat. Every failure path asserts no stack frame, file path or SDK internal reaches the user, and a malformed keys file is proven not to echo its contents — a secret pasted there by mistake must not be published in a diagnostic.
+
+**And the pipe trap caught me again, minutes after I documented it.** The first exit-code reading said `exit=0` for a failing command, because `$?` after `| tail` reports `tail`'s status. Re-measured without the pipe: 2, correctly. Writing the rule down did not stop me using the broken instrument; noticing the implausible answer did.
+
 ## 🔴 Session scope boundary — one session writes implementation this week
 
 **Set by Fatih 2026-09-10, after `#66` landed tagged `[W2-D10-01]`.** Read this before starting work.

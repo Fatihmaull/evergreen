@@ -176,6 +176,15 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
   for (const issue of result.issues) {
     lines.push(`! ${issue.kind}: ${issue.message}`);
     lines.push(`  contracts: ${issue.contracts.join(', ')}`);
+    // An absent entry has two very different causes with two different fixes,
+    // and the scan genuinely cannot tell them apart — RPC returns nothing
+    // either way. Naming both beats implying the wrong one, and beats leaving
+    // a reader to guess at the moment they are trying to act.
+    if (issue.kind === 'entry-not-found') {
+      lines.push('  This means one of two things, and a scan cannot distinguish them:');
+      lines.push('    · the entry was ARCHIVED — restore it with RestoreFootprintOp, or');
+      lines.push('    · it never existed — check the contract ID and that it is deployed here.');
+    }
     lines.push('');
   }
 

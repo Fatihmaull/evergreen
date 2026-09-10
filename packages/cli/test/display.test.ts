@@ -166,3 +166,42 @@ describe('--json health block — magnitude lives here, not in the exit code', (
     }
   });
 });
+
+describe('W2-D10-03 — an absent entry names both causes', () => {
+  it('offers restore AND never-deployed, because a scan cannot tell them apart', () => {
+    const out = formatHuman(
+      {
+        network: 'testnet',
+        contracts: [{ id: 'CONTRACT_A' }],
+        entries: {},
+        issues: [
+          {
+            kind: 'entry-not-found',
+            contracts: ['CONTRACT_A'],
+            message: 'No entry returned. Absence is not proof of archival or deletion.',
+          },
+        ],
+      },
+      NOW,
+      { thresholdLedgers: THRESHOLD },
+    );
+    expect(out).toContain('RestoreFootprintOp');
+    expect(out).toContain('never existed');
+    // It must not assert either cause — the scan does not know which.
+    expect(out).toContain('cannot distinguish them');
+  });
+
+  it('does not attach that guidance to unrelated issue kinds', () => {
+    const out = formatHuman(
+      {
+        network: 'testnet',
+        contracts: [{ id: 'CONTRACT_A' }],
+        entries: {},
+        issues: [{ kind: 'rpc-error', contracts: ['CONTRACT_A'], message: 'timeout' }],
+      },
+      NOW,
+      { thresholdLedgers: THRESHOLD },
+    );
+    expect(out).not.toContain('RestoreFootprintOp');
+  });
+});
