@@ -1,6 +1,6 @@
 # `@evergreen/dashboard`
 
-**Built in Week 4.** No framework chosen yet — that depends on the hosting decision still open in [ADR-003](../../docs/adr/ADR-003-toolchain-hosting-persistence.md) (`W1-D5-03`).
+**Built in Week 4.** Hosting is decided — **Cloudflare Pages**, live since Sep 8, per [ADR-003](../../docs/adr/ADR-003-toolchain-hosting-persistence.md) (`W1-D5-02`). The framework is still open; Pages does not constrain it, and choosing one is Week 4 work.
 
 ## Two layers
 

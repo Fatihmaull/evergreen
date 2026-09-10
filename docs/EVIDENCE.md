@@ -29,6 +29,20 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Transaction hashes
 
+### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)
+
+[Full record with before/after RPC and Horizon confirmations](evidence/2026-09-09-guinea-pig-a-extend/README.md). Three `ExtendFootprintTTLOp` transactions from `evergreen-b` (`GDGAWY72…MASE`), which holds no authority over A and needs none.
+
+| Entry | Hash | Before → after | Fee |
+|---|---|---|---|
+| instance | `f15efca7bfabed10df9ec61f5b2bcb2a8bdfdd53c16d574e0f56766b81db77c0` | 4,712,648 → **6,025,589** | 156,840 stroops |
+| persistent | `f48b7e796f9727758de59b8864320033265daf4eff72a70dc9db7183350af787` | 4,712,658 → **6,025,595** | 106,308 stroops |
+| temporary | `2963ac1e4cf818fe979dafba009d8d281424638779b0873df1a84e877f90d4fb` | 4,712,659 → **6,025,598** | 55,655 stroops |
+
+All three `successful: true`, confirmed through Horizon rather than trusted from the CLI's success message. **Total 318,803 stroops ≈ 0.032 XLM for ~83 days**, taking all three entries to ~2026-12-01 so the evidence outlives the sprint. The shared `ContractCode` entry was deliberately **not** extended — A, B and C share it, so touching it would move both decay proofs; that is `W3-D18-02d`, due after Sep 25. B and C were verified unchanged immediately afterwards.
+
+**This is a manual, disclosed extend, not an unattended-engine proof.** It belongs to the same category as the Sep 5 calibration extends: deliberate intervention, recorded as such. The unattended proof remains `W3-D18-02b`.
+
 ### 2026-09-08 — W1 review: scan snapshot and historical transaction recovery
 
 [Evidence snapshot and complete recovered inventory](evidence/2026-09-08-w1-review/README.md), prepared for `W1-D7-03`. The compiled CLI read guinea-pig A at ledger **4,570,079**, with **142,569 ledgers remaining** and final live ledger **4,712,648**. Human and JSON commands both exited 0. [Scan image](evidence/2026-09-08-w1-review/scan-output.png) presents the actual saved stdout with metadata; raw output and commands accompany it.
@@ -115,7 +129,7 @@ One thing worth stating because it is not obvious: B and C were deployed from th
 
 **`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
 
-Whether B is achievable depends on the TTL floors measured at `W1-D4-04` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
+Whether B is achievable depends on the TTL floors measured at `W1-D4-04b` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
 
 > ⚠️ **Guinea-pig B must stay OUT of the engine's watched-contract config until the moment of proof.** If it lands in the config during Week 3 testing, the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
 

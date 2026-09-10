@@ -112,10 +112,41 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 | Contract ID | `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` |
 | Deployed | 2026-09-05, by account A (`GBRGOJUA…MWLZ`) |
 | Remaining TTL at initial sample | instance/code/persistent ≈ 120,927 ledgers · temporary 688 ledgers; these are sampled remainders, not network minimums — see [the correction](SOROBAN-PRIMER.md#measured-ttl-floors) |
-| Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 |
+| Extended | 2026-09-05 during `W1-D4-06`, to ledger ≈ 4,712,650 · **2026-09-09 during `W1-D7-08`, to ~6,025,590** |
 | Redeploy script | `./scripts/deploy-guinea-pig.sh A` |
 
-> Deployed during `W1-D4-06` and already used for the permissionless verification, so its TTL has been extended once. That is fine — A is the working subject and is expected to be bumped, broken, and redeployed.
+> Deployed during `W1-D4-06` and already used for the permissionless verification, so its TTL has been extended twice. That is fine — A is the working subject and is expected to be bumped, broken, and redeployed.
+
+#### A's horizon — the dates that matter
+
+| Entry | Live until ledger | Projected expiry | On expiry |
+|---|---|---|---|
+| instance | **6,025,589** | 2026-12-01 19:18 UTC | archived |
+| persistent | **6,025,595** | 2026-12-01 19:18 UTC | archived |
+| temporary | **6,025,598** | 2026-12-01 19:18 UTC | **deleted — unrecoverable** |
+| code *(shared with B and C)* | 5,290,829 | **2026-10-20 06:38 UTC** | archived |
+
+> ### 🔴 One ledger entry is the real expiry date of everything we built
+>
+> **Ledger `5,290,829` ≈ 2026-10-20 06:38 UTC is not "A's code entry". It is the expiry of the whole project's demonstrable state.** A, B and C share it, so on that date all three contracts become unusable at once — and with them every artifact that points at any of them: both decay proofs, all four evidence snapshots, the scan screenshots, the demo video's contract, the README's reproduction command, and PR #60's four-entry capture. The three December dates in the table above do not protect any of that; this one number governs it.
+>
+> That date is **eighteen days after the sprint ends**, and attention stops on Oct 2. Scheduled as `W3-D18-02d` on **Sat Sep 26** — the first day the decay proofs are captured and the constraint lifts, and the last day everyone is still looking. Extend to `max_entry_ttl` (180 days, reaching ~2027-03-25, the protocol ceiling) and take A's other three entries to the same date while you are there.
+>
+> ### 📅 Reading this in early 2027? The engine should already have handled it.
+>
+> **~2027-03-25 is a real deadline with nobody watching**, six months past any horizon a person is holding in their head — which is the exact failure that produced this whole section. Extending to the ceiling does not remove that problem; it postpones it by 180 days, because 180 days is all the protocol allows in one operation.
+>
+> **The fix is not a longer extend, it is `W3-D15-01b`:** guinea-pig A is the engine's first monitored contract, and B and C join it once their proofs are captured. Once that ships, **the next extend is the product's job rather than a human's** — the engine watches the shared code entry like any other ledger key and bumps it before the threshold, without anyone remembering to.
+>
+> So if you are here in February 2027 wondering whether to extend by hand: **first check whether the engine is running and A/B/C are in its watched config.** If they are, this is already handled and the entry will show a fresh `liveUntilLedgerSeq`. If they are not, extend by hand *and* fix that, because the manual extend buys another 180 days of the same exposure.
+>
+> ### ⚠️ A's code entry is the one still on a clock — and it is not A's alone
+>
+> All three guinea-pigs were built from the same Wasm (`c7e55f0a…98bfb`, verified by fetching and hashing each contract independently on 2026-09-09), so **they share a single `ContractCode` ledger entry.** "Extending A's code" is not a thing that can be done — it extends B's and C's at the same time, which is why the three extends on Sep 9 named every ledger key explicitly with `--key-xdr` instead of relying on `--id` alone.
+>
+> **A contract is only as alive as its code entry**, so A becomes unusable on **2026-10-20** regardless of the three dates above. That is deliberate for now: both decay proofs are still live, and `SETUP` forbids touching the shared entry while they are. **Extend it after Sep 25**, once B's and C's proofs are captured — at which point the shared entry is nobody's constraint. Tracked as `W3-D18-02d`.
+>
+> Full record, including before/after RPC and Horizon confirmations: [`W1-D7-08` evidence](evidence/2026-09-09-guinea-pig-a-extend/README.md).
 
 ### B — the natural-decay subject ⚠️
 
@@ -152,11 +183,11 @@ Deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and then left al
 >
 > If Sep 12–13 arrives with genuine slack, deploying a pure third contract as a bonus is cheap, and whichever reads better can be used. That is opportunistic — **B is the plan.**
 
-> ### ⚠️ Guinea-pig B must stay OUT of the engine's watched-contract config
+> ### ⚠️ An accidental bump of B or C destroys the proof
 >
-> If B ends up in `evergreen.config.json` during Week 3 testing, the engine will dutifully bump it — and destroy the very thing it was deployed to demonstrate. Weeks of aging, gone, with no way to get them back inside the sprint.
+> If B ends up watched by an engine whose threshold is wrong, the engine will dutifully bump it — and destroy the very thing it was deployed to demonstrate. Weeks of aging, gone, with no way to get them back inside the sprint.
 >
-> The config file carries a comment saying so. **Do not add B to it until the moment of proof.** Losing this to an accidental bump would be an entirely self-inflicted way to lose the grant's best evidence.
+> **This is not "keep B out of the config".** That was the rule before calibration existed, and it is superseded — see [§ Putting B and C into the engine config](#putting-b-and-c-into-the-engine-config) below, which is the procedure to follow. Calibrated against a matching threshold, the engine correctly does nothing until the crossing; the danger is a *mismatched threshold*, not the config entry. Adding them is a deliberate, verified step: add, dry-run, confirm no action needed, only then run live.
 
 ### Building and deploying them
 
@@ -224,9 +255,9 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 | Service | Purpose | Account/owner | Status |
 |---|---|---|---|
 | GitHub | repo, CI, Action publishing | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ public, MIT, CI green |
-| npm | `evergreen` packages | *(W1-D5-01 — see below)* | ⬜ |
-| Hosting (Vercel/Netlify/Cloudflare) | dashboard | *(W1-D5-02)* | ⬜ |
-| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | ✅ manual and genuine scheduled Testnet reads verified; evidence published in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27), awaiting merge |
+| npm | `@evergreen-stellar/cli` + `/core` | org **`evergreen-stellar`** owned (`W1-D5-01`) | ✅ scope owned, so nothing in it can be squatted; `publishConfig.access=public` set. Publication itself is `W4-D27-02`, **not** Sep 16 |
+| Cloudflare Pages | dashboard | `evergreen-stellar` (`W1-D5-02`) | ✅ live, HTTP 200 verified |
+| GitHub Actions + Node 24 | read-only scheduler smoke; engine later | same repository (`W1-D5-03`) | ✅ manual and genuine scheduled Testnet reads verified; evidence merged in [PR #27](https://github.com/Fatihmaull/evergreen/pull/27) on Sep 7 |
 | Resend | local email smoke; engine alerts later | `W1-D5-04` | ✅ one local email accepted (HTTP 200) and inbox receipt confirmed; [evidence](evidence/2026-09-07-email-smoke/README.md) |
 | Shared drive | evidence (screenshots, video) | *(W1-D5-06)* | ⬜ |
 

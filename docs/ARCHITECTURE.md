@@ -103,7 +103,7 @@ The [RPC adapter](../packages/core/src/rpc.ts) isolates SDK entry reads behind `
 
 ### `packages/cli` — `evergreen`
 
-The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package name and install/`npx` instructions remain subject to the npm setup decision (`W1-D5-01`); the executable can remain `evergreen` through its `bin` mapping.
+The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package is **`@evergreen-stellar/cli`** (`W1-D5-01`, org owned), installed as `npx @evergreen-stellar/cli`; the executable stays `evergreen` through its `bin` mapping. Publication is `W4-D27-02`.
 
 ### `packages/engine`
 
