@@ -18,9 +18,7 @@ export interface ExtensionRpc {
   getAccount(address: string): Promise<Account>;
   simulateTransaction(tx: Transaction): Promise<rpc.Api.SimulateTransactionResponse>;
   sendTransaction(tx: Transaction): Promise<{ status: string; hash: string }>;
-  getTransaction(
-    hash: string,
-  ): Promise<{
+  getTransaction(hash: string): Promise<{
     status: string;
     txHash?: string;
     ledger?: number;
