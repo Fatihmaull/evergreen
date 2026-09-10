@@ -30,14 +30,23 @@ const BACKLOG = 'BACKLOG.md';
 const ROOTS = ['docs', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
 const SKIP = ['archive', 'node_modules'];
 
-// A registered task is one with a checkbox in BACKLOG.
-const REGISTERED = new Set(
-  [
-    ...readFileSync(BACKLOG, 'utf8').matchAll(
-      /^- \[.\] \*\*(W\d-D\d+-[0-9a-c]+|F-\d+|B-D\d+-\d+)\*\*/gm,
-    ),
-  ].map((m) => m[1]),
-);
+// A registered task is one with a checkbox in BACKLOG...
+const backlog = readFileSync(BACKLOG, 'utf8');
+const ID = String.raw`W\d-D\d+-[0-9a-c]+|F-\d+|B-D\d+-\d+`;
+
+// ...or a row in § Recurring obligations. A standing obligation is tracked work
+// with a closing condition rather than a weekly checkbox, so it is registered
+// even though it will never carry one. Added 2026-09-10 when W1-D4-09 moved out
+// of the Week 1 count and this checker correctly called every reference to it
+// dangling — the ID was still tracked, just not in the shape the regex knew.
+const afterHeading = backlog.split(/^## Recurring obligations$/m)[1] ?? '';
+// Up to the next top-level heading, or the rest of the file if it is the last section.
+const recurring = afterHeading.split(/^## /m)[0];
+
+const REGISTERED = new Set([
+  ...[...backlog.matchAll(new RegExp(String.raw`^- \[.\] \*\*(${ID})\*\*`, 'gm'))].map((m) => m[1]),
+  ...[...recurring.matchAll(new RegExp(String.raw`\*\*\`?(${ID})\`?\*\*`, 'g'))].map((m) => m[1]),
+]);
 
 // Any delimiter. Trailing guard stops a prefix matching a longer ID.
 const REF = /\b(W\d-D\d+-\d+[a-c]?|F-\d{2}|B-D\d+-\d+)\b(?![-\w])/g;
