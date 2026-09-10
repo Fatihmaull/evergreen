@@ -2,12 +2,22 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · W2 day 8: D8/D9/D10/D13/D14-01/02 done; D11–D12 with Rakha
+**Last updated:** 2026-09-10 · Rakha planning D12; D11 remains published separately
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
+
+## Current — W2-D12-01 planning only
+
+Rakha requested the next-task plan. [D12 basic storage advice](W2-D12-01-PLAN.md) is on `docs/W2-D12-01-optimizer-plan`, created directly from `origin/main` `ed16bc2` (#85), not stacked on D11. D12-01 is In progress for planning; D12-02 remains Pending. No runtime edit, optimizer implementation, new live read, quote or transaction. The plan proposes opt-in `scan --optimize`, pure core recommendations, optional reuse of existing per-key cost quotes, and unchanged scan exits.
+
+**Evidence boundaries:** existing health/sharing warnings must not merely be duplicated. Basic advice uses observed key metadata, historical rent comparisons and current-or-labelled-historical settings; no oversized/byte-duplicate claims without payload evidence. Corrected the D12 row's conflation of sampled remaining TTL (688/120,927) with configured minimum lifetime (720/120,960). The plan distinguishes same encoded size from identical contents, isolated adjacent-ledger deletion proof from B's later absence, and historical rent from current savings. No rule change to W3 temporary retention policy.
+
+**D11 remains separate:** PR #86 is open with implementation review completed and prior final checks green; Issue #87 is assigned to Fatih for D11-04 handoff, with no reply at this check. D11 runtime is not present on this planning branch because it is not merged. Its task status is In progress in its published branch/Notion even where main's checkbox still says Pending. Preserve both branches; address a concrete D11 review blocker first if one arrives. Shared CLI edits must be reconciled with #86/#87 before D12 implementation.
+
+## Earlier main snapshots
 
 ## 🔚 Session 1 ends here — 2026-09-10
 

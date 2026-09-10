@@ -135,6 +135,7 @@ The asymmetry is the finding. **B and C had a drift check running twice a week; 
 
 | Date | Who | Doing what | What the doc did not give me |
 |---|---|---|---|
+| 2026-09-10 | Rakha | Planning W2-D12-01 | The cut names three basic flags but retains oversized/duplicated wording despite ScanResult lacking payload/size data. The task also labels sampled remaining TTL as a fresh-entry floor; historical fee/deletion prose overstates what the numerical fields and isolated proof establish. The plan states evidence-qualified scope and the backlog corrects the floor wording. |
 | 2026-09-10 | Session 1 | Registering `W1-D4-09` as a recurring obligation | `CONVENTIONS.md` § Task status defines five states and says recurring work is `[~]`. It has no state for *"standing obligation, outside the weekly count"* — the concept did not exist until it was needed, so the backlog had to grow a new section rather than the docs answering the question. |
 | 2026-09-10 | Session 1 | Same task | `scripts/check-task-ids.mjs` documents what it catches and what it deliberately cannot, but nothing said **what shape makes an ID "registered"** — a checkbox line. Registering a task any other way silently produced dangling references in two files. The constraint was discoverable only by tripping it. |
 
