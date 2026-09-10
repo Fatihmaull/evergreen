@@ -153,7 +153,7 @@ export function analyzeStorage(
         action:
           'Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.',
         rationale:
-          'Historical A rent was about 1.95x higher for persistent than temporary at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents.',
+          'Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents.',
       });
     }
   }
