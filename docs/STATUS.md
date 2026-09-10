@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · Rakha synchronized main; D11 planning only
+**Last updated:** 2026-09-10 · Rakha implementing W2-D11-01
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — Rakha synchronization and D11 planning, 2026-09-10
+## Current — W2-D11-01 implementation, 2026-09-10
+
+Rakha approved execution of the reviewed plan. Implementation starts on `feat/W2-D11-01-manual-extend` from the #81-integrated plan. D11-01 is In progress; D11-02/03 remain Pending and no live transaction is authorized by this step. D11-04 remains Fatih-owned: the core default simulation belongs in D11-01; his explicit dry-run flag/help and independent acceptance checks will use the same execution seam. A #69 start notice answers that work begins now, ahead of Monday; it is not a completion/merge promise.
+
+### Earlier planning snapshots
 
 **D11 plan revision after #81:** integrated `origin/main` at `ebe8e15` into the existing planning branch. [D11-01 plan](W2-D11-01-PLAN.md) now defines the file map, sequential implementation/test checkpoints, public payer and aggregate fee-cap options, signing/confirmation rejection tests, and the review/publication boundary. D11-01 stays In progress for planning; no runtime code or live transaction. D12's basic-only cut from #81 is preserved. Fatih's new #69 request for Monday branch availability needs an explicit answer; a draft ownership/boundary reply is in the plan and has not been sent. No calendar commitment or D11-04 ownership transfer has been made. Rakha confirmed npm username coordination happened directly; this does not assert the invitation or publishing access is complete.
 
