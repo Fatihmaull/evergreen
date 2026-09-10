@@ -96,3 +96,32 @@ describe('resolveExtendTarget — the CLI absorbs delta-to-target', () => {
     ).toThrow(/from the network/);
   });
 });
+
+describe('readStateArchivalSettings — the network path', () => {
+  it('reads and decodes the config entry the chain returns', async () => {
+    const { readStateArchivalSettings } = await import('../src/network-config.js');
+    const { xdr } = await import('@stellar/stellar-sdk');
+    const fake = {
+      getLedgerEntries: () =>
+        Promise.resolve({
+          latestLedger: 4_600_000,
+          entries: [
+            { val: xdr.LedgerEntryData.fromXDR(recorded.result.entries[0]!.xdr, 'base64') },
+          ],
+        }),
+    } as unknown as Parameters<typeof readStateArchivalSettings>[0];
+    const s = await readStateArchivalSettings(fake);
+    expect(s.maxEntryTtl).toBe(3_110_400);
+    expect(s.observedAtLedger).toBe(4_600_000);
+  });
+
+  it('🔴 refuses an empty response rather than defaulting the ceiling', async () => {
+    // Defaulting max_entry_ttl would be a hardcoded constant sneaking back in
+    // through an error path — and the primer says it is network configuration.
+    const { readStateArchivalSettings } = await import('../src/network-config.js');
+    const empty = {
+      getLedgerEntries: () => Promise.resolve({ latestLedger: 1, entries: [] }),
+    } as unknown as Parameters<typeof readStateArchivalSettings>[0];
+    await expect(readStateArchivalSettings(empty)).rejects.toThrow(/no state-archival config/);
+  });
+});

@@ -12,6 +12,8 @@
   "packageManager": "pnpm@11.25.0",
   "scripts": {
     "typecheck": "tsc --build --force && pnpm typecheck:shared-types",
+    "build": "tsc --build",
+    "cli": "pnpm build && node packages/cli/dist/bin.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
