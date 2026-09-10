@@ -4,6 +4,7 @@ import type { ScanResult } from '@evergreen-stellar/shared-types';
 import { scanContract } from '../src/scan-contract.js';
 import { readerFromFixture } from './mock-rpc.js';
 import { analyzeStorage } from '../src/optimizer.js';
+import { coverageIssues } from '../src/health.js';
 import type { StorageAdviceContext } from '../src/optimizer.js';
 
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
@@ -19,6 +20,22 @@ async function scan(): Promise<ScanResult> {
 }
 const settings = { minTemporaryTtl: 720, minPersistentTtl: 120960, observedAtLedger: 4519665 };
 describe('basic storage advice', () => {
+  it('retains code advice for advisory sharing issues but suppresses real read failures', async () => {
+    const s = await scan();
+    const key = Object.keys(s.entries).find((k) => s.entries[k]?.kind === 'code')!;
+    const advisory = { ...s, issues: coverageIssues(s) };
+    const report = analyzeStorage(advisory, {});
+    expect(report.findings.find((f) => f.entryKey === key)?.code).toBe('shared-code-dependency');
+    expect(report.limitations.join(' ')).not.toContain('missing or unreadable');
+    const failed = {
+      ...advisory,
+      issues: [
+        ...advisory.issues,
+        { kind: 'rpc-error' as const, contracts: [A], entryKey: key, message: 'unreadable' },
+      ],
+    };
+    expect(analyzeStorage(failed, {}).findings.some((f) => f.entryKey === key)).toBe(false);
+  });
   it('sanitizes malformed quote maps and null optional settings', async () => {
     const s = await scan();
     for (const quote of [

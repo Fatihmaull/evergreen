@@ -102,7 +102,11 @@ export function analyzeStorage(
       : {}),
   };
   const findings: StorageAdvice[] = [];
-  let unreadable = scan.issues.length > 0;
+  // Coverage/sharing caveats describe successful reads; they are not unreadable entries.
+  const readIssues = scan.issues.filter(
+    (i) => i.kind !== 'coverage-limited' && i.kind !== 'sharing-undetermined',
+  );
+  let unreadable = readIssues.length > 0;
   for (const [entryKey, entry] of Object.entries(scan.entries)) {
     if (
       entry.ttl.status !== 'known' ||
@@ -110,7 +114,7 @@ export function analyzeStorage(
       !ledger(entry.ttl.endsAtLedger) ||
       !Number.isSafeInteger(entry.ttl.remainingLedgers) ||
       entry.ttl.remainingLedgers !== entry.ttl.endsAtLedger - entry.observedAtLedger ||
-      scan.issues.some((i) => i.entryKey === entryKey)
+      readIssues.some((i) => i.entryKey === entryKey)
     ) {
       unreadable = true;
       continue;
