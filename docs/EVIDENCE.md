@@ -85,6 +85,10 @@ On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a project
 
 ---
 
+## Manual extension simulation — W2-D11-01
+
+2026-09-10: [unsigned CLI simulation on A's instance](evidence/2026-09-10-manual-extend-simulation/README.md), exit 0. At ledger 4,601,296, remaining TTL 1,424,293 plus requested 1,000 resolved to 1,425,293; prepared fee 15,073 stroops. The bundle contains exact RPC request/response text, CLI JSON and stderr. The capture rejects all methods except Testnet network/entry reads and simulation. No signature or send occurred; the prepared hash is not a transaction receipt. **D11-02/03 live evidence remains Pending.**
+
 ## Transaction hashes
 
 ### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)

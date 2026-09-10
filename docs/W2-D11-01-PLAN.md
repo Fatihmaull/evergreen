@@ -10,7 +10,9 @@
 
 **Spec:** BACKLOG.md § Day 11; docs/PRD.md § 6; docs/ARCHITECTURE.md shared interfaces; ADR-004/005/006; the command contract and acceptance checks below.
 
-2026-09-10. Owner: Rakha. Planning only; no implementation, signing or submission.
+2026-09-10. Owner: Rakha. Execution approved; implementation on `feat/W2-D11-01-manual-extend`. No live signing/submission has been performed.
+
+Execution correction: the largest operation target is `maxEntryTtl - 1`, not the setting itself. The shared helper is corrected at its single source; see the primer for the Stellar core validation rule. Existing checkboxes remain the original execution checklist; the delivery record in STATUS distinguishes implemented behavior, validation and pending live evidence.
 Base: `origin/main` at `ebe8e15` (#81), integrated into the existing planning branch `docs/W2-D11-01-plan-and-sync`. #80 supplies the cost helpers. Implementation branch, once execution starts: `feat/W2-D11-01-manual-extend`, retaining the reviewed planning changes.
 
 ## Current coordination and scope
@@ -98,7 +100,7 @@ expect(resolveExtendTarget({
   currentRemainingLedgers: 990,
   additionalLedgers: 20,
   maxEntryTtl: 1000,
-}).extendToLedgers).toBe(1000);
+}).extendToLedgers).toBe(999);
 ```
 
 - [ ] Add selection failures for foreign data keys, absent/expired/unreadable selected entries and malformed config. A failure on an unselected code entry must not prohibit an otherwise valid instance-only extension; selection validity and whole-contract coverage are separate. Shared code is excluded unless explicitly selected and its warning remains visible.
