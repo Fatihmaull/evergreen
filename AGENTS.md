@@ -83,7 +83,7 @@ Update the Notion row(s) for every task ID in that PR: `Status`, plus a one-line
 1. Repo: flip the `BACKLOG.md` checkbox, update `docs/STATUS.md`, record any evidence in `docs/EVIDENCE.md`.
 2. Notion: set `Status` on every task touched, and write the outcome into `Notes` — what happened, not just that something happened. Link the PR or Issue.
 
-   > **When creating a Notion row, take the ID from `BACKLOG.md`. Never infer it from a naming pattern.** Guessing `W1-D4-04d` because `04b` and `04c` exist is how the join key diverges — and a divergent ID does not fail, it silently stops matching. The row falls out of every future diff while the diff still reads green. The repo registers the ID first; Notion copies it.
+   > **When creating a Notion row, take the ID from `BACKLOG.md`. Never infer it from a naming pattern.** Guessing ~~W1-D4-04d~~ because `04b` and `04c` exist is how the join key diverges — and a divergent ID does not fail, it silently stops matching. The row falls out of every future diff while the diff still reads green. The repo registers the ID first; Notion copies it.
 3. If a new finding, decision, or ADR landed, add it to the **Knowledge Base** or **Decisions** page. These are where the humans go for "why", so a decision that exists only in a commit message is effectively invisible.
 4. At a **week gate**, also refresh the Project Brain page: per-week counts, today's tasks and owners, days to deadline, health.
 
