@@ -1,6 +1,6 @@
 import { scanContract } from '@evergreen-stellar/core';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
-import { EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
+import { DEFAULT_THRESHOLD_LEDGERS, EXIT_ERROR, exitCodeFor, formatHuman } from './scan.js';
 
 const USAGE =
   'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json]';
@@ -23,12 +23,27 @@ so a clean exit means "everything I was asked to check is healthy" and never
                       and is never independently verified.
 --require-declared-scope
                       also exit 3 when scope was not declared. Intended for CI on
-                      a contract you own; evergreen-check sets it by default.`;
+                      a contract you own; evergreen-check sets it by default.
+--json                machine-readable output. The human view is a summary; JSON
+                      is the complete record, including every issue.
+
+Health states, printed per entry and as a worst-of summary:
+  HEALTHY   above threshold.
+  WARNING   low, recoverable, and affects only this contract.
+  CRITICAL  expired, OR temporary (deleted at expiry, unrecoverable), OR low and
+            SHARED — a code entry shared by N contracts at 3 days is N contracts
+            at 3 days, not one.
+  UNKNOWN   TTL could not be read. Not healthy; unread.
+
+Colour is added only for an interactive terminal and honours NO_COLOR. The state
+word always prints, so piped output and screenshots lose nothing.`;
 
 export interface CliDependencies {
   connect(): Promise<LedgerEntryReader>;
   readKeysFile(path: string): Promise<string>;
   now(): Date;
+  /** True only for an interactive TTY with NO_COLOR unset. Decided in bin.ts. */
+  color?: boolean;
 }
 
 export interface CliOutput {
@@ -102,8 +117,15 @@ export async function runCli(
   }
   const result = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
   return {
-    stdout: asJson ? JSON.stringify(result, null, 2) : formatHuman(result, dependencies.now()),
+    stdout: asJson
+      ? JSON.stringify(result, null, 2)
+      : formatHuman(result, dependencies.now(), {
+          color: dependencies.color === true,
+          thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
+        }),
     stderr: '',
-    exitCode: exitCodeFor(result, 17_280, { requireDeclaredScope }),
+    // Same constant the display grades against, so the printed health and the
+    // exit code can never describe different thresholds.
+    exitCode: exitCodeFor(result, DEFAULT_THRESHOLD_LEDGERS, { requireDeclaredScope }),
   };
 }

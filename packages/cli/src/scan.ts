@@ -1,5 +1,48 @@
 import type { ScanResult } from '@evergreen-stellar/shared-types';
-import { estimateEndsAt, isLive, needsAction } from '@evergreen-stellar/core';
+import {
+  assessEntry,
+  estimateEndsAt,
+  isLive,
+  needsAction,
+  worstHealth,
+} from '@evergreen-stellar/core';
+import type { EntryAssessment, EntryHealth } from '@evergreen-stellar/core';
+
+/**
+ * Colour is opt-in and off by default. A CLI whose output is piped into a log,
+ * a CI annotation or a grant reviewer's terminal transcript should not emit
+ * escape codes nobody asked for; `bin.ts` enables it only for an interactive
+ * TTY with NO_COLOR unset.
+ *
+ * The health WORD is always printed. Colour is redundant emphasis on top of it,
+ * never the only carrier of the state — a reader who is colour-blind, piping to
+ * a file, or reading a screenshot must get the same information.
+ */
+const ANSI: Record<EntryHealth, string> = {
+  healthy: '\u001B[32m',
+  warning: '\u001B[33m',
+  critical: '\u001B[31m',
+  unknown: '\u001B[35m',
+};
+const RESET = '\u001B[0m';
+
+function paint(health: EntryHealth, text: string, color: boolean): string {
+  return color ? `${ANSI[health]}${text}${RESET}` : text;
+}
+
+const LABEL: Record<EntryHealth, string> = {
+  healthy: 'HEALTHY',
+  warning: 'WARNING',
+  critical: 'CRITICAL',
+  unknown: 'UNKNOWN',
+};
+
+export interface FormatOptions {
+  /** Emit ANSI colour. Default false; `bin.ts` decides from the environment. */
+  readonly color?: boolean;
+  /** Ledgers below which an entry needs action. Must match the exit-code gate. */
+  readonly thresholdLedgers?: number;
+}
 
 /**
  * Format a scan for humans. The CLI is thin: it parses, calls core, formats,
@@ -11,9 +54,15 @@ export const EXIT_BELOW_THRESHOLD = 1;
 export const EXIT_ERROR = 2;
 export const EXIT_INCOMPLETE = 3;
 
-export function formatHuman(result: ScanResult, now: Date): string {
+/** Matches evergreen.config.example.json; pinned by scripts/check-policy-constants.mjs. */
+export const DEFAULT_THRESHOLD_LEDGERS = 17_280;
+
+export function formatHuman(result: ScanResult, now: Date, options: FormatOptions = {}): string {
+  const color = options.color === true;
+  const thresholdLedgers = options.thresholdLedgers ?? DEFAULT_THRESHOLD_LEDGERS;
   const lines: string[] = [];
   const entries = Object.entries(result.entries);
+  const assessments: EntryAssessment[] = [];
 
   if (result.coverage) {
     lines.push('Coverage: known keys only — contract storage has NOT been fully enumerated.');
@@ -39,9 +88,37 @@ export function formatHuman(result: ScanResult, now: Date): string {
 
   for (const [key, entry] of entries) {
     const live = isLive(entry.ttl);
+    const assessment = assessEntry(entry, thresholdLedgers);
+    assessments.push(assessment);
     const shortKey = `${key.slice(0, 10)}…`;
-    lines.push(`${entry.kind}  ${shortKey}`);
+    lines.push(
+      `${paint(assessment.health, LABEL[assessment.health], color)}  ${entry.kind}  ${shortKey}`,
+    );
     lines.push(`  contracts:  ${entry.contracts.join(', ')}`);
+    // Misleading BY OMISSION otherwise, and misleading in the
+    // confidently-green-before-total-outage direction: a per-contract view that
+    // never mentions sharing shows N healthy contracts whose one common entry
+    // is about to take all of them down together.
+    if (assessment.isShared) {
+      const others = assessment.blastRadius - 1;
+      lines.push(
+        `  ⚠ shared:   this ${entry.kind} entry is shared with ${others} other contract${others === 1 ? '' : 's'} — they fail together`,
+      );
+    } else if (entry.kind === 'code') {
+      // A code entry belongs to the Wasm, not to the contract. Every contract
+      // deployed from the same Wasm shares THIS entry, and a scan only knows
+      // the contracts it was handed — `contracts` is documented as "not a
+      // global usage census". Rendering that as "not shared" would be the
+      // confidently-green-before-total-outage failure: silence reading as
+      // proof of exclusivity. Say what the scan cannot see.
+      lines.push(
+        '  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.',
+      );
+      lines.push(
+        '              This scan saw 1. Others may depend on this entry and are invisible here —',
+      );
+      lines.push('              pass them together to see the real blast radius.');
+    }
 
     if (entry.ttl.status === 'unavailable') {
       // Say "no TTL", never "0 ledgers" — an entry type that carries no TTL is
@@ -55,6 +132,7 @@ export function formatHuman(result: ScanResult, now: Date): string {
       if (at) lines.push(`  approx:     ${at.toISOString()} (estimate — ledgers are the truth)`);
     }
     lines.push(`  observed:   ledger ${entry.observedAtLedger.toLocaleString()}`);
+    lines.push(`  health:     ${LABEL[assessment.health]} — ${assessment.reason}`);
     lines.push('');
   }
 
@@ -62,6 +140,16 @@ export function formatHuman(result: ScanResult, now: Date): string {
     lines.push(`! ${issue.kind}: ${issue.message}`);
     lines.push(`  contracts: ${issue.contracts.join(', ')}`);
     lines.push('');
+  }
+
+  const worst = worstHealth(assessments);
+  if (worst !== undefined) {
+    const shared = assessments.filter((a) => a.isShared).length;
+    lines.push(
+      `Worst entry health: ${paint(worst, LABEL[worst], color)}` +
+        ` (threshold ${thresholdLedgers.toLocaleString()} ledgers)` +
+        (shared > 0 ? ` · ${shared} shared entr${shared === 1 ? 'y' : 'ies'}` : ''),
+    );
   }
 
   // A partial scan must never read as a clean bill of health.
