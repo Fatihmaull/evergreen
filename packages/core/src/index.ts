@@ -51,3 +51,14 @@ export type {
 } from './liveness.js';
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';
+export { planExtension, executeExtensions } from './extend.js';
+export type {
+  ExtensionPlan,
+  ExtensionOptions,
+  PlannedExtension,
+  ExtensionExecutionDependencies,
+  ExtensionExecutionResult,
+} from './extend.js';
+export { prepareExtension, submitExtension, confirmExtension } from './extend-rpc.js';
+export type { PreparedExtension, ExtensionRpc, ExtensionConfirmation } from './extend-rpc.js';
+export { createEd25519Signer, isValidPayerAccount } from './ed25519-signer.js';

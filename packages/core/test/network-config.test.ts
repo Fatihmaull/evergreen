@@ -63,19 +63,19 @@ describe('resolveExtendTarget — the CLI absorbs delta-to-target', () => {
       additionalLedgers: 1_000_000,
       maxEntryTtl: max,
     });
-    expect(r.extendToLedgers).toBe(max);
+    expect(r.extendToLedgers).toBe(max - 1);
     expect(r.wasCapped).toBe(true);
     expect(r.requestedLedgers).toBe(4_000_000);
   });
 
-  it('does not report capping when the request lands exactly on the ceiling', () => {
+  it('reports capping at the setting because the operation ceiling excludes the current ledger', () => {
     const r = resolveExtendTarget({
       currentRemainingLedgers: max - 1,
       additionalLedgers: 1,
       maxEntryTtl: max,
     });
-    expect(r.extendToLedgers).toBe(max);
-    expect(r.wasCapped).toBe(false);
+    expect(r.extendToLedgers).toBe(max - 1);
+    expect(r.wasCapped).toBe(true);
   });
 
   it('treats an already-expired entry as zero remaining, not as a subtraction', () => {
