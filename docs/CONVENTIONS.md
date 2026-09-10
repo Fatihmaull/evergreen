@@ -236,6 +236,10 @@ That is a real limit on every rule in this document, and it has a practical cons
 
 **Report the numbers that surprise you, and stop when one does.** Surprise is the only detector that works on failure modes nobody has enumerated — including the ones no rule here covers yet. A result that is merely *wrong* looks like every other result; a result that is *implausible* announces itself, but only to someone who has a prior about what it should be.
 
+**Two catches in one day, and both were QUANTITIES.** `exit=0` for a command known to have failed; `2.0 XLM` for an extension that should have cost a fraction of that — the second was a single target applied across entries with different remaining TTL, and **no test caught it.** That is a pattern worth pointing attention at: **numbers you can sanity-check against a rough expectation are the cheapest detector available.** They cost nothing to print and nothing to glance at, and they catch classes of error no rule anticipates.
+
+So: **print the quantity, and look at it.** A total, an exit code, a count, a duration. Not because you will check every one carefully, but because an order-of-magnitude error is visible at a glance and a behavioural error usually is not.
+
 Which is also the argument for stating expected values before running something, rather than reading the output and deciding it looks fine.
 
 ### Guards get written by someone already thinking about the pattern — elsewhere
