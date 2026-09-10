@@ -7,7 +7,7 @@ W1's foundation and real Testnet scan milestone are ready for W2. Shared closeou
 - Current merged baseline: main `321656b`, including task-ID checker PR #56, architecture PR #53 and ADR-005/carry-forward PR #58, in addition to the earlier W1 foundations.
 - Architecture: [PR #53](https://github.com/Fatihmaull/evergreen/pull/53) merged as `59c3cf8`; its former head branch, used as #57's base, was subsequently deleted.
 - Closeout: `docs/W1-D7-03-week-one-review` was originally stacked on #53. Fatih restored [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) after its base was deleted, retargeted it to main and synchronized at `1e08aeb`. The Sep 9 follow-up reconciles that head with the preserved local synchronization and weekly Task Tracker notes; Rakha reviewed and authorized publication. **The PR merged on 2026-09-09 as `88372ec`, which is how this file reached `main`;** its head branch is deleted.
-- [BACKLOG](../BACKLOG.md): 50 W1 tasks, **49 Done, 1 In progress** on main. Merging #57 *is* the shared acceptance, so `W1-D7-04` is Done. The one open item is the recurring drift check `W1-D4-09`, which runs until Sep 20 and is correctly `[~]` rather than incomplete.
+- [BACKLOG](../BACKLOG.md): **51 W1 tasks, 51 closed** as of 2026-09-10, plus one active recurring obligation. Merging #57 *is* the shared acceptance, so `W1-D7-04` is Done. The one open item is the recurring drift check `W1-D4-09`, which runs until Sep 20 and is correctly `[~]` rather than incomplete.
 
 **Task registration:** [PR #56](https://github.com/Fatihmaull/evergreen/pull/56) is integrated. C retains its separate `W3-D18-02c` spare-proof task; the backlog now contains 132 tasks (W3: 27). Its Notion row and future-week mirror counts still need catch-up; this synchronization is local codebase work.
 
@@ -126,3 +126,16 @@ The rule now lives in `docs/adr/README.md`: **sweep corrected facts, not only ch
 The audit did not find the largest problem. Running the CLI against testnet did: guinea-pig **A** was nine days from archival, and nothing in the repo recorded it — every mention of ledger `4,712,648` treated it as a number to match a scan against, never as a deadline.
 
 The asymmetry is the finding. **B and C had a drift check running twice a week; A had nobody.** The two contracts deliberately designed to be at risk were monitored, and the one every scan, screenshot and milestone record depends on was not — because it was never *supposed* to be at risk, which is precisely the assumption that expires quietly. Rescued by hand in `W1-D7-08`; handed to the engine in `W3-D15-01b`, which is the only version of the fix that survives the sprint.
+
+## Doc gap log — standing, both sessions
+
+**Append here whenever a doc failed to give you what you needed.** One line, written at the moment it happens rather than after it is resolved. The rule is in [`AGENTS.md`](../AGENTS.md) § Log the doc gaps as you hit them.
+
+**Why this exists.** Two independent observations, recorded a week apart and only connected during the 2026-09-10 closeout, say the same thing: `W1-D4-12`'s fresh-eyes agent scored **7/7 on the self-test and still could not start `W2-D8-01`**, and `W1-D7-06` above records seven questions Rakha had to ask while stating that his unaided comprehension **was not measured**. Facts transmitted; action not enabled. Both sets of gaps were fixed, and **whether the fixes worked has never been tested.** `W3-D21-01e` (Sep 23) is the formal test; this log exists so it is not the *first* signal, because the engine is built solo from ~Sep 17 and a failure discovered then lands in the worst possible week.
+
+| Date | Who | Doing what | What the doc did not give me |
+|---|---|---|---|
+| 2026-09-10 | Session 1 | Registering `W1-D4-09` as a recurring obligation | `CONVENTIONS.md` § Task status defines five states and says recurring work is `[~]`. It has no state for *"standing obligation, outside the weekly count"* — the concept did not exist until it was needed, so the backlog had to grow a new section rather than the docs answering the question. |
+| 2026-09-10 | Session 1 | Same task | `scripts/check-task-ids.mjs` documents what it catches and what it deliberately cannot, but nothing said **what shape makes an ID "registered"** — a checkbox line. Registering a task any other way silently produced dangling references in two files. The constraint was discoverable only by tripping it. |
+
+*Two entries on day one, both from the same small task, both real. That is roughly the rate the earlier observations predicted.*

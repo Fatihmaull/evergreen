@@ -18,6 +18,19 @@ Task IDs are stable identifiers referenced in commit subjects (`feat(cli): scan 
 
 A future session that reads `W2-D8` as a calendar commitment will re-derive this whole problem. It isn't one.
 
+## Recurring obligations
+
+**These sit outside the weekly counts on purpose.** A standing obligation is not an unfinished task, and counting one as open makes a closed week look unfinished — which trains everyone to read `[~]` as debt. Each entry here has a **closing condition** rather than a due date; it ends when the condition is met, not when a week ends.
+
+*(Created 2026-09-10 during the W1 closeout. `W1-D4-09` was being carried as the one open Week 1 item, which made W1 read 50/51 when the actual state was "finished, with a cron job running." It also meant a task would complete three weeks after its week closed — confusing in every future reading of the backlog. The ID does not move; only where it is counted.)*
+
+| Obligation | Owner | Cadence | Closing condition |
+|---|---|---|---|
+| **`W1-D4-09`** — decay-proof drift check | Shared | Twice weekly | **Guinea-pig B crosses, ~2026-09-20 12:00 UTC.** Closes then, whether or not any drift was ever observed. |
+
+**`W1-D4-09` in full.** Run `python3 scripts/check-decay-drift.py` and paste the output into the drift log in `docs/STATUS.md`. **A set-and-forget calibration is how a two-hour drift becomes a missed proof.** Six readings so far — Sep 5, 6, 7, 8, 9, 9 — all `+0.0h` on both B and C. The absence of drift is itself the finding, but only because it keeps being checked; see the drift log for what a zero reading does and does not establish.
+
+
 ## Capacity model — 24 effective days
 
 The original plan assigned build work to all 30 calendar days including every weekend. Plans shaped like that deliver about 80% of their days, so this one is planned against **24 effective days** with **6 slack days** held explicitly.
@@ -130,7 +143,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 - [x] **W1-D4-04b** (S) **Measure the real TTL floor per entry type** (instance, code, persistent, temporary) on a fresh deploy and record the numbers in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Two things depend on these and neither can be guessed: the bump threshold has to be set against a real floor, and whether the natural-decay proof is achievable in-sprint at all.
 - [x] **W1-D4-07** (F) ✅ **Guinea-pig C — staggered spare**, calibrated to cross **2026-09-25 ~12:00 UTC**, five days after B. Converts an unrecoverable one-shot proof into two shots. Also pushed the **shared code entry** (B and C share one, being the same Wasm) past the whole sprint so it drives neither crossing.
 - [x] **W1-D4-08** (F) ✅ `scripts/check-decay-drift.py` — re-derives both projected crossings from live ledger state. **Run twice weekly, paste into STATUS.** Exits non-zero if a crossing drifts >6h early. Temporary stand-in; delete it once `evergreen scan` does the job.
-- [~] **W1-D4-09** (S) **Recurring drift check.** *(`[~]` not `[ ]`: it has started and runs until Sep 20. Recurring work is in-progress, not pending — see `docs/CONVENTIONS.md`.)* Twice weekly until Sep 20, run `check-decay-drift.py` and record the output in `docs/STATUS.md`. A set-and-forget calibration is how a two-hour drift becomes a missed proof.
+- **`W1-D4-09`** — the recurring drift check. **Moved out of the Week 1 count on 2026-09-10; see [§ Recurring obligations](#recurring-obligations).** It is a standing obligation that happened to be created in Week 1, not an unfinished Week 1 task.
 - [x] **W1-D4-13** (R) **Exact TTL boundary confirmed on Testnet, 2026-09-06.** The isolated temporary entry was present at its final live ledger **4,529,810** (remaining 0) and absent at **4,529,811** (remaining -1). Offline replay of 412 captured responses confirmed the inclusive boundary; 11 verifier tests and `pnpm check` pass. [Full evidence](docs/evidence/2026-09-06-ttl-boundary/README.md), including the seed transaction JSON and explorer screenshot. Prior 189 inconclusive samples preserved; B/C and shared code unchanged. Primer updated. Merged in [PR #22](https://github.com/Fatihmaull/evergreen/pull/22), closing [Issue #21](https://github.com/Fatihmaull/evergreen/issues/21).
 - [x] **W1-D4-12** (F) ✅ **Tool-agnostic agent onboarding.** `AGENTS.md` canonical for any agent tool, `CLAUDE.md` reduced to a 15-line pointer, `docs/ONBOARDING.md` written. Fresh-eyes tested with an agent restricted to those two files: 7/7 on the self-test, still could not start `W2-D8-01` — gaps fixed. Surfaced a factual error (guinea-pig A's ID truncated and mistyped) and an open domain question (the `liveUntilLedgerSeq` boundary convention, now flagged in the primer).
 - [x] **W1-D4-11** (F) ✅ **Dual-channel sync installed, exercised, and corrected.** Notion MCP verified, workflow installed in `CLAUDE.md`, status vocabulary in `CONVENTIONS`, exercised in both directions incl. a planted false-completion. PRs #11, #12. *Registered retroactively: the installation was directed work but consumed a session and was not in the 24-day plan, so it belongs in the ledger. Found by applying the workflow's own part B to itself.*
@@ -200,7 +213,7 @@ Goal: by Sep 9 nobody should ever again say "I can't start because X isn't set u
 
 ---
 
-**Review outcome (2026-09-09) — Week 1 is closed at 49/50.** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md), merged to main in [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) (`88372ec`) after being restored twice from GitHub's stacked-PR auto-close. **That merge is the shared acceptance of the closeout, so `W1-D7-04` is Done.** Fatih accepted ADR-005 and confirmed the W2–W4 carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58). The single remaining W1 item is `W1-D4-09`, the recurring drift check, correctly `[~]` until Sep 20. [#44](https://github.com/Fatihmaull/evergreen/issues/44) stays open as a discussion thread. No cut or task ownership change is introduced.
+**Review outcome — Week 1 closed at 51/51 on 2026-09-10.** `W1-D7-03/05/06` reports are in [docs/W1-REVIEW.md](docs/W1-REVIEW.md), merged in [PR #57](https://github.com/Fatihmaull/evergreen/pull/57) (`88372ec`) after being restored twice from GitHub's stacked-PR auto-close. **That merge is the shared acceptance of the closeout, so `W1-D7-04` is Done.** Fatih accepted ADR-005 and the carry-forward in [PR #58](https://github.com/Fatihmaull/evergreen/pull/58), and ADR-006 as amended in [#66](https://github.com/Fatihmaull/evergreen/pull/66). The count reads 51/51 rather than the 49/50 reported on Sep 9 for two reasons, neither of them a slip: `W1-D7-08` was added on Sep 9 as unplanned corrective work (the denominator grew), and `W1-D4-09` moved to [§ Recurring obligations](#recurring-obligations) because a standing obligation is not an unfinished task. **One recurring obligation is active**, closing when B crosses ~Sep 20.
 
 > ✅ **Found and fixed on Sep 9, recorded nowhere before that:** guinea-pig **A**'s instance, persistent and temporary entries were all due to expire **Wed Sep 16 ~19:27 UTC** (ends at ledger 4,712,648; its code entry survives to Oct 20). A is the working contract, not a decay subject — `W3-D17-04` requires bumping it *before Fri Sep 18*, which would have been impossible once archived. **Resolved the same day by `W1-D7-08`** — all three extended to ~2026-12-01. The shared code entry still expires 2026-10-20 and is `W3-D18-02d`. See `docs/STATUS.md`.
 
@@ -224,7 +237,7 @@ Follow-up audit [#61](https://github.com/Fatihmaull/evergreen/pull/61) and A-ext
 
 ### Day 9
 *Planned: Fri Sep 11 — may slip; the D-number does not.*
-- [ ] **W2-D9-01** (R) Rent/cost estimation model: what does extending N ledgers cost, per entry and per contract?
+- [ ] **W2-D9-01** (R) Rent/cost estimation model: what does extending N ledgers cost, per entry and per contract? 🔴 **Binding item for Deliverable 1 — protected 2026-09-10, batch scan cut to make room.**
   - **Sum per unique ledger key, never per contract.** Contracts sharing a Wasm share one `ContractCode` entry, so a per-contract sum charges it N times across a factory deployment — the headline cost estimate would be silently wrong for exactly the users who care most about cost. **Regression test with two contracts sharing a Wasm; B and C are that fixture.**
 - [ ] **W2-D9-02** (R) Validate the estimate against a real testnet transaction's actual fee — the model is worthless if it's off by an order of magnitude. Record the comparison. ✅ **The validation data already exists: [`packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json`](packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json)**, three measured extends from `W1-D7-08` with `rentFeeCharged` isolated from `resultMetaXdr` rather than inferred from `fee_charged`. It was a by-product of rescuing A, so nothing had to be manufactured for it. `packages/core/test/rent-fixture.test.ts` pins the relationships the model must reproduce. **Two things it hands you and one it deliberately withholds:** rent is 95.6–98.5% of an extend-only fee and the non-refundable part is roughly flat (~2,300 stroops), so modelling rent alone is within ~4.4%; **durability roughly doubles the price at identical size**; but three points do **not** determine the size coefficient — instance is 1.12× persistent's bytes and 1.49× its rent, so do not fit a stroops-per-byte constant to them. If the model needs that coefficient, measure more points; the fixture says which gap it is.
 - [ ] **W2-D9-03** (F) Unit tests for the cost model with fixture inputs.
@@ -257,7 +270,7 @@ Follow-up audit [#61](https://github.com/Fatihmaull/evergreen/pull/61) and A-ext
 *Planned: Tue Sep 15 — may slip; the D-number does not.*
 - [ ] **W2-D13-01** (F) Config file support (`evergreen.config.json`): contract list, thresholds, RPC URL, payer/signer resolution — shared later by the engine. Carry the guinea-pig B/C comment forward from `evergreen.config.example.json`, and carry the *current* rule, not the superseded one: they may be watched once calibrated, via add → dry-run → confirm-no-action → go-live, because the danger is a mismatched threshold rather than the config entry (`W1-D4-04c`, procedure in `docs/SETUP.md`). *Also preserve any caller coverage declaration explicitly if ADR-006 is accepted.*
 - [ ] **W2-D13-02** (F) **Wallet-connect spike (half a day, throwaway).** Connect a wallet, sign one `extendTTL` payment, throw the code away. Moved here from Week 4 deliberately: the transaction-building machinery from `W2-D11` is hot, this is Fatih's day, and it displaces the batch scan below, which is already first in the cut order. Turns the Week 4 job from *learn wallet integration under deadline* into *put a button on something that already works*. **If this spike says the write path is unshippable at 24 effective days, say so now** — an early, cheap decision, and SOW 2 is a strong home for it.
-- [ ] **W2-D13-03** (F) Batch scan: multiple contracts in one command with a summary table *(P1 — cut this first if the week is tight)*.
+- [-] **W2-D13-03** (F) ~~Batch scan: multiple contracts in one command with a summary table.~~ **CUT 2026-09-10.** It was always cut-order #1, and now there is a concrete reason rather than a projected one: `W2-D9-01/02` is the binding item for Deliverable 1 evidence and needs the room. Reason recorded here and in `docs/STATUS.md` per the `[-]` rule. *(Not `W2-D13-02` — that is the wallet-connect spike, and cutting it would force `W4-D24-04`'s dashboard write-path decision to be made blind later instead of on evidence now.)*
 
 ### Day 14 · W2 review
 *Planned: Wed Sep 16 — may slip; the D-number does not.*
@@ -366,6 +379,10 @@ The old plan spent the riskiest week's first two days on a spike the whole deliv
   Run it against a contract that is **not** A, B or C, funding a fresh account — the stranger's path is "my own contract, my own money", and our guinea-pigs are pre-configured in ways a stranger's contract will not be. Feed the gap list to `W4-D26-02` before that guide is written, so it is written against observed failure rather than remembered intent.
 
   *This is the only independent verification outcome 4 gets anywhere in the thirty days. The Action gets a throwaway repo (`W4-D25-02`), the CLI gets the fresh-machine test (`B-D29-03`) — the engine otherwise gets a guide written Sep 28 and first read by the grant reviewer.*
+
+  > **Expect this to go badly, and do not read that as a crisis.** Standing gap-logging (`AGENTS.md`) produced **two real documentation gaps on its first day, from one small task** — reclassifying `W1-D4-09`. That rate is consistent with what the two earlier observations predicted: the fresh-eyes agent scoring 7/7 and still unable to start a task, and the ramp report's seven questions. **If one small task yields two gaps, a from-scratch engine stand-up will yield many.**
+  >
+  > That is the system working. The entire point of moving gap-logging earlier was to stop Sep 23 being the *first* signal, so a bad result here is **data arriving on schedule** — and the response is a documentation pass, not an emergency. Budget for the pass now rather than discovering it feels like a fire on the day. **A run that finds nothing would be the surprising outcome**, and worth distrusting before celebrating.
 - [ ] **W3-D21-01c** (F) **Draft the README quickstart before `W4-D26-01`.** It does not have to be good on Sep 23; it has to exist, so `W3-D21-01b` and the Week 4 repeats test the real front door rather than a placeholder. A fresh-machine test against an unwritten README measures nothing and reports success.
 - [ ] **W3-D21-01d** (S) 🔴 **Gate check: state plainly whether each of the four `READY.md` outcomes will be true on Oct 2.** Not a status colour — a yes or a no per outcome, with the specific task each depends on. **If any is a no, cut a P1 to protect it now**, per the cut order below. That trade is pre-approved: a shipped P1 is worth less than any one of the four. Do this at the Week 3 gate, while four working days of Week 4 remain, rather than discovering it in the buffer.
 - [ ] **W3-D21-02** (S) Reconcile the slack ledger: how many of the six are gone, and what took them.
@@ -478,7 +495,7 @@ Work that belongs to no particular day because nothing is blocked by not having 
 
 Cut from the bottom up, in this exact order. Never improvise the cut order mid-week:
 
-1. **W2-D13-03** batch scan (P1)
+1. ~~**W2-D13-03** batch scan (P1)~~ — **taken 2026-09-10** to protect `W2-D9-01/02`. Next item is now #2.
 2. **W2-D12** storage optimizer depth — ship basic flags, drop advanced heuristics (P1)
 3. **W4-D24-04** dashboard wallet-connect + "extend now" (P1) — decided early by the `W2-D13-02` spike rather than late under pressure; SOW 2 is a strong home for it
 4. **W4-D24-03** dashboard rent cost view — scan, status and history are the P0 parts
