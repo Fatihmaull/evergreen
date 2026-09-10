@@ -92,6 +92,8 @@ async function main(): Promise<number> {
   const color = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
   const output = await runCli(process.argv.slice(2), {
     connect: () => connectTestnet(rpcUrl),
+    readStorageSettings: () =>
+      readStateArchivalSettings(new rpc.Server(rpcUrl, { timeout: 10_000 })),
     readKeysFile: (path) => readFile(path, 'utf8'),
     now: () => new Date(),
     color,
