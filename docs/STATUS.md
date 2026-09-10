@@ -2,9 +2,9 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-09 · W2-D8-03 published in PR #60; shared review In progress
-**Sprint day:** 7 of 30 · **Deadline:** 2026-10-02
-**Current week:** W2 — Core CLI
+**Last updated:** 2026-09-10 · [S2] #60 merged; #63 queued; `W2-D8-01/02` shipped
+**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
+**Current week:** W2 — Core CLI, Deliverable 1 · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18**
 
 ---
@@ -12,6 +12,27 @@
 ## Right now
 
 **2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
+
+## [S2] Week 2 execution log
+
+*Session 2 owns Week 2 execution (Sep 10–16). This section is appended to by S2 only; S1's entries above and below are never rewritten here.*
+
+**2026-09-10 — `W2-D8-01` / `W2-D8-02` TTL projection and cadence (S2).** `projectEnd` and `measureCadence` land in `packages/core/src/ttl.ts` with 18 tests. The settled inclusive boundary was reused, not reopened.
+
+- **Cadence stopped being a constant.** `LedgerCadence` carries the rate with its provenance and a ± band. The two recorded measurements (5.000 s/ledger over 100,000 ledgers; 5.0008 s over 16.3 h) bound a spread of 0.0008 — recorded as *a spread between two measurements, not a variance*, because two points no more give a variance than three gave a rent coefficient. Across `max_entry_ttl` that band is over an hour wide, which is why a projection reports a range.
+- **`measureCadence` never reports zero uncertainty.** Close times are whole seconds, so a window of N ledgers cannot resolve cadence finer than `1/N` s/ledger, and a single interval cannot bound drift at all. A clean sample returning ±0 would have been the confidently-wrong answer — the same shape as the testnet guard that refused everything.
+- **No `projectedArchiveDate` reached `shared-types`.** ADR-005 is accepted and untouched; the projection is a display-edge derivation in `core`, and `isRestorableAfterEnd` is exposed so no display path re-derives durability and calls a deletion an archival.
+- **Guards were mutation-tested, not assumed.** Flipping `isLive` to `> 0`, assigning the uncertainty band naively, and dropping the quantization floor each failed exactly one test — the one written for it. Restored and green afterwards.
+
+**2026-09-10 — merge-order handling (S2).** PR #63 was retargeted to `main` **before** #60 merged, per the stacked-PR rule; it survived #60's merge instead of being auto-closed. Squashing #60 then left #63 conflicting in seven files. Resolution was verified rather than trusted: every conflicted file on `main` is byte-identical to #60's head, which is an ancestor of #63, so the branch side is a provable superset. The merged tree is byte-identical to #63's tip and `pnpm check` passes with 170 tests. **The push to Rakha's branch was blocked by this session's sandbox and is pending Fatih.**
+
+**Notion anomaly (2026-09-10, S2).** All 23 W2 IDs present with owners matching `BACKLOG.md`. `W2-D8-04` read **Done** in Notion while PR #63 was open and unmerged — the mirror asserting something the repo did not support. Not corrected by editing the mirror: #60 is merged and #63 is queued, so the fix is to make the claim true. `W2-D8-03` read In progress against a Pending repo row — an ordinary missed write. Recorded here because status-only validation keeps proving insufficient; this is the third boundary at which the mirror and the repo disagreed on something other than status alone.
+
+**Prompt-vs-repo corrections (2026-09-10, S2).** The Week 2 session brief mis-stated four task IDs, one dangerously: it listed `W2-D13-02` as the batch scan and first cut. `W2-D13-02` is the **wallet-connect spike**; the batch scan is `W2-D13-03`. Cutting by the brief would have deleted the item the plan front-loaded *in order to* protect the batch scan's cut slot. Likewise `W4-D24-01` is the live public URL — required evidence, explicitly never-cut — not the rent view (`W4-D24-03`). `BACKLOG.md`'s cut order is correct and remains canonical. The brief also treated `docs/READY.md` and the `extendTTL-fees-guinea-pig-a.json` rent fixture as landed; both are still in unmerged PR #62, so `W2-D9-02`'s validation data is real but not yet on `main`. Effective build days in the sprint are **22, not 24** (8 weekend days, computed).
+
+**Week 2 fit (2026-09-10, S2).** Seven task-days (`D8`–`D14`) are scheduled into **five** build days: Sep 12/13 are Sat/Sun, and the backlog plans `W2-D10` and `W2-D11` — the first write transaction, required SOW evidence — onto them. Fatih's call: hold the cut decision until Fri Sep 11 and decide against a measured burn rate rather than an estimate. Cheap items remain available (`W2-D13-03`, then `W2-D12` depth).
+
+**`W2-D10-04` is not fully buildable in Week 2 as written (2026-09-10, S2).** It asserts behaviour over `claim()` and lock lookups; `packages/engine/src/index.ts` is still `ENGINE_PLACEHOLDER = true` and the run loop arrives at `W3-D15-01`. The task splits: the **decision rule** — below threshold and no bump recorded ⇒ non-zero — is a pure function buildable now in `core` with no engine, and the **wiring** is a W3 line. Building the rule ahead of the engine is what keeps the Fri Sep 18 gate reachable. Flagged, not yet actioned.
 
 ## Earlier D8-03 publication snapshot
 
