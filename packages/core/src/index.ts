@@ -29,6 +29,10 @@ export {
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
 export { assessEntry, worstHealth } from './health.js';
+export { estimateRent, stroopsToXlm } from './rent.js';
+export { createSimulatingQuoter } from './rent-quoter.js';
+export type { QuoteBreakdown, SimulatingQuoterOptions } from './rent-quoter.js';
+export type { RentEstimateResult, RentQuote, RentQuoter } from './rent.js';
 export type { EntryAssessment, EntryHealth } from './health.js';
 export { assertLiveness } from './liveness.js';
 export type {
