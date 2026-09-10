@@ -53,3 +53,10 @@ export type {
 } from './liveness.js';
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';
+export { analyzeStorage } from './optimizer.js';
+export type {
+  StorageSettings,
+  StorageAdviceContext,
+  StorageAdvice,
+  StorageAdviceReport,
+} from './optimizer.js';
