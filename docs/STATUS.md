@@ -28,6 +28,21 @@ The open question is whether `--no-data-keys` asserts something a caller can act
 
 **2026-09-09 — review follow-up and main synchronization:** integrated merged W1 PRs #57/#59 from main `88372ec`, preserving D8-03 runtime and all raw scan evidence. Fatih accepted the exit-code scheme in [his review](https://github.com/Fatihmaull/evergreen/issues/44#issuecomment-5600478304), requesting historical milestone labeling and an explicit warning against using the empty-data assertion to silence unknown coverage. Rakha authorized publication after result review; those documentation corrections are included in PR #60; ADR-006 remains Proposed pending final acceptance. W1-D7-04 is Done by shared acceptance. Audit #61 and A-extension evidence #62 are open, not integrated here. Fatih reports A's instance/data extended on Sep 9; dated scan evidence remains valid and reproduction now returns newer TTLs. Shared code and B/C must not be extended by this work. No transaction or new live observation in this synchronization. The synchronized parent at cad029e passed pnpm check with all 143 offline tests; runtime and raw evidence match the previously published scanner. D8-03 remains In progress pending final ADR acceptance; its local follow-up and W1-D7-04 Done were mirrored and read back. Publication-link sync follows this push. D8-04 is complete on its separate child branch and is being published for review; it is not part of this PR. No merge is authorized or claimed.
 
+## 🔴 Session scope boundary — one session writes implementation this week
+
+**Set by Fatih 2026-09-10, after `#66` landed tagged `[W2-D10-01]`.** Read this before starting work.
+
+| Session | Scope |
+| --- | --- |
+| **S1** | **Evidence assembly only.** W1 evaluation and the Deliverable 1 evidence bundle. |
+| **S2** | **All implementation.** Week 2 execution, Sep 10–16. |
+
+**If the D1 evidence bundle turns out to need an implementation change — and given the cost model and the recapture, it might — that change is handed to S2 rather than made in S1.** Say what is needed; do not write it.
+
+*Why this exists rather than being assumed:* `#66` was not a careless overreach. Accepting an ADR that changes behaviour necessarily lands the code for that behaviour — S1 could not amend ADR-006's exit-code scheme without touching `exitCodeFor`. The original two-session rule assumed a cleaner separation than the work allows, so the boundary is now stated in the one place both sessions read first, rather than inferred from task ownership.
+
+The concrete cost of the ambiguity was a task row that meant nothing: `W2-D10-01` sat `[ ]` while half of it was already merged, which is the state that produces either duplicated work or a silently dropped remainder. It now names what `#66` covered and what is left.
+
 ## [S2] Week 2 execution log
 
 *Session 2 owns Week 2 execution (Sep 10–16). This section is appended to by S2 only; S1's entries above and below are never rewritten here.*
