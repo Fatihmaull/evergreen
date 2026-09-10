@@ -133,6 +133,7 @@ AGENTS.md               this file — canonical operating manual for any agent
 CLAUDE.md               thin pointer to AGENTS.md (Claude Code reads it by name)
 docs/ONBOARDING.md      orientation for an agent arriving cold
 docs/
+  READY.md              ⭐ the product's definition of done — four things a stranger must be able to do
   PRD.md                what we're building and why; scope boundaries
   STATUS.md             living board — current state of every workstream
   ARCHITECTURE.md       modules, data flow, shared types
@@ -166,6 +167,73 @@ Already decided — do not relitigate without a reason and an ADR amendment:
 
 New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) and link it from STATUS.md.
 
+## Token efficiency
+
+Default to sequential work in a single thread. Sub-agents are a deliberate
+tool for defined moments, not a reflex.
+
+### The test, before the rules
+
+**Would this have caught something a targeted check could not?**
+
+That is the primary test and it decides most cases on its own. A fan-out over the whole doc tree at a week gate, yes — no grep finds "these two files contradict each other about a contract we cannot replace." A fan-out to answer what one grep answers, no.
+
+It is deliberately about the *finding*, not the procedure: the caps below are a proxy for proportionality, and a proxy is worth less than the thing it stands for. **When the test gives a clear answer, follow it. Use the caps as the fallback for when it is genuinely ambiguous** — and when you invoke a cap instead of the test, say which, because that is a signal the test needs sharpening.
+
+**Sub-agents**
+
+- Do not spawn sub-agents for routine work, or automatically for
+  "comprehensive" audits.
+- Spawn them only at week gates, before merging a high-risk change, or when
+  explicitly asked.
+- Cap at 3 per invocation. Five lenses plus three refuters is an audit
+  someone asked for, not a default.
+- State up front what each one is for and roughly what it will cost.
+
+**Models**
+
+- Sonnet or lower for reading, context-gathering, delegation, and routine
+  implementation.
+- Opus only for a named high-stakes decision — an architectural trade-off, a
+  security-relevant review, a finding that would change the plan. Say why
+  before using it.
+
+**Scope**
+
+- Audit only what the current task or branch touches. No global sweeps
+  unless asked.
+- Read targeted line ranges, not whole files, unless the whole file is the
+  subject.
+- Prefer one well-aimed grep over loading a directory.
+
+**Reporting**
+
+- Report roughly what a session cost when it was unusually large, and why.
+  Cost that stays invisible cannot be managed.
+
+### What this rule deliberately does not cut
+
+**Not a ban, and the distinction matters.** Two Sep 8–9 audits cost ~9.3M and ~7.1M sub-agent tokens between them, which is what prompted this section — but they are also what found the packaging defect that would have 404'd for every user, the public README error about our own domain, a `CODEOWNERS` that had never routed a review, and two contradictory `SETUP.md` rules about the contract we cannot replace. **A rule that would have prevented the npm fix is a bad rule.** Cut the breadth; keep the rigor.
+
+Two things survive this section unchanged, and are not "audits" for the purposes of the caps above:
+
+- **Fresh-machine and stranger-facing checks stay.** They are cheap — a pack, an install, a scan — and they catch what internal gates structurally cannot. Six green gates said nothing about whether a stranger could install the package, because *a check that never leaves the monorepo cannot answer a question about strangers.*
+- **Verifying a finding before acting on it stays.** Running the reproduction costs a few hundred tokens and has corrected three claims this week, including two of Fatih's own and one of mine. Reading code to decide whether a claim is true is the expensive path *and* the unreliable one.
+
+### Baseline, so the numbers mean something
+
+A cost with nothing to compare against cannot be judged. Measured on this repo, main-thread tokens from the session counter and sub-agent tokens as the workflow tool reports them:
+
+| Turn | Main thread | Sub-agents | Total |
+|---|---|---|---|
+| Ordinary sequential turn (multi-file edits, checks, commit, PR) | **~30k** | 0 | **~30k** |
+| Week-gate doc audit (5 lenses × 2 refuters, 123 agents) | ~125k | 9.26M | **~9.4M** |
+| Readiness audit (5 lenses × 2 refuters, 73 agents) | ~94k | 7.11M | **~7.2M** |
+
+**An audit turn costs roughly 250–300× an ordinary one.** Both figures are ±10% and exclude cache effects.
+
+Read that as a price, not as waste. The two audits bought the packaging defect, the public README domain error, the inert `CODEOWNERS` and the contradictory `SETUP` rules — the first of which would otherwise have shipped. **The point of the baseline is that "was this finding worth 7M tokens?" becomes a question with an answer**, instead of a cost nobody can see.
+
 ## Working style expected here
 
 - Small, reviewable commits tied to task IDs. See `docs/CONVENTIONS.md`.
@@ -179,5 +247,7 @@ New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) a
 - Behavior works against the guinea-pig testnet contract (ID in `docs/SETUP.md`).
 - Unit tests cover the logic, using fixtures rather than live RPC.
 - `pnpm check` green — it runs exactly what CI runs. Don't substitute a subset here: `pnpm typecheck && pnpm lint && pnpm test` skips three of the six gates, and a local gate weaker than the remote one is worse than no local gate. *(That exact gap shipped once already — `format:check` was in CI but not in `check`.)*
+
+**This is when a *task* is done. [`docs/READY.md`](docs/READY.md) is when the *product* is done** — four things a stranger must be able to do by Oct 2. Every task above can pass and the product can still fail that, which is the failure this project is actually exposed to. *(Demonstrated 2026-09-09: every gate was green while `npx @evergreen-stellar/cli` would have 404'd for every user, because nothing in the plan installed the package from outside the monorepo until day 27.)*
 - Docs updated if user-facing behavior changed.
 - BACKLOG.md checkbox flipped, STATUS.md updated, evidence recorded if applicable.
