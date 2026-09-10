@@ -104,6 +104,36 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **And the pipe trap caught me again, minutes after I documented it.** The first exit-code reading said `exit=0` for a failing command, because `$?` after `| tail` reports `tail`'s status. Re-measured without the pipe: 2, correctly. Writing the rule down did not stop me using the broken instrument; noticing the implausible answer did.
 
+## ✂️ Week 2 cuts taken 2026-09-10 — and cut #3 reverses something Fatih asked for
+
+**Cut order #2 — `W2-D12` optimizer depth.** Basic flags only: the measured-floor warning, the observed temporary deletion, the shared code entry. The advanced heuristics go. Those three are what the task promises; the depth is what it hoped for.
+
+**Cut order #3 — `W4-D24-04` dashboard wallet-connect. Naming what this reverses rather than letting it pass as routine:** Fatih asked for this directly — maintainers extending rent from the dashboard was the DX play. It was set P1 *at the time* precisely so this decision could be made cheaply if the week tightened, with the explicit note that it becomes the **SOW 2 headline rather than a loss**. The cut is inside the framework it was designed for, and confirmed. The dashboard ships read-only, which was always the P0 shape.
+
+**It pays twice, and that is sharper than the framework anticipated.** `W2-D13-02`'s only purpose was to de-risk `W4-D24-04`, so cutting the consumer leaves the spike nothing to inform. **Cutting #3 *is* the decision the spike was going to make** — taken now on evidence in hand rather than Tuesday after half a day spent reaching it. The spike's own text asked for exactly this: *"if this spike says the write path is unshippable at 24 effective days, say so now."* It is, and that is said now. `W2-D13-02` is `[-]`.
+
+`W4-D26-04` now names the dashboard write path as the **headline** SOW 2 item, not one of the deferred ones — writing it as "deferred" in the retro would misread a designed decision as a shortfall.
+
+## `W2-D11` — asked Rakha today rather than finding out Monday
+
+Fatih approved the standing decision: **if `W2-D11-01` is not started, S2 takes it Monday**, and `W2-D14-02b/02c` slip to Week 4. The trade is not close — D11 is the first required SOW evidence for Deliverable 2 and every W3 task assumes it exists, while the npm rehearsal and admin pull-forward are **insurance that was pulled forward**. Spending insurance to protect the critical path is the right trade every time.
+
+**But "find out Monday" was the wrong half of the plan.** That discovers the answer having already lost the weekend to a question askable on Friday. [Asked on #69 today](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615382737): *will D11-01 be in a branch by Monday morning?* Yes and no are equally useful; silence by end of day reads as no. Same front-loading applied to a coordination question instead of a technical one.
+
+**The slipped rows keep dates, not a "sometime."** `W2-D14-02c` includes Rakha's npm org invitation, and he cannot publish to `@evergreen-stellar` without it — an undated slip is exactly how that resurfaces as a blocker on Sep 29. Both rows are marked *planned Mon Sep 28*.
+
+## Three findings from `--cost`, carried further
+
+**Simulation prices extensions the protocol cannot perform.** Worse than the silent shortfall anticipated: asked for `extendTo: 4,000,000` against a 3,110,400 ceiling, simulation quoted 345,853 stroops without erroring or clamping — ~52% above the capped reality. **The user is not merely given less than they asked for; they are quoted for the thing that cannot happen.** In the primer next to `extendTTL`, worded as behaviour rather than caution, because the next person to call `simulateTransaction` will assume the network validates the request.
+
+**The durability coefficient was published in the protocol all along.** The fee fixture measured 1.952× and refused to fit a coefficient to three points. The live config says `persistent_rent_rate_denominator: 1215`, `temp: 2430` — **exactly 2:1**, with the residual accounted for by the flat components. That moves the finding from *"we observed this ratio"* to *"here is the constant that produces it"*, which nobody can dismiss as three data points. Recorded in the fixture notes beside the measurement, with the caveat that the **size** coefficient is still not in that config and still must not be fitted.
+
+**99% of the rent is the shared code entry**, measured on guinea-pig A. The one entry N contracts depend on is simultaneously the biggest availability risk and the biggest line item — one sentence carrying both halves of the product thesis, and truer than anything the optimizer will say. Written into `W4-D28-01`'s demo script as the closing beat; unlike the `F-01` framing it needs no survey to be true.
+
+## The implausibility rule caught two things the same day it was written
+
+`exit=0` for a command known to have failed, and `2.0 XLM` for an extension that should have cost a fraction of it. **Both were quantities, and neither was caught by a test.** `CONVENTIONS` now says where to point attention: **numbers you can sanity-check against a rough expectation are the cheapest detector available** — they cost nothing to print and nothing to glance at, and an order-of-magnitude error is visible where a behavioural one is not.
+
 ## 🔴 `W2-D9` was taken from Rakha — told him, and the reasoning
 
 **2026-09-10.** `W2-D9-01/02` were `Pending` with **no branch and no PR**, and they are the sole blocker on SOW §6.1's cost screenshot. Four build days to the gate, `W2-D13-03` already cut to protect it, Session 1 ended so nobody chasing it. Waiting for an answer would have cost a day on the critical path, so it was taken and reported loudly rather than asked about.
