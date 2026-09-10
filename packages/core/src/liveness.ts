@@ -6,7 +6,7 @@ import type {
   LedgerKey,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { hasExpired, needsAction } from './ttl.js';
+import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
 
 /**
  * The liveness assertion (`W2-D10-04`).
@@ -173,7 +173,7 @@ export function assertLiveness(args: {
 }): LivenessVerdict {
   const { scan, records } = args;
   const threshold = args.thresholds.bumpWhenRemainingLedgersBelow;
-  if (!Number.isInteger(threshold) || threshold < 0) {
+  if (!isValidThreshold(threshold)) {
     throw new Error('bumpWhenRemainingLedgersBelow must be a non-negative integer of ledgers');
   }
 

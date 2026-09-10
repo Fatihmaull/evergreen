@@ -59,6 +59,20 @@ Evergreen is tracked in the repo (canonical) and mirrored to Notion. The `BACKLO
 
 **Recurring work is `[~]`, not `[ ]`.** A task that runs repeatedly until a date — the twice-weekly drift check, for instance — is *started and not finished*, which is exactly what `[~]` means. Leaving it `[ ]` understates it. There is deliberately no separate "ongoing" state; five states is the whole vocabulary.
 
+### Coordination between sessions belongs in the repo, not in messages between agents
+
+When two agent sessions work one repo, a rule, a scope boundary or a handoff goes into a **file** — `docs/STATUS.md` for state, `BACKLOG.md` for ownership — never only into a message from one session to another.
+
+**A directive that lives in one session's context window expires silently.** It does not survive a restart, it cannot be read by a third session that joins later, and it can be delivered to the wrong recipient — peer sessions are not always distinguishable by name, and sending a scope directive to an unknown recipient is worse than sending none.
+
+The repo wins on all three axes: it cannot be misdelivered, it survives restarts, and `STATUS.md` is already the first file every session reads. This is *documentation at the point of use* applied to process rather than to code.
+
+**Established 2026-09-10**, when S2 was told to message S1 about scope and instead wrote the boundary into `STATUS.md` — four indistinguishable `evergreen-*` peers were listed, and none could be identified as S1 with enough confidence to message.
+
+The occasion was `#66` landing tagged `[W2-D10-01]`, a task owned by the other session. That was **not careless**: accepting an ADR that changes behaviour necessarily lands the code for that behaviour, so S1 could not amend ADR-006's exit-code scheme without touching `exitCodeFor`. The two-session rule had assumed a cleaner separation than the work allows. Its cost was a task row that meant nothing — `W2-D10-01` sat `[ ]` while half of it was merged, the state that produces either duplicated work or a silently dropped remainder.
+
+**So: when a session boundary turns out to be wrong, fix it in the file rather than by asking people to be more careful.**
+
 ### Notion operational backlog and weekly narrative
 
 **User-confirmed 2026-09-08:** Evergreen Tasks is the primary operational backlog in Notion; repo `BACKLOG.md` and `docs/STATUS.md` remain the source for synchronization. The separate [Task Tracker](https://www.notion.so/3d2e2030b2ce81c48b03ebbe4f27e4b5) is a readable narrative snapshot, refreshed **one week at a time at that week's closing review**, not on every commit. Preserve the existing database sync at session/merge boundaries.
@@ -200,6 +214,10 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - Money/fee values carry the unit too: `estimatedRentStroops`, never bare `cost`.
 - Booleans read as assertions: `isArchived`, `shouldBump`, `hasPolicySigner`.
 
+**⚠️ `remainingLedgers` and `threshold*` are matched by a lint rule.** `eslint.config.js` identifies hand-written TTL policy comparisons by *identifier name*. Renaming these silently disables a safety guard — the rename succeeds, every test passes, and the rule simply stops matching anything.
+
+That is the divergent-ID failure again: a check that stops checking rather than failing. If you rename them, update the selectors in `eslint.config.js` in the same commit, and confirm the rule still fires by planting a deliberate copy and watching lint reject it.
+
 ## Testing
 
 - Test runner is **Vitest** (ADR-003). `pnpm test` runs unit tests only.
@@ -213,20 +231,43 @@ Full workflow, including the session-start validation and the discrepancy rules,
 
 **A rule lives in exactly one function. Every other place calls it.** Writing `remaining < threshold` by hand where `needsAction(remaining, threshold)` exists creates a *copy*, and copies do not move when the original does.
 
-This is a member of the [report-named-no-subject family](#-the-report-named-no-subject--the-pattern-and-its-six-members) with a different surface. The copy agrees with the original right up until they diverge, and agreement is exactly what makes it invisible until then.
+This is a member of the [report-named-no-subject family](#-the-report-named-no-subject--the-pattern-and-its-six-members) with a different surface. The copy agrees with the original right up until they diverge, and that agreement is exactly what makes it invisible until then.
 
-**Observed twice on 2026-09-10, from one policy change.** When the threshold became a floor (`<=`):
+**Enforced by lint, not by discipline.** `eslint.config.js` forbids hand-written TTL threshold and expiry comparisons everywhere except `packages/core/src/ttl.ts`, which is the one home. A copy is now a CI failure at the moment it is typed, rather than a defect found by whoever thinks to grep.
 
-1. A test simulating the engine carried its own `remaining < THRESHOLD`. It failed, loudly, and was fixed.
-2. `exitCodeFor` in the CLI carried the same longhand. It did **not** fail, because nothing compared the two. At exactly the threshold the engine alarmed while `evergreen-check` reported a clean CI pass — the Action's entire contract with the outside world, wrong, silently.
+#### Two real catches, 2026-09-10, from a single policy change
 
-The second was found by grepping for longhand comparisons *because the first had just happened*. Without that prompt it would have shipped.
+Both happened when the threshold became a floor (`<` → `<=`). They are recorded together because **the difference between them is the argument for the rule.**
 
-**The rule:**
+**Catch 1 — a test carried its own copy. It failed loudly.** The guinea-pig B simulation computed *when the engine acts* as `remaining < THRESHOLD` instead of calling the predicate. It broke the moment the policy moved, and was fixed in minutes.
 
-- A boundary, threshold, or policy comparison gets a named predicate — `isLive`, `hasExpired`, `needsAction` — and every consumer calls it.
-- When two modules consume one policy, **pin their agreement in a test**, not by inspection. `packages/cli/test/gate-agreement.test.ts` walks across the boundary asserting the CLI gate and the engine give the same answer, *and* that both match the predicate — two consumers agreeing on a wrong answer is still wrong.
-- Reach for a grep whenever a policy changes. If a rule had two homes, it may have three.
+**Catch 2 — `exitCodeFor` carried the same longhand. It did not fail at all.** Nothing compared the CLI gate to the engine, so there was no signal to miss:
+
+```
+remaining= 17281  needsAction=false  engine.isAlarm=false  cli.exit=0  agree
+remaining= 17280  needsAction=true   engine.isAlarm=true   cli.exit=0  *** DIVERGE ***
+remaining= 17279  needsAction=true   engine.isAlarm=true   cli.exit=1  agree
+```
+
+At exactly the threshold, `evergreen-check` reported a **clean CI pass** while the engine alarmed. That exit code is the Action's entire contract with strangers' CI: someone else's pipeline would have gone green while their contract sat on the last ledger of its margin, and green is the answer nobody investigates. Same shape as the npm packaging defect — wrong in the direction nobody checks.
+
+**The honest tally: one caught by accident of a policy change, one caught by a grep prompted by that accident. Neither by design.** That is why the rule is now a lint rule. Grep found the third copy; grep cannot prove there is no fourth.
+
+### An `eslint-disable` for a policy rule needs the same bar as changing the policy
+
+The policy modules carry **zero** inline disables today. That property does not survive a deadline unless it is written down, because every individual disable looks justified at the moment someone writes it — and a rule with scattered disables has decayed into documentation that happens to run.
+
+**So: silencing the one-home rule requires the same scrutiny as changing the threshold semantics itself.** Not a reviewer's shrug; a decision, with a reason recorded in `STATUS.md`.
+
+The rule already fired once on legitimate code — `threshold < 0` in `assertLiveness`, which was *validation, not policy*. The right response was not a disable. It was `isValidThreshold`, which is clearer code and left the exception count at zero. **Expect that to be the usual outcome:** when this rule fires on something legitimate, the code generally wants to be clearer anyway.
+
+### Agreement is not correctness
+
+When two modules consume one policy, pin their agreement in a test — `packages/cli/test/gate-agreement.test.ts` walks across the boundary asserting the CLI gate and the engine give the same answer.
+
+**But assert that both match the predicate, not merely each other.** Two consumers agreeing on a wrong answer is still a wrong answer, and a pure agreement test would pass happily while both were wrong together. The agreement pattern invites exactly this failure, so the guard against it belongs beside it.
+
+Note the limit, too: an agreement test protects the consumers it knows about. A call site added later is not covered by it — which is the other reason the lint rule exists.
 
 ### A test must call the thing it tests, never restate it
 
