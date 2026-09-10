@@ -135,6 +135,7 @@ The asymmetry is the finding. **B and C had a drift check running twice a week; 
 
 | Date | Who | Doing what | What the doc did not give me |
 |---|---|---|---|
+| 2026-09-10 | Rakha | Synchronizing W2 and planning W2-D11-01 | BACKLOG and AGENTS still described ADR-006 as Proposed after #66 accepted its amendment; STATUS retained unlabelled pre-merge snapshots. Had to verify the ADR, merged PRs and current CLI before choosing a base. D11 also leaves entry selection and the boundary with Fatih's dry-run task unspecified; the new plan proposes explicit defaults. |
 | 2026-09-10 | Session 1 | Registering `W1-D4-09` as a recurring obligation | `CONVENTIONS.md` § Task status defines five states and says recurring work is `[~]`. It has no state for *"standing obligation, outside the weekly count"* — the concept did not exist until it was needed, so the backlog had to grow a new section rather than the docs answering the question. |
 | 2026-09-10 | Session 1 | Same task | `scripts/check-task-ids.mjs` documents what it catches and what it deliberately cannot, but nothing said **what shape makes an ID "registered"** — a checkbox line. Registering a task any other way silently produced dangling references in two files. The constraint was discoverable only by tripping it. |
 

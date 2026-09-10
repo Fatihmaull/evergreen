@@ -2,12 +2,28 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · **Session 1 closed.** ADR-006 accepted as amended (#66); mirror reconciled 145 = 145 on four fields
+**Last updated:** 2026-09-10 · Rakha synchronized main; D11 planning only
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
+
+## Current — Rakha synchronization and D11 planning, 2026-09-10
+
+Local `main` was fast-forwarded to remote `71692c8` (#79), then planning moved to `docs/W2-D11-01-plan-and-sync`; old feature branches were preserved. Runtime was not edited. The synchronized tree passed `pnpm check`: 258 Vitest tests plus 36 Node script tests, typecheck, lint, formatting and repository guards. GitHub main CI was also green at the checked head; local and remote evidence are distinct.
+
+**Current task truth:** #60 and #63 are merged; ADR-006 is Accepted as amended in #66. Reconciled stale D8-03 to Done and D10-02 to Done from merged CLI behavior/tests (#66/#70/#71/#75/#77). D10-02's completion does not claim the future Action exists; it must enable `--require-declared-scope` at W4-D25-01. D10-04 stays In progress for engine integration. Updated AGENTS' stale ADR-006 pointers. These tracking corrections are on this planning branch, not yet merged into main.
+
+**Next work:** W2-D11-01 is In progress for planning only; see [the implementation plan](W2-D11-01-PLAN.md). Proposed explicit target flag `--extend-to-ledgers`, default simulation, explicit entry selection and submit, and verified before/after TTL. D11-02/03 remain Pending for controlled A evidence after implementation review. D11-04 remains Fatih's task; coordinate the dry-run/CLI interface boundary before implementation. No implementation, signature, chain transaction or new live scan in this synchronization.
+
+**Avoid duplicate work:** Fatih's D9-01/02/03 is merged in #78 and remains his ownership; active remote branch `feat/W2-D9-cost-cli` confirms the announced CLI wiring is underway. Rakha has no local rent implementation to reconcile. D12-01/02 follows D11; W1 is closed apart from the separately tracked recurring obligation. Existing npm admin requests in Issue #64 remain unchanged.
+
+**Mirror pending:** Notion tools are unavailable this turn. Sync D8-03 (Done), D8-04 (merged outcome), D10-02 (Done), and D11-01 (In progress, planning only) after the branch correction is available; validate D9 ownership and D11-02/03/04 unchanged. The required all-row presence diff could not run and is pending, not assumed clean. Task Tracker remains a week-gate snapshot. No new task IDs were added.
+
+## Historical handover and execution log
+
+The entries below retain their original dated state; current merge/ADR/task state is the section above. In particular, the Sep 9 Proposed/open-PR notes are historical and must not drive new work.
 
 ## 🔚 Session 1 ends here — 2026-09-10
 
