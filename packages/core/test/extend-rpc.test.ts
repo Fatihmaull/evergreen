@@ -2,6 +2,7 @@ import {
   Account,
   Keypair,
   Networks,
+  Operation,
   SorobanDataBuilder,
   TransactionBuilder,
   xdr,
@@ -38,23 +39,91 @@ function fakeServer() {
     getTransaction: vi.fn(async () => ({ status: 'NOT_FOUND', txHash: 'a'.repeat(64) })),
   };
 }
+function receipt() {
+  const tx = new TransactionBuilder(new Account(SOURCE, '12'), {
+    fee: '100',
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(Operation.extendFootprintTtl({ extendTo: 120 }))
+    .setTimeout(60)
+    .build();
+  return { hash: Buffer.from(tx.hash()).toString('hex'), envelopeXdr: tx.toEnvelope() };
+}
 describe('extension RPC envelope', () => {
-  it('distinguishes confirmed success from a failed transaction', async () => {
-    const hash = 'a'.repeat(64);
+  it.each(['SUCCESS', 'FAILED'])(
+    'rejects %s without an envelope even if the echoed hash matches',
+    async (status) => {
+      const { hash } = receipt();
+      await expect(
+        confirmExtension(
+          { getTransaction: async () => ({ status, txHash: hash, ledger: 1002 }) },
+          hash,
+        ),
+      ).rejects.toThrow('envelope');
+    },
+  );
+  it('does not trust the SDK-echoed hash when RPC returns a different envelope', async () => {
+    const first = new TransactionBuilder(new Account(SOURCE, '12'), {
+      fee: '100',
+      networkPassphrase: Networks.TESTNET,
+    })
+      .addOperation(Operation.extendFootprintTtl({ extendTo: 120 }))
+      .setTimeout(60)
+      .build();
+    const other = new TransactionBuilder(new Account(SOURCE, '13'), {
+      fee: '100',
+      networkPassphrase: Networks.TESTNET,
+    })
+      .addOperation(Operation.extendFootprintTtl({ extendTo: 120 }))
+      .setTimeout(60)
+      .build();
+    const hash = Buffer.from(first.hash()).toString('hex');
     const server = {
-      getTransaction: vi.fn(async () => ({ status: 'SUCCESS', txHash: hash, ledger: 1002 })),
+      getTransaction: vi.fn(async () => ({
+        status: 'SUCCESS',
+        txHash: hash,
+        ledger: 1002,
+        envelopeXdr: other.toEnvelope(),
+      })),
+    };
+    await expect(confirmExtension(server, hash)).rejects.toThrow('envelope');
+  });
+  it('distinguishes confirmed success from a failed transaction', async () => {
+    const { hash, envelopeXdr } = receipt();
+    const server = {
+      getTransaction: vi.fn(async () => ({
+        status: 'SUCCESS',
+        txHash: hash,
+        ledger: 1002,
+        envelopeXdr,
+      })),
     };
     expect(await confirmExtension(server, hash)).toEqual({ status: 'confirmed', ledger: 1002 });
-    server.getTransaction.mockResolvedValue({ status: 'FAILED', txHash: hash, ledger: 1002 });
+    server.getTransaction.mockResolvedValue({
+      status: 'FAILED',
+      txHash: hash,
+      ledger: 1002,
+      envelopeXdr,
+    });
     expect(await confirmExtension(server, hash)).toEqual({ status: 'failed' });
   });
   it('refuses malformed confirmation status/ledger and invalid poll bounds', async () => {
-    const hash = 'a'.repeat(64);
+    const { hash, envelopeXdr } = receipt();
     const server = {
-      getTransaction: vi.fn(async () => ({ status: 'SUCCESS', txHash: hash, ledger: NaN })),
+      getTransaction: vi.fn(async () => ({
+        status: 'SUCCESS',
+        txHash: hash,
+        ledger: NaN,
+        envelopeXdr,
+      })),
     };
     await expect(confirmExtension(server, hash)).rejects.toThrow('inclusion ledger');
-    server.getTransaction.mockResolvedValue({ status: 'PENDING', txHash: hash, ledger: 1002 });
+    server.getTransaction.mockResolvedValue({
+      status: 'PENDING',
+      txHash: hash,
+      ledger: 1002,
+      envelopeXdr,
+    });
     await expect(confirmExtension(server, hash)).rejects.toThrow('Unknown');
     await expect(confirmExtension(server, hash, { attempts: 0 })).rejects.toThrow('bound');
   });

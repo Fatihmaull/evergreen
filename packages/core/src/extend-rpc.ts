@@ -7,6 +7,7 @@ import {
   Transaction,
   TransactionBuilder,
   rpc,
+  xdr,
 } from '@stellar/stellar-sdk';
 import type { PlannedExtension } from './extend.js';
 import { extensionKey } from './extend.js';
@@ -17,7 +18,14 @@ export interface ExtensionRpc {
   getAccount(address: string): Promise<Account>;
   simulateTransaction(tx: Transaction): Promise<rpc.Api.SimulateTransactionResponse>;
   sendTransaction(tx: Transaction): Promise<{ status: string; hash: string }>;
-  getTransaction(hash: string): Promise<{ status: string; txHash?: string; ledger?: number }>;
+  getTransaction(
+    hash: string,
+  ): Promise<{
+    status: string;
+    txHash?: string;
+    ledger?: number;
+    envelopeXdr?: xdr.TransactionEnvelope;
+  }>;
 }
 export interface PreparedExtension {
   readonly entry: PlannedExtension;
@@ -98,6 +106,17 @@ export async function confirmExtension(
   for (let i = 0; i < attempts; i++) {
     const response = await server.getTransaction(hash);
     if (response.txHash !== hash) throw new Error('Transaction confirmation hash mismatch');
+    if (response.status === 'SUCCESS' || response.status === 'FAILED') {
+      // SDK 17 getTransaction() fills txHash from the request, not the response.
+      // Bind the result to the returned envelope rather than accepting that echo.
+      if (!response.envelopeXdr) throw new Error('Missing transaction confirmation envelope');
+      const transaction = TransactionBuilder.fromXDR(
+        response.envelopeXdr.toXDR('base64'),
+        Networks.TESTNET,
+      );
+      if (Buffer.from(transaction.hash()).toString('hex') !== hash)
+        throw new Error('Transaction confirmation envelope hash mismatch');
+    }
     if (response.status === 'FAILED') return { status: 'failed' };
     if (response.status === 'SUCCESS') {
       if (!Number.isSafeInteger(response.ledger) || response.ledger! <= 0)
