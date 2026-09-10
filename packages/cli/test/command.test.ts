@@ -39,13 +39,32 @@ describe('scan CLI', () => {
     expect(deps.readKeysFile).toHaveBeenCalledWith('keys.json');
   });
 
-  it('keeps no-file scans visibly limited and nonzero even with healthy instance/code', async () => {
+  it('keeps no-file scans visibly limited, but answerable', async () => {
     const deps = dependencies();
     const result = await runCli(['scan', A], deps);
     expect(deps.readKeysFile).not.toHaveBeenCalled();
-    expect(result.exitCode).toBe(3);
+    // ADR-006 amendment: a bare scan answers what it was asked. The limit is
+    // reported in the output every time — it is not carried by the exit code,
+    // because a code that fires on every default invocation carries nothing.
+    expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('NOT been fully enumerated');
     expect(result.stdout).toContain('0 explicit data key(s)');
+    expect(result.stdout).toContain('further entries are unread');
+  });
+
+  it('fails closed on an undeclared scope when the caller asks to be held to it', async () => {
+    const deps = dependencies();
+    const result = await runCli(['scan', A, '--require-declared-scope'], deps);
+    expect(result.exitCode).toBe(3);
+    expect(result.stdout).toContain('NOT been fully enumerated');
+  });
+
+  it('reaches zero under --require-declared-scope once the author declares emptiness', async () => {
+    const result = await runCli(
+      ['scan', A, '--no-data-keys', '--require-declared-scope'],
+      dependencies(),
+    );
+    expect(result.exitCode).toBe(0);
   });
 
   it('returns zero only for healthy supplied keys, while still explaining coverage', async () => {
@@ -74,12 +93,18 @@ describe('scan CLI', () => {
   });
 
   it('does not silently treat an empty keys file as the no-data assertion', async () => {
-    const output = await runCli(
-      ['scan', A, '--keys-file', 'empty.json'],
-      dependencies('{"dataKeys":[]}'),
+    // An empty file says "here are my keys: none". Only --no-data-keys says "there
+    // are none". Under the amendment that distinction shows up where it matters:
+    // the caller who asked to be held to a declared scope.
+    const args = ['scan', A, '--keys-file', 'keys.json', '--require-declared-scope'];
+    const result = await runCli(args, dependencies('{"dataKeys":[]}'));
+    expect(result.exitCode).toBe(3);
+
+    const declared = await runCli(
+      ['scan', A, '--no-data-keys', '--require-declared-scope'],
+      dependencies(),
     );
-    expect(output.exitCode).toBe(3);
-    expect(output.stdout).toContain('Data-key coverage unknown');
+    expect(declared.exitCode).toBe(0);
   });
 
   it.each([['--help'], ['scan', '--help']])('help performs no I/O: %j', async (...args) => {

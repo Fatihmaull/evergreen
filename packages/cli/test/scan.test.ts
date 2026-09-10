@@ -100,26 +100,54 @@ describe('exitCodeFor — the Action contract', () => {
     expect(exitCodeFor(noTtl, 17_280)).toBe(EXIT_INCOMPLETE);
   });
 
-  it('requires coverage metadata from legacy producers too', () => {
+  // ADR-006 amendment (2026-09-10). Undeclared scope is no longer incomplete by
+  // default — only a caller who opted into being held to it gets 3. The cases
+  // below are Rakha's original coverage, moved behind the flag rather than
+  // dropped: every one of them still fails closed for the CI caller.
+  it('treats a legacy producer without coverage as answerable by default', () => {
     const legacy: ScanResult = {
       network: healthy.network,
       contracts: healthy.contracts,
       entries: healthy.entries,
       issues: [],
     };
-    expect(exitCodeFor(legacy, 17_280)).toBe(EXIT_INCOMPLETE);
+    expect(exitCodeFor(legacy, 17_280)).toBe(EXIT_OK);
+    expect(exitCodeFor(legacy, 17_280, { requireDeclaredScope: true })).toBe(EXIT_INCOMPLETE);
   });
 
   it.each([undefined, -1, 1.5, NaN, 0])(
-    'rejects unknown or invalid data-key count %s as incomplete',
+    'reports unknown or invalid data-key count %s as incomplete only when scope is required',
     (count) => {
       const coverage = {
         mode: 'known-keys' as const,
         dataKeysSuppliedByContract: count === undefined ? {} : { C1: count },
       };
-      expect(exitCodeFor({ ...healthy, coverage }, 17_280)).toBe(EXIT_INCOMPLETE);
+      expect(exitCodeFor({ ...healthy, coverage }, 17_280)).toBe(EXIT_OK);
+      expect(exitCodeFor({ ...healthy, coverage }, 17_280, { requireDeclaredScope: true })).toBe(
+        EXIT_INCOMPLETE,
+      );
     },
   );
+
+  // The reason the default changed, stated as a test so it cannot quietly revert.
+  it('lets a stranger scanning an unknown contract reach 0 without asserting anything', () => {
+    const thirdParty = result({
+      entries: healthy.entries,
+      coverage: { mode: 'known-keys', dataKeysSuppliedByContract: { C1: 0 } },
+    });
+    // No --no-data-keys: they did not write this contract and cannot know.
+    expect(exitCodeFor(thirdParty, 17_280)).toBe(EXIT_OK);
+  });
+
+  it('still reports a degraded read as incomplete, with or without the flag', () => {
+    const missing = result({
+      entries: healthy.entries,
+      coverage: { mode: 'known-keys', dataKeysSuppliedByContract: { C1: 1 } },
+      issues: [{ kind: 'entry-not-found', contracts: ['C1'], message: 'no entry returned' }],
+    });
+    expect(exitCodeFor(missing, 17_280)).toBe(EXIT_INCOMPLETE);
+    expect(exitCodeFor(missing, 17_280, { requireDeclaredScope: true })).toBe(EXIT_INCOMPLETE);
+  });
 
   it('does not accept an empty assertion contradicting a positive count', () => {
     expect(
@@ -133,6 +161,7 @@ describe('exitCodeFor — the Action contract', () => {
           },
         },
         17_280,
+        { requireDeclaredScope: true },
       ),
     ).toBe(EXIT_INCOMPLETE);
   });

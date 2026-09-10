@@ -9,7 +9,7 @@ One file per non-trivial decision. Numbered, immutable in spirit: if a decision 
 | [ADR-003](ADR-003-toolchain-hosting-persistence.md) | Toolchain, hosting, scheduler, and persistence | Actions + Node 24 and Pages selected; Neon/PostgreSQL adoption deferred to W4 after Sep 20; spike retained as unused experiment |
 | [ADR-004](ADR-004-payment-model.md) | The user always pays their own extend fees; Apex never subsidises rent | Accepted |
 | [ADR-005](ADR-005-shared-domain-types.md) | JSON-compatible shared domain types: ledger-key-keyed results, money as integer decimal text, explicit variants | **Accepted 2026-09-08** |
-| [ADR-006](ADR-006-scan-health-exit-codes.md) | `scan` exit codes separate incomplete information (3) from observed low TTL (1); precedence 2 > 3 > 1 > 0 | Proposed — merged in #60 and live in the CLI; **acceptance pending, amendment proposed** |
+| [ADR-006](ADR-006-scan-health-exit-codes.md) | `scan` exit codes: `3` is a degraded scan, not an undeclared scope; completeness is demanded via `--require-declared-scope`, on by default in the Action. Precedence 2 > 3 > 1 > 0 | **Accepted 2026-09-10 as amended** |
 
 ## When to write one
 
