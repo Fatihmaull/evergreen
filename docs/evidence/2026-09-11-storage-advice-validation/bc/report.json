@@ -1,0 +1,270 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+    },
+    {
+      "id": "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4793687,
+        "remainingLedgers": 174732
+      }
+    },
+    "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4880097,
+        "remainingLedgers": 261142
+      }
+    },
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4793688,
+        "remainingLedgers": 174733
+      }
+    },
+    "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4880099,
+        "remainingLedgers": 261144
+      }
+    },
+    "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+      "kind": "code",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 5290829,
+        "remainingLedgers": 671874
+      }
+    }
+  },
+  "issues": [
+    {
+      "kind": "entry-not-found",
+      "message": "No entry returned. Absence is not proof of archival or deletion.",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "entryKey": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+      "observedAtLedger": 4618955
+    },
+    {
+      "kind": "entry-not-found",
+      "message": "No entry returned. Absence is not proof of archival or deletion.",
+      "contracts": [
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      ],
+      "entryKey": "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+      "observedAtLedger": 4618955
+    }
+  ],
+  "coverage": {
+    "mode": "known-keys",
+    "dataKeysSuppliedByContract": {
+      "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": 2,
+      "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": 2
+    }
+  },
+  "health": {
+    "thresholdLedgers": 17280,
+    "worst": "healthy",
+    "sharedEntryCount": 1,
+    "undeterminedSharingCount": 0,
+    "byEntry": {
+      "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 2,
+        "blastRadiusAtLeast": 2,
+        "sharingStatus": "shared",
+        "reason": "Above threshold."
+      }
+    }
+  },
+  "optimization": {
+    "scope": "observed-keys-only",
+    "context": {
+      "settings": {
+        "minTemporaryTtl": 720,
+        "minPersistentTtl": 120960,
+        "observedAtLedger": 4618955
+      }
+    },
+    "findings": [
+      {
+        "entryKey": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "knownConsumers": [
+          "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4793688,
+          "remainingLedgers": 174733
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "durability-review",
+        "benchmarkId": "guinea-pig-a-2026-09-09",
+        "action": "Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.",
+        "rationale": "Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents."
+      },
+      {
+        "entryKey": "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "knownConsumers": [
+          "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4880099,
+          "remainingLedgers": 261144
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "durability-review",
+        "benchmarkId": "guinea-pig-a-2026-09-09",
+        "action": "Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.",
+        "rationale": "Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents."
+      },
+      {
+        "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+        "knownConsumers": [
+          "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+          "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 5290829,
+          "remainingLedgers": 671874
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "shared-code-dependency",
+        "action": "Monitor this code key once with its known consumers; checking their instances alone does not establish protection.",
+        "rationale": "Every contract built from the same Wasm uses this code entry. Other consumers may exist outside this scan; sharing is not duplicated storage or a measured saving."
+      }
+    ],
+    "limitations": [
+      "Only observed keys were analyzed; storage was not enumerated. No size, duplicate-content or global-consumer inference is supported.",
+      "Advice is conditional on application requirements; it does not authorize a transaction or change scan health exits.",
+      "Some requested entries are missing or unreadable; they receive no inferred retention or cost advice.",
+      "Current rent is unavailable for some findings. Use --cost for quotes where supported; historical benchmark amounts are not per-entry quotes."
+    ],
+    "evidence": {
+      "rent": {
+        "id": "guinea-pig-a-2026-09-09",
+        "recordedAt": "2026-09-09T10:58:52Z",
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json",
+        "persistent": {
+          "rentStroops": "103849",
+          "totalFeeStroops": "106308",
+          "dataBytes": 88,
+          "keyBytes": 76,
+          "ledgersExtended": 1312937
+        },
+        "temporary": {
+          "rentStroops": "53196",
+          "totalFeeStroops": "55655",
+          "dataBytes": 88,
+          "keyBytes": 76,
+          "ledgersExtended": 1312939
+        },
+        "qualification": "Historical measured rent at equal encoded sizes over durations differing by two ledgers; not a quote or savings forecast for this entry."
+      },
+      "settings": {
+        "recordedOn": "2026-09-05",
+        "observedAtLedger": 4519665,
+        "minTemporaryTtl": 720,
+        "minPersistentTtl": 120960,
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-05-ttl-boundary/state-archival-settings.json"
+      },
+      "deletion": {
+        "recordedOn": "2026-09-06",
+        "subject": "isolated temporary-entry experiment",
+        "lastLiveLedger": 4529810,
+        "firstAbsentLedger": 4529811,
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-06-ttl-boundary/README.md"
+      }
+    }
+  }
+}

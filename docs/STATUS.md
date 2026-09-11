@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
-**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
+**Last updated:** 2026-09-11 · D12-02 validated; ready for result review
+**Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
 ## Current — W2-D12-02 read-only validation
+
+**D12-02 Done on its validation branch, not a new PR or merge.** [Evidence and semantic assessment](evidence/2026-09-11-storage-advice-validation/README.md): reused the Sep 10 A baseline; B/C/B returned two contracts, five entries and three recommendations with expected exit 3 for absent temporary keys. Blend TestnetV2 returned instance/code and two source-defined persistent reserve keys, matching the publisher's Wasm hash; three conditional recommendations and exit 0. The known reserve config/accounting roles fail the disposable-data condition, so no migration or savings claim is made. All current prices remain unavailable.
+
+**Verification:** raw request/response text saved; offline replay matched keys, TTLs, recommendations and Blend payload roles. B/C expiry ledgers were unchanged in an immediate post-read. Full pnpm check passed 340 Vitest + 36 Node = 376 tests. Only getNetwork/getLedgerEntries reached Testnet; no simulation, invocation, signing, transaction or runtime source edit. Ready for Rakha result review before publication. This branch is stacked on #88; D11 #86/#87 and integration #89/#95 remain separate.
+
+### Validation start record
 
 Rakha approved the next task on 2026-09-11. D12-02 is In progress on `test/W2-D12-02-storage-advice-validation`, stacked on #88 (38e6543). Scope: reuse A evidence, read B/C shared-key advice and validate one independently published third-party Testnet contract. Record provenance and raw responses; no arbitrary storage enumeration or fabricated keys. No runtime feature, transaction or PR publication in this execution step.
 

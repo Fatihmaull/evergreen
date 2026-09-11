@@ -89,6 +89,10 @@ On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a project
 
 2026-09-10: [read-only A report](evidence/2026-09-10-storage-advice/README.md), actual CLI human and JSON runs, exit 0. Four entries produced three scoped recommendations; temporary TTL remained over 1.4 million ledgers despite its configured minimum of 720. Both output modes preserve that distinction and label historical rent separately from unavailable current quotes. Exact RPC responses are saved; no simulation or transaction. Broader D12-02 validation remains Pending.
 
+## Broader storage advice validation — W2-D12-02
+
+2026-09-11: [B/C and third-party Blend TestnetV2 evidence](evidence/2026-09-11-storage-advice-validation/README.md). Read-only known-key scans, publisher-pinned address/schema provenance, matching deployed Wasm, and offline replay. B/C has one shared-code finding with two consumers and correctly reports absent temporary keys; Blend reserve config/accounting recommendations remain conditional. No transaction, quote, contract invocation or claim of full storage coverage. A's prior capture is reused as dated evidence.
+
 ## Transaction hashes
 
 ### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)
