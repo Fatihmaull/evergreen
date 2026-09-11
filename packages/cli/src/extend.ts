@@ -1,4 +1,8 @@
-import { isValidContractId, isValidPayerAccount } from '@evergreen-stellar/core';
+import {
+  isValidContractId,
+  isValidPayerAccount,
+  ProtectedEntryError,
+} from '@evergreen-stellar/core';
 import type {
   ExtensionExecutionResult,
   ExtensionPlan,
@@ -157,7 +161,13 @@ export async function runExtendCli(
         : 'Extension incomplete. Inspect per-entry outcomes and reconcile any submitted hash before retrying.',
       exitCode: report.result.ok ? 0 : 2,
     };
-  } catch {
+  } catch (error) {
+    // A protected-subject refusal is NOT a connectivity problem, and reporting
+    // it as one sends the operator to check their RPC endpoint while the real
+    // message — that this write would spend an unrepeatable proof — is thrown
+    // away. Same defect class as the wrong-network message fixed in W2-D10-03:
+    // a safety event wearing a generic failure.
+    if (error instanceof ProtectedEntryError) return fail(error.message);
     return fail(
       'Extension preparation failed. Check Testnet RPC, selected live keys, public payer and network configuration. No raw provider details are printed.',
     );
