@@ -9,6 +9,10 @@
 
 ---
 
+## Active — W2-D11-02/03 proof preparation, 2026-09-12
+
+Rakha authorized execution of the approved plan. Preparing real screenshot capture and the bounded RPC recorder on existing branch `docs/W2-D11-02-live-proof-plan`. Explorer screenshot saving now works through CUA; a local read-only ttyd terminal will display a real CLI scan for capture. No secret read, signature or send at this point. D11-02 In progress for readiness work; D11-03 Pending until before-scan capture starts. Existing transaction bounds and #103 remain unchanged.
+
 ## Current — synchronized main; W2-D11-02/03 next
 
 Integrated `origin/main` at `c3ba97b` (#101) into the existing `docs/W2-D11-02-live-proof-plan` branch. Fatih merged #86, #88 and #97; #100 adds the B/C and shared-code write guard, #99 evaluates coverage in the canonical check, and #94 adds warning/critical tiers. Runtime files match this merged main. #102 remains OPEN at `06041e5c`: explicit dry-run, multi-contract CLI, automatic Notion mirroring and the W2 review are not imported into this branch.
