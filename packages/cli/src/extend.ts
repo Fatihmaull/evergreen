@@ -36,6 +36,9 @@ export interface ExtendCliDependencies {
 export const EXTEND_HELP = `usage: evergreen extend <contract-id> --ledgers N
   [--source-account G...] [--keys-file path] [--include-code] [--json]
   [--submit --secret-env NAME --max-fee-stroops N]
+--dry-run              simulate only and say so. This is already the default; the flag
+                       exists so a script can state its own safety rather than rely on
+                       an absence. Mutually exclusive with --submit.
 
 Testnet only. Default: simulate, never sign or submit. Supply a public payer
 with --source-account or EVERGREEN_SOURCE_ACCOUNT; there is no fallback payer.
@@ -85,12 +88,26 @@ export async function runExtendCli(
       const value = args[++i];
       if (!value || value.startsWith('-')) return fail('Missing extend option value.');
       values.set(arg, value);
-    } else if (['--submit', '--json', '--include-code'].includes(arg)) flags.add(arg);
+    } else if (['--submit', '--dry-run', '--json', '--include-code'].includes(arg)) flags.add(arg);
     else return fail('Unknown or conflicting extend option.\n' + EXTEND_HELP);
   }
   const rawLedgers = values.get('--ledgers') ?? '';
   const additionalLedgers = Number(rawLedgers);
   const sourceAccount = values.get('--source-account') ?? deps.sourceAccount;
+  // `--dry-run` is the DEFAULT made speakable (`W2-D11-04`). It adds no new
+  // behaviour — it names the behaviour you already get — which is the point:
+  // someone scripting a safe run should be able to SAY so, and someone reading
+  // that script should see the safety rather than infer it from an absence.
+  //
+  // Requesting both is refused rather than resolved. Any precedence rule here
+  // is a coin-flip on a live transaction: if `--submit` wins, a script that
+  // added `--dry-run` for safety submits anyway; if `--dry-run` wins, an
+  // operator who typed `--submit` believes they sent something and did not.
+  if (flags.has('--submit') && flags.has('--dry-run'))
+    return fail(
+      '--submit and --dry-run are mutually exclusive.\n' +
+        '  Dry-run is already the default; drop --dry-run to submit, or drop --submit to simulate.',
+    );
   const submit = flags.has('--submit');
   const secretEnv = values.get('--secret-env');
   const maxFeeStroops = values.get('--max-fee-stroops');
