@@ -6,6 +6,16 @@ import { scanContract } from '../src/scan-contract.js';
 import { instanceKey } from '../src/rpc.js';
 import { planExtension, executeExtensions } from '../src/extend.js';
 import { coverageIssues } from '../src/health.js';
+import { SHARED_CODE_ENTRY_KEY } from '../src/write-guard.js';
+
+/**
+ * These fixtures ARE guinea-pig A, whose code entry is the real shared one
+ * protected by `assertWriteAllowed`. Acknowledging it explicitly is what the
+ * escape hatch is for, and doing so here also proves the override works —
+ * a guard with no tested way through is a guard that will be deleted the
+ * first time someone legitimately needs to pass it.
+ */
+const ACK = { acknowledgeProtected: [SHARED_CODE_ENTRY_KEY] };
 
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const fixture = JSON.parse(
@@ -56,7 +66,7 @@ describe('manual extension selection', () => {
     const report = { ...advisory, issues: coverageIssues(advisory) };
     expect(planExtension(report, options).entries).toHaveLength(1);
     expect(
-      planExtension(report, { ...options, includeCode: true }).entries.map((e) => e.kind),
+      planExtension(report, { ...options, ...ACK, includeCode: true }).entries.map((e) => e.kind),
     ).toEqual(['instance', 'code']);
   });
   it('selects only the instance by default and adds a delta to its current TTL', async () => {
@@ -80,7 +90,7 @@ describe('manual extension selection', () => {
     ).toBe('temporary');
   });
   it('requires explicit code selection and warns about invisible consumers', async () => {
-    const p = planExtension(await atRemaining(), { ...options, includeCode: true });
+    const p = planExtension(await atRemaining(), { ...options, ...ACK, includeCode: true });
     expect(p.entries.map((e) => e.kind)).toEqual(['instance', 'code']);
     expect(p.warnings.join(' ')).toContain('outside this scan');
   });
@@ -129,7 +139,7 @@ describe('manual extension selection', () => {
       ],
     };
     expect(planExtension(partial, options).entries).toHaveLength(1);
-    expect(() => planExtension(partial, { ...options, includeCode: true })).toThrow();
+    expect(() => planExtension(partial, { ...options, ...ACK, includeCode: true })).toThrow();
   });
 });
 

@@ -29,6 +29,14 @@ export {
 export type { LedgerEntryReader, RawLedgerEntry } from './rpc.js';
 export { scanInstances } from './scan.js';
 export { ConfigError, TESTNET_PASSPHRASE, loadConfig } from './config.js';
+export {
+  PROTECTED_ENTRIES,
+  ProtectedEntryError,
+  SHARED_CODE_ENTRY_KEY,
+  SHARED_CODE_UNTIL,
+  assertWriteAllowed,
+} from './write-guard.js';
+export type { WriteGuardOptions } from './write-guard.js';
 export type { ConfigLoadResult } from './config.js';
 export { assessEntry, coverageIssues, worstHealth } from './health.js';
 export { estimateRent, stroopsToXlm } from './rent.js';
