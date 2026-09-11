@@ -168,3 +168,19 @@ Previews go to stderr **before signing**, including the prepared hash (not yet s
 Live success checks the absolute expiry ledger against the before observation and inclusion ledger plus target. Later remaining-TTL readings naturally decrease as ledgers advance. A concurrent third-party extension may also improve post-state; the CLI does not prove exclusive causation.
 
 For the sprint proof use **A's instance only** after review. Do not submit for B/C or shared A/B/C Wasm while decay proofs are pending. [D11 simulation evidence](../../docs/evidence/2026-09-10-manual-extend-simulation/README.md) is unsigned and is not a live extension proof.
+## Storage advice
+
+Add `--optimize` to a scan for conditional design recommendations with evidence:
+
+```bash
+pnpm cli scan <contract-id> --keys-file keys.json --optimize
+pnpm cli scan <contract-id> --keys-file keys.json --optimize --cost --ledgers 1000 --json
+```
+
+The report covers temporary retention, persistent-data durability choices, and shared-code dependencies. It reads network minimum lifetimes but requires no payer or simulation unless `--cost` is also requested. Plain scans retain their existing output and network work.
+
+Recommendations are scoped to observed keys. They do not infer payload size, duplicate contents, application requirements or unseen consumers. Instance storage is never suggested for conversion to temporary. A persistent-data suggestion applies only when the data is disposable or recomputable; durable state should remain persistent. No storage change, extension or automatic migration happens.
+
+Current per-key rent quotes retain their pricing context when `--cost` is supplied. Missing, invalid or stale quotes remain unavailable, never zero. The historical A rent comparison is separately labelled; its approximately 1.95x ratio is not a promise of savings. Current network minimum lifetime is not the current entry's expiry: the report retains each entry's actual observed TTL. If settings cannot be read, a dated historical reference and limitation replace them.
+
+JSON adds `optimization` alongside unchanged scan/health/cost fields. Advice does not change scan exit precedence; a healthy exit is not a complete-storage audit. Even when optional pricing fails, the scan and qualified advice remain visible. [Read-only A evidence](../../docs/evidence/2026-09-10-storage-advice/README.md) includes full RPC and both output modes.

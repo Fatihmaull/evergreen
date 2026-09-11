@@ -3,6 +3,7 @@
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
 **Last updated:** 2026-09-10 · D11 published for review in PR #86
+**Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -60,6 +61,43 @@ Local `main` was synchronized to remote `ad18ad4` (#80, merged during this turn)
 ## Historical handover and execution log
 
 The entries below retain their original dated state; current merge/ADR/task state is the section above. In particular, the Sep 9 Proposed/open-PR notes are historical and must not drive new work.
+## Current — W2-D12-01 implementation
+
+**Synchronization complete:** #88 and #86 are synchronized with main #93 (`96ebe2d`) independently; the local combined tree passed 446 tests and unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) includes per-branch checks (D12 376, D11 428), installed CLI-only tarballs, and a fresh-output pipeline proof. W2-D14-02d is verified in both branches; #95 and #89 remain open for actual main integration after review. No force-push, PR merge, live RPC or transaction. Final-head remote CI is checked separately after push.
+
+**Main #93 synchronization:** merged `origin/main` `96ebe2d`, resolved the CLI import conflict by retaining both coverageIssues and analyzeStorage, and applied the same W2-D14-02d pipeline correction as #86 (Issue #95). New advisory sharing/coverage issues no longer suppress optimizer findings or masquerade as read errors; actual read failures still suppress unsupported advice. The pre-fix CLI tests reproduced two missing-finding failures. Full check now passes 340 Vitest + 36 Node = 376 tests, coverage passes unchanged thresholds. A newly built CLI-only tarball installed outside the repo with fresh cache and no core/shared-types siblings; the installed bundle's offline scan retained machine-readable sharing caveats and all three optimizer findings. No live RPC or transaction; registry downloads only. Combined-tree verification under #89 follows separately.
+
+**Published in [PR #88](https://github.com/Fatihmaull/evergreen/pull/88)** after Rakha approved publication; Fatih is requested as reviewer. Reviewed implementation `7a5a99c`, base main `ed16bc2`. D12-01 remains Done for verified implementation, not merged; D12-02 remains Pending. No new live read, quote, signing or transaction. Full local check passed 362 tests; coverage passed unchanged thresholds. Final-head GitHub checks are verified separately.
+
+**Integration coordination:** [Issue #89](https://github.com/Fatihmaull/evergreen/issues/89), assigned to and mentioning Fatih, tracks the concrete overlap with D11 PR #86 in CLI dispatch/wiring and core exports. Preserve both paths, synchronize the second PR after the first merge, and validate the combined tree. This is coordination, not a fabricated current blocker or new task ID. D11-04's existing handoff stays in #87; ownership is unchanged.
+
+### Pre-publication review record
+
+**Review complete:** [D12 review report](W2-D12-01-REVIEW.md). No blocking correctness finding identified against refreshed main `ed16bc2`; clarified “1.95x higher” to “1.95 times the temporary rent” without changing numerical data or behavior. Fresh full `pnpm check` passed 326 Vitest + 36 Node = 362 tests. D12-01 remains Done on its verified branch, not merged; D12-02 remains Pending. Ready for PR publication after Rakha's instruction; no new live read or transaction during review. D11 #86/#87 remain separate.
+
+### Implementation delivery record
+
+**D12-01 Done on its implementation branch, not merged:** `scan --optimize` is implemented and verified on `feat/W2-D12-01-basic-storage-advice`, based on main #85 independently of D11. It adds evidence-qualified temporary retention, persistent durability and shared-code recommendations, optional existing cost quotes, and labelled partial context. No shared-types change, payload-size/duplicate-content heuristic or transaction path. It preserves scan exits and non-optimize behavior. Rakha result review is the next checkpoint; no D12 PR exists.
+
+**Validation:** full `pnpm check` passed 326 Vitest + 36 Node tests (362 total on this D12-only branch); coverage passed unchanged thresholds: 94.41% statements, 88.01% branches, 96.84% functions, 95.78% lines. The initial tests failed before implementation; a null/missing quote-context test reproduced an exception and passed after sanitization. Build artifacts loaded with bundled evidence from an empty directory without repo fixtures. [Actual read-only A evidence](evidence/2026-09-10-storage-advice/README.md) includes human/JSON output and raw RPC: four entries, three appropriate recommendations, current settings 720/120960, temporary remaining over 1.4M ledgers. Only getNetwork/getLedgerEntries were permitted; no pricing, payer lookup, signing or submission. Current prices were correctly unavailable.
+
+**Coordination:** [D12 scan-only boundary notice](https://github.com/Fatihmaull/evergreen/issues/87#issuecomment-5616743484) was sent to Fatih. #86/#87 stay separate; no D11 code was removed from its branch. The broader D12-02 guinea-pig/third-party validation remains Pending. D12-01's Done means this branch meets its implementation definition of done, not that it is published as a PR or merged to main.
+
+### Implementation start record
+
+Rakha approved execution. Work starts on `feat/W2-D12-01-basic-storage-advice` from the reviewed D12 plan and main #85. D12-01 is In progress for implementation; D12-02 remains Pending. New core/CLI advice modules and scan-only opt-in integration; no D11 signing/submission code is changed. Review precedes PR publication.
+
+### Earlier planning record
+
+Rakha requested the next-task plan. [D12 basic storage advice](W2-D12-01-PLAN.md) is on `docs/W2-D12-01-optimizer-plan`, created directly from `origin/main` `ed16bc2` (#85), not stacked on D11. D12-01 is In progress for planning; D12-02 remains Pending. No runtime edit, optimizer implementation, new live read, quote or transaction. The plan proposes opt-in `scan --optimize`, pure core recommendations, optional reuse of existing per-key cost quotes, and unchanged scan exits.
+
+**Evidence boundaries:** existing health/sharing warnings must not merely be duplicated. Basic advice uses observed key metadata, historical rent comparisons and current-or-labelled-historical settings; no oversized/byte-duplicate claims without payload evidence. Corrected the D12 row's conflation of sampled remaining TTL (688/120,927) with configured minimum lifetime (720/120,960). The plan distinguishes same encoded size from identical contents, isolated adjacent-ledger deletion proof from B's later absence, and historical rent from current savings. No rule change to W3 temporary retention policy.
+
+**D11 remains separate:** PR #86 is open with implementation review completed and prior final checks green; Issue #87 is assigned to Fatih for D11-04 handoff, with no reply at this check. D11 runtime is not present on this planning branch because it is not merged. Its task status is In progress in its published branch/Notion even where main's checkbox still says Pending. Preserve both branches; address a concrete D11 review blocker first if one arrives. Shared CLI edits must be reconciled with #86/#87 before D12 implementation.
+
+**Planning validation:** conflict-marker and registered-task-ID checks passed (145 registered IDs); diff whitespace check passed. No runtime tests are claimed for a Markdown-only plan. Notion D12-01 was updated to In progress/planning only and D12-02 remains Pending. Full presence comparison: 145 repo IDs / 146 Notion rows, no missing IDs; sole extra is the intentionally retired Dropped predecessor ~~W3-D18-02~~. The plan is published on its branch, with no PR or merge.
+
+## Earlier main snapshots
 
 ## 🔚 Session 1 ends here — 2026-09-10
 

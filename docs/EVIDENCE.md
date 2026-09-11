@@ -94,6 +94,9 @@ On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a project
 ## Manual extension simulation — W2-D11-01
 
 2026-09-10: [unsigned CLI simulation on A's instance](evidence/2026-09-10-manual-extend-simulation/README.md), exit 0. At ledger 4,601,296, remaining TTL 1,424,293 plus requested 1,000 resolved to 1,425,293; prepared fee 15,073 stroops. The bundle contains exact RPC request/response text, CLI JSON and stderr. The capture rejects all methods except Testnet network/entry reads and simulation. No signature or send occurred; the prepared hash is not a transaction receipt. **D11-02/03 live evidence remains Pending.**
+## Storage advice — W2-D12-01
+
+2026-09-10: [read-only A report](evidence/2026-09-10-storage-advice/README.md), actual CLI human and JSON runs, exit 0. Four entries produced three scoped recommendations; temporary TTL remained over 1.4 million ledgers despite its configured minimum of 720. Both output modes preserve that distinction and label historical rent separately from unavailable current quotes. Exact RPC responses are saved; no simulation or transaction. Broader D12-02 validation remains Pending.
 
 ## Transaction hashes
 

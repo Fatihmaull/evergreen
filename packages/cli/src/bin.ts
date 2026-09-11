@@ -111,6 +111,8 @@ async function main(): Promise<number> {
       run: (request, preview) => runExtension(rpcUrl, request, preview),
     },
     connect: () => connectTestnet(rpcUrl),
+    readStorageSettings: () =>
+      readStateArchivalSettings(new rpc.Server(rpcUrl, { timeout: 10_000 })),
     readKeysFile: (path) => readFile(path, 'utf8'),
     now: () => new Date(),
     color,

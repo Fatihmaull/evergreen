@@ -72,3 +72,10 @@ export type {
 export { prepareExtension, submitExtension, confirmExtension } from './extend-rpc.js';
 export type { PreparedExtension, ExtensionRpc, ExtensionConfirmation } from './extend-rpc.js';
 export { createEd25519Signer, isValidPayerAccount } from './ed25519-signer.js';
+export { analyzeStorage } from './optimizer.js';
+export type {
+  StorageSettings,
+  StorageAdviceContext,
+  StorageAdvice,
+  StorageAdviceReport,
+} from './optimizer.js';
