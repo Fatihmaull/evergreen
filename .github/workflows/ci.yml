@@ -28,3 +28,33 @@ jobs:
       # One canonical pipeline: build/typecheck precedes artifact inspection,
       # and CI cannot omit newly added repository, bundle or publish gates.
       - run: pnpm check
+
+  # The mirror is DERIVED, not maintained. Runs only after a merge to main, so
+  # the trigger is the merge itself rather than somebody remembering it.
+  #
+  # `continue-on-error` is deliberate: a stale Notion row is a nuisance, a red
+  # main is a blocker, and the mirror must never be able to take the build down.
+  # It still shows as a visible ✗ on the run — non-blocking, never silent.
+  #
+  # The PARSE half is not here. It lives in `pnpm check` above and runs on every
+  # PR, so duplicate and unparseable task IDs are caught before merge with no
+  # secret involved. Only the WRITE needs a token.
+  notion-mirror:
+    name: sync Notion from BACKLOG.md
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+
+      # No install: the script is dependency-free on purpose, so this job cannot
+      # be the thing that breaks when the lockfile changes.
+      - run: node scripts/sync-notion.mjs
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_SYNC: apply

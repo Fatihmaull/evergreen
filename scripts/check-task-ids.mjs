@@ -25,6 +25,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
+import { ID } from './task-id.mjs';
 
 const BACKLOG = 'BACKLOG.md';
 const ROOTS = ['docs', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
@@ -55,11 +56,10 @@ const SKIP = ['archive', 'node_modules'];
 // ─────────────────────────────────────────────────────────────────────────────
 
 const backlog = readFileSync(BACKLOG, 'utf8');
-// Suffix letters are open-ended. This was [0-9a-c] until 2026-09-10, which made
-// W3-D21-01d and W3-D21-01e invisible in BOTH directions: not registered, and
-// references to them not flagged. Silently untracked work, from a character class
-// that encoded "how many sub-tasks we happened to have" as a rule.
-const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+`;
+// The ID shape now lives in `task-id.mjs`, imported below, because a rule kept
+// in a comment gets re-invented: this class was [0-9a-c] until 2026-09-10 (which
+// hid W3-D21-01d/e), and on 2026-09-12 sync-notion.mjs independently wrote its
+// own narrower class and silently dropped 22 rows. One definition, one import.
 
 // ...or a row in § Recurring obligations. A standing obligation is tracked work
 // with a closing condition rather than a weekly checkbox, so it is registered
