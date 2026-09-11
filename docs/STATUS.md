@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-11 · D12-02 validated; ready for result review
+**Last updated:** 2026-09-11 · D12-02 internal review complete
 **Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,8 @@
 ---
 
 ## Current — W2-D12-02 read-only validation
+
+**Internal review complete:** [D12-02 review report](W2-D12-02-REVIEW.md). Fixed a P2 verification gap: empty post-read and mismatched registry copies previously passed the offline verifier. It now binds post-read key completeness, published Wasm, network settings, key encoding and expected exits/counts to raw evidence. The valid capture passes; four temporary-copy mutations fail for the intended reasons. All 15 original raw RPC/provenance files remain byte-identical. Fresh full pnpm check passed 376 tests. No production code or new live read/transaction. Ready for PR + issue publication after Rakha's instruction; Fatih reviews and handles merge.
 
 **D12-02 Done on its validation branch, not a new PR or merge.** [Evidence and semantic assessment](evidence/2026-09-11-storage-advice-validation/README.md): reused the Sep 10 A baseline; B/C/B returned two contracts, five entries and three recommendations with expected exit 3 for absent temporary keys. Blend TestnetV2 returned instance/code and two source-defined persistent reserve keys, matching the publisher's Wasm hash; three conditional recommendations and exit 0. The known reserve config/accounting roles fail the disposable-data condition, so no migration or savings claim is made. All current prices remain unavailable.
 

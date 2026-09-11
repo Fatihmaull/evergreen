@@ -49,6 +49,9 @@ Offline reproduction from the repository root after building:
 ```bash
 pnpm build
 node docs/evidence/2026-09-11-storage-advice-validation/verify.mjs
+node docs/evidence/2026-09-11-storage-advice-validation/review-mutations.mjs
 ```
+
+Internal review strengthened the offline verifier to check complete post-read key sets, direct registry hash equality, raw network settings and explicit result expectations. Four corrupted temporary-copy cases are rejected for their intended reasons; the original capture still passes. [Review results](review-mutation-results.json) and [review report](../../W2-D12-02-REVIEW.md) document this correction. The 15 original raw RPC/provenance files are unchanged; checksums for changed verification scripts and new review artifacts are refreshed.
 
 For a new live capture, copy only capture.mjs and the provenance registry into an empty new directory at docs/evidence/<new-date>/, verify current deployment provenance first, then run the script there. The recorder refuses to overwrite a completed capture. Archived/missing future deployments are not grounds to restore or redeploy them as part of this task.
