@@ -34,7 +34,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
-import { ANY_ROW, ROW, looksLikeTaskId } from './task-id.mjs';
+import { ANY_ROW, ROW, looksLikeTaskId, recurringIds } from './task-id.mjs';
 
 /** Checkbox → Notion `Status`. These are the mirror's exact select options. */
 const STATUS = {
@@ -92,7 +92,7 @@ export function parseBacklog(text) {
  * `changes` are the only thing ever written. `missing` and `phantom` are
  * reported and deliberately left alone — see the header.
  */
-export function planSync(backlogRows, notionRows) {
+export function planSync(backlogRows, notionRows, standingIds = []) {
   const byId = new Map(notionRows.map((r) => [r.id, r]));
   const changes = [];
   const missing = [];
@@ -111,7 +111,10 @@ export function planSync(backlogRows, notionRows) {
     if (Object.keys(fields).length > 0)
       changes.push({ id: row.id, pageId: remote.pageId, fields, was: remote });
   }
-  const known = new Set(backlogRows.map((r) => r.id));
+  // Standing obligations are KNOWN but carry no checkbox, so they are neither
+  // phantoms nor rows this script has any status to write. Recognised and left
+  // entirely alone — the mirror's own value for them is the human's.
+  const known = new Set([...backlogRows.map((r) => r.id), ...standingIds]);
   const phantom = notionRows.filter((r) => !known.has(r.id)).map((r) => r.id);
   return { changes, missing, phantom };
 }
@@ -200,7 +203,7 @@ async function main() {
   }
 
   const mirror = await readMirror();
-  const { changes, missing, phantom } = planSync(rows, mirror);
+  const { changes, missing, phantom } = planSync(rows, mirror, recurringIds(backlog));
   console.log(`\n✓ read ${mirror.length} rows from the Notion mirror`);
 
   for (const c of changes) {

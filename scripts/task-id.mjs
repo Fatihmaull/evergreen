@@ -44,3 +44,25 @@ export const ANY_ROW = /^- \[(.)\] \*\*([^*\n]+)\*\*/gm;
 export function looksLikeTaskId(token) {
   return /\d/.test(token) && token.includes('-');
 }
+
+/**
+ * IDs of STANDING obligations — tracked work that will never carry a checkbox.
+ *
+ * `§ Recurring obligations` exists because a standing obligation is not an
+ * unfinished task: carrying `W1-D4-09` as the one open Week 1 item made W1 read
+ * 50/51 when the real state was "finished, with a cron job running", which
+ * trains everyone to read `[~]` as debt.
+ *
+ * Both parsers must know about it, and for different reasons. `check-task-ids`
+ * would call every reference to `W1-D4-09` dangling; `sync-notion` would report
+ * its Notion row as a phantom on EVERY run. The second is the worse failure —
+ * a phantom report that cries wolf every time is one people stop reading, which
+ * silently disarms the mechanism rather than breaking it loudly.
+ */
+export function recurringIds(backlog) {
+  const afterHeading = backlog.split(/^## Recurring obligations$/m)[1] ?? '';
+  // Up to the next top-level heading, or the rest of the file if it is last.
+  const section = afterHeading.split(/^## /m)[0];
+  const found = section.matchAll(new RegExp(String.raw`\*\*\`?(${ID})\`?\*\*`, 'g'));
+  return [...new Set([...found].map((m) => m[1]))];
+}
