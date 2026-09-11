@@ -100,7 +100,10 @@ def main() -> int:
             drift_h = (projected.replace(tzinfo=None) - expected).total_seconds() / 3600
             flag = "  ← EARLY" if drift_h < -2 else ""
             print(
-                f"   {name:<11} crosses ~{projected.strftime('%Y-%m-%d %H:%M')} UTC"
+                # "alert threshold", never "crosses". This projects
+                # liveUntil - THRESHOLD_LEDGERS; the CLI projects liveUntil.
+                # Exactly 24h apart, because THRESHOLD_LEDGERS is exactly a day.
+                f"   {name:<11} alert threshold ~{projected.strftime('%Y-%m-%d %H:%M')} UTC"
                 f"   drift {drift_h:+.1f}h vs plan{flag}"
             )
             worst = drift_h if worst is None or drift_h < worst else worst

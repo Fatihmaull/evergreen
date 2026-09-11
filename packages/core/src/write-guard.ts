@@ -24,19 +24,34 @@ import type { ContractId, LedgerKey, ScanResult } from '@evergreen-stellar/share
 export const PROTECTED_ENTRIES: ReadonlyArray<{
   readonly contractId: ContractId;
   readonly label: string;
-  readonly crossesOn: string;
+  /**
+   * When this entry crosses the ALERT THRESHOLD — `liveUntil - 17,280` — which
+   * is when the engine should fire. NOT when it expires.
+   *
+   * The two were both called "crossing" until 2026-09-12, and they are exactly
+   * 24 hours apart because `THRESHOLD_LEDGERS` is exactly one day. That made
+   * the collision convincing: the drift check and the CLI disagreed by exactly
+   * 24.0h on both B and C and both were right. Someone scheduling evidence
+   * capture from this field alone arrives a day early for the expiry — and the
+   * expiry is the unrepeatable event.
+   */
+  readonly alertThresholdOn: string;
+  /** When the entry actually expires. THIS is the date to be present for. */
+  readonly expiresOn: string;
   readonly why: string;
 }> = [
   {
     contractId: 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',
     label: 'guinea-pig B',
-    crossesOn: '2026-09-20',
+    alertThresholdOn: '2026-09-20',
+    expiresOn: '2026-09-21',
     why: 'Natural-decay proof. Extending it moves the crossing past the sprint and the ageing cannot be recreated.',
   },
   {
     contractId: 'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL',
     label: 'guinea-pig C',
-    crossesOn: '2026-09-25',
+    alertThresholdOn: '2026-09-25',
+    expiresOn: '2026-09-26',
     why: 'Backup natural-decay proof, the only second shot if B is missed.',
   },
 ];
@@ -131,7 +146,9 @@ export function assertWriteAllowed(args: {
             `  A, B and C are built from one Wasm, so extending code extends all three.\n`
           : '') +
         `  ${subject.why}\n` +
-        `  It is calibrated to cross unattended on ${subject.crossesOn}. Extending it now\n` +
+        `  It crosses the alert threshold on ${subject.alertThresholdOn} and EXPIRES on\n` +
+        `  ${subject.expiresOn} — be present for the second one, that is the unrepeatable\n` +
+        `  event. Extending it now\n` +
         `  moves that crossing past the sprint, and the ageing cannot be recreated.\n\n` +
         `  If you genuinely intend this, pass the contract explicitly:\n` +
         `    --acknowledge-protected ${subject.contractId}\n` +

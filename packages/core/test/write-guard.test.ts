@@ -198,7 +198,7 @@ describe('the deny-list itself', () => {
 
   it('gives every subject a date and a reason', () => {
     for (const subject of PROTECTED_ENTRIES) {
-      expect(subject.crossesOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(subject.alertThresholdOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(subject.why.length).toBeGreaterThan(20);
     }
   });
