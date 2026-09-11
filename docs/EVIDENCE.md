@@ -64,6 +64,26 @@ Three sub-parts, and they are not in the same state:
 
 **Cost was the binding item for this whole requirement, and the model half is now done.** `W2-D9` was Pending with nothing in flight on 2026-09-10 and was taken over rather than left, because without it there is no screenshot showing cost, ever — the same reason `W2-D13-03` batch scan was cut to protect it. **What remains is CLI wiring**: `estimateRent` needs a `--cost` path so a rent figure appears in human and `--json` output. Until that lands there is still nothing to screenshot. The validation data used: [`extendTTL-fees-guinea-pig-a.json`](../packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json), three measured extends with `rentFeeCharged` isolated from `resultMetaXdr`.
 
+#### ✅ The four-entry-type command, verified 2026-09-12
+
+**Checked before handing it over, because the `temporary` key was the risk.** Those keys were recorded on Sep 8, and temporary entries are *deleted* rather than archived — if it had lapsed, the four-type capture would not be reproducible from them and a fresh entry would be needed.
+
+It has not lapsed: the `W1-D7-08` extend on Sep 9 carried the temporary entry to December along with the others. All four types return:
+
+```bash
+pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L \
+  --keys-file docs/evidence/2026-09-08-scan-entry-types/data-keys.json
+```
+
+```
+HEALTHY  instance    AAAABgAAAA…
+HEALTHY  persistent  AAAABgAAAA…
+HEALTHY  temporary   AAAABgAAAA…
+HEALTHY  code        AAAAB8flXw…
+```
+
+Add `--cost --ledgers 518400` for the cost figure, and `--json` for the machine-readable capture. **Both output modes are needed** — §6.1 names both.
+
 #### The recapture — once, and only once
 
 **Do not recapture before `W2-D9` lands.** Capturing now produces a *third* superseded artifact.
