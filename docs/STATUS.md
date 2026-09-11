@@ -9,7 +9,11 @@
 
 ---
 
-## Current — W2-D11-01 implementation, 2026-09-10
+## Current — W2-D11-02/03 live-proof planning
+
+Rakha requested a concrete next-task plan. D11-02 is In progress for planning/preflight only on `docs/W2-D11-02-live-proof-plan`, based on #86 at ccf7374. D11-03 remains Pending. Scope is A instance only, public Rakha payer, bounded fee and complete evidence; no secret read, signing or transaction. #86 still awaits Fatih formal review, and Fatih handles merge.
+
+## Earlier D11 implementation record
 
 **Synchronization complete:** #86 and #88 are synchronized with main #93 (`96ebe2d`) independently, and their local combined tree passed 446 tests plus unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) records per-branch tests (D11 428, D12 376), actual CLI-only tarball installation, and the fresh-output pipeline proof. W2-D14-02d is verified on both branches; #95 remains open pending main integration. #89 remains the integration/review thread. No force-push, PR merge, live RPC or transaction. Final remote CI is checked on the newly pushed PR heads separately.
 
