@@ -1,0 +1,20 @@
+{
+  "verifiedOffline": true,
+  "cases": [
+    {
+      "case": "bc",
+      "rawEntriesMatched": 5,
+      "findings": 3,
+      "exitCode": 3
+    },
+    {
+      "case": "blend",
+      "rawEntriesMatched": 4,
+      "findings": 3,
+      "exitCode": 0
+    }
+  ],
+  "bcExpiryUnchanged": true,
+  "noNetwork": true,
+  "blendPersistentPayloadMatchesDocumentedRole": true
+}

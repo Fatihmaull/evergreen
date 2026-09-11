@@ -1,0 +1,232 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 6062102,
+        "remainingLedgers": 1443147
+      }
+    },
+    "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAJUmVzQ29uZmlnAAAAAAAAEgAAAAEgItVuCrpkUW9uYmBNKWIyvoZP/fuE1YYT50I8rOArKAAAAAE=": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 6040232,
+        "remainingLedgers": 1421277
+      }
+    },
+    "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAHUmVzRGF0YQAAAAASAAAAASAi1W4KumRRb25iYE0pYjK+hk/9+4TVhhPnQjys4CsoAAAAAQ==": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 6040232,
+        "remainingLedgers": 1421277
+      }
+    },
+    "AAAAB6QfxT1nU7bATrFbAhxVBSNmpMjg4hvHJwD0YSZOwTUO": {
+      "kind": "code",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      ],
+      "observedAtLedger": 4618955,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 6040232,
+        "remainingLedgers": 1421277
+      }
+    }
+  },
+  "issues": [
+    {
+      "kind": "sharing-undetermined",
+      "contracts": [
+        "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+      ],
+      "entryKey": "AAAAB6QfxT1nU7bATrFbAhxVBSNmpMjg4hvHJwD0YSZOwTUO",
+      "observedAtLedger": 4618955,
+      "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+    }
+  ],
+  "coverage": {
+    "mode": "known-keys",
+    "dataKeysSuppliedByContract": {
+      "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF": 2
+    }
+  },
+  "health": {
+    "thresholdLedgers": 17280,
+    "worst": "healthy",
+    "sharedEntryCount": 0,
+    "undeterminedSharingCount": 1,
+    "byEntry": {
+      "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABQAAAAB": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAJUmVzQ29uZmlnAAAAAAAAEgAAAAEgItVuCrpkUW9uYmBNKWIyvoZP/fuE1YYT50I8rOArKAAAAAE=": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAHUmVzRGF0YQAAAAASAAAAASAi1W4KumRRb25iYE0pYjK+hk/9+4TVhhPnQjys4CsoAAAAAQ==": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAAB6QfxT1nU7bATrFbAhxVBSNmpMjg4hvHJwD0YSZOwTUO": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "undetermined",
+        "reason": "Above threshold."
+      }
+    }
+  },
+  "optimization": {
+    "scope": "observed-keys-only",
+    "context": {
+      "settings": {
+        "minTemporaryTtl": 720,
+        "minPersistentTtl": 120960,
+        "observedAtLedger": 4618955
+      }
+    },
+    "findings": [
+      {
+        "entryKey": "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAJUmVzQ29uZmlnAAAAAAAAEgAAAAEgItVuCrpkUW9uYmBNKWIyvoZP/fuE1YYT50I8rOArKAAAAAE=",
+        "knownConsumers": [
+          "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 6040232,
+          "remainingLedgers": 1421277
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "durability-review",
+        "benchmarkId": "guinea-pig-a-2026-09-09",
+        "action": "Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.",
+        "rationale": "Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents."
+      },
+      {
+        "entryKey": "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAHUmVzRGF0YQAAAAASAAAAASAi1W4KumRRb25iYE0pYjK+hk/9+4TVhhPnQjys4CsoAAAAAQ==",
+        "knownConsumers": [
+          "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 6040232,
+          "remainingLedgers": 1421277
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "durability-review",
+        "benchmarkId": "guinea-pig-a-2026-09-09",
+        "action": "Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.",
+        "rationale": "Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents."
+      },
+      {
+        "entryKey": "AAAAB6QfxT1nU7bATrFbAhxVBSNmpMjg4hvHJwD0YSZOwTUO",
+        "knownConsumers": [
+          "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF"
+        ],
+        "observedAtLedger": 4618955,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 6040232,
+          "remainingLedgers": 1421277
+        },
+        "currentRent": {
+          "status": "unavailable"
+        },
+        "code": "shared-code-dependency",
+        "action": "Monitor this code key once with its known consumers; checking their instances alone does not establish protection.",
+        "rationale": "Every contract built from the same Wasm uses this code entry. Other consumers may exist outside this scan; sharing is not duplicated storage or a measured saving."
+      }
+    ],
+    "limitations": [
+      "Only observed keys were analyzed; storage was not enumerated. No size, duplicate-content or global-consumer inference is supported.",
+      "Advice is conditional on application requirements; it does not authorize a transaction or change scan health exits.",
+      "Current rent is unavailable for some findings. Use --cost for quotes where supported; historical benchmark amounts are not per-entry quotes."
+    ],
+    "evidence": {
+      "rent": {
+        "id": "guinea-pig-a-2026-09-09",
+        "recordedAt": "2026-09-09T10:58:52Z",
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json",
+        "persistent": {
+          "rentStroops": "103849",
+          "totalFeeStroops": "106308",
+          "dataBytes": 88,
+          "keyBytes": 76,
+          "ledgersExtended": 1312937
+        },
+        "temporary": {
+          "rentStroops": "53196",
+          "totalFeeStroops": "55655",
+          "dataBytes": 88,
+          "keyBytes": 76,
+          "ledgersExtended": 1312939
+        },
+        "qualification": "Historical measured rent at equal encoded sizes over durations differing by two ledgers; not a quote or savings forecast for this entry."
+      },
+      "settings": {
+        "recordedOn": "2026-09-05",
+        "observedAtLedger": 4519665,
+        "minTemporaryTtl": 720,
+        "minPersistentTtl": 120960,
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-05-ttl-boundary/state-archival-settings.json"
+      },
+      "deletion": {
+        "recordedOn": "2026-09-06",
+        "subject": "isolated temporary-entry experiment",
+        "lastLiveLedger": 4529810,
+        "firstAbsentLedger": 4529811,
+        "source": "https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-06-ttl-boundary/README.md"
+      }
+    }
+  }
+}

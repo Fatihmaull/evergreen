@@ -9,6 +9,7 @@ import type { ExtensionConfirmation, PreparedExtension } from './extend-rpc.js';
 import { instanceKey, isValidContractId } from './rpc.js';
 import { resolveExtendTarget } from './network-config.js';
 import { hasExpired, needsAction } from './ttl.js';
+import { assertWriteAllowed } from './write-guard.js';
 
 export interface ExtensionOptions {
   readonly contractId: string;
@@ -16,6 +17,8 @@ export interface ExtensionOptions {
   readonly maxEntryTtl: number;
   readonly dataKeys?: readonly string[];
   readonly includeCode?: boolean;
+  /** Explicit, per-contract consent to write to a protected decay subject. */
+  readonly acknowledgeProtected?: readonly string[];
 }
 export interface PlannedExtension {
   readonly entryKey: string;
@@ -75,6 +78,17 @@ export function planExtension(scan: ScanResult, options: ExtensionOptions): Exte
     if (extensionKey(key).type !== 'contractCode') throw new Error('Invalid code entry');
     keys.set(key, 'code');
   }
+  // Refuse BEFORE any envelope is prepared, so a blocked write never leaves a
+  // transaction hash lying around that someone could submit by hand.
+  assertWriteAllowed({
+    contractId,
+    entryKeys: [...keys.keys()],
+    scan,
+    ...(options.acknowledgeProtected === undefined
+      ? {}
+      : { options: { acknowledgeProtected: options.acknowledgeProtected } }),
+  });
+
   const entries = [...keys].map(([entryKey, kind]): PlannedExtension => {
     const entry = scan.entries[entryKey];
     if (

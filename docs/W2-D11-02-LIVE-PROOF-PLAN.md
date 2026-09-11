@@ -1,6 +1,10 @@
 # W2-D11-02/03 — controlled A-instance live-proof plan
 
-**Bounded request approved by Rakha, 2026-09-11; execution Blocked on readiness.** Owner: Rakha. D11-02 is Blocked under [#98](https://github.com/Fatihmaull/evergreen/issues/98); D11-03 remains Pending. Approval covers only the fixed scope below and does not waive the readiness checks. Based on PR #86 at `ccf7374`; Fatih's formal code review is still pending. Fatih handles PR merges. Follow the already agreed internal-review → publish PR/issue → Fatih review flow.
+**Bounded request approved by Rakha on 2026-09-11; plan synchronized 2026-09-12.** Owner: Rakha. D11-02 is Blocked on evidence-capture readiness under primary [#103](https://github.com/Fatihmaull/evergreen/issues/103); #98 is superseded context. D11-03 remains Pending. Fatih reviewed and merged #86; #100's guard correction is also merged. Execution baseline is `origin/main` at `c3ba97b` (#101), synchronized into `docs/W2-D11-02-live-proof-plan`. Approval covers the fixed request below. Fatih handles PR merges; internal review and publication remain separate checkpoints.
+
+**Goal:** Confirm one controlled A-instance extension with a complete, durable evidence bundle.
+**Architecture:** Use the merged CLI, real account/sequence adapter and protected-entry guard unchanged. Keep the existing sequential confirmation and exact-key post-read checks.
+**Spec:** BACKLOG W2-D11-02/03, AGENTS evidence rules, and the approved request below. Issue #103 supplies coordination context; its delta/target inconsistency is resolved against the merged helper.
 
 ## Objective and fixed scope
 
@@ -21,7 +25,7 @@ Do not supply `--keys-file` or `--include-code`. No B/C key or shared Wasm may a
 
 ## Observed preflight, not a reusable transaction
 
-[Raw preflight and decoded verification](evidence/2026-09-11-live-proof-preflight/verification.json) were captured at **2026-09-11 09:49:14 UTC**, using the compiled CLI from the reviewed D11 branch, with no submit/secret flags.
+[Raw preflight and decoded verification](evidence/2026-09-11-live-proof-preflight/verification.json) were captured at **2026-09-11 09:49:14 UTC**, using the compiled CLI from the D11 branch before Fatih review, with no submit/secret flags.
 
 | Observation | Value |
 |---|---:|
@@ -39,16 +43,28 @@ The decoded envelope contains one extension operation, one read-only instance ke
 
 ## Readiness before any live run
 
-- [ ] Fatih has reviewed the current #86 implementation. Reconcile any requested changes first and run checks on the exact tree that will execute; do not treat earlier CI as validation of later code.
+- [x] Fatih reviewed and merged #86; the guard correction landed in #100.
+- [x] Synchronized tree passed full pnpm check on 2026-09-12: 470 tests with coverage evaluated; runtime matches main c3ba97b. Revalidate if code changes before execution.
 - [x] Rakha approved continuation of this bounded live request on 2026-09-11. Any changed key, payer, increment, added operation or increased fee cap needs renewed review.
 - [ ] The intended secret can be supplied privately via the existing environment setup; the actual signer must derive the expected public payer. Secret availability has **not** been inspected in this planning turn. Never print a seed or pass one as a CLI argument; the command does not auto-load `.env`.
 - [ ] Evidence capture is ready **before** sending: raw RPC request/response saving, CLI stdout/stderr, actual before/after scan screenshots and an actual transaction-explorer screenshot. Verify image files can be saved into the evidence directory. Do not substitute rendered text for real screenshots.
 
 Screenshot preflight: the Chrome DevTools connector could not find its Chrome executable. The in-app browser successfully loaded A's real StellarExpert page and produced an actual screenshot in the session. This establishes a browser fallback, not a saved transaction receipt. Real terminal before/after screenshot capture and saving image artifacts to the repository still need verification at execution time; coordinate those captures with Rakha/Fatih if the harness cannot operate a native terminal. Do not send while this evidence path is unready.
 
-## Execution recipe after approval
+## Immediate sequence and file map
 
-1. Create a fresh execution/evidence branch from the reviewed D11 code or its merged main version; preserve this plan. Mark D11-02/03 In progress in repo/Notion, record the exact source SHA, and make branch ownership visible. The plan branch is currently `docs/W2-D11-02-live-proof-plan`, stacked on #86.
+1. Finish synchronization checks and keep #103 as the primary task. #102 is not a prerequisite: on merged main, omit `--submit` for simulation; explicit `--dry-run` is not available yet.
+2. Verify actual screenshot capture **and file saving**, first with a harmless real scan/explorer page. Store a valid image and inspect it. If this harness still cannot capture a terminal, arrange human capture before sending. Preparing this evidence path is the next executable step.
+3. Only after capture readiness, validate the private environment setup without printing the secret, then execute the recipe below within the already approved bounds.
+4. Stop after proof and internal review. Publish the evidence PR after Rakha's publication checkpoint; Fatih reviews/merges. W3 engine work gets its own next-task plan.
+
+Files: use existing `packages/cli/src/extend.ts`, `packages/core/src/extend.ts`, `extend-rpc.ts`, `ed25519-signer.ts`, `network-config.ts`, and `write-guard.ts` unchanged. Create the dated evidence directory at execution time; update `docs/EVIDENCE.md`, `BACKLOG.md`, and `docs/STATUS.md` with the actual result. Unit tests remain offline.
+
+**Delta correction:** `--ledgers 1000` adds 1,000 to observed remaining TTL; it is not a raw extendTo target. Do not follow #103's contradictory suggestion to make N exceed the current remainder. The previous 15,073-stroop preflight is consistent with a small increment, not proof of a no-op. Decode the new target and verify absolute expiry after inclusion. No `--acknowledge-protected` option is allowed for this proof; B/C and shared Wasm remain protected regardless of message dates.
+
+## Execution recipe using the existing approval
+
+1. Continue the synchronized planning branch as the single execution/evidence branch; preserve this plan. Mark D11-02/03 In progress in repo/Notion, record the exact source SHA, and make branch ownership visible. The branch is `docs/W2-D11-02-live-proof-plan`, synchronized with merged main #101.
 2. Run `pnpm check` and build the actual CLI bundle with `pnpm --filter @evergreen-stellar/cli bundle`. If the base changed, rerun the relevant signing/confirmation tests and review the diff before proceeding.
 3. Create `docs/evidence/<actual-date>-manual-extend-proof/`. Set up a capture path that saves full unedited RPC responses, not just parsed summaries. Planning's read/simulate-only recorder intentionally refuses sends; live capture must explicitly permit only the one approved send plus reads/confirmation, never an unrestricted transport.
 4. Capture A's scan before state and the actual terminal screenshot; record B/C instance/persistent and shared-code expiry as read-only controls. Save network configuration and account observation. No exact deletion/archival claim is inferred from a missing response.

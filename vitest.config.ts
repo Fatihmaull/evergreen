@@ -56,6 +56,26 @@ export default defineConfig({
         branches: 84,
         functions: 88,
         lines: 89,
+        /**
+         * PER-FILE floors on the modules where a regression is expensive.
+         *
+         * A global number cannot see a new critical module landing at 0% — the
+         * hole `rent-quoter.ts` sat in while the global read a healthy 85%. It
+         * reopens the moment the next one arrives, so the modules that decide
+         * things carry their own floor.
+         *
+         * Deliberately NOT applied to `rpc.ts` or `bin.ts`: those are network
+         * adapter and process glue, and covering them means testing the SDK or
+         * Node rather than Evergreen.
+         */
+        'packages/core/src/ttl.ts': { statements: 95, branches: 95, lines: 95 },
+        'packages/core/src/rent.ts': { statements: 90, branches: 80, lines: 90 },
+        'packages/core/src/rent-quoter.ts': { statements: 90, branches: 80, lines: 90 },
+        'packages/core/src/health.ts': { statements: 90, branches: 90, lines: 90 },
+        'packages/core/src/liveness.ts': { statements: 90, branches: 85, lines: 90 },
+        'packages/core/src/config.ts': { statements: 85, branches: 75, lines: 85 },
+        'packages/core/src/network-config.ts': { statements: 85, branches: 75, lines: 85 },
+        'packages/cli/src/cost.ts': { statements: 95, branches: 80, lines: 95 },
       },
     },
   },

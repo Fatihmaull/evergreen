@@ -1,0 +1,101 @@
+{
+  "capturedAt": "2026-09-11T09:19:27.655Z",
+  "runtimeBase": "38e6543",
+  "network": "testnet",
+  "rpcMethods": [
+    "getNetwork",
+    "getLedgerEntries"
+  ],
+  "bc": {
+    "inputContracts": 3,
+    "uniqueContracts": 2,
+    "returnedEntries": 5,
+    "uniqueRequestedKeys": 7,
+    "sharedCodeFindings": 1,
+    "persistentFindings": 2,
+    "temporaryFindings": 0,
+    "issues": [
+      "entry-not-found",
+      "entry-not-found"
+    ],
+    "exitCode": 3,
+    "ttlUnchangedAcrossReads": true
+  },
+  "blend": {
+    "contract": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
+    "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
+    "registryCommit": "b05242df30b6b6caf9d317646f754541824a5a8b",
+    "storageSourceCommit": "ba22b487b2c5057a4ecc28b05b5193c28e4bd117",
+    "wasmHash": "a41fc53d6753b6c04eb15b021c55052366a4c8e0e21bc72700f461264ec1350e",
+    "matchesPublishedHash": true,
+    "returnedEntries": 4,
+    "persistentKeys": [
+      "ResConfig(USDC)",
+      "ResData(USDC)"
+    ],
+    "adviceCount": 3,
+    "exitCode": 0,
+    "fullStorageEnumeration": false
+  },
+  "aEvidenceReused": "docs/evidence/2026-09-10-storage-advice/",
+  "calls": [
+    {
+      "phase": "network",
+      "method": "getNetwork",
+      "keys": []
+    },
+    {
+      "phase": "network",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAACAAAAAo="
+      ]
+    },
+    {
+      "phase": "bc",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+        "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB"
+      ]
+    },
+    {
+      "phase": "bc",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+        "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+        "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7"
+      ]
+    },
+    {
+      "phase": "blend",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABQAAAAB"
+      ]
+    },
+    {
+      "phase": "blend",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAJUmVzQ29uZmlnAAAAAAAAEgAAAAEgItVuCrpkUW9uYmBNKWIyvoZP/fuE1YYT50I8rOArKAAAAAE=",
+        "AAAABgAAAAGIGo8M3rDcCq2N4KGUr0SSkVe9+IeSIiEhONFXijvhzgAAABAAAAABAAAAAgAAAA8AAAAHUmVzRGF0YQAAAAASAAAAASAi1W4KumRRb25iYE0pYjK+hk/9+4TVhhPnQjys4CsoAAAAAQ==",
+        "AAAAB6QfxT1nU7bATrFbAhxVBSNmpMjg4hvHJwD0YSZOwTUO"
+      ]
+    },
+    {
+      "phase": "bc-post",
+      "method": "getLedgerEntries",
+      "keys": [
+        "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+        "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB",
+        "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+        "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7"
+      ]
+    }
+  ]
+}

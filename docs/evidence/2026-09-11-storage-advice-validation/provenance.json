@@ -1,0 +1,32 @@
+{
+  "retrievedOn": "2026-09-11",
+  "registry": {
+    "repository": "blend-capital/blend-utils",
+    "commit": "b05242df30b6b6caf9d317646f754541824a5a8b",
+    "path": "testnet.contracts.json",
+    "url": "https://github.com/blend-capital/blend-utils/blob/b05242df30b6b6caf9d317646f754541824a5a8b/testnet.contracts.json",
+    "sha256": "16a2d6114bb261aa01fa8d0eb9bfc62be86357e529ba7e7efb901acdf8c22713"
+  },
+  "storageSchema": {
+    "repository": "blend-capital/blend-contracts-v2",
+    "commit": "ba22b487b2c5057a4ecc28b05b5193c28e4bd117",
+    "path": "pool/src/storage.rs",
+    "url": "https://github.com/blend-capital/blend-contracts-v2/blob/ba22b487b2c5057a4ecc28b05b5193c28e4bd117/pool/src/storage.rs",
+    "sha256": "1c16bc7eea8219ea0d24581de9e6c8b7d7f5b69173cb9303242f89c4cdbbb0e5",
+    "keyVariants": [
+      "ResConfig(Address)",
+      "ResData(Address)"
+    ],
+    "durability": "persistent",
+    "note": "Read key definitions/getters only; never invoked getters (they extend TTL). Source was inspected, not claimed reproduced to the deployed Wasm."
+  },
+  "runtime": {
+    "parent": "38e65432f27eca2d57c2100f1dacf2be871aa14a",
+    "sourceDigests": {
+      "packages/core/src/optimizer.ts": "27473053272e54aa0c64bac71fadfc5c02c1f4da34110714aa60f6392571986c",
+      "packages/core/src/scan-contract.ts": "4dabe8417948f4941410461e7510bb93b4e48c2812e384d2d79ce19924510b85",
+      "packages/core/src/health.ts": "d3a1cfbb9e022d1d6f9a5e5c790c6b26d2d2aba71806b574f9c7ca432b83e097",
+      "packages/cli/src/optimizer.ts": "31fa86731236b3a108afd78581b12bcb3d2eba92f1e59bc32c0abcd6735f66c1"
+    }
+  }
+}
