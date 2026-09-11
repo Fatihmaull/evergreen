@@ -170,6 +170,14 @@ Current CLI exit behavior, in precedence order:
 
 Zero covers only the supplied/discovered keys, never all contract storage. Precedence is 2 > 3 > 1 > 0. Legacy results without coverage now return 3. `--no-data-keys` is a caller assertion stored in `coverage.noDataKeysDeclaredByContract`, mutually exclusive with a keys file; an empty keys file is not that assertion. JSON retains low-TTL observations even when incomplete/error takes precedence. Exit status is a CI health summary, never authorization to spend. The engine consumes structured observations and policy/payer/budget inputs before deciding to bump. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) records this proposal for shared review. Cross-contract consumer merging is implemented in `W2-D8-04`; severity presentation remains `W2-D10-01`.
 
+### Manual extension path (D11 implementation branch)
+
+`extend` parsing lives in `packages/cli/src/extend.ts`; `bin.ts` resolves the public payer/RPC and supplies a deferred secret lookup. Core `extend.ts` selects explicit entries, resolves one target per key, and executes sequentially through injected dependencies. `extend-rpc.ts` simulates and assembles actual envelopes, checks Testnet, submits once and polls the exact hash. `ed25519-signer.ts` implements the existing `Signer` interface with operation, footprint, payer, fee, hash and time-bound checks before reading a key. It is software validation, not the Stage 2 policy signer.
+
+No flag means simulation: no signer resolution and no send. Live mode requires `--submit`, a secret environment variable name and an aggregate fee cap. Each selected entry has one transaction; later entries obtain fresh sequences. Uncertain sends retain the locally calculated hash, stop the command and never trigger replacements. A successful `BumpRecord` requires confirmed inclusion plus increased absolute expiry meeting inclusion ledger + target. Read-to-submit drift and concurrent extenders are not hidden.
+
+The shared `resolveExtendTarget` now caps at `maxEntryTtl - 1`, the operation ceiling; configuration counts the current ledger inclusively. Both cost and extension consume this helper. This implementation has offline tests and an unsigned A-instance Testnet simulation; live D11-02/03 evidence remains Pending. Engine scheduling, persistence and D11-04's explicit dry-run alias remain separate work.
+
 ### Planned path: decide, pay, confirm, record
 
 This is the W3 target flow, not an implemented engine. The current CLI does not run it.

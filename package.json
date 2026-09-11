@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -35,7 +35,8 @@
     "check:task-ids": "node scripts/check-task-ids.mjs",
     "check:policy": "node scripts/check-policy-constants.mjs",
     "check:bundle": "node scripts/check-bundle-secrets.mjs",
-    "check:publish": "node scripts/check-publish-safety.mjs"
+    "check:publish": "node scripts/check-publish-safety.mjs",
+    "test:fast": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

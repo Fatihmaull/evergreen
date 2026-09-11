@@ -2,6 +2,9 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
+**Last updated:** 2026-09-10 · D11 published for review in PR #86
+**Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
+**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
 **Last updated:** 2026-09-11 · D12-02 published in PR #97 / Issue #96
 **Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
@@ -9,6 +12,58 @@
 
 ---
 
+## Current — W2-D11-01 implementation, 2026-09-10
+
+**Synchronization complete:** #86 and #88 are synchronized with main #93 (`96ebe2d`) independently, and their local combined tree passed 446 tests plus unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) records per-branch tests (D11 428, D12 376), actual CLI-only tarball installation, and the fresh-output pipeline proof. W2-D14-02d is verified on both branches; #95 remains open pending main integration. #89 remains the integration/review thread. No force-push, PR merge, live RPC or transaction. Final remote CI is checked on the newly pushed PR heads separately.
+
+**Main #93 synchronization:** merged `origin/main` `96ebe2d` without rewriting branch history. Preserved the one-CLI-package bundle, source aliases, publish/bundle checks and machine-readable sharing caveats. Planner now distinguishes advisory coverage/sharing issues from unreadable entries. The real payer/sequence regression was commissioned: replacing the fetched sequence with synthetic zero failed (1 instead of 13), then the original implementation was restored. Full check passed 392 Vitest + 36 Node = 428 tests; coverage passed unchanged thresholds. A CLI-only tarball installed with a fresh cache outside the repo, no core/shared-types siblings; installed bundle help/extend help and offline fixture scan passed, including expected low-TTL exit 1 and new JSON sharing caveats.
+
+**Shared pipeline correction W2-D14-02d / [#95](https://github.com/Fatihmaull/evergreen/issues/95):** bundle checks previously ran before dist was built, and CI omitted the new checks. Typecheck now precedes artifact checks; CI runs canonical pnpm check. The same corrective commit is being reused in #88; D12 and combined validation are recorded when complete. No PR merge or chain operation.
+
+**Dedicated D11 handoff:** [Issue #87](https://github.com/Fatihmaull/evergreen/issues/87) now tracks W2-D11-04, assigned to and mentioning Fatih, at Rakha's request. Earlier coordination was only in the broad #69 thread. The previously missing prerequisite (published D11-01 seam) is available in PR #86; Fatih is asked to confirm start or identify the precise remaining blocker. D11-04 stays Pending, ownership unchanged. #87 tracks handoff resolution rather than automatically declaring the implementation Done; #69 remains the broad W2 discussion.
+
+**Published for review in [PR #86](https://github.com/Fatihmaull/evergreen/pull/86)** after Rakha approved publication. Base main `ed16bc2`; reviewed implementation `f162fc0`. Fatih is requested as reviewer. The PR contains the D11 command, guarded signing/submission, confirmation-envelope fix, unsigned simulation evidence and review report. D11-01 remains In progress; D11-02/03 remain Pending for the separately reviewed live proof. No merge or live transaction. D11-04 stays Fatih-owned on the agreed seam; Issue #69 remains the coordination thread. Local full check passed 414 tests and coverage passed unchanged thresholds. GitHub checks are verified against the PR's final head separately; this publication update changes tracking Markdown only.
+
+### Pre-publication review record
+
+**Review complete, ready for publication approval:** [D11 review report](W2-D11-01-REVIEW.md). One P1 confirmation-binding finding was reproduced and fixed; no remaining blocking code finding identified in scope. Final full `pnpm check`: 378 Vitest + 36 Node = 414 tests, all gates passed. Coverage: 92.46% statements / 86.60% branches / 92.03% functions / 94.22% lines, unchanged thresholds. All-ID mirror presence remains 145 registered / 146 rows, only the intentional retired predecessor extra. #84/#85 are integrated at `ed16bc2`. No PR, merge or live transaction; D11-01 remains In progress pending full live evidence.
+
+**Review correction:** reproduced a P1 confirmation-binding defect: SDK 17.0.1 synthesizes `getTransaction().txHash` from the request. A matching echo could accept a different returned transaction envelope. `confirmExtension` now recomputes the Testnet transaction hash from the returned envelope for SUCCESS and FAILED and refuses absent/mismatched envelopes. The regression failed before the fix and passes after it; the existing executor keeps rejected confirmations submitted/unconfirmed and never sends a replacement. No public submit/dry-run CLI interface changed. #84's new quickstart and #85's task closure notes are integrated; overlapping docs retain the manual-extension instructions and current D11 status. Full gate/coverage verification follows this integration. No PR or live transaction.
+
+**Implementation ready for Rakha review; task remains In progress.** The WIP branch `feat/W2-D11-01-manual-extend` implements instance/default and explicit-key extension, public-payer simulation, per-entry capped targets, aggregate fee limits, local guarded signing, one-shot submission, bounded exact-hash polling and TTL post-verification. Live execution needs explicit submit/key-variable/budget flags. Main #82/#83 (config and coverage) is integrated at `25ed1fc`; the manual command keeps explicit payer selection. No PR, merge, real signature or live submission is claimed.
+
+**Verified evidence:** actual unsigned CLI simulation on A's instance at ledger 4,601,296 resolved 1,424,293 + 1,000 to target 1,425,293 with a 15,073-stroop envelope fee. [Raw RPC and CLI bundle](evidence/2026-09-10-manual-extend-simulation/README.md) records the allowlisted read/simulation methods; shared Wasm was only read, not selected for extension. D11-02/03 remain Pending for a separately reviewed live request.
+
+**Coordination:** Fatih accepted the D11-04 boundary in [#69](https://github.com/Fatihmaull/evergreen/issues/69#issuecomment-5615849537). His task waits for the published stable seam: `runExtendCli` delegates to `executeExtensions`, where only `submit === true` can resolve a signer. D11-04 owns explicit dry-run flag/help and independent no-sign/no-send acceptance checks. A branch handoff is enough; no ready PR is required to start his work.
+
+**Source-verified correction within D11:** Stellar core rejects extendTo above maxEntryTTL minus one, and uses inclusionLedger plus extendTo as the new expiry floor. The shared target helper, cost cap display and primer are corrected together; regression tests distinguish the setting from the operation ceiling. No transaction at the ceiling was sent.
+
+**Validation:** final `pnpm check` passed on the #82/#83-integrated tree: 375 Vitest + 36 Node tests (411 total), typecheck, lint, formatting and repo guards. `pnpm test:coverage` also passed: 92.41% statements, 86.47% branches, 92.03% functions, 94.19% lines, with #83 thresholds unchanged. The first coverage run found branches at 83.93%, below 84%; added tests cover confirmed/failed/malformed responses, unsigned sends, missing budgets and actual CLI dispatch. All-ID mirror presence is 145 registered / 146 rows: no missing IDs or duplicates, only the intentionally retired Dropped predecessor ~~W3-D18-02~~. This final tracking edit records verified results; the implementation remains unmerged branch work.
+
+### Implementation start record
+
+Rakha approved execution of the reviewed plan. Implementation starts on `feat/W2-D11-01-manual-extend` from the #81-integrated plan. D11-01 is In progress; D11-02/03 remain Pending and no live transaction is authorized by this step. D11-04 remains Fatih-owned: the core default simulation belongs in D11-01; his explicit dry-run flag/help and independent acceptance checks will use the same execution seam. A #69 start notice answers that work begins now, ahead of Monday; it is not a completion/merge promise.
+
+### Earlier planning snapshots
+
+**D11 plan revision after #81:** integrated `origin/main` at `ebe8e15` into the existing planning branch. [D11-01 plan](W2-D11-01-PLAN.md) now defines the file map, sequential implementation/test checkpoints, public payer and aggregate fee-cap options, signing/confirmation rejection tests, and the review/publication boundary. D11-01 stays In progress for planning; no runtime code or live transaction. D12's basic-only cut from #81 is preserved. Fatih's new #69 request for Monday branch availability needs an explicit answer; a draft ownership/boundary reply is in the plan and has not been sent. No calendar commitment or D11-04 ownership transfer has been made. Rakha confirmed npm username coordination happened directly; this does not assert the invitation or publishing access is complete.
+
+**Plan validation:** full `pnpm check` passed on the #81-integrated planning tree (280 Vitest + 36 Node tests); the first sandbox attempt failed to spawn `git`, and the same full gate passed with the required process permissions. Final edits record this outcome only. All-ID Notion presence check: 145 registered repo IDs, 146 rows, no missing IDs or duplicates; the sole extra is the intentionally retired Dropped predecessor ~~W3-D18-02~~. D11-01 is In progress/Rakha, D11-02/03 Pending/Rakha and D11-04 Pending/Fatih. These are planning-branch records, not merged-main implementation claims.
+
+Local `main` was synchronized to remote `ad18ad4` (#80, merged during this turn), and planning lives on `docs/W2-D11-01-plan-and-sync`; old feature branches were preserved. Runtime was not edited. The integrated #80 tree passed full `pnpm check`: 280 Vitest tests plus 36 Node script tests (316 total), typecheck, lint, formatting and repository guards. #80's published CI and Pages also passed. Subsequent edits update tracking Markdown only. Local and remote validation are reported separately.
+
+**Current task truth:** #60 and #63 are merged; ADR-006 is Accepted as amended in #66. Reconciled stale D8-03 to Done and D10-02 to Done from merged CLI behavior/tests (#66/#70/#71/#75/#77). D10-02's completion does not claim the future Action exists; it must enable `--require-declared-scope` at W4-D25-01. D10-04 stays In progress for engine integration. Updated AGENTS' stale ADR-006 pointers. These tracking corrections are on this planning branch, not yet merged into main.
+
+**Next work:** W2-D11-01 is In progress for planning only; see [the implementation plan](W2-D11-01-PLAN.md). Keep #80's `--ledgers N` increment interface and per-entry target helper, default simulation, explicit entry selection and submit, and verified before/after TTL. D11-02/03 remain Pending for controlled A evidence after implementation review. D11-04 remains Fatih's task; coordinate the dry-run/CLI interface boundary before implementation. No implementation, signature, chain transaction or new live scan in this synchronization.
+
+**Avoid duplicate work:** Fatih's D9-01/02/03 is merged in #78 and remains his ownership; CLI cost wiring merged in #80 during planning and is now included. Rakha has no local rent implementation to reconcile. D12-01/02 follows D11; W1 is closed apart from the separately tracked recurring obligation. Existing npm admin requests in Issue #64 remain unchanged.
+
+**Mirror recovered, 2026-09-10:** Notion MCP schema fetch and data queries succeeded. Updated and fetched back exact IDs D8-03 (Done), D8-04 (merged outcome), D10-02 (Done), D11-01 (In progress, planning only); Notes distinguish branch tracking corrections from merged runtime. Confirmed D9-01/02/03 remain Done/Fatih, D11-02/03 Pending/Rakha and D11-04 Pending/Fatih. Full presence comparison: 145 registered repo IDs, all present; 146 Notion rows including the intentionally retained Dropped predecessor ~~W3-D18-02~~. No missing active IDs or unexplained extra rows in this query. Recurring W1-D4-09 is included through its table registration, not only checkbox parsing. Task Tracker stays a week-gate snapshot. No new task IDs, runtime edits or transactions.
+
+## Historical handover and execution log
+
+The entries below retain their original dated state; current merge/ADR/task state is the section above. In particular, the Sep 9 Proposed/open-PR notes are historical and must not drive new work.
+## Current — W2-D12-01 implementation
 ## Current — W2-D12-02 read-only validation
 
 **Published after Rakha approval:** [PR #97](https://github.com/Fatihmaull/evergreen/pull/97), stacked on optimizer #88 at `38e6543`; [Issue #96](https://github.com/Fatihmaull/evergreen/issues/96) tracks review/acceptance, assigned to and mentioning Fatih. Reviewed validation `99ee901`; final publication tracking edits are Markdown only. Fatih is requested as reviewer and handles merge. Retarget this child before #88's branch is deleted, then synchronize/revalidate after the parent lands. D12-02 remains Done for verified branch work, not merged. No new live read, quote, signing or transaction. Local full check passed 376 tests; final-head remote CI is checked separately.
