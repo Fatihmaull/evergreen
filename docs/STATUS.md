@@ -2,14 +2,16 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · D11 published for review in PR #86
-**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
+**Last updated:** 2026-09-11 · D11 controlled-proof plan and unsigned preflight
+**Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
 ## Current — W2-D11-02/03 live-proof planning
+
+**Concrete plan prepared:** [D11-02/03 request](W2-D11-02-LIVE-PROOF-PLAN.md) and [raw preflight](evidence/2026-09-11-live-proof-preflight/README.md). At ledger 4,619,313, A instance remaining 1,406,276 plus 1,000 resolved to 1,407,276; unsigned envelope fee 15,073 stroops, proposed cap 25,000. Real payer/sequence observed; one operation, one instance key, zero writable keys/signatures. Captured XDR is expired and must never be reused. Browser screenshot fallback worked through CUA after Chrome DevTools reported no executable; actual terminal before/after capture and image-file saving are still execution readiness items. #86 formal review and explicit live request approval remain pending. No secret read or transaction; D11-02 planning In progress, D11-03 Pending.
 
 Rakha requested a concrete next-task plan. D11-02 is In progress for planning/preflight only on `docs/W2-D11-02-live-proof-plan`, based on #86 at ccf7374. D11-03 remains Pending. Scope is A instance only, public Rakha payer, bounded fee and complete evidence; no secret read, signing or transaction. #86 still awaits Fatih formal review, and Fatih handles merge.
 
