@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-11 · D12-02 internal review complete
+**Last updated:** 2026-09-11 · D12-02 published in PR #97 / Issue #96
 **Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -10,6 +10,10 @@
 ---
 
 ## Current — W2-D12-02 read-only validation
+
+**Published after Rakha approval:** [PR #97](https://github.com/Fatihmaull/evergreen/pull/97), stacked on optimizer #88 at `38e6543`; [Issue #96](https://github.com/Fatihmaull/evergreen/issues/96) tracks review/acceptance, assigned to and mentioning Fatih. Reviewed validation `99ee901`; final publication tracking edits are Markdown only. Fatih is requested as reviewer and handles merge. Retarget this child before #88's branch is deleted, then synchronize/revalidate after the parent lands. D12-02 remains Done for verified branch work, not merged. No new live read, quote, signing or transaction. Local full check passed 376 tests; final-head remote CI is checked separately.
+
+### Internal review record
 
 **Internal review complete:** [D12-02 review report](W2-D12-02-REVIEW.md). Fixed a P2 verification gap: empty post-read and mismatched registry copies previously passed the offline verifier. It now binds post-read key completeness, published Wasm, network settings, key encoding and expected exits/counts to raw evidence. The valid capture passes; four temporary-copy mutations fail for the intended reasons. All 15 original raw RPC/provenance files remain byte-identical. Fresh full pnpm check passed 376 tests. No production code or new live read/transaction. Ready for PR + issue publication after Rakha's instruction; Fatih reviews and handles merge.
 
