@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "3a0b79f6f365f9ef57c6bbfbbaf5d7c3334bcf61",
+  "runtimeMain": "c3ba97b5eb1ca938076c37a4d22bdaa0a3a672f4",
+  "runtimeDiffEmpty": true,
+  "bundleSha256": "19ff97e4e8dcc86af6acc9ead1f14d3ea53789f92aefe78f04dc5a780a7770be",
+  "approvedAdditionalLedgers": 1000,
+  "maximumFeeStroops": "25000",
+  "maximumTransactions": 1,
+  "captureReady": true,
+  "keyMatchesApprovedPayer": true,
+  "canonicalCheck": "passed 470 tests including coverage",
+  "recorderSha256": {
+    "capture.mjs": "935e715b6ce367af230df0e61aa8bdc1a1a84a6e260dc13eb040584d3083ad2c",
+    "verify-envelope.mjs": "41bc635a93133a10fa6e40032052eeee9c66e8112d43f2d8a68af802e6b288ed"
+  }
+}

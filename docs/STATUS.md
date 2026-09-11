@@ -2,18 +2,26 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · synchronized main #101; live proof follows #103
+**Last updated:** 2026-09-12 · D11 A-instance live proof complete; evidence awaiting internal review
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Active — W2-D11-02/03 proof preparation, 2026-09-12
+## Current — D11-01/02/03 live proof complete, evidence branch
 
-Rakha authorized execution of the approved plan. Preparing real screenshot capture and the bounded RPC recorder on existing branch `docs/W2-D11-02-live-proof-plan`. Explorer screenshot saving now works through CUA; a local read-only ttyd terminal will display a real CLI scan for capture. No secret read, signature or send at this point. D11-02 In progress for readiness work; D11-03 Pending until before-scan capture starts. Existing transaction bounds and #103 remain unchanged.
+One Testnet transaction confirmed at ledger 4,626,423: `e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a`. A instance only, +1,000 requested, target 1,400,168. Expiry increased 6,025,589 → 6,026,591; the extra two ledgers are plan-read to inclusion delay. Fee ceiling 25,000; envelope maximum 15,073; actual charged 5,064 stroops, decoded from the raw receipt and matching explorer. Exactly one send; initial NOT_FOUND polls did not trigger another transaction. B/C instance/persistent and shared-code expiry controls (five keys) stayed unchanged.
 
-## Current — synchronized main; W2-D11-02/03 next
+[Complete evidence](evidence/2026-09-12-manual-extend-proof/README.md): hash, full unedited RPC, actual explorer screenshot, before/after CLI screenshots and raw output, pre-send source/bundle identity, and offline verifier. Screenshot readiness and expected payer match were verified before send; no secret was printed or recorded. D11-01/02/03 meet their behavior/evidence criteria on this branch; #103 stays open for internal review/publication, #98 is superseded. Runtime was already merged in #86/#100; the new evidence is **not merged main**, and no new PR has been created.
+
+Full pre-send pnpm check passed 470 tests with coverage. Offline proof verification passed; three corrupted temporary copies (wrong expiry, changed control, missing screenshot) were rejected. Final evidence-tree pnpm check also passed 470 tests with coverage. All-ID presence: 146 registered / 147 mirror rows, no missing IDs; only retired Dropped ~~W3-D18-02~~ is extra. The actual private seed was checked absent from all 103 evidence files without printing it. Notion must copy this branch-qualified outcome. No further task or second transaction is started.
+
+## Earlier — W2-D11-02/03 proof preparation, 2026-09-12
+
+Rakha authorized execution of the approved plan. Preparing real screenshot capture and the bounded RPC recorder on existing branch `docs/W2-D11-02-live-proof-plan`. Explorer screenshot saving now works through CUA; a local read-only ttyd terminal will display a real CLI scan for capture. No secret read, signature or send at this point. Real ttyd scan screenshot and CUA explorer screenshot have both been saved and inspected. Private key presence and expected public payer match were verified without printing the secret. D11-02/03 are now In progress for the before-scan and controlled proof. Existing transaction bounds and #103 remain unchanged.
+
+## Earlier — synchronized main; W2-D11-02/03 plan
 
 Integrated `origin/main` at `c3ba97b` (#101) into the existing `docs/W2-D11-02-live-proof-plan` branch. Fatih merged #86, #88 and #97; #100 adds the B/C and shared-code write guard, #99 evaluates coverage in the canonical check, and #94 adds warning/critical tiers. Runtime files match this merged main. #102 remains OPEN at `06041e5c`: explicit dry-run, multi-contract CLI, automatic Notion mirroring and the W2 review are not imported into this branch.
 

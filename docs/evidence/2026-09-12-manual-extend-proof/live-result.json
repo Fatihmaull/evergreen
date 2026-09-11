@@ -1,0 +1,82 @@
+{
+  "plan": {
+    "contractId": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+    "additionalLedgers": 1000,
+    "entries": [
+      {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "kind": "instance",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "before": {
+          "observedAtLedger": 4626421,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1400168,
+        "wasCapped": false,
+        "skip": false
+      }
+    ],
+    "warnings": [
+      "Only selected keys are extended; storage is not enumerated and whole-contract protection is not established."
+    ]
+  },
+  "result": {
+    "ok": true,
+    "mode": "live",
+    "records": [
+      {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "payer": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+        "before": {
+          "observedAtLedger": 4626421,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1400168,
+        "recordedAt": "2026-09-11T19:41:36.658Z",
+        "reason": "Explicit manual extension",
+        "mode": "live",
+        "outcome": "succeeded",
+        "transactionHash": "e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a",
+        "signer": {
+          "kind": "ed25519",
+          "account": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB"
+        },
+        "after": {
+          "observedAtLedger": 4626423,
+          "endsAtLedger": 6026591
+        }
+      }
+    ],
+    "skipped": [],
+    "unattempted": [],
+    "committedFeeStroops": "15073"
+  },
+  "previews": [
+    {
+      "entry": {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "kind": "instance",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "before": {
+          "observedAtLedger": 4626421,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1400168,
+        "wasCapped": false,
+        "skip": false
+      },
+      "sourceAccount": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+      "transactionXdr": "AAAAAgAAAACJSE5n7urHY8lt5ezYx6CC/3EutnKEJkLy4LCyBjVRVwAAOuEARPWvAAAABQAAAAEAAAAAAAAAAAAAAABqpFmtAAAAAAAAAAEAAAAAAAAAGQAAAAAAFV1oAAAAAQAAAAAAAAABAAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAADp9AAAAAA==",
+      "transactionHash": "e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a",
+      "feeStroops": "15073",
+      "simulatedAtLedger": 4626422
+    }
+  ]
+}

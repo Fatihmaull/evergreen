@@ -1,0 +1,17 @@
+[
+  {
+    "case": "wrong-expiry",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "changed-control",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "missing-screenshot",
+    "exitCode": 1,
+    "rejected": true
+  }
+]

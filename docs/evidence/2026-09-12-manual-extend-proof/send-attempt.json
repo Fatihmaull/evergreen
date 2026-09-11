@@ -1,0 +1,14 @@
+{
+  "hash": "e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a",
+  "sequence": "19410430384406533",
+  "target": 1400168,
+  "fee": "15073",
+  "key": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+  "source": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+  "signed": true,
+  "before": {
+    "ledger": 4626421,
+    "endsAt": 6025589
+  },
+  "at": "2026-09-11T19:41:37.796Z"
+}

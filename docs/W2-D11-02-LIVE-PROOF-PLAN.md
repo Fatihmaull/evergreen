@@ -1,5 +1,7 @@
 # W2-D11-02/03 — controlled A-instance live-proof plan
 
+**Executed 2026-09-12; do not rerun.** One transaction succeeded and the complete [evidence bundle](evidence/2026-09-12-manual-extend-proof/README.md) is ready for internal review. The request and recipe below are historical; they do not authorize another transaction.
+
 **Bounded request approved by Rakha on 2026-09-11; plan synchronized 2026-09-12.** Owner: Rakha. D11-02 is Blocked on evidence-capture readiness under primary [#103](https://github.com/Fatihmaull/evergreen/issues/103); #98 is superseded context. D11-03 remains Pending. Fatih reviewed and merged #86; #100's guard correction is also merged. Execution baseline is `origin/main` at `c3ba97b` (#101), synchronized into `docs/W2-D11-02-live-proof-plan`. Approval covers the fixed request below. Fatih handles PR merges; internal review and publication remain separate checkpoints.
 
 **Goal:** Confirm one controlled A-instance extension with a complete, durable evidence bundle.
@@ -46,8 +48,8 @@ The decoded envelope contains one extension operation, one read-only instance ke
 - [x] Fatih reviewed and merged #86; the guard correction landed in #100.
 - [x] Synchronized tree passed full pnpm check on 2026-09-12: 470 tests with coverage evaluated; runtime matches main c3ba97b. Revalidate if code changes before execution.
 - [x] Rakha approved continuation of this bounded live request on 2026-09-11. Any changed key, payer, increment, added operation or increased fee cap needs renewed review.
-- [ ] The intended secret can be supplied privately via the existing environment setup; the actual signer must derive the expected public payer. Secret availability has **not** been inspected in this planning turn. Never print a seed or pass one as a CLI argument; the command does not auto-load `.env`.
-- [ ] Evidence capture is ready **before** sending: raw RPC request/response saving, CLI stdout/stderr, actual before/after scan screenshots and an actual transaction-explorer screenshot. Verify image files can be saved into the evidence directory. Do not substitute rendered text for real screenshots.
+- [x] Private environment setup verified 2026-09-12 without printing a secret; the actual signer must derive the expected public payer. Expected public payer match was verified. Never print a seed or pass one as a CLI argument; the command does not auto-load `.env`.
+- [x] Real explorer and read-only ttyd scan screenshots saved and inspected 2026-09-12; evidence capture is ready **before** sending: raw RPC request/response saving, CLI stdout/stderr, actual before/after scan screenshots and an actual transaction-explorer screenshot. Verify image files can be saved into the evidence directory. Do not substitute rendered text for real screenshots.
 
 Screenshot preflight: the Chrome DevTools connector could not find its Chrome executable. The in-app browser successfully loaded A's real StellarExpert page and produced an actual screenshot in the session. This establishes a browser fallback, not a saved transaction receipt. Real terminal before/after screenshot capture and saving image artifacts to the repository still need verification at execution time; coordinate those captures with Rakha/Fatih if the harness cannot operate a native terminal. Do not send while this evidence path is unready.
 
