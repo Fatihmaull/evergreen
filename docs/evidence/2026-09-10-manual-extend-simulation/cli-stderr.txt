@@ -1,0 +1,7 @@
+Mode: dry-run; requested increment: 1000; aggregate budget: not supplied (simulation only)
+Selected instance AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+Known consumers: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Payer: GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB
+Before: ledger 4601296, live until 6025589
+Target remaining: 1425293; prepared fee cap: 15073 stroops
+Selected scope only. Code may have consumers outside this scan.

@@ -8,6 +8,8 @@ import {
 import type { StorageSettings, StorageAdviceReport } from '@evergreen-stellar/core';
 import { formatStorageAdvice } from './optimizer.js';
 import { formatCost, type CostLine } from './cost.js';
+import { EXTEND_HELP, runExtendCli } from './extend.js';
+import type { ExtendCliDependencies } from './extend.js';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import {
   DEFAULT_THRESHOLD_LEDGERS,
@@ -53,7 +55,7 @@ so a clean exit means "everything I was asked to check is healthy" and never
 
                       "--ledgers N" means "give me N MORE ledgers". The protocol
                       wants an absolute target, so the CLI computes it for you
-                      and caps it at max_entry_ttl, saying so when it does.
+                      and caps it at max_entry_ttl - 1, saying so when it does.
                       Costs are estimates: rent pricing varies with network
                       state and has differed ~18% between days.
 
@@ -69,6 +71,7 @@ Colour is added only for an interactive terminal and honours NO_COLOR. The state
 word always prints, so piped output and screenshots lose nothing.`;
 
 export interface CliDependencies {
+  readonly extend?: ExtendCliDependencies;
   connect(): Promise<LedgerEntryReader>;
   readStorageSettings?(): Promise<StorageSettings | undefined>;
   /** Optional: supplied only when --cost is requested, so a plain scan stays one round trip. */
@@ -93,6 +96,17 @@ export async function runCli(
   args: readonly string[],
   dependencies: CliDependencies,
 ): Promise<CliOutput> {
+  if (args[0] === 'extend') {
+    if (args[1] === '--help' && args.length === 2)
+      return { stdout: EXTEND_HELP, stderr: '', exitCode: 0 };
+    if (!dependencies.extend)
+      return {
+        stdout: '',
+        stderr: 'Extension dependencies are unavailable.',
+        exitCode: EXIT_ERROR,
+      };
+    return runExtendCli(args, dependencies.extend);
+  }
   const fail = (message: string): CliOutput => ({
     stdout: '',
     stderr: message,
@@ -102,7 +116,11 @@ export async function runCli(
     (args.length === 1 && args[0] === '--help') ||
     (args.length === 2 && args[0] === 'scan' && args[1] === '--help')
   ) {
-    return { stdout: HELP, stderr: '', exitCode: 0 };
+    return {
+      stdout: HELP + '\n\nManual extension: evergreen extend --help',
+      stderr: '',
+      exitCode: 0,
+    };
   }
   const contractId = args[1];
   if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);

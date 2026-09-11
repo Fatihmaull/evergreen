@@ -89,8 +89,7 @@ describe('formatCost — capping is announced, never silent', () => {
     // Silently returning a smaller extension while reporting success is the
     // same shortfall shape as passing a delta where a target belongs.
     const out = formatCost(cost({ cappedEntryCount: 1 })).join('\n');
-    expect(out).toContain('CAPPED at the protocol maximum');
-    expect(out).toContain('3,110,400');
+    expect(out).toContain('CAPPED at the operation maximum of 3,110,399 ledgers');
     expect(out).toContain('less than requested');
   });
 
