@@ -1,0 +1,74 @@
+{
+  "base": "96ebe2d",
+  "d11RuntimeHead": "343e112",
+  "d12RuntimeHead": "f661261",
+  "localCombinedCommit": "65e9d90",
+  "validation": {
+    "d11": {
+      "pnpmCheck": "passed",
+      "totalTests": 428,
+      "coverageLinesPercent": 94.54,
+      "coverageBranchesPercent": 86.65,
+      "installedArtifact": {
+        "mode": "d11",
+        "tarball": "/tmp/evergreen-d11-artifact-qFbRWX/tarballs/evergreen-stellar-cli-0.0.0.tgz",
+        "installDirectory": "/tmp/evergreen-d11-artifact-qFbRWX/installed",
+        "binary": "./dist/evergreen.mjs",
+        "runtimeDependencies": {
+          "@stellar/stellar-sdk": "17.0.1"
+        },
+        "workspaceSiblingsInstalled": false,
+        "scanEntries": 4,
+        "scanExit": 1,
+        "sharingCaveat": true,
+        "adviceCount": null,
+        "extendHelp": true,
+        "network": "registry install only; CLI used offline fixture replay"
+      }
+    },
+    "d12": {
+      "pnpmCheck": "passed",
+      "totalTests": 376,
+      "coverageLinesPercent": 96.54,
+      "coverageBranchesPercent": 88.03,
+      "installedArtifact": {
+        "mode": "d12",
+        "tarball": "/tmp/evergreen-d12-artifact-t2V85R/tarballs/evergreen-stellar-cli-0.0.0.tgz",
+        "installDirectory": "/tmp/evergreen-d12-artifact-t2V85R/installed",
+        "binary": "./dist/evergreen.mjs",
+        "runtimeDependencies": {
+          "@stellar/stellar-sdk": "17.0.1"
+        },
+        "workspaceSiblingsInstalled": false,
+        "scanEntries": 4,
+        "scanExit": 1,
+        "sharingCaveat": true,
+        "adviceCount": 3,
+        "extendHelp": false,
+        "network": "registry install only; CLI used offline fixture replay"
+      }
+    },
+    "combined": {
+      "pnpmCheck": "passed",
+      "totalTests": 446,
+      "coverageLinesPercent": 95.58,
+      "coverageBranchesPercent": 88.37,
+      "installedArtifact": {
+        "mode": "combined",
+        "tarball": "/tmp/evergreen-combined-artifact-W0paJK/tarballs/evergreen-stellar-cli-0.0.0.tgz",
+        "installDirectory": "/tmp/evergreen-combined-artifact-W0paJK/installed",
+        "binary": "./dist/evergreen.mjs",
+        "runtimeDependencies": {
+          "@stellar/stellar-sdk": "17.0.1"
+        },
+        "workspaceSiblingsInstalled": false,
+        "scanEntries": 4,
+        "scanExit": 1,
+        "sharingCaveat": true,
+        "adviceCount": 3,
+        "extendHelp": true,
+        "network": "registry install only; CLI used offline fixture replay"
+      }
+    }
+  }
+}

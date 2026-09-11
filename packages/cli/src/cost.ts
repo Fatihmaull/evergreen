@@ -95,7 +95,7 @@ export function formatCost(cost: CostLine): string[] {
     // success — the same shortfall shape as passing a delta where a target belongs.
     lines.push('');
     lines.push(
-      `  ⚠ ${cost.cappedEntryCount} entr${cost.cappedEntryCount === 1 ? 'y was' : 'ies were'} CAPPED at the protocol maximum of ${cost.maxEntryTtl.toLocaleString()} ledgers`,
+      `  ⚠ ${cost.cappedEntryCount} entr${cost.cappedEntryCount === 1 ? 'y was' : 'ies were'} CAPPED at the operation maximum of ${(cost.maxEntryTtl - 1).toLocaleString()} ledgers`,
     );
     lines.push('    (~180 days). Those entries get less than requested; the price above reflects');
     lines.push('    the capped extension, not the request.');

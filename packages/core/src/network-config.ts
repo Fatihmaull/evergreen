@@ -12,7 +12,7 @@ import { xdr, rpc } from '@stellar/stellar-sdk';
 export const STATE_ARCHIVAL_CONFIG_KEY = 'AAAACAAAAAo=';
 
 export interface StateArchivalSettings {
-  /** Protocol ceiling on remaining TTL after any single extend. */
+  /** Inclusive lifetime setting; an extend operation target must be <= this minus one. */
   readonly maxEntryTtl: number;
   readonly minTemporaryTtl: number;
   readonly minPersistentTtl: number;
@@ -131,7 +131,9 @@ export function resolveExtendTarget(args: {
   // than subtracting from the request.
   const base = Math.max(0, currentRemainingLedgers);
   const requested = base + additionalLedgers;
-  const capped = Math.min(requested, maxEntryTtl);
+  // The setting includes the current live ledger. Core rejects an operation
+  // target greater than maxEntryTTL - 1 (ExtendFootprintTTLOpFrame::doCheckValidForSoroban).
+  const capped = Math.min(requested, maxEntryTtl - 1);
   return {
     extendToLedgers: capped,
     wasCapped: capped < requested,

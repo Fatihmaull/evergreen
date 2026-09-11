@@ -25,20 +25,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # A conflict marker in a config file does not fail loudly — it silently
-      # stops the file meaning what it says. Cheapest check we have; runs first.
-      - run: pnpm check:conflicts
-
-      # A doc referencing a task ID that is not in BACKLOG is work nobody tracks.
-      # Catches dangling IDs, NOT repurposed ones — see docs/CONVENTIONS.md.
-      - run: pnpm check:task-ids
-
-      - run: pnpm typecheck
-
-      - run: pnpm lint
-
-      - run: pnpm format:check
-
-      # Unit tests only. Integration tests hit real testnet RPC and are never
-      # run here by default — see CLAUDE.md hard rule 9.
-      - run: pnpm test
+      # One canonical pipeline: build/typecheck precedes artifact inspection,
+      # and CI cannot omit newly added repository, bundle or publish gates.
+      - run: pnpm check
