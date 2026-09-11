@@ -9,7 +9,18 @@ import {
   estimateRent,
   readStateArchivalSettings,
   resolveExtendTarget,
+  planExtension,
+  executeExtensions,
+  prepareExtension,
+  submitExtension,
+  confirmExtension,
+  createEd25519Signer,
+  scanContract,
+  createRpcReader,
 } from '@evergreen-stellar/core';
+import type { PreparedExtension } from '@evergreen-stellar/core';
+import { extensionPreview } from './extend.js';
+import type { ExtendReport, ExtendRequest } from './extend.js';
 import type { ScanResult, Stroops } from '@evergreen-stellar/shared-types';
 import type { CostLine } from './cost.js';
 import { runCli } from './command.js';
@@ -91,7 +102,17 @@ async function main(): Promise<number> {
   // WORD prints either way — colour is never the only carrier of the state.
   const color = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
   const output = await runCli(process.argv.slice(2), {
+    extend: {
+      ...(process.env.EVERGREEN_SOURCE_ACCOUNT
+        ? { sourceAccount: process.env.EVERGREEN_SOURCE_ACCOUNT }
+        : {}),
+      readKeysFile: (path) => readFile(path, 'utf8'),
+      preview: (text) => console.error(text),
+      run: (request, preview) => runExtension(rpcUrl, request, preview),
+    },
     connect: () => connectTestnet(rpcUrl),
+    readStorageSettings: () =>
+      readStateArchivalSettings(new rpc.Server(rpcUrl, { timeout: 10_000 })),
     readKeysFile: (path) => readFile(path, 'utf8'),
     now: () => new Date(),
     color,
@@ -111,6 +132,75 @@ main()
   .then((code) => process.exit(code))
   .catch(() => {
     // Never let a raw stack trace reach a user (docs/CONVENTIONS.md).
-    console.error('\n✖ Unexpected scan failure.');
+    console.error('\n✖ Unexpected command failure.');
     process.exit(EXIT_ERROR);
   });
+
+/** Network/secret wiring only. The command and execution state machine test offline. */
+async function runExtension(
+  rpcUrl: string,
+  request: ExtendRequest,
+  preview: (text: string) => void,
+): Promise<ExtendReport> {
+  const server = new rpc.Server(rpcUrl, { timeout: 10_000 });
+  if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
+    throw new Error('RPC is not Testnet');
+  const reader = createRpcReader(server);
+  const scan = await scanContract(reader, { id: request.contractId }, request.dataKeys);
+  const settings = await readStateArchivalSettings(server);
+  const plan = planExtension(scan, {
+    contractId: request.contractId,
+    additionalLedgers: request.additionalLedgers,
+    maxEntryTtl: settings.maxEntryTtl,
+    dataKeys: request.dataKeys,
+    includeCode: request.includeCode,
+  });
+  const previews: PreparedExtension[] = [];
+  const result = await executeExtensions(
+    plan,
+    {
+      payer: request.sourceAccount,
+      submit: request.submit,
+      ...(request.maxFeeStroops === undefined ? {} : { maxFeeStroops: request.maxFeeStroops }),
+    },
+    {
+      prepare: (entry) => prepareExtension(server, entry, request.sourceAccount),
+      signer: (prepared, remainingFeeStroops) =>
+        createEd25519Signer({
+          payer: request.sourceAccount,
+          sourceAccount: request.sourceAccount,
+          entryKey: prepared.entry.entryKey,
+          extendToLedgers: prepared.entry.extendToLedgers,
+          expectedHash: prepared.transactionHash,
+          maxFeeStroops: remainingFeeStroops,
+          readSecret: () => {
+            // This callback is unreachable in simulation. Environment NAME is public; VALUE is never reported.
+            const secret = request.secretEnv ? process.env[request.secretEnv] : undefined;
+            if (!secret) throw new Error('Signing key is unavailable');
+            return secret;
+          },
+        }),
+      submit: (prepared, signed) => submitExtension(server, prepared, signed),
+      confirm: (hash) => confirmExtension(server, hash),
+      readAfter: async (entryKey) => {
+        const after = await scanContract(reader, { id: request.contractId }, request.dataKeys);
+        const entry = after.entries[entryKey];
+        if (
+          !entry ||
+          entry.ttl.status !== 'known' ||
+          after.issues.some((i) => i.entryKey === entryKey)
+        )
+          throw new Error('Post-read incomplete');
+        return { observedAtLedger: entry.observedAtLedger, endsAtLedger: entry.ttl.endsAtLedger };
+      },
+      preview: async (prepared) => {
+        previews.push(prepared);
+        preview(
+          `Mode: ${request.submit ? 'live (explicit submit)' : 'dry-run'}; requested increment: ${request.additionalLedgers}; aggregate budget: ${request.maxFeeStroops ?? 'not supplied (simulation only)'}\n${extensionPreview(prepared)}`,
+        );
+      },
+      now: () => new Date(),
+    },
+  );
+  return { plan, result, previews };
+}

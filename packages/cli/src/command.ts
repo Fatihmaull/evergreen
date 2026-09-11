@@ -3,8 +3,13 @@ import {
   coverageIssues,
   isValidContractId,
   scanContract,
+  analyzeStorage,
 } from '@evergreen-stellar/core';
+import type { StorageSettings, StorageAdviceReport } from '@evergreen-stellar/core';
+import { formatStorageAdvice } from './optimizer.js';
 import { formatCost, type CostLine } from './cost.js';
+import { EXTEND_HELP, runExtendCli } from './extend.js';
+import type { ExtendCliDependencies } from './extend.js';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import {
   DEFAULT_THRESHOLD_LEDGERS,
@@ -18,7 +23,7 @@ import {
 const DEFAULT_EXTEND_LEDGERS = 518_400;
 
 const USAGE =
-  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]]';
+  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]';
 const HELP = `${USAGE}
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
@@ -41,13 +46,16 @@ so a clean exit means "everything I was asked to check is healthy" and never
                       a contract you own; evergreen-check sets it by default.
 --json                machine-readable output. The human view is a summary; JSON
                       is the complete record, including every issue.
+--optimize            append conditional storage advice with evidence and scope
+                      limits. Reads network minimum lifetimes; no payer needed.
+                      Add --cost for current rent quotes. No storage is changed.
 --cost [--ledgers N]  estimate what extending every entry by N more ledgers
                       would cost, priced by simulating against the network.
                       Default N is 518,400 (~30 days). Nothing is submitted.
 
                       "--ledgers N" means "give me N MORE ledgers". The protocol
                       wants an absolute target, so the CLI computes it for you
-                      and caps it at max_entry_ttl, saying so when it does.
+                      and caps it at max_entry_ttl - 1, saying so when it does.
                       Costs are estimates: rent pricing varies with network
                       state and has differed ~18% between days.
 
@@ -63,7 +71,9 @@ Colour is added only for an interactive terminal and honours NO_COLOR. The state
 word always prints, so piped output and screenshots lose nothing.`;
 
 export interface CliDependencies {
+  readonly extend?: ExtendCliDependencies;
   connect(): Promise<LedgerEntryReader>;
+  readStorageSettings?(): Promise<StorageSettings | undefined>;
   /** Optional: supplied only when --cost is requested, so a plain scan stays one round trip. */
   priceExtend?(args: {
     readonly scan: import('@evergreen-stellar/shared-types').ScanResult;
@@ -86,6 +96,17 @@ export async function runCli(
   args: readonly string[],
   dependencies: CliDependencies,
 ): Promise<CliOutput> {
+  if (args[0] === 'extend') {
+    if (args[1] === '--help' && args.length === 2)
+      return { stdout: EXTEND_HELP, stderr: '', exitCode: 0 };
+    if (!dependencies.extend)
+      return {
+        stdout: '',
+        stderr: 'Extension dependencies are unavailable.',
+        exitCode: EXIT_ERROR,
+      };
+    return runExtendCli(args, dependencies.extend);
+  }
   const fail = (message: string): CliOutput => ({
     stdout: '',
     stderr: message,
@@ -95,7 +116,11 @@ export async function runCli(
     (args.length === 1 && args[0] === '--help') ||
     (args.length === 2 && args[0] === 'scan' && args[1] === '--help')
   ) {
-    return { stdout: HELP, stderr: '', exitCode: 0 };
+    return {
+      stdout: HELP + '\n\nManual extension: evergreen extend --help',
+      stderr: '',
+      exitCode: 0,
+    };
   }
   const contractId = args[1];
   if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);
@@ -111,6 +136,7 @@ export async function runCli(
   }
   let asJson = false;
   let withCost = false;
+  let withOptimize = false;
   let additionalLedgers = DEFAULT_EXTEND_LEDGERS;
   let noDataKeys = false;
   let requireDeclaredScope = false;
@@ -118,6 +144,7 @@ export async function runCli(
   for (let i = 2; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
     else if (args[i] === '--cost' && !withCost) withCost = true;
+    else if (args[i] === '--optimize' && !withOptimize) withOptimize = true;
     else if (args[i] === '--ledgers') {
       const raw = args[++i];
       const parsed = Number(raw);
@@ -183,33 +210,64 @@ export async function runCli(
   // told a human it was incomplete must not hand a machine an empty array.
   const result = { ...scanned, issues: [...scanned.issues, ...coverageIssues(scanned)] };
 
+  let settings: StorageSettings | undefined;
+  if (withOptimize) {
+    try {
+      settings = await dependencies.readStorageSettings?.();
+    } catch {
+      /* Dated historical context is explicitly labelled in advice. */
+    }
+  }
+  const advice = (priced?: CostLine): StorageAdviceReport | undefined =>
+    withOptimize
+      ? analyzeStorage(result, {
+          ...(settings === undefined ? {} : { settings }),
+          ...(priced === undefined
+            ? {}
+            : {
+                quote: {
+                  rentByEntry: priced.rentByEntry,
+                  pricedAtLedger: priced.pricedAtLedger,
+                  additionalLedgers: priced.additionalLedgers,
+                },
+              }),
+        })
+      : undefined;
+
   let cost: CostLine | undefined;
   if (withCost) {
-    if (dependencies.priceExtend === undefined) {
+    if (dependencies.priceExtend === undefined && !withOptimize) {
       return fail('--cost is unavailable: no pricing backend was configured.');
     }
     try {
+      if (dependencies.priceExtend === undefined) throw new Error('No pricing backend');
       cost = await dependencies.priceExtend({ scan: result, additionalLedgers });
     } catch {
+      const optimization = advice();
       // A failed quote must not take the scan down with it — the TTL answer is
       // still correct and still worth printing.
       return {
         stdout: asJson
           ? JSON.stringify(
-              { ...result, health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS) },
+              {
+                ...result,
+                health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS),
+                ...(optimization === undefined ? {} : { optimization }),
+              },
               null,
               2,
             )
           : `${formatHuman(result, dependencies.now(), {
               color: dependencies.color === true,
               thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
-            })}\n\n! Could not price an extend: the network declined to simulate it.\n  The TTL results above are unaffected.`,
+            })}\n\n! Could not price an extend: the network declined to simulate it.\n  The TTL results above are unaffected.${optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`}`,
         stderr: '',
         exitCode: exitCodeFor(result, DEFAULT_THRESHOLD_LEDGERS, { requireDeclaredScope }),
       };
     }
   }
 
+  const optimization = advice(cost);
   return {
     stdout: asJson
       ? // Additive envelope: every existing key of ScanResult is untouched, so
@@ -219,6 +277,7 @@ export async function runCli(
             ...result,
             health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS),
             ...(cost === undefined ? {} : { cost }),
+            ...(optimization === undefined ? {} : { optimization }),
           },
           null,
           2,
@@ -226,7 +285,9 @@ export async function runCli(
       : formatHuman(result, dependencies.now(), {
           color: dependencies.color === true,
           thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
-        }) + (cost === undefined ? '' : `\n\n${formatCost(cost).join('\n')}`),
+        }) +
+        (cost === undefined ? '' : `\n\n${formatCost(cost).join('\n')}`) +
+        (optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`),
     stderr: '',
     // Same constant the display grades against, so the printed health and the
     // exit code can never describe different thresholds.

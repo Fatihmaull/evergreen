@@ -159,7 +159,7 @@ docs/
   SETUP.md              environment, accounts, service config, contract IDs
   EVIDENCE.md           grant evidence tracker (tx hashes, screenshots, links)
   POLICY-SIGNER.md      (W3) the hardened signer path for self-hosters
-  adr/                  architecture decision records (001–006; 006 is Proposed)
+  adr/                  architecture decision records (001–006; see each ADR for current status)
   archive/              historical snapshots; provenance only, never authoritative
 packages/
   shared-types/         the types every module speaks
@@ -180,7 +180,7 @@ Already decided — do not relitigate without a reason and an ADR amendment:
 - **ADR-003:** all three parts decided. Toolchain Node 24 / pnpm / Vitest; scheduler **GitHub Actions cron**; hosting **Cloudflare Pages** (live); persistence **PostgreSQL on Neon, deferred to W4** behind the Sep 20 proof. Frame persistence as *atomicity*, not storage — the no-double-bump guarantee needs a real lock, and repo-committed JSON is adequate history but useless as one. Only one of its three arguments is load-bearing; the ADR labels which.
 - **ADR-004:** the user always pays their own extend fees. Apex never subsidises rent. `BumpRecord` carries payer distinct from contract; config is N contracts × M payers; `Signer` is an interface resolved per payer — v1 implements no multi-tenancy but must not foreclose it.
 - **ADR-005 (accepted 2026-09-08):** shared domain types are JSON-compatible. Money is decimal text, not `number` — stroops above `MAX_SAFE_INTEGER` round silently. Explicit variants over sentinels, so "no TTL known" stays distinct from "expiring now". The `Signer` seam is **not** a security boundary.
-- **ADR-006 (Proposed, in PR #60):** `evergreen scan` exit codes separate *incomplete information* (3) from *observed low TTL* (1), precedence 2 > 3 > 1 > 0. Exit status summarises health and **never authorises a transaction.** Awaiting Fatih's acceptance.
+- **ADR-006 (accepted as amended 2026-09-10, #66):** scan exits retain precedence 2 > 3 > 1 > 0. Bare scans report health of observed scope; `--require-declared-scope` additionally enforces a caller declaration and is mandatory for the future Action. Degraded reads still return 3. Blast radius changes output severity, not exit category. Exit status never authorizes a transaction.
 
 New non-trivial decision? Write an ADR (`docs/adr/README.md` has the template) and link it from STATUS.md.
 

@@ -103,3 +103,57 @@ describe('createSimulatingQuoter — rent is the DIFFERENCE between two simulati
       });
   });
 });
+
+describe('createSimulatingQuoter — the default synthetic identity', () => {
+  it('🔴 works with NO sourceAccountId — the path that removed the hardcoded key', () => {
+    // Found by the per-file coverage floor on its first run: every existing
+    // test passed an explicit account, so the default — the whole point of
+    // removing our own key from the published bundle — was never exercised.
+    const { server: s } = server(['11708', '91309']);
+    return createSimulatingQuoter(s, { networkPassphrase: Networks.TESTNET })
+      .quoteDetailed({ entryKeys: [KEY], extendToLedgers: 2_000_000 })
+      .then(([q]) => {
+        expect(q?.estimatedRentStroops).toBe('79601');
+      });
+  });
+
+  it('generates a DIFFERENT identity per quoter, never a shared constant', () => {
+    // A fixed fallback would be the hardcoded account again, wearing a
+    // generated-looking name.
+    const seen = new Set<string>();
+    const capture = {
+      getAccount: () => Promise.reject(new Error('must not be called')),
+      simulateTransaction: (tx: { source: string }) => {
+        seen.add(tx.source);
+        return Promise.resolve({ minResourceFee: '11708', transactionData: {}, events: [] });
+      },
+    } as unknown as rpc.Server;
+    const opts = { networkPassphrase: Networks.TESTNET };
+    return Promise.all([
+      createSimulatingQuoter(capture, opts).quoteDetailed({
+        entryKeys: [KEY],
+        extendToLedgers: 2_000_000,
+      }),
+      createSimulatingQuoter(capture, opts).quoteDetailed({
+        entryKeys: [KEY],
+        extendToLedgers: 2_000_000,
+      }),
+    ]).then(() => {
+      expect(seen.size).toBeGreaterThan(1);
+    });
+  });
+
+  it('treats an absent minResourceFee as zero rather than crashing', () => {
+    // A malformed simulation response must not take the scan down with it.
+    const s = {
+      getAccount: () => Promise.reject(new Error('must not be called')),
+      simulateTransaction: () => Promise.resolve({ transactionData: {}, events: [] }),
+    } as unknown as rpc.Server;
+    return createSimulatingQuoter(s, { networkPassphrase: Networks.TESTNET })
+      .quoteDetailed({ entryKeys: [KEY], extendToLedgers: 2_000_000 })
+      .then(([q]) => {
+        expect(q?.estimatedRentStroops).toBe('0');
+        expect(q?.minResourceFeeStroops).toBe('0');
+      });
+  });
+});

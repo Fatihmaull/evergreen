@@ -1,0 +1,74 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 2 explicit data key(s)
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,423,324 ledgers — live
+  ends at:    ledger 6,025,589
+  approx:     2026-12-01T18:58:54.616Z (estimate — ledgers are the truth)
+  observed:   ledger 4,602,265
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  persistent  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,423,330 ledgers — live
+  ends at:    ledger 6,025,595
+  approx:     2026-12-01T18:59:24.616Z (estimate — ledgers are the truth)
+  observed:   ledger 4,602,265
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  temporary  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,423,333 ledgers — live
+  ends at:    ledger 6,025,598
+  approx:     2026-12-01T18:59:39.616Z (estimate — ledgers are the truth)
+  observed:   ledger 4,602,265
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Others may depend on this entry and are invisible here —
+              pass them together to see the real blast radius.
+  remaining:  688,564 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:54.616Z (estimate — ledgers are the truth)
+  observed:   ledger 4,602,265
+  health:     HEALTHY — Above threshold.
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+
+Storage advice — observed keys only
+Network minimum lifetimes at ledger 4602265: temporary 720, persistent 120960 ledgers.
+Minimum lifetime includes the current ledger; it is not the expiry of an already-existing entry.
+
+durability-review: AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==
+Known consumers: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Action: Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.
+Why: Historical A rent was about 1.95x higher for persistent than temporary at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents.
+Observed at ledger 4602265: 1423330 remaining; last live ledger 6025595.
+Current rent: unavailable (not zero).
+
+temporary-retention: AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==
+Known consumers: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Action: Compare the observed TTL with intended retention. If data must survive expiry, evaluate persistent storage in contract source; otherwise permit deliberate expiry.
+Why: Temporary state is deleted, not archived or restorable. The isolated 2026-09-06 experiment observed the final live ledger and absence at the next ledger; it does not measure this entry's deletion.
+Observed at ledger 4602265: 1423333 remaining; last live ledger 6025598.
+Current rent: unavailable (not zero).
+
+shared-code-dependency: AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+Known consumers: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Action: Monitor this code key once with its known consumers; checking their instances alone does not establish protection.
+Why: Every contract built from the same Wasm uses this code entry. Other consumers may exist outside this scan; sharing is not duplicated storage or a measured saving.
+Observed at ledger 4602265: 688564 remaining; last live ledger 5290829.
+Current rent: unavailable (not zero).
+
+Historical A benchmark (2026-09-09T10:58:52Z): persistent rent 103849 versus temporary rent 53196 stroops; about 1.95x.
+Historical measured rent at equal encoded sizes over durations differing by two ledgers; not a quote or savings forecast for this entry.
+Source: https://github.com/Fatihmaull/evergreen/blob/main/packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json
+Observed deletion reference: isolated temporary-entry experiment (2026-09-06); present at 4529810, absent at 4529811.
+Source: https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-06-ttl-boundary/README.md
+
+Limit: Only observed keys were analyzed; storage was not enumerated. No size, duplicate-content or global-consumer inference is supported.
+Limit: Advice is conditional on application requirements; it does not authorize a transaction or change scan health exits.
+Limit: Current rent is unavailable for some findings. Use --cost for quotes where supported; historical benchmark amounts are not per-entry quotes.

@@ -105,6 +105,12 @@ The [RPC adapter](../packages/core/src/rpc.ts) isolates SDK entry reads behind `
 
 The [entry point](../packages/cli/src/bin.ts) parses a single contract ID, calls core, prints human or JSON output, and sets an exit code. It currently uses a fixed threshold of 17,280 ledgers and `SOROBAN_RPC_URL` or the default Testnet endpoint. It does not load `evergreen.config.json` yet. The published package is **`@evergreen-stellar/cli`** (`W1-D5-01`, org owned), installed as `npx @evergreen-stellar/cli`; the executable stays `evergreen` through its `bin` mapping. Publication is `W4-D27-02`.
 
+### Storage advice (D12 implementation branch)
+
+`core/optimizer.ts` is a pure consumer of ScanResult, optional network minimum lifetimes and optional per-key rent quotes. It emits conditional retention/durability/shared-code advice without changing health grades or transaction policy. Bundled metadata in `optimizer-evidence.ts` is verified against fixtures by tests; production imports no fixture files. No payload/size analysis or shared-types change is introduced.
+
+CLI `scan --optimize` adds one optional settings read after the Testnet scan connection and an additive `optimization` report. It reuses the existing optional pricing result once; settings/pricing failures are qualified without losing scan output. Existing scan exits still describe scan health/coverage, not an optimization guarantee. D11's signing/submission path is separate and is not part of this branch.
+
 ### `packages/engine`
 
 A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-scheduled-serverless-engine.md), [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md)). The real loop is planned for W3. The existing [scheduler smoke workflow](../.github/workflows/scheduler-smoke.yml) reads A's instance only and never signs or sends a transaction.
@@ -163,6 +169,14 @@ Current CLI exit behavior, in precedence order:
 | All supplied/discovered entries have known TTL at or above threshold and no issues | `0` |
 
 Zero covers only the supplied/discovered keys, never all contract storage. Precedence is 2 > 3 > 1 > 0. Legacy results without coverage now return 3. `--no-data-keys` is a caller assertion stored in `coverage.noDataKeysDeclaredByContract`, mutually exclusive with a keys file; an empty keys file is not that assertion. JSON retains low-TTL observations even when incomplete/error takes precedence. Exit status is a CI health summary, never authorization to spend. The engine consumes structured observations and policy/payer/budget inputs before deciding to bump. [ADR-006](adr/ADR-006-scan-health-exit-codes.md) records this proposal for shared review. Cross-contract consumer merging is implemented in `W2-D8-04`; severity presentation remains `W2-D10-01`.
+
+### Manual extension path (D11 implementation branch)
+
+`extend` parsing lives in `packages/cli/src/extend.ts`; `bin.ts` resolves the public payer/RPC and supplies a deferred secret lookup. Core `extend.ts` selects explicit entries, resolves one target per key, and executes sequentially through injected dependencies. `extend-rpc.ts` simulates and assembles actual envelopes, checks Testnet, submits once and polls the exact hash. `ed25519-signer.ts` implements the existing `Signer` interface with operation, footprint, payer, fee, hash and time-bound checks before reading a key. It is software validation, not the Stage 2 policy signer.
+
+No flag means simulation: no signer resolution and no send. Live mode requires `--submit`, a secret environment variable name and an aggregate fee cap. Each selected entry has one transaction; later entries obtain fresh sequences. Uncertain sends retain the locally calculated hash, stop the command and never trigger replacements. A successful `BumpRecord` requires confirmed inclusion plus increased absolute expiry meeting inclusion ledger + target. Read-to-submit drift and concurrent extenders are not hidden.
+
+The shared `resolveExtendTarget` now caps at `maxEntryTtl - 1`, the operation ceiling; configuration counts the current ledger inclusively. Both cost and extension consume this helper. This implementation has offline tests and an unsigned A-instance Testnet simulation; live D11-02/03 evidence remains Pending. Engine scheduling, persistence and D11-04's explicit dry-run alias remain separate work.
 
 ### Planned path: decide, pay, confirm, record
 

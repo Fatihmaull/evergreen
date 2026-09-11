@@ -1,0 +1,26 @@
+{
+  "positiveControlPassed": true,
+  "originalEvidenceUnchanged": true,
+  "results": [
+    {
+      "mutation": "empty-post",
+      "rejected": true,
+      "reason": "Post-read must cover every original entry exactly once"
+    },
+    {
+      "mutation": "duplicate-post",
+      "rejected": true,
+      "reason": "Post-read must cover every original entry exactly once"
+    },
+    {
+      "mutation": "wrong-registry",
+      "rejected": true,
+      "reason": "Observed Wasm must match publisher registry"
+    },
+    {
+      "mutation": "wrong-settings",
+      "rejected": true,
+      "reason": "Settings must match raw RPC"
+    }
+  ]
+}
