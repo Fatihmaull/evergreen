@@ -9,7 +9,11 @@
 
 ---
 
-## Current — W2-D12-01 implementation
+## Current — W2-D12-02 read-only validation
+
+Rakha approved the next task on 2026-09-11. D12-02 is In progress on `test/W2-D12-02-storage-advice-validation`, stacked on #88 (38e6543). Scope: reuse A evidence, read B/C shared-key advice and validate one independently published third-party Testnet contract. Record provenance and raw responses; no arbitrary storage enumeration or fabricated keys. No runtime feature, transaction or PR publication in this execution step.
+
+## Earlier D12 implementation record
 
 **Synchronization complete:** #88 and #86 are synchronized with main #93 (`96ebe2d`) independently; the local combined tree passed 446 tests and unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) includes per-branch checks (D12 376, D11 428), installed CLI-only tarballs, and a fresh-output pipeline proof. W2-D14-02d is verified in both branches; #95 and #89 remain open for actual main integration after review. No force-push, PR merge, live RPC or transaction. Final-head remote CI is checked separately after push.
 

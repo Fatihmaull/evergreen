@@ -268,7 +268,7 @@ Follow-up audit [#61](https://github.com/Fatihmaull/evergreen/pull/61) and A-ext
   - **Observed deletion is cited accurately:** the isolated Sep 6 temporary-entry experiment was present at ledger 4,529,810 and absent at 4,529,811. B's later absent temporary entry does not establish an exact deletion minute.
   - **Minimum lifetime versus observed TTL:** historical configured minima were 720 / 120,960, while 688 / 120,927 were remaining samples. The report prefers current settings and retains each entry's actual TTL; unavailable configuration becomes labelled historical context.
   - **Measured price, conditional trade-off:** W1-D7-08 recorded 103,849 / 53,196 rent stroops at equal encoded sizes and near-equal extension durations (~1.95x). This is neither a quote nor promised savings for another key; temporary data is unrecoverably deleted, so required state stays persistent. Shared code is counted once with known consumers, never a claimed global census.
-- [ ] **W2-D12-02** (R) Run it against the guinea-pig contracts + third-party public testnet contracts; sanity-check the advice isn't nonsense.
+- [~] **W2-D12-02** (R) **Read-only validation started 2026-09-11**, on `test/W2-D12-02-storage-advice-validation`, based on the published #88 implementation. Reuse A evidence; capture B/C shared-key advice and a independently documented third-party Testnet contract. No simulation, funding, deployment, signing or submission.  Run it against the guinea-pig contracts + third-party public testnet contracts; sanity-check the advice isn't nonsense.
 
 ### Day 13
 *Planned: Tue Sep 15 — may slip; the D-number does not.*
