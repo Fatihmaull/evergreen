@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-11 · D11 controlled-proof plan and unsigned preflight
+**Last updated:** 2026-09-11 · D11 bounded request approved; execution readiness blocked
 **Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W2-D11-02/03 live-proof planning
+## Current — W2-D11-02 execution readiness blocked
+
+Rakha approved the bounded A-instance proof (+1,000 ledgers, max 25,000 stroops, own public dev payer, at most one Testnet transaction). D11-02 is Blocked under [#98](https://github.com/Fatihmaull/evergreen/issues/98), assigned to and mentioning Fatih: #86 remains OPEN at `ccf7374` without formal review, and actual scan/explorer screenshot saving must be ready before send. In-app explorer screenshot display worked, but file persistence and terminal captures remain unverified. D11-03 stays Pending. No secret read, signing or transaction; Fatih handles merge. This readiness record is branch work, not merged main. All-ID presence verified: 146 repo IDs / 147 Notion rows, no missing IDs; the sole extra is the intentionally retired Dropped ~~W3-D18-02~~.
+
+## Earlier — W2-D11-02/03 live-proof planning
 
 **Concrete plan prepared:** [D11-02/03 request](W2-D11-02-LIVE-PROOF-PLAN.md) and [raw preflight](evidence/2026-09-11-live-proof-preflight/README.md). At ledger 4,619,313, A instance remaining 1,406,276 plus 1,000 resolved to 1,407,276; unsigned envelope fee 15,073 stroops, proposed cap 25,000. Real payer/sequence observed; one operation, one instance key, zero writable keys/signatures. Captured XDR is expired and must never be reused. Browser screenshot fallback worked through CUA after Chrome DevTools reported no executable; actual terminal before/after capture and image-file saving are still execution readiness items. #86 formal review and explicit live request approval remain pending. No secret read or transaction; D11-02 planning In progress, D11-03 Pending.
 
