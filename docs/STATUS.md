@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · D11 evidence review complete; ready for publication approval
+**Last updated:** 2026-09-12 · D11 evidence published in PR #105 for Fatih review
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — D11-01/02/03 review complete, ready for publication approval
+## Current — D11-01/02/03 evidence published for review
+
+Rakha approved publication after internal review. [PR #105](https://github.com/Fatihmaull/evergreen/pull/105) targets main c3ba97b from `docs/W2-D11-02-live-proof-plan`, with Fatih requested as reviewer. Reviewed evidence head: 2bab347. The PR links #103 for closure on merge; #98 remains superseded context. No new issue duplicates #103. Evidence/plan/tracking only; runtime diff against main is empty. D11-01/02/03 remain Done for the verified live proof, but its evidence PR is **open, not merged**. Final-head CI is checked separately. No further transaction or task started; Fatih handles merge.
+
+## Earlier — D11-01/02/03 internal review complete
 
 [Internal review](W2-D11-02-REVIEW.md) reproduced and fixed one P2 in the offline verifier: changing attempt fee metadata could produce a false envelope-fee summary. The verifier now binds fee/sequence/payer/key/target to the signed transaction, verifies its signature and successful receipt, and checks the receipt's own A-instance TTL state/update. Six corrupt copies fail and the original passes. Full pnpm check passed 470 tests with coverage; all raw RPC/screenshots are unchanged. No new chain operation or runtime change. Evidence remains on this branch, no PR yet; #103 stays open for publication/review, Fatih handles merge.
 
