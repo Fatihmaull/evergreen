@@ -38,7 +38,14 @@ export {
 } from './write-guard.js';
 export type { WriteGuardOptions } from './write-guard.js';
 export type { ConfigLoadResult } from './config.js';
-export { assessEntry, coverageIssues, worstHealth } from './health.js';
+export {
+  DEFAULT_CRITICAL_LEDGERS,
+  DEFAULT_THRESHOLDS,
+  DEFAULT_WARN_LEDGERS,
+  assessEntry,
+  coverageIssues,
+  worstHealth,
+} from './health.js';
 export { estimateRent, stroopsToXlm } from './rent.js';
 export { createSimulatingQuoter } from './rent-quoter.js';
 export {
@@ -50,7 +57,7 @@ export {
 export type { ResolvedTarget, StateArchivalSettings } from './network-config.js';
 export type { QuoteBreakdown, SimulatingQuoterOptions } from './rent-quoter.js';
 export type { RentEstimateResult, RentQuote, RentQuoter } from './rent.js';
-export type { EntryAssessment, EntryHealth, SharingStatus } from './health.js';
+export type { EntryAssessment, EntryHealth, HealthThresholds, SharingStatus } from './health.js';
 export { assertLiveness } from './liveness.js';
 export type {
   LivenessFinding,
