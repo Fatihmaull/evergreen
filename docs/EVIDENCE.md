@@ -38,7 +38,7 @@ This costs about a minute per transaction if done at capture time and is unrecov
 | 1 | Public repo | ✅ **Met** | — | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen), MIT, CI green |
 | 2 | Published npm package | ❌ **Not met — and not a Sep 16 concern** | `W4-D27-02` | Rakha, ~Sep 29 |
 | 3 | Screenshots: TTL / archive prediction / cost | ⚠️ **Unblocked — all three now in the CLI; the capture itself remains** | — | Recapture once the CLI is final |
-| 4 | Test coverage report | ❌ **Not met** | `W2-D14-01` | Shared, Sep 16 itself |
+| 4 | Test coverage report | ✅ **Met** | — | [Committed 2026-09-10](evidence/2026-09-10-coverage/README.md); floor enforced in CI from 2026-09-12 |
 
 ### 1 — Public repo ✅
 
@@ -75,9 +75,15 @@ Conditions, all four:
 3. **Both `--json` and human-readable**, since the SOW names both output modes.
 4. **Against guinea-pig A** (`CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L`), which now runs to ~2026-12-01 and will not archive under the reviewer.
 
-### 4 — Test coverage report ❌
+### 4 — Test coverage report ✅
 
-No artifact exists. `pnpm test:coverage` is wired (`vitest run --coverage`) but has never been run into a committed report. `W2-D14-01` targets ~80% on the math/cost modules and is scheduled for **Sep 16 itself — no slack.** If Week 2 slips a day, this is the requirement that slips with it.
+[Committed 2026-09-10](evidence/2026-09-10-coverage/README.md). 93.95% statements, 85.71% branches, 98.85% functions, 95.28% lines.
+
+**Correction, 2026-09-12.** From Sep 10 to Sep 12 this section and the check-in deck both said the floor was *"enforced in CI"*. **It was not.** The thresholds were configured in `vitest.config.ts`, but `pnpm check` ran `vitest run` without `--coverage`, so they were never evaluated. Proved by setting `statements: 99.9` — impossible — and watching `pnpm check` pass clean.
+
+Now genuinely enforced: `pnpm test` runs `--coverage`, and the gate was commissioned three ways — an impossible global floor, an impossible per-file floor, and deleting a test — each exiting non-zero.
+
+**Per-file floors were added at the same time**, because a global number cannot see a new critical module landing at 0% while the global average stays healthy. That is not hypothetical: `rent-quoter.ts` sat at 0% under an 85% global. On its first run the per-file floor immediately found a second gap — the **synthetic-account default path**, the very thing that removed our hardcoded key from the published bundle, had no test at all.
 
 ### What "yes or no at the gate" means
 
