@@ -1,0 +1,10 @@
+instance   AAAABgAAAAEbls…  consumers=1  sharing=exclusive  blastRadiusAtLeast=1  health=healthy
+           remaining 1,400,439 ledgers, ends at 6,025,589
+instance   AAAABgAAAAGwZ3…  consumers=1  sharing=exclusive  blastRadiusAtLeast=1  health=healthy
+           remaining 168,537 ledgers, ends at 4,793,687
+instance   AAAABgAAAAGXbv…  consumers=1  sharing=exclusive  blastRadiusAtLeast=1  health=healthy
+           remaining 254,947 ledgers, ends at 4,880,097
+code       AAAAB8flXwrYnv…  consumers=3  sharing=shared  blastRadiusAtLeast=3  health=healthy
+           remaining 665,679 ledgers, ends at 5,290,829
+
+issues: coverage-limited, coverage-limited, coverage-limited

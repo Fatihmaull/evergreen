@@ -1,0 +1,11 @@
+decay-proof drift check — 2026-09-11 17:56 UTC
+
+B (primary proof)  CCYGO7KQ6FCA…   current ledger 4,625,157
+   instance    crosses ~2026-09-20 12:00 UTC   drift +0.0h vs plan
+   persistent  crosses ~2026-09-20 12:00 UTC   drift +0.0h vs plan
+
+C (staggered spare)  CCLW55OIEDHK…   current ledger 4,625,157
+   instance    crosses ~2026-09-25 12:01 UTC   drift +0.0h vs plan
+   persistent  crosses ~2026-09-25 12:01 UTC   drift +0.0h vs plan
+
+Paste this into docs/STATUS.md under the decay-proof section.
