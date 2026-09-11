@@ -1,0 +1,93 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ: 2 explicit data key(s)
+  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL: 2 explicit data key(s)
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+  remaining:  174,732 ledgers — live
+  ends at:    ledger 4,793,687
+  approx:     2026-09-21T12:00:26.293Z (estimate — ledgers are the truth)
+  observed:   ledger 4,618,955
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  remaining:  261,142 ledgers — live
+  ends at:    ledger 4,880,097
+  approx:     2026-09-26T12:01:16.293Z (estimate — ledgers are the truth)
+  observed:   ledger 4,618,955
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  persistent  AAAABgAAAA…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+  remaining:  174,733 ledgers — live
+  ends at:    ledger 4,793,688
+  approx:     2026-09-21T12:00:31.293Z (estimate — ledgers are the truth)
+  observed:   ledger 4,618,955
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  persistent  AAAABgAAAA…
+  contracts:  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  remaining:  261,144 ledgers — live
+  ends at:    ledger 4,880,099
+  approx:     2026-09-26T12:01:26.293Z (estimate — ledgers are the truth)
+  observed:   ledger 4,618,955
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ, CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  ⚠ shared:   this code entry is shared with 1 other contract — they fail together
+  remaining:  671,874 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:56.293Z (estimate — ledgers are the truth)
+  observed:   ledger 4,618,955
+  health:     HEALTHY — Above threshold.
+
+! entry-not-found: No entry returned. Absence is not proof of archival or deletion.
+  contracts: CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+  This means one of two things, and a scan cannot distinguish them:
+    · the entry was ARCHIVED — restore it with RestoreFootprintOp, or
+    · it never existed — check the contract ID and that it is deployed here.
+
+! entry-not-found: No entry returned. Absence is not proof of archival or deletion.
+  contracts: CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  This means one of two things, and a scan cannot distinguish them:
+    · the entry was ARCHIVED — restore it with RestoreFootprintOp, or
+    · it never existed — check the contract ID and that it is deployed here.
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers) · 1 shared entry
+Scan is PARTIAL — 2 issue(s). Absence is not health.
+
+Storage advice — observed keys only
+Network minimum lifetimes at ledger 4618955: temporary 720, persistent 120960 ledgers.
+Minimum lifetime includes the current ledger; it is not the expiry of an already-existing entry.
+
+durability-review: AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==
+Known consumers: CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+Action: Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.
+Why: Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents.
+Observed at ledger 4618955: 174733 remaining; last live ledger 4793688.
+Current rent: unavailable (not zero).
+
+durability-review: AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==
+Known consumers: CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+Action: Only if this data is disposable or recomputable, evaluate temporary storage in contract source. Keep balances, required configuration and durable state persistent.
+Why: Historical A persistent rent was about 1.95 times the temporary rent at equal encoded sizes. This is a measured comparison, not guaranteed savings or evidence of equal contents.
+Observed at ledger 4618955: 261144 remaining; last live ledger 4880099.
+Current rent: unavailable (not zero).
+
+shared-code-dependency: AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+Known consumers: CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ, CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+Action: Monitor this code key once with its known consumers; checking their instances alone does not establish protection.
+Why: Every contract built from the same Wasm uses this code entry. Other consumers may exist outside this scan; sharing is not duplicated storage or a measured saving.
+Observed at ledger 4618955: 671874 remaining; last live ledger 5290829.
+Current rent: unavailable (not zero).
+
+Historical A benchmark (2026-09-09T10:58:52Z): persistent rent 103849 versus temporary rent 53196 stroops; about 1.95x.
+Historical measured rent at equal encoded sizes over durations differing by two ledgers; not a quote or savings forecast for this entry.
+Source: https://github.com/Fatihmaull/evergreen/blob/main/packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json
+
+Limit: Only observed keys were analyzed; storage was not enumerated. No size, duplicate-content or global-consumer inference is supported.
+Limit: Advice is conditional on application requirements; it does not authorize a transaction or change scan health exits.
+Limit: Some requested entries are missing or unreadable; they receive no inferred retention or cost advice.
+Limit: Current rent is unavailable for some findings. Use --cost for quotes where supported; historical benchmark amounts are not per-entry quotes.

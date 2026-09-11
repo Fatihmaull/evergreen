@@ -5,6 +5,8 @@
 **Last updated:** 2026-09-10 · D11 published for review in PR #86
 **Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
 **Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
+**Last updated:** 2026-09-11 · D12-02 published in PR #97 / Issue #96
+**Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
@@ -62,6 +64,23 @@ Local `main` was synchronized to remote `ad18ad4` (#80, merged during this turn)
 
 The entries below retain their original dated state; current merge/ADR/task state is the section above. In particular, the Sep 9 Proposed/open-PR notes are historical and must not drive new work.
 ## Current — W2-D12-01 implementation
+## Current — W2-D12-02 read-only validation
+
+**Published after Rakha approval:** [PR #97](https://github.com/Fatihmaull/evergreen/pull/97), stacked on optimizer #88 at `38e6543`; [Issue #96](https://github.com/Fatihmaull/evergreen/issues/96) tracks review/acceptance, assigned to and mentioning Fatih. Reviewed validation `99ee901`; final publication tracking edits are Markdown only. Fatih is requested as reviewer and handles merge. Retarget this child before #88's branch is deleted, then synchronize/revalidate after the parent lands. D12-02 remains Done for verified branch work, not merged. No new live read, quote, signing or transaction. Local full check passed 376 tests; final-head remote CI is checked separately.
+
+### Internal review record
+
+**Internal review complete:** [D12-02 review report](W2-D12-02-REVIEW.md). Fixed a P2 verification gap: empty post-read and mismatched registry copies previously passed the offline verifier. It now binds post-read key completeness, published Wasm, network settings, key encoding and expected exits/counts to raw evidence. The valid capture passes; four temporary-copy mutations fail for the intended reasons. All 15 original raw RPC/provenance files remain byte-identical. Fresh full pnpm check passed 376 tests. No production code or new live read/transaction. Ready for PR + issue publication after Rakha's instruction; Fatih reviews and handles merge.
+
+**D12-02 Done on its validation branch, not a new PR or merge.** [Evidence and semantic assessment](evidence/2026-09-11-storage-advice-validation/README.md): reused the Sep 10 A baseline; B/C/B returned two contracts, five entries and three recommendations with expected exit 3 for absent temporary keys. Blend TestnetV2 returned instance/code and two source-defined persistent reserve keys, matching the publisher's Wasm hash; three conditional recommendations and exit 0. The known reserve config/accounting roles fail the disposable-data condition, so no migration or savings claim is made. All current prices remain unavailable.
+
+**Verification:** raw request/response text saved; offline replay matched keys, TTLs, recommendations and Blend payload roles. B/C expiry ledgers were unchanged in an immediate post-read. Full pnpm check passed 340 Vitest + 36 Node = 376 tests. Only getNetwork/getLedgerEntries reached Testnet; no simulation, invocation, signing, transaction or runtime source edit. Ready for Rakha result review before publication. This branch is stacked on #88; D11 #86/#87 and integration #89/#95 remain separate.
+
+### Validation start record
+
+Rakha approved the next task on 2026-09-11. D12-02 is In progress on `test/W2-D12-02-storage-advice-validation`, stacked on #88 (38e6543). Scope: reuse A evidence, read B/C shared-key advice and validate one independently published third-party Testnet contract. Record provenance and raw responses; no arbitrary storage enumeration or fabricated keys. No runtime feature, transaction or PR publication in this execution step.
+
+## Earlier D12 implementation record
 
 **Synchronization complete:** #88 and #86 are synchronized with main #93 (`96ebe2d`) independently; the local combined tree passed 446 tests and unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) includes per-branch checks (D12 376, D11 428), installed CLI-only tarballs, and a fresh-output pipeline proof. W2-D14-02d is verified in both branches; #95 and #89 remain open for actual main integration after review. No force-push, PR merge, live RPC or transaction. Final-head remote CI is checked separately after push.
 
