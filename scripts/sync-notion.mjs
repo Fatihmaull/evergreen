@@ -47,7 +47,19 @@ const STATUS = {
 /** Owner initial → Notion `Owner`. `Agent` exists in Notion and has no initial. */
 const OWNER = { F: 'Fatih', R: 'Rakha', S: 'Shared' };
 
-const DATA_SOURCE_ID = '3e078dc6-0805-4b11-b970-6d544fa4a98c';
+/**
+ * Two IDs exist for one table and they are NOT interchangeable. Notion's newer
+ * model puts data sources inside databases, so the mirror has both:
+ *
+ *   database    9aa56f25-12b6-48fc-a04a-8a0e21c727fa   /v1/databases/{id}/query      (2022-06-28)
+ *   datasource  3e078dc6-0805-4b11-b970-6d544fa4a98c   /v1/data_sources/{id}/query   (2025-09-03)
+ *
+ * This shipped pairing the DATA SOURCE id with the DATABASE endpoint, which is
+ * neither combination and would have 404'd on the first CI run. Both are named
+ * here so the next person debugging an `object_not_found` can see immediately
+ * which half is wrong, rather than re-deriving that these are different things.
+ */
+const DATABASE_ID = '9aa56f25-12b6-48fc-a04a-8a0e21c727fa';
 const NOTION_VERSION = '2022-06-28';
 
 /**
@@ -140,7 +152,19 @@ async function notion(path, init) {
     // `code` is a documented enum (`unauthorized`, `object_not_found`, ...).
     // The body is not echoed: it is provider output, and the convention here is
     // that provider output never reaches a log.
-    throw new Error(`Notion ${response.status} (${body.code ?? 'unknown'}) on ${path}`);
+    // The two failures worth naming, because both look like "it is broken":
+    //   unauthorized     -> NOTION_TOKEN missing, wrong, or revoked
+    //   object_not_found -> the token is fine but the database was never SHARED
+    //                       with the connection. A Notion token grants nothing
+    //                       on its own; access is per-page and explicit.
+    const hint =
+      body.code === 'object_not_found'
+        ? '\n  The token is valid but cannot see this database. Open it in Notion →' +
+          ' ··· → Connections → add the connection. A token alone grants no access.'
+        : body.code === 'unauthorized'
+          ? '\n  NOTION_TOKEN is missing, wrong, or revoked.'
+          : '';
+    throw new Error(`Notion ${response.status} (${body.code ?? 'unknown'}) on ${path}${hint}`);
   }
   return body;
 }
@@ -156,7 +180,7 @@ async function readMirror() {
   const rows = [];
   let cursor;
   do {
-    const page = await notion(`databases/${DATA_SOURCE_ID}/query`, {
+    const page = await notion(`databases/${DATABASE_ID}/query`, {
       method: 'POST',
       body: JSON.stringify({ page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) }),
     });
