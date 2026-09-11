@@ -12,6 +12,7 @@
   "envelopeFeeStroops": "15073",
   "feeChargedStroops": "5064",
   "sends": 1,
+  "receiptTtlChangeVerified": true,
   "protectedControlEntriesUnchanged": 5,
   "screenshots": [
     "before.jpg",

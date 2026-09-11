@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · D11 A-instance live proof complete; evidence awaiting internal review
+**Last updated:** 2026-09-12 · D11 evidence review complete; ready for publication approval
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — D11-01/02/03 live proof complete, evidence branch
+## Current — D11-01/02/03 review complete, ready for publication approval
+
+[Internal review](W2-D11-02-REVIEW.md) reproduced and fixed one P2 in the offline verifier: changing attempt fee metadata could produce a false envelope-fee summary. The verifier now binds fee/sequence/payer/key/target to the signed transaction, verifies its signature and successful receipt, and checks the receipt's own A-instance TTL state/update. Six corrupt copies fail and the original passes. Full pnpm check passed 470 tests with coverage; all raw RPC/screenshots are unchanged. No new chain operation or runtime change. Evidence remains on this branch, no PR yet; #103 stays open for publication/review, Fatih handles merge.
+
+## Completed live proof, evidence branch
 
 One Testnet transaction confirmed at ledger 4,626,423: `e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a`. A instance only, +1,000 requested, target 1,400,168. Expiry increased 6,025,589 → 6,026,591; the extra two ledgers are plan-read to inclusion delay. Fee ceiling 25,000; envelope maximum 15,073; actual charged 5,064 stroops, decoded from the raw receipt and matching explorer. Exactly one send; initial NOT_FOUND polls did not trigger another transaction. B/C instance/persistent and shared-code expiry controls (five keys) stayed unchanged.
 

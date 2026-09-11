@@ -53,4 +53,4 @@ The preliminary valid-time envelope gate test used a record timestamp taken befo
 
 Final evidence-tree `pnpm check` also passed 470 tests with coverage: 93.88% statements, 88.69% branches, 93.75% functions, 95.67% lines. The private seed was checked absent from every evidence file without printing it.
 
-Result is ready for Rakha's internal review. Evidence publication as a PR is a separate checkpoint; Fatih handles review/merge.
+**Internal review completed 2026-09-12:** [review report](../../W2-D11-02-REVIEW.md). A P2 verifier metadata-binding gap was reproduced and fixed: the envelope maximum fee is now checked against the actual transaction, alongside the pinned payer/key, signature and receipt TTL changes. Six corrupted copies are rejected; raw RPC and screenshots remain unchanged. Result is ready for publication approval. Evidence publication as a PR is a separate checkpoint; Fatih handles review/merge.
