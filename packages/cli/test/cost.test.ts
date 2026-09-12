@@ -63,7 +63,19 @@ describe('formatCost — total leads, rent breaks out underneath', () => {
   });
 
   it('names the read-then-submit gap so a discrepancy is not read as a bug', () => {
-    expect(out).toContain('ledger advances before submission');
+    expect(out).toContain('the ledger advances before');
+  });
+
+  it('🔴 names BOTH quantities the gap moves, and says they go opposite ways', () => {
+    // One phrase covering two quantities is the alertThresholdOn/expiresOn
+    // collision again. `--ledgers 1000` measured +1,002 on absolute expiry in
+    // the live proof, while remaining TTL lands UNDER target — both true, in
+    // opposite directions. A note saying only "under the target" makes a user
+    // comparing the promise to the receipt conclude one is a bug.
+    expect(out).toContain('REMAINING TTL');
+    expect(out).toContain('UNDER target');
+    expect(out).toContain('ABSOLUTE EXPIRY');
+    expect(out).toContain('PAST the request');
   });
 
   it('names the dominant entry when one entry is most of the bill', () => {

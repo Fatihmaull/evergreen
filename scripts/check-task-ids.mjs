@@ -75,6 +75,34 @@ const REGISTERED = new Set([
   ...[...recurring.matchAll(new RegExp(String.raw`\*\*\`?(${ID})\`?\*\*`, 'g'))].map((m) => m[1]),
 ]);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// A SECOND COUNT, BY A METHOD THAT CANNOT BE WRONG THE SAME WAY.
+//
+// This checker is structurally incapable of detecting its own ID class being
+// too narrow. Narrowing `ID` stops registering `W3-D21-01d` AND stops flagging
+// every reference to it, in one stroke — so the check stays green. Verified
+// 2026-09-12 by narrowing the class to [a-c] and watching it report a cheerful
+// "✓ 142 tasks" while `sync-notion.mjs` failed loudly on the same mutation.
+//
+// So count the checkbox rows crudely — any bolded token in an ID slot — and
+// assert the two agree. The crude count does not use `ID` at all, which is the
+// whole point: it cannot narrow when `ID` narrows. This would have caught the
+// 22 dropped rows on 2026-09-12 instantly.
+const crude = [...backlog.matchAll(/^- \[.\] \*\*([^*\n]+)\*\*/gm)]
+  .map((m) => m[1])
+  .filter((t) => /\d/.test(t) && t.includes('-'));
+const strictRows = [...backlog.matchAll(new RegExp(String.raw`^- \[.\] \*\*(${ID})\*\*`, 'gm'))];
+if (crude.length !== strictRows.length) {
+  const missed = crude.filter((t) => !strictRows.some((m) => m[1] === t));
+  console.error(
+    `✖ ${crude.length} checkbox rows look like tasks but only ${strictRows.length} parsed.\n` +
+      `  Unrecognised: ${missed.join(', ')}\n` +
+      '  The ID class in scripts/task-id.mjs is too narrow, or an ID is malformed.\n' +
+      '  This check cannot see that on its own — hence the second count.',
+  );
+  process.exit(1);
+}
+
 // Any delimiter. Trailing guard stops a prefix matching a longer ID.
 // Built from the SAME `ID` source as REGISTERED. It used to be a second, hand-kept
 // copy of the pattern, which is how W3-D21-01d/e ended up invisible in both
