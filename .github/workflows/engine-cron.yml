@@ -43,8 +43,17 @@ jobs:
       # it should arrive with its own explicit opt-in rather than inheriting a
       # schedule that already runs unattended.
       - name: Decide (dry-run)
+        # `shell: bash` is REQUIRED, not cosmetic. Without it the default shell
+        # has no `pipefail`, so `pnpm engine:run | tee` exits with tee's status
+        # and a failing engine run reports SUCCESS. The first cron run did
+        # exactly that: the script died on a config error and the job went
+        # green — a silent failure in the one job that runs unattended.
+        shell: bash
         env:
-          EVERGREEN_CONFIG: evergreen.config.example.json
+          # The dogfood config, not the example. The example carries deliberate
+          # placeholder IDs that loadConfig refuses, which is how the first run
+          # failed — correctly, and invisibly.
+          EVERGREEN_CONFIG: evergreen.config.dogfood.json
         run: pnpm engine:run | tee /tmp/engine.log
 
       # A guard refusal is a non-event: no transaction, no hash, nothing an
