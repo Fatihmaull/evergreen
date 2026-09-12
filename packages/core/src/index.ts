@@ -68,6 +68,8 @@ export type {
 } from './liveness.js';
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';
+export { decideBumps, runEngine } from './engine.js';
+export type { EngineRun } from './engine.js';
 export { planExtension, executeExtensions } from './extend.js';
 export type {
   ExtensionPlan,
