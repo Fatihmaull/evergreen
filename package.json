@@ -25,6 +25,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "check": "pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
+    "engine:run": "node scripts/engine-run.mjs",
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
     "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json",

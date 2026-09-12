@@ -1,0 +1,56 @@
+{
+  "_README": [
+    "The DOGFOOD config (W3-D15-01b) \u2014 real IDs, used by the fallback runner on a cron.",
+    "",
+    "Guinea-pig A only. B and C stay in _doNotWatch until their crossings:",
+    "B expires ~2026-09-21, C ~2026-09-26 (alert thresholds one day earlier).",
+    "",
+    "DECIDE-ONLY today. The cron job is given no secret, so it cannot sign or",
+    "submit even if the code changed to try. Execution is W3-D16-01 and must",
+    "arrive with its own explicit opt-in rather than inheriting a running schedule.",
+    "",
+    "Contract IDs are public. No secret belongs in this file \u2014 name an env var."
+  ],
+  "network": {
+    "rpcUrl": "https://soroban-testnet.stellar.org",
+    "networkPassphrase": "Test SDF Network ; September 2015"
+  },
+  "defaults": {
+    "bumpWhenRemainingLedgersBelow": 17280,
+    "extendToLedgers": 518400
+  },
+  "contracts": [
+    {
+      "_note": "Guinea-pig A \u2014 the working subject, and the engine's first monitored contract.",
+      "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+      "label": "guinea-pig-A",
+      "payer": "bot-testnet"
+    }
+  ],
+  "_doNotWatch": [
+    {
+      "_warning": "GUINEA-PIG B \u2014 move into 'contracts' only via the verified procedure in docs/SETUP.md.",
+      "_why": "It is deliberately ageing so it EXPIRES ~2026-09-21 12:00 UTC (alert threshold ~2026-09-20). DECIDED 2026-09-14 (W3-D18-02b): the engine must NOT save it. This _why previously said the opposite \u2014 'so the engine can save it unattended' \u2014 which contradicted the list it sits in and read as an instruction to move B into 'contracts'. Doing that destroys the only unrepeatable evidence in the sprint. Bumping it early destroys the grant's strongest evidence. Calibrated at bumpWhenRemainingLedgersBelow 17280, the engine declines to act until the crossing \u2014 so verify that threshold in dry-run before it ever runs live against B.",
+      "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+      "label": "guinea-pig-B-natural-decay"
+    },
+    {
+      "_warning": "GUINEA-PIG C \u2014 the SPARE natural-decay proof. Same rule as B.",
+      "_why": "Deliberately ageing so it EXPIRES ~2026-09-26 12:00 UTC (alert threshold ~2026-09-25). It is the only second shot if B is missed, so an early bump costs the sprint its fallback as well as its primary. The write guard refuses it unconditionally regardless of this list; both exist so a misconfiguration and a code path have to fail together.",
+      "id": "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL",
+      "label": "guinea-pig-C-natural-decay"
+    }
+  ],
+  "payers": {
+    "bot-testnet": {
+      "_note": "The engine's own account. Holds only enough XLM to pay extendTTL fees; it has no authority over any contract and needs none, because extendTTL is permissionless. Secret lives in .env, never here.",
+      "signer": "ed25519",
+      "secretEnvVar": "EVERGREEN_SIGNER_SECRET"
+    }
+  },
+  "notifications": {
+    "channel": "email",
+    "toEnvVar": "EVERGREEN_ALERT_TO"
+  },
+  "mode": "dry-run"
+}

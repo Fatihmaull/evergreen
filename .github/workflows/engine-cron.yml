@@ -1,0 +1,62 @@
+name: Engine (fallback runner)
+
+# W3-D18-00. The same engine code on a GitHub Actions cron, so the "ran
+# unattended" claim does not depend on the production scheduler decision
+# (ADR-003) landing before B's crossing on ~2026-09-20. That date cannot be
+# moved; the deployment decision can.
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 15 minutes, offset off the top of the hour. Scheduling is
+    # best-effort on Actions — which is fine here, because the two-tier
+    # threshold gives ~7 days of warning before the ~1 day of urgency.
+    - cron: '3,18,33,48 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-cron
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm build
+
+      # 🔴 DECIDE-ONLY. No secret is provided to this job, so it CANNOT sign or
+      # submit even if the code were changed to try. Execution is W3-D16-01, and
+      # it should arrive with its own explicit opt-in rather than inheriting a
+      # schedule that already runs unattended.
+      - name: Decide (dry-run)
+        env:
+          EVERGREEN_CONFIG: evergreen.config.example.json
+        run: pnpm engine:run | tee /tmp/engine.log
+
+      # A guard refusal is a non-event: no transaction, no hash, nothing an
+      # explorer shows. On ~2026-09-20 this is the ONLY trace W3-D18-02b will
+      # ever have, so it goes into the run summary rather than only a log.
+      - name: Publish the decisions where they can be read
+        if: always()
+        run: |
+          {
+            echo '## Engine decisions'
+            echo
+            echo '```'
+            tail -40 /tmp/engine.log 2>/dev/null || echo '(no output)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
