@@ -38,6 +38,7 @@
     "check:bundle": "node scripts/check-bundle-secrets.mjs",
     "check:publish": "node scripts/check-publish-safety.mjs",
     "check:backlog": "node scripts/sync-notion.mjs",
+    "prepare": "git config core.hooksPath .githooks || true",
     "test:fast": "vitest run"
   },
   "devDependencies": {

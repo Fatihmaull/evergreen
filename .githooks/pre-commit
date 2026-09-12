@@ -1,0 +1,35 @@
+#!/bin/sh
+# Catch duplicate and unparseable task IDs BEFORE the commit, not in CI.
+#
+# The keep-both-sides conflict edit has produced a duplicate BACKLOG.md row four
+# times — #97, twice during Week 2 closeout, and once while editing a report
+# ABOUT duplicates. Every one was caught by a person reading carefully. Four is
+# enough evidence that attention is not the mechanism.
+#
+# Both checks run in ~0.05s against BACKLOG.md only. A pre-commit hook that is
+# slow gets bypassed, and a bypassed hook is worse than none because it still
+# reads as protection.
+#
+# This does NOT replace `pnpm check` in CI. It removes one class early.
+#
+# To skip in a genuine emergency: git commit --no-verify
+
+# Only when BACKLOG.md is actually staged.
+if git diff --cached --name-only | grep -q '^BACKLOG\.md$'; then
+  node scripts/sync-notion.mjs >/dev/null || {
+    echo ''
+    echo '✖ pre-commit: BACKLOG.md has duplicate or unparseable task IDs.'
+    echo '  Run: node scripts/sync-notion.mjs'
+    echo ''
+    echo '  If this came from a merge conflict: DELETE the duplicate row.'
+    echo '  Do not keep both sides — keeping both is what creates them.'
+    exit 1
+  }
+  node scripts/check-task-ids.mjs >/dev/null || {
+    echo ''
+    echo '✖ pre-commit: a task ID is referenced but not registered, or the ID'
+    echo '  class is too narrow to see every row.'
+    echo '  Run: node scripts/check-task-ids.mjs'
+    exit 1
+  }
+fi
