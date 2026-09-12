@@ -51,6 +51,16 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
+          # MUST be false. setup-node's package-manager cache defaults to ON and
+          # shells out to the detected package manager — and this job has no
+          # pnpm, deliberately. The first real run after merge failed here with
+          # "Unable to locate executable file: pnpm", before reaching the script
+          # at all, so the sync had not run even though the job existed.
+          #
+          # Adding pnpm/action-setup would fix the symptom and undo the point:
+          # this job stays dependency-free so it cannot break when the lockfile
+          # changes. Turning the cache off is the fix that keeps that property.
+          package-manager-cache: false
 
       # No install: the script is dependency-free on purpose, so this job cannot
       # be the thing that breaks when the lockfile changes.
