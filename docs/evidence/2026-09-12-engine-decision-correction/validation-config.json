@@ -1,0 +1,32 @@
+{
+  "network": {
+    "rpcUrl": "https://soroban-testnet.stellar.org",
+    "networkPassphrase": "Test SDF Network ; September 2015"
+  },
+  "mode": "dry-run",
+  "defaults": {
+    "bumpWhenRemainingLedgersBelow": 17280,
+    "extendToLedgers": 518400
+  },
+  "contracts": [
+    {
+      "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+      "label": "guinea-pig-A",
+      "payer": "bot-testnet",
+      "thresholds": {
+        "bumpWhenRemainingLedgersBelow": 1500000,
+        "extendToLedgers": 2000000
+      }
+    }
+  ],
+  "payers": {
+    "bot-testnet": {
+      "signer": "ed25519",
+      "secretEnvVar": "EVERGREEN_SIGNER_SECRET"
+    }
+  },
+  "notifications": {
+    "channel": "email",
+    "toEnvVar": "EVERGREEN_ALERT_TO"
+  }
+}
