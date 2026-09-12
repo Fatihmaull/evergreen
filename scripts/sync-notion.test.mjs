@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseBacklog, planSync } from './sync-notion.mjs';
-import { recurringIds } from './task-id.mjs';
+import { recurringIds, retiredIds } from './task-id.mjs';
 import { readFileSync } from 'node:fs';
 
 const row = (id, status, owner, pageId = `page:${id}`) => ({ id, status, owner, pageId });
@@ -150,4 +150,45 @@ test('one ambiguous row does not strand every other row', () => {
     changes.map((c) => c.id),
     ['W1-D1-02'],
   );
+});
+
+// ── retired IDs: the third category (2026-09-14) ────────────────────────────
+
+test('a retired ID in the mirror is not a phantom', () => {
+  // CONVENTIONS is explicit that a retired ID must stay VISIBLE as Dropped:
+  // "if the repo shows a retired ID and the mirror shows nothing, the mirror
+  // has stopped mirroring". W3-D18-02 was reported as a phantom on every run —
+  // the W1-D4-09 false positive again, and a warning that needs no response is
+  // one people stop reading.
+  const { phantom } = planSync([], [row('W3-D18-02', 'Dropped', 'Rakha')], [], ['W3-D18-02']);
+  assert.deepEqual(phantom, []);
+});
+
+test('a retired ID is never written to', () => {
+  const { changes } = planSync([], [row('W3-D18-02', 'Dropped', 'Rakha')], [], ['W3-D18-02']);
+  assert.deepEqual(changes, []);
+});
+
+test('🔴 a retired ID that does not read as Dropped IS reported', () => {
+  // Checked, not suppressed. A retired ID reading as "Pending" is the reuse
+  // hazard the retire rule exists to prevent, wearing the wrong label.
+  const { retiredMisfiled } = planSync(
+    [],
+    [row('W3-D18-02', 'Pending', 'Rakha')],
+    [],
+    ['W3-D18-02'],
+  );
+  assert.deepEqual(retiredMisfiled, [{ id: 'W3-D18-02', status: 'Pending' }]);
+});
+
+test('a genuine phantom is still a phantom when a retired list exists', () => {
+  const { phantom } = planSync([], [row('X-9', 'Done', 'Fatih')], [], ['W3-D18-02']);
+  assert.deepEqual(phantom, ['X-9']);
+});
+
+test('retiredIds reads the real CONVENTIONS strikethroughs', () => {
+  // Guards the marker itself: a changed convention would silently return []
+  // and bring the false positive straight back.
+  const ids = retiredIds(readFileSync('docs/CONVENTIONS.md', 'utf8'));
+  assert.ok(ids.includes('W3-D18-02'), 'W3-D18-02 is struck through in CONVENTIONS');
 });

@@ -79,3 +79,27 @@ export function recurringIds(backlog) {
   const found = section.matchAll(new RegExp(String.raw`\*\*\`?(${ID})\`?\*\*`, 'g'));
   return [...new Set([...found].map((m) => m[1]))];
 }
+
+/**
+ * IDs that were RETIRED — struck through in `docs/CONVENTIONS.md`.
+ *
+ * A third category, alongside checkbox rows and standing obligations, and it
+ * exists because CONVENTIONS is explicit that a retired ID must stay VISIBLE in
+ * the mirror as `Dropped`:
+ *
+ *   "If the repo shows a retired ID and the mirror shows nothing, the mirror
+ *    has stopped mirroring — and it has removed the very warning the retire
+ *    rule exists to display."
+ *
+ * So `W3-D18-02` in Notion with no `BACKLOG.md` row is not a phantom. It is the
+ * retire rule working. Reporting it every run is the `W1-D4-09` false positive
+ * again — a warning that needs no response is one people stop reading, which
+ * disarms the mechanism quietly instead of breaking it loudly.
+ *
+ * Strikethrough is the documented marker for exactly this, so it is the source
+ * rather than a second hand-kept list that would drift from it.
+ */
+export function retiredIds(conventions) {
+  const found = conventions.matchAll(new RegExp(String.raw`~~\`?(${ID})\`?~~`, 'g'));
+  return [...new Set([...found].map((m) => m[1]))];
+}

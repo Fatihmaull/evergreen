@@ -386,6 +386,49 @@ did not fire, because prose cannot.
 A comment that says "don't do X elsewhere" is a bug report filed against the
 future. If X is worth preventing, export it.
 
+### A converged reconciler cannot be verified by running it
+
+*Commission a checker by watching it fail* assumes there is something to fail on.
+**A reconciler in the state it is supposed to produce has nothing to detect, so a
+passing run carries no information at all — not weak evidence, none.**
+
+The only way to verify one is to give it something to find: **manufacture the
+condition it exists to handle, then check the correction landed.**
+
+2026-09-14, the Notion sync. The mirror was already in parity because a human had
+reconciled it by hand, so a green run would have proved auth and read and said
+nothing whatsoever about the `PATCH`. One row was set to a deliberately wrong
+status, the job dispatched, and the row **read back**:
+
+```
+W4-D24-04  Status: Pending → Dropped       (the planted drift, corrected)
+W2-D14-03  Status: Blocked → Done          (a real one nobody had noticed)
+```
+
+This generalises well past Notion. **Any idempotent or reconciling mechanism —
+a migration, a drift corrector, a repair job, a cache invalidator, a restore —
+is unverifiable in the state it is meant to produce.** It has to be tested
+against the state it is meant to fix.
+
+Two details that made the verification real rather than ceremonial:
+
+- **Read the artefact back, not the exit code.** A green job is precisely the
+  evidence that has misled this project repeatedly.
+- **Confirm the negative.** `Notes`, `Owner`, `Day`, `Kind`, `Week` and `Task`
+  were checked *unchanged*, so "writes Status and Owner only" is demonstrated in
+  practice rather than asserted in the code.
+
+### A manual sweep that was performed can still be incomplete
+
+The mirror was in parity on 2026-09-14 because Rakha had reconciled it by hand.
+It still carried `W2-D14-03` at `Blocked` while `BACKLOG.md` said `Done`, and
+nobody knew.
+
+That is a harder fact than "hand-syncing does not converge". **The sweep was
+performed, by someone careful, and was incomplete** — which is the actual reason
+the mirror is derived rather than maintained. Notion is safe as a mirror
+precisely because nothing depends on a human keeping it right.
+
 ### An ad-hoc instrument reports on itself
 
 A **negative** result is a hypothesis about the instrument until the instrument
