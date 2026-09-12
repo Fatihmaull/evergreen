@@ -34,7 +34,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
-import { ANY_ROW, ROW, looksLikeTaskId, recurringIds } from './task-id.mjs';
+import { ANY_ROW, ROW, looksLikeTaskId, recurringIds, retiredIds } from './task-id.mjs';
 
 /** Checkbox → Notion `Status`. These are the mirror's exact select options. */
 const STATUS = {
@@ -104,7 +104,7 @@ export function parseBacklog(text) {
  * `changes` are the only thing ever written. `missing` and `phantom` are
  * reported and deliberately left alone — see the header.
  */
-export function planSync(backlogRows, notionRows, standingIds = []) {
+export function planSync(backlogRows, notionRows, standingIds = [], retired = []) {
   // Two mirror pages carrying the same task ID used to collapse into one: a
   // `Map` keeps the LAST, so the other page was never compared, never written,
   // and never mentioned. The run reported clean while a stale row diverged
@@ -151,7 +151,15 @@ export function planSync(backlogRows, notionRows, standingIds = []) {
   // Standing obligations are KNOWN but carry no checkbox, so they are neither
   // phantoms nor rows this script has any status to write. Recognised and left
   // entirely alone — the mirror's own value for them is the human's.
-  const known = new Set([...backlogRows.map((r) => r.id), ...standingIds]);
+  // A RETIRED id is expected in the mirror and expected to be `Dropped`. Not
+  // suppressed — CHECKED: present-but-not-Dropped is a real finding, because a
+  // retired ID that does not read as retired is exactly the reuse hazard the
+  // retire rule exists to prevent.
+  const retiredSet = new Set(retired);
+  const retiredMisfiled = notionRows
+    .filter((r) => retiredSet.has(r.id) && r.status !== 'Dropped')
+    .map((r) => ({ id: r.id, status: r.status }));
+  const known = new Set([...backlogRows.map((r) => r.id), ...standingIds, ...retired]);
   const phantom = [...new Set(notionRows.filter((r) => !known.has(r.id)).map((r) => r.id))].filter(
     (id) => !ambiguous.has(id),
   );
@@ -159,6 +167,7 @@ export function planSync(backlogRows, notionRows, standingIds = []) {
     changes,
     missing,
     phantom,
+    retiredMisfiled,
     ambiguous: [...ambiguous].map(([id, pageIds]) => ({ id, pageIds })),
   };
 }
@@ -259,7 +268,16 @@ async function main() {
   }
 
   const mirror = await readMirror();
-  const { changes, missing, phantom, ambiguous } = planSync(rows, mirror, recurringIds(backlog));
+  const conventions = readFileSync(
+    fileURLToPath(new globalThis.URL('../docs/CONVENTIONS.md', import.meta.url)),
+    'utf8',
+  );
+  const { changes, missing, phantom, ambiguous, retiredMisfiled } = planSync(
+    rows,
+    mirror,
+    recurringIds(backlog),
+    retiredIds(conventions),
+  );
   console.log(`\n✓ read ${mirror.length} rows from the Notion mirror`);
 
   for (const c of changes) {
@@ -276,6 +294,11 @@ async function main() {
     console.error(
       `  ✖ ${a.id} appears on ${a.pageIds.length} Notion pages: ${a.pageIds.join(', ')}\n` +
         '    Not written — the target is ambiguous. Delete the duplicate page in Notion.',
+    );
+  for (const r of retiredMisfiled)
+    console.log(
+      `  ⚠ ${r.id} is retired but reads as "${r.status}" in Notion, not "Dropped".\n` +
+        '    A retired ID that does not read as retired is the reuse hazard itself.',
     );
   if (missing.length > 0 || phantom.length > 0)
     console.log(
