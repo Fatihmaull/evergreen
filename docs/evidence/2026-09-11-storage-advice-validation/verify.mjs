@@ -1,14 +1,18 @@
-import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {URL} from 'node:url';
 import {Buffer} from 'node:buffer';
 import assert from 'node:assert/strict';
 import process from 'node:process';
 import {createHash} from 'node:crypto';
+import {resolve} from 'node:path';
+import console from 'node:console';
+import {verifyEvidenceIntegrity} from '../../../scripts/verify-evidence-integrity.mjs';
+const base=process.argv[2]?resolve(process.argv[2]):new URL('.',import.meta.url).pathname;
+console.error(`Evidence integrity verified: ${verifyEvidenceIntegrity(base)} files`);
 globalThis.fetch=async()=>{throw new Error('Offline verifier cannot access the network');};
 const {scanContracts,scanContract,coverageIssues,analyzeStorage,parseStateArchivalSettings}=await import('../../../packages/core/dist/index.js');
 const {exitCodeFor}=await import('../../../packages/cli/dist/scan.js');
 const {xdr,scValToNative}=await import('@stellar/stellar-sdk');
-const base=new URL('.',import.meta.url).pathname;
 function read(path){return JSON.parse(readFileSync(`${base}/${path}`,'utf8'));}
 const input=read('input.json');const verification=read('verification.json');
 const registry=read('provenance/blend-testnet.contracts.json');
@@ -95,5 +99,4 @@ assert(Number.isSafeInteger(post.latestLedger));
 assert(post.latestLedger>=Math.max(...Object.values(bc.entries).map(entry=>entry.observedAtLedger)),'Post-read ledger must not precede initial read');
 for(const row of post.entries)assert.equal(row.liveUntilLedgerSeq,bc.entries[row.key].ttl.endsAtLedger);
 const result={verifiedOffline:true,cases:matches,bcExpiryUnchanged:true,noNetwork:true,blendPersistentPayloadMatchesDocumentedRole:true};
-writeFileSync(`${base}/offline-verification.json`,JSON.stringify(result,null,2));
 process.stdout.write(JSON.stringify(result,null,2)+'\n');

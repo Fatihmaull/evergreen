@@ -2,12 +2,30 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · D11 evidence published in PR #105 for Fatih review
+**Last updated:** 2026-09-12 · W2-D14-04 published in PR #113 for Fatih review
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
+
+## Current — W2-D14-04 published for review in #113
+
+Rakha approved publication after internal review. [PR #113](https://github.com/Fatihmaull/evergreen/pull/113) targets main ba72ea8 from `fix/W2-D14-04-evidence-integrity`; Fatih is requested as reviewer. Reviewed implementation d8307a9, review record 537722f. Existing [Issue #107](https://github.com/Fatihmaull/evergreen/issues/107) is linked for closure on merge; no duplicate issue was created. Task remains Done for verified branch implementation, while the PR is open and unmerged. 22 new regressions and full 537-test check passed; all 130 original non-tool/non-manifest files are unchanged. No transaction or runtime CLI change during publication. Fatih handles merge; final-head CI is checked separately.
+
+## Earlier — W2-D14-04 internal review complete
+
+[Pre-publication review](W2-D14-04-REVIEW.md) found no blocking issue and required no code correction. Fresh integrity suite passed 22/22; full pnpm check passed 537 tests with coverage. Both manifests verify, and all 130 original non-tool/non-manifest files remain byte-identical to origin/main ba72ea8. No runtime CLI change, secret read or chain transaction. #107 remains open; PR publication awaits Rakha's next checkpoint, and Fatih handles merge.
+
+## Implementation record — W2-D14-04
+
+Both evidence verifier entry points now check SHA256SUMS before semantic verification and remain read-only. Shared helper rejects corrupt/missing files, invalid manifests, duplicate paths and path escapes. New suite: 22 tests; full pnpm check: 537 tests passed. Manual proof verifies 103 manifest entries, storage advice 29. Compared with origin/main ba72ea8, all 130 original non-tool/non-manifest files across both bundles remain byte-for-byte unchanged. Only the two verifier scripts and their own manifest hash lines change inside the evidence folders. [Implementation report](W2-D14-04-INTEGRITY.md).
+
+Task Done refers to the verified branch implementation, not a PR or merge. #107 stays open for review/publication. No signature, transaction, secret access or runtime CLI change. All-ID presence verified: 148 registered / 149 Notion rows, no missing IDs; sole extra is the known retired Dropped predecessor ~~W3-D18-02~~.
+
+## Start record — W2-D14-04 evidence-integrity correction (#107)
+
+Starting from origin/main ba72ea8 on `fix/W2-D14-04-evidence-integrity`. Previous review and proof branches remain preserved. #102/#105 are merged; #106 fixes were post-reviewed, and W2's closeout remains accepted. New frozen correction ID W2-D14-04 tracks the separately assigned #107. Both advertised evidence verifiers will check SHA256SUMS first and remain offline. Tests precede implementation. Raw RPC, original screenshots and recorded JSON outcomes must remain byte-for-byte unchanged; only verifier tooling, its own manifest entries and documentation may change. No new signing, transaction or live Notion automation run.
 
 ## Current — D11-01/02/03 evidence published for review
 

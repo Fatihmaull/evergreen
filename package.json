@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -39,7 +39,8 @@
     "check:publish": "node scripts/check-publish-safety.mjs",
     "check:backlog": "node scripts/sync-notion.mjs",
     "prepare": "git config core.hooksPath .githooks || true",
-    "test:fast": "vitest run"
+    "test:fast": "vitest run",
+    "test:evidence-integrity": "node --test --test-isolation=none scripts/verify-evidence-integrity.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
