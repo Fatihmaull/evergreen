@@ -386,6 +386,54 @@ did not fire, because prose cannot.
 A comment that says "don't do X elsewhere" is a bug report filed against the
 future. If X is worth preventing, export it.
 
+### An ad-hoc instrument reports on itself
+
+A **negative** result is a hypothesis about the instrument until the instrument
+is shown to work on that input. That was too narrow. The same applies to
+**positive** findings: a defect apparently discovered by a throwaway script is a
+statement about the script until it is reproduced through the product's real
+entry point.
+
+**Specifically: a script that opts out of the project's own guarantees cannot be
+evidence about code that relies on them.**
+
+2026-09-12: an ad-hoc `.mjs` called `scanContracts` directly and reported exit 0
+with zero entries for three live contracts. That was written up as a product
+defect and a requirement was attached to it. The CLI was never affected —
+`scanIsDegraded` already covers `entries.length === 0` and exits 3. The script
+had bypassed TypeScript, which is exactly how its wrong call shape survived, and
+it never touched `exitCodeFor` at all.
+
+Before reporting behaviour, ask which instrument produced it. If the answer is
+"a script I wrote to look at this", reproduce it through the real entry point
+first.
+
+### Implausibility produces signals, not verdicts
+
+The detector below is the most productive one this project has. That is precisely
+how a heuristic gets promoted to a verdict without anyone deciding to promote it.
+
+**An implausible quantity tells you to look. It does not tell you what you will
+find.** 2026-09-12: exactly 24.0h between two instruments read as an off-by-one
+and was a constant. A fee of ~11,700 stroops is a *signal* the target may be
+wrong; it is not proof of a no-op — Rakha proved the extension the right way, by
+showing absolute expiry rose after inclusion, not by reasoning from the fee.
+
+The failure mode of a very good detector is that people stop checking behind it.
+
+### Advice already sent does not correct itself
+
+When a review teaches you how something actually works, **check what you have
+already told someone that it contradicts.** It is sitting in an issue with your
+name on it, being followed.
+
+2026-09-12: an issue told Rakha to "pick N large enough to clear the existing
+remaining" — in a document that also, correctly, said the CLI resolves
+`--ledgers N` to `current + N`. Two contradictory instructions, one document. A
+day later the `#86` review read `const requested = base + additionalLedgers` and
+mutated it to prove the guard fires. The correct answer was held twenty-four
+hours after the wrong one was sent, and nothing connected them. Rakha caught it.
+
 ### Detection: arithmetic on a quantity
 
 Worth recording because the hit rate is lopsided. Six of the last eight findings
