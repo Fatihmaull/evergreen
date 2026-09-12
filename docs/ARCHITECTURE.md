@@ -113,6 +113,16 @@ CLI `scan --optimize` adds one optional settings read after the Testnet scan con
 
 ### `packages/engine`
 
+**D15 current path:** `packages/core/src/engine.ts` provides `decideBumps` and
+`runEngine`; `scripts/engine-run.mjs` is the decide-only consumer scheduled by
+`engine-cron.yml`. The engine package itself is still a placeholder. The
+W3-D15-04 correction reads the network TTL ceiling, preserves config target
+semantics, requires agreement on shared-entry payer/target, refuses expired
+candidates and feeds one resolved per-key action threshold into both decisions
+and liveness. See [implementation and API notes](W3-D15-04-IMPLEMENTATION.md).
+No transaction is simulated, signed or submitted on this path.
+
+
 A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-scheduled-serverless-engine.md), [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md)). The real loop is planned for W3. The existing [scheduler smoke workflow](../.github/workflows/scheduler-smoke.yml) reads A's instance only and never signs or sends a transaction.
 
 The engine resolves a `Signer` per payer. Stage 1 uses a plain funded Ed25519 account; Stage 2 adds the capped policy signer ([ADR-002](adr/ADR-002-policy-signer-provider.md), [policy signer plan](POLICY-SIGNER.md)). The same interface supports both. The adapter must verify network, payer, permitted operations and fee policy before signing; its method name does not provide those protections.

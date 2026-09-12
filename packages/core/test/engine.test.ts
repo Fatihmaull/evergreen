@@ -31,34 +31,39 @@ const scanOf = (entries: Record<string, LedgerEntryTTL>): ScanResult =>
 
 const configFor = (ids: string[], below = 17_280): EvergreenConfig =>
   ({
-    network: { rpcUrl: 'https://soroban-testnet.stellar.org', networkPassphrase: 'x' },
+    network: {
+      rpcUrl: 'https://soroban-testnet.stellar.org',
+      networkPassphrase: 'Test SDF Network ; September 2015',
+    },
     defaults: { bumpWhenRemainingLedgersBelow: below, extendToLedgers: 500_000 },
     contracts: ids.map((id) => ({ id, payer: 'dev' })),
-    payers: {},
+    payers: { dev: { signer: 'ed25519', secretEnvVar: 'UNREAD_SECRET' } },
   }) as unknown as EvergreenConfig;
 
 describe('decideBumps — acting', () => {
   it('extends an entry below threshold, resolving a TARGET not a delta', () => {
-    const [d] = decideBumps(scanOf({ k1: entry([A], 100) }), configFor([A]));
+    const [d] = decideBumps(scanOf({ k1: entry([A], 100) }), configFor([A]), 3_110_400);
     expect(d?.action).toBe('extend');
-    // current remaining + extendToLedgers, never the bare delta.
-    expect(d?.action === 'extend' && d.extendToLedgers).toBe(100 + 500_000);
+    // Config is a remaining-TTL target; only CLI --ledgers is an increment.
+    expect(d?.action === 'extend' && d.extendToLedgers).toBe(500_000);
   });
 
   it('skips an entry above threshold and says the number', () => {
-    const [d] = decideBumps(scanOf({ k1: entry([A], 900_000) }), configFor([A]));
+    const [d] = decideBumps(scanOf({ k1: entry([A], 900_000) }), configFor([A]), 3_110_400);
     expect(d?.action).toBe('skip');
     expect(d?.reason).toContain('900,000');
   });
 
   it('acts at EXACTLY the threshold — the boundary is inclusive', () => {
     // The project's first finding, in the component whose job is deciding.
-    const [d] = decideBumps(scanOf({ k1: entry([A], 17_280) }), configFor([A], 17_280));
+    const [d] = decideBumps(scanOf({ k1: entry([A], 17_280) }), configFor([A], 17_280), 3_110_400);
     expect(d?.action).toBe('extend');
   });
 
   it('ignores entries belonging to no configured contract', () => {
-    expect(decideBumps(scanOf({ k1: entry(['CUNKNOWN'], 10) }), configFor([A]))).toEqual([]);
+    expect(decideBumps(scanOf({ k1: entry(['CUNKNOWN'], 10) }), configFor([A]), 3_110_400)).toEqual(
+      [],
+    );
   });
 });
 
@@ -66,7 +71,7 @@ describe('decideBumps — refusing', () => {
   it('🔴 records a guard refusal as a DECISION, and does not throw', () => {
     // The Sep 20 sequence: B crosses, the guard refuses, and the refusal is the
     // evidence. A throw here would take the whole run — and the alert — down.
-    const decisions = decideBumps(scanOf({ k1: entry([B], 100) }), configFor([B]));
+    const decisions = decideBumps(scanOf({ k1: entry([B], 100) }), configFor([B]), 3_110_400);
     expect(decisions).toHaveLength(1);
     expect(decisions[0]?.action).toBe('skip');
     expect(decisions[0]?.reason).toContain('REFUSED BY WRITE GUARD');
@@ -77,6 +82,7 @@ describe('decideBumps — refusing', () => {
     const decisions = decideBumps(
       scanOf({ kA: entry([A], 100), kB: entry([B], 100) }),
       configFor([A, B]),
+      3_110_400,
     );
     expect(decisions.map((d) => d.action).sort()).toEqual(['extend', 'skip']);
   });
@@ -85,13 +91,14 @@ describe('decideBumps — refusing', () => {
     const decisions = decideBumps(
       scanOf({ [SHARED_CODE_ENTRY_KEY]: entry([A], 100) }),
       configFor([A]),
+      3_110_400,
     );
     expect(decisions[0]?.action).toBe('skip');
     expect(decisions[0]?.reason).toContain('REFUSED BY WRITE GUARD');
   });
 
   it('never extends an entry whose TTL could not be read', () => {
-    const [d] = decideBumps(scanOf({ k1: entry([A], undefined) }), configFor([A]));
+    const [d] = decideBumps(scanOf({ k1: entry([A], undefined) }), configFor([A]), 3_110_400);
     expect(d?.action).toBe('skip');
     expect(d?.reason).toContain('Unknown is not healthy');
   });

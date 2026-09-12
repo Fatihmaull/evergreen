@@ -53,6 +53,7 @@ const succeeded: BumpRecord = {
 describe('assertLiveness — it PERMITS what it should', () => {
   it('stays quiet when everything is comfortably above threshold', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100_000) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -63,6 +64,7 @@ describe('assertLiveness — it PERMITS what it should', () => {
 
   it('stays quiet when a low entry WAS confirmed extended', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [succeeded],
@@ -73,6 +75,7 @@ describe('assertLiveness — it PERMITS what it should', () => {
   it('stays quiet one ledger ABOVE the threshold', () => {
     // The margin is untouched here, so there is nothing to say.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(17_281) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -81,9 +84,10 @@ describe('assertLiveness — it PERMITS what it should', () => {
   });
 
   it('stays quiet on an empty scan — nothing watched, nothing claimed', () => {
-    expect(assertLiveness({ scan: scan({}), thresholds: THRESHOLDS, records: [] }).isAlarm).toBe(
-      false,
-    );
+    expect(
+      assertLiveness({ decisions: [], scan: scan({}), thresholds: THRESHOLDS, records: [] })
+        .isAlarm,
+    ).toBe(false);
   });
 });
 
@@ -94,6 +98,7 @@ describe('assertLiveness — the threshold is a floor, not a line to sit on', ()
     // inclusive TTL boundary, where zero is still live — see the comparison
     // block in ttl.ts. One is a protocol fact, this is a policy choice.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(17_280) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -108,6 +113,7 @@ describe('assertLiveness — it STOPS what it should', () => {
     // ordinary path, so ~96 runs could pass looking exactly like this while
     // guinea-pig B archives unattended.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -121,6 +127,7 @@ describe('assertLiveness — it STOPS what it should', () => {
     // in dry-run" a likely, not exotic, failure.
     const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [simulated],
@@ -138,6 +145,7 @@ describe('assertLiveness — it STOPS what it should', () => {
       transactionHash: 'pending',
     };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [submitted],
@@ -154,6 +162,7 @@ describe('assertLiveness — it STOPS what it should', () => {
       error: { code: 'tx_insufficient_balance', message: 'underfunded' },
     };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [failed],
@@ -165,6 +174,7 @@ describe('assertLiveness — it STOPS what it should', () => {
   it('🔴 alarms when a watched entry could not be OBSERVED at all', () => {
     // Unknown must never collapse into fine.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(undefined) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -175,6 +185,7 @@ describe('assertLiveness — it STOPS what it should', () => {
 
   it('🔴 alarms when an RPC error hid an entry entirely', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({}, [
         { kind: 'rpc-error', contracts: ['CONTRACT_A'], entryKey: KEY, message: 'timeout' },
       ]),
@@ -187,6 +198,7 @@ describe('assertLiveness — it STOPS what it should', () => {
 
   it('does not double-report an entry that was both observed and mentioned in an issue', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }, [
         { kind: 'entry-not-found', contracts: ['CONTRACT_A'], entryKey: KEY, message: 'absent' },
       ]),
@@ -202,6 +214,7 @@ describe('assertLiveness — a record for the WRONG entry is not cover', () => {
     // The dangerous version of "something got bumped, so we are fine".
     const other: BumpRecord = { ...succeeded, entryKey: 'AAAAB090aGVyS2V5' };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [other],
@@ -215,6 +228,7 @@ describe('assertLiveness — blast radius', () => {
   it('alarms ONCE for a shared entry but names every contract it takes down', () => {
     const contracts = ['CONTRACT_A', 'CONTRACT_B', 'CONTRACT_C'];
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [SHARED]: { ...entry(100, contracts), kind: 'code', endBehavior: 'archived' } }),
       thresholds: THRESHOLDS,
       records: [],
@@ -234,6 +248,7 @@ describe('assertLiveness — reporting', () => {
       error: { code: 'e', message: 'm' },
     };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [simulated, failed],
@@ -243,6 +258,7 @@ describe('assertLiveness — reporting', () => {
 
   it('produces a printable detail carrying no raw error text', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -254,6 +270,7 @@ describe('assertLiveness — reporting', () => {
   it('refuses a nonsensical threshold rather than silently permitting everything', () => {
     expect(() =>
       assertLiveness({
+        decisions: [],
         scan: scan({ [KEY]: entry(100) }),
         thresholds: { bumpWhenRemainingLedgersBelow: -1 },
         records: [],
@@ -277,6 +294,7 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
     let remaining = THRESHOLD + (RUNS / 2) * LEDGERS_PER_RUN;
     for (let i = 0; i < RUNS; i += 1) {
       const v = assertLiveness({
+        decisions: [],
         scan: scan({ [KEY]: entry(remaining, ['GUINEA_PIG_B']) }),
         thresholds: { bumpWhenRemainingLedgersBelow: THRESHOLD },
         records: [], // claim() returned null — the ordinary skip path
@@ -318,6 +336,7 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
       // disagreed with the engine it was modelling — and this test caught it.
       const bumped = needsAction(remaining, THRESHOLD);
       const v = assertLiveness({
+        decisions: [],
         scan: scan({ [KEY]: entry(bumped ? 518_400 : remaining, ['GUINEA_PIG_B']) }),
         thresholds: { bumpWhenRemainingLedgersBelow: THRESHOLD },
         records: bumped ? [{ ...succeeded, entryKey: KEY }] : [],
@@ -333,6 +352,7 @@ describe('assertLiveness — one bad entry among healthy ones', () => {
   it('🔴 alarms when a SINGLE entry needs action and everything else is fine', () => {
     // Confirming the requested property: health is not a majority vote.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({
         AAAAB0hlYWx0aHkx: entry(200_000, ['CONTRACT_A']),
         AAAAB0hlYWx0aHky: entry(180_000, ['CONTRACT_B']),
@@ -352,6 +372,7 @@ describe('assertLiveness — one bad entry among healthy ones', () => {
     // sick shared entry is not three-quarters healthy — it is N contracts down.
     const shared = { ...entry(100, ['A', 'B', 'C']), kind: 'code' as const };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({
         AAAAB0luc3RBAA: entry(200_000, ['A']),
         AAAAB0luc3RCAA: entry(200_000, ['B']),
@@ -373,6 +394,7 @@ describe('assertLiveness — expired is not the same as low', () => {
     // extendTTL cannot reach an archived entry. Someone acting under pressure
     // must not be pointed at the wrong operation.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(-5) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -386,6 +408,7 @@ describe('assertLiveness — expired is not the same as low', () => {
 
   it('sends a merely-low entry to EXTEND', () => {
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -399,6 +422,7 @@ describe('assertLiveness — expired is not the same as low', () => {
     // remaining === 0 is still live (protocol), but it needs action (policy).
     // Both rules apply at once and they do not contradict each other.
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(0) }),
       thresholds: THRESHOLDS,
       records: [],
@@ -413,6 +437,7 @@ describe('assertLiveness — severity grades the message, never the firing', () 
   it('grades a dry-run as info but still fires it', () => {
     const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [simulated],
@@ -431,6 +456,7 @@ describe('assertLiveness — severity grades the message, never the firing', () 
       transactionHash: 'pending',
     };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [submitted],
@@ -449,6 +475,7 @@ describe('assertLiveness — severity grades the message, never the firing', () 
       error: { code: 'tx_insufficient_balance', message: 'underfunded' },
     };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100) }),
       thresholds: THRESHOLDS,
       records: [failed],
@@ -479,6 +506,7 @@ describe('assertLiveness — severity grades the message, never the firing', () 
   it('reports the loudest severity present across mixed findings', () => {
     const simulated: BumpRecord = { ...attempt, outcome: 'simulated', mode: 'dry-run' };
     const v = assertLiveness({
+      decisions: [],
       scan: scan({ [KEY]: entry(100), AAAAB090aGVyMQ: entry(50, ['CONTRACT_B']) }),
       thresholds: THRESHOLDS,
       records: [simulated],
