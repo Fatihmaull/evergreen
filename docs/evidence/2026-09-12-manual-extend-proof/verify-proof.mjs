@@ -1,6 +1,6 @@
 // Offline verification of the captured proof; never submits or reads a secret.
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { URL, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
@@ -8,12 +8,14 @@ import process from 'node:process';
 import { Buffer } from 'node:buffer';
 import console from 'node:console';
 import { createHash } from 'node:crypto';
+import { verifyEvidenceIntegrity } from '../../../scripts/verify-evidence-integrity.mjs';
+const base=process.argv[2] ? pathToFileURL(resolve(process.argv[2])+'/') : new URL('.',import.meta.url);
+console.error(`Evidence integrity verified: ${verifyEvidenceIntegrity(base)} files`);
 const require=createRequire(new URL('../../../packages/cli/package.json',import.meta.url));
 const {TransactionBuilder,Networks,Keypair,xdr}=require('@stellar/stellar-sdk');
 const approvedPayer='GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB';
 const approvedKey='AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB';
 const approvedContract='CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
-const base=process.argv[2] ? pathToFileURL(resolve(process.argv[2])+'/') : new URL('.',import.meta.url);
 const read=name=>JSON.parse(readFileSync(new URL(name,base)));
 const attempt=read('send-attempt.json');
 assert.equal(attempt.source,approvedPayer,'attempt payer must match approved payer');
@@ -111,5 +113,4 @@ const result={transactionHash:attempt.hash,inclusionLedger:confirmed.ledger,
   beforeScanLedger:before.latestLedger,afterScanLedger:after.latestLedger,
   feeCeilingStroops:'25000',envelopeFeeStroops:attempt.fee,feeChargedStroops:feeCharged,
   sends:1,receiptTtlChangeVerified:true,protectedControlEntriesUnchanged:5,screenshots:['before.jpg','after.jpg','explorer.jpg']};
-writeFileSync(new URL('verification.json',base),JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));
