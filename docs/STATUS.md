@@ -9,6 +9,10 @@
 
 ---
 
+## Current — W2-D14-04 evidence-integrity correction (#107)
+
+Starting from origin/main ba72ea8 on `fix/W2-D14-04-evidence-integrity`. Previous review and proof branches remain preserved. #102/#105 are merged; #106 fixes were post-reviewed, and W2's closeout remains accepted. New frozen correction ID W2-D14-04 tracks the separately assigned #107. Both advertised evidence verifiers will check SHA256SUMS first and remain offline. Tests precede implementation. Raw RPC, original screenshots and recorded JSON outcomes must remain byte-for-byte unchanged; only verifier tooling, its own manifest entries and documentation may change. No new signing, transaction or live Notion automation run.
+
 ## Current — D11-01/02/03 evidence published for review
 
 Rakha approved publication after internal review. [PR #105](https://github.com/Fatihmaull/evergreen/pull/105) targets main c3ba97b from `docs/W2-D11-02-live-proof-plan`, with Fatih requested as reviewer. Reviewed evidence head: 2bab347. The PR links #103 for closure on merge; #98 remains superseded context. No new issue duplicates #103. Evidence/plan/tracking only; runtime diff against main is empty. D11-01/02/03 remain Done for the verified live proof, but its evidence PR is **open, not merged**. Final-head CI is checked separately. No further transaction or task started; Fatih handles merge.
