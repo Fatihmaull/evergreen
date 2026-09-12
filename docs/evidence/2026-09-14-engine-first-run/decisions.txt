@@ -1,0 +1,16 @@
+
+── A, default threshold (17,280)
+   mode=dry-run  liveness=undefined
+   SKIP   AAAABgAAAAEb… Above threshold: 1,386,929 ledgers remaining.
+   SKIP   AAAAB8flXwrY… Above threshold: 651,167 ledgers remaining.
+
+── A, threshold raised above its TTL (1,500,000)
+   mode=dry-run  liveness=critical
+   EXTEND AAAABgAAAAEb… WARNING — Low, recoverable, and affects only this contract.
+   SKIP   AAAAB8flXwrY… REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode en
+
+── A + B, threshold raised — B must be REFUSED
+   mode=dry-run  liveness=critical
+   EXTEND AAAABgAAAAEb… WARNING — Low, recoverable, and affects only this contract.
+   SKIP   AAAABgAAAAGw… REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig B (CCYGO7KQ6FCAZ
+   SKIP   AAAAB8flXwrY… REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode en
