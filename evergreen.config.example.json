@@ -32,7 +32,7 @@
   "_doNotWatch": [
     {
       "_warning": "GUINEA-PIG B — move into 'contracts' only via the verified procedure in docs/SETUP.md.",
-      "_why": "It is deliberately ageing so the engine can save it unattended, crossing ~2026-09-20 12:00 UTC. Bumping it early destroys the grant's strongest evidence. Calibrated at bumpWhenRemainingLedgersBelow 17280, the engine declines to act until the crossing — so verify that threshold in dry-run before it ever runs live against B.",
+      "_why": "It is deliberately ageing so it EXPIRES ~2026-09-21 12:00 UTC (alert threshold ~2026-09-20). DECIDED 2026-09-14 (W3-D18-02b): the engine must NOT save it. This _why previously said the opposite — 'so the engine can save it unattended' — which contradicted the list it sits in and read as an instruction to move B into 'contracts'. Doing that destroys the only unrepeatable evidence in the sprint. Bumping it early destroys the grant's strongest evidence. Calibrated at bumpWhenRemainingLedgersBelow 17280, the engine declines to act until the crossing — so verify that threshold in dry-run before it ever runs live against B.",
       "id": "REPLACE_WITH_GUINEA_PIG_B_ID",
       "label": "guinea-pig-B-natural-decay"
     }

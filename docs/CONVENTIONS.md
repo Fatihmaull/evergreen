@@ -386,6 +386,35 @@ did not fire, because prose cannot.
 A comment that says "don't do X elsewhere" is a bug report filed against the
 future. If X is worth preventing, export it.
 
+### Reclassify a false positive; do not suppress it
+
+When you remove a false positive, **ask what the check can no longer see.**
+Suppression trades a blind spot for a blind spot. Reclassification keeps both
+the silence and the coverage.
+
+2026-09-14, ~~W3-D18-02~~. It was reported as a mirror phantom on every sync run.
+The easy repair was to ignore that one ID and enjoy the quiet — which would have
+removed the noise *and* the coverage, because an ID genuinely appearing where it
+should not would then also be silent.
+
+What it actually was: an **intentionally retired ID**, documented at
+`CONVENTIONS.md` and deliberately kept `Dropped` so the ID is never reused. So
+it became a third category alongside checkbox rows and standing obligations —
+and the category is **checked**, not muted: a retired ID that does not read as
+`Dropped` is now a reported finding, because a retired ID not reading as retired
+is the reuse hazard itself.
+
+Two details worth copying:
+
+- **Source a new category from an existing documented marker**, never a new
+  hand-kept list. The retired set is derived from the strikethrough convention
+  already in this file. A second list would have been a fresh divergence source
+  inside a mechanism whose whole purpose is eliminating divergence sources —
+  the fix would have carried the disease.
+- **Find out which it is.** The answer was already written down in the repo; the
+  binary "restore it or delete it" was a false choice offered before anyone
+  looked.
+
 ### A converged reconciler cannot be verified by running it
 
 *Commission a checker by watching it fail* assumes there is something to fail on.
