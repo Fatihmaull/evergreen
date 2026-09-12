@@ -12,6 +12,10 @@
 
 ---
 
+## Active — W2-D14-03 closeout review, 2026-09-12
+
+Rakha requested review of Fatih's PR #102 before closing W2. Review base: main c3ba97b; exact PR head 06041e5c. A detached review checkout at /tmp/evergreen-pr102-review preserves #105's evidence branch. No changes to Fatih's branch and no merge. D14-03 is In progress for integrated closeout review; #105 remains open for Fatih review. Code review, offline reproductions, package install rehearsal and a concrete correction list will be recorded here before any feedback publication.
+
 ## Current — W2-D11-01 implementation, 2026-09-10
 
 **Synchronization complete:** #86 and #88 are synchronized with main #93 (`96ebe2d`) independently, and their local combined tree passed 446 tests plus unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) records per-branch tests (D11 428, D12 376), actual CLI-only tarball installation, and the fresh-output pipeline proof. W2-D14-02d is verified on both branches; #95 remains open pending main integration. #89 remains the integration/review thread. No force-push, PR merge, live RPC or transaction. Final remote CI is checked on the newly pushed PR heads separately.
