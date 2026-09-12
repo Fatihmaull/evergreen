@@ -1,0 +1,31 @@
+{
+  "name": "@evergreen-stellar/cli",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "evergreen": "./dist/evergreen.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@evergreen-stellar/core": "0.0.0",
+    "@evergreen-stellar/shared-types": "0.0.0",
+    "esbuild": "0.25.0"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "bundle": "esbuild src/bin.ts --bundle --platform=node --format=esm --external:@stellar/stellar-sdk --sourcemap --outfile=dist/evergreen.mjs"
+  }
+}
