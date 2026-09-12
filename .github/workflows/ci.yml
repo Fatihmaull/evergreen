@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Deliberate trigger. The sync's write path must be testable WITHOUT waiting
+  # for a real merge — letting the next merge be its first write test is how a
+  # broken mirror stays broken for a week.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -41,10 +45,13 @@ jobs:
   # secret involved. Only the WRITE needs a token.
   notion-mirror:
     name: sync Notion from BACKLOG.md
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: check
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v5
 
@@ -64,7 +71,66 @@ jobs:
 
       # No install: the script is dependency-free on purpose, so this job cannot
       # be the thing that breaks when the lockfile changes.
-      - run: node scripts/sync-notion.mjs
+      - id: sync
+        continue-on-error: true
+        run: |
+          set +e
+          node scripts/sync-notion.mjs 2>&1 | tee /tmp/sync.log
+          echo "code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        shell: bash
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_SYNC: apply
+
+      # A 401 living only in a log nobody opens means every merge reports green
+      # while the mirror silently drifts — the manual-sweep problem back, with an
+      # automation badge on it. So the result gets a SURFACE either way.
+      - name: Report the sync result where it can be seen
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CODE='${{ steps.sync.outputs.code }}'
+          {
+            echo "## Notion mirror sync"
+            echo
+            if [ "$CODE" = "0" ]; then echo "✅ succeeded"; else echo "❌ FAILED (exit $CODE)"; fi
+            echo
+            echo '```'
+            tail -30 /tmp/sync.log 2>/dev/null || echo "(no output — the job died before the script ran)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [ "$CODE" = "0" ] && exit 0
+
+          # One open issue, not one per run. A failure that pages you every
+          # merge gets muted, and a muted alert is the same as no alert.
+          TITLE='Notion mirror sync is failing'
+          EXISTING=$(gh issue list --search "$TITLE in:title" --state open \
+            --json number --jq '.[0].number // empty')
+          BODY=$(printf '%s\n' \
+            "The post-merge Notion sync exited non-zero. \`BACKLOG.md\` stays canonical, so nothing is lost — but **the mirror is drifting and will keep drifting until this is fixed**." \
+            "" \
+            "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            "Commit: \`${{ github.sha }}\`" \
+            "" \
+            'Last 30 lines:' '```' "$(tail -30 /tmp/sync.log 2>/dev/null)" '```' \
+            "" \
+            "Closes itself on the next successful sync.")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --assignee Fatihmaull
+          fi
+
+      - name: Close the failure issue once a sync succeeds
+        if: steps.sync.outputs.code == '0'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          N=$(gh issue list --search 'Notion mirror sync is failing in:title' \
+            --state open --json number --jq '.[0].number // empty')
+          [ -n "$N" ] && gh issue close "$N" \
+            --comment "Sync succeeded on \`${{ github.sha }}\`. Closing automatically." || true
