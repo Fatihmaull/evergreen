@@ -1,6 +1,6 @@
 # W2-D14-04 — evidence integrity entry points (#107)
 
-Implementation complete for internal review, based on merged main `ba72ea8`. No new transaction, signature, secret access or runtime CLI change. Issue #107 remains open pending review and publication.
+Implementation and [internal review](W2-D14-04-REVIEW.md) complete; ready for publication approval, based on merged main `ba72ea8`. No new transaction, signature, secret access or runtime CLI change. Issue #107 remains open pending review and publication.
 
 ## Behavior
 
@@ -25,4 +25,4 @@ Full `pnpm check` passed **537 tests** (459 Vitest + 78 Node), including the new
 
 Both original bundles verify successfully: manual 103 entries, storage advice 29 entries. Byte comparison against origin/main confirms **102 manual-proof files and 28 storage-advice files unchanged**, excluding only the relevant verifier and SHA256SUMS. This includes every raw RPC response, screenshot, recorded JSON result, capture-time helper and existing README. Each manifest changes exactly one line: the hash of its edited verifier. No raw artifact was regenerated or reformatted.
 
-Implementation is on `fix/W2-D14-04-evidence-integrity`. Next checkpoint: review, then publish a separate tooling PR linked to #107 after Rakha approval. Fatih handles merge.
+Implementation is on `fix/W2-D14-04-evidence-integrity`. Review found no blocker; next checkpoint is publication of a separate tooling PR linked to #107 after Rakha approval. Fatih handles merge.

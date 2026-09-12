@@ -2,14 +2,18 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · W2-D14-04 evidence integrity implemented; ready for review
+**Last updated:** 2026-09-12 · W2-D14-04 review complete; ready for publication approval
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W2-D14-04 implemented; ready for internal review
+## Current — W2-D14-04 review complete; ready for publication approval
+
+[Pre-publication review](W2-D14-04-REVIEW.md) found no blocking issue and required no code correction. Fresh integrity suite passed 22/22; full pnpm check passed 537 tests with coverage. Both manifests verify, and all 130 original non-tool/non-manifest files remain byte-identical to origin/main ba72ea8. No runtime CLI change, secret read or chain transaction. #107 remains open; PR publication awaits Rakha's next checkpoint, and Fatih handles merge.
+
+## Implementation record — W2-D14-04
 
 Both evidence verifier entry points now check SHA256SUMS before semantic verification and remain read-only. Shared helper rejects corrupt/missing files, invalid manifests, duplicate paths and path escapes. New suite: 22 tests; full pnpm check: 537 tests passed. Manual proof verifies 103 manifest entries, storage advice 29. Compared with origin/main ba72ea8, all 130 original non-tool/non-manifest files across both bundles remain byte-for-byte unchanged. Only the two verifier scripts and their own manifest hash lines change inside the evidence folders. [Implementation report](W2-D14-04-INTEGRITY.md).
 
