@@ -1,12 +1,16 @@
 # W2-D14-03 — review of Fatih PR #102 and W2 closeout
 
-2026-09-12. Exact PR head `06041e5c1f3057831a4157b0c058b5fa708e5988`, main base `c3ba97b`. PR #105 remains open at `016f6ff` and contains the later live A-instance proof. Review work uses `docs/W2-D14-03-closeout-review`; neither PR was merged or modified. This is the internal result and a review draft, not a submitted GitHub review.
+2026-09-12. Exact PR head `06041e5c1f3057831a4157b0c058b5fa708e5988`, main base `c3ba97b`. PR #105 remains open at `016f6ff` and contains the later live A-instance proof. Review work uses `docs/W2-D14-03-closeout-review`; neither PR was merged or modified. Published after Rakha approval: [formal Changes requested review](https://github.com/Fatihmaull/evergreen/pull/102#pullrequestreview-5185045374), pinned to 4ffa5fa, with two inline comments. [Issue #106](https://github.com/Fatihmaull/evergreen/issues/106) is assigned to and mentions Fatih for correction tracking. No merge.
 
 ## Latest head included in review
 
 During review Fatih advanced #102 to `041a5ffbd90835989924df9123d1327263f30ca6`. Reviewed its six-file delta: new guard tests, cost display clarification/tests, parser coverage check, conventions and W4 packer wording. Full check rerun passed on the new head; both owner and duplicate-mirror findings still reproduce. The report below retains the original head for the initial package rehearsal and count provenance. No changes were made to Fatih's branch.
 
-## Recommendation: request changes
+## Publication head check
+
+PR head advanced from 041a5ff to 4ffa5fa before publication. The delta contains packaging rehearsal evidence and its backlog closure; the two affected sync files are unchanged. The additional packaging proof is acknowledged as completed, not an outstanding request. Full-check evidence remains specifically from 041a5ff; no unrun suite is claimed for 4ffa5fa.
+
+## Submitted decision: request changes
 
 The dry-run and multi-contract CLI changes passed the inspected paths, existing tests, and installed-package smoke checks. Resolve the following sync correctness findings and reconcile the week report before accepting #102 as the W2 closeout.
 
@@ -44,7 +48,7 @@ Requested correction: reject/report duplicate mirror IDs before any PATCH and id
 
 The Notion automation needs NOTION_TOKEN and database access. Do not infer operational success from a parse-only green job. No token was requested, provisioned or read in this review. Assign configuration ownership and verify a controlled sync once available. CI being non-blocking does not remove the need to check the job outcome.
 
-## Proposed message to Fatih — not sent
+## Earlier internal feedback draft — superseded by published review
 
 @Fatihmaull reviewed #102 initially at 06041e5c, then its update to 041a5ff. Full check passed on both heads; fresh CLI-only installation and offline scan/flag smoke checks passed. Please address two mirror correctness gaps before merge: annotated `(F, was R)` owners parse as undefined (real D9 rows), and duplicate mirror IDs silently select the last page instead of reporting ambiguity. Also update the W2 summary against current head and #105, The missing W2-D10-01c mirror row was reconciled separately, preserving your ID and ownership. Existing live proof is complete in #105; no transaction repeat is needed. I recommend request changes on those points, with Fatih retaining branch and merge ownership.
 
