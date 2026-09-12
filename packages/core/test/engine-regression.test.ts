@@ -6,6 +6,8 @@ import { decideBumps, runEngine } from '../src/engine.js';
 import { codeKey, instanceKey } from '../src/rpc.js';
 import { STATE_ARCHIVAL_CONFIG_KEY, parseStateArchivalSettings } from '../src/network-config.js';
 import { createMockReader } from './mock-rpc.js';
+import { loadConfig } from '../src/config.js';
+import { assertLiveness } from '../src/liveness.js';
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const D = StrKey.encodeContract(Buffer.alloc(32, 7));
 const code = codeKey(new Uint8Array(32).fill(6));
@@ -216,5 +218,94 @@ describe('runEngine — decisions and liveness resolve the same policy', () => {
     expect(run.decisions.every((d) => d.action === 'skip')).toBe(true);
     expect(run.liveness.isAlarm).toBe(true);
     expect(run.scan.issues.some((i) => i.message.includes('state-archival'))).toBe(true);
+  });
+});
+
+describe('internal review — repeated registrations and expired temporary guidance', () => {
+  it.each([false, true])(
+    'refuses repeated-contract payer conflicts in either order (%s)',
+    async (reverse) => {
+      const base = config();
+      const registrations = [
+        { id: A, payer: 'payer-a' },
+        { id: A, payer: 'payer-d' },
+      ];
+      const { config: parsed } = loadConfig(
+        JSON.stringify({
+          ...base,
+          contracts: reverse ? registrations.reverse() : registrations,
+        }),
+      );
+      const run = await runEngine(reader(), parsed);
+      const decision = run.decisions.find((d) => d.entryKey === instanceKey(A));
+      expect(decision?.action).toBe('skip');
+      expect(decision?.reason).toMatch(/payer/);
+    },
+  );
+  it('refuses repeated-contract target conflicts instead of choosing the last row', () => {
+    const base = config();
+    const cfg = {
+      ...base,
+      contracts: [
+        base.contracts[0]!,
+        { ...base.contracts[0]!, thresholds: { extendToLedgers: 600000 } },
+      ],
+    };
+    const [decision] = decideBumps(scan(1000), cfg, ceiling);
+    expect(decision?.action).toBe('skip');
+    expect(decision?.reason).toMatch(/target/);
+  });
+  it('retains every repeated registration threshold in decision and liveness', async () => {
+    const base = config();
+    const cfg = {
+      ...base,
+      defaults: { ...base.defaults, bumpWhenRemainingLedgersBelow: 100 },
+      contracts: [
+        { id: A, payer: 'payer-a', thresholds: { bumpWhenRemainingLedgersBelow: 2000 } },
+        { id: A, payer: 'payer-a', thresholds: { bumpWhenRemainingLedgersBelow: 100 } },
+      ],
+    };
+    const run = await runEngine(reader(), cfg);
+    expect(run.decisions.find((d) => d.entryKey === instanceKey(A))?.action).toBe('extend');
+    expect(run.liveness.isAlarm).toBe(true);
+  });
+  it('keeps consistent repeated registrations usable without duplicate decisions', async () => {
+    const base = config();
+    const run = await runEngine(reader(), {
+      ...base,
+      contracts: [base.contracts[0]!, base.contracts[0]!],
+    });
+    const decisions = run.decisions.filter((d) => d.entryKey === instanceKey(A));
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0]).toMatchObject({
+      action: 'extend',
+      payer: 'payer-a',
+      extendToLedgers: 518400,
+    });
+  });
+  it('does not recommend restoring temporary data that has been deleted', () => {
+    const base = scan(-1);
+    const key = instanceKey(A);
+    const temporary: ScanResult = {
+      ...base,
+      entries: {
+        [key]: {
+          ...base.entries[key]!,
+          kind: 'temporary',
+          endBehavior: 'deleted',
+        },
+      },
+    };
+    const decisions = decideBumps(temporary, config(), ceiling);
+    expect(decisions[0]?.action).toBe('skip');
+    const verdict = assertLiveness({
+      scan: temporary,
+      thresholds: config().defaults,
+      records: [],
+      decisions,
+    });
+    expect(verdict.findings[0]?.remediation).toBe('investigate');
+    expect(verdict.findings[0]?.detail).not.toContain('RestoreFootprintOp');
+    expect(verdict.findings[0]?.detail).toMatch(/cannot be restored/);
   });
 });

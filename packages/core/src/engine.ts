@@ -66,12 +66,19 @@ function evaluateBumps(
 ): DecisionPass {
   const decisions: BumpDecision[] = [];
   const actionThresholdByEntry: Record<LedgerKey, number> = {};
-  const byContract = new Map(config.contracts.map((c) => [c.id, c]));
+  // The scanner unions repeated registrations. Preserve every policy too:
+  // collapsing to the last row would silently choose its payer/target/threshold.
+  const byContract = new Map<string, EvergreenConfig['contracts'][number][]>();
+  for (const registration of config.contracts) {
+    const rows = byContract.get(registration.id) ?? [];
+    rows.push(registration);
+    byContract.set(registration.id, rows);
+  }
 
   for (const [entryKey, entry] of Object.entries(scan.entries)) {
     const consumers = entry.contracts;
-    const registrations = consumers.map((id) => byContract.get(id));
-    const configured = registrations.filter((c) => c !== undefined);
+    const registrations = consumers.map((id) => byContract.get(id) ?? []);
+    const configured = registrations.flat();
     if (configured.length === 0) continue;
     const policies = configured.map((c) => ({ ...config.defaults, ...c.thresholds }));
     const actionThreshold = Math.max(...policies.map((p) => p.bumpWhenRemainingLedgersBelow));
@@ -108,7 +115,7 @@ function evaluateBumps(
       continue;
     }
     if (
-      configured.length !== registrations.length ||
+      registrations.some((rows) => rows.length === 0) ||
       configured.some((c) => !Object.hasOwn(config.payers, c.payer))
     ) {
       skip('Unresolved payer policy for a consumer of this entry.');
