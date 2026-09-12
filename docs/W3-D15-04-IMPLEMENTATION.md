@@ -1,6 +1,6 @@
 # W3-D15-04 — correct the existing engine decision contract
 
-Status: internal review complete; two findings fixed in 73a9050. Ready for publication; no PR or merge yet. See [review](W3-D15-04-REVIEW.md).
+Status: internal review complete; two findings fixed in 73a9050. Published in [PR #120](https://github.com/Fatihmaull/evergreen/pull/120) for Fatih review; not merged. See [review](W3-D15-04-REVIEW.md).
 Tracking: [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119).
 Base: main cc0fb16. Branch: `fix/W3-D15-04-engine-decisions`.
 
@@ -56,7 +56,7 @@ were lowered. Engine coverage: 97.64% statements, 91.22% branches, 100% function
 
 ## Next boundary
 
-Internal review findings are resolved; PR publication is the next checkpoint. D16 must consume the
+Internal review findings are resolved; PR #120 is published and awaiting Fatih review/merge. D16 must consume the
 corrected target and resolved payer, re-check guard immediately before prepare,
 and require its own explicit live opt-in. For a later A proof with a raised
 threshold, the requested target must also be above that threshold; the existing

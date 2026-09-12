@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · W3-D15-04 internal review complete; publication next
+**Last updated:** 2026-09-12 · W3-D15-04 published in PR #120 for Fatih review
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 engine correction**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-04 internal review complete; ready for publication
+## Current — W3-D15-04 published in PR #120
+
+Rakha approved publication after internal review. [PR #120](https://github.com/Fatihmaull/evergreen/pull/120) targets main cc0fb16 from `fix/W3-D15-04-engine-decisions`; Fatih is requested as reviewer. Code/review corrections are at 73a9050, reviewed documentation at 46b4b7b. [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119) is linked for closure on merge. W3-D15-04 remains Done for verified branch implementation; PR is open and unmerged. Fatih handles merge.
+
+Fresh pre-publication full pnpm check passed 575 tests with unchanged coverage gates. The PR includes the initial reproductions, corrected engine/liveness behavior, seven mutation checks and read-only A observations. No new transaction, signature, protected override or scheduler activation during publication. Final-head remote CI is verified separately; local check results are not a claim about remote CI.
+
+## Earlier — W3-D15-04 internal review complete; ready for publication
 
 [Review report](W3-D15-04-REVIEW.md): review of 79e9124 found two P2 issues, both reproduced and fixed in 73a9050. Repeated contract registrations no longer discard prior payer/target/threshold policies; consistent duplicates still work. Liveness now reports deleted temporary data as non-restorable while preserving restore guidance for archived entries. No blocking findings remain in the reviewed correction scope.
 
