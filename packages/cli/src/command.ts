@@ -2,7 +2,7 @@ import {
   NotTestnetError,
   coverageIssues,
   isValidContractId,
-  scanContract,
+  scanContracts,
   analyzeStorage,
 } from '@evergreen-stellar/core';
 import type { StorageSettings, StorageAdviceReport } from '@evergreen-stellar/core';
@@ -23,11 +23,24 @@ import {
 const DEFAULT_EXTEND_LEDGERS = 518_400;
 
 const USAGE =
-  'usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]';
+  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]';
 const HELP = `${USAGE}
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
 Keys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }
+
+PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts
+built from the same Wasm share ONE ContractCode ledger entry, and a scan of one
+contract cannot tell whether others depend on it — the chain does not index
+reverse dependencies from a single query, so that entry reports "sharing
+undetermined". Naming them together resolves it:
+
+  evergreen scan <A>              code entry: 1 consumer, sharing UNDETERMINED
+  evergreen scan <A> <B> <C>      code entry: 3 consumers, SHARED, they fail together
+
+Every scan prints which contracts it actually scanned, so a mistyped or dropped
+argument is visible rather than inferred. --keys-file takes exactly one contract,
+because data keys belong to a specific contract and the file does not say which.
 
 Exit: 0 everything scanned is healthy; 1 observed low TTL; 2 error;
       3 the scan came back incomplete (entry missing, TTL unavailable,
@@ -122,18 +135,38 @@ export async function runCli(
       exitCode: 0,
     };
   }
-  const contractId = args[1];
-  if (args[0] !== 'scan' || !contractId || contractId.startsWith('-')) return fail(USAGE);
+  if (args[0] !== 'scan') return fail(USAGE);
+  // N contract IDs, because the tool's own advice requires it (`W2-D10-01c`).
+  //
+  // A single-contract scan structurally CANNOT establish that a shared code
+  // entry is unshared, so it reports `sharingStatus: 'undetermined'` and tells
+  // the reader to "pass them together to see the real blast radius". That
+  // sentence was unreachable from the command line: `scanContracts` has taken
+  // an array since it was written, and only this parser was singular. Naming a
+  // limitation and withholding its remedy is half a fix.
+  const contractIds: string[] = [];
+  let argIndex = 1;
+  for (; argIndex < args.length && !args[argIndex]!.startsWith('-'); argIndex++) {
+    contractIds.push(args[argIndex]!);
+  }
+  if (contractIds.length === 0) return fail(USAGE);
   // Validate shape BEFORE connecting. A typo should cost a one-line message,
   // not a network round trip that surfaces as a scan report full of coverage
   // boilerplate about a contract that cannot exist.
-  if (!isValidContractId(contractId)) {
-    return fail(
-      `Not a Stellar contract ID: ${contractId}\n` +
-        'Contract IDs start with C and are 56 characters (StrKey-encoded).\n' +
-        'Check for a truncated paste or an account address (G…) used by mistake.',
-    );
+  for (const id of contractIds) {
+    if (!isValidContractId(id)) {
+      return fail(
+        `Not a Stellar contract ID: ${id}\n` +
+          'Contract IDs start with C and are 56 characters (StrKey-encoded).\n' +
+          'Check for a truncated paste or an account address (G…) used by mistake.',
+      );
+    }
   }
+  // A repeated ID is a mistake worth naming rather than silently deduplicating:
+  // the caller believes they asked about more contracts than they did, and the
+  // blast-radius count they read back would be a floor below what they expect.
+  const duplicate = contractIds.find((id, i) => contractIds.indexOf(id) !== i);
+  if (duplicate !== undefined) return fail(`Repeated contract ID: ${duplicate}`);
   let asJson = false;
   let withCost = false;
   let withOptimize = false;
@@ -141,7 +174,7 @@ export async function runCli(
   let noDataKeys = false;
   let requireDeclaredScope = false;
   let keysPath: string | undefined;
-  for (let i = 2; i < args.length; i++) {
+  for (let i = argIndex; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
     else if (args[i] === '--cost' && !withCost) withCost = true;
     else if (args[i] === '--optimize' && !withOptimize) withOptimize = true;
@@ -162,6 +195,19 @@ export async function runCli(
   }
   if (noDataKeys && keysPath !== undefined)
     return fail('--keys-file and --no-data-keys are mutually exclusive.');
+  // Refused, not resolved. A keys file is `{ "dataKeys": [...] }` with no
+  // contract attached, and persistent/temporary keys are derived from the
+  // contract that owns them — so spreading one list across N contracts would
+  // attribute entries to contracts that do not own them, and the scan would
+  // report that misattribution as fact.
+  if (keysPath !== undefined && contractIds.length > 1)
+    return fail(
+      '--keys-file applies to exactly one contract.\n' +
+        '  Data keys are owned by a specific contract and the file does not say which,\n' +
+        '  so spreading one list across several would misattribute entries.\n' +
+        '  Scan them together without --keys-file to see shared-code blast radius,\n' +
+        '  or scan one at a time when you need explicit data keys.',
+    );
 
   let dataKeys: string[] = [];
   if (keysPath !== undefined) {
@@ -204,7 +250,10 @@ export async function runCli(
         'syntax, and your network connection. Nothing was read and nothing was changed.',
     );
   }
-  const scanned = await scanContract(reader, { id: contractId }, dataKeys, { noDataKeys });
+  const scanned = await scanContracts(
+    reader,
+    contractIds.map((id) => ({ contract: { id }, dataKeys, noDataKeys })),
+  );
   // `issues.length === 0` is the question a consumer will actually ask, so it
   // has to be answerable. Caveats are merged in for that reason — a scan that
   // told a human it was incomplete must not hand a machine an empty array.

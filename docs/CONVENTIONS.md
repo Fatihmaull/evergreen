@@ -352,6 +352,103 @@ Full workflow, including the session-start validation and the discrepancy rules,
 - No default exports (except where a framework demands it).
 - Async: `async/await`, no floating promises, no `.then()` chains.
 
+## A lesson written as prose cannot prevent its own recurrence
+
+**When you write down a lesson, ask what would execute it.** If the answer is
+"someone reads the file it happens to sit in", the lesson is not protected — it
+is documentation next to code that happens to be right, with no way to run when
+someone opens a different file.
+
+This project has now paid four times for one rule that lived in one place and
+was copied into a second, then a third, then re-derived from scratch:
+
+| when | the rule | how it failed |
+|---|---|---|
+| 2026-09-08 | four separate task-ID patterns | diverged; #73 collapsed them to one |
+| 2026-09-10 | ID suffix class `[0-9a-c]` | `W3-D21-01d/e` invisible in both directions |
+| 2026-09-10 | the threshold comparison | a longhand copy did not move when the policy became a floor (`<=`); the engine alarmed while CI reported a clean pass |
+| 2026-09-12 | ID shape, again | the Sep 10 lesson was a **correct comment** in `check-task-ids.mjs`; a new file re-invented the identical bug **two hours after it was written**, silently dropping 22 rows |
+
+The last one is the proof. The prose was right, current, and in the repo. It
+did not fire, because prose cannot.
+
+**So: a lesson is finished when something executes it.** In order of strength:
+
+1. **A shared implementation** — one module, imported. `scripts/task-id.mjs`,
+   `needsAction()` in `ttl.ts`, `coverageIssues()` for both output channels.
+2. **A name the compiler enforces** — `alertThresholdOn` and `expiresOn` cannot
+   collide the way two things both called "crossing" did.
+3. **A check that fails**, commissioned by watching it fail. Note that this is
+   weaker than it looks: `check-task-ids.mjs` narrows on *both* sides at once,
+   so it can never detect its own class being too narrow.
+4. **A comment.** Necessary for the *why*. Never sufficient for the *rule*.
+
+A comment that says "don't do X elsewhere" is a bug report filed against the
+future. If X is worth preventing, export it.
+
+### An ad-hoc instrument reports on itself
+
+A **negative** result is a hypothesis about the instrument until the instrument
+is shown to work on that input. That was too narrow. The same applies to
+**positive** findings: a defect apparently discovered by a throwaway script is a
+statement about the script until it is reproduced through the product's real
+entry point.
+
+**Specifically: a script that opts out of the project's own guarantees cannot be
+evidence about code that relies on them.**
+
+2026-09-12: an ad-hoc `.mjs` called `scanContracts` directly and reported exit 0
+with zero entries for three live contracts. That was written up as a product
+defect and a requirement was attached to it. The CLI was never affected —
+`scanIsDegraded` already covers `entries.length === 0` and exits 3. The script
+had bypassed TypeScript, which is exactly how its wrong call shape survived, and
+it never touched `exitCodeFor` at all.
+
+Before reporting behaviour, ask which instrument produced it. If the answer is
+"a script I wrote to look at this", reproduce it through the real entry point
+first.
+
+### Implausibility produces signals, not verdicts
+
+The detector below is the most productive one this project has. That is precisely
+how a heuristic gets promoted to a verdict without anyone deciding to promote it.
+
+**An implausible quantity tells you to look. It does not tell you what you will
+find.** 2026-09-12: exactly 24.0h between two instruments read as an off-by-one
+and was a constant. A fee of ~11,700 stroops is a *signal* the target may be
+wrong; it is not proof of a no-op — Rakha proved the extension the right way, by
+showing absolute expiry rose after inclusion, not by reasoning from the fee.
+
+The failure mode of a very good detector is that people stop checking behind it.
+
+### Advice already sent does not correct itself
+
+When a review teaches you how something actually works, **check what you have
+already told someone that it contradicts.** It is sitting in an issue with your
+name on it, being followed.
+
+2026-09-12: an issue told Rakha to "pick N large enough to clear the existing
+remaining" — in a document that also, correctly, said the CLI resolves
+`--ledgers N` to `current + N`. Two contradictory instructions, one document. A
+day later the `#86` review read `const requested = base + additionalLedgers` and
+mutated it to prove the guard fires. The correct answer was held twenty-four
+hours after the wrong one was sent, and nothing connected them. Rakha caught it.
+
+### Detection: arithmetic on a quantity
+
+Worth recording because the hit rate is lopsided. Six of the last eight findings
+were caught by a number being implausible, against zero caught by a rule
+looking for them:
+
+- three rows marked done, two moved → 22 dropped task IDs
+- coverage floor set to 99.9% and the suite passed → the floor was never wired
+- 9,349 stroops of "rent" for an extend needing none → right number, wrong mechanism
+- exactly 24.0h between two instruments → a constant, not drift
+
+**Rules catch the patterns you are looking for; implausibility catches the ones
+you are not.** When a count, a cost, or a date looks slightly off, that is the
+cheapest signal available — spend the five minutes.
+
 ## Naming
 
 - Ledger-related values always carry their unit in the name: `remainingLedgers`, `observedAtLedger`, `endsAtLedger`. TTL bugs come from confusing ledgers with seconds — the names should make that impossible. `endsAtLedger` is the final live ledger; `endBehavior` distinguishes archival from deletion. Wall-clock estimates are display-only.

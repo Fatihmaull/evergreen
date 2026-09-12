@@ -112,6 +112,18 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
   // Every caveat the human sees comes from `coverageIssues`, which is also what
   // the JSON emits. One source of truth, so the two channels cannot disagree.
   const caveats = coverageIssues(result);
+
+  // The ROSTER, not an inference from one. `W2-D10-01c` asks that a scan say
+  // which contracts it actually scanned, in both channels, so that an argument
+  // dropped by a parser is VISIBLE rather than deduced from something missing
+  // further down. The JSON has always carried `contracts`; the human channel
+  // only listed them as a side effect of per-contract data-key counts, which
+  // reads as a coverage detail rather than "here is what I looked at".
+  if (result.contracts.length > 0) {
+    lines.push(
+      `Scanned ${result.contracts.length} contract(s): ${result.contracts.map((c) => c.id).join(', ')}`,
+    );
+  }
   if (result.coverage) {
     lines.push('Coverage: known keys only — contract storage has NOT been fully enumerated.');
     for (const [contract, count] of Object.entries(result.coverage.dataKeysSuppliedByContract)) {
@@ -172,7 +184,12 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
       lines.push(`  remaining:  ${entry.ttl.remainingLedgers.toLocaleString()} ledgers — ${state}`);
       lines.push(`  ends at:    ledger ${entry.ttl.endsAtLedger.toLocaleString()}`);
       const at = estimateEndsAt(entry.ttl, now);
-      if (at) lines.push(`  approx:     ${at.toISOString()} (estimate — ledgers are the truth)`);
+      // "expires", not "approx" or "crosses". `check-decay-drift.py` projects
+      // the ALERT THRESHOLD and this projects EXPIRY; they sit exactly 24h
+      // apart because THRESHOLD_LEDGERS is exactly one day, which is what made
+      // the 2026-09-12 collision so convincing. Both were right, and a vague
+      // label is what let one word cover two events.
+      if (at) lines.push(`  expires ~:  ${at.toISOString()} (estimate — ledgers are the truth)`);
     }
     lines.push(`  observed:   ledger ${entry.observedAtLedger.toLocaleString()}`);
     lines.push(`  health:     ${LABEL[assessment.health]} — ${assessment.reason}`);

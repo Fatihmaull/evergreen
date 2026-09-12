@@ -25,6 +25,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
+import { ID } from './task-id.mjs';
 
 const BACKLOG = 'BACKLOG.md';
 const ROOTS = ['docs', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
@@ -55,11 +56,10 @@ const SKIP = ['archive', 'node_modules'];
 // ─────────────────────────────────────────────────────────────────────────────
 
 const backlog = readFileSync(BACKLOG, 'utf8');
-// Suffix letters are open-ended. This was [0-9a-c] until 2026-09-10, which made
-// W3-D21-01d and W3-D21-01e invisible in BOTH directions: not registered, and
-// references to them not flagged. Silently untracked work, from a character class
-// that encoded "how many sub-tasks we happened to have" as a rule.
-const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+`;
+// The ID shape now lives in `task-id.mjs`, imported below, because a rule kept
+// in a comment gets re-invented: this class was [0-9a-c] until 2026-09-10 (which
+// hid W3-D21-01d/e), and on 2026-09-12 sync-notion.mjs independently wrote its
+// own narrower class and silently dropped 22 rows. One definition, one import.
 
 // ...or a row in § Recurring obligations. A standing obligation is tracked work
 // with a closing condition rather than a weekly checkbox, so it is registered
@@ -74,6 +74,34 @@ const REGISTERED = new Set([
   ...[...backlog.matchAll(new RegExp(String.raw`^- \[.\] \*\*(${ID})\*\*`, 'gm'))].map((m) => m[1]),
   ...[...recurring.matchAll(new RegExp(String.raw`\*\*\`?(${ID})\`?\*\*`, 'g'))].map((m) => m[1]),
 ]);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A SECOND COUNT, BY A METHOD THAT CANNOT BE WRONG THE SAME WAY.
+//
+// This checker is structurally incapable of detecting its own ID class being
+// too narrow. Narrowing `ID` stops registering `W3-D21-01d` AND stops flagging
+// every reference to it, in one stroke — so the check stays green. Verified
+// 2026-09-12 by narrowing the class to [a-c] and watching it report a cheerful
+// "✓ 142 tasks" while `sync-notion.mjs` failed loudly on the same mutation.
+//
+// So count the checkbox rows crudely — any bolded token in an ID slot — and
+// assert the two agree. The crude count does not use `ID` at all, which is the
+// whole point: it cannot narrow when `ID` narrows. This would have caught the
+// 22 dropped rows on 2026-09-12 instantly.
+const crude = [...backlog.matchAll(/^- \[.\] \*\*([^*\n]+)\*\*/gm)]
+  .map((m) => m[1])
+  .filter((t) => /\d/.test(t) && t.includes('-'));
+const strictRows = [...backlog.matchAll(new RegExp(String.raw`^- \[.\] \*\*(${ID})\*\*`, 'gm'))];
+if (crude.length !== strictRows.length) {
+  const missed = crude.filter((t) => !strictRows.some((m) => m[1] === t));
+  console.error(
+    `✖ ${crude.length} checkbox rows look like tasks but only ${strictRows.length} parsed.\n` +
+      `  Unrecognised: ${missed.join(', ')}\n` +
+      '  The ID class in scripts/task-id.mjs is too narrow, or an ID is malformed.\n' +
+      '  This check cannot see that on its own — hence the second count.',
+  );
+  process.exit(1);
+}
 
 // Any delimiter. Trailing guard stops a prefix matching a longer ID.
 // Built from the SAME `ID` source as REGISTERED. It used to be a second, hand-kept
