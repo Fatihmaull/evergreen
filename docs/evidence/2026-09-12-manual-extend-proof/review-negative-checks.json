@@ -1,0 +1,32 @@
+[
+  {
+    "case": "wrong-envelope-fee",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "wrong-record-payer",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "wrong-expiry",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "changed-control",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "missing-screenshot",
+    "exitCode": 1,
+    "rejected": true
+  },
+  {
+    "case": "missing-tx-meta",
+    "exitCode": 1,
+    "rejected": true
+  }
+]

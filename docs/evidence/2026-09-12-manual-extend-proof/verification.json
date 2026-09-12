@@ -1,0 +1,22 @@
+{
+  "transactionHash": "e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a",
+  "inclusionLedger": 4626423,
+  "requestedAdditionalLedgers": 1000,
+  "resolvedTarget": 1400168,
+  "beforeExpiry": 6025589,
+  "afterExpiry": 6026591,
+  "expiryIncrease": 1002,
+  "beforeScanLedger": 4626386,
+  "afterScanLedger": 4626432,
+  "feeCeilingStroops": "25000",
+  "envelopeFeeStroops": "15073",
+  "feeChargedStroops": "5064",
+  "sends": 1,
+  "receiptTtlChangeVerified": true,
+  "protectedControlEntriesUnchanged": 5,
+  "screenshots": [
+    "before.jpg",
+    "after.jpg",
+    "explorer.jpg"
+  ]
+}

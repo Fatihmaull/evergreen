@@ -1,0 +1,16 @@
+{
+  "verifiedAt": "2026-09-11T19:39:29.246Z",
+  "hash": "417e413ad7e9573d0da40d5ae1ba569b0a25cee65813b4f1eee19e4d0d52aefb",
+  "sequence": "19410430384406533",
+  "target": 1400198,
+  "fee": "15073",
+  "key": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+  "source": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+  "signed": false,
+  "before": {
+    "ledger": 4626391,
+    "endsAt": 6025589
+  },
+  "signatureCount": 0,
+  "reuseEnvelope": false
+}

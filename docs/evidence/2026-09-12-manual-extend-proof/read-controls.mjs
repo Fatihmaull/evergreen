@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import process from 'node:process';
+import console from 'node:console';
+import { URL } from 'node:url';
+const rpc = 'https://soroban-testnet.stellar.org/';
+const call = async (method,params={}) => (await globalThis.fetch(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})})).json();
+await call('getNetwork');
+const prior = JSON.parse(readFileSync(new URL('../2026-09-11-storage-advice-validation/bc-post/07-getLedgerEntries-request.json',import.meta.url)));
+const response = await call('getLedgerEntries',prior.params);
+const result=response.result;
+if (!result || result.entries?.length !== 5) throw new Error('Incomplete controls');
+writeFileSync(`${process.env.EVERGREEN_CAPTURE_DIR}/parsed.json`,JSON.stringify({ledger:result.latestLedger,entries:result.entries.map(e=>({key:e.key,endsAt:e.liveUntilLedgerSeq}))},null,2)+'\n',{flag:'wx'});
+console.log('Five protected control entries recorded read-only at ledger',result.latestLedger);

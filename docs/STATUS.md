@@ -2,17 +2,56 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-10 · D11 published for review in PR #86
-**Last updated:** 2026-09-10 · D12 published in PR #88; integration Issue #89
-**Sprint day:** 8 of 30 · **Deadline:** 2026-10-02 · **17 build days left** (weekdays only)
-**Last updated:** 2026-09-11 · D12-02 published in PR #97 / Issue #96
-**Sprint day:** 9 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
+**Last updated:** 2026-09-12 · D11 evidence published in PR #105 for Fatih review
+**Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W2-D11-01 implementation, 2026-09-10
+## Current — D11-01/02/03 evidence published for review
+
+Rakha approved publication after internal review. [PR #105](https://github.com/Fatihmaull/evergreen/pull/105) targets main c3ba97b from `docs/W2-D11-02-live-proof-plan`, with Fatih requested as reviewer. Reviewed evidence head: 2bab347. The PR links #103 for closure on merge; #98 remains superseded context. No new issue duplicates #103. Evidence/plan/tracking only; runtime diff against main is empty. D11-01/02/03 remain Done for the verified live proof, but its evidence PR is **open, not merged**. Final-head CI is checked separately. No further transaction or task started; Fatih handles merge.
+
+## Earlier — D11-01/02/03 internal review complete
+
+[Internal review](W2-D11-02-REVIEW.md) reproduced and fixed one P2 in the offline verifier: changing attempt fee metadata could produce a false envelope-fee summary. The verifier now binds fee/sequence/payer/key/target to the signed transaction, verifies its signature and successful receipt, and checks the receipt's own A-instance TTL state/update. Six corrupt copies fail and the original passes. Full pnpm check passed 470 tests with coverage; all raw RPC/screenshots are unchanged. No new chain operation or runtime change. Evidence remains on this branch, no PR yet; #103 stays open for publication/review, Fatih handles merge.
+
+## Completed live proof, evidence branch
+
+One Testnet transaction confirmed at ledger 4,626,423: `e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a`. A instance only, +1,000 requested, target 1,400,168. Expiry increased 6,025,589 → 6,026,591; the extra two ledgers are plan-read to inclusion delay. Fee ceiling 25,000; envelope maximum 15,073; actual charged 5,064 stroops, decoded from the raw receipt and matching explorer. Exactly one send; initial NOT_FOUND polls did not trigger another transaction. B/C instance/persistent and shared-code expiry controls (five keys) stayed unchanged.
+
+[Complete evidence](evidence/2026-09-12-manual-extend-proof/README.md): hash, full unedited RPC, actual explorer screenshot, before/after CLI screenshots and raw output, pre-send source/bundle identity, and offline verifier. Screenshot readiness and expected payer match were verified before send; no secret was printed or recorded. D11-01/02/03 meet their behavior/evidence criteria on this branch; #103 stays open for internal review/publication, #98 is superseded. Runtime was already merged in #86/#100; the new evidence is **not merged main**, and no new PR has been created.
+
+Full pre-send pnpm check passed 470 tests with coverage. Offline proof verification passed; three corrupted temporary copies (wrong expiry, changed control, missing screenshot) were rejected. Final evidence-tree pnpm check also passed 470 tests with coverage. All-ID presence: 146 registered / 147 mirror rows, no missing IDs; only retired Dropped ~~W3-D18-02~~ is extra. The actual private seed was checked absent from all 103 evidence files without printing it. Notion must copy this branch-qualified outcome. No further task or second transaction is started.
+
+## Earlier — W2-D11-02/03 proof preparation, 2026-09-12
+
+Rakha authorized execution of the approved plan. Preparing real screenshot capture and the bounded RPC recorder on existing branch `docs/W2-D11-02-live-proof-plan`. Explorer screenshot saving now works through CUA; a local read-only ttyd terminal will display a real CLI scan for capture. No secret read, signature or send at this point. Real ttyd scan screenshot and CUA explorer screenshot have both been saved and inspected. Private key presence and expected public payer match were verified without printing the secret. D11-02/03 are now In progress for the before-scan and controlled proof. Existing transaction bounds and #103 remain unchanged.
+
+## Earlier — synchronized main; W2-D11-02/03 plan
+
+Integrated `origin/main` at `c3ba97b` (#101) into the existing `docs/W2-D11-02-live-proof-plan` branch. Fatih merged #86, #88 and #97; #100 adds the B/C and shared-code write guard, #99 evaluates coverage in the canonical check, and #94 adds warning/critical tiers. Runtime files match this merged main. #102 remains OPEN at `06041e5c`: explicit dry-run, multi-contract CLI, automatic Notion mirroring and the W2 review are not imported into this branch.
+
+**Current ownership and state:** D11-01 remains In progress pending live behavior; D11-02 is Blocked only on verified evidence-capture readiness; D11-03 Pending. Primary coordination is [#103](https://github.com/Fatihmaull/evergreen/issues/103), with #98 retained as superseded context. The earlier #86 review dependency is resolved. Rakha's existing approval remains A instance only, +1,000 ledgers, maximum 25,000 stroops, own dev payer, at most one Testnet transaction. [Updated execution plan](W2-D11-02-LIVE-PROOF-PLAN.md). No secret read, signing or transaction during synchronization.
+
+**Plan clarification:** #103's advice to choose N greater than the current remaining TTL conflicts with the merged helper: N is added to current remaining, then capped at maxEntryTtl - 1. Keep +1,000; inspect fresh target, footprint and fee, and prove increased absolute expiry after confirmation. Fee magnitude alone cannot establish a no-op. No protected-key override is in scope, and the guard does not automatically expire on a date.
+
+**Tracking reconciliation:** D12-01/#88 and D12-02/#97 are now merged, including raw validation artifacts. W2-D14-02d's canonical pipeline is present on main, whose CI passed at `c3ba97b` (run 34628204489). #95/#89/#96 remain open coordination issues, not evidence of unmerged code. Removed main's duplicate Pending D12-02 row while retaining its completed row, matching the correction already proposed in #102. Notion notes were stale publication snapshots, not unsupported completion claims; mirror updates follow this repo record.
+
+**Validation:** full `pnpm check` passed: 434 Vitest + 36 Node = 470 tests, with coverage evaluated (93.88% statements, 88.69% branches, 93.75% functions, 95.67% lines). Runtime diff against origin/main is empty. All 19 preflight checksum entries passed unchanged. All-ID presence is 146 repo IDs / 147 Notion rows, no missing IDs; sole extra is intentionally retired Dropped ~~W3-D18-02~~. Sync metadata and the updated plan remain branch work until a later reviewed publication; Fatih handles PR merges.
+
+## Historical Sep 11 — W2-D11-02 execution readiness blocked
+
+Rakha approved the bounded A-instance proof (+1,000 ledgers, max 25,000 stroops, own public dev payer, at most one Testnet transaction). D11-02 is Blocked under [#98](https://github.com/Fatihmaull/evergreen/issues/98), assigned to and mentioning Fatih: #86 remains OPEN at `ccf7374` without formal review, and actual scan/explorer screenshot saving must be ready before send. In-app explorer screenshot display worked, but file persistence and terminal captures remain unverified. D11-03 stays Pending. No secret read, signing or transaction; Fatih handles merge. This readiness record is branch work, not merged main. All-ID presence verified: 146 repo IDs / 147 Notion rows, no missing IDs; the sole extra is the intentionally retired Dropped ~~W3-D18-02~~.
+
+## Earlier — W2-D11-02/03 live-proof planning
+
+**Concrete plan prepared:** [D11-02/03 request](W2-D11-02-LIVE-PROOF-PLAN.md) and [raw preflight](evidence/2026-09-11-live-proof-preflight/README.md). At ledger 4,619,313, A instance remaining 1,406,276 plus 1,000 resolved to 1,407,276; unsigned envelope fee 15,073 stroops, proposed cap 25,000. Real payer/sequence observed; one operation, one instance key, zero writable keys/signatures. Captured XDR is expired and must never be reused. Browser screenshot fallback worked through CUA after Chrome DevTools reported no executable; actual terminal before/after capture and image-file saving are still execution readiness items. #86 formal review and explicit live request approval remain pending. No secret read or transaction; D11-02 planning In progress, D11-03 Pending.
+
+Rakha requested a concrete next-task plan. D11-02 is In progress for planning/preflight only on `docs/W2-D11-02-live-proof-plan`, based on #86 at ccf7374. D11-03 remains Pending. Scope is A instance only, public Rakha payer, bounded fee and complete evidence; no secret read, signing or transaction. #86 still awaits Fatih formal review, and Fatih handles merge.
+
+## Earlier — W2-D11-01 implementation, 2026-09-10
 
 **Synchronization complete:** #86 and #88 are synchronized with main #93 (`96ebe2d`) independently, and their local combined tree passed 446 tests plus unchanged coverage thresholds. [Shared validation report](evidence/2026-09-10-pr-sync/README.md) records per-branch tests (D11 428, D12 376), actual CLI-only tarball installation, and the fresh-output pipeline proof. W2-D14-02d is verified on both branches; #95 remains open pending main integration. #89 remains the integration/review thread. No force-push, PR merge, live RPC or transaction. Final remote CI is checked on the newly pushed PR heads separately.
 

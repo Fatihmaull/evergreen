@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "--import",
+    "/home/rakhargo/projects/evergreen/docs/evidence/2026-09-12-manual-extend-proof/capture.mjs",
+    "/home/rakhargo/projects/evergreen/packages/cli/dist/evergreen.mjs",
+    "scan",
+    "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+  ],
+  "exitCode": 0,
+  "finishedAt": "2026-09-11T19:42:28.439730+00:00"
+}

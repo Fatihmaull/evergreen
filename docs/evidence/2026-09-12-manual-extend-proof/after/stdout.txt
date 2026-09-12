@@ -1,0 +1,31 @@
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,400,159 ledgers — live
+  ends at:    ledger 6,026,591
+  approx:     2026-12-01T20:22:23.415Z (estimate — ledgers are the truth)
+  observed:   ledger 4,626,432
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Whether others depend on this entry cannot be
+              determined from a single-contract scan — pass them together.
+  remaining:  664,397 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:53.415Z (estimate — ledgers are the truth)
+  observed:   ledger 4,626,432
+  health:     HEALTHY — Above threshold.
+
+! sharing-undetermined: Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+Scan is PARTIAL — 2 issue(s). Absence is not health.

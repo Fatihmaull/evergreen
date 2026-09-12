@@ -176,7 +176,7 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 
 | Date | Task | What it proves | Contract | Signer | Tx hash | JSON | Screenshot |
 |---|---|---|---|---|---|---|---|
-| | W2-D11-02 | first manual `extendTTL` succeeded | | dev key | | ⬜ | ⬜ |
+| 2026-09-12 | W2-D11-02 | manual CLI instance extension succeeded; expiry +1,002 ledgers | guinea-pig A instance | Rakha dev key | [e18e0822…](https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a) | [Full SUCCESS RPC](evidence/2026-09-12-manual-extend-proof/live/14-getTransaction-response.json) | [Screenshot](evidence/2026-09-12-manual-extend-proof/explorer.jpg) |
 | | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
 | | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
 | | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
@@ -270,7 +270,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | Date | Task | Shot | Link |
 |---|---|---|---|
 | 2026-09-08 | W1-D7-03 | working instance scan against Testnet; presentation of captured stdout | [Image and raw record](evidence/2026-09-08-w1-review/README.md#working-scan) |
-| | W2-D11-03 | TTL before/after a manual extend | |
+| 2026-09-12 | W2-D11-03 | TTL before/after a manual extend | [Before](evidence/2026-09-12-manual-extend-proof/before.jpg) · [After](evidence/2026-09-12-manual-extend-proof/after.jpg) |
 | | W2-D14-03 | CLI output (human + `--json`), coverage report | |
 | | W3-D17-03 | alert emails (success + failure) | |
 | | W3-D18-03 | engine run logs on the scheduler | |
@@ -313,3 +313,7 @@ The W1-D7-01 milestone exit-code checks record the implementation at capture tim
 ### W2-D8-04 — Unique ledger keys and known consumers (2026-09-09)
 
 [Read-only B/C evidence](evidence/2026-09-09-scan-dedup/README.md) captures input B, C, B at ledger 4,586,511 and returns two unique contracts, two instances and one shared code entry with both consumers. Entry requests contain 2 keys then 1 key, with no duplicate read. Raw requests/responses, compiled/source hashes, output and checksums are retained. Additional-data coverage remains unknown (health helper 3); no transaction or calibration change occurred. This is core API evidence, not a multi-contract CLI feature or a new drift run.
+
+## W2-D11-02 — controlled A-instance live extension (2026-09-12 Jakarta)
+
+Confirmed one Testnet transaction at 2026-09-11 19:41 UTC (2026-09-12 02:41 Asia/Jakarta): [`e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a`](https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a). A instance only; +1,000 requested, target 1,400,168, envelope fee 15,073 stroops (cap 25,000). CLI confirmed expiry 6,025,589 → 6,026,591. [Full unedited RPC responses](evidence/2026-09-12-manual-extend-proof/live/) and [CLI result](evidence/2026-09-12-manual-extend-proof/live-result.json) saved immediately. Completed artifacts: [explorer](evidence/2026-09-12-manual-extend-proof/explorer.jpg), [before scan](evidence/2026-09-12-manual-extend-proof/before.jpg), [after scan](evidence/2026-09-12-manual-extend-proof/after.jpg), [offline verification](evidence/2026-09-12-manual-extend-proof/verification.json). Actual charged fee decoded from raw resultXdr is 5,064 stroops (0.0005064 XLM); all five B/C/shared-code control expiries remained unchanged. [Full proof](evidence/2026-09-12-manual-extend-proof/README.md) is complete on this evidence branch, pending review/publication. No retry or second transaction.

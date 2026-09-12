@@ -1,0 +1,8 @@
+Mode: dry-run; requested increment: 1000; aggregate budget: 25000
+Selected instance AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+Known consumers: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Payer: GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB
+Prepared hash (not yet sent): 82bcd1b9d2073ae6876af8cc6dc9de3913c433e5f26f5d13cc38806c11be5584
+Before: ledger 4619313, live until 6025589
+Target remaining: 1407276; prepared fee cap: 15073 stroops
+Selected scope only. Code may have consumers outside this scan.

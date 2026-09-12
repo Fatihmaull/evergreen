@@ -1,0 +1,73 @@
+{
+  "plan": {
+    "contractId": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+    "additionalLedgers": 1000,
+    "entries": [
+      {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "kind": "instance",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "before": {
+          "observedAtLedger": 4619313,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1407276,
+        "wasCapped": false,
+        "skip": false
+      }
+    ],
+    "warnings": [
+      "Only selected keys are extended; storage is not enumerated and whole-contract protection is not established."
+    ]
+  },
+  "result": {
+    "ok": true,
+    "mode": "dry-run",
+    "records": [
+      {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "payer": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+        "before": {
+          "observedAtLedger": 4619313,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1407276,
+        "recordedAt": "2026-09-11T09:49:14.973Z",
+        "reason": "Explicit manual extension",
+        "mode": "dry-run",
+        "outcome": "simulated"
+      }
+    ],
+    "skipped": [],
+    "unattempted": [],
+    "committedFeeStroops": "0"
+  },
+  "previews": [
+    {
+      "entry": {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "kind": "instance",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "before": {
+          "observedAtLedger": 4619313,
+          "endsAtLedger": 6025589
+        },
+        "extendToLedgers": 1407276,
+        "wasCapped": false,
+        "skip": false
+      },
+      "sourceAccount": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+      "transactionXdr": "AAAAAgAAAACJSE5n7urHY8lt5ezYx6CC/3EutnKEJkLy4LCyBjVRVwAAOuEARPWvAAAABQAAAAEAAAAAAAAAAAAAAABqo87XAAAAAAAAAAEAAAAAAAAAGQAAAAAAFXksAAAAAQAAAAAAAAABAAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAADp9AAAAAA==",
+      "transactionHash": "82bcd1b9d2073ae6876af8cc6dc9de3913c433e5f26f5d13cc38806c11be5584",
+      "feeStroops": "15073",
+      "simulatedAtLedger": 4619313
+    }
+  ]
+}
