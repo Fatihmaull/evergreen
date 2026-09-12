@@ -1,0 +1,2 @@
+Unknown or repeated argument.
+usage: evergreen scan <contract-id> [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]

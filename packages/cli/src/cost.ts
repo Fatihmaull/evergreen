@@ -101,7 +101,20 @@ export function formatCost(cost: CostLine): string[] {
     lines.push('    the capped extension, not the request.');
   }
   lines.push('');
-  lines.push('  Targets are computed from TTL read now; the ledger advances before submission,');
-  lines.push('  so the achieved remaining TTL lands a few ledgers under the target.');
+  // NAME THE QUANTITY. Both of these are true and they move in OPPOSITE
+  // directions, so a sentence that says only "under the target" reads as a
+  // contradiction of the receipt. Measured on the live proof 2026-09-12:
+  // `--ledgers 1000` produced +1,002 on absolute expiry.
+  //
+  //   remaining TTL, measured later  -> a few ledgers UNDER the target
+  //   absolute expiry, at inclusion  -> a few ledgers OVER the request
+  //
+  // Same shape as the alertThresholdOn/expiresOn collision one week earlier:
+  // one phrase covering two quantities. A user comparing the promise to the
+  // result would conclude one of them is a bug, and be right to.
+  lines.push('  Targets are computed from TTL read now, and the ledger advances before');
+  lines.push('  submission. Two consequences, in opposite directions:');
+  lines.push('    · REMAINING TTL, measured after inclusion, lands a few ledgers UNDER target');
+  lines.push('    · ABSOLUTE EXPIRY moves a few ledgers PAST the request (+N plus the gap)');
   return lines;
 }
