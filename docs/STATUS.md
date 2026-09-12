@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · W3-D15-04 correction implemented and verified; internal review next
+**Last updated:** 2026-09-12 · W3-D15-04 internal review complete; publication next
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 engine correction**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-04 implemented; awaiting internal review
+## Current — W3-D15-04 internal review complete; ready for publication
+
+[Review report](W3-D15-04-REVIEW.md): review of 79e9124 found two P2 issues, both reproduced and fixed in 73a9050. Repeated contract registrations no longer discard prior payer/target/threshold policies; consistent duplicates still work. Liveness now reports deleted temporary data as non-restorable while preserving restore guidance for archived entries. No blocking findings remain in the reviewed correction scope.
+
+Full pnpm check passed 575 tests (497 Vitest + 78 Node), unchanged coverage gates. Focused suite passed 75 tests. Reintroducing last-row policy selection fails four review tests; unconditional restore fails one. The current compiled engine exactly replayed the existing read-only A snapshots without a network call. No new transaction, seed access, scheduler action, PR or merge. W3-D15-04 is Done for verified branch implementation; publication is the next checkpoint and Fatih still handles review/merge. Issue #119 stays open. Notion read-back confirms Done/Rakha with the branch-qualified outcome. Full presence diff: 149 registered IDs / 150 mirror rows, no missing or duplicate IDs; sole extra is the known retired Dropped predecessor.
+
+## Earlier — W3-D15-04 implemented; awaiting internal review
 
 [Implementation report](W3-D15-04-IMPLEMENTATION.md), [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119). The existing core engine now preserves remaining-TTL targets using an observed network ceiling, refuses expired candidates, requires shared payer/target agreement, and uses one effective threshold map for decisions and liveness. Guard refusals stay recorded skips; no second engine or workflow change. W3-D15-04 remains In progress until internal review/publication checkpoints; Fatih's existing task ownership is unchanged.
 

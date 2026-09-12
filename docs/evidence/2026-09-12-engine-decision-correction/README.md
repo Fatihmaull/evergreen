@@ -62,3 +62,15 @@ restored and all 69 focused engine/liveness/agreement tests passed.
 Full `pnpm check` passed with 491 Vitest + 78 Node = **569 tests**. Coverage was
 94.42% statements, 89.16% branches, 94.52% functions, 95.95% lines. Final checks
 are recorded in the implementation report if later tests change these totals.
+
+
+## Internal review follow-up
+
+The initial live capture above remains unchanged. Review of 79e9124 reproduced
+repeated-registration policy loss and incorrect restore guidance for deleted
+temporary data; 73a9050 fixes both. Six review cases bring engine-regression tests
+to 30. Final full check passes **575 tests (497 Vitest + 78 Node)**. The two
+additional [review mutation checks](review-mutation-checks.json) fail as expected.
+The review build replayed all three saved reader responses and produced a result
+identical to result.json, without reaching the network. See the
+[review report](../../W3-D15-04-REVIEW.md) for scope and final coverage.

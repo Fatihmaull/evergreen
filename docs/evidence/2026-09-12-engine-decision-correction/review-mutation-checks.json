@@ -1,0 +1,20 @@
+[
+  {
+    "mutation": "duplicate-last-row",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  4 failed | 2 passed | 24 skipped (30)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 4 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "temporary-restore",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  1 failed | 29 skipped (30)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 # W3-D15-04 — correct the existing engine decision contract
 
-Status: implementation prepared for Rakha's internal review; no PR or merge yet.
+Status: internal review complete; two findings fixed in 73a9050. Ready for publication; no PR or merge yet. See [review](W3-D15-04-REVIEW.md).
 Tracking: [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119).
 Base: main cc0fb16. Branch: `fix/W3-D15-04-engine-decisions`.
 
@@ -16,7 +16,7 @@ Fatih's merged work; D15-04 is the separately owned correction.
 | Config target 518400 became 535680 at remainder 17280 | Config target stays 518400. The adapter derives the delta and reuses resolveExtendTarget. |
 | Ceiling was Number.MAX_SAFE_INTEGER | runEngine reads and parses the STATE_ARCHIVAL config via its existing reader; no executable target without a valid observed ceiling. |
 | Expired instance got extend | Expired entries skip; zero remains live and can extend. |
-| Shared key selected the first payer | All known consumers must resolve and agree on payer and target. Conflicts skip; a common policy still permits one decision with every consumer retained. |
+| Shared key selected the first payer | All known consumers and repeated registrations must resolve and agree on payer and target. Conflicts skip; a common policy still permits one decision with every consumer retained. |
 | Override affected decisions but not liveness | One internal pass resolves effective thresholds per key and passes the same map to assertLiveness. Both higher and lower overrides are covered. |
 
 For a shared key, the highest consumer action threshold applies. This is a trigger
@@ -50,13 +50,13 @@ records 24 regression cases, five mutation checks, full test results and read-on
 A observations. The built script returned exit 0 for normal A monitoring and
 exit 1 for an override that needs action but has not performed it.
 
-Full pnpm check passed 569 tests (491 Vitest + 78 Node); no coverage thresholds
-were lowered. Engine coverage: 97.56% statements, 88.67% branches, 100% functions,
-98.59% lines. No signing, submission, protected override or transaction artifact.
+Full pnpm check after review passed 575 tests (497 Vitest + 78 Node); no coverage thresholds
+were lowered. Engine coverage: 97.64% statements, 91.22% branches, 100% functions,
+98.68% lines. No signing, submission, protected override or transaction artifact.
 
 ## Next boundary
 
-Rakha reviews this implementation before PR publication. D16 must consume the
+Internal review findings are resolved; PR publication is the next checkpoint. D16 must consume the
 corrected target and resolved payer, re-check guard immediately before prepare,
 and require its own explicit live opt-in. For a later A proof with a raised
 threshold, the requested target must also be above that threshold; the existing
