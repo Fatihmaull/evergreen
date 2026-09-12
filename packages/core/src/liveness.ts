@@ -164,17 +164,20 @@ export function assertLiveness(args: {
   readonly thresholds: Pick<BumpThresholds, 'bumpWhenRemainingLedgersBelow'>;
   /** Every record this run produced. An empty array is the silent-run case. */
   readonly records: readonly BumpRecord[];
-  /**
-   * Decisions this run made. Optional: without them a deliberate skip is
-   * indistinguishable from nothing happening, and both alarm as critical
-   * anyway. Supplying them only buys a more honest message.
-   */
-  readonly decisions?: readonly BumpDecision[];
+  /** Every real caller supplies decisions, even when there were none. */
+  readonly decisions: readonly BumpDecision[];
+  /** The decision pass's effective threshold per key; global is the fallback. */
+  readonly actionThresholdByEntry?: Readonly<Record<LedgerKey, number>>;
 }): LivenessVerdict {
   const { scan, records } = args;
   const threshold = args.thresholds.bumpWhenRemainingLedgersBelow;
   if (!isValidThreshold(threshold)) {
     throw new Error('bumpWhenRemainingLedgersBelow must be a non-negative integer of ledgers');
+  }
+
+  for (const value of Object.values(args.actionThresholdByEntry ?? {})) {
+    if (!isValidThreshold(value))
+      throw new Error('Entry action thresholds must be non-negative integer ledgers');
   }
 
   const byEntry = new Map<LedgerKey, BumpRecord[]>();
@@ -184,7 +187,7 @@ export function assertLiveness(args: {
     else byEntry.set(record.entryKey, [record]);
   }
   const skips = new Map<LedgerKey, string>();
-  for (const decision of args.decisions ?? []) {
+  for (const decision of args.decisions) {
     if (decision.action === 'skip') skips.set(decision.entryKey, decision.reason);
   }
 
@@ -207,7 +210,8 @@ export function assertLiveness(args: {
     }
 
     const { remainingLedgers } = entry.ttl;
-    if (!needsAction(remainingLedgers, threshold)) continue;
+    if (!needsAction(remainingLedgers, args.actionThresholdByEntry?.[entryKey] ?? threshold))
+      continue;
 
     const forEntry = byEntry.get(entryKey) ?? [];
     if (forEntry.some(confirmedBump)) continue;

@@ -1,15 +1,18 @@
 import type {
   BumpDecision,
-  ContractId,
   EvergreenConfig,
   LedgerKey,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { needsAction } from './ttl.js';
+import { hasExpired, needsAction } from './ttl.js';
 import { assessEntry } from './health.js';
 import { assertLiveness, type LivenessVerdict } from './liveness.js';
 import { ProtectedEntryError, assertWriteAllowed } from './write-guard.js';
-import { resolveExtendTarget } from './network-config.js';
+import {
+  STATE_ARCHIVAL_CONFIG_KEY,
+  parseStateArchivalSettings,
+  resolveExtendTarget,
+} from './network-config.js';
 import { scanContracts } from './scan-contract.js';
 import { coverageIssues } from './health.js';
 import type { LedgerEntryReader } from './rpc.js';
@@ -41,104 +44,133 @@ export interface EngineRun {
   readonly mode: 'dry-run';
 }
 
-/** Contracts the caller told us about, keyed by entry, as a floor not a census. */
-function consumersOf(scan: ScanResult, entryKey: LedgerKey): readonly ContractId[] {
-  return scan.entries[entryKey]?.contracts ?? [];
+/** One resolution is shared by the decision pass and the liveness assertion. */
+interface DecisionPass {
+  readonly decisions: readonly BumpDecision[];
+  readonly actionThresholdByEntry: Readonly<Record<LedgerKey, number>>;
 }
 
-/**
- * Pure. No network, no clock, no config file — so `W3-D15-03` can exercise
- * every branch against fixtures.
- */
-export function decideBumps(scan: ScanResult, config: EvergreenConfig): readonly BumpDecision[] {
+/** Pure preview. Without an observed ceiling, due entries refuse to plan a target. */
+export function decideBumps(
+  scan: ScanResult,
+  config: EvergreenConfig,
+  maxEntryTtl?: number,
+): readonly BumpDecision[] {
+  return evaluateBumps(scan, config, maxEntryTtl).decisions;
+}
+
+function evaluateBumps(
+  scan: ScanResult,
+  config: EvergreenConfig,
+  maxEntryTtl: number | undefined,
+): DecisionPass {
   const decisions: BumpDecision[] = [];
+  const actionThresholdByEntry: Record<LedgerKey, number> = {};
   const byContract = new Map(config.contracts.map((c) => [c.id, c]));
 
   for (const [entryKey, entry] of Object.entries(scan.entries)) {
-    const consumers = consumersOf(scan, entryKey as LedgerKey);
-    // The first configured consumer owns the decision. A shared code entry can
-    // have several; picking one deterministically beats emitting duplicates for
-    // the same ledger key, which is the within-run idempotency case W3-D16-02b
-    // covers on the execution side.
-    const owner = consumers.map((id) => byContract.get(id)).find((c) => c !== undefined);
-    if (!owner) continue;
-
-    const thresholds = { ...config.defaults, ...(owner.thresholds ?? {}) };
-    const assessment = assessEntry(entry, thresholds.bumpWhenRemainingLedgersBelow);
-
+    const consumers = entry.contracts;
+    const registrations = consumers.map((id) => byContract.get(id));
+    const configured = registrations.filter((c) => c !== undefined);
+    if (configured.length === 0) continue;
+    const policies = configured.map((c) => ({ ...config.defaults, ...c.thresholds }));
+    const actionThreshold = Math.max(...policies.map((p) => p.bumpWhenRemainingLedgersBelow));
+    actionThresholdByEntry[entryKey] = actionThreshold;
+    const skip = (reason: string): void => {
+      decisions.push({ action: 'skip', entryKey, contracts: consumers, reason });
+    };
     if (entry.ttl.status === 'unavailable') {
-      decisions.push({
-        action: 'skip',
-        entryKey: entryKey as LedgerKey,
-        contracts: consumers,
-        reason: 'TTL could not be read. Unknown is not healthy — investigate rather than extend.',
-      });
+      skip('TTL could not be read. Unknown is not healthy — investigate rather than extend.');
+      continue;
+    }
+    const { remainingLedgers } = entry.ttl;
+    if (!needsAction(remainingLedgers, actionThreshold)) {
+      skip(`Above threshold: ${remainingLedgers.toLocaleString()} ledgers remaining.`);
       continue;
     }
 
-    // CALLS the shared predicate. Never restates it: a longhand copy of this
-    // comparison is what made the engine and CI disagree at exactly the
-    // threshold on 2026-09-10.
-    if (!needsAction(entry.ttl.remainingLedgers, thresholds.bumpWhenRemainingLedgersBelow)) {
-      decisions.push({
-        action: 'skip',
-        entryKey: entryKey as LedgerKey,
-        contracts: consumers,
-        reason: `Above threshold: ${entry.ttl.remainingLedgers.toLocaleString()} ledgers remaining.`,
-      });
-      continue;
-    }
-
-    // 🔴 THE GUARD, BEFORE ANYTHING IS PLANNED.
-    //
-    // Recorded as a skip, not thrown. One protected subject must not abort the
-    // run: the other contracts in the config still need deciding, and a crash
-    // here would take the alert down with it — silence at exactly the moment
-    // the engine is doing the most interesting thing it will ever do.
+    // Preserve refusals as decisions, before payer selection or target planning.
+    // The full scan lets the guard check every consumer, including shared keys.
+    const first = configured[0]!;
     try {
-      assertWriteAllowed({
-        contractId: owner.id,
-        entryKeys: [entryKey as LedgerKey],
-        scan,
-      });
+      assertWriteAllowed({ contractId: first.id, entryKeys: [entryKey], scan });
     } catch (error) {
       if (!(error instanceof ProtectedEntryError)) throw error;
-      decisions.push({
-        action: 'skip',
-        entryKey: entryKey as LedgerKey,
-        contracts: consumers,
-        reason: `REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`,
-      });
+      skip(`REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`);
       continue;
     }
-
+    if (hasExpired(remainingLedgers)) {
+      skip(
+        entry.endBehavior === 'deleted'
+          ? 'Expired temporary entry cannot be extended or restored.'
+          : 'Expired entry requires restoration, not extendTTL.',
+      );
+      continue;
+    }
+    if (
+      configured.length !== registrations.length ||
+      configured.some((c) => !Object.hasOwn(config.payers, c.payer))
+    ) {
+      skip('Unresolved payer policy for a consumer of this entry.');
+      continue;
+    }
+    if (configured.some((c) => c.payer !== first.payer)) {
+      skip('Conflicting payer policies for a shared entry; no payer was selected.');
+      continue;
+    }
+    const requestedTarget = policies[0]!.extendToLedgers;
+    if (policies.some((p) => p.extendToLedgers !== requestedTarget)) {
+      skip('Conflicting target policies for a shared entry; no target was selected.');
+      continue;
+    }
+    if (
+      !Number.isSafeInteger(requestedTarget) ||
+      requestedTarget <= 0 ||
+      needsAction(requestedTarget, actionThreshold) ||
+      needsAction(requestedTarget, remainingLedgers)
+    ) {
+      skip('Configured target must increase TTL and clear the action threshold.');
+      continue;
+    }
+    if (
+      maxEntryTtl === undefined ||
+      !Number.isSafeInteger(maxEntryTtl) ||
+      maxEntryTtl <= 0 ||
+      maxEntryTtl > 0xffff_ffff
+    ) {
+      skip('No valid observed network TTL ceiling; target planning refused.');
+      continue;
+    }
     const target = resolveExtendTarget({
-      currentRemainingLedgers: entry.ttl.remainingLedgers,
-      additionalLedgers: thresholds.extendToLedgers,
-      maxEntryTtl: Number.MAX_SAFE_INTEGER,
+      currentRemainingLedgers: remainingLedgers,
+      additionalLedgers: requestedTarget - remainingLedgers,
+      maxEntryTtl,
     });
-
+    if (
+      needsAction(target.extendToLedgers, actionThreshold) ||
+      needsAction(target.extendToLedgers, remainingLedgers)
+    ) {
+      skip('Network-capped target cannot increase TTL and clear the action threshold.');
+      continue;
+    }
+    const assessment = assessEntry(entry, actionThreshold);
     decisions.push({
       action: 'extend',
-      entryKey: entryKey as LedgerKey,
+      entryKey,
       contracts: consumers,
-      payer: owner.payer,
+      payer: first.payer,
       extendToLedgers: target.extendToLedgers,
-      reason: `${assessment.health.toUpperCase()} — ${assessment.reason}`,
+      reason:
+        `${assessment.health.toUpperCase()} — ${assessment.reason}` +
+        (target.wasCapped
+          ? ` Target capped to ${target.extendToLedgers} by the network ceiling.`
+          : ''),
     });
   }
-
-  return decisions;
+  return { decisions, actionThresholdByEntry };
 }
 
-/**
- * Read config, scan every registered contract, decide. Dry-run always.
- *
- * `assertLiveness` runs over the decisions so a run that acted on nothing says
- * WHY it acted on nothing — a deliberate skip and a broken run look identical
- * from the outside otherwise, and that is the failure this project keeps
- * catching everywhere else.
- */
+/** Read config, scan registered contracts, decide, assert liveness. Never execute. */
 export async function runEngine(
   reader: LedgerEntryReader,
   config: EvergreenConfig,
@@ -152,10 +184,35 @@ export async function runEngine(
     })),
   );
   const scan = { ...scanned, issues: [...scanned.issues, ...coverageIssues(scanned)] };
-  const decisions = decideBumps(scan, config);
+  let maxEntryTtl: number | undefined;
+  if (Object.keys(scan.entries).length > 0) {
+    try {
+      const response = await reader.read([STATE_ARCHIVAL_CONFIG_KEY]);
+      const entry = response.entries.find((e) => e.key === STATE_ARCHIVAL_CONFIG_KEY);
+      if (!entry?.entryXdr) throw new Error('Missing settings');
+      const settings = parseStateArchivalSettings(entry.entryXdr, response.latestLedger);
+      if (
+        !Number.isSafeInteger(settings.maxEntryTtl) ||
+        settings.maxEntryTtl <= 0 ||
+        settings.maxEntryTtl > 0xffff_ffff
+      )
+        throw new Error('Invalid settings');
+      maxEntryTtl = settings.maxEntryTtl;
+    } catch {
+      // No raw RPC error or URL: the reader can carry credentials in diagnostics.
+      scan.issues.push({
+        kind: 'rpc-error',
+        contracts: scan.contracts.map((c) => c.id),
+        message:
+          'Could not read valid state-archival settings; no extension target can be planned.',
+      });
+    }
+  }
+  const { decisions, actionThresholdByEntry } = evaluateBumps(scan, config, maxEntryTtl);
   const liveness = assertLiveness({
     scan,
     thresholds: { bumpWhenRemainingLedgersBelow: config.defaults.bumpWhenRemainingLedgersBelow },
+    actionThresholdByEntry,
     records: [],
     decisions,
   });
