@@ -25,8 +25,21 @@
  */
 export const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+`;
 
-/** A checkbox row in `BACKLOG.md`, with its optional `(F)`/`(R)`/`(S)` owner. */
-export const ROW = new RegExp(String.raw`^- \[(.)\] \*\*(${ID})\*\*\s*(?:\((.)\))?`, 'gm');
+/**
+ * A checkbox row in `BACKLOG.md`, with its optional `(F)`/`(R)`/`(S)` owner.
+ *
+ * The owner group captures the LEADING character and tolerates an annotation
+ * after it, because ownership transfers are written `(F, was R)`. The previous
+ * `\((.)\)` required exactly one character, so those rows matched with NO owner
+ * at all — and they are precisely the rows where ownership CHANGED, which is
+ * the one case the mirror most needs corrected. Found by Rakha reviewing #102
+ * against the real `W2-D9-01` and `W2-D9-02` rows.
+ *
+ * A genuinely absent owner still parses as absent: `OWNER[...]` returns
+ * undefined for anything that is not F/R/S, and `planSync` never clears an
+ * owner it cannot read.
+ */
+export const ROW = new RegExp(String.raw`^- \[(.)\] \*\*(${ID})\*\*\s*(?:\((.)[^)]*\))?`, 'gm');
 
 /**
  * Anything that OCCUPIES a checkbox row's ID slot, well-formed or not.

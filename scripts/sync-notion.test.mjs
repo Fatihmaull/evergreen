@@ -69,3 +69,85 @@ test('recurringIds finds the standing obligation in the real backlog', () => {
   const backlog = readFileSync('BACKLOG.md', 'utf8');
   assert.ok(recurringIds(backlog).includes('W1-D4-09'));
 });
+
+// ── PR #102 review findings (Rakha, 2026-09-12) ──────────────────────────────
+
+test('an ownership-transfer annotation still yields an owner', () => {
+  // `(F, was R)` is written on rows where ownership MOVED — the one case the
+  // mirror most needs corrected. The old `\((.)\)` required exactly one
+  // character, so those rows parsed with no owner and planSync emitted nothing.
+  const rows = parseBacklog(
+    '- [x] **W2-D9-01** (F, was R) something\n- [x] **W2-D9-02** (F, was R) something\n',
+  );
+  assert.deepEqual(
+    rows.map((r) => r.owner),
+    ['Fatih', 'Fatih'],
+  );
+});
+
+test('a genuinely absent owner is still absent, not invented', () => {
+  const [row] = parseBacklog('- [ ] **W1-D1-01** no owner here\n');
+  assert.equal(row.owner, undefined);
+});
+
+test('an annotation that is not an owner does not become one', () => {
+  const [row] = parseBacklog('- [ ] **W1-D1-01** (P1) priority, not a person\n');
+  assert.equal(row.owner, undefined);
+});
+
+test('the real backlog has no row whose owner failed to parse', () => {
+  // Guards the live file, not a fixture: this is how the two W2-D9 rows hid.
+  const rows = parseBacklog(readFileSync('BACKLOG.md', 'utf8'));
+  assert.deepEqual(
+    rows.filter((r) => !r.owner).map((r) => r.id),
+    [],
+  );
+});
+
+test('two mirror pages with one task ID are refused, not collapsed', () => {
+  // A Map keeps the LAST, so the other page was never compared, never written
+  // and never mentioned — a clean run over a row diverging forever. This is the
+  // mirror-side twin of the duplicate check already enforced on BACKLOG.md.
+  const { changes, ambiguous } = planSync(
+    [{ id: 'W1-D1-01', status: 'Done', owner: 'Fatih' }],
+    [row('W1-D1-01', 'Pending', 'Fatih', 'page-AAA'), row('W1-D1-01', 'Done', 'Fatih', 'page-BBB')],
+    [],
+  );
+  assert.deepEqual(changes, [], 'writing to one of two candidate pages is the papering-over');
+  assert.deepEqual(ambiguous, [{ id: 'W1-D1-01', pageIds: ['page-AAA', 'page-BBB'] }]);
+});
+
+test('an ambiguous ID names every page, so a person can delete the right one', () => {
+  const { ambiguous } = planSync(
+    [],
+    [
+      row('X-1', 'Done', 'Fatih', 'p1'),
+      row('X-1', 'Done', 'Fatih', 'p2'),
+      row('X-1', 'Done', 'Fatih', 'p3'),
+    ],
+    ['X-1'],
+  );
+  assert.deepEqual(ambiguous[0].pageIds, ['p1', 'p2', 'p3']);
+});
+
+test('one ambiguous row does not strand every other row', () => {
+  // 145 correct rows must still sync. Blocking everything on one bad row trades
+  // a small visible problem for a large invisible one.
+  const { changes, ambiguous } = planSync(
+    [
+      { id: 'W1-D1-01', status: 'Done', owner: 'Fatih' },
+      { id: 'W1-D1-02', status: 'Done', owner: 'Fatih' },
+    ],
+    [
+      row('W1-D1-01', 'Pending', 'Fatih', 'pA'),
+      row('W1-D1-01', 'Pending', 'Fatih', 'pB'),
+      row('W1-D1-02', 'Pending', 'Fatih', 'pC'),
+    ],
+    [],
+  );
+  assert.equal(ambiguous.length, 1);
+  assert.deepEqual(
+    changes.map((c) => c.id),
+    ['W1-D1-02'],
+  );
+});

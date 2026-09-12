@@ -105,10 +105,35 @@ export function parseBacklog(text) {
  * reported and deliberately left alone — see the header.
  */
 export function planSync(backlogRows, notionRows, standingIds = []) {
-  const byId = new Map(notionRows.map((r) => [r.id, r]));
+  // Two mirror pages carrying the same task ID used to collapse into one: a
+  // `Map` keeps the LAST, so the other page was never compared, never written,
+  // and never mentioned. The run reported clean while a stale row diverged
+  // forever. Found by Rakha reviewing #102.
+  //
+  // This is the mirror-side twin of the duplicate check already enforced on
+  // `BACKLOG.md`, and its absence was an ASYMMETRY: one side of a two-way
+  // reconciliation was guarded and the other was not.
+  //
+  // Ambiguous IDs are excluded from `changes` — writing to one of two candidate
+  // pages is exactly the papering-over this script exists to refuse — and
+  // reported with both page IDs so a person can delete the right one. Every
+  // unambiguous row still syncs; one bad row must not strand the other 145.
+  const seen = new Map();
+  const ambiguous = new Map();
+  for (const r of notionRows) {
+    if (seen.has(r.id)) {
+      const pages = ambiguous.get(r.id) ?? [seen.get(r.id).pageId];
+      pages.push(r.pageId);
+      ambiguous.set(r.id, pages);
+    } else {
+      seen.set(r.id, r);
+    }
+  }
+  const byId = seen;
   const changes = [];
   const missing = [];
   for (const row of backlogRows) {
+    if (ambiguous.has(row.id)) continue;
     const remote = byId.get(row.id);
     if (!remote) {
       missing.push(row.id);
@@ -127,8 +152,15 @@ export function planSync(backlogRows, notionRows, standingIds = []) {
   // phantoms nor rows this script has any status to write. Recognised and left
   // entirely alone — the mirror's own value for them is the human's.
   const known = new Set([...backlogRows.map((r) => r.id), ...standingIds]);
-  const phantom = notionRows.filter((r) => !known.has(r.id)).map((r) => r.id);
-  return { changes, missing, phantom };
+  const phantom = [...new Set(notionRows.filter((r) => !known.has(r.id)).map((r) => r.id))].filter(
+    (id) => !ambiguous.has(id),
+  );
+  return {
+    changes,
+    missing,
+    phantom,
+    ambiguous: [...ambiguous].map(([id, pageIds]) => ({ id, pageIds })),
+  };
 }
 
 /** Notion rejections report a status and a stable `code`, never a raw body. */
@@ -227,7 +259,7 @@ async function main() {
   }
 
   const mirror = await readMirror();
-  const { changes, missing, phantom } = planSync(rows, mirror, recurringIds(backlog));
+  const { changes, missing, phantom, ambiguous } = planSync(rows, mirror, recurringIds(backlog));
   console.log(`\n✓ read ${mirror.length} rows from the Notion mirror`);
 
   for (const c of changes) {
@@ -240,6 +272,11 @@ async function main() {
     console.log(`\n  ⚠ ${missing.length} in BACKLOG.md with no Notion row: ${missing.join(', ')}`);
   if (phantom.length > 0)
     console.log(`  ⚠ ${phantom.length} in Notion with no BACKLOG.md row: ${phantom.join(', ')}`);
+  for (const a of ambiguous)
+    console.error(
+      `  ✖ ${a.id} appears on ${a.pageIds.length} Notion pages: ${a.pageIds.join(', ')}\n` +
+        '    Not written — the target is ambiguous. Delete the duplicate page in Notion.',
+    );
   if (missing.length > 0 || phantom.length > 0)
     console.log(
       '  Neither is created or deleted here — both need a person to say which side is wrong.',
@@ -259,6 +296,7 @@ async function main() {
     await notion(`pages/${c.pageId}`, { method: 'PATCH', body: JSON.stringify({ properties }) });
   }
   console.log(`\n✓ applied ${changes.length} row update(s). Status and Owner only.`);
+  if (ambiguous.length > 0) process.exit(1);
 }
 
 // Importable for tests without running the sync.

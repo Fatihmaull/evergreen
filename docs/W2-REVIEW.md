@@ -11,7 +11,9 @@ engine, dashboard or publication deliverables complete.
 ## Review basis
 
 - Merged baseline: `main` at `c3ba97b`, 26 PRs merged Sep 10–12 (#72–#101).
-- **W2: 26 tasks — 18 done, 3 pending, 3 in progress, 1 blocked, 2 dropped.**
+- **W2: 27 tasks — 20 done, 2 in progress, 1 blocked, 2 pending, 2 dropped.**
+  *(Recounted 2026-09-14. This first read "26 tasks — 18 done, 3 pending, 3 in progress, 1 blocked, 2 dropped": a total that was stale before `W2-D10-01c` was added, and a breakdown summing to 27 against a stated 26. Caught by Rakha reviewing #102 — **arithmetic on a quantity again, this time pointed at me**. The counts here are now produced by counting, not by editing the previous number.)*
+- **After #105 and #102 both merge, W2 closes at 23/27**: `W2-D11-01/02/03` all Done, leaving one in progress (`W2-D10-04`, engine wiring, which is `W3-D15-01`), one pending (`W2-D14-02c`, moved to Week 4 by decision, with a date) and two dropped by decision.
 - W1 remains 50/50. Backlog total 146 tasks.
 - Evidence: [snapshot #2](evidence/2026-09-12-w2-review/README.md), captured by
   running the commands at ledger ~4,625,132.
@@ -109,27 +111,74 @@ printed *"Extension preparation failed. Check Testnet RPC…"* — sending an
 operator to debug their network while the real message was that this write would
 spend an unrepeatable proof. A safety event wearing a generic failure.
 
-## ⛔ What is not done
+## ✅ Closed after this report was first written
 
-**`W2-D11-02` — the live `extendTTL` transaction.** Required SOW evidence for
-Deliverable 2. The CLI merged (#86) and the unsigned simulation passed, but **no
-live transaction has ever run.** It needs a signing key, so it is Rakha's:
-[#103](https://github.com/Fatihmaull/evergreen/issues/103). `W2-D11-01` stays In
-progress until live behaviour is proved, which is correct rather than pessimistic.
+**The two items below were open at the Sep 12 snapshot and both closed on Sep 14.
+The original text is kept rather than rewritten**, because a review that quietly
+edits its own findings into successes stops being a record of what was true when.
 
-**`W2-D14-02b` — the publish rehearsal**, reopened. It passed while testing the
-wrong thing: all three tarballs were installed together, so the CLI's `core@0.0.0`
-resolved from a **sibling file on disk** rather than the registry. A stranger has
-no such file. Closed as a class by bundling one package with `core` and
-`shared-types` permanently `private: true`.
+### `W2-D11-02/03` — the live transaction, now run
+
+*As written Sep 12:* "Required SOW evidence for Deliverable 2. The CLI merged
+(#86) and the unsigned simulation passed, but **no live transaction has ever
+run.**"
+
+**Run by Rakha on Sep 11 UTC and published in
+[#105](https://github.com/Fatihmaull/evergreen/pull/105).** One controlled
+A-instance extension, `+1,000` requested:
+
+```
+tx  e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a
+    ledger 4,626,423 · expiry 6,025,589 -> 6,026,591 · fee 5,064 stroops
+    exactly one send · B, C and the shared code entry unchanged
+```
+
+Verified here **against the chain rather than against the PR body**: A's
+instance reads 6,026,591, and B (4,793,687), C (4,880,097) and the shared code
+entry (5,290,829, still 3 consumers) are untouched. The unrepeatable proofs
+survived their first contact with live write code.
+
+The `+1,002` is not drift in the tool: the target is computed from a read at
+ledger L₀ and applied at inclusion L₁, so the result is `N + (L₁ − L₀)`. Two
+ledgers elapsed. **Deliverable 2 evidence now exists.**
+
+### `W2-D14-02b` — the publish rehearsal, now conclusive
+
+*As written Sep 12:* "reopened. It passed while testing the wrong thing: all
+three tarballs were installed together, so the CLI's `core@0.0.0` resolved from
+a **sibling file on disk** rather than the registry."
+
+**Re-run Sep 14 in the conclusive configuration** — CLI tarball alone, fresh
+directory outside the repo, clean dedicated cache, no siblings, no workspace
+above it ([record](evidence/2026-09-14-pack-rehearsal/README.md)). The decisive
+result is an absence: `node_modules/@evergreen-stellar/` contains **only `cli`**.
+Zero `workspace:*` literals anywhere in the tarball.
+
+### One observation, not two
+
+From that stranger install — a binary on a machine that never saw this
+repository — `evergreen scan` reports A's instance ending at ledger
+**6,026,591**.
+
+That is **Deliverable 1's packaging and Deliverable 2's transaction confirmed in
+a single observation**, by the exact path a reviewer would take: install from the
+registry artefact, run the command, read the chain. Neither claim is taken on
+trust from this repository.
+
+## ⛔ What is still not done
 
 **`W2-D10-04` — engine wiring.** The decision rule landed with 18 tests; the
-engine loop is `W3-D15-01`.
+engine loop is `W3-D15-01`, and it is Week 3 work rather than Week 2 debt.
 
-**`W2-D10-01c` — the CLI cannot follow its own advice**, found during this
-review. `scan` prints *"pass them together to see the real blast radius"* and
-accepts exactly one contract ID. The capability exists in core; only the
-argument parser is singular.
+**`W2-D14-02c`** was moved to Week 4 by decision on Sep 10, with a date
+(Mon Sep 28) rather than a "sometime".
+
+**`W2-D10-01c` — the CLI could not follow its own advice**, found during this
+review and **closed on Sep 14**. `scan` printed *"pass them together to see the
+real blast radius"* and accepted exactly one contract ID; `scanContracts` had
+taken an array all along, and only the argument parser was singular. It now
+takes N. Listed here rather than above because it was *found* by this review —
+the Sep 12 snapshot recorded it as open, and it was.
 
 ## The pattern worth carrying into Week 3
 
