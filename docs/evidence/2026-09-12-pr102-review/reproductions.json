@@ -1,0 +1,37 @@
+{
+  "reviewedHead": "06041e5c1f3057831a4157b0c058b5fa708e5988",
+  "annotatedOwners": {
+    "ids": [
+      "W2-D9-01",
+      "W2-D9-02"
+    ],
+    "backlogOwner": "F, was R",
+    "parsedOwner": null,
+    "mirrorOwnerUsedInReproduction": "Rakha",
+    "plannedUpdates": []
+  },
+  "duplicateMirrorIds": {
+    "inputPages": [
+      "first",
+      "second"
+    ],
+    "id": "W2-D11-04",
+    "onlyUpdatedPage": "second",
+    "missing": [],
+    "phantom": []
+  },
+  "headW2": {
+    "total": 27,
+    "Done": 19,
+    "In progress": 3,
+    "Blocked": 1,
+    "Pending": 2,
+    "Dropped": 2
+  },
+  "installedCli": {
+    "singleScanExit": 0,
+    "multipleWithMissingContractExit": 3,
+    "contradictoryDryRunSubmitExit": 2
+  },
+  "tarballSha256": "e49a8f00dcc52c848f520e735d536e14ca44c8f9e4a00ea31b17c032c58f29cc"
+}

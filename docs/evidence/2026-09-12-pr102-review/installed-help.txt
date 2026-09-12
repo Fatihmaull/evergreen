@@ -1,0 +1,60 @@
+usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]
+
+Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
+Keys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }
+
+PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts
+built from the same Wasm share ONE ContractCode ledger entry, and a scan of one
+contract cannot tell whether others depend on it — the chain does not index
+reverse dependencies from a single query, so that entry reports "sharing
+undetermined". Naming them together resolves it:
+
+  evergreen scan <A>              code entry: 1 consumer, sharing UNDETERMINED
+  evergreen scan <A> <B> <C>      code entry: 3 consumers, SHARED, they fail together
+
+Every scan prints which contracts it actually scanned, so a mistyped or dropped
+argument is visible rather than inferred. --keys-file takes exactly one contract,
+because data keys belong to a specific contract and the file does not say which.
+
+Exit: 0 everything scanned is healthy; 1 observed low TTL; 2 error;
+      3 the scan came back incomplete (entry missing, TTL unavailable,
+        executable not followable, or nothing observed).
+Precedence: 2 > 3 > 1 > 0. Exit status never authorizes a transaction.
+
+Scanning reads the keys it is given; it cannot enumerate a contract's storage,
+so a clean exit means "everything I was asked to check is healthy" and never
+"this contract is fully healthy". Coverage is printed with every scan.
+
+--no-data-keys        assert this contract has no data keys beyond its instance.
+                      Only its author can know that; it is a caller declaration
+                      and is never independently verified.
+--require-declared-scope
+                      also exit 3 when scope was not declared. Intended for CI on
+                      a contract you own; evergreen-check sets it by default.
+--json                machine-readable output. The human view is a summary; JSON
+                      is the complete record, including every issue.
+--optimize            append conditional storage advice with evidence and scope
+                      limits. Reads network minimum lifetimes; no payer needed.
+                      Add --cost for current rent quotes. No storage is changed.
+--cost [--ledgers N]  estimate what extending every entry by N more ledgers
+                      would cost, priced by simulating against the network.
+                      Default N is 518,400 (~30 days). Nothing is submitted.
+
+                      "--ledgers N" means "give me N MORE ledgers". The protocol
+                      wants an absolute target, so the CLI computes it for you
+                      and caps it at max_entry_ttl - 1, saying so when it does.
+                      Costs are estimates: rent pricing varies with network
+                      state and has differed ~18% between days.
+
+Health states, printed per entry and as a worst-of summary:
+  HEALTHY   above threshold.
+  WARNING   low, recoverable, and affects only this contract.
+  CRITICAL  expired, OR temporary (deleted at expiry, unrecoverable), OR low and
+            SHARED — a code entry shared by N contracts at 3 days is N contracts
+            at 3 days, not one.
+  UNKNOWN   TTL could not be read. Not healthy; unread.
+
+Colour is added only for an interactive terminal and honours NO_COLOR. The state
+word always prints, so piped output and screenshots lose nothing.
+
+Manual extension: evergreen extend --help

@@ -1,0 +1,2 @@
+--submit and --dry-run are mutually exclusive.
+  Dry-run is already the default; drop --dry-run to submit, or drop --submit to simulate.
