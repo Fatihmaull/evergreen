@@ -2,6 +2,10 @@
 
 2026-09-12. Exact PR head `06041e5c1f3057831a4157b0c058b5fa708e5988`, main base `c3ba97b`. PR #105 remains open at `016f6ff` and contains the later live A-instance proof. Review work uses `docs/W2-D14-03-closeout-review`; neither PR was merged or modified. This is the internal result and a review draft, not a submitted GitHub review.
 
+## Latest head included in review
+
+During review Fatih advanced #102 to `041a5ffbd90835989924df9123d1327263f30ca6`. Reviewed its six-file delta: new guard tests, cost display clarification/tests, parser coverage check, conventions and W4 packer wording. Full check rerun passed on the new head; both owner and duplicate-mirror findings still reproduce. The report below retains the original head for the initial package rehearsal and count provenance. No changes were made to Fatih's branch.
+
 ## Recommendation: request changes
 
 The dry-run and multi-contract CLI changes passed the inspected paths, existing tests, and installed-package smoke checks. Resolve the following sync correctness findings and reconcile the week report before accepting #102 as the W2 closeout.
@@ -42,6 +46,6 @@ The Notion automation needs NOTION_TOKEN and database access. Do not infer opera
 
 ## Proposed message to Fatih — not sent
 
-@Fatihmaull reviewed #102 at 06041e5c. Full check passed 496 tests; fresh CLI-only installation and offline scan/flag smoke checks passed. Please address two mirror correctness gaps before merge: annotated `(F, was R)` owners parse as undefined (real D9 rows), and duplicate mirror IDs silently select the last page instead of reporting ambiguity. Also update the W2 summary against current head and #105, The missing W2-D10-01c mirror row was reconciled separately, preserving your ID and ownership. Existing live proof is complete in #105; no transaction repeat is needed. I recommend request changes on those points, with Fatih retaining branch and merge ownership.
+@Fatihmaull reviewed #102 initially at 06041e5c, then its update to 041a5ff. Full check passed on both heads; fresh CLI-only installation and offline scan/flag smoke checks passed. Please address two mirror correctness gaps before merge: annotated `(F, was R)` owners parse as undefined (real D9 rows), and duplicate mirror IDs silently select the last page instead of reporting ambiguity. Also update the W2 summary against current head and #105, The missing W2-D10-01c mirror row was reconciled separately, preserving your ID and ownership. Existing live proof is complete in #105; no transaction repeat is needed. I recommend request changes on those points, with Fatih retaining branch and merge ownership.
 
 After corrections: recheck the affected tests, reconcile #102/#105 on their merge order, refresh final W2 counts/evidence and the narrative Task Tracker, then close related issues. Do not start W3 as a substitute for this closeout.

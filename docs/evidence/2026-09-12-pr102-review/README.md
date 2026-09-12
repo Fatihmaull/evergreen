@@ -11,3 +11,7 @@ Reviewed exact head `06041e5c1f3057831a4157b0c058b5fa708e5988`, base `c3ba97b`. 
 These checks support closure of the pack/install rehearsal itself. npm registry publication and the Sep 28 public-install rehearsal remain separate W4 work. They do not depend on making core/shared-types public.
 
 Parser reproductions are in the [review report](../../W2-D14-03-PR102-REVIEW.md). The proposed mirror was not run with a real token: its transport/apply behavior still needs a separately configured integration check. The eight new sync tests test pure parse/diff behavior, not authenticated Notion writes.
+
+## Head update during review
+
+Fatih advanced #102 to `041a5ffbd90835989924df9123d1327263f30ca6`. Reviewed the six changed files: additional guard tests, cost wording/tests, task-ID parser coverage check, conventions and W4 packer wording. Full check on this exact head passed; see [unaltered output](pnpm-check-041a5ff.txt). Both sync reproductions remain unchanged and still reproduce. The CLI-only install rehearsal above remains explicitly tied to 06041e5c; it was not relabelled as a rehearsal of the newer artifact.

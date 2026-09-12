@@ -33,5 +33,7 @@
     "multipleWithMissingContractExit": 3,
     "contradictoryDryRunSubmitExit": 2
   },
-  "tarballSha256": "e49a8f00dcc52c848f520e735d536e14ca44c8f9e4a00ea31b17c032c58f29cc"
+  "tarballSha256": "e49a8f00dcc52c848f520e735d536e14ca44c8f9e4a00ea31b17c032c58f29cc",
+  "recheckedHead": "041a5ffbd90835989924df9123d1327263f30ca6",
+  "bothSyncFindingsStillReproduce": true
 }
