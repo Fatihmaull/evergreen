@@ -156,3 +156,91 @@ describe('runEngine — visible warning without premature action', () => {
     },
   );
 });
+
+describe('D15-02 review — combined policy boundaries', () => {
+  it.each([false, true])(
+    'combines independent consumer horizons without changing guard/action behavior (%s)',
+    async (reverse) => {
+      const base = config();
+      const contracts = [
+        {
+          id: A,
+          payer: 'payer',
+          thresholds: { warnBelowLedgers: 300000, bumpWhenRemainingLedgersBelow: 1000 },
+        },
+        {
+          id: B,
+          payer: 'payer',
+          thresholds: { warnBelowLedgers: 60480, bumpWhenRemainingLedgersBelow: 2000 },
+        },
+      ];
+      const cfg = { ...base, contracts: reverse ? contracts.reverse() : contracts };
+      const early = await runEngine(reader(50000, true), cfg);
+      expect(early.health.thresholdsByEntry[code]).toEqual({
+        warnBelowLedgers: 300000,
+        criticalBelowLedgers: 2000,
+      });
+      expect(early.health.byEntry[code]).toMatchObject({ health: 'critical', needsAction: false });
+      expect(early.decisions.every((d) => d.action === 'skip')).toBe(true);
+      expect(early.liveness.isAlarm).toBe(false);
+      const due = await runEngine(reader(2000, true), cfg);
+      expect(due.health.byEntry[code]?.needsAction).toBe(true);
+      expect(due.decisions.find((d) => d.entryKey === code)).toMatchObject({
+        action: 'skip',
+        reason: expect.stringContaining('REFUSED BY WRITE GUARD'),
+      });
+      expect(due.liveness.findings.some((f) => f.entryKey === code)).toBe(true);
+    },
+  );
+  it('keeps a legacy high action override usable with a derived warning and exact target', async () => {
+    const base = config();
+    const run = await runEngine(reader(1300000), {
+      ...base,
+      contracts: [
+        {
+          ...base.contracts[0]!,
+          thresholds: { bumpWhenRemainingLedgersBelow: 1500000, extendToLedgers: 2000000 },
+        },
+      ],
+    });
+    expect(run.health.thresholdsByEntry[instanceKey(A)]).toEqual({
+      warnBelowLedgers: 1500000,
+      criticalBelowLedgers: 1500000,
+    });
+    expect(run.decisions.find((d) => d.entryKey === instanceKey(A))).toMatchObject({
+      action: 'extend',
+      extendToLedgers: 2000000,
+    });
+    expect(run.liveness.isAlarm).toBe(true);
+  });
+  it('keeps explicit zero horizons in both assessment and liveness through the last live ledger', async () => {
+    const base = config();
+    const cfg = {
+      ...base,
+      contracts: [
+        {
+          ...base.contracts[0]!,
+          thresholds: { warnBelowLedgers: 0, bumpWhenRemainingLedgersBelow: 0 },
+        },
+      ],
+    };
+    const before = await runEngine(reader(1), cfg);
+    expect(before.health.thresholdsByEntry[instanceKey(A)]).toEqual({
+      warnBelowLedgers: 0,
+      criticalBelowLedgers: 0,
+    });
+    expect(before.health.byEntry[instanceKey(A)]).toMatchObject({
+      health: 'healthy',
+      needsAction: false,
+    });
+    expect(before.liveness.isAlarm).toBe(false);
+    const finalLive = await runEngine(reader(0), cfg);
+    expect(finalLive.health.byEntry[instanceKey(A)]).toMatchObject({
+      health: 'critical',
+      needsAction: true,
+      isExpired: false,
+    });
+    expect(finalLive.decisions.find((d) => d.entryKey === instanceKey(A))?.action).toBe('extend');
+    expect(finalLive.liveness.isAlarm).toBe(true);
+  });
+});

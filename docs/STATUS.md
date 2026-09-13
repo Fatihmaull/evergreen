@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-13 · D15-02 implemented and verified; internal review next
+**Last updated:** 2026-09-13 · D15-02 internal review complete; publication next
 **Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-02 implemented; awaiting internal review
+## Current — W3-D15-02 internal review complete; ready for publication
+
+[Review](W3-D15-02-REVIEW.md) of 53cd395 against parent #120 at dda2530 found no blocking issue and required no production changes. Four review cases add direct coverage of independent shared-consumer horizons, high legacy action overrides and zero thresholds. Full pnpm check passed 638 tests (556 Vitest + 82 Node) with unchanged gates. Two review mutations fail; restored source exactly replays the saved A observations and renders warning-only output without a network call.
+
+D15-02 is Done for verified branch implementation; no child PR or merge yet. #120 remains the parent dependency and Fatih handles PR review/merge. D15-02b remains Pending/Shared. No new live RPC, secret access, transaction, funding or scheduler operation during review. Publication is the next checkpoint. Notion read-back matches Done/Rakha with the branch-qualified outcome; all-ID presence diff found 149 registered IDs / 150 rows, no missing or duplicate IDs, and the one known retired Dropped predecessor as extra.
+
+## Earlier — W3-D15-02 implemented; awaiting internal review
 
 [Implementation report](W3-D15-02-IMPLEMENTATION.md). The stacked branch adds optional warning config, validated inheritance, engine health/threshold metadata and visible runner output. Warning-only entries do not become bump candidates or liveness alarms, even when shared/temporary impact is critical. Existing target, payer agreement, duplicate-policy and guard behavior from #120 remains. D15-02 is In progress/Rakha until review checkpoints; D15-02b remains Pending/Shared. No PR for D15-02 yet. Notion mirrors In progress/Rakha with the implementation outcome. All-ID presence diff found 149 registered IDs / 150 mirror rows, no missing or duplicate IDs; sole extra is the known retired Dropped predecessor.
 

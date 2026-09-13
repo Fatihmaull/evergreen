@@ -54,3 +54,14 @@ config copy had been written; it is preserved as preflight-config.json. A permit
 read-only retry captured the successful observation. No failed attempt created a
 transaction or a TTL observation. The recorder uses exclusive file creation;
 future validation must use a new directory rather than overwrite these results.
+
+
+## Internal review follow-up
+
+Review of 53cd395 found no blocking defect and made no production change. Four
+additional engine cases cover distinct consumer horizons in both orders, a legacy
+high action override and explicit zero boundaries. Full check now passes **638
+tests (556 Vitest + 82 Node)**. The two [review mutation checks](review-mutation-checks.json)
+fail as expected; source was restored. The current compiled engine and formatter
+replayed the saved observations without network access, matching result.json.
+See [the review report](../../W3-D15-02-REVIEW.md). Original captured files remain unchanged.

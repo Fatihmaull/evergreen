@@ -1,0 +1,20 @@
+[
+  {
+    "mutation": "first-consumer-horizons",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  2 failed | 11 skipped (13)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "zero-action-fallback",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  1 failed | 12 skipped (13)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  }
+]

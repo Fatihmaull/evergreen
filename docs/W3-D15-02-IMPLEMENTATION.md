@@ -1,6 +1,6 @@
 # W3-D15-02 — two-tier engine thresholds
 
-Status: implemented on `feat/W3-D15-02-thresholds`, awaiting internal review.
+Status: internal review complete on `feat/W3-D15-02-thresholds`; no blocking findings or production corrections. [Review](W3-D15-02-REVIEW.md). Ready for publication, no child PR yet.
 Implementation commit: c32918e. Base: #120 head dda2530. #120 was still open at implementation start; these changes
 are isolated on a child branch and do not alter that PR. No new PR or merge yet.
 
@@ -65,9 +65,9 @@ are retained; this task does not silently migrate CLI behavior.
 
 ## Verification
 
-- 29 resolver/assessment cases, 17 new config cases, 9 engine integration cases
+- 29 resolver/assessment cases, 17 new config cases, 13 engine integration cases
   and 4 formatter cases. All default unit tests are offline.
-- Full pnpm check: **634 tests = 552 Vitest + 82 Node**, unchanged coverage gates.
+- Full pnpm check: **638 tests = 556 Vitest + 82 Node**, unchanged coverage gates.
 - Three deliberate regressions failed behavioral assertions: hidden warning
   (4 selected failures), warning used as action (3), silent explicit-warning
   widening (2). Sources restored; focused config/health/engine suite passed 76.
@@ -83,7 +83,7 @@ application behavior was changed to work around those environment restrictions.
 
 ## Next boundary
 
-Internal review precedes publication. If #120 remains open, the future PR is stacked
+Internal review passed; publication is the next checkpoint. If #120 remains open, the future PR is stacked
 against its branch; retarget before that branch is deleted. If it has merged,
 refresh main and reconcile its content first. Fatih handles review/merge.
 
