@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -42,7 +42,9 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "test:fast": "vitest run",
     "test:evidence-integrity": "node --test --test-isolation=none scripts/verify-evidence-integrity.test.mjs",
-    "test:engine-output": "node --test --test-isolation=none scripts/engine-output.test.mjs"
+    "test:engine-output": "node --test --test-isolation=none scripts/engine-output.test.mjs",
+    "engine:execute": "node scripts/engine-execute.mjs",
+    "test:engine-recorder": "node --test --test-isolation=none scripts/engine-recorder.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

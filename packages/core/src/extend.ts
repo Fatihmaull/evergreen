@@ -148,6 +148,10 @@ export function planExtension(scan: ScanResult, options: ExtensionOptions): Exte
 
 export interface ExtensionExecutionDependencies {
   prepare(entry: PlannedExtension): Promise<PreparedExtension>;
+  /** Optional for manual compatibility; the engine supplies a scope-preserving refresh. */
+  refresh?(entry: PlannedExtension): Promise<PlannedExtension>;
+  /** Engine live runs require a real recorder; this hook must finish before send. */
+  beforeSubmit?(prepared: PreparedExtension, signer: Signer['identity']): Promise<void>;
   signer(prepared: PreparedExtension, remainingFeeStroops: string): Signer;
   submit(prepared: PreparedExtension, signedXdr: string): Promise<{ status: string; hash: string }>;
   confirm(hash: string): Promise<ExtensionConfirmation>;
@@ -163,16 +167,30 @@ export interface ExtensionExecutionResult {
   readonly unattempted: readonly string[];
   /** Reserved envelope fee upper bound; not a claim about actual fees charged. */
   readonly committedFeeStroops: string;
+  /** Sum of accepted prepared fee upper bounds, including in simulation. */
+  readonly estimatedFeeStroops: string;
 }
 
-/** Execute sequentially. A possibly-sent transaction stops the run until reconciled. */
-export async function executeExtensions(
+export interface ExtensionExecutionOptions {
+  readonly payer: string;
+  readonly submit?: boolean;
+  readonly maxFeeStroops?: string;
+  readonly reason?: string;
+}
+
+/** Preserve the manual plan API while sharing its execution state machine. */
+export function executeExtensions(
   plan: ExtensionPlan,
-  options: {
-    readonly payer: string;
-    readonly submit?: boolean;
-    readonly maxFeeStroops?: string;
-  },
+  options: ExtensionExecutionOptions,
+  deps: ExtensionExecutionDependencies,
+): Promise<ExtensionExecutionResult> {
+  return executeExtensionEntries(plan.entries, options, deps);
+}
+
+/** Execute exact entries sequentially; a possibly-sent transaction stops the selection. */
+export async function executeExtensionEntries(
+  entries: readonly PlannedExtension[],
+  options: ExtensionExecutionOptions,
   deps: ExtensionExecutionDependencies,
 ): Promise<ExtensionExecutionResult> {
   const live = options.submit === true;
@@ -180,52 +198,79 @@ export async function executeExtensions(
     !options.payer ||
     (options.maxFeeStroops !== undefined && !/^[1-9]\d*$/.test(options.maxFeeStroops)) ||
     (live && options.maxFeeStroops === undefined)
-  )
+  ) {
     throw new Error('Live extension needs an explicit payer and fee budget');
+  }
+  if (new Set(entries.map((e) => e.entryKey)).size !== entries.length) {
+    throw new Error('Duplicate execution entry keys');
+  }
   const budget = options.maxFeeStroops === undefined ? undefined : BigInt(options.maxFeeStroops);
   let committed = 0n;
   const records: BumpRecord[] = [];
   const skipped: string[] = [];
   const visited = new Set<string>();
   let ok = true;
-  for (const entry of plan.entries) {
-    visited.add(entry.entryKey);
-    if (entry.skip) {
-      skipped.push(entry.entryKey);
+  for (const original of entries) {
+    visited.add(original.entryKey);
+    if (original.skip) {
+      skipped.push(original.entryKey);
       continue;
     }
-    const base = {
+    let entry = original;
+    const recordedAt = deps.now().toISOString();
+    const base = () => ({
       entryKey: entry.entryKey,
       contracts: entry.contracts,
       payer: options.payer,
       before: entry.before,
       extendToLedgers: entry.extendToLedgers,
-      recordedAt: deps.now().toISOString(),
-      reason: 'Explicit manual extension',
-    };
+      recordedAt,
+      reason: options.reason ?? 'Explicit manual extension',
+    });
     let sent: { hash: string; signer: Signer['identity'] } | undefined;
+    let knownSigner: Signer['identity'] | undefined;
     let confirmed = false;
     try {
+      if (deps.refresh) {
+        const fresh = await deps.refresh(original);
+        if (
+          fresh.entryKey !== original.entryKey ||
+          fresh.kind !== original.kind ||
+          fresh.contracts.join('\0') !== original.contracts.join('\0')
+        ) {
+          throw new Error('Refresh changed execution scope');
+        }
+        entry = fresh;
+        if (entry.skip) {
+          skipped.push(entry.entryKey);
+          continue;
+        }
+      }
       const prepared = await deps.prepare(entry);
       if (
+        prepared.entry.entryKey !== entry.entryKey ||
+        prepared.entry.extendToLedgers !== entry.extendToLedgers ||
         !/^\d+$/.test(prepared.feeStroops) ||
         (budget !== undefined && committed + BigInt(prepared.feeStroops) > budget)
-      )
-        throw new Error('Fee budget exceeded');
+      ) {
+        throw new Error('Prepared selection or fee budget mismatch');
+      }
       await deps.preview(prepared);
       if (!live) {
-        records.push({ ...base, mode: 'dry-run', outcome: 'simulated' });
-        // For a multi-entry preview the supplied cap bounds the whole selection.
+        records.push({ ...base(), mode: 'dry-run', outcome: 'simulated' });
         committed += BigInt(prepared.feeStroops);
         continue;
       }
       const signer = deps.signer(prepared, (budget! - committed).toString());
-      if (signer.payer !== options.payer || signer.identity.account !== prepared.sourceAccount)
+      if (signer.payer !== options.payer || signer.identity.account !== prepared.sourceAccount) {
         throw new Error('Signer identity mismatch');
+      }
+      knownSigner = signer.identity;
       const signed = await signer.signExtendTTL({
         networkPassphrase: 'Test SDF Network ; September 2015',
         transactionXdr: prepared.transactionXdr,
       });
+      await deps.beforeSubmit?.(prepared, signer.identity);
       sent = { hash: prepared.transactionHash, signer: signer.identity };
       committed += BigInt(prepared.feeStroops);
       const response = await deps.submit(prepared, signed);
@@ -241,18 +286,17 @@ export async function executeExtensions(
       confirmed = true;
       if (confirmation.status !== 'confirmed') throw new Error('Transaction failed');
       const after = await deps.readAfter(entry.entryKey);
-      // Stellar core sets liveUntil = inclusion ledger + extendTo. Compare the
-      // absolute expiry, not remaining TTL measured at different read ledgers.
       if (
         !Number.isSafeInteger(after.observedAtLedger) ||
         after.observedAtLedger < confirmation.ledger ||
         !Number.isSafeInteger(after.endsAtLedger) ||
         after.endsAtLedger <= entry.before.endsAtLedger ||
         after.endsAtLedger < confirmation.ledger + entry.extendToLedgers
-      )
+      ) {
         throw new Error('TTL increase could not be verified');
+      }
       records.push({
-        ...base,
+        ...base(),
         mode: 'live',
         outcome: 'succeeded',
         transactionHash: sent.hash,
@@ -261,35 +305,37 @@ export async function executeExtensions(
       });
     } catch {
       ok = false;
-      if (sent && !confirmed)
+      if (sent && !confirmed) {
         records.push({
-          ...base,
+          ...base(),
           mode: 'live',
           outcome: 'submitted',
           transactionHash: sent.hash,
           signer: sent.signer,
         });
-      else if (live)
+      } else if (live) {
         records.push({
-          ...base,
-          mode: 'live',
+          ...base(),
           outcome: 'failed',
-          ...(sent ? { transactionHash: sent.hash, signer: sent.signer } : {}),
+          mode: 'live',
+          ...(sent ? { transactionHash: sent.hash } : {}),
+          ...(knownSigner ? { signer: knownSigner } : {}),
           error: {
             code: 'EXTENSION_FAILED',
             message: 'Extension rejected or post-state unverified. No replacement was submitted.',
           },
         });
-      else
+      } else {
         records.push({
-          ...base,
-          mode: 'dry-run',
+          ...base(),
           outcome: 'failed',
+          mode: 'dry-run',
           error: {
             code: 'SIMULATION_FAILED',
             message: 'Extension preparation or fee validation failed. Nothing was submitted.',
           },
         });
+      }
       break;
     }
   }
@@ -298,7 +344,8 @@ export async function executeExtensions(
     mode: live ? 'live' : 'dry-run',
     records,
     skipped,
-    unattempted: plan.entries.filter((e) => !visited.has(e.entryKey)).map((e) => e.entryKey),
+    unattempted: entries.filter((e) => !visited.has(e.entryKey)).map((e) => e.entryKey),
     committedFeeStroops: live ? committed.toString() : '0',
+    estimatedFeeStroops: committed.toString(),
   };
 }

@@ -1,0 +1,246 @@
+$ pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm lint && pnpm format:check && pnpm test
+$ node scripts/check-conflict-markers.mjs
+✓ no conflict markers in 1218 tracked files
+$ node scripts/check-task-ids.mjs
+✓ every task ID referenced in docs is registered (149 tasks)
+$ node scripts/check-policy-constants.mjs
+✓ policy constants agree across TS/JSON/Python (threshold 17280, cadence 5s)
+$ tsc --build --force && pnpm typecheck:shared-types
+$ tsc --project packages/shared-types/tsconfig.test.json
+$ node scripts/check-bundle-secrets.mjs
+✓ publishable bundle clean (83.4kb, 4 forbidden patterns checked)
+$ node scripts/check-publish-safety.mjs
+✓ publishing safety: one publishable package, workspace deps bundled, runtime deps pinned
+$ node scripts/sync-notion.mjs
+✓ parsed 148 task rows from BACKLOG.md
+    Pending      61
+    In progress  1
+    Done         83
+    Dropped      3
+
+  Parse only — no NOTION_TOKEN, so the mirror was not read or written.
+  This is the gate that runs on every PR; the write runs after merge.
+$ eslint .
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder
+
+ RUN  v5.0.0 /home/rakhargo/projects/evergreen
+      Coverage enabled with v8
+
+Not a Stellar contract ID: NOT_A_CONTRACT_ID
+Contract IDs start with C and are 56 characters (StrKey-encoded).
+Check for a truncated paste or an account address (G…) used by mistake.
+Not a Stellar contract ID: NOT_A_CONTRACT_ID
+Contract IDs start with C and are 56 characters (StrKey-encoded).
+Check for a truncated paste or an account address (G…) used by mistake.
+
+ Test Files  45 passed (45)
+      Tests  619 passed (619)
+   Start at  22:14:18
+   Duration  5.34s (import 64%, tests 27%, transform 6%, worker 3%)
+
+    Isolate  45 workers spawned · ~192ms startup each (spawn + environment, per file)
+             at least ~592ms faster with isolate: false — reuses workers across files instead of one per file
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   94.12 |     90.2 |   94.44 |   96.17 |                   
+ cli/src           |   94.09 |    87.15 |   85.29 |   94.75 |                   
+  command.ts       |    96.8 |    92.98 |     100 |   97.46 | 185,289           
+  cost.ts          |     100 |    81.25 |     100 |     100 | 58-73,75          
+  extend.ts        |      80 |    76.92 |    37.5 |   81.48 | ...41,158,168-171 
+  optimizer.ts     |    92.3 |       80 |     100 |    91.3 | 34-35             
+  scan.ts          |   98.07 |    91.42 |     100 |   98.93 | 145               
+ core/src          |   94.84 |    92.09 |   97.72 |   96.73 |                   
+  config.ts        |   91.74 |    90.74 |     100 |   94.05 | ...67,210,235,239 
+  ...519-signer.ts |   96.87 |    97.72 |     100 |     100 | 17                
+  ...ution-plan.ts |    87.5 |    90.62 |     100 |   93.87 | 66-68             
+  engine.ts        |   97.84 |    91.22 |     100 |    98.8 | 225               
+  extend-rpc.ts    |    92.3 |       95 |      60 |   95.34 | 43,145            
+  extend.ts        |   93.96 |    93.79 |     100 |   97.19 | 51,266,283        
+  health.ts        |   98.33 |    98.21 |     100 |   98.14 | 188               
+  liveness.ts      |   96.92 |    92.75 |     100 |   96.61 | 187,240           
+  ...ork-config.ts |   88.57 |       80 |     100 |   93.54 | 51,64             
+  optimizer.ts     |   97.72 |    96.55 |     100 |     100 | 48,152            
+  rent.ts          |   96.07 |    81.25 |     100 |   95.91 | 125,142           
+  rpc.ts           |   94.44 |       50 |     100 |   94.11 | 88                
+  scan-contract.ts |   95.42 |    92.79 |     100 |   97.12 | 46,170,295,343    
+  scan.ts          |    90.9 |    57.89 |     100 |   93.75 | 50,63             
+  ttl.ts           |   98.07 |      100 |    92.3 |   97.87 | 134               
+ engine/src        |   90.82 |    85.45 |      92 |   95.58 |                   
+  command.ts       |   91.89 |     92.1 |     100 |   96.66 | 63                
+  execution.ts     |   88.88 |    81.25 |   85.71 |   94.82 | ...09,236,240-244 
+  transport.ts     |   95.65 |    90.32 |     100 |   97.14 | 40                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 94.12% ( 1457/1548 )
+Branches     : 90.2% ( 1207/1338 )
+Functions    : 94.44% ( 204/216 )
+Lines        : 96.17% ( 1333/1386 )
+================================================================================
+$ node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs
+✔ confirms only with the final live ledger and the immediately following absent ledger (0.907833ms)
+✔ does not turn a skipped boundary into a confirmation (0.159731ms)
+✔ reports an entry absent on its advertised final live ledger as a contradiction (0.133171ms)
+✔ reports a still-present entry after expiry as a contradiction (0.12163ms)
+✔ rejects RPC errors rather than treating an unavailable read as absence (0.377403ms)
+✔ rejects missing or malformed entries instead of confirming expiry (0.219264ms)
+✔ rejects an intervening TTL change (0.201049ms)
+✔ rejects malformed or unrelated array members instead of confirming expiry (0.248008ms)
+✔ rejects multiple entries in a response to the single-key observation (0.202462ms)
+✔ rejects conflicting observations for one ledger (0.260471ms)
+✔ requires a real ledger number instead of trusting malformed RPC data (0.146256ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19.63647
+$ node --test --test-isolation=none scripts/scheduler-smoke.test.mjs
+✔ the command emits a structured error and exits nonzero for an RPC failure (410.662461ms)
+✔ reads only the A instance and calculates remaining TTL from its response ledger (3.532395ms)
+✔ refuses a different network before requesting any ledger entries (0.404262ms)
+✔ propagates network and entry-read failures instead of reporting success (0.519851ms)
+✔ rejects malformed ledger numbers (1.189916ms)
+✔ rejects missing, malformed, empty, or duplicate entry arrays (1.33564ms)
+✔ rejects malformed entries and entries for other ledger keys (0.714738ms)
+✔ requires a valid TTL on the returned instance (1.215794ms)
+✔ accepts the inclusive final live ledger but rejects an entry beyond it (0.638816ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 799.476931
+$ node --test --test-isolation=none scripts/send-test-email.test.mjs
+✔ default preview works without an API key and makes no request (1.824893ms)
+✔ help works without configuration and unknown flags never send (0.536793ms)
+✔ missing or multiple recipients and malformed senders fail before requesting (0.326256ms)
+✔ sending needs a key and is refused in CI (0.210087ms)
+✔ explicit send posts one email and reports acceptance without claiming inbox receipt (15.929716ms)
+✔ manual retries use the same idempotency key and another recipient uses a different key (0.928462ms)
+✔ provider rejection does not echo its response body or retry automatically (0.440921ms)
+✔ transport failures discard raw error details and do not retry (0.292241ms)
+✔ invalid JSON or missing email IDs cannot be recorded as accepted (1.1236ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39.679518
+$ node --test --test-isolation=none scripts/persistence-spike.test.mjs
+✔ preview and help never connect even with a configured database (0.962396ms)
+✔ only an exact explicit run flag permits the database experiment (0.276703ms)
+✔ remote connections verify TLS even when the URI only says require (0.755676ms)
+✔ remote downgrade options and unreviewed URI settings are refused (0.252697ms)
+✔ unencrypted connections are confined to explicit loopback hosts (0.235054ms)
+✔ schema names cannot point at an existing user namespace or inject SQL (0.239021ms)
+✔ invalid URLs and transport errors never disclose credentials (0.815639ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40.797858
+$ node --test --test-isolation=none scripts/sync-notion.test.mjs
+✔ a standing obligation is not a phantom (1.33001ms)
+✔ a standing obligation is never written to either (0.851928ms)
+✔ a genuine phantom is still reported (0.205698ms)
+✔ a backlog row with no Notion row is reported, never created (0.120598ms)
+✔ an owner absent from BACKLOG.md does not clear a human-set owner (0.117141ms)
+✔ only Status and Owner are ever written (0.140054ms)
+✔ parseBacklog refuses to skip a row that occupies an ID slot (0.629027ms)
+✔ recurringIds finds the standing obligation in the real backlog (1.129571ms)
+✔ an ownership-transfer annotation still yields an owner (0.254641ms)
+✔ a genuinely absent owner is still absent, not invented (0.213433ms)
+✔ an annotation that is not an owner does not become one (0.108895ms)
+✔ the real backlog has no row whose owner failed to parse (0.981882ms)
+✔ two mirror pages with one task ID are refused, not collapsed (0.189417ms)
+✔ an ambiguous ID names every page, so a person can delete the right one (0.117983ms)
+✔ one ambiguous row does not strand every other row (0.144072ms)
+✔ a retired ID in the mirror is not a phantom (0.088417ms)
+✔ a retired ID is never written to (0.072658ms)
+✔ 🔴 a retired ID that does not read as Dropped IS reported (0.094148ms)
+✔ a genuine phantom is still a phantom when a retired list exists (0.067067ms)
+✔ retiredIds reads the real CONVENTIONS strikethroughs (0.279417ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.888376
+$ node --test --test-isolation=none scripts/verify-evidence-integrity.test.mjs
+✔ manual: original bundle passes without rewriting its recorded result (305.695249ms)
+✔ manual: rejects changed file before semantic verification (37.149504ms)
+✔ manual: rejects missing file before semantic verification (40.12558ms)
+✔ manual: rejects missing manifest before semantic verification (41.364096ms)
+✔ manual: rejects empty manifest before semantic verification (39.466767ms)
+✔ manual: rejects bad hash before semantic verification (40.384858ms)
+✔ manual: rejects duplicate path before semantic verification (38.409191ms)
+✔ manual: rejects parent path before semantic verification (38.596344ms)
+✔ manual: rejects absolute path before semantic verification (40.244674ms)
+✔ manual: semantic checks still reject a false claim with matching checksums (300.937241ms)
+✔ manual: refuses a manifest entry symlink escaping the bundle (48.117779ms)
+✔ storage: original bundle passes without rewriting its recorded result (430.698315ms)
+✔ storage: rejects changed file before semantic verification (40.966015ms)
+✔ storage: rejects missing file before semantic verification (39.206675ms)
+✔ storage: rejects missing manifest before semantic verification (39.576444ms)
+✔ storage: rejects empty manifest before semantic verification (40.930498ms)
+✔ storage: rejects bad hash before semantic verification (39.444133ms)
+✔ storage: rejects duplicate path before semantic verification (39.486394ms)
+✔ storage: rejects parent path before semantic verification (39.793623ms)
+✔ storage: rejects absolute path before semantic verification (40.683142ms)
+✔ storage: semantic checks still reject a false claim with matching checksums (418.364885ms)
+✔ storage: refuses a manifest entry symlink escaping the bundle (43.416048ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2206.887395
+$ node --test --test-isolation=none scripts/engine-output.test.mjs
+▶ engine output — visible early warning and actual decisions
+  ✔ shows warning and effective horizons without claiming a bump (0.791433ms)
+  ✔ does not turn high impact into an action (0.189227ms)
+  ✔ retains a guard refusal even when the entry needs action (0.15363ms)
+  ✔ reports a candidate without implying that it was executed (0.199156ms)
+✔ engine output — visible early warning and actual decisions (3.020619ms)
+ℹ tests 4
+ℹ suites 1
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.164102
+$ node --test --test-isolation=none scripts/engine-recorder.test.mjs
+▶ local attempt recorder — retained one-shot journal
+  ✔ writes and flushes each public intent, retains it after close and refuses reuse (6.373275ms)
+  ✔ does not overwrite an existing empty or corrupt intent file (2.212534ms)
+  ✔ two writers cannot both acquire the same attempt file (1.467199ms)
+✔ local attempt recorder — retained one-shot journal (11.394349ms)
+ℹ tests 3
+ℹ suites 1
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21.849396

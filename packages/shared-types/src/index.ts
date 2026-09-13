@@ -207,7 +207,14 @@ export interface BumpThresholds {
 }
 
 export type PayerConfig =
-  | { readonly signer: 'ed25519'; readonly secretEnvVar: string }
+  | {
+      readonly signer: 'ed25519';
+      readonly secretEnvVar: string;
+      /** Public fee account; required by execution, optional for decide-only configs. */
+      readonly sourceAccount?: string;
+      /** Aggregate per-run envelope fee cap for this payer; mandatory for live execution. */
+      readonly maxFeeStroops?: Stroops;
+    }
   | {
       readonly signer: 'policy';
       /** Opaque adapter configuration reference; provider-specific setup is W3. */

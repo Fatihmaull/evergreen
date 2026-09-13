@@ -1,0 +1,24 @@
+[
+  {
+    "mutation": "record-before-send",
+    "test": [
+      "packages/engine/test/execution.test.ts",
+      "-t",
+      "recorder fails"
+    ],
+    "exitCode": 1,
+    "detected": true,
+    "restoredSha256": "d6f781718f6a3be2c0f13d566270f156bf59e5a4e161f7221f62433d9373cb1a"
+  },
+  {
+    "mutation": "send-never-retries",
+    "test": [
+      "packages/engine/test/transport.test.ts",
+      "-t",
+      "does not retry send"
+    ],
+    "exitCode": 1,
+    "detected": true,
+    "restoredSha256": "60fe9ecf6dd8f0861edb575a1d57e8ea011f14dcf5fbffddb1a225a58e3fc400"
+  }
+]
