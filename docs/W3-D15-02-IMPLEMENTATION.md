@@ -1,8 +1,8 @@
 # W3-D15-02 — two-tier engine thresholds
 
-Status: internal review complete on `feat/W3-D15-02-thresholds`; no blocking findings or production corrections. [Review](W3-D15-02-REVIEW.md). Ready for publication, no child PR yet.
+Status: internal review complete on `feat/W3-D15-02-thresholds`; no blocking findings or production corrections. [Review](W3-D15-02-REVIEW.md). Published in [PR #121](https://github.com/Fatihmaull/evergreen/pull/121) for Fatih review, stacked on #120; not merged.
 Implementation commit: c32918e. Base: #120 head dda2530. #120 was still open at implementation start; these changes
-are isolated on a child branch and do not alter that PR. No new PR or merge yet.
+are isolated on a child branch and do not alter that PR. #121 is the child PR; neither PR is claimed merged.
 
 ## Result
 
@@ -83,7 +83,7 @@ application behavior was changed to work around those environment restrictions.
 
 ## Next boundary
 
-Internal review passed; publication is the next checkpoint. If #120 remains open, the future PR is stacked
+Internal review passed and PR #121 is published; Fatih review/merge is next. If #120 remains open, the future PR is stacked
 against its branch; retarget before that branch is deleted. If it has merged,
 refresh main and reconcile its content first. Fatih handles review/merge.
 

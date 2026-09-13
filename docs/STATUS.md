@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-13 · D15-02 internal review complete; publication next
+**Last updated:** 2026-09-13 · D15-02 published in stacked PR #121 for Fatih review
 **Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-02 internal review complete; ready for publication
+## Current — W3-D15-02 published in stacked PR #121
+
+Rakha approved publication after internal review. [PR #121](https://github.com/Fatihmaull/evergreen/pull/121) targets `fix/W3-D15-04-engine-decisions` (#120 at dda2530); Fatih is requested as reviewer. Reviewed implementation c32918e and review checkpoint dbd8203. D15-02 is Done for verified branch implementation, but #121 is open and unmerged. Coordination remains in #104; D15-02b remains Pending/Shared.
+
+Stack order: retarget #121 to main before merging/deleting #120's branch, then reconcile with merged main and recheck CI before merging #121. Do not merge the child into the parent branch. Fatih handles both merges. Fresh pre-publication pnpm check passed 638 tests with unchanged gates; final-head remote checks are verified separately. No new RPC/transaction, secret access, operational config change or scheduler activation during publication.
+
+## Earlier — W3-D15-02 internal review complete; ready for publication
 
 [Review](W3-D15-02-REVIEW.md) of 53cd395 against parent #120 at dda2530 found no blocking issue and required no production changes. Four review cases add direct coverage of independent shared-consumer horizons, high legacy action overrides and zero thresholds. Full pnpm check passed 638 tests (556 Vitest + 82 Node) with unchanged gates. Two review mutations fail; restored source exactly replays the saved A observations and renders warning-only output without a network call.
 
