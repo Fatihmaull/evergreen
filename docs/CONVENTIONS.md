@@ -415,6 +415,39 @@ Two details worth copying:
   binary "restore it or delete it" was a false choice offered before anyone
   looked.
 
+### Testing a guard means testing that it refuses AND that it is reached
+
+**A guard has two failure modes: it fails to refuse, or it is never invoked.**
+A unit test of the guard covers the first and is *structurally blind* to the
+second — the guard's own test file passes identically whether or not anything
+calls it.
+
+2026-09-13: `write-guard.test.ts` proved `assertWriteAllowed` refuses
+guinea-pigs B and C. Nothing proved the CALL SITE existed inside
+`planExtension`. Deleting the call left 620 tests green — and that is the CLI's
+manual extend path, **the one the live transaction in #105 was signed through on
+Sep 11**. Nothing bad happened, but that was established by reading the chain
+afterwards, not guaranteed by the code beforehand.
+
+So "the guard is tested" is an ambiguous claim and should stop being made.
+**The invocation needs its own test, at the call site, and it exists only if
+someone writes it deliberately.** A mutation inventory across every call site is
+the cheap way to find the ones nobody wrote.
+
+### A test of one clause must satisfy every other clause
+
+When a test targets one clause of a compound condition, **the fixture must
+satisfy all the others** — otherwise a different clause throws first, the
+assertion passes, and the branch under test is never reached. It looks exactly
+like coverage.
+
+2026-09-13: a payer-agreement test passed while deleting the clause it was
+written for changed nothing, because the payer chosen was also undeclared and
+`!Object.hasOwn(config.payers, …)` threw first. Green, isolating nothing.
+
+The check is mechanical: delete the clause the test names and confirm that test
+— specifically that one — fails.
+
 ### Mutation testing cannot see a wrong oracle
 
 **Mutation testing proves that tests detect change. It cannot prove that tests

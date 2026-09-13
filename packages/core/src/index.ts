@@ -71,6 +71,8 @@ export type {
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';
 export { decideBumps, runEngine } from './engine.js';
+export { approachingCritical, bumpFailed, bumpSucceeded } from './notification-templates.js';
+export type { Notification } from './notification-templates.js';
 export type { EngineRun, EngineHealthReport } from './engine.js';
 export { planExtension, executeExtensions, executeExtensionEntries } from './extend.js';
 export type {
