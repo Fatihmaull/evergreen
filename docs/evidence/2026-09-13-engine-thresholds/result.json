@@ -1,0 +1,121 @@
+{
+  "warnings": [],
+  "result": {
+    "scan": {
+      "network": "testnet",
+      "contracts": [
+        {
+          "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+          "label": "guinea-pig-A"
+        }
+      ],
+      "entries": {
+        "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+          "kind": "instance",
+          "endBehavior": "archived",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "observedAtLedger": 4648013,
+          "ttl": {
+            "status": "known",
+            "endsAtLedger": 6026591,
+            "remainingLedgers": 1378578
+          }
+        },
+        "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+          "kind": "code",
+          "endBehavior": "archived",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "observedAtLedger": 4648013,
+          "ttl": {
+            "status": "known",
+            "endsAtLedger": 5290829,
+            "remainingLedgers": 642816
+          }
+        }
+      },
+      "issues": [
+        {
+          "kind": "sharing-undetermined",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+          "observedAtLedger": 4648013,
+          "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+        },
+        {
+          "kind": "coverage-limited",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "message": "No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract."
+        }
+      ],
+      "coverage": {
+        "mode": "known-keys",
+        "dataKeysSuppliedByContract": {
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0
+        }
+      }
+    },
+    "decisions": [
+      {
+        "action": "skip",
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "reason": "WARNING — Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed. 1,378,578 ledgers remaining."
+      },
+      {
+        "action": "skip",
+        "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "reason": "WARNING — Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (17280 ledgers); warning only, no bump needed. 642,816 ledgers remaining."
+      }
+    ],
+    "liveness": {
+      "isAlarm": false,
+      "findings": []
+    },
+    "health": {
+      "byEntry": {
+        "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+          "health": "warning",
+          "needsAction": false,
+          "isExpired": false,
+          "observedContractCount": 1,
+          "blastRadiusAtLeast": 1,
+          "sharingStatus": "exclusive",
+          "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed."
+        },
+        "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+          "health": "warning",
+          "needsAction": false,
+          "isExpired": false,
+          "observedContractCount": 1,
+          "blastRadiusAtLeast": 1,
+          "sharingStatus": "undetermined",
+          "reason": "Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (17280 ledgers); warning only, no bump needed."
+        }
+      },
+      "thresholdsByEntry": {
+        "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+          "warnBelowLedgers": 2000000,
+          "criticalBelowLedgers": 17280
+        },
+        "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+          "warnBelowLedgers": 2000000,
+          "criticalBelowLedgers": 17280
+        }
+      }
+    },
+    "mode": "dry-run"
+  }
+}

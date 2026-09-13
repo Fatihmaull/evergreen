@@ -113,6 +113,15 @@ CLI `scan --optimize` adds one optional settings read after the Testnet scan con
 
 ### `packages/engine`
 
+**D15-02 warning layer:** `BumpThresholds.warnBelowLedgers` is optional. Core
+resolves it with the existing action field into `HealthThresholds`, preserving
+explicit warning choices and rejecting inverted pairs. `EngineRun.health` carries
+per-entry assessments and effective horizons. Warning-only entries are visible
+in the existing runner but do not trigger bump decisions or liveness alarms;
+shared/temporary impact severity is separate from action urgency. The CLI's
+single-threshold interface remains unchanged. [Configuration and API notes](W3-D15-02-IMPLEMENTATION.md).
+
+
 **D15 current path:** `packages/core/src/engine.ts` provides `decideBumps` and
 `runEngine`; `scripts/engine-run.mjs` is the decide-only consumer scheduled by
 `engine-cron.yml`. The engine package itself is still a placeholder. The

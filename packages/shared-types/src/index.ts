@@ -200,6 +200,8 @@ export interface NotificationChannel {
 }
 
 export interface BumpThresholds {
+  /** Optional early-warning horizon; omission is resolved by core policy. */
+  readonly warnBelowLedgers?: number;
   readonly bumpWhenRemainingLedgersBelow: number;
   readonly extendToLedgers: number;
 }

@@ -18,6 +18,7 @@
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import console from 'node:console';
+import { formatEngineRun } from './engine-output.mjs';
 import { rpc, Networks } from '@stellar/stellar-sdk';
 // Imported from the BUILT core by relative URL, not by package name: the repo
 // root is not a workspace member and cannot resolve `@evergreen-stellar/core`.
@@ -41,13 +42,9 @@ if (passphrase !== Networks.TESTNET) {
 }
 
 const run = await runEngine(createRpcReader(server), config);
-const acted = run.decisions.filter((d) => d.action === 'extend');
 const refused = run.decisions.filter((d) => d.reason.includes('REFUSED BY WRITE GUARD'));
 
-console.log(`mode=${run.mode} decisions=${run.decisions.length} would-extend=${acted.length}`);
-for (const d of run.decisions) {
-  console.log(`  ${d.action.toUpperCase().padEnd(6)} ${d.entryKey}\n         ${d.reason}`);
-}
+console.log(formatEngineRun(run));
 
 // A refusal is a non-event — no transaction, no hash, nothing in an explorer.
 // On ~2026-09-20 this line is the evidence for W3-D18-02b, so it is printed

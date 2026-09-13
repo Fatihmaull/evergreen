@@ -43,6 +43,8 @@ export {
   DEFAULT_THRESHOLDS,
   DEFAULT_WARN_LEDGERS,
   assessEntry,
+  assessEntryWithThresholds,
+  resolveHealthThresholds,
   coverageIssues,
   worstHealth,
 } from './health.js';
@@ -69,7 +71,7 @@ export type {
 export type { ContractScanRequest } from './scan-contract.js';
 export { scanContract, scanContracts } from './scan-contract.js';
 export { decideBumps, runEngine } from './engine.js';
-export type { EngineRun } from './engine.js';
+export type { EngineRun, EngineHealthReport } from './engine.js';
 export { planExtension, executeExtensions } from './extend.js';
 export type {
   ExtensionPlan,

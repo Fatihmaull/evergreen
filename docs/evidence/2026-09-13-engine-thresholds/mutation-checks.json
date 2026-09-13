@@ -1,0 +1,29 @@
+[
+  {
+    "mutation": "warning-hidden",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  4 failed | 5 passed | 20 skipped (29)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 4 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "warning-as-action",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  3 failed | 6 skipped (9)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 3 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "explicit-warning-widened",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Tests  2 failed | 27 skipped (29)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  }
+]

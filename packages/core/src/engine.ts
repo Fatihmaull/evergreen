@@ -5,7 +5,8 @@ import type {
   ScanResult,
 } from '@evergreen-stellar/shared-types';
 import { hasExpired, needsAction } from './ttl.js';
-import { assessEntry } from './health.js';
+import { assessEntryWithThresholds, resolveHealthThresholds } from './health.js';
+import type { EntryAssessment, HealthThresholds } from './health.js';
 import { assertLiveness, type LivenessVerdict } from './liveness.js';
 import { ProtectedEntryError, assertWriteAllowed } from './write-guard.js';
 import {
@@ -36,16 +37,23 @@ import type { LedgerEntryReader } from './rpc.js';
  * (`W3-D16-01`) so that nothing here can submit by accident.
  */
 
+export interface EngineHealthReport {
+  readonly byEntry: Readonly<Record<LedgerKey, EntryAssessment>>;
+  readonly thresholdsByEntry: Readonly<Record<LedgerKey, HealthThresholds>>;
+}
+
 export interface EngineRun {
   readonly scan: ScanResult;
   readonly decisions: readonly BumpDecision[];
   readonly liveness: LivenessVerdict;
+  readonly health: EngineHealthReport;
   /** Always 'dry-run' from this module. Nothing here signs or submits. */
   readonly mode: 'dry-run';
 }
 
 /** One resolution is shared by the decision pass and the liveness assertion. */
 interface DecisionPass {
+  readonly health: EngineHealthReport;
   readonly decisions: readonly BumpDecision[];
   readonly actionThresholdByEntry: Readonly<Record<LedgerKey, number>>;
 }
@@ -65,6 +73,8 @@ function evaluateBumps(
   maxEntryTtl: number | undefined,
 ): DecisionPass {
   const decisions: BumpDecision[] = [];
+  const byEntry: Record<LedgerKey, EntryAssessment> = {};
+  const thresholdsByEntry: Record<LedgerKey, HealthThresholds> = {};
   const actionThresholdByEntry: Record<LedgerKey, number> = {};
   // The scanner unions repeated registrations. Preserve every policy too:
   // collapsing to the last row would silently choose its payer/target/threshold.
@@ -81,7 +91,15 @@ function evaluateBumps(
     const configured = registrations.flat();
     if (configured.length === 0) continue;
     const policies = configured.map((c) => ({ ...config.defaults, ...c.thresholds }));
-    const actionThreshold = Math.max(...policies.map((p) => p.bumpWhenRemainingLedgersBelow));
+    const pairs = configured.map((c) => resolveHealthThresholds(config.defaults, c.thresholds));
+    const thresholds = {
+      warnBelowLedgers: Math.max(...pairs.map((p) => p.warnBelowLedgers)),
+      criticalBelowLedgers: Math.max(...pairs.map((p) => p.criticalBelowLedgers)),
+    };
+    thresholdsByEntry[entryKey] = thresholds;
+    const assessment = assessEntryWithThresholds(entry, thresholds);
+    byEntry[entryKey] = assessment;
+    const actionThreshold = thresholds.criticalBelowLedgers;
     actionThresholdByEntry[entryKey] = actionThreshold;
     const skip = (reason: string): void => {
       decisions.push({ action: 'skip', entryKey, contracts: consumers, reason });
@@ -92,7 +110,9 @@ function evaluateBumps(
     }
     const { remainingLedgers } = entry.ttl;
     if (!needsAction(remainingLedgers, actionThreshold)) {
-      skip(`Above threshold: ${remainingLedgers.toLocaleString()} ledgers remaining.`);
+      skip(
+        `${assessment.health.toUpperCase()} — ${assessment.reason} ${remainingLedgers.toLocaleString()} ledgers remaining.`,
+      );
       continue;
     }
 
@@ -160,7 +180,6 @@ function evaluateBumps(
       skip('Network-capped target cannot increase TTL and clear the action threshold.');
       continue;
     }
-    const assessment = assessEntry(entry, actionThreshold);
     decisions.push({
       action: 'extend',
       entryKey,
@@ -174,7 +193,7 @@ function evaluateBumps(
           : ''),
     });
   }
-  return { decisions, actionThresholdByEntry };
+  return { decisions, actionThresholdByEntry, health: { byEntry, thresholdsByEntry } };
 }
 
 /** Read config, scan registered contracts, decide, assert liveness. Never execute. */
@@ -215,7 +234,7 @@ export async function runEngine(
       });
     }
   }
-  const { decisions, actionThresholdByEntry } = evaluateBumps(scan, config, maxEntryTtl);
+  const { decisions, actionThresholdByEntry, health } = evaluateBumps(scan, config, maxEntryTtl);
   const liveness = assertLiveness({
     scan,
     thresholds: { bumpWhenRemainingLedgersBelow: config.defaults.bumpWhenRemainingLedgersBelow },
@@ -223,5 +242,5 @@ export async function runEngine(
     records: [],
     decisions,
   });
-  return { scan, decisions, liveness, mode: 'dry-run' };
+  return { scan, decisions, liveness, health, mode: 'dry-run' };
 }

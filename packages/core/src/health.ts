@@ -1,4 +1,9 @@
-import type { LedgerEntryTTL, ScanIssue, ScanResult } from '@evergreen-stellar/shared-types';
+import type {
+  BumpThresholds,
+  LedgerEntryTTL,
+  ScanIssue,
+  ScanResult,
+} from '@evergreen-stellar/shared-types';
 import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
 
 /**
@@ -116,6 +121,67 @@ export const DEFAULT_THRESHOLDS: HealthThresholds = {
   warnBelowLedgers: DEFAULT_WARN_LEDGERS,
   criticalBelowLedgers: DEFAULT_CRITICAL_LEDGERS,
 };
+
+/** Validate policy ordering separately from observation classification. */
+function assertHealthThresholds(thresholds: HealthThresholds): void {
+  if (
+    !Number.isSafeInteger(thresholds.criticalBelowLedgers) ||
+    !isValidThreshold(thresholds.criticalBelowLedgers)
+  ) {
+    throw new Error('criticalBelowLedgers must be a non-negative safe integer of ledgers');
+  }
+  if (
+    !Number.isSafeInteger(thresholds.warnBelowLedgers) ||
+    !isValidThreshold(thresholds.warnBelowLedgers)
+  ) {
+    throw new Error('warnBelowLedgers must be a non-negative safe integer of ledgers');
+  }
+  if (!needsAction(thresholds.criticalBelowLedgers, thresholds.warnBelowLedgers)) {
+    throw new Error(
+      'warnBelowLedgers must be at least the action threshold (bumpWhenRemainingLedgersBelow)',
+    );
+  }
+}
+
+/** Preserve omission: only an implicit warning can widen for a legacy action override. */
+export function resolveHealthThresholds(
+  defaults: BumpThresholds,
+  overrides: Partial<BumpThresholds> = {},
+): HealthThresholds {
+  const criticalBelowLedgers =
+    overrides.bumpWhenRemainingLedgersBelow ?? defaults.bumpWhenRemainingLedgersBelow;
+  const warnBelowLedgers =
+    overrides.warnBelowLedgers ??
+    defaults.warnBelowLedgers ??
+    Math.max(DEFAULT_WARN_LEDGERS, criticalBelowLedgers);
+  const resolved = { warnBelowLedgers, criticalBelowLedgers };
+  assertHealthThresholds(resolved);
+  return resolved;
+}
+
+/** Two-tier engine assessment. Impact may be critical without authorizing an action. */
+export function assessEntryWithThresholds(
+  entry: LedgerEntryTTL,
+  thresholds: HealthThresholds,
+): EntryAssessment {
+  assertHealthThresholds(thresholds);
+  const assessment = assessEntry(entry, thresholds.warnBelowLedgers);
+  if (entry.ttl.status === 'unavailable' || assessment.isExpired) return assessment;
+  if (needsAction(entry.ttl.remainingLedgers, thresholds.criticalBelowLedgers)) {
+    return {
+      ...assessment,
+      health: 'critical',
+      needsAction: true,
+      reason: `At or below action threshold (${thresholds.criticalBelowLedgers} ledgers). ${assessment.reason}`,
+    };
+  }
+  if (assessment.health === 'healthy') return assessment;
+  return {
+    ...assessment,
+    needsAction: false,
+    reason: `${assessment.reason} Above action threshold (${thresholds.criticalBelowLedgers} ledgers); warning only, no bump needed.`,
+  };
+}
 
 export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): EntryAssessment {
   if (!isValidThreshold(thresholdLedgers)) {
