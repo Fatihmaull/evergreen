@@ -18,6 +18,7 @@
     "networkPassphrase": "Test SDF Network ; September 2015"
   },
   "defaults": {
+    "warnBelowLedgers": 120960,
     "bumpWhenRemainingLedgersBelow": 17280,
     "extendToLedgers": 518400
   },

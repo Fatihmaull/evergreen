@@ -71,11 +71,21 @@ export const configExample = {
     rpcUrl: 'https://soroban-testnet.stellar.org',
     networkPassphrase: 'Test SDF Network ; September 2015',
   },
-  defaults: { bumpWhenRemainingLedgersBelow: 17280, extendToLedgers: 518400 },
+  defaults: {
+    warnBelowLedgers: 120960,
+    bumpWhenRemainingLedgersBelow: 17280,
+    extendToLedgers: 518400,
+  },
   contracts: [{ id: 'REPLACE_WITH_GUINEA_PIG_A_ID', label: 'guinea-pig-A', payer: 'bot-testnet' }],
   payers: { 'bot-testnet': { signer: 'ed25519', secretEnvVar: 'EVERGREEN_SIGNER_SECRET' } },
   notifications: { channel: 'email', toEnvVar: 'EVERGREEN_ALERT_TO' },
   mode: 'dry-run',
+} as const satisfies EvergreenConfig;
+
+// Compile-time compatibility: callers may still omit the new warning field.
+export const legacyConfigExample = {
+  ...configExample,
+  defaults: { bumpWhenRemainingLedgersBelow: 17280, extendToLedgers: 518400 },
 } as const satisfies EvergreenConfig;
 
 export const multiPayerConfig = {

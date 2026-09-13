@@ -1,9 +1,12 @@
 import type {
   EvergreenConfig,
+  BumpThresholds,
   ExecutionMode,
   PayerConfig,
   TestnetPassphrase,
 } from '@evergreen-stellar/shared-types';
+import { DEFAULT_WARN_LEDGERS, resolveHealthThresholds } from './health.js';
+import { needsAction } from './ttl.js';
 
 /**
  * Config loading (`W2-D13-01`). Pure: takes text, returns a validated config.
@@ -60,10 +63,57 @@ function requireString(value: unknown, path: string): string {
 }
 
 function requireLedgerCount(value: unknown, path: string): number {
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
-    throw new ConfigError(`${path} must be a non-negative whole number of ledgers.`);
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw new ConfigError(`${path} must be a non-negative safe whole number of ledgers.`);
   }
   return value;
+}
+
+const THRESHOLD_FIELDS = [
+  'warnBelowLedgers',
+  'bumpWhenRemainingLedgersBelow',
+  'extendToLedgers',
+] as const;
+
+function parseThresholdFields(value: unknown, path: string): Partial<BumpThresholds> {
+  const raw = requireRecord(value, path);
+  const parsed: { -readonly [K in keyof BumpThresholds]?: BumpThresholds[K] } = {};
+  for (const key of Object.keys(raw)) {
+    if (isDocumentationKey(key)) continue;
+    if (!THRESHOLD_FIELDS.some((field) => field === key)) {
+      throw new ConfigError(
+        `${path}.${key} is not a supported threshold field. Use warnBelowLedgers for warning and bumpWhenRemainingLedgersBelow for action.`,
+      );
+    }
+  }
+  for (const field of THRESHOLD_FIELDS) {
+    if (raw[field] !== undefined)
+      parsed[field] = requireLedgerCount(raw[field], `${path}.${field}`);
+  }
+  return parsed;
+}
+
+function validateThresholdPair(
+  defaults: BumpThresholds,
+  overrides: Partial<BumpThresholds> | undefined,
+  path: string,
+  warnings: string[],
+): void {
+  try {
+    const pair = resolveHealthThresholds(defaults, overrides);
+    if (
+      defaults.warnBelowLedgers === undefined &&
+      overrides?.warnBelowLedgers === undefined &&
+      !needsAction(pair.criticalBelowLedgers, DEFAULT_WARN_LEDGERS) &&
+      (path === 'defaults' || pair.criticalBelowLedgers !== defaults.bumpWhenRemainingLedgersBelow)
+    ) {
+      warnings.push(
+        `${path}: warning omitted; derived warnBelowLedgers=${pair.warnBelowLedgers} to match the action threshold. Set an explicit warning horizon for an earlier warning.`,
+      );
+    }
+  } catch (error) {
+    throw new ConfigError(`${path}: ${(error as Error).message}`);
+  }
 }
 
 /**
@@ -118,14 +168,16 @@ export function loadConfig(raw: string): ConfigLoadResult {
     );
   }
 
-  const defaults = requireRecord(root.defaults, 'defaults');
-  const thresholds = {
+  const defaults = parseThresholdFields(root.defaults, 'defaults');
+  const thresholds: BumpThresholds = {
+    ...defaults,
     bumpWhenRemainingLedgersBelow: requireLedgerCount(
       defaults.bumpWhenRemainingLedgersBelow,
       'defaults.bumpWhenRemainingLedgersBelow',
     ),
     extendToLedgers: requireLedgerCount(defaults.extendToLedgers, 'defaults.extendToLedgers'),
   };
+  validateThresholdPair(thresholds, undefined, 'defaults', warnings);
 
   const payersRaw = requireRecord(root.payers, 'payers');
   const payers: Record<string, PayerConfig> = {};
@@ -174,35 +226,18 @@ export function loadConfig(raw: string): ConfigLoadResult {
           'Those cannot both be true. Remove one.',
       );
     }
-    const overrides = isRecord(contract.thresholds) ? contract.thresholds : undefined;
+    const overrides =
+      contract.thresholds === undefined
+        ? undefined
+        : parseThresholdFields(contract.thresholds, `contracts[${index}].thresholds`);
+    validateThresholdPair(thresholds, overrides, `contracts[${index}].thresholds`, warnings);
     return {
       id,
       ...(label === undefined ? {} : { label }),
       payer,
       ...(dataKeys === undefined ? {} : { dataKeys }),
       ...(noDataKeys === undefined ? {} : { noDataKeys }),
-      ...(overrides === undefined
-        ? {}
-        : {
-            thresholds: {
-              ...(overrides.bumpWhenRemainingLedgersBelow === undefined
-                ? {}
-                : {
-                    bumpWhenRemainingLedgersBelow: requireLedgerCount(
-                      overrides.bumpWhenRemainingLedgersBelow,
-                      `contracts[${index}].thresholds.bumpWhenRemainingLedgersBelow`,
-                    ),
-                  }),
-              ...(overrides.extendToLedgers === undefined
-                ? {}
-                : {
-                    extendToLedgers: requireLedgerCount(
-                      overrides.extendToLedgers,
-                      `contracts[${index}].thresholds.extendToLedgers`,
-                    ),
-                  }),
-            },
-          }),
+      ...(overrides === undefined ? {} : { thresholds: overrides }),
     };
   });
 

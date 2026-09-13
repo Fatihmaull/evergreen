@@ -202,3 +202,132 @@ describe('loadConfig — the caller coverage declaration survives (ADR-006)', ()
     expect(c.contracts[0]).not.toHaveProperty('noDataKeys');
   });
 });
+
+describe('loadConfig — warning/action policy (W3-D15-02)', () => {
+  it('preserves a supplied warning in defaults and overrides', () => {
+    const { config: c } = loadConfig(
+      config({
+        defaults: {
+          warnBelowLedgers: 120960,
+          bumpWhenRemainingLedgersBelow: 17280,
+          extendToLedgers: 518400,
+        },
+        contracts: [
+          {
+            id: A,
+            payer: 'bot-testnet',
+            thresholds: { warnBelowLedgers: 60480, bumpWhenRemainingLedgersBelow: 8640 },
+          },
+        ],
+      }),
+    );
+    expect(c.defaults).toHaveProperty('warnBelowLedgers', 120960);
+    expect(c.contracts[0]?.thresholds).toHaveProperty('warnBelowLedgers', 60480);
+  });
+  it('does not materialize omitted warnings and lose their inheritance semantics', () => {
+    const { config: c, warnings } = loadConfig(
+      config({
+        contracts: [
+          { id: A, payer: 'bot-testnet', thresholds: { bumpWhenRemainingLedgersBelow: 1500000 } },
+        ],
+      }),
+    );
+    expect(c.defaults).not.toHaveProperty('warnBelowLedgers');
+    expect(c.contracts[0]?.thresholds).not.toHaveProperty('warnBelowLedgers');
+    expect(warnings.join(' ')).toMatch(/1500000/);
+  });
+  it('identifies an inverted effective pair at the contract path', () => {
+    expect(() =>
+      loadConfig(
+        config({
+          defaults: {
+            warnBelowLedgers: 120960,
+            bumpWhenRemainingLedgersBelow: 17280,
+            extendToLedgers: 518400,
+          },
+          contracts: [
+            { id: A, payer: 'bot-testnet', thresholds: { bumpWhenRemainingLedgersBelow: 1500000 } },
+          ],
+        }),
+      ),
+    ).toThrow(/contracts\[0\]\.thresholds/);
+  });
+  it('identifies an inverted default pair even when no contracts exist', () => {
+    expect(() =>
+      loadConfig(
+        config({
+          contracts: [],
+          defaults: {
+            warnBelowLedgers: 10,
+            bumpWhenRemainingLedgersBelow: 20,
+            extendToLedgers: 100,
+          },
+        }),
+      ),
+    ).toThrow(/defaults/);
+  });
+  it.each([null, [], 'warning', 123].map((value) => [value]))(
+    'rejects a malformed thresholds object %j',
+    (thresholds) => {
+      expect(() =>
+        loadConfig(config({ contracts: [{ id: A, payer: 'bot-testnet', thresholds }] })),
+      ).toThrow(/contracts\[0\]\.thresholds/);
+    },
+  );
+  it.each(['warnBelowLedger', 'criticalBelowLedgers', 'bumpWhenRemainingLedgerBelow'])(
+    'rejects unknown threshold behavior %s instead of ignoring it',
+    (key) => {
+      expect(() =>
+        loadConfig(
+          config({
+            defaults: { bumpWhenRemainingLedgersBelow: 17280, extendToLedgers: 518400, [key]: 100 },
+          }),
+        ),
+      ).toThrow(new RegExp(`defaults.${key}`));
+      expect(() =>
+        loadConfig(
+          config({ contracts: [{ id: A, payer: 'bot-testnet', thresholds: { [key]: 100 } }] }),
+        ),
+      ).toThrow(new RegExp(`contracts\\[0\\].thresholds.${key}`));
+    },
+  );
+  it.each([-1, 1.5, null, '120960', Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid warning config %j',
+    (warnBelowLedgers) => {
+      expect(() =>
+        loadConfig(
+          config({
+            defaults: {
+              warnBelowLedgers,
+              bumpWhenRemainingLedgersBelow: 17280,
+              extendToLedgers: 518400,
+            },
+          }),
+        ),
+      ).toThrow(/defaults.warnBelowLedgers/);
+    },
+  );
+  it('accepts threshold documentation and an explicit equal pair', () => {
+    const { config: c } = loadConfig(
+      config({
+        defaults: {
+          _why: 'notes',
+          warnBelowLedgers: 17280,
+          bumpWhenRemainingLedgersBelow: 17280,
+          extendToLedgers: 518400,
+        },
+        contracts: [
+          {
+            id: A,
+            payer: 'bot-testnet',
+            thresholds: { _why: 'notes', warnBelowLedgers: 0, bumpWhenRemainingLedgersBelow: 0 },
+          },
+        ],
+      }),
+    );
+    expect(c.contracts[0]?.thresholds).toEqual({
+      warnBelowLedgers: 0,
+      bumpWhenRemainingLedgersBelow: 0,
+    });
+  });
+});
