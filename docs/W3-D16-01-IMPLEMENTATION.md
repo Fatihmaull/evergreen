@@ -1,7 +1,7 @@
 # W3-D16-01 — local engine execution
 
 Status: local implementation and offline verification complete on
-`feat/W3-D16-01-engine-execution`, based on #121 head cdecdb8. Internal review is complete with no blocking findings; [review report](W3-D16-01-REVIEW.md). Rakha authorized publication after review; the child PR is being prepared against #121. Task completion still requires controlled Testnet validation.
+`feat/W3-D16-01-engine-execution`, based on #121 head cdecdb8. Internal review is complete with no blocking findings; [review report](W3-D16-01-REVIEW.md). Published implementation commit 19f9275 in [PR #122](https://github.com/Fatihmaull/evergreen/pull/122), stacked on #121, for Fatih review/merge. Task completion still requires controlled Testnet validation.
 The backlog stays In progress pending the remaining definition of done.
 
 ## Behavior and reuse

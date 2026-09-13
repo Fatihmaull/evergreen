@@ -5,6 +5,8 @@ No production correction was required. Six regression cases were added, and the
 complete check passed. Ready for the explicit publication checkpoint; this is
 not approval to submit a Testnet transaction or activate live scheduling.
 
+Publication after this review: implementation 19f9275 is in [PR #122](https://github.com/Fatihmaull/evergreen/pull/122), awaiting Fatih review/merge.
+
 Reviewed the uncommitted D16 changes on `feat/W3-D16-01-engine-execution` against
 parent cdecdb8, including new files. The [review source manifest](evidence/2026-09-13-engine-execution/review-verification.json)
 identifies the exact tree. Production source matches the implementation snapshot;
