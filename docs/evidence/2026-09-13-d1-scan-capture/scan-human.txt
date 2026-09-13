@@ -1,0 +1,61 @@
+Scanned 1 contract(s): CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 2 explicit data key(s)
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,368,037 ledgers — live
+  ends at:    ledger 6,026,591
+  expires ~:  2026-12-01T20:22:30.920Z (estimate — ledgers are the truth)
+  observed:   ledger 4,658,554
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  persistent  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,367,041 ledgers — live
+  ends at:    ledger 6,025,595
+  expires ~:  2026-12-01T18:59:30.920Z (estimate — ledgers are the truth)
+  observed:   ledger 4,658,554
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  temporary  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,367,044 ledgers — live
+  ends at:    ledger 6,025,598
+  expires ~:  2026-12-01T18:59:45.920Z (estimate — ledgers are the truth)
+  observed:   ledger 4,658,554
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Whether others depend on this entry cannot be
+              determined from a single-contract scan — pass them together.
+  remaining:  632,275 ledgers — live
+  ends at:    ledger 5,290,829
+  expires ~:  2026-10-20T06:29:00.920Z (estimate — ledgers are the truth)
+  observed:   ledger 4,658,554
+  health:     HEALTHY — Above threshold.
+
+! sharing-undetermined: Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+Scan is PARTIAL — 1 issue(s). Absence is not health.
+
+Cost to extend 4 entries by 518,400 more ledgers
+  total   about 0.83 XLM  (8,311,540 stroops) — what leaves the account
+    rent  about 0.83 XLM  (8,264,288 stroops)
+    fees  about 0.0047 XLM  (47,252 stroops) — non-refundable resource + base fee
+
+  98% of that rent is one entry (AAAAB8flXw…). Code entries hold the
+  Wasm and are usually the expensive one — and the one shared between contracts.
+
+  Priced by simulating against the network at ledger 4,658,554.
+  Rent pricing varies with network state — a quote taken on another day has
+  differed by ~18%. This is an estimate to budget against, not a quoted price.
+
+  Targets are computed from TTL read now, and the ledger advances before
+  submission. Two consequences, in opposite directions:
+    · REMAINING TTL, measured after inclusion, lands a few ledgers UNDER target
+    · ABSOLUTE EXPIRY moves a few ledgers PAST the request (+N plus the gap)
