@@ -29,7 +29,87 @@ The engine's signing key is a hot key that sits on a server with lumens on it �
 
 ## Quickstart
 
-*(Available once packages are published — W4-D27.)*
+**Works today, from a clone.** Publication lands at `W4-D27`; until then this is
+the real front door and it is the one tested on a fresh machine.
+
+Needs Node 24 (`.nvmrc`) and pnpm 11.
+
+```bash
+git clone https://github.com/Fatihmaull/evergreen.git
+cd evergreen
+pnpm install
+pnpm build
+```
+
+Then scan our public test contract — no key, no account, no signup. **Scanning
+is a permissionless read; nothing here can spend anything.**
+
+```bash
+pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+```
+
+```
+HEALTHY  instance  AAAABgAAAA…
+  remaining:  1,367,103 ledgers — live
+  ends at:    ledger 6,026,591
+  expires ~:  2026-12-01T20:22:23.016Z (estimate — ledgers are the truth)
+  health:     HEALTHY — Above threshold.
+```
+
+That contract is deliberately long-lived, so it reads the same for you as it did
+for us. Swap in any Testnet contract ID.
+
+### What will it cost to keep alive?
+
+```bash
+pnpm cli scan <contract-id> --cost --ledgers 518400
+```
+
+```
+Cost to extend 2 entries by 518,400 more ledgers
+  total   about 0.82 XLM  (8,212,413 stroops) — what leaves the account
+    rent  about 0.82 XLM  (8,188,780 stroops)
+    fees  about 0.0024 XLM  (23,633 stroops) — non-refundable resource + base fee
+```
+
+Priced by simulating the real operation against live network config, not by a
+local formula. It is an estimate: rent varies with network state, and we have
+measured ~18% between days.
+
+### The thing most people do not know they have
+
+Contracts built from the same Wasm **share one `ContractCode` ledger entry**. If
+it expires, every one of them breaks at once — and a scan of a single contract
+*cannot tell you* whether others depend on it. Pass them together:
+
+```bash
+pnpm cli scan <contract-a> <contract-b> <contract-c>
+```
+
+```
+⚠ shared:   this code entry is shared with 2 other contracts — they fail together
+```
+
+On our three test contracts that one shared entry is **97% of the rent bill** —
+it is simultaneously the biggest availability risk and the biggest line item.
+The exact share depends on which entries are in scope; scanning one of them with
+its data keys puts it at 98%. Either way the shape is the point: the entry
+everything depends on is also the entry that costs.
+
+### Other things worth knowing
+
+```bash
+pnpm cli scan <id> --json        # complete record, including every caveat
+pnpm cli scan <id> --optimize    # storage advice, with its evidence and limits
+pnpm cli extend --help           # manual extendTTL — simulates unless you pass --submit
+```
+
+Exit codes are meaningful: `0` healthy, `1` low TTL observed, `2` error, `3` the
+scan came back incomplete. **A clean exit means "everything I was asked to check
+is healthy", never "this contract is fully healthy"** — scanning cannot enumerate
+a contract's storage, so coverage is printed with every scan.
+
+### Once published (`W4-D27`)
 
 ```bash
 npx @evergreen-stellar/cli scan <contract-id>
