@@ -1,0 +1,15 @@
+mode=dry-run decisions=2 would-extend=1
+  EXTEND AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+         WARNING — Low, recoverable, and affects only this contract.
+  SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+         REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry.
+
+🔴 1 write(s) REFUSED by the guard. This is expected for
+   guinea-pigs B and C and the shared code entry, and it is EVIDENCE:
+   capture this log. A refusal leaves no other trace anywhere.
+[ELIFECYCLE] Command failed with exit code 1.
+$ node scripts/engine-run.mjs
+
+✖ liveness alarm (critical):
+  critical: no-action-recorded
+  critical: skipped

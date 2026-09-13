@@ -1,0 +1,52 @@
+[
+  {
+    "mutation": "config-target-as-delta",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Test Files  1 failed | 1 skipped (2)",
+      "Tests  1 failed | 31 skipped (32)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "expired-candidate",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Test Files  1 failed | 1 skipped (2)",
+      "Tests  1 failed | 31 skipped (32)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "implicit-first-payer",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Test Files  1 failed | 1 skipped (2)",
+      "Tests  2 failed | 30 skipped (32)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "global-only-liveness",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Test Files  1 failed | 1 skipped (2)",
+      "Tests  2 failed | 30 skipped (32)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  },
+  {
+    "mutation": "guard-bypassed",
+    "exitCode": 1,
+    "assertionFailure": true,
+    "summary": [
+      "Test Files  1 failed | 1 skipped (2)",
+      "Tests  3 failed | 29 skipped (32)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 3 \u23af\u23af\u23af\u23af\u23af\u23af\u23af"
+    ]
+  }
+]

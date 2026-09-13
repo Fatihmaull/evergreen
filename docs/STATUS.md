@@ -2,14 +2,52 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · W2-D14-04 published in PR #113 for Fatih review
+**Last updated:** 2026-09-12 · W3-D15-04 published in PR #120 for Fatih review
 **Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
-**Current week:** **W2 — Core CLI, Deliverable 1** (W1 closed **51/51**, one recurring obligation active) · 🔴 **milestone gate Wed Sep 16**
+**Current week:** **W3 — Stage 1 engine correction**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W2-D14-04 published for review in #113
+## Current — W3-D15-04 published in PR #120
+
+Rakha approved publication after internal review. [PR #120](https://github.com/Fatihmaull/evergreen/pull/120) targets main cc0fb16 from `fix/W3-D15-04-engine-decisions`; Fatih is requested as reviewer. Code/review corrections are at 73a9050, reviewed documentation at 46b4b7b. [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119) is linked for closure on merge. W3-D15-04 remains Done for verified branch implementation; PR is open and unmerged. Fatih handles merge.
+
+Fresh pre-publication full pnpm check passed 575 tests with unchanged coverage gates. The PR includes the initial reproductions, corrected engine/liveness behavior, seven mutation checks and read-only A observations. No new transaction, signature, protected override or scheduler activation during publication. Final-head remote CI is verified separately; local check results are not a claim about remote CI.
+
+## Earlier — W3-D15-04 internal review complete; ready for publication
+
+[Review report](W3-D15-04-REVIEW.md): review of 79e9124 found two P2 issues, both reproduced and fixed in 73a9050. Repeated contract registrations no longer discard prior payer/target/threshold policies; consistent duplicates still work. Liveness now reports deleted temporary data as non-restorable while preserving restore guidance for archived entries. No blocking findings remain in the reviewed correction scope.
+
+Full pnpm check passed 575 tests (497 Vitest + 78 Node), unchanged coverage gates. Focused suite passed 75 tests. Reintroducing last-row policy selection fails four review tests; unconditional restore fails one. The current compiled engine exactly replayed the existing read-only A snapshots without a network call. No new transaction, seed access, scheduler action, PR or merge. W3-D15-04 is Done for verified branch implementation; publication is the next checkpoint and Fatih still handles review/merge. Issue #119 stays open. Notion read-back confirms Done/Rakha with the branch-qualified outcome. Full presence diff: 149 registered IDs / 150 mirror rows, no missing or duplicate IDs; sole extra is the known retired Dropped predecessor.
+
+## Earlier — W3-D15-04 implemented; awaiting internal review
+
+[Implementation report](W3-D15-04-IMPLEMENTATION.md), [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119). The existing core engine now preserves remaining-TTL targets using an observed network ceiling, refuses expired candidates, requires shared payer/target agreement, and uses one effective threshold map for decisions and liveness. Guard refusals stay recorded skips; no second engine or workflow change. W3-D15-04 remains In progress until internal review/publication checkpoints; Fatih's existing task ownership is unchanged.
+
+Verification: 24 new regression cases, 69 focused tests green, full pnpm check 569 tests (491 Vitest + 78 Node) with unchanged coverage gates. Five deliberate regressions each fail the relevant tests. Read-only A validation at ledger 4640020 produced exact target 2000000 under a 1500000 per-contract action threshold, shared-code refusal and liveness alarm; the actual built script returned 0 with normal config and 1 with the validation override. [Captured observations](evidence/2026-09-12-engine-decision-correction/README.md). No signature, submission, protected override, config deployment or scheduler dispatch. No PR/merge yet. Notion W3-D15-04 mirrors In progress/Rakha with the implementation outcome; all-ID presence check found 149 registered IDs / 150 rows, no missing or duplicate IDs, and only the known retired Dropped predecessor as extra.
+
+## Earlier — W3-D15-04 corrective implementation
+
+Rakha authorized adapting to merged main and opening an issue for the reproduced problems. Tracked in [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119), assigned Rakha and mentioning Fatih. Starting W3-D15-04 on `fix/W3-D15-04-engine-decisions` from cc0fb16. Scope: target semantics and real network ceiling, expired-entry refusal, explicit shared-key policy conflicts, and identical effective thresholds for decisions/liveness. Existing decide-only entry points and B/C/shared guard remain in use. D15-01/D15-03 remain Fatih-owned and Done; no replacement engine is being built. Test first, full check and read-only A validation, then internal review before PR publication. No signing, submission, cron activation or protected override. Planning notes/handoff have been preserved; the pre-switch stash is retained as a backup.
+
+## Earlier — startup refresh found D15-01 already merged; correction scope needs reconciliation
+
+After Rakha approved the D15-01 plan, git fetch advanced origin/main to cc0fb16 (#118). #113 was approved by Fatih and merged; #107 closed. #115 records D15-01/D15-03 as Done under Fatih, #116 records read-only A dogfooding, and #117/#118 provide the decide-only fallback cron. Notion status/owner for D15-01, D15-03, D18-00 and W2-D10-04 match the updated main rows; their older Notes are historical text. No duplicate feature branch or engine implementation was created.
+
+[Startup reproduction](evidence/2026-09-12-engine-startup-review/README.md) on a clean cc0fb16 export: 37 existing tests pass; four new expectations fail. Config target is used as a delta (518400 becomes 535680 with remaining 17280); expired instance still receives extend; shared key elects the first payer; and an override can request action while global-threshold liveness stays false. All checks were offline and production source was unmodified. The next proposal is a focused correction of the existing module, not a second engine. No new task was claimed and no correction was published.
+
+#114 changes B's intended outcome: detect crossing, refuse extension, and capture expiry. A supplies the separate save proof. Old statements below about saving B are superseded by that merged decision. Protected keys remain protected. The local approved plan is labeled superseded pending adjustment to this changed implementation/ownership context. No transaction, config activation, schedule dispatch or GitHub message occurred in this startup reconciliation.
+
+## Earlier — W3-D15-01 planning, local and not published
+
+Rakha requested context refresh and a plan before implementation. [Local plan](W3-D15-01-PLAN.md) proposes a single-run engine reusing current core, with explicit threshold/target mappings, per-key decisions, payer conflict handling, protected-key refusal and liveness wiring. W3-D15-01/02/02b/03 remain Pending; W2-D10-04 remains In progress. No engine implementation, new branch, commit, push, GitHub message, schedule, signature or transaction in this planning session. These local planning notes are not part of published #113.
+
+Fetched origin/main is ba72ea8 (#112). #113 remains OPEN at b77495f with successful CI/Cloudflare checks and no Fatih feedback; #107 remains open. #105 is merged despite the older status entry below. The final #104 comment says dismissal of #102's review was unnecessary: unresolved conversations were the actual merge gate; the two findings remain correct. No repeat post-review or A live proof is needed.
+
+Notion validation was read-only: 149 rows, no duplicate IDs, no missing registered IDs; all D15 rows match status/owner. Main has 147 registered IDs; the #113 branch has 148. W2-D14-04 exists in #113 but not main, and the one other extra is the known retired Dropped predecessor. No mechanical correction is warranted. No task status changed in this session. Rakha clarified that work should proceed as soon as dependencies allow, without waiting for historical day-block dates. The plan is now scoped specifically to W3-D15-01; it consumes existing config overrides but leaves new two-tier config fields, transaction execution and scheduling to their own tasks. September 18 remains the hard gate; no intermediate date is treated as a reason to wait. B/C and shared Wasm protections remain in force.
+
+## Earlier — W2-D14-04 published for review in #113
 
 Rakha approved publication after internal review. [PR #113](https://github.com/Fatihmaull/evergreen/pull/113) targets main ba72ea8 from `fix/W2-D14-04-evidence-integrity`; Fatih is requested as reviewer. Reviewed implementation d8307a9, review record 537722f. Existing [Issue #107](https://github.com/Fatihmaull/evergreen/issues/107) is linked for closure on merge; no duplicate issue was created. Task remains Done for verified branch implementation, while the PR is open and unmerged. 22 new regressions and full 537-test check passed; all 130 original non-tool/non-manifest files are unchanged. No transaction or runtime CLI change during publication. Fatih handles merge; final-head CI is checked separately.
 

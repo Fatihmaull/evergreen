@@ -4,6 +4,7 @@ import type {
   BumpThresholds,
   ContractId,
   LedgerKey,
+  LedgerEntryTTL,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
 import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
@@ -61,7 +62,8 @@ export type LivenessReason =
  * What someone woken by this alarm should actually do. Separate from `reason`
  * because they are different questions, and because the answer changes at the
  * expiry boundary: an already-expired entry is past saving by `extendTTL` and
- * needs `RestoreFootprintOp`. Telling someone to "bump" it at the moment they
+ * needs `RestoreFootprintOp` only if persistent; temporary data cannot be restored.
+ * Telling someone to "bump" it at the moment they
  * are acting under pressure sends them at the wrong operation.
  */
 export type LivenessRemediation = 'extend' | 'restore' | 'investigate';
@@ -78,7 +80,7 @@ export interface LivenessFinding {
   readonly remediation: LivenessRemediation;
   /** Absent when the entry was never observed. Negative means already expired. */
   readonly remainingLedgers?: number;
-  /** True when the entry is past `extendTTL` and needs restoring instead. */
+  /** True past the live boundary: archived data needs restore; deleted data cannot be restored. */
   readonly isExpired: boolean;
   /** Human-readable, safe to print; never a raw stack trace. */
   readonly detail: string;
@@ -134,6 +136,7 @@ function describe(
   remainingLedgers: number | undefined,
   isExpired: boolean,
   note?: string,
+  endBehavior: LedgerEntryTTL['endBehavior'] = 'archived',
 ): string {
   const where =
     remainingLedgers === undefined
@@ -142,7 +145,11 @@ function describe(
         ? `EXPIRED ${Math.abs(remainingLedgers).toLocaleString()} ledgers ago`
         : `${remainingLedgers.toLocaleString()} ledgers remain`;
   // Said once, here, so no caller has to remember which operation applies.
-  const fix = isExpired ? ' Past extendTTL — this needs RestoreFootprintOp, not a bump.' : '';
+  const fix = !isExpired
+    ? ''
+    : endBehavior === 'deleted'
+      ? ' Past extendTTL — temporary data was deleted and cannot be restored.'
+      : ' Past extendTTL — this needs RestoreFootprintOp, not a bump.';
   switch (reason) {
     case 'no-action-recorded':
       return `Needs action (${where}) and this run recorded nothing for it.${fix}`;
@@ -164,17 +171,20 @@ export function assertLiveness(args: {
   readonly thresholds: Pick<BumpThresholds, 'bumpWhenRemainingLedgersBelow'>;
   /** Every record this run produced. An empty array is the silent-run case. */
   readonly records: readonly BumpRecord[];
-  /**
-   * Decisions this run made. Optional: without them a deliberate skip is
-   * indistinguishable from nothing happening, and both alarm as critical
-   * anyway. Supplying them only buys a more honest message.
-   */
-  readonly decisions?: readonly BumpDecision[];
+  /** Every real caller supplies decisions, even when there were none. */
+  readonly decisions: readonly BumpDecision[];
+  /** The decision pass's effective threshold per key; global is the fallback. */
+  readonly actionThresholdByEntry?: Readonly<Record<LedgerKey, number>>;
 }): LivenessVerdict {
   const { scan, records } = args;
   const threshold = args.thresholds.bumpWhenRemainingLedgersBelow;
   if (!isValidThreshold(threshold)) {
     throw new Error('bumpWhenRemainingLedgersBelow must be a non-negative integer of ledgers');
+  }
+
+  for (const value of Object.values(args.actionThresholdByEntry ?? {})) {
+    if (!isValidThreshold(value))
+      throw new Error('Entry action thresholds must be non-negative integer ledgers');
   }
 
   const byEntry = new Map<LedgerKey, BumpRecord[]>();
@@ -184,7 +194,7 @@ export function assertLiveness(args: {
     else byEntry.set(record.entryKey, [record]);
   }
   const skips = new Map<LedgerKey, string>();
-  for (const decision of args.decisions ?? []) {
+  for (const decision of args.decisions) {
     if (decision.action === 'skip') skips.set(decision.entryKey, decision.reason);
   }
 
@@ -207,7 +217,8 @@ export function assertLiveness(args: {
     }
 
     const { remainingLedgers } = entry.ttl;
-    if (!needsAction(remainingLedgers, threshold)) continue;
+    if (!needsAction(remainingLedgers, args.actionThresholdByEntry?.[entryKey] ?? threshold))
+      continue;
 
     const forEntry = byEntry.get(entryKey) ?? [];
     if (forEntry.some(confirmedBump)) continue;
@@ -244,10 +255,14 @@ export function assertLiveness(args: {
       contracts: entry.contracts,
       reason: chosen.reason,
       severity: SEVERITY[chosen.reason],
-      remediation: isExpired ? 'restore' : 'extend',
+      remediation: isExpired
+        ? entry.endBehavior === 'deleted'
+          ? 'investigate'
+          : 'restore'
+        : 'extend',
       remainingLedgers,
       isExpired,
-      detail: describe(chosen.reason, remainingLedgers, isExpired, chosen.note),
+      detail: describe(chosen.reason, remainingLedgers, isExpired, chosen.note, entry.endBehavior),
     });
   }
 

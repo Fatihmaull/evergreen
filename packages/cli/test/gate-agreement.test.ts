@@ -46,6 +46,7 @@ describe('the CLI gate and the engine agree about "needs action"', () => {
   it.each(around)('agrees at remaining = %i', (remainingLedgers) => {
     const scan = scanAt(remainingLedgers);
     const engineAlarms = assertLiveness({
+      decisions: [],
       scan,
       thresholds: { bumpWhenRemainingLedgersBelow: THRESHOLD },
       records: [],

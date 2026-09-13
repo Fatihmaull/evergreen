@@ -1,0 +1,44 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import { StrKey } from '@stellar/stellar-sdk';
+import type { EvergreenConfig, LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
+import { decideBumps, runEngine } from '../src/engine.js';
+import { codeKey, instanceKey } from '../src/rpc.js';
+import { createMockReader } from './mock-rpc.js';
+const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+const D = StrKey.encodeContract(Buffer.alloc(32, 7));
+function config(ids = [A]): EvergreenConfig {
+  return {
+    network: {rpcUrl:'https://soroban-testnet.stellar.org', networkPassphrase:'Test SDF Network ; September 2015'},
+    defaults: {bumpWhenRemainingLedgersBelow:17280,extendToLedgers:518400},
+    contracts: ids.map(id=>({id,payer:id===A?'payer-a':'payer-d'})),
+    payers: {'payer-a':{signer:'ed25519',secretEnvVar:'UNREAD_A'},'payer-d':{signer:'ed25519',secretEnvVar:'UNREAD_D'}},
+  };
+}
+function scan(remaining: number, consumers = [A], kind: 'instance' | 'code' = 'instance'): ScanResult {
+  const entry: LedgerEntryTTL = {kind,endBehavior:'archived',contracts:consumers,observedAtLedger:1000000,ttl:{status:'known',endsAtLedger:1000000+remaining,remainingLedgers:remaining}};
+  return {network:'testnet',contracts:consumers.map(id=>({id})),entries:{[kind==='instance'?instanceKey(A):codeKey(new Uint8Array(32).fill(6))]:entry},issues:[]};
+}
+describe('W3 startup: approved-plan boundaries on merged main',()=>{
+  it('preserves a configured remaining-TTL target rather than treating it as an increment',()=>{
+    const [d]=decideBumps(scan(17280),config());
+    expect(d?.action).toBe('extend');
+    expect(d?.action==='extend'&&d.extendToLedgers).toBe(518400);
+  });
+  it('does not propose extending an expired instance',()=>{
+    expect(decideBumps(scan(-1),config())[0]?.action).toBe('skip');
+  });
+  it('does not select a payer implicitly for shared code with different payers',()=>{
+    expect(decideBumps(scan(100,[A,D],'code'),config([A,D]))[0]?.action).toBe('skip');
+  });
+  it('alarms when an override needs action but the decision-only run produces no successful action',async()=>{
+    const fixture=JSON.parse(readFileSync(new URL('./fixtures/getLedgerEntries-guinea-pig-a.json',import.meta.url),'utf8')) as {result:{latestLedger:number;entries:{key:string;xdr:string}[]}};
+    const at=fixture.result.latestLedger;
+    const reader=createMockReader(at,fixture.result.entries.map(e=>({key:e.key,entryXdr:e.xdr,liveUntilLedgerSeq:at+1000})));
+    const base=config();
+    const cfg:EvergreenConfig={...base,defaults:{...base.defaults,bumpWhenRemainingLedgersBelow:100},contracts:[{id:A,payer:'payer-a',thresholds:{bumpWhenRemainingLedgersBelow:2000}}]};
+    const run=await runEngine(reader,cfg);
+    expect(run.decisions.find(d=>d.entryKey===instanceKey(A))?.action).toBe('extend');
+    expect(run.liveness.isAlarm).toBe(true);
+  });
+});
