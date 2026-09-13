@@ -1,4 +1,4 @@
-# Pack rehearsal — conclusive configuration, 2026-09-14
+# Pack rehearsal — conclusive configuration, 2026-09-12
 
 `W2-D14-02b`, re-run after the packaging decision landed in #93. The row had
 been `[~]` pending that decision — *"a rehearsal cannot pass while `core@0.0.0`

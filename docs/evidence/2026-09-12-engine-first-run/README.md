@@ -1,4 +1,4 @@
-# Engine first live run — 2026-09-14
+# Engine first live run — 2026-09-12
 
 `W3-D15-01`'s decision pass, against live Testnet. **Decide-only: nothing signed,
 nothing submitted.**

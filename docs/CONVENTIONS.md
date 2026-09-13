@@ -392,7 +392,7 @@ When you remove a false positive, **ask what the check can no longer see.**
 Suppression trades a blind spot for a blind spot. Reclassification keeps both
 the silence and the coverage.
 
-2026-09-14, ~~W3-D18-02~~. It was reported as a mirror phantom on every sync run.
+2026-09-12, ~~W3-D18-02~~. It was reported as a mirror phantom on every sync run.
 The easy repair was to ignore that one ID and enjoy the quiet — which would have
 removed the noise *and* the coverage, because an ID genuinely appearing where it
 should not would then also be silent.
@@ -424,7 +424,7 @@ passing run carries no information at all — not weak evidence, none.**
 The only way to verify one is to give it something to find: **manufacture the
 condition it exists to handle, then check the correction landed.**
 
-2026-09-14, the Notion sync. The mirror was already in parity because a human had
+2026-09-12, the Notion sync. The mirror was already in parity because a human had
 reconciled it by hand, so a green run would have proved auth and read and said
 nothing whatsoever about the `PATCH`. One row was set to a deliberately wrong
 status, the job dispatched, and the row **read back**:
@@ -449,7 +449,7 @@ Two details that made the verification real rather than ceremonial:
 
 ### A manual sweep that was performed can still be incomplete
 
-The mirror was in parity on 2026-09-14 because Rakha had reconciled it by hand.
+The mirror was in parity on 2026-09-12 because Rakha had reconciled it by hand.
 It still carried `W2-D14-03` at `Blocked` while `BACKLOG.md` said `Done`, and
 nobody knew.
 
