@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { BumpDecision, EvergreenConfig, ScanResult } from '@evergreen-stellar/shared-types';
 import { scanContract } from '../src/scan-contract.js';
 import { createMockReader } from './mock-rpc.js';
+import { instanceKey } from '../src/rpc.js';
 import { planEngineExecution } from '../src/engine-execution-plan.js';
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const raw = JSON.parse(
@@ -126,5 +127,62 @@ describe('exact engine execution selection', () => {
         config,
       ),
     ).toThrow(/live/i);
+  });
+});
+
+describe('🔴 the write guard on the EXECUTION path', () => {
+  // Defence in depth: `decideBumps` already refuses guinea-pig B, so this
+  // barrier only fires on a decision that bypassed it — a hand-built decision,
+  // a future caller, or a bug upstream. Untested defence in depth is just
+  // untested code, and this is the path that can actually spend.
+  //
+  // Added 2026-09-13 during review of #122: removing the guard call here left
+  // all 619 tests green, and Fatih's standing rule is that mutation-proof of
+  // any new write path is not cuttable.
+  const B = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ';
+
+  async function scanWithB(): Promise<ScanResult> {
+    const bKey = instanceKey(B);
+    const base = await scan();
+    return {
+      ...base,
+      contracts: [...base.contracts, { id: B }],
+      entries: {
+        ...base.entries,
+        [bKey]: {
+          kind: 'instance',
+          endBehavior: 'archived',
+          contracts: [B],
+          observedAtLedger: 1000,
+          ttl: { status: 'known', endsAtLedger: 1050, remainingLedgers: 50 },
+        },
+      },
+    } as ScanResult;
+  }
+
+  it('refuses an extend decision naming guinea-pig B, even when handed one directly', async () => {
+    const bKey = instanceKey(B);
+    const configWithB: EvergreenConfig = {
+      ...config,
+      contracts: [...config.contracts, { id: B, payer: 'payer' }],
+    };
+    const result = planEngineExecution(
+      await scanWithB(),
+      [
+        {
+          action: 'extend',
+          entryKey: bKey,
+          contracts: [B],
+          payer: 'payer',
+          extendToLedgers: 1000,
+          reason: 'hand-built decision that bypassed decideBumps',
+        },
+      ],
+      configWithB,
+    );
+    expect(result.entries).toHaveLength(0);
+    expect(result.skipped?.[0]?.reason ?? JSON.stringify(result)).toContain(
+      'REFUSED BY WRITE GUARD',
+    );
   });
 });
