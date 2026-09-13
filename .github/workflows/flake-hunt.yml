@@ -1,0 +1,71 @@
+name: Flake hunt (manual)
+
+# #128. The engine execution test failed once on a CI runner and passes
+# everywhere locally — including 40 runs under 10-way CPU saturation. The three
+# remaining hypotheses (I/O contention, runner cgroup limits, a different Node
+# build) are all properties of the RUNNER and none can be tested on a laptop.
+#
+# So: run the same loop where it actually failed. It either reproduces, or it
+# converts the park from "not reproducible locally" into "not reproducible on
+# the machine that failed" — which is a much stronger park.
+#
+# Manual only. This is an experiment, not a gate.
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'How many times to run the test'
+        default: '40'
+      target:
+        description: 'Test file to loop'
+        default: 'packages/engine/test/execution.test.ts'
+
+permissions:
+  contents: read
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Loop
+        shell: bash
+        run: |
+          fails=0
+          for i in $(seq 1 "${{ inputs.runs }}"); do
+            if ! pnpm vitest run "${{ inputs.target }}" --no-color > "/tmp/run-$i.log" 2>&1; then
+              fails=$((fails+1))
+              echo "::warning::run $i FAILED"
+              sed -n '/Failed Tests/,/^$/p' "/tmp/run-$i.log" | head -20
+            fi
+          done
+          echo "RESULT: $fails failures in ${{ inputs.runs }} runs" | tee /tmp/result.txt
+          {
+            echo "## Flake hunt"
+            echo
+            echo "\`${{ inputs.target }}\` × ${{ inputs.runs }} on a CI runner."
+            echo
+            echo "**$fails failures.**"
+            echo
+            echo "Local baseline: 0/40 under 10-way CPU saturation, 3/3 full suite, 2/2 isolated."
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Report the finding; do not fail the job on a reproduction — the
+          # reproduction IS the result we want, and a red job would read as
+          # broken CI rather than a successful experiment.
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: flake-hunt-${{ github.run_id }}
+          path: /tmp/run-*.log
+          retention-days: 30
+          if-no-files-found: warn

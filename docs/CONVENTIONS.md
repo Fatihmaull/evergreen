@@ -434,6 +434,26 @@ So "the guard is tested" is an ambiguous claim and should stop being made.
 someone writes it deliberately.** A mutation inventory across every call site is
 the cheap way to find the ones nobody wrote.
 
+### A substring assertion is a proxy, and proxies fail hardest near the requirement
+
+When the requirement is about what the system **does or offers**, assert on
+behaviour or structure — not on whether a word appears.
+
+2026-09-14: a notification template must never offer to restore a temporary
+entry, because temporary data is DELETED at expiry. The test banned the
+substring `restore` — and failed on the correct sentence, *"It cannot be
+restored."*
+
+That is the general failure: **correct copy mentions the forbidden thing
+precisely in order to rule it out**, so a textual proxy rejects exactly the
+sentence you most want to keep. The assertion became "does not contain
+`RestoreFootprintOp`" plus "does contain `cannot be restored`" — two statements
+about what is offered rather than one about vocabulary.
+
+Distinct from the wrong-oracle and compound-clause rules. Those are about a test
+encoding the wrong specification or never reaching its branch; this one is about
+a test encoding the *right* specification through the wrong kind of evidence.
+
 ### A test of one clause must satisfy every other clause
 
 When a test targets one clause of a compound condition, **the fixture must
