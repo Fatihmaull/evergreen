@@ -15,7 +15,7 @@
  * `W3-D16-01`. Keeping the cron read-only until that lands means an unattended
  * schedule cannot spend anything while nobody is watching.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import console from 'node:console';
 import { formatEngineRun } from './engine-output.mjs';
@@ -42,6 +42,31 @@ if (passphrase !== Networks.TESTNET) {
 }
 
 const run = await runEngine(createRpcReader(server), config);
+
+// W3-D16-03: Week 3 persists WITHOUT a database (ADR-003 defers PostgreSQL to
+// Week 4), so a run is durable when it is BOTH in the step summary AND uploaded
+// as an artifact. The summary is readable; the artifact is machine-readable and
+// survives the log being trimmed.
+//
+// Written unconditionally, including for a run that decided nothing. A run that
+// looked and found nothing due is evidence — it is the difference between "the
+// engine saw no work" and "the engine did not run", which is exactly the
+// distinction Sep 20 turns on.
+const record = {
+  recordedAt: new Date().toISOString(),
+  mode: run.mode,
+  observedAtLedger: Object.values(run.scan.entries)[0]?.observedAtLedger ?? null,
+  contracts: run.scan.contracts.map((c) => c.id),
+  decisions: run.decisions,
+  refusedByGuard: run.decisions.filter((d) => d.reason.includes('REFUSED BY WRITE GUARD')).length,
+  liveness: { isAlarm: run.liveness.isAlarm, severity: run.liveness.severity ?? null },
+  issues: run.scan.issues.map((i) => i.kind),
+};
+const recordPath = process.env.EVERGREEN_RUN_RECORD ?? '';
+if (recordPath) {
+  writeFileSync(recordPath, JSON.stringify(record, null, 2) + '\n');
+  console.log(`run record written to ${recordPath}`);
+}
 const refused = run.decisions.filter((d) => d.reason.includes('REFUSED BY WRITE GUARD'));
 
 console.log(formatEngineRun(run));

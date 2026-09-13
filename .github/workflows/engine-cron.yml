@@ -54,6 +54,7 @@ jobs:
           # placeholder IDs that loadConfig refuses, which is how the first run
           # failed — correctly, and invisibly.
           EVERGREEN_CONFIG: evergreen.config.dogfood.json
+          EVERGREEN_RUN_RECORD: /tmp/engine-record.json
         run: pnpm engine:run | tee /tmp/engine.log
 
       # A guard refusal is a non-event: no transaction, no hash, nothing an
@@ -69,3 +70,21 @@ jobs:
             tail -40 /tmp/engine.log 2>/dev/null || echo '(no output)'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # W3-D16-03. Week 3 persists WITHOUT a database, so "durable" is defined
+      # as step summary PLUS artifact. The summary is for a human reading the
+      # run; the artifact is machine-readable and survives log trimming.
+      #
+      # 90 days covers the sprint with room. Naming it explicitly rather than
+      # inheriting a default, because the retention IS the durability guarantee
+      # here — an unnamed default is a guarantee nobody checked.
+      - name: Upload the run record (durability, W3-D16-03)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-run-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/engine-record.json
+            /tmp/engine.log
+          retention-days: 90
+          if-no-files-found: warn
