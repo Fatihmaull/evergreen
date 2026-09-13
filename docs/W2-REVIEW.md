@@ -12,7 +12,7 @@ engine, dashboard or publication deliverables complete.
 
 - Merged baseline: `main` at `c3ba97b`, 26 PRs merged Sep 10–12 (#72–#101).
 - **W2: 27 tasks — 20 done, 2 in progress, 1 blocked, 2 pending, 2 dropped.**
-  *(Recounted 2026-09-14. This first read "26 tasks — 18 done, 3 pending, 3 in progress, 1 blocked, 2 dropped": a total that was stale before `W2-D10-01c` was added, and a breakdown summing to 27 against a stated 26. Caught by Rakha reviewing #102 — **arithmetic on a quantity again, this time pointed at me**. The counts here are now produced by counting, not by editing the previous number.)*
+  *(Recounted 2026-09-12. This first read "26 tasks — 18 done, 3 pending, 3 in progress, 1 blocked, 2 dropped": a total that was stale before `W2-D10-01c` was added, and a breakdown summing to 27 against a stated 26. Caught by Rakha reviewing #102 — **arithmetic on a quantity again, this time pointed at me**. The counts here are now produced by counting, not by editing the previous number.)*
 - **After #105 and #102 both merge, W2 closes at 23/27**: `W2-D11-01/02/03` all Done, leaving one in progress (`W2-D10-04`, engine wiring, which is `W3-D15-01`), one pending (`W2-D14-02c`, moved to Week 4 by decision, with a date) and two dropped by decision.
 - W1 remains 50/50. Backlog total 146 tasks.
 - Evidence: [snapshot #2](evidence/2026-09-12-w2-review/README.md), captured by
@@ -150,7 +150,7 @@ a **sibling file on disk** rather than the registry."
 
 **Re-run Sep 14 in the conclusive configuration** — CLI tarball alone, fresh
 directory outside the repo, clean dedicated cache, no siblings, no workspace
-above it ([record](evidence/2026-09-14-pack-rehearsal/README.md)). The decisive
+above it ([record](evidence/2026-09-12-pack-rehearsal/README.md)). The decisive
 result is an absence: `node_modules/@evergreen-stellar/` contains **only `cli`**.
 Zero `workspace:*` literals anywhere in the tarball.
 
