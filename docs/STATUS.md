@@ -2,14 +2,30 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-12 · W3-D15-04 published in PR #120 for Fatih review
-**Sprint day:** 10 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
-**Current week:** **W3 — Stage 1 engine correction**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
+**Last updated:** 2026-09-13 · D15-02 implemented and verified; internal review next
+**Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
+**Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-04 published in PR #120
+## Current — W3-D15-02 implemented; awaiting internal review
+
+[Implementation report](W3-D15-02-IMPLEMENTATION.md). The stacked branch adds optional warning config, validated inheritance, engine health/threshold metadata and visible runner output. Warning-only entries do not become bump candidates or liveness alarms, even when shared/temporary impact is critical. Existing target, payer agreement, duplicate-policy and guard behavior from #120 remains. D15-02 is In progress/Rakha until review checkpoints; D15-02b remains Pending/Shared. No PR for D15-02 yet. Notion mirrors In progress/Rakha with the implementation outcome. All-ID presence diff found 149 registered IDs / 150 mirror rows, no missing or duplicate IDs; sole extra is the known retired Dropped predecessor.
+
+Full pnpm check passed 634 tests (552 Vitest + 82 Node); three deliberately reintroduced failures were caught, sources restored. Read-only A at ledger 4648013 showed warning for instance/code with zero candidates and no liveness alarm under warning=2000000/action=17280. The real built runner returned exit 0 and printed both horizons and action-needed=no. [Captured evidence](evidence/2026-09-13-engine-thresholds/README.md). No transaction, seed read, workflow activation, main merge or change to operational config. Standard sandbox restrictions on git subprocess and RPC were resolved by approved bounded execution, not code changes.
+
+## Earlier — W3-D15-02 implementation started, 2026-09-13
+
+Rakha authorized implementation after checking latest publications. #120 is still open at dda2530, without Fatih feedback; main remains cc0fb16. Starting `feat/W3-D15-02-thresholds` from #120's head, preserving that PR's scope. D15-02 is In progress/Rakha; D15-02b remains Pending/Shared. Scope follows [the plan](W3-D15-02-PLAN.md): optional warning config, validated inheritance, two-tier engine assessments and visible warning-only output, with unchanged action/target/liveness safety. No CLI exit migration, operational config change, transaction or scheduler activation. WIP branch is pushed before implementation; internal review precedes PR publication.
+
+## Earlier — W3-D15-02 planning, local and not published
+
+Rakha requested the next plan. [D15-02 draft](W3-D15-02-PLAN.md) proposes optional warnBelowLedgers, retaining the existing action field, one resolved two-tier policy per key, visible warning-only output, and unchanged action/liveness alignment from #120. D15-02 remains Pending/Rakha and D15-02b Pending/Shared. No code, new branch, commit, push, live RPC or transaction during this planning step. #120 remains open at dda2530 without Fatih feedback on this refresh; the draft will move to its own implementation branch after review, not be appended to #120.
+
+Source check: HealthThresholds/constants exist, but assessEntry and the current CLI/engine still consume a single threshold. The plan adds an engine-facing two-tier assessment without silently migrating CLI semantics. Sync anomaly (2026-09-12, W3-D15-02): Notion's Task title still said one threshold in ledgers OR days; the corrected repo row requires warning/critical tiers and needsAction. The mirror title is aligned to the current row; status/owner already agree. [Coordination in #104](https://github.com/Fatihmaull/evergreen/issues/104#issuecomment-5646828107) explicitly records Rakha planning D15-02 before implementation so the task is not duplicated. Temporary auto-bump remains a separate Shared decision before any live temporary-entry path.
+
+## Earlier — W3-D15-04 published in PR #120
 
 Rakha approved publication after internal review. [PR #120](https://github.com/Fatihmaull/evergreen/pull/120) targets main cc0fb16 from `fix/W3-D15-04-engine-decisions`; Fatih is requested as reviewer. Code/review corrections are at 73a9050, reviewed documentation at 46b4b7b. [Issue #119](https://github.com/Fatihmaull/evergreen/issues/119) is linked for closure on merge. W3-D15-04 remains Done for verified branch implementation; PR is open and unmerged. Fatih handles merge.
 

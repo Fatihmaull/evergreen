@@ -1,0 +1,10 @@
+$ node scripts/engine-run.mjs
+mode=dry-run decisions=2 would-extend=0
+  SKIP   AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+         WARNING · warning=2000000 action=17280 ledgers · action-needed=no
+         WARNING — Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed. 1,378,564 ledgers remaining.
+  SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+         WARNING · warning=2000000 action=17280 ledgers · action-needed=no
+         WARNING — Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (17280 ledgers); warning only, no bump needed. 642,802 ledgers remaining.
+
+✓ run complete. Nothing was signed and nothing was submitted.
