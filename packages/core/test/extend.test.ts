@@ -6,7 +6,7 @@ import { scanContract } from '../src/scan-contract.js';
 import { instanceKey } from '../src/rpc.js';
 import { planExtension, executeExtensions } from '../src/extend.js';
 import { coverageIssues } from '../src/health.js';
-import { SHARED_CODE_ENTRY_KEY } from '../src/write-guard.js';
+import { ProtectedEntryError, SHARED_CODE_ENTRY_KEY } from '../src/write-guard.js';
 
 /**
  * These fixtures ARE guinea-pig A, whose code entry is the real shared one
@@ -358,5 +358,98 @@ describe('entries execution seam for the engine', () => {
       ),
     ).rejects.toThrow(/duplicate/i);
     expect(deps.prepare).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Layered-defence inventory, 2026-09-13.
+ *
+ * Every inner layer of a layered defence is SHADOWED by the layer above it, so
+ * nothing naturally exercises it — and the inner layer exists precisely for the
+ * case where the outer one failed. A mutation inventory across all eight guard
+ * call sites found three that no test touched. These are two of them.
+ */
+describe('🔴 layered defences that nothing was testing', () => {
+  const B = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ';
+
+  it('planExtension itself refuses a protected contract — not just assertWriteAllowed in isolation', () => {
+    // `write-guard.test.ts` proves the FUNCTION refuses. Nothing proved the CALL
+    // SITE existed: deleting `assertWriteAllowed(...)` from planExtension left
+    // all 620 tests green. This is the CLI's manual extend path — the one the
+    // live transaction in #105 was signed through.
+    const key = instanceKey(B);
+    const scan = {
+      network: 'testnet',
+      contracts: [{ id: B }],
+      issues: [],
+      entries: {
+        [key]: {
+          kind: 'instance',
+          endBehavior: 'archived',
+          contracts: [B],
+          observedAtLedger: 1000,
+          ttl: { status: 'known', endsAtLedger: 1050, remainingLedgers: 50 },
+        },
+      },
+    } as unknown as ScanResult;
+    expect(() =>
+      planExtension(scan, {
+        contractId: B,
+        additionalLedgers: 100,
+        maxEntryTtl: 3_110_400,
+        dataKeys: [],
+        includeCode: false,
+      }),
+    ).toThrow(ProtectedEntryError);
+  });
+
+  it('refuses to sign when the signer is not the payer the caller asked for', async () => {
+    // The deepest check on the submit path: the signer handed back must match
+    // both the requested payer AND the account the transaction was prepared
+    // against. Removing it left all 620 tests green, so nothing was stopping a
+    // dependency from returning a different identity than the one authorised.
+    const p = planExtension(await atRemaining(), options);
+    const deps = executionDependencies();
+    deps.signer = vi.fn(() => ({
+      payer: 'someone-else',
+      identity: { kind: 'ed25519' as const, account: 'public' },
+      signExtendTTL: vi.fn(async () => 'signed'),
+    })) as unknown as typeof deps.signer;
+    const result = await executeExtensions(
+      p,
+      { payer: 'manual', submit: true, maxFeeStroops: '1200' },
+      deps,
+    );
+    // The mismatch is recorded as a failed run rather than thrown — per-entry
+    // failure must not crash the whole execution. What matters is that NOTHING
+    // WAS SENT: a signer that is not the authorised identity must never reach
+    // the submit call.
+    expect(result.ok).toBe(false);
+    expect(deps.submit).not.toHaveBeenCalled();
+    expect(deps.signer).toHaveBeenCalled();
+  });
+
+  it('refuses to sign when the signer account is not the prepared source account', async () => {
+    // Same check, other half — a signer with the right payer name but a
+    // different account would sign a transaction built for someone else.
+    const p = planExtension(await atRemaining(), options);
+    const deps = executionDependencies();
+    deps.signer = vi.fn(() => ({
+      payer: 'manual',
+      identity: { kind: 'ed25519' as const, account: 'a-different-account' },
+      signExtendTTL: vi.fn(async () => 'signed'),
+    })) as unknown as typeof deps.signer;
+    const result = await executeExtensions(
+      p,
+      { payer: 'manual', submit: true, maxFeeStroops: '1200' },
+      deps,
+    );
+    // The mismatch is recorded as a failed run rather than thrown — per-entry
+    // failure must not crash the whole execution. What matters is that NOTHING
+    // WAS SENT: a signer that is not the authorised identity must never reach
+    // the submit call.
+    expect(result.ok).toBe(false);
+    expect(deps.submit).not.toHaveBeenCalled();
+    expect(deps.signer).toHaveBeenCalled();
   });
 });

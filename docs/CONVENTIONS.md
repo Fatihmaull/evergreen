@@ -415,6 +415,71 @@ Two details worth copying:
   binary "restore it or delete it" was a false choice offered before anyone
   looked.
 
+### Mutation testing cannot see a wrong oracle
+
+**Mutation testing proves that tests detect change. It cannot prove that tests
+encode correct intent.** A commissioned check is only as good as the thing it is
+commissioned against, and nothing in the commissioning loop ever looks at the
+contract.
+
+2026-09-13, the engine's target arithmetic. The correct semantics were written
+in the type annotation being imported — `extendToLedgers` is *"Target lifetime
+relative to execution, not an absolute ledger number"*, and `BumpDecision.payer`
+says *"Never choose the first shared contract implicitly."* A comment was
+written asserting the opposite, the opposite was encoded into a test, a second
+comment was added defending it, and then the whole thing was mutation-tested.
+**Every mutation passed, reporting perfectly on a specification that was already
+wrong.**
+
+The two methods are not substitutes:
+
+- **commissioned checks verify the MECHANISM** — does this fail when it should
+- **reading the contract verifies the INTENT** — should it fail here at all
+
+This project is strong at the first and has no habit for the second. Rakha has
+now found two classes of defect by reading the authority — the
+`extendTo <= maxEntryTtl - 1` ceiling from stellar-core's validator, and these
+from our own type annotations — and both times our tooling was green.
+
+**The cheap habit: when you import a type, read its annotations before writing a
+comment about what it means. If your comment and the annotation disagree, the
+annotation wins until proven otherwise.**
+
+### Every inner layer of a layered defence is untested by construction
+
+An inner guard is **shadowed by the layer above it**, so nothing naturally
+exercises it — and it exists precisely for the case where the outer layer
+failed. The untested layers are exactly the ones that matter once something has
+already gone wrong.
+
+2026-09-13: deleting `assertWriteAllowed` from the engine's execution plan left
+all 619 tests green, because `decideBumps` refuses guinea-pig B upstream. A
+mutation inventory across all eight guard call sites then found **three**
+decorations, including the guard call inside `planExtension` — the CLI's manual
+extend path, the one the live transaction in #105 was signed through. The guard
+FUNCTION was well tested; its CALL SITE was not.
+
+**So test each layer by bypassing the one above it.** Hand the inner function
+the input the outer layer would have blocked. And when the inventory says a
+layer is covered, check that the test isolates *that clause*: one of the three
+new tests passed while deleting the clause it was written for changed nothing,
+because a different clause in the same `if` threw first.
+
+### Dates come from the clock, never from prose
+
+Any date written into the repo is read from the system clock. Not from a
+message, a plan, or a conversational "Monday" or "tomorrow" — those are framing,
+not authority.
+
+2026-09-13: twenty-two dated claims across `BACKLOG.md`, `CONVENTIONS.md`,
+`W2-REVIEW.md` and two evidence directory names said Sep 14 for work that landed
+Sep 12. In this repo `crossesOn`, `expiresOn`, evidence directory names and the
+drift-check cadence are all dated claims that other work depends on.
+
+An evidence directory's date is a factual claim about when the observation was
+taken, so a rename is part of the correction — leaving the name disagreeing with
+the content is the same collision that got `crossesOn` renamed.
+
 ### A converged reconciler cannot be verified by running it
 
 *Commission a checker by watching it fail* assumes there is something to fail on.

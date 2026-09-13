@@ -186,3 +186,34 @@ describe('🔴 the write guard on the EXECUTION path', () => {
     );
   });
 });
+
+describe('🔴 the payer agreement check on the EXECUTION path', () => {
+  // Third of three layers the 2026-09-13 mutation inventory found untested.
+  // `decideBumps` already refuses a disagreeing payer upstream, so this only
+  // fires on a decision that bypassed it — which is exactly what it is for.
+  it("refuses a payer that IS declared but is not this contract's registered payer", async () => {
+    // Isolates the registration clause specifically. An undeclared payer also
+    // throws, but via `!Object.hasOwn(config.payers, ...)` — so testing with
+    // one leaves this clause unexercised and a green test proving nothing.
+    // Found by the mutation inventory: the first version of this test passed
+    // while deleting the clause it was written for changed nothing.
+    const s = await scan();
+    const twoPayers: EvergreenConfig = {
+      ...config,
+      payers: {
+        ...config.payers,
+        other: { signer: 'ed25519', secretEnvVar: 'UNREAD' },
+      },
+    };
+    expect(() => planEngineExecution(s, [{ ...decision(), payer: 'other' }], twoPayers)).toThrow(
+      'Selected payer does not match config',
+    );
+  });
+
+  it('refuses a payer that is not declared in config.payers at all', async () => {
+    const s = await scan();
+    expect(() => planEngineExecution(s, [{ ...decision(), payer: 'ghost' }], config)).toThrow(
+      'Selected payer does not match config',
+    );
+  });
+});
