@@ -331,3 +331,46 @@ describe('loadConfig — warning/action policy (W3-D15-02)', () => {
     });
   });
 });
+
+describe('engine payer execution fields', () => {
+  const source = 'GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE';
+  it('preserves the public account and decimal fee cap without reading a seed', () => {
+    const { config: c } = loadConfig(
+      config({
+        payers: {
+          'bot-testnet': {
+            signer: 'ed25519',
+            secretEnvVar: 'UNREAD',
+            sourceAccount: source,
+            maxFeeStroops: '9007199254740993',
+          },
+        },
+      }),
+    );
+    expect(c.payers['bot-testnet']).toMatchObject({
+      sourceAccount: source,
+      maxFeeStroops: '9007199254740993',
+    });
+  });
+  it.each(['not-an-account', '', null])(
+    'rejects invalid supplied public identity %s',
+    (sourceAccount) => {
+      expect(() =>
+        loadConfig(
+          config({
+            payers: { 'bot-testnet': { signer: 'ed25519', secretEnvVar: 'UNREAD', sourceAccount } },
+          }),
+        ),
+      ).toThrow(/sourceAccount/);
+    },
+  );
+  it.each(['0', '-1', '01', 1000, null])('rejects invalid supplied fee cap %s', (maxFeeStroops) => {
+    expect(() =>
+      loadConfig(
+        config({
+          payers: { 'bot-testnet': { signer: 'ed25519', secretEnvVar: 'UNREAD', maxFeeStroops } },
+        }),
+      ),
+    ).toThrow(/maxFeeStroops/);
+  });
+});

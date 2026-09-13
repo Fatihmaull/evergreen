@@ -1,12 +1,14 @@
 import type {
   EvergreenConfig,
   BumpThresholds,
+  Stroops,
   ExecutionMode,
   PayerConfig,
   TestnetPassphrase,
 } from '@evergreen-stellar/shared-types';
 import { DEFAULT_WARN_LEDGERS, resolveHealthThresholds } from './health.js';
 import { needsAction } from './ttl.js';
+import { isValidPayerAccount } from './ed25519-signer.js';
 
 /**
  * Config loading (`W2-D13-01`). Pure: takes text, returns a validated config.
@@ -138,7 +140,26 @@ function parsePayer(value: unknown, id: string): PayerConfig {
   const payer = requireRecord(value, `payers.${id}`);
   const signer = payer.signer;
   if (signer === 'ed25519') {
-    return { signer, secretEnvVar: requireString(payer.secretEnvVar, `payers.${id}.secretEnvVar`) };
+    const sourceAccount =
+      payer.sourceAccount === undefined
+        ? undefined
+        : requireString(payer.sourceAccount, `payers.${id}.sourceAccount`);
+    if (sourceAccount !== undefined && !isValidPayerAccount(sourceAccount)) {
+      throw new ConfigError(`payers.${id}.sourceAccount must be a public Ed25519 account.`);
+    }
+    const maxFeeStroops =
+      payer.maxFeeStroops === undefined
+        ? undefined
+        : requireString(payer.maxFeeStroops, `payers.${id}.maxFeeStroops`);
+    if (maxFeeStroops !== undefined && !/^[1-9]\d*$/.test(maxFeeStroops)) {
+      throw new ConfigError(`payers.${id}.maxFeeStroops must be positive decimal integer stroops.`);
+    }
+    return {
+      signer,
+      secretEnvVar: requireString(payer.secretEnvVar, `payers.${id}.secretEnvVar`),
+      ...(sourceAccount === undefined ? {} : { sourceAccount }),
+      ...(maxFeeStroops === undefined ? {} : { maxFeeStroops: maxFeeStroops as Stroops }),
+    };
   }
   if (signer === 'policy') {
     return { signer, signerRef: requireString(payer.signerRef, `payers.${id}.signerRef`) };

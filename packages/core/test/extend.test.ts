@@ -284,3 +284,79 @@ describe('extension execution safety', () => {
     expect(deps.signer).not.toHaveBeenCalled();
   });
 });
+
+describe('entries execution seam for the engine', () => {
+  it('records intent after signing but before submission', async () => {
+    const deps = executionDependencies();
+    const recorder = vi.fn(async () => {});
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual', submit: true, maxFeeStroops: '600', reason: 'Engine threshold extension' },
+      { ...deps, beforeSubmit: recorder },
+    );
+    expect(result.records[0]).toMatchObject({
+      outcome: 'succeeded',
+      reason: 'Engine threshold extension',
+    });
+    expect(recorder.mock.invocationCallOrder[0]).toBeLessThan(
+      deps.submit.mock.invocationCallOrder[0]!,
+    );
+    expect(recorder.mock.invocationCallOrder[0]).toBeGreaterThan(
+      deps.signer().signExtendTTL.mock.invocationCallOrder[0]!,
+    );
+  });
+  it('recorder failure is pre-send failure and retains the known signer', async () => {
+    const deps = executionDependencies();
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual', submit: true, maxFeeStroops: '600' },
+      {
+        ...deps,
+        beforeSubmit: async () => {
+          throw new Error('private recorder detail');
+        },
+      },
+    );
+    expect(deps.submit).not.toHaveBeenCalled();
+    expect(result.records[0]).toMatchObject({
+      outcome: 'failed',
+      signer: { kind: 'ed25519', account: 'public' },
+    });
+    expect(result.records[0]).not.toHaveProperty('transactionHash');
+    expect(JSON.stringify(result)).not.toContain('private recorder detail');
+  });
+  it('refresh can skip a now-satisfied entry before preparing or signing', async () => {
+    const deps = executionDependencies();
+    const plan = planExtension(await atRemaining(), options);
+    const result = await executeExtensions(
+      plan,
+      { payer: 'manual' },
+      { ...deps, refresh: async (entry) => ({ ...entry, skip: true }) },
+    );
+    expect(result.skipped).toEqual([instanceKey(A)]);
+    expect(result.records).toEqual([]);
+    expect(deps.prepare).not.toHaveBeenCalled();
+  });
+  it('refresh cannot redirect execution to a different key', async () => {
+    const deps = executionDependencies();
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual' },
+      { ...deps, refresh: async (entry) => ({ ...entry, entryKey: dataKeys[0]! }) },
+    );
+    expect(result.ok).toBe(false);
+    expect(deps.prepare).not.toHaveBeenCalled();
+  });
+  it('duplicate entries cannot cause two sends', async () => {
+    const deps = executionDependencies();
+    const plan = planExtension(await atRemaining(), options);
+    await expect(
+      executeExtensions(
+        { ...plan, entries: [...plan.entries, ...plan.entries] },
+        { payer: 'manual', submit: true, maxFeeStroops: '1200' },
+        deps,
+      ),
+    ).rejects.toThrow(/duplicate/i);
+    expect(deps.prepare).not.toHaveBeenCalled();
+  });
+});

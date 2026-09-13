@@ -2,14 +2,26 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-13 · D15-02 published in stacked PR #121 for Fatih review
+**Last updated:** 2026-09-13 · D16-01 publication authorized; preparing stacked PR
 **Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D15-02 published in stacked PR #121
+## Current — W3-D16-01 publication authorized after internal review
+
+Rakha authorized the local execution plan. Working on `feat/W3-D16-01-engine-execution` from #121 head cdecdb8; #120/#121 were still open without new review feedback at startup. D16-01 remains In progress locally: implementation, offline checks and internal review are complete; publication and controlled Testnet validation remain. [Implementation report](W3-D16-01-IMPLEMENTATION.md) and [verification](evidence/2026-09-13-engine-execution/verification.json). [Internal review](W3-D16-01-REVIEW.md) found no blocking issue in the local slice; six additional cases and two detected/restored mutations strengthen the safety evidence. Fresh full `pnpm check` passed (619 Vitest + 85 script tests). Initial scan errors still fail the whole run closed, even when another key is readable; ordinary protected skips do not block A. Scope is instance/persistent execution, actual simulation by default, per-payer fee caps, validated Signer path, write-before-send recorder and no replacement after uncertainty. Core primitives remain the implementation basis.
+
+Rakha explicitly authorized publication after internal review. The child PR will target #121 (`feat/W3-D15-02-thresholds`, cdecdb8), which is still open alongside #120 at the publication refresh. Retarget this child to main before merging/deleting #121's branch, then reconcile it with merged main and recheck CI. Publication does not authorize live RPC/signing/submission. D15-02b remains a separate unpublished local draft. Notion synchronization is pending for W3-D16-01 at this publication boundary; its task remains In progress. Presence validation found 149 registered IDs / 150 mirror rows, no missing or duplicate IDs; the sole extra is the known retired Dropped W3-D18-02. The first Notion connection returned 404; the alternate configured connection succeeded.
+
+## Earlier — local W3-D16-01 execution planning
+
+Rakha approved continuing local planning for D16-01 while D15-02b remains a separate Shared draft. [Local execution plan](W3-D16-01-PLAN.md) proposes the initial instance/persistent path, reuse of existing core execution/signing/confirmation primitives, explicit public payer/fee inputs, bounded pre-send retries and same-hash handling after uncertainty. Per-run execution is separated from D16-02 recovery/serialization and D16-03 history; unattended live activation and any new Testnet transaction require their later concrete gates. D16-01 remains Pending/Rakha; no implementation has started.
+
+Publication preference clarified by Rakha: planning, implementation and internal review stay local; GitHub comments, Notion writes and pushes wait for an explicit publish request. This overrides the earlier inference that a Shared owner permitted publishing draft planning. This turn only read GitHub for dependencies (#120/#121 still open at refresh), inspected local source and wrote local planning notes. No external message/mirror update, branch, commit, push, live RPC, seed read or transaction. The previous D15-02b draft and previously sent comment are preserved, not silently removed or republished.
+
+## Earlier — W3-D15-02 published in stacked PR #121
 
 Rakha approved publication after internal review. [PR #121](https://github.com/Fatihmaull/evergreen/pull/121) targets `fix/W3-D15-04-engine-decisions` (#120 at dda2530); Fatih is requested as reviewer. Reviewed implementation c32918e and review checkpoint dbd8203. D15-02 is Done for verified branch implementation, but #121 is open and unmerged. Coordination remains in #104; D15-02b remains Pending/Shared.
 
