@@ -1,9 +1,0 @@
-{
-  "id": "watch-5081e369af28cdc42141f5819fdbc7e8ccd4f9bfed59d359ce41e33b7badd37e",
-  "kind": "missed-run",
-  "notification": {
-    "severity": "warn",
-    "subject": "[WARN] Evergreen scheduler late",
-    "body": "Watch: paket-a-github-watch-20260914\nStatus: late\nLast actual job start: 2026-09-14T04:54:14.000Z\nMinutes since anchor: 219\nThis is scheduler observation, not a transaction failure record. Check the runner and retained state; no replacement transaction was submitted."
-  }
-}

@@ -9,7 +9,7 @@ import {
   xdr,
 } from '@stellar/stellar-sdk';
 import type { Transaction } from '@stellar/stellar-sdk';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { EvergreenConfig } from '@evergreen-stellar/shared-types';
 import { instanceKey, PROTECTED_ENTRIES, SHARED_CODE_ENTRY_KEY } from '@evergreen-stellar/core';
 import { runEngineExecution } from '../src/execution.js';
@@ -150,13 +150,6 @@ function setup(otherPayer = false) {
   };
 }
 describe('engine execution — real core primitives over fixture RPC', () => {
-  // The injected engine clock and SDK envelope clock must share the same instant.
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
   it('simulates by default, without signer, secret or recorder access', async () => {
     const s = setup();
     const result = await runEngineExecution(s.config, s.deps);

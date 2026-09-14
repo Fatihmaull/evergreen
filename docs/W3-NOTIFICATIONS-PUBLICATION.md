@@ -1,56 +1,64 @@
-# W3 notification and scheduled-save publication — 2026-09-14
+# W3 notification and evidence review — reconciliation
 
-Published after local implementation, internal review and Rakha authorization.
-Public surfaces use task IDs and concrete deliverables; local grouping labels stay
-in private planning/chat. Historical run IDs and original raw evidence remain exact.
+Updated 2026-09-14 after main advanced through #154 (`91ad650`). The remaining
+PRs target main independently; no serial #145 → #146 → #147 merge is required.
+Old branch commits remain in merge ancestry and the recorded proof source remains
+accessible through the archived reviewed-source branch. No force push was used.
 
-| Task / scope | PR | Integration head |
+| Scope | PR | State at reconciliation |
 | --- | --- | --- |
-| W3-D17-05 — run/liveness events | [#142](https://github.com/Fatihmaull/evergreen/pull/142) | `dc2c9d8` |
-| W3-D17-05 — persisted alert runner | [#143](https://github.com/Fatihmaull/evergreen/pull/143) | `089f4ab` |
-| W3-D17-05 — independent scheduler watcher | [#144](https://github.com/Fatihmaull/evergreen/pull/144) | `0f4736f` |
-| W3-D18-02a — bounded save-proof harness | [#145](https://github.com/Fatihmaull/evergreen/pull/145) | `83387d5` |
-| W3-D17-05 / W3-D16-01 — failure evidence and fixture clock | [#146](https://github.com/Fatihmaull/evergreen/pull/146) | `cbf4038` |
-| W3-D16-01 / W3-D17-04 / W3-D18-02a — scheduled-save evidence | [#147](https://github.com/Fatihmaull/evergreen/pull/147) | `47947f6` |
+| Run/liveness event mapping | [#142](https://github.com/Fatihmaull/evergreen/pull/142) | Merged by Fatih; #152 corrected diagnostic suppression |
+| Persisted alert runner | [#143](https://github.com/Fatihmaull/evergreen/pull/143) | Merged by Fatih |
+| Independent scheduler observer | [#144](https://github.com/Fatihmaull/evergreen/pull/144) | Merged by Fatih |
+| Bounded save-proof harness | [#145](https://github.com/Fatihmaull/evergreen/pull/145) | Main plus harness files only; 842 tests passed |
+| Failure acceptance and fixture clock | [#146](https://github.com/Fatihmaull/evergreen/pull/146) | Main plus failure scope only; 839 tests passed |
+| Saved A evidence and observation-gate docs | [#147](https://github.com/Fatihmaull/evergreen/pull/147) | Evidence/docs only; baseline full gate 836 tests passed, doc/gate checks separately verified |
 
-The integration heads above passed full CI and Cloudflare checks and have Fatih
-requested as reviewer. These are publication-validation snapshots; current PR
-checks are authoritative after subsequent metadata commits. No new task PR was
-merged or auto-merged by this agent. Before merging/deleting a parent, retarget
-its children to main so GitHub does not silently close the dependent PRs.
+## Which change closes which gate
 
-Fatih approved/merged #137 and #138 during publication. All six task branches retain
-their EmailChannel/stub exports and current main #139, including its scheduler-window
-warning and revised Sep 20 preflight. Conflicting append-only exports and doc-gap
-rows were reconciled without dropping either workstream. The final integrated local
-`pnpm check` passed 743 Vitest + 95 Node = 838 tests. Intermediate PR CI executes the
-same canonical full check. Existing signed proof and checksums remain verified.
+- **W3-D17-05:** merged #142–#144 and #152 supply runtime behavior; #146 supplies
+  failure evidence and its acceptance. It does not need #145 or #147 to merge.
+- **W3-D17-04:** success/liveness receipt proof is in #147, failure proof in #146.
+  Both evidence scopes need acceptance; the harness is not a functional dependency.
+- **W3-D18-02a:** the local OS-timer save is already captured in #147. Fatih Shared
+  acceptance remains #130. Reviewing reusable harness code #145 and accepting the
+  historical proof are distinct; no second A transaction is needed for reconciliation.
+- **W3-D18-02b/c:** readiness uses the read-only in-memory probe from #149 and
+  rehearsal-resistant gate from #151. Corrected preflight dates and gate wording
+  are in #147. No B/C timer, write or restore is activated by this documentation.
+- **W3-D18-03:** the A artifacts exist; future B/C observations and final bundle
+  acceptance still remain. Published implementation is not a claim that those
+  future events have happened.
 
-Tracking: [engine alert/failure acceptance #140](https://github.com/Fatihmaull/evergreen/issues/140),
-[independent watcher #141](https://github.com/Fatihmaull/evergreen/issues/141),
-[W3 coordination #104](https://github.com/Fatihmaull/evergreen/issues/104),
-[Shared save-proof acceptance #130](https://github.com/Fatihmaull/evergreen/issues/130),
-and [test-clock finding #128](https://github.com/Fatihmaull/evergreen/issues/128).
+## Corrections retained and checked
 
-Notion read-back verified seven affected rows with unchanged formal owners:
-D16-01, D17-01/02/03/04/05 Done for their implemented/verified outcomes; D18-02a
-In progress for Shared acceptance and merge. Notes explicitly distinguish merged
-#137/#138 from open task PRs. All-ID presence check: 149 registered IDs, 150 mirror
-rows, no missing/duplicate IDs; the sole extra is the known retired Dropped predecessor.
-The Knowledge Base now mirrors the review findings and proof boundaries.
+Main #148 D1 captures, #149 B/C verification/probe, #151 rehearsal exclusion,
+#152 every-diagnostic alerting, #153 gate rules and #154 two-tier CLI display are
+retained. No production package source is replaced by the older branch versions.
 
-A main-driven Notion sync can temporarily replace statuses for still-unmerged work;
-published outcomes and PR/evidence links remain in Notes. No status here asserts
-that an open PR is merged. Session sync follows the verified published branch per
-AGENTS and preserves this limitation explicitly.
+The old failure rehearsal expected one alert for an insufficient-balance simulation.
+Against #152 it reproducibly returned two. The corrected test requires a failed-bump
+alert and a distinct EXECUTION_INCOMPLETE event, unique IDs and no network/signer
+access. Historical delivery JSON and message counts were not rewritten or resent.
 
-[Scheduled A evidence](evidence/2026-09-14-scheduled-a-save/README.md) preserves one
-transaction, actual timer provenance, full RPC/receipt/TTL verification and confirmed
-success/liveness inbox receipts. [Failure evidence](evidence/2026-09-14-stage1-failures/README.md)
-distinguishes injection from real provider delivery and records the one spam placement.
-The original executing commit 32670fe is retained through the archived reviewed-source
-branch. Later fixes, #139 and #138 are not retroactively claimed as that build.
+The preflight now says Friday September 18, Sunday September 20 and Monday
+September 21. The real probe command unsets BELOW rather than relying on an operator
+to revert a rehearsal variable. Exit zero alone is not crossing evidence. Minimum
+C crossing/refusal capture remains required by the existing date gate; full backup
+expiry proof is conditional on B's outcome. An isolated fixture check confirmed
+B-only evidence is red on September 25, real C evidence makes it green, and a C
+rehearsal remains red. No synthetic capture was committed to the evidence tree.
 
-D18-02a still needs Fatih's Shared acceptance of the local OS-timer proof. Production
-GitHub stays decide-only. No new email, transaction, timer activation or funding was
-performed during publication; the proof timers remain stopped.
+A carries the scheduled-save claim; manual B/C observations are recorded as manual.
+A separately requested unattended B observation needs an agreed read-only timer,
+not a live B configuration. Shared review remains explicit. The guard, probe,
+crossing checker and dogfood config are byte-identical to main.
+
+The [A bundle](evidence/2026-09-14-scheduled-a-save/README.md) is byte-identical to
+its previous published version. Signed envelope/receipt/TTL/control verification
+still passes. Failure artifacts and operation guidance are independently reviewed
+in [#146](https://github.com/Fatihmaull/evergreen/pull/146).
+
+Tracking remains #104 (coordination), #140 (failure acceptance), #141 (watcher),
+#128 (fixture-clock finding), and #130 (Shared proof acceptance). Current PR checks
+and reviewer decisions are authoritative; no PR is merged by this agent.

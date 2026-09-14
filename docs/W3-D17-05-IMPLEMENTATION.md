@@ -1,5 +1,7 @@
 # W3 Stage 1 execution and alerts — implementation
 
+> Reconciliation update, 2026-09-14: #142–#144 and #152/#154 are now merged. #145, #146 and #147 target main independently; this PR carries evidence, not the unmerged harness or failure tooling. The earlier publication/test counts below are historical snapshots. Fatih found and fixed a diagnostic-suppression case missed by the original review in #152. Current validation is recorded in the reconciliation section of STATUS.md and the PR checks. D17-05 acceptance is #146; D17-04 success evidence and Shared D18-02a acceptance are #147/#130.
+
 Implementation, internal review and relevant e2e evidence are complete and published
 in task PRs #142–#147. [Publication report](W3-NOTIFICATIONS-PUBLICATION.md) records
 heads, tracking and acceptance boundaries. Fatih review/merge remains separate.
@@ -14,14 +16,14 @@ The existing core execution, Signer, guards, confirmation and templates are reus
 | W3-D17-05 / W3-D16-01: failure validation | [#146](https://github.com/Fatihmaull/evergreen/pull/146) | Real failure emails through injected RPC/history; deterministic fixture clock |
 | W3-D16-01 / W3-D17-04 / W3-D18-02a: save evidence | [#147](https://github.com/Fatihmaull/evergreen/pull/147) | Scheduled Testnet A save, verified receipt/TTL, success and liveness inbox confirmation |
 
-PR #142 targets main. The remaining task PRs use their predecessor's branch as a
-base to keep review scope narrow; retarget children before merging/deleting parents.
+All remaining task PRs now target main. Their functional and acceptance scopes are
+separate; there is no required six-PR merge chain.
 All three [internal-review corrections](W3-D17-05-REVIEW.md) are included. Fatih's
 merged #137/#138 and #139 are reconciled without dropping either export set or docs.
 
 ## Observed outcomes
 
-[Failure evidence](evidence/2026-09-14-stage1-failures/README.md): bounded RPC timeout,
+[Failure evidence](https://github.com/Fatihmaull/evergreen/pull/146): bounded RPC timeout,
 injected insufficient-balance simulation failure, and missed-run detection each
 produced one real labelled email. Rakha confirmed timeout/missed-run in inbox;
 balance arrived in spam and was marked not spam. No resends or Stellar writes in
@@ -61,4 +63,4 @@ Timers/helper processes were stopped; temporary env copies removed. Original int
 and raw evidence remain intact. Seven affected Notion rows and the Knowledge Base
 were synchronized and verified; notes distinguish published work from merged work.
 No new email, transaction or timer activation occurred during publication.
-See the [runbook](W3-D17-05-RUNBOOK.md) for operation and reconciliation rules.
+See the [runbook](https://github.com/Fatihmaull/evergreen/pull/146) for operation and reconciliation rules.

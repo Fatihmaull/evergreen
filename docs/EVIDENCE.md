@@ -31,13 +31,13 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 **Handover, 2026-09-10.** Session 1 assembled D1 evidence through this date; Session 2 owns it from here. This section is the complete picture, including the requirements that are fine, so it can be picked up without asking anyone.
 
-**SOW §6.1 requires, for Deliverable 1:** *"Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report."* Four requirements, quoted rather than paraphrased, and treated below as four separate rows because two are met and two are not.
+**SOW §6.1 requires, for Deliverable 1:** *"Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report."* Four requirements, quoted rather than paraphrased, and treated below as four separate rows because three are met and one is not.
 
 | # | Requirement | State | Blocked behind | Unblocked by / when |
 |---|---|---|---|---|
 | 1 | Public repo | ✅ **Met** | — | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen), MIT, CI green |
 | 2 | Published npm package | ❌ **Not met — and not a Sep 16 concern** | `W4-D27-02` | Rakha, ~Sep 29 |
-| 3 | Screenshots: TTL / archive prediction / cost | ⚠️ **Unblocked — all three now in the CLI; the capture itself remains** | — | Recapture once the CLI is final |
+| 3 | Screenshots: TTL / archive prediction / cost | ✅ **Met** | — | [Captured 2026-09-14](evidence/2026-09-14-d1-capture/README.md) on `main` at `00ba2a9`, human + `--json` |
 | 4 | Test coverage report | ✅ **Met** | — | [Committed 2026-09-10](evidence/2026-09-10-coverage/README.md); floor enforced in CI from 2026-09-12 |
 
 ### 1 — Public repo ✅
@@ -52,15 +52,28 @@ All three packages are still `"private": true` at `0.0.0`. Publication is `W4-D2
 
 The install path itself is proven: `W2-D14-02b`'s pack-and-install rehearsal found that `npx @evergreen-stellar/cli` would have returned a hard 404 for every user, because `cli` and `core` both declare `@evergreen-stellar/shared-types` as a runtime dependency while only two packages were going to be published. Fixed and re-verified on 2026-09-09. **`W4-D27-02` publishes three packages, in order.**
 
-### 3 — Screenshots showing TTL, archive prediction and cost ⚠️
+### 3 — Screenshots showing TTL, archive prediction and cost ✅
 
-Three sub-parts, and they are not in the same state:
+**Captured 2026-09-14 — [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md).**
+All four conditions below were met: the capture followed `W2-D9` and the #66 exit-code
+amendment, they are real terminal screenshots, both `--json` and human-readable modes are
+present, and they run against guinea-pig A.
+
+Verified before acceptance rather than on sight, because the superseded set failed on a
+stale build that looked correct: JSON carries `sharingStatus` / `blastRadiusAtLeast` / a
+non-empty `issues` array and no `isShared`, human output reads `expires ~:` and never
+`approx:`, all twelve TTL rows satisfy `endsAtLedger − observedAtLedger = remaining`, and
+`rent + fees = total` in both modes. B and C were cross-checked against an independent
+chain read. The bundle README explains the three things a reviewer would otherwise misread.
+
+The record of what was required, kept because it is why the capture was delayed twice.
+All three sub-parts are now in one capture:
 
 | Sub-part | Exists? | Where / why not |
 |---|---|---|
-| **TTL** | Yes, but **stale** | [`2026-09-08-w1-review/`](evidence/2026-09-08-w1-review/README.md) captures the W1 **instance-only** scan. The CLI now reads four entry types, prints coverage, and its exit codes changed twice (ADR-006, then its amendment in #66). The artifact shows a CLI that no longer behaves that way. |
-| **Archive prediction** | Yes, **uncaptured** | Landed in #65 (`projectEnd` / `measureCadence`). The CLI prints `approx:` today. It has never been in a screenshot. |
-| **Cost** | **Yes — `evergreen scan <id> --cost` prints it** | `W2-D9` landed 2026-09-10, CLI wiring included. Total leads (*what leaves the account*), rent breaks out beneath, [validated to within ~18%](evidence/2026-09-10-rent-model-validation/README.md) of a real recorded fee and labelled as an estimate rather than a quote. **All three sub-parts of Row 3 now exist in one command** — the recapture is unblocked. |
+| **TTL** | ✅ **Captured 2026-09-14** (superseded set was stale) | [`2026-09-08-w1-review/`](evidence/2026-09-08-w1-review/README.md) captures the W1 **instance-only** scan. The CLI now reads four entry types, prints coverage, and its exit codes changed twice (ADR-006, then its amendment in #66). The artifact shows a CLI that no longer behaves that way. |
+| **Archive prediction** | ✅ **Captured 2026-09-14** (was uncaptured) | Landed in #65 (`projectEnd` / `measureCadence`). Now printed as `expires ~:` with `(estimate — ledgers are the truth)` beside it; the `approx:` wording it replaced is what dated the superseded set. |
+| **Cost** | **Yes — `evergreen scan <id> --cost` prints it** | `W2-D9` landed 2026-09-10, CLI wiring included. Total leads (*what leaves the account*), rent breaks out beneath, [validated to within ~18%](evidence/2026-09-10-rent-model-validation/README.md) of a real recorded fee and labelled as an estimate rather than a quote. **All three sub-parts of Row 3 exist in one command**, and `capture-1` is that command. |
 
 **Cost was the binding item for this whole requirement, and the model half is now done.** `W2-D9` was Pending with nothing in flight on 2026-09-10 and was taken over rather than left, because without it there is no screenshot showing cost, ever — the same reason `W2-D13-03` batch scan was cut to protect it. **What remains is CLI wiring**: `estimateRent` needs a `--cost` path so a rent figure appears in human and `--json` output. Until that lands there is still nothing to screenshot. The validation data used: [`extendTTL-fees-guinea-pig-a.json`](../packages/core/test/fixtures/extendTTL-fees-guinea-pig-a.json), three measured extends with `rentFeeCharged` isolated from `resultMetaXdr`.
 
@@ -328,6 +341,6 @@ Confirmed one Testnet transaction at 2026-09-11 19:41 UTC (2026-09-12 02:41 Asia
 
 The manual-extension and storage-advice verifier commands now verify every SHA256SUMS entry before inspecting claims, and do not rewrite the recorded results. Run the existing entry point from the repository checkout; a changed/missing file or invalid manifest exits nonzero. [Implementation and validation](W2-D14-04-INTEGRITY.md). Raw RPC, screenshots and recorded outcomes are unchanged; only verifier tooling and its own checksum entries change. This is a tooling correction, not another chain transaction.
 
-## 2026-09-14 — W3 Stage 1 scheduled instance-A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
+## 2026-09-14 — scheduled A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
 
-One local user-systemd timer invoked the pinned runner. Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261; A instance expiry increased from 6,026,591 to 6,370,261. [Bundle](evidence/2026-09-14-scheduled-a-save/README.md), [full raw RPC](evidence/2026-09-14-scheduled-a-save/rpc/), [explorer screenshot](evidence/2026-09-14-scheduled-a-save/explorer.jpg). Screenshot captured and inspected; offline checksum/signature/receipt/TTL/control/timer verification passed, including four deliberately altered evidence cases. Raised threshold 1,500,000; target 1,700,000; no natural-decay claim. Real success and separate shared-code refusal alerts were accepted. Rakha confirmed success and liveness emails in inbox. Shared acceptance of the local timer remains Fatih review; production GitHub cron stays decide-only.
+Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261 from a local user-systemd timer. A instance expiry 6,026,591 → 6,370,261. [Raw RPC, signature/receipt/TTL verifier and actual explorer screenshot](evidence/2026-09-14-scheduled-a-save/README.md). Success/liveness inbox receipt confirmed by Rakha. Raised threshold 1,500,000 and target 1,700,000: not natural decay. B/C/shared controls unchanged and independently checked by Fatih in #149. Source snapshot remains 32670fe; later #152/#154 fixes are not retroactively claimed as that build. Shared platform acceptance stays #130; failure evidence is separately reviewed in [#146](https://github.com/Fatihmaull/evergreen/pull/146).

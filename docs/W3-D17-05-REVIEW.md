@@ -1,5 +1,7 @@
 # W3 Stage 1 internal review — 2026-09-14
 
+> Reconciliation update, 2026-09-14: #142–#144 and #152/#154 are now merged. #145, #146 and #147 target main independently; this PR carries evidence, not the unmerged harness or failure tooling. The earlier publication/test counts below are historical snapshots. Fatih found and fixed a diagnostic-suppression case missed by the original review in #152. Current validation is recorded in the reconciliation section of STATUS.md and the PR checks. D17-05 acceptance is #146; D17-04 success evidence and Shared D18-02a acceptance are #147/#130.
+
 **Result: three reproduced P2 findings fixed; no unresolved blocking finding in
 this scope.** Fresh full `pnpm check` passed: 731 Vitest + 95 Node = 826 tests.
 Publication and Fatih review/merge are separate. No new send or live transaction.

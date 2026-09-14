@@ -2,20 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · engine alerts and scheduled-save publication
+**Last updated:** 2026-09-14 · D1 §6.1 row 3 met (captures committed); #137/#138 merged
 **Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3 notification and save-proof task PRs published
+## Current — independent W3 evidence review
 
-Rakha authorized publication after internal review. [Publication report](W3-NOTIFICATIONS-PUBLICATION.md) maps all six PRs (#142–#147), their integration heads, tracking and boundaries. The full integrated local gate passed **838 tests** after retaining Fatih's merged #137/#138 and #139. All six integration heads have successful full CI/Cloudflare checks and Fatih requested as reviewer; no task PR merge or auto-merge was performed by this agent. Current PR checks remain authoritative for later metadata commits. Public titles, descriptions and active docs use task IDs; local grouping labels stay private, and historical raw identifiers remain unchanged.
+#142–#144 and diagnostic correction #152 are merged. The remaining #145/#146/#147 all target main with only their own scope. #145 carries the bounded save harness; #146 carries failure acceptance and the fixture-clock fix; #147 carries the saved A evidence and associated tracking. Main #148/#149/#151/#153/#154 and Fatih's D1 captures, probe, gate and CLI corrections are retained.
 
-Task outcomes D16-01 and D17-03/04/05 are implemented, reviewed, evidenced and published. D18-02a remains In progress for Fatih Shared acceptance of the bounded local OS-timer proof in #130 and merge. The one A save, received success/liveness emails, injected-failure delivery and five unchanged B/C/shared controls are preserved in [save evidence](evidence/2026-09-14-scheduled-a-save/README.md) and [failure evidence](evidence/2026-09-14-stage1-failures/README.md). No new live test during publication. Production GitHub remains decide-only; proof timers are stopped.
+D17-05 requires the failure evidence in #146 on top of merged runtime #152; it does not require #145 or #147. D17-04 requires the success evidence here plus failure evidence #146. D18-02a remains In progress for Fatih Shared acceptance in #130. No Shared acceptance is inferred from code merges or B/C control confirmation. The corrected preflight uses September 18 readiness, a real-threshold probe with BELOW unset, explicit manual/ scheduled provenance and minimum C crossing capture required by the unchanged date gate. Isolated fixtures verified B-only red / B+C green / C rehearsal red. The original A transaction and receipts are preserved without re-running any live test.
 
-Notion synchronization and read-back completed for seven affected rows (D16-01; D17-01/02/03/04/05; D18-02a), with unchanged owners and explicit PR/evidence links. Knowledge Base updated. Full presence diff: 149 registered / 150 mirror rows, no missing or duplicates; sole extra is the known retired Dropped predecessor. The main-driven generator can temporarily overwrite unmerged-work statuses, so published outcomes and unmerged PR links are retained in Notes. Tracking: #140 alerts/failures, #141 watcher, #104 coordination, #130 Shared proof, #128 clock finding. Local plan/grouping/handoff files remain untracked.
+## Earlier — Deliverable 1 row 3 met; D17 channels merged
+
+**SOW §6.1 row 3 is met.** Fatih's terminal captures are committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md): four entry types, both output modes, cost, archive prediction, and the three-contract scan that resolves the shared code entry to `shared with 2 other contracts`. Deliverable 1 now stands at **three of four rows met**; row 2 (npm publish) is `W4-D27-02`, ~Sep 29, and remains correctly open.
+
+Accepted only after checking the build-freshness markers, not the images — `sharingStatus`, `blastRadiusAtLeast`, a non-empty `issues` array, `expires ~:` — plus every TTL row's arithmetic and `rent + fees = total` in both modes. The folder was renamed from `2026-09-16-` to its actual capture date and `.DS_Store` files were dropped before committing. #126 closed.
 
 ## Earlier — W3-D17 notification channels: email live-verified, stubs reconciled
 
@@ -392,7 +396,7 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **Repo tidied.** 17 branches → 3: 15 merged branches deleted plus six `tmp*` left over from conflict work, checked by **PR state** rather than `git merge-base`, which lies under squash-merge. `delete_branch_on_merge` is now on, so this does not recur — verified by watching a branch delete itself on the next merge.
 
-**Deliverable 1 after today:** Row 1 repo ✅. Row 2 npm ❌ and correctly so, W4. **Row 3 unblocked** — TTL, archive prediction and cost now all print from one command. **Row 4 ✅** — coverage report committed at 93%. The one part of Row 3 that cannot be done from this session is the terminal screenshot itself: the outputs can be produced, but §6.1 says *screenshots*, and an agent running commands through tooling cannot photograph a terminal. That needs Fatih.
+**Deliverable 1 after today:** Row 1 repo ✅. Row 2 npm ❌ and correctly so, W4. **Row 3 ✅ met 2026-09-14** — TTL, archive prediction and cost all print from one command, and the capture is committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md). **Row 4 ✅** — coverage report committed at 93%. The one part of Row 3 no session could do was the terminal screenshot itself — §6.1 says *screenshots*, and an agent running commands through tooling cannot photograph a terminal. **Fatih captured it on 2026-09-14** and it was verified against what the CLI emits rather than on sight, the superseded set having failed on a stale build that looked perfectly fine.
 
 ## ✂️ Week 2 cuts taken 2026-09-10 — and cut #3 reverses something Fatih asked for
 
@@ -418,7 +422,7 @@ Fatih approved the standing decision: **if `W2-D11-01` is not started, S2 takes 
 
 **The durability coefficient was published in the protocol all along.** The fee fixture measured 1.952× and refused to fit a coefficient to three points. The live config says `persistent_rent_rate_denominator: 1215`, `temp: 2430` — **exactly 2:1**, with the residual accounted for by the flat components. That moves the finding from *"we observed this ratio"* to *"here is the constant that produces it"*, which nobody can dismiss as three data points. Recorded in the fixture notes beside the measurement, with the caveat that the **size** coefficient is still not in that config and still must not be fitted.
 
-**99% of the rent is the shared code entry**, measured on guinea-pig A. The one entry N contracts depend on is simultaneously the biggest availability risk and the biggest line item — one sentence carrying both halves of the product thesis, and truer than anything the optimizer will say. Written into `W4-D28-01`'s demo script as the closing beat; unlike the `F-01` framing it needs no survey to be true.
+**99% of the rent is the shared code entry** — measured on guinea-pig A, scanning **instance and code only**. With A's two data keys supplied the same entry is **98%** of a four-entry scan (8,116,648 of 8,264,289 stroops); the absolute rent is identical and only the denominator changes. **State the scope wherever this number appears** — the committed D1 capture shows 98%, and a demo quoting 99% beside it reads as a discrepancy unless the scope is said out loud. The one entry N contracts depend on is simultaneously the biggest availability risk and the biggest line item — one sentence carrying both halves of the product thesis, and truer than anything the optimizer will say. Written into `W4-D28-01`'s demo script as the closing beat; unlike the `F-01` framing it needs no survey to be true.
 
 ## The implausibility rule caught two things the same day it was written
 

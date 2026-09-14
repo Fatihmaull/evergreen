@@ -1,9 +1,0 @@
-
- RUN  v5.0.0 /home/rakhargo/projects/evergreen
-
-
- Test Files  1 passed (1)
-      Tests  1 passed | 23 skipped (24)
-   Start at  15:46:47
-   Duration  1.81s (tests 68%, import 22%, transform 10%)
-
