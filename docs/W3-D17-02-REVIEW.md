@@ -4,6 +4,8 @@
 was needed. The defined stub task is complete locally and ready for publication;
 this is not a claim that Telegram or webhook delivery is implemented.
 
+Published after review: implementation 731bbf4, [PR #138](https://github.com/Fatihmaull/evergreen/pull/138), awaiting Fatih review/merge.
+
 Reviewed the new channel-stubs module, engine public exports, source/artifact
 tests and task documentation against main cbd2a7e on
 `feat/W3-D17-02-channel-stubs`. This was a sequential internal review; Fatih's

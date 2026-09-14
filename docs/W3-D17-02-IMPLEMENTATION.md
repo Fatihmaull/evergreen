@@ -1,8 +1,7 @@
 # W3-D17-02 — notification channel stubs
 
 Status: local implementation and built public API refusal tests complete;
-[internal review](W3-D17-02-REVIEW.md) found no blocking findings. Branch `feat/W3-D17-02-channel-stubs`, base main cbd2a7e. No push,
-commit or PR for this task is claimed. The defined stub task is Done locally; publication and Fatih review/merge remain.
+[internal review](W3-D17-02-REVIEW.md) found no blocking findings. Branch `feat/W3-D17-02-channel-stubs`, base main cbd2a7e. Published implementation 731bbf4 in [PR #138](https://github.com/Fatihmaull/evergreen/pull/138), awaiting Fatih review/merge. The defined stub task is Done; Fatih review/merge remains.
 
 ## Result
 
@@ -56,6 +55,6 @@ under .evergreen, which ESLint still scans. That helper was preserved byte-for-b
 outside the repo at /tmp/evergreen-W3-D17-01-send-approved-email-2026-09-14.mjs;
 private intent/results remain in .evergreen. No lint exclusion or gate was changed.
 
-Next checkpoint is an explicit publish request, then Fatih review/merge. Refresh #137's state and reconcile its export/tracking changes before
+Publication is complete; Fatih review/merge is the next checkpoint. Refresh #137's state and reconcile its export/tracking changes before
 publishing. Notion sync is deferred to publication. Afterwards prioritize D17-05
 failure/alert wiring and D17-04 proof before September 18.
