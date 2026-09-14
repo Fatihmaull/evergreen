@@ -1,0 +1,10 @@
+[Unit]
+Description=Evergreen scheduler observation
+[Service]
+Type=oneshot
+# Render absolute paths for the pinned runtime and private email-only environment.
+EnvironmentFile=/ABSOLUTE/PRIVATE/watch.env
+ExecStart=/ABSOLUTE/NODE /ABSOLUTE/RUNTIME/scripts/scheduler-watch.mjs --config /ABSOLUTE/PRIVATE/watch.json --send-alerts
+TimeoutStartSec=90
+SuccessExitStatus=1
+NoNewPrivileges=true
