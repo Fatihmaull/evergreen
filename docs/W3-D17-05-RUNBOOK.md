@@ -52,7 +52,10 @@ case injects a simulation rejection, not a real on-chain insufficient-balance tx
 A second missed-run observation must deduplicate. Preserve rehearsal JSON and
 per-message journal; do not reuse IDs for a fresh uncertain send.
 
-## Scheduled A proof
+## Scheduled A proof (separate harness PR #145)
+
+This section requires the harness introduced by #145. It is not a dependency of
+the failure rehearsal or the W3-D17-05 acceptance gate.
 
 The harness is a bounded local OS timer with persistent pre-send intent; it is not
 a migration of the production GitHub cron. Shared acceptance remains Fatih's gate.
@@ -82,3 +85,8 @@ explorer screenshot, runtime/config hashes, trigger metadata and alert receipts.
 Index any transaction in EVIDENCE immediately, then checksum and verify the bundle.
 Describe A honestly: its threshold was raised above observed TTL; it did not decay
 naturally to this trigger. No production signer belongs in the decide-only cron.
+
+Current main emits every distinct run diagnostic even if a bump alert was already
+produced (#152). A failed bump plus EXECUTION_INCOMPLETE therefore produces two
+distinct events. Historical delivery files preserve the actual earlier messages;
+do not edit them or resend merely to match the newer diagnostic behavior.

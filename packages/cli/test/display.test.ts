@@ -34,14 +34,14 @@ const fmt = (r: ScanResult, color = false): string =>
 
 describe('display — states are words first, colour second', () => {
   it('prints the state word with colour disabled', () => {
-    expect(fmt(scan({ K: entry({ remaining: 100_000 }) }))).toContain('HEALTHY');
+    expect(fmt(scan({ K: entry({ remaining: 500_000 }) }))).toContain('HEALTHY');
   });
 
   it('prints the SAME word when colour is on — colour is never the only carrier', () => {
     // A reader who is colour-blind, piping to a file, or looking at a
     // screenshot must get the same information as one at a colour terminal.
-    const plain = fmt(scan({ K: entry({ remaining: 100 }) }), false);
-    const painted = fmt(scan({ K: entry({ remaining: 100 }) }), true);
+    const plain = fmt(scan({ K: entry({ remaining: 100_000 }) }), false);
+    const painted = fmt(scan({ K: entry({ remaining: 100_000 }) }), true);
     expect(plain).toContain('WARNING');
     expect(painted).toContain('WARNING');
     expect(painted.replace(SGR, '')).toBe(plain);
@@ -106,8 +106,13 @@ describe('display — the summary never overstates', () => {
     expect(out).toContain('Worst entry health: UNKNOWN');
   });
 
-  it('states the threshold it graded against', () => {
-    expect(fmt(scan({ K: entry({ remaining: 100_000 }) }))).toContain('threshold 17,280 ledgers');
+  it('states BOTH thresholds it graded against', () => {
+    // Printing only the action tier is what let `scan` say HEALTHY for an entry
+    // the engine called WARNING: the reader could not see that a second, wider
+    // horizon existed at all.
+    const out = fmt(scan({ K: entry({ remaining: 100_000 }) }));
+    expect(out).toContain('warn below 120,960');
+    expect(out).toContain('act below 17,280 ledgers');
   });
 });
 
@@ -131,15 +136,37 @@ describe('--json health block — magnitude lives here, not in the exit code', (
   });
 
   it('grades the shared entry critical and the lone one warning at identical TTL', () => {
-    const report = healthReport(sharedScan, THRESHOLD);
+    // Between the tiers, blast radius still decides the word — and the band this
+    // is visible across is now 120,960 ledgers wide rather than 17,280.
+    const between = scan({
+      lone: entry({ remaining: 100_000 }),
+      sharedKey: entry({ remaining: 100_000, kind: 'code', contracts: ['A', 'B', 'C'] }),
+    });
+    const report = healthReport(between, THRESHOLD);
     expect(report.byEntry.sharedKey?.health).toBe('critical');
     expect(report.byEntry.lone?.health).toBe('warning');
     expect(report.worst).toBe('critical');
     expect(report.sharedEntryCount).toBe(1);
   });
 
-  it('states the threshold it graded against, so the report is self-describing', () => {
-    expect(healthReport(sharedScan, THRESHOLD).thresholdLedgers).toBe(THRESHOLD);
+  it('🔴 below the action tier both are critical, and impact still distinguishes them', () => {
+    // Urgency dominates here and it should: an entry roughly a day from expiry
+    // needs action whoever else depends on it. The old single-threshold display
+    // called the lone one `warning` at this TTL, which understated it.
+    // The impact signal is not lost — it moves to the fields built to carry it.
+    const report = healthReport(sharedScan, THRESHOLD);
+    expect(report.byEntry.lone?.health).toBe('critical');
+    expect(report.byEntry.sharedKey?.health).toBe('critical');
+    expect(report.byEntry.lone?.needsAction).toBe(true);
+    expect(report.byEntry.lone?.blastRadiusAtLeast).toBe(1);
+    expect(report.byEntry.sharedKey?.blastRadiusAtLeast).toBe(3);
+    expect(report.byEntry.sharedKey?.sharingStatus).toBe('shared');
+  });
+
+  it('states both thresholds it graded against, so the report is self-describing', () => {
+    const report = healthReport(sharedScan, THRESHOLD);
+    expect(report.thresholdLedgers).toBe(THRESHOLD);
+    expect(report.warnBelowLedgers).toBe(120_960);
   });
 
   it('omits `worst` rather than claiming health for an empty scan', () => {

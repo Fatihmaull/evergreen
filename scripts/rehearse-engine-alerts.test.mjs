@@ -28,12 +28,22 @@ for (const scenario of ['rpc-timeout', 'insufficient-balance', 'missed-run']) {
         // Network validation uses the existing three-attempt read retry policy.
         assert.equal(injection.injectedFailures, scenario === 'rpc-timeout' ? 3 : 1);
         assert.equal(result.exitCode, 2);
-        assert.equal(result.alertReceipts.length, 1);
-        assert.equal(result.alertReceipts[0].status, 'preview');
+        assert.equal(result.alertReceipts.length, scenario === 'insufficient-balance' ? 2 : 1);
+        assert(result.alertReceipts.every((r) => r.status === 'preview'));
+        assert.equal(
+          new Set(result.alertReceipts.map((r) => r.id)).size,
+          result.alertReceipts.length,
+        );
         if (scenario === 'rpc-timeout') assert.equal(result.execution, undefined);
         else {
           assert.equal(result.execution.records[0].outcome, 'failed');
-          assert.equal(result.execution.records[0].txHash, undefined);
+          assert.equal(result.execution.records[0].transactionHash, undefined);
+          assert(result.alertReceipts.some((r) => r.id.includes(':bump:')));
+          assert(
+            result.alertReceipts.some((r) =>
+              r.notification.body.includes('Code: EXECUTION_INCOMPLETE'),
+            ),
+          );
         }
       }
     } finally {

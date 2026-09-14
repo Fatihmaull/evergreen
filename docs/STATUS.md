@@ -2,14 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · #137 merged; #138 reconciled onto it — D17-01 done, D17-02 stubs reviewed
+**Last updated:** 2026-09-14 · D1 §6.1 row 3 met (captures committed); #137/#138 merged
 **Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D17 notification channels: email live-verified, stubs reconciled
+## Current — W3-D17-05 failure validation reconciliation
+
+Failure evidence PR #146 now targets main directly; its runtime dependencies are already merged in #142–#144 and diagnostic correction #152. The save-proof harness #145 is not a functional dependency. The historical receipts remain unchanged. The old one-alert assertion was reproduced failing (2 versus 1) and corrected to require both the failed-bump alert and distinct EXECUTION_INCOMPLETE diagnostic with unique IDs. Full pnpm check passed: 750 Vitest + 89 Node = 839 tests. D17-05 acceptance is carried by #146, not by the unmerged save harness. No live email or transaction is repeated.
+
+## Earlier — Deliverable 1 row 3 met; D17 channels merged
+
+**SOW §6.1 row 3 is met.** Fatih's terminal captures are committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md): four entry types, both output modes, cost, archive prediction, and the three-contract scan that resolves the shared code entry to `shared with 2 other contracts`. Deliverable 1 now stands at **three of four rows met**; row 2 (npm publish) is `W4-D27-02`, ~Sep 29, and remains correctly open.
+
+Accepted only after checking the build-freshness markers, not the images — `sharingStatus`, `blastRadiusAtLeast`, a non-empty `issues` array, `expires ~:` — plus every TTL row's arithmetic and `rent + fees = total` in both modes. The folder was renamed from `2026-09-16-` to its actual capture date and `.DS_Store` files were dropped before committing. #126 closed.
+
+## Earlier — W3-D17 notification channels: email live-verified, stubs reconciled
 
 #137 merged as 1ab4921: D17-01's `EmailChannel`, its live-delivery evidence and completed tracking are on main. #138 is reconciled onto that main. Both export sets are kept because they are disjoint, and D17-01's completed status is restored everywhere this branch's older base still showed it open — that stale row was a snapshot of an earlier main, not a reversal of the verified result.
 
@@ -384,7 +394,7 @@ A lone `code` entry now says so explicitly: *"code entries are shared by every c
 
 **Repo tidied.** 17 branches → 3: 15 merged branches deleted plus six `tmp*` left over from conflict work, checked by **PR state** rather than `git merge-base`, which lies under squash-merge. `delete_branch_on_merge` is now on, so this does not recur — verified by watching a branch delete itself on the next merge.
 
-**Deliverable 1 after today:** Row 1 repo ✅. Row 2 npm ❌ and correctly so, W4. **Row 3 unblocked** — TTL, archive prediction and cost now all print from one command. **Row 4 ✅** — coverage report committed at 93%. The one part of Row 3 that cannot be done from this session is the terminal screenshot itself: the outputs can be produced, but §6.1 says *screenshots*, and an agent running commands through tooling cannot photograph a terminal. That needs Fatih.
+**Deliverable 1 after today:** Row 1 repo ✅. Row 2 npm ❌ and correctly so, W4. **Row 3 ✅ met 2026-09-14** — TTL, archive prediction and cost all print from one command, and the capture is committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md). **Row 4 ✅** — coverage report committed at 93%. The one part of Row 3 no session could do was the terminal screenshot itself — §6.1 says *screenshots*, and an agent running commands through tooling cannot photograph a terminal. **Fatih captured it on 2026-09-14** and it was verified against what the CLI emits rather than on sight, the superseded set having failed on a stale build that looked perfectly fine.
 
 ## ✂️ Week 2 cuts taken 2026-09-10 — and cut #3 reverses something Fatih asked for
 
@@ -410,7 +420,7 @@ Fatih approved the standing decision: **if `W2-D11-01` is not started, S2 takes 
 
 **The durability coefficient was published in the protocol all along.** The fee fixture measured 1.952× and refused to fit a coefficient to three points. The live config says `persistent_rent_rate_denominator: 1215`, `temp: 2430` — **exactly 2:1**, with the residual accounted for by the flat components. That moves the finding from *"we observed this ratio"* to *"here is the constant that produces it"*, which nobody can dismiss as three data points. Recorded in the fixture notes beside the measurement, with the caveat that the **size** coefficient is still not in that config and still must not be fitted.
 
-**99% of the rent is the shared code entry**, measured on guinea-pig A. The one entry N contracts depend on is simultaneously the biggest availability risk and the biggest line item — one sentence carrying both halves of the product thesis, and truer than anything the optimizer will say. Written into `W4-D28-01`'s demo script as the closing beat; unlike the `F-01` framing it needs no survey to be true.
+**99% of the rent is the shared code entry** — measured on guinea-pig A, scanning **instance and code only**. With A's two data keys supplied the same entry is **98%** of a four-entry scan (8,116,648 of 8,264,289 stroops); the absolute rent is identical and only the denominator changes. **State the scope wherever this number appears** — the committed D1 capture shows 98%, and a demo quoting 99% beside it reads as a discrepancy unless the scope is said out loud. The one entry N contracts depend on is simultaneously the biggest availability risk and the biggest line item — one sentence carrying both halves of the product thesis, and truer than anything the optimizer will say. Written into `W4-D28-01`'s demo script as the closing beat; unlike the `F-01` framing it needs no survey to be true.
 
 ## The implausibility rule caught two things the same day it was written
 
