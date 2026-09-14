@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:save-proof && pnpm test:proof-runtime",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:save-proof && pnpm test:proof-runtime && pnpm test:failure-rehearsal",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -54,7 +54,8 @@
     "scheduler:watch": "pnpm build && node scripts/scheduler-watch.mjs",
     "test:scheduler-watch": "node --test --test-isolation=none scripts/scheduler-watch.test.mjs",
     "test:save-proof": "node --test --test-isolation=none scripts/run-save-proof.test.mjs",
-    "test:proof-runtime": "node --test --test-isolation=none scripts/build-proof-runtime.test.mjs"
+    "test:proof-runtime": "node --test --test-isolation=none scripts/build-proof-runtime.test.mjs",
+    "test:failure-rehearsal": "node --test --test-isolation=none scripts/rehearse-engine-alerts.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
