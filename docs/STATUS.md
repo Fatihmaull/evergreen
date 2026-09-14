@@ -11,9 +11,9 @@
 
 ## Current — W3-D18-03 crossing capture publication
 
-Read-only B/C collector, offline verifier and operator instructions are reviewed and being published from `feat/W3-D18-03-crossing-capture`, directly against main `91ad650` (#154). Full post-review `pnpm check` passed (852 tests), including cross-locale gate regression. [Raw preparation captures](evidence/2026-09-14-bc-capture-preparation/README.md) preserve the original source `2ac20f4` and bytes; B/C remain before action and the B rehearsal cannot qualify. No new transaction, email or timer was run.
+Read-only B/C collector, offline verifier and operator instructions are reviewed and published in [PR #155](https://github.com/Fatihmaull/evergreen/pull/155) from `feat/W3-D18-03-crossing-capture`, directly against main `91ad650` (#154). Full post-review `pnpm check` passed (852 tests), including cross-locale gate regression. [Raw preparation captures](evidence/2026-09-14-bc-capture-preparation/README.md) preserve the original source `2ac20f4` and bytes; B/C remain before action and the B rehearsal cannot qualify. No new transaction, email or timer was run.
 
-D18-03 remains In progress; actual crossings/expiry and Shared acceptance remain outstanding. PRs #145–#147 are still open. The identical test-only fixture clock correction overlaps #146; retain it once when merging. See [implementation](W3-D18-03-IMPLEMENTATION.md), [operator guide](W3-D18-03-CAPTURE.md) and [closed internal review](W3-D18-03-REVIEW.md). Notion publication sync is pending completion of this PR creation.
+D18-03 remains In progress; actual crossings/expiry and Shared acceptance remain outstanding. PRs #145–#147 are still open. The identical test-only fixture clock correction overlaps #146; retain it once when merging. See [implementation](W3-D18-03-IMPLEMENTATION.md), [operator guide](W3-D18-03-CAPTURE.md) and [closed internal review](W3-D18-03-REVIEW.md). Notion D18-03 is synced to In progress with the PR outcome. Full presence check: 148 checkbox tasks + one standing obligation + one retired ID match all 150 Notion rows; no missing or phantom IDs. Fatih review/merge remains pending.
 
 ## Current — Deliverable 1 row 3 met; D17 channels merged
 

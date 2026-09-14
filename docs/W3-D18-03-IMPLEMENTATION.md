@@ -68,3 +68,10 @@ English-locale dated gates. Historical real capture bytes are unchanged and stil
 pass semantic replay with runtime-version checking disabled; strict replay retains
 its original-source requirement. The existing test-only clock fix from PR #146 is
 also reused after the known #128 flake surfaced during the full check.
+
+## Publication
+
+[PR #155](https://github.com/Fatihmaull/evergreen/pull/155) publishes the reviewed
+implementation and unchanged raw preparation captures. Notion D18-03 is synced
+to In progress. Fatih review/merge and actual event capture remain outstanding.
+The earlier local-only descriptions above record the implementation checkpoints.
