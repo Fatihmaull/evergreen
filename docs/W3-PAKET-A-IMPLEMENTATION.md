@@ -1,7 +1,6 @@
 # Paket A implementation — 2026-09-14
 
-Implementation and relevant e2e proof are complete locally, ready for a separate
-internal review. Nothing from Paket A has been pushed, published or merged.
+Implementation and relevant e2e proof are complete locally. [Internal review](W3-PAKET-A-REVIEW.md) subsequently reproduced and fixed three P2 defects; 826 tests now pass. Publication remains separate. Nothing from Paket A has been pushed, published or merged.
 Base is the existing EmailChannel #137, not a rebuild of it. Core execution,
 Signer, guards, confirmation and truthful templates are reused.
 
@@ -56,8 +55,7 @@ recovery/dedup, finite windows, changed runtime/config and retained attempts.
 The failure harness invokes the real built command in an offline subprocess.
 
 - D16-01, D17-03/04/05 have local completion evidence; task ownership is unchanged.
-- D18-02a remains In progress for Shared acceptance of the local timer, internal
-  review and publication. Its live proof has been banked; another A transaction
+- D18-02a remains In progress for Shared acceptance of the local timer and publication. Its live proof has been banked; another A transaction
   is not needed merely to repeat it.
 - Production GitHub cron remains decide-only, without a signer. Ephemeral runners
   still need a reviewed durable pre-send journal before repeated live execution.

@@ -35,7 +35,8 @@ Keep the state directory across checks/restarts. Preview has separate delivery
 state. Sent incident IDs deduplicate across restarts; a new actual job can resolve
 the incident. An existing lock indicates overlap or interrupted work: inspect it,
 do not automatically remove it or create another watch ID to bypass uncertainty.
-Install an explicit stop timer with the watcher. The policy itself stops network
+A temporary GitHub observation error has its own alert; it does not reopen the
+same late-job incident when the API returns. Install an explicit stop timer with the watcher. The policy itself stops network
 and email outside its window; the stop timer also releases the polling service.
 The selected Linux machine must remain awake and connected. This proves a local
 observer, not a hosted SLA or achieved GitHub cadence.
@@ -57,12 +58,15 @@ The harness is a bounded local OS timer with persistent pre-send intent; it is n
 a migration of the production GitHub cron. Shared acceptance remains Fatih's gate.
 Build and commit the tested code, then snapshot it using
 `node scripts/build-proof-runtime.mjs /tmp/evergreen-paket-a-runtime-UNIQUE`.
+The builder refuses modified/untracked runtime inputs and forces a fresh TypeScript
+build before assigning HEAD provenance. Documentation-only local notes may remain.
 Use a private config copied from `evergreen.config.save-proof.json`, `mode: live`,
 A only, target above the raised action threshold, expected dev payer and the
 existing 2,000,000-stroop cap. Verify fresh Testnet TTL, ceiling, balance, unsigned
 simulation and screenshot export before arming. B/C/shared Wasm remain protected.
 
-Create manifest version 1 from the runtime manifest plus `runId` beginning
+Create manifest version 1 from the complete runtime manifest (retain all file hashes;
+readiness compares it to runtime-manifest.json) plus `runId` beginning
 `paket-a-`, absolute `configPath`, SHA-256 `configSha256`, absolute `attemptFile`
 and `outputRoot` (create this parent first), `notBefore`/`notAfter` epoch ms with
 at most a one-hour window. Keep that same campaign and attempt path after restart.
