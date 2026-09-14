@@ -374,3 +374,27 @@ describe('engine payer execution fields', () => {
     ).toThrow(/maxFeeStroops/);
   });
 });
+
+describe('notification config refuses silent provider coercion', () => {
+  it.each([
+    null,
+    false,
+    [],
+    'email',
+    { channel: 'telegram', toEnvVar: 'ALERT' },
+    { toEnvVar: 'bad-name' },
+    { toEnvVar: '1BAD' },
+    { toEnvVar: 'ALERT', recipient: 'private@example.com' },
+  ])('rejects malformed notifications %j', (notifications) => {
+    expect(() => loadConfig(config({ notifications }))).toThrow(ConfigError);
+  });
+  it('preserves legacy default email and explicit email', () => {
+    for (const notifications of [{ toEnvVar: 'ALERT' }, { channel: 'email', toEnvVar: 'ALERT' }]) {
+      expect(loadConfig(config({ notifications })).config.notifications).toEqual({
+        channel: 'email',
+        toEnvVar: 'ALERT',
+      });
+    }
+    expect(loadConfig(config()).config.notifications).toBeUndefined();
+  });
+});

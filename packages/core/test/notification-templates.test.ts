@@ -58,7 +58,7 @@ describe('🔴 bumpFailed — submitted is not success', () => {
     expect(n.body).toContain('DO NOT retry blindly');
   });
 
-  it('a real failure says a retry is safe, because nothing is pending', () => {
+  it('labels failed simulation without claiming a live extension or safe retry', () => {
     const n = bumpFailed({
       ...base,
       outcome: 'failed',
@@ -66,8 +66,9 @@ describe('🔴 bumpFailed — submitted is not success', () => {
       error: { code: 'RPC_TIMEOUT', message: 'timed out' },
     } as unknown as Extract<BumpRecord, { outcome: 'failed' }>);
     expect(n.body).toContain('RPC_TIMEOUT');
-    expect(n.body).toContain('retry is safe');
-    expect(n.body).not.toContain('DO NOT retry');
+    expect(n.body).toContain('Simulation failed');
+    expect(n.body).toContain('No transaction was submitted');
+    expect(n.body).not.toContain('retry is safe');
   });
 });
 
@@ -112,4 +113,25 @@ describe('approachingCritical — severity comes from assessEntry, not from here
     expect(n.body).toContain('not healthy');
     expect(n.severity).not.toBe('info');
   });
+});
+
+describe('failure evidence limits', () => {
+  it.each([undefined, 'a'.repeat(64)])(
+    'does not claim unchanged TTL or resolved intent for live failure (%s)',
+    (hash) => {
+      const n = bumpFailed({
+        ...base,
+        mode: 'live',
+        outcome: 'failed',
+        ...(hash ? { transactionHash: hash } : {}),
+        error: { code: 'EXTENSION_FAILED', message: 'Post-state unverified' },
+      });
+      expect(n.body).toContain('could not be verified');
+      expect(n.body).not.toContain('extension did not happen');
+      expect(n.body).not.toContain('original TTL');
+      expect(n.body).not.toContain('Nothing was left pending');
+      expect(n.body).not.toContain('retry is safe');
+      expect(n.body).toContain('before retrying');
+    },
+  );
 });

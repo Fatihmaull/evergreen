@@ -1,0 +1,17 @@
+{
+  "sourceRestoredSha256": "06db46b43362635c30757dcc6a58e69fa69870aac1156944642a947ca6e83311",
+  "results": [
+    {
+      "mutation": "send-opt-in",
+      "test": "previews by default",
+      "exitCode": 1,
+      "detected": true
+    },
+    {
+      "mutation": "delivery-error-propagation",
+      "test": "surfaces HTTP",
+      "exitCode": 1,
+      "detected": true
+    }
+  ]
+}

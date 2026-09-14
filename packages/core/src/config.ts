@@ -296,12 +296,20 @@ export function loadConfig(raw: string): ConfigLoadResult {
     }
   }
 
-  const notifications = isRecord(root.notifications)
-    ? {
-        channel: 'email' as const,
-        toEnvVar: requireString(root.notifications.toEnvVar, 'notifications.toEnvVar'),
-      }
-    : undefined;
+  let notifications: EvergreenConfig['notifications'];
+  if (root.notifications !== undefined) {
+    const value = requireRecord(root.notifications, 'notifications');
+    for (const key of Object.keys(value)) {
+      if (!['channel', 'toEnvVar'].includes(key) && !key.startsWith('_'))
+        throw new ConfigError(`Unknown notifications field: ${key}`);
+    }
+    if (value.channel !== undefined && value.channel !== 'email')
+      throw new ConfigError('notifications.channel must be email.');
+    const toEnvVar = requireString(value.toEnvVar, 'notifications.toEnvVar');
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(toEnvVar))
+      throw new ConfigError('notifications.toEnvVar must be an environment-variable name.');
+    notifications = { channel: 'email', toEnvVar };
+  }
 
   return {
     config: {
