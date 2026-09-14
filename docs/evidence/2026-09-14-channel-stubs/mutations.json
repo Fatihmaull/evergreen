@@ -1,0 +1,17 @@
+{
+  "restoredSourceSha256": "a66700b3a1fa2bc51dc0b9beaa5a8e58e3d91766c8c5abdf28ffef71157bf595",
+  "results": [
+    {
+      "channel": "webhook",
+      "mutation": "resolve notify instead of rejecting",
+      "exitCode": 1,
+      "detected": true
+    },
+    {
+      "channel": "telegram",
+      "mutation": "resolve notify instead of rejecting",
+      "exitCode": 1,
+      "detected": true
+    }
+  ]
+}

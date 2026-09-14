@@ -1,0 +1,20 @@
+{
+  "task": "W3-D17-02",
+  "base": "cbd2a7e598c4ef92fc01d4cd4f8d5ac34275f0a4",
+  "branch": "feat/W3-D17-02-channel-stubs",
+  "command": "pnpm check",
+  "exitCode": 0,
+  "vitestTests": 643,
+  "nodeTests": 85,
+  "builtChannelsExercised": [
+    "webhook",
+    "telegram"
+  ],
+  "externalRequests": 0,
+  "sourceSha256": {
+    "packages/engine/src/channel-stubs.ts": "a66700b3a1fa2bc51dc0b9beaa5a8e58e3d91766c8c5abdf28ffef71157bf595",
+    "packages/engine/src/index.ts": "eb34e4eb012d6e09565438565f2a7a5967d38a3810b4faec60dab3b61463a2a1",
+    "packages/engine/test/channel-stubs.test.ts": "a3eb743b55ab2f8dbcdd961213fe95e0e4499a45543ff9d67be6002d78d0d3d0",
+    "packages/engine/test/channel-stubs-artifact.test.ts": "184a172b3b929f17a3b5684c64b2f7cdcf0ea492181c41a721259e6466e6a625"
+  }
+}
