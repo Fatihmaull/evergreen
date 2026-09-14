@@ -2,14 +2,20 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · D17-01 published in PR #137 for Fatih review
+**Last updated:** 2026-09-14 · D17-01 e2e channel delivery confirmed; closing task
 **Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D17-01 published for Fatih review
+## Current — D17-01 live email e2e confirmed
+
+Rakha authorized the reviewed one-email test and clarified the operating preference: carry each task through relevant, necessary e2e validation rather than stopping at mocks or asking again for already-authorized tests. This includes relevant email and Testnet transactions; preserve Testnet-only, capped-purpose operation, B/C/shared-Wasm guards and the existing review/publication workflow. Do not expand tests merely to force a completion claim.
+
+The published EmailChannel made exactly one real Resend POST, accepted as 7c9ac428-8a6c-43e6-936e-5d774aa88462 at 2026-09-14T05:45:24.973Z. [Evidence](evidence/2026-09-14-email-channel-live/README.md). Rakha separately confirmed “Sudah masuk inbox”. API read-back was unavailable with the sending-only key and the mailbox connector returned tool-not-found; recipient confirmation provides the final inbox evidence. Exactly one send, no credential-scope expansion. D17-01 is Done for the implemented/verified channel. D17-03/04/05 engine outcome and automatic-alert proof remain separate. No Stellar transaction was needed. The evidence follow-up is being published to #137. Notion read-back confirms Done/Rakha with the matching email ID and separate recipient confirmation.
+
+## Earlier — W3-D17-01 published for Fatih review
 
 Rakha approved [the D17-01 plan](W3-D17-01-PLAN.md) and local implementation. Work is on feat/W3-D17-01-email-channel based on main cbd2a7e, including Fatih's merged templates/idempotency changes. The unchanged NotificationChannel interface now has a Resend EmailChannel, explicit-send rehearsal command and validated record input. The reviewed D17-03 wording correction avoids claiming unchanged TTL/safe retry after unverified post-state. The W1 email probe is a retired help-only shim; historical evidence remains. [Implementation report](W3-D17-01-IMPLEMENTATION.md).
 

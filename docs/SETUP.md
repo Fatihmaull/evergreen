@@ -326,6 +326,8 @@ failure. An accepted result contains `emailId` and `receivedInInbox: unverified`
 then record sanitized output, event identity, email ID and receipt evidence. A
 notification failure must not rewrite a successful BumpRecord or re-run a bump.
 
+**Live W3 channel verified 2026-09-14:** one explicitly labelled diagnostic message was accepted by Resend and Rakha separately confirmed inbox receipt. [Evidence](evidence/2026-09-14-email-channel-live/README.md). This completes channel delivery validation, while actual engine outcome and unattended alert proofs remain D17-03/04/05.
+
 ### Historical W1 email smoke
 
 `pnpm email:smoke` now displays migration instructions; its old `--send` is

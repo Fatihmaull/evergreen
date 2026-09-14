@@ -2,8 +2,7 @@
 
 Status: implementation and offline verification complete on
 `feat/W3-D17-01-email-channel`, based on main cbd2a7e. Internal review complete: [one P2 record-owner mismatch fixed](W3-D17-01-REVIEW.md), no remaining blocking finding.
-Published implementation b4514f9 in [PR #137](https://github.com/Fatihmaull/evergreen/pull/137), awaiting Fatih review/merge. D17-01 remains In progress;
-actual email delivery/receipt and integration validation are still outstanding.
+Published implementation b4514f9 in [PR #137](https://github.com/Fatihmaull/evergreen/pull/137), awaiting Fatih review/merge. D17-01 channel delivery validation completed 2026-09-14: one real message accepted by Resend and separately confirmed in the inbox. [Live evidence](evidence/2026-09-14-email-channel-live/README.md). Engine integration/outcome proofs remain D17-03/04/05.
 
 ## What changed
 

@@ -4,6 +4,8 @@
 offline verification and internal review are complete; Rakha authorized publication. This does not authorize email,
 transaction, secret lookup or scheduler activation.
 
+Subsequent authorization and completion: Rakha authorized the reviewed live email and relevant, necessary e2e tests without repeated permission requests. D17-01 delivery was accepted and independently confirmed by the recipient on 2026-09-14; see the implementation report and live evidence. Earlier phase restrictions below are historical planning boundaries.
+
 **Goal:** implement the existing notification interface with a reusable Resend
 email adapter and a previewable local command, feeding the September 18 alert gate.
 
