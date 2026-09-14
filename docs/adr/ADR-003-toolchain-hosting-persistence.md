@@ -243,3 +243,29 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 - 2026-09-08: integrated PR #48/#49/#50; retained the unused experiment and review findings, deferred hosted validation to W4, and clarified that row claims do not use session advisory locks and quota scenarios depend on measured average usage. Runtime/provider/timing decisions are unchanged.
 
 - 2026-09-08: W1 review clarified current TTL versus transaction outcome and propagated the distinction to STATUS and the W2–W4 handoff. No change to runtime, provider, adoption timing or shared interfaces.
+
+- 2026-09-14: **measured the reliability of the scheduler this ADR chose.** GitHub
+  Actions delivers **~7.5% of a declared 15-minute cron** — 7.8% over two days on
+  `engine-cron.yml`, 7.3% over seven days on `scheduler-smoke.yml`, two
+  independent workflows agreeing. **Median gap 136–212 minutes; worst observed
+  gap 331 minutes (5.5 hours).** Documented platform behaviour: scheduled
+  workflows are delayed or dropped under load, and low-activity repositories are
+  throttled hardest. Full method and instrument checks in
+  [`docs/evidence/2026-09-14-scheduler-cadence`](../evidence/2026-09-14-scheduler-cadence/README.md).
+
+  **The decision is not reopened.** Six days before an unrepeatable crossing,
+  with the alternative's Stellar SDK compatibility still unresolved, is the wrong
+  moment — and the measurement shows Actions is *sufficient* for the window that
+  matters: B's threshold-to-expiry is 24 hours, so even at the worst gap the
+  engine fires at least four times inside it.
+
+  **What the number changes is what may be claimed.** `W3-D18-01` asks for a
+  "5–15 min" cadence and stays `[~]` because we do not achieve it. And the
+  margin comes from the **two-tier threshold**, not the cadence: 17,280 ledgers
+  is a full day of warning, which absorbs a scheduler missing ~92% of its slots.
+  A tighter threshold would not have survived, which is why
+  `MIN_SAFE_ACTION_THRESHOLD_LEDGERS` now warns when a configured action window
+  is shorter than four worst-case gaps.
+
+  Recorded here so a Week 4 revisit starts from the number rather than
+  re-measuring it.

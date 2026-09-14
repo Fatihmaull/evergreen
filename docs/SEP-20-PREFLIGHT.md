@@ -20,18 +20,27 @@ the day.
 | **On the day** | Fatih |
 | **Backstop** | Rakha, if Fatih is unreachable |
 
-**If no scheduled run appears between 12:00 and 14:00 UTC on Sep 20:**
-dispatch one by hand —
+### 🔴 Dispatch by hand at 12:00 UTC. Do not wait for the scheduler.
 
 ```bash
 gh workflow run engine-cron.yml --ref main
 ```
 
-This is expected to be needed sometimes. The scheduler delivers ~10% of its
-declared slots ([measurement](evidence/2026-09-14-scheduler-cadence/README.md)),
-median gap ~132 minutes. A two-hour silence is normal; a four-hour silence is
-still within observed behaviour. **Dispatch rather than wait.** A manual run at
-13:00 is worth more than a scheduled one that never came.
+**Corrected 2026-09-14.** An earlier draft said "dispatch if no scheduled run
+appears between 12:00 and 14:00". That trigger was wrong: measured across two
+workflows the scheduler delivers **~7.5%** of declared slots with a **median gap
+of 136–212 minutes and a worst observed gap of 331 minutes**
+([measurement](evidence/2026-09-14-scheduler-cadence/README.md)). A two-hour
+silence is not a signal — it is the median. A trigger that fires on normal
+behaviour is noise, and noise on the one day that matters is worse than no
+trigger.
+
+So the manual dispatch is the **primary action**, not the fallback. Any
+scheduled run that also lands is a bonus.
+
+Dispatch again at **~18:00** and **~00:00** to bracket the window. Three
+deliberate runs across 24 hours cost nothing and do not depend on a scheduler
+that misses nine slots in ten.
 
 ---
 
