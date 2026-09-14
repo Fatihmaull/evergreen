@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Soroban state-archival autopilot \u2014 monitor TTL, predict archival, extend automatically.",
+  "description": "Soroban state-archival autopilot — monitor TTL, predict archival, extend automatically.",
   "license": "MIT",
   "engines": {
     "node": ">=24",
@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -48,7 +48,9 @@
     "test:engine-output": "node --test --test-isolation=none scripts/engine-output.test.mjs",
     "engine:execute": "node scripts/engine-execute.mjs",
     "test:engine-recorder": "node --test --test-isolation=none scripts/engine-recorder.test.mjs",
-    "email:notify": "pnpm build && node scripts/email-notify.mjs"
+    "email:notify": "pnpm build && node scripts/email-notify.mjs",
+    "engine:alert-run": "pnpm build && node scripts/engine-alert-run.mjs",
+    "test:alert-journal": "node --test --test-isolation=none scripts/run-journal.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
