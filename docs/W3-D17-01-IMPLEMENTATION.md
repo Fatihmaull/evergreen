@@ -2,7 +2,7 @@
 
 Status: implementation and offline verification complete on
 `feat/W3-D17-01-email-channel`, based on main cbd2a7e. Internal review complete: [one P2 record-owner mismatch fixed](W3-D17-01-REVIEW.md), no remaining blocking finding.
-No commit, push, PR, Notion update or merge is claimed. D17-01 remains In progress;
+Published implementation b4514f9 in [PR #137](https://github.com/Fatihmaull/evergreen/pull/137), awaiting Fatih review/merge. D17-01 remains In progress;
 actual email delivery/receipt and integration validation are still outstanding.
 
 ## What changed

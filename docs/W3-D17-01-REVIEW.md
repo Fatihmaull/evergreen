@@ -4,6 +4,8 @@
 findings in the reviewed scope.** Ready for the explicit publication checkpoint.
 Real email delivery and inbox verification remain outstanding.
 
+Published after review: implementation b4514f9, [PR #137](https://github.com/Fatihmaull/evergreen/pull/137), awaiting Fatih review/merge.
+
 Reviewed uncommitted D17 changes on `feat/W3-D17-01-email-channel`, based on main
 cbd2a7e, including new files. This was a sequential internal review in the same
 session; Fatih's independent review remains separate.
