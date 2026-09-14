@@ -1,6 +1,7 @@
 import { readFile, access } from 'node:fs/promises';
 import { resolve, join, isAbsolute } from 'node:path';
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { loadConfig } from '../packages/core/dist/index.js';
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const PAYER = 'GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB';
@@ -24,6 +25,15 @@ export async function checkSaveProof(manifest, { now = Date.now(), live = false 
     throw Error('Invalid proof window');
   if (live && (now < manifest.notBefore || now >= manifest.notAfter))
     throw Error('Outside proof window');
+  const snapshot = JSON.parse(
+    await readFile(join(manifest.runtimeRoot, 'runtime-manifest.json'), 'utf8'),
+  );
+  if (
+    snapshot.sourceCommit !== manifest.sourceCommit ||
+    snapshot.runtimeRoot !== manifest.runtimeRoot ||
+    !isDeepStrictEqual(snapshot.files, manifest.files)
+  )
+    throw Error('Campaign does not match the complete runtime manifest');
   for (const needed of [
     'scripts/engine-alert-run.mjs',
     'scripts/run-save-proof.mjs',

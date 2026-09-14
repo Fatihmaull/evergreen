@@ -10,6 +10,7 @@ async function setup() {
   const root = await mkdtemp(join(tmpdir(), 'save-proof-'));
   const paths = [
     'scripts/engine-alert-run.mjs',
+    'scripts/engine-recorder.mjs',
     'scripts/run-save-proof.mjs',
     'scripts/check-save-proof-readiness.mjs',
     'packages/engine/dist/index.js',
@@ -23,6 +24,10 @@ async function setup() {
   }
   const c = JSON.parse(await readFile('evergreen.config.save-proof.json', 'utf8'));
   c.mode = 'live';
+  await writeFile(
+    join(root, 'runtime-manifest.json'),
+    JSON.stringify({ sourceCommit: 'a'.repeat(40), runtimeRoot: root, files }),
+  );
   const configPath = join(root, 'config.json');
   const raw = JSON.stringify(c);
   await writeFile(configPath, raw);
@@ -85,6 +90,18 @@ test('a live proof cannot run outside its bounded window', async () => {
       checkSaveProof(s.manifest, { live: true, now: s.manifest.notAfter }),
       /Outside/,
     );
+  } finally {
+    await rm(s.root, { recursive: true, force: true });
+  }
+});
+
+test('proof refuses a campaign that omits a changed runtime dependency from its hashes', async () => {
+  const s = await setup();
+  try {
+    const files = { ...s.manifest.files };
+    delete files['scripts/engine-recorder.mjs'];
+    await writeFile(join(s.root, 'scripts/engine-recorder.mjs'), 'changed dependency');
+    await assert.rejects(checkSaveProof({ ...s.manifest, files }), /manifest|Runtime/i);
   } finally {
     await rm(s.root, { recursive: true, force: true });
   }

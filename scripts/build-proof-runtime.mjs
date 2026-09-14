@@ -8,6 +8,30 @@ import console from 'node:console';
 const destination = resolve(process.argv[2] ?? '');
 if (!process.argv[2] || !destination.startsWith('/tmp/evergreen-paket-a-runtime-'))
   throw Error('Use an explicit temporary runtime destination');
+const inputs = [
+  'packages',
+  'scripts',
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'tsconfig.json',
+  'tsconfig.base.json',
+  '.npmrc',
+  '.nvmrc',
+];
+const git = (args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+const sourceCommit = git(['rev-parse', 'HEAD']);
+function assertCommittedInputs() {
+  if (git(['status', '--porcelain', '--untracked-files=all', '--', ...inputs]))
+    throw Error('Commit runtime inputs before building a proof snapshot');
+  if (git(['rev-parse', 'HEAD']) !== sourceCommit) throw Error('Source changed during snapshot');
+}
+assertCommittedInputs();
+// dist is ignored: its presence does not establish which source produced it.
+execFileSync(process.execPath, [resolve('node_modules/typescript/bin/tsc'), '--build', '--force'], {
+  stdio: 'pipe',
+});
+assertCommittedInputs();
 await mkdir(destination, { mode: 0o700 });
 for (const pkg of ['core', 'engine', 'shared-types']) {
   await mkdir(join(destination, 'packages', pkg), { recursive: true });
@@ -49,7 +73,7 @@ async function walk(dir) {
   }
 }
 await walk(destination);
-const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+assertCommittedInputs();
 await writeFile(
   join(destination, 'runtime-manifest.json'),
   JSON.stringify({ sourceCommit, runtimeRoot: destination, files }, null, 2) + '\n',
