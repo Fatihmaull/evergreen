@@ -21,3 +21,4 @@ export type { EmailChannelOptions, EmailDeliveryResult } from './email-channel.j
 export { runEmailCommand } from './email-command.js';
 export type { EmailCommandDependencies } from './email-command.js';
 export { parseNotificationRecord, NotificationRecordError } from './notification-record.js';
+export { WebhookChannel, TelegramChannel, ChannelNotImplementedError } from './channel-stubs.js';
