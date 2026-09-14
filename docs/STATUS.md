@@ -9,6 +9,10 @@
 
 ---
 
+## Current — W3-D18-03 crossing capture preparation (local)
+
+Rakha authorized local preparation of the B/C read-only collector, offline verifier and operational checklist. Baseline main is 91ad650 (#154); the remaining reviewed fixes stay in independent PRs #145–#147. Reuse the existing crossing producer and protected data keys. No B/C write, timer activation, new message, push or PR is part of this implementation turn. D18-03 is In progress for tooling; actual crossings/expiry and Shared acceptance remain future work. Notion sync is pending the separate publication checkpoint. Local implementation is now validated: `pnpm check` passed (851 tests); real B/C reads and one explicitly marked B rehearsal all replayed offline successfully. B/C are still before the action threshold; no event completion is claimed. Runtime commit `2ac20f4`; see [implementation results](W3-D18-03-IMPLEMENTATION.md) and [operator guide](W3-D18-03-CAPTURE.md). Internal review and publication remain separate.
+
 ## Current — Deliverable 1 row 3 met; D17 channels merged
 
 **SOW §6.1 row 3 is met.** Fatih's terminal captures are committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md): four entry types, both output modes, cost, archive prediction, and the three-contract scan that resolves the shared code entry to `shared with 2 other contracts`. Deliverable 1 now stands at **three of four rows met**; row 2 (npm publish) is `W4-D27-02`, ~Sep 29, and remains correctly open.
