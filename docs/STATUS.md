@@ -2,14 +2,32 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-13 · D16-01 published in stacked PR #122 for Fatih review
-**Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
-**Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
+**Last updated:** 2026-09-14 · D17-01 e2e channel delivery confirmed; closing task
+**Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
+**Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D16-01 published for Fatih review
+## Current — D17-01 live email e2e confirmed
+
+Rakha authorized the reviewed one-email test and clarified the operating preference: carry each task through relevant, necessary e2e validation rather than stopping at mocks or asking again for already-authorized tests. This includes relevant email and Testnet transactions; preserve Testnet-only, capped-purpose operation, B/C/shared-Wasm guards and the existing review/publication workflow. Do not expand tests merely to force a completion claim.
+
+The published EmailChannel made exactly one real Resend POST, accepted as 7c9ac428-8a6c-43e6-936e-5d774aa88462 at 2026-09-14T05:45:24.973Z. [Evidence](evidence/2026-09-14-email-channel-live/README.md). Rakha separately confirmed “Sudah masuk inbox”. API read-back was unavailable with the sending-only key and the mailbox connector returned tool-not-found; recipient confirmation provides the final inbox evidence. Exactly one send, no credential-scope expansion. D17-01 is Done for the implemented/verified channel. D17-03/04/05 engine outcome and automatic-alert proof remain separate. No Stellar transaction was needed. The evidence follow-up is being published to #137. Notion read-back confirms Done/Rakha with the matching email ID and separate recipient confirmation.
+
+## Earlier — W3-D17-01 published for Fatih review
+
+Rakha approved [the D17-01 plan](W3-D17-01-PLAN.md) and local implementation. Work is on feat/W3-D17-01-email-channel based on main cbd2a7e, including Fatih's merged templates/idempotency changes. The unchanged NotificationChannel interface now has a Resend EmailChannel, explicit-send rehearsal command and validated record input. The reviewed D17-03 wording correction avoids claiming unchanged TTL/safe retry after unverified post-state. The W1 email probe is a retired help-only shim; historical evidence remains. [Implementation report](W3-D17-01-IMPLEMENTATION.md).
+
+[Internal review](W3-D17-01-REVIEW.md) reproduced and fixed one P2 input-consistency defect: ContractData keys now require exactly their encoded owner, while ContractCode can still name multiple consumers. Eight regression cases were added. Fresh full pnpm check passed: 714 Vitest + 79 Node = 793 tests, unchanged gates. Built-command tests use offline provider fixtures. The owner-check mutation was detected and restored, with focused tests passing afterwards. No blocking finding remains in the local review scope. Rakha authorized publication after review. [PR #137](https://github.com/Fatihmaull/evergreen/pull/137) publishes implementation b4514f9 directly against main cbd2a7e, with Fatih requested as reviewer. No merge or auto-merge was performed. D17-01 stays In progress/Rakha pending actual delivery validation. D16-01 remains code-complete/merged with live validation pending. Publication is limited to the reviewed code, tests, docs and coordination; no operational seed read, real email, RPC or transaction is authorized. Notion read-back confirms D17-01 In progress/Rakha with #137, D17-03 In progress/Fatih with the proposed template correction, and D16-01 In progress/Rakha with #122 merged and live validation pending. All-ID presence validation found 149 registered IDs / 150 Notion rows, no missing or duplicate IDs; sole extra is the known retired Dropped ~~W3-D18-02~~. Local D15-02b and handoff files remain separate.
+
+**D16-01 is no longer waiting for review:** Fatih approved and merged #122 on Sep 13, after adding direct execution-selector guard coverage. #120/#121 are also merged. Report it as **implementation complete/merged; live validation pending**. Retain In progress until controlled Testnet validation, currently also tracked by #130. #129 supplies real unsigned simulation, not a successful submitted bump. Proposed efficient closeout: after the email channel is ready, one separately authorized A execution can supply both D16 validation and the success-alert half of D17-04; a manual command does not prove D18-02a's unattended claim. Failure-alert proof remains separate. B/C/shared Wasm remain protected; W2 A proof authorization is not reused.
+
+Fatih has taken and merged D16-02/02b (#135/#134). D16-03 output/history and D17-03 templates are available (#131); actual email delivery is still pending. D18-01 is In progress under Fatih because measured cadence is 132-minute median / 294-minute worst, not the declared 15 minutes. Next priority is D17-01, then D17-02 and D17-04/05 before **Friday September 18**. #125 temporary policy remains a Shared decision and does not block this sequence. #128 remains an unresolved intermittent CI failure, not a reproduced production fault.
+
+**Template integration finding addressed locally:** the failed/live wording now states that extension success could not be verified and requires inspecting intent, transaction and current TTL before retrying. It no longer claims unchanged TTL or a safe retry from a failed outcome alone. The approved D17-03 correction is covered by regressions and published for Fatih review in #137. Notification config validation and preview/provider-acceptance/inbox distinctions are implemented.
+
+## Earlier — W3-D16-01 published for Fatih review
 
 Rakha authorized the local execution plan. Working on `feat/W3-D16-01-engine-execution` from #121 head cdecdb8; #120/#121 were still open without new review feedback at startup. D16-01 remains In progress locally: implementation, offline checks and internal review are complete; Fatih review/merge and controlled Testnet validation remain. [Implementation report](W3-D16-01-IMPLEMENTATION.md) and [verification](evidence/2026-09-13-engine-execution/verification.json). [Internal review](W3-D16-01-REVIEW.md) found no blocking issue in the local slice; six additional cases and two detected/restored mutations strengthen the safety evidence. Fresh full `pnpm check` passed (619 Vitest + 85 script tests). Initial scan errors still fail the whole run closed, even when another key is readable; ordinary protected skips do not block A. Scope is instance/persistent execution, actual simulation by default, per-payer fee caps, validated Signer path, write-before-send recorder and no replacement after uncertainty. Core primitives remain the implementation basis.
 

@@ -29,7 +29,7 @@
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
     "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json",
-    "email:smoke": "node --env-file-if-exists=.env scripts/send-test-email.mjs",
+    "email:smoke": "node scripts/send-test-email.mjs",
     "test:email": "node --test --test-isolation=none scripts/send-test-email.test.mjs",
     "persistence:spike": "node --env-file-if-exists=.env scripts/persistence-spike.mjs",
     "test:persistence": "node --test --test-isolation=none scripts/persistence-spike.test.mjs",
@@ -47,7 +47,8 @@
     "test:evidence-integrity": "node --test --test-isolation=none scripts/verify-evidence-integrity.test.mjs",
     "test:engine-output": "node --test --test-isolation=none scripts/engine-output.test.mjs",
     "engine:execute": "node scripts/engine-execute.mjs",
-    "test:engine-recorder": "node --test --test-isolation=none scripts/engine-recorder.test.mjs"
+    "test:engine-recorder": "node --test --test-isolation=none scripts/engine-recorder.test.mjs",
+    "email:notify": "pnpm build && node scripts/email-notify.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

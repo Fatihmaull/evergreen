@@ -1,0 +1,13 @@
+{
+  "status": "accepted",
+  "submitted": true,
+  "emailId": "7c9ac428-8a6c-43e6-936e-5d774aa88462",
+  "receivedInInbox": "unverified",
+  "eventId": "W3-D17-01-email-check-2026-09-14-01",
+  "recordedAt": "2026-09-14T05:45:24.973Z",
+  "requestCount": 1,
+  "subject": "Evergreen W3 \u2014 uji EmailChannel",
+  "from": "[redacted]",
+  "to": "[redacted]",
+  "stellarTransactions": 0
+}

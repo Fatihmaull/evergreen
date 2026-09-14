@@ -246,6 +246,12 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 
 2026-09-08 follow-up: [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts the existing proof. The probe and nine offline tests are integrated from the preserved local branch; [setup instructions](SETUP.md#local-email-smoke--w1-d5-04) describe the preview/send commands. No new email or Stellar transaction is needed for integration. The three-artifact transaction rule does not apply to this email; later engine success/failure alerts require separate evidence.
 
+### W3 EmailChannel live test — W3-D17-01
+
+2026-09-14: the published W3 EmailChannel sent one explicitly authorized diagnostic email through Resend. HTTP 200; email ID `7c9ac428-8a6c-43e6-936e-5d774aa88462`, accepted at `2026-09-14T05:45:24.973Z`. [Live channel evidence](evidence/2026-09-14-email-channel-live/README.md). Rakha separately confirmed “Sudah masuk inbox”; the confirmation is recorded alongside the original accepted result. This is a real channel transport test, not automatic engine alert proof; no Stellar transaction was made.
+
+
+
 ## Local persistence and Workers compatibility — `W1-D6-04`
 
 2026-09-08: [local experiment record](evidence/2026-09-08-persistence-spike/README.md) preserves eight successful PostgreSQL checks plus a controlled database-unavailable failure. Separate processes contend for the same entry; one receives the claim. Lease generation, pending-state protection, rollback and durable history are verified with synthetic data. A bounded local Workers runtime also imported SDK 17.0.1 and read Testnet A successfully. These are database and read-path proofs, not an unattended bump, hosted database test or Cloudflare deployment. No transaction was signed or submitted; synthetic hashes are not chain evidence. Neon is the accepted W4 target under PR #48; hosted validation is deferred until after the Sep 20 proof. The spike remains unused by the engine, with pending reconciliation and failed-outcome storage documented as adoption prerequisites in the linked record.

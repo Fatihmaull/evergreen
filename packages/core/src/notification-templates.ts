@@ -69,6 +69,7 @@ export function bumpFailed(
   record: Extract<BumpRecord, { outcome: 'failed' | 'submitted' }>,
 ): Notification {
   const unresolved = record.outcome === 'submitted';
+  const simulation = record.mode === 'dry-run';
   return {
     severity: 'critical',
     subject: unresolved
@@ -77,7 +78,9 @@ export function bumpFailed(
     body: [
       unresolved
         ? 'A transaction was SUBMITTED and has not been confirmed. It may have succeeded.'
-        : 'The extension did not happen. This entry is still on its original TTL.',
+        : simulation
+          ? 'Simulation failed. No transaction was submitted.'
+          : 'Extension success could not be verified. Inspect the transaction and current TTL.',
       '',
       contractsLine(record),
       `Entry: ${record.entryKey}`,
@@ -89,9 +92,10 @@ export function bumpFailed(
         : '',
       '',
       unresolved
-        ? 'DO NOT retry blindly. Reconcile this hash first — a replacement send\n' +
-          'against the same sequence can double-spend the fee or land twice.'
-        : 'Nothing was left pending. A retry is safe once the cause is understood.',
+        ? 'DO NOT retry blindly. Reconcile this hash first; a new transaction could pay fees again.'
+        : simulation
+          ? 'Inspect the simulation error before retrying.'
+          : 'Inspect any recorded intent, transaction result and current TTL before retrying.',
     ]
       .filter(Boolean)
       .join('\n'),
