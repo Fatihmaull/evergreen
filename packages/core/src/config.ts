@@ -188,7 +188,13 @@ function parsePayer(value: unknown, id: string): PayerConfig {
  * ledgers, which is why the 17,280 default (a full day) clears it and a
  * "couple of hours" threshold does not.
  */
-const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 331;
+/**
+ * The worst gap actually measured between scheduled runs, 2026-09-14, against a
+ * declared 15-minute cron. Median was 132. Exported because two separate
+ * policies have to stand in a relation to it and neither can be checked by eye:
+ * the action-threshold window below, and the watcher's critical tier.
+ */
+export const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 331;
 const MIN_ACTION_RUNS_IN_WINDOW = 4;
 export const MIN_SAFE_ACTION_WINDOW_LEDGERS = Math.ceil(
   (WORST_OBSERVED_SCHEDULER_GAP_MINUTES * MIN_ACTION_RUNS_IN_WINDOW * 60) / SECONDS_PER_LEDGER,
