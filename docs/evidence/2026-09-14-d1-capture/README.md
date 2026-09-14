@@ -148,6 +148,37 @@ different ledgers; the totals agree because the quote is for the same work.
 
 ---
 
+## The threshold line changed after these were captured
+
+**Stated here rather than left for a reviewer to notice.** These captures print:
+
+```
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+```
+
+Running the same command today prints both tiers:
+
+```
+Worst entry health: HEALTHY (warn below 120,960 · act below 17,280 ledgers)
+```
+
+`scan` graded every entry against the action threshold alone, so it could never
+say `WARNING` — it had the word and no path to it, and the two-tier model that
+reached the engine had not reached the display. Fixed in #154 the same day, after
+`scan` and an engine run were observed disagreeing about guinea-pig B minutes
+apart: `HEALTHY` from one, `WARNING` from the other, same entry, same chain state.
+
+**Nothing in these images is wrong, and no verdict changes.** Guinea-pig A sits at
+~1,698,000 ledgers remaining, far above both tiers, so it reads `HEALTHY` under
+either model — the label beside it is what gained a second number. Every TTL,
+ledger, cost and blast-radius figure is unaffected; they are chain readings, not
+health verdicts.
+
+Not recaptured. A recapture costs a scarce thing — Fatih's terminal, and these
+were taken on the second attempt after the first set was disqualified — to change
+one line that does not alter a single claim the evidence makes. If Deliverable 1
+is recaptured for another reason before Oct 2, this line comes along with it.
+
 ## Scope and limits
 
 - **Testnet only.** Nothing here was submitted; `scan` and `--cost` never sign or send. The

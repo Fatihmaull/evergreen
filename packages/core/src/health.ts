@@ -143,10 +143,19 @@ function assertHealthThresholds(thresholds: HealthThresholds): void {
   }
 }
 
+/**
+ * Only the two health fields, so a caller that has no extension policy can still
+ * resolve tiers. Narrowed 2026-09-14 when `scan` needed this: it grades entries
+ * and never extends anything, and requiring `extendToLedgers` would have meant
+ * passing a meaningless number into a policy call. A full `BumpThresholds` is
+ * still assignable, so every existing caller is unaffected.
+ */
+type HealthPolicyInput = Pick<BumpThresholds, 'bumpWhenRemainingLedgersBelow' | 'warnBelowLedgers'>;
+
 /** Preserve omission: only an implicit warning can widen for a legacy action override. */
 export function resolveHealthThresholds(
-  defaults: BumpThresholds,
-  overrides: Partial<BumpThresholds> = {},
+  defaults: HealthPolicyInput,
+  overrides: Partial<HealthPolicyInput> = {},
 ): HealthThresholds {
   const criticalBelowLedgers =
     overrides.bumpWhenRemainingLedgersBelow ?? defaults.bumpWhenRemainingLedgersBelow;

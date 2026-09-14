@@ -1,6 +1,7 @@
 import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
-  assessEntry,
+  assessEntryWithThresholds,
+  resolveHealthThresholds,
   coverageIssues,
   estimateEndsAt,
   isLive,
@@ -72,6 +73,8 @@ export const DEFAULT_THRESHOLD_LEDGERS = 17_280;
  */
 export interface ScanHealthReport {
   readonly thresholdLedgers: number;
+  /** The warning tier. Informational only — the exit code uses the action tier. */
+  readonly warnBelowLedgers: number;
   /** Worst state across all entries. Absent when nothing was observed. */
   readonly worst?: EntryHealth;
   /** Entries KNOWN to serve more than one contract. A floor. */
@@ -85,16 +88,37 @@ export interface ScanHealthReport {
   readonly byEntry: Readonly<Record<string, EntryAssessment>>;
 }
 
+/**
+ * Both tiers, from the single action threshold the CLI is given.
+ *
+ * `scan` graded every entry against the action threshold alone until 2026-09-14,
+ * so it printed `(threshold 17,280 ledgers)` and could never say WARNING — it had
+ * the vocabulary and no path to it. The two-tier decision reached the engine and
+ * stopped there, which meant the two tools disagreed about the same entry:
+ * guinea-pig B at 120,909 remaining read `WARNING` in an engine run and `HEALTHY`
+ * in a scan, minutes apart. An operator got no warning horizon at all — an entry
+ * stayed HEALTHY until it was one day from expiry, which is the failure the
+ * second tier was introduced to prevent.
+ *
+ * `resolveHealthThresholds` is reused rather than restated so a widened action
+ * threshold still widens the warning with it.
+ */
+function tiers(thresholdLedgers: number) {
+  return resolveHealthThresholds({ bumpWhenRemainingLedgersBelow: thresholdLedgers });
+}
+
 /** Grade every entry once, for whichever renderer wants it. */
 export function healthReport(result: ScanResult, thresholdLedgers: number): ScanHealthReport {
+  const thresholds = tiers(thresholdLedgers);
   const byEntry: Record<string, EntryAssessment> = {};
   for (const [key, entry] of Object.entries(result.entries)) {
-    byEntry[key] = assessEntry(entry, thresholdLedgers);
+    byEntry[key] = assessEntryWithThresholds(entry, thresholds);
   }
   const assessments = Object.values(byEntry);
   const worst = worstHealth(assessments);
   return {
     thresholdLedgers,
+    warnBelowLedgers: thresholds.warnBelowLedgers,
     ...(worst === undefined ? {} : { worst }),
     sharedEntryCount: assessments.filter((a) => a.sharingStatus === 'shared').length,
     undeterminedSharingCount: assessments.filter((a) => a.sharingStatus === 'undetermined').length,
@@ -147,7 +171,7 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
 
   for (const [key, entry] of entries) {
     const live = isLive(entry.ttl);
-    const assessment = assessEntry(entry, thresholdLedgers);
+    const assessment = assessEntryWithThresholds(entry, tiers(thresholdLedgers));
     assessments.push(assessment);
     const shortKey = `${key.slice(0, 10)}…`;
     lines.push(
@@ -216,7 +240,8 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
     const shared = assessments.filter((a) => a.sharingStatus === 'shared').length;
     lines.push(
       `Worst entry health: ${paint(worst, LABEL[worst], color)}` +
-        ` (threshold ${thresholdLedgers.toLocaleString()} ledgers)` +
+        ` (warn below ${tiers(thresholdLedgers).warnBelowLedgers.toLocaleString()}` +
+        ` · act below ${thresholdLedgers.toLocaleString()} ledgers)` +
         (shared > 0 ? ` · ${shared} shared entr${shared === 1 ? 'y' : 'ies'}` : ''),
     );
   }
