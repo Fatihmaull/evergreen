@@ -1,0 +1,9 @@
+[Unit]
+Description=Evergreen Paket A finite-window watcher
+[Timer]
+OnActiveSec=5s
+OnUnitInactiveSec=5min
+AccuracySec=1s
+# Activation must also arm a separate stop timer at the configured endAt.
+[Install]
+WantedBy=timers.target
