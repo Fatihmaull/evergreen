@@ -22,3 +22,11 @@ Eleven testnet ledger closes, 2,000 apart, spanning ledgers 4,576,156–4,596,15
 **This one is a derived extract, not a raw response, and says so in its own `_provenance` block.** `measureCadence` consumes exactly two fields; the raw responses carry ~40 unrelated ones each. The only transformation is `closed_at` → epoch seconds. The unedited rule still holds for recorded *responses* — this is labelled differently because it is a different kind of artifact, rather than quietly bending the rule.
 
 Why it exists: the cadence constant restates measurements from 2026-09-05. Restating a number is not observing it. This fixture re-checks the constant against closes seen five days later, and the test asserting the agreement says explicitly that a future disagreement is a **finding**, not a reason to widen the band.
+
+## `getLedgerEntries-bc-controls-2026-09-14.json` — `W3-D18-03`
+
+Unedited copy of `docs/evidence/2026-09-14-scheduled-a-save/controls-before-response.json`
+at commit `6b536c2` (PR #147 evidence source). Contains B/C instance and persistent
+entries plus their shared Wasm control; temporary entries were absent. The crossing
+capture tests reuse these real XDR values and explicitly vary ledger/expiry metadata
+in memory to exercise boundaries. Those synthetic responses are not live evidence.

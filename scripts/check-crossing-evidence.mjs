@@ -23,7 +23,8 @@
  * file in `docs/evidence/` containing a guard refusal for that contract.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { verifyCrossingCapture } from './verify-crossing-capture.mjs';
 import process from 'node:process';
 import console from 'node:console';
 
@@ -64,11 +65,30 @@ if (subjects.length === 0) {
   process.exit(1);
 }
 
+function captureRoot(file) {
+  for (let dir = dirname(file); dir !== ROOT && dir.startsWith(ROOT); dir = dirname(dir)) {
+    if (existsSync(join(dir, '.crossing-capture'))) return dir;
+    if (existsSync(join(dir, 'manifest.json'))) {
+      try {
+        if (
+          JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')).captureFormat ===
+          'evergreen-crossing-v1'
+        )
+          return dir;
+      } catch {
+        /* incomplete marked captures fail closed below */
+      }
+    }
+  }
+  return null;
+}
+const verified = new Map();
 const files = jsonFiles(ROOT);
 const failures = [];
 for (const s of subjects) {
   if (today < s.alertThresholdOn) continue;
-  const evidence = files.filter((f) => {
+  const evidence = [];
+  for (const f of files) {
     // The evidence must come FROM the crossing, not from a rehearsal of it.
     //
     // Added 2026-09-14, the same day it was needed: committing a rehearsal that
@@ -82,11 +102,30 @@ for (const s of subjects) {
     // is in the path. Anything dated before the alert threshold is, by
     // definition, not a capture of that crossing.
     const dated = /(\d{4}-\d{2}-\d{2})/.exec(f.slice(ROOT.length));
-    if (!dated || dated[1] < s.alertThresholdOn) return false;
+    if (!dated || dated[1] < s.alertThresholdOn) continue;
+    const bundle = captureRoot(f);
+    if (bundle) {
+      if (!verified.has(bundle)) {
+        try {
+          verified.set(bundle, await verifyCrossingCapture(bundle, { checkRuntime: false }));
+        } catch {
+          verified.set(bundle, null);
+        }
+      }
+      const result = verified.get(bundle);
+      if (
+        f === join(bundle, 'manifest.json') &&
+        result?.qualifiesCrossing &&
+        result.subject === s.label.slice(-1) &&
+        dated[1] === result.observedAt.slice(0, 10)
+      )
+        evidence.push(f);
+      continue;
+    }
     const text = readFileSync(f, 'utf8');
-    if (/RAISED — rehearsal|rehearsal, not the real crossing/.test(text)) return false;
-    return text.includes(s.contractId) && /REFUSED BY WRITE GUARD/.test(text);
-  });
+    if (/RAISED — rehearsal|rehearsal, not the real crossing/.test(text)) continue;
+    if (text.includes(s.contractId) && /REFUSED BY WRITE GUARD/.test(text)) evidence.push(f);
+  }
   if (evidence.length === 0) failures.push(s);
 }
 
