@@ -1,0 +1,36 @@
+
+ RUN  v5.0.0 /home/rakhargo/projects/evergreen
+
+ ❯ packages/engine/test/execution.test.ts (24 tests | 1 failed | 23 skipped) 1164ms
+   ❯ engine execution — real core primitives over fixture RPC (15)
+     × does not reset a payer budget for a second key 1163ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/engine/test/execution.test.ts > engine execution — real core primitives over fixture RPC > does not reset a payer budget for a second key
+AssertionError: expected [ 'failed' ] to deeply equal [ 'succeeded', 'failed' ]
+
+- Expected
++ Received
+
+  [
+-   "succeeded",
+    "failed",
+  ]
+
+ ❯ packages/engine/test/execution.test.ts:277:50
+    275|       { submit: true },
+    276|     );
+    277|     expect(result.records.map((r) => r.outcome)).toEqual(['succeeded',…
+       |                                                  ^
+    278|     expect(s.rpc.sendTransaction).toHaveBeenCalledTimes(1);
+    279|     expect(result.exitCode).toBe(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  15:46:19
+   Duration  1.82s (tests 68%, import 22%, transform 10%)
+

@@ -9,11 +9,15 @@
 
 ---
 
-## Current — independent W3 evidence review
+## Current — W3-D17-05 closed; D17-04 evidence landed
 
-#142–#144 and diagnostic correction #152 are merged. The remaining #145/#146/#147 all target main with only their own scope. #145 carries the bounded save harness; #146 carries failure acceptance and the fixture-clock fix; #147 carries the saved A evidence and associated tracking. Main #148/#149/#151/#153/#154 and Fatih's D1 captures, probe, gate and CLI corrections are retained.
+**`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
 
-D17-05 requires the failure evidence in #146 on top of merged runtime #152; it does not require #145 or #147. D17-04 requires the success evidence here plus failure evidence #146. D18-02a remains In progress for Fatih Shared acceptance in #130. No Shared acceptance is inferred from code merges or B/C control confirmation. The corrected preflight uses September 18 readiness, a real-threshold probe with BELOW unset, explicit manual/ scheduled provenance and minimum C crossing capture required by the unchanged date gate. Isolated fixtures verified B-only red / B+C green / C rehearsal red. The original A transaction and receipts are preserved without re-running any live test.
+**`W3-D17-04` has its evidence, and acceptance is Fatih's.** #147 carries the success/liveness receipts and #146 the failure receipts; the gate needs both and neither alone. No live email or transaction was repeated to publish either — the original A transaction and its receipts are preserved as recorded.
+
+**`W3-D18-02a` remains In progress** pending Shared acceptance in #130. No Shared acceptance is inferred from a code merge or from B/C control confirmation. **#145** — the reusable save harness — and **#155** — B/C observation capture, which is Saturday's machinery and wants to be in well before the crossing — are the two still open.
+
+The corrected pre-flight stands: September 18 readiness, a real-threshold probe with `BELOW` unset, explicit manual-versus-scheduled provenance, and the C crossing capture the unchanged date gate requires. Isolated fixtures verified B-only red, B+C green, C rehearsal red.
 
 ## Earlier — Deliverable 1 row 3 met; D17 channels merged
 
