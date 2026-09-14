@@ -10,3 +10,5 @@ export type {
 
 export { runEngineCommand } from './command.js';
 export type { EngineCommandDependencies } from './command.js';
+
+export { WebhookChannel, TelegramChannel, ChannelNotImplementedError } from './channel-stubs.js';

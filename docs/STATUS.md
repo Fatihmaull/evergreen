@@ -2,14 +2,22 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-13 · D16-01 published in stacked PR #122 for Fatih review
-**Sprint day:** 11 of 30 · **Deadline:** 2026-10-02 · **16 build days left** (weekdays only)
+**Last updated:** 2026-09-14 · D17-02 publication authorized after review
+**Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 thresholds**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — W3-D16-01 published for Fatih review
+## Current — W3-D17-02 publication authorized
+
+Rakha approved [the local stub plan](W3-D17-02-PLAN.md). Working on feat/W3-D17-02-channel-stubs from main cbd2a7e, independently of open #137. D17-02 is Done/Rakha for the defined local stub behavior. [Internal review](W3-D17-02-REVIEW.md) found no blocking issue and required no production change; publication and Fatih review/merge remain. Two unavailable transports now implement the existing interface, with typed rejection and no side effects. [Implementation report](W3-D17-02-IMPLEMENTATION.md). Fresh full pnpm check passed 728 tests (643 Vitest + 85 Node); both built exports were exercised in a guarded fresh process, and removing each rejection fails its tests. No live provider interaction is needed for a deliberately unavailable stub. Rakha explicitly authorized publication. The PR will target main, independently of #137; no merge or auto-merge is authorized. Notion publication sync is pending for D17-02. Presence check found 149 registered IDs and 150 mirror rows, no missing or duplicate IDs; sole extra is the known retired Dropped ~~W3-D18-02~~.
+
+D17-01 is implemented and inbox-verified on #137 at 4451394, still awaiting Fatih review/merge at startup; this older main-based branch does not carry that PR's completion/evidence commits. Do not interpret its historical D17-01 row as a reversal of the verified result. The unpublished STATUS/W1-REVIEW notes from that branch were preserved in the stash named Preserve unpublished D17-01 session notes before D17-02. Draft D15-02b and the handoff remain untracked and untouched. Reconcile tracking after #137 merges; do not duplicate its code here.
+
+Rakha authorizes relevant, necessary e2e tests without repeated permission requests. For deliberately unavailable stubs, validation is a built public API refusal test: exports reject without network or credential access. This is not a claim of e2e Telegram/webhook delivery. A real Telegram/webhook send would exceed this task's scope. D17-04/05 remains the September 18 operational priority; B/C/shared-Wasm guards remain intact.
+
+## Earlier — W3-D16-01 published for Fatih review
 
 Rakha authorized the local execution plan. Working on `feat/W3-D16-01-engine-execution` from #121 head cdecdb8; #120/#121 were still open without new review feedback at startup. D16-01 remains In progress locally: implementation, offline checks and internal review are complete; Fatih review/merge and controlled Testnet validation remain. [Implementation report](W3-D16-01-IMPLEMENTATION.md) and [verification](evidence/2026-09-13-engine-execution/verification.json). [Internal review](W3-D16-01-REVIEW.md) found no blocking issue in the local slice; six additional cases and two detected/restored mutations strengthen the safety evidence. Fresh full `pnpm check` passed (619 Vitest + 85 script tests). Initial scan errors still fail the whole run closed, even when another key is readable; ordinary protected skips do not block A. Scope is instance/persistent execution, actual simulation by default, per-payer fee caps, validated Signer path, write-before-send recorder and no replacement after uncertainty. Core primitives remain the implementation basis.
 

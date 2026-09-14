@@ -136,6 +136,14 @@ A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-schedu
 
 The engine resolves a `Signer` per payer. Stage 1 uses a plain funded Ed25519 account; Stage 2 adds the capped policy signer ([ADR-002](adr/ADR-002-policy-signer-provider.md), [policy signer plan](POLICY-SIGNER.md)). The same interface supports both. The adapter must verify network, payer, permitted operations and fee policy before signing; its method name does not provide those protections.
 
+**Notification extension stubs (W3-D17-02):** the engine exports WebhookChannel,
+TelegramChannel and ChannelNotImplementedError. Both classes satisfy the existing
+NotificationChannel interface, but notify always rejects with
+CHANNEL_NOT_IMPLEMENTED and identifies actual delivery as SOW 2 scope. They accept
+no endpoints or credentials and have no network, fallback or successful no-op
+path. They are not new usable config options. EmailChannel implementation and its
+strict email-only config validation are tracked separately in PR #137.
+
 ### `apps/dashboard`
 
 The planned W4 P0 product is public and read-only: permissionless scans for any contract ID, plus history for contracts monitored by the demonstration instance. For other contracts, history says "not monitored by this instance"; it does not imply nobody protects them. There are no accounts or registration flows. Pages hosting preparation is separate from the engine runtime and database decision.
