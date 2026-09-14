@@ -108,7 +108,7 @@ export function formatCrossingProbe(probe) {
   emit(`subject:    ${subject.contractId}`);
   emit(`expires:    ${subject.expiresOn} (alert threshold ${subject.alertThresholdOn})`);
   emit(
-    `threshold:  ${below.toLocaleString()} ledgers${rehearsal ? '  ⚠ RAISED — rehearsal, not the real crossing' : ''}`,
+    `threshold:  ${below.toLocaleString('en-US')} ledgers${rehearsal ? '  ⚠ RAISED — rehearsal, not the real crossing' : ''}`,
   );
   emit(`mode:       ${run.mode}   decisions: ${run.decisions.length}\n`);
 

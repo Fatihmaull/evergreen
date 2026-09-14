@@ -111,7 +111,7 @@ function evaluateBumps(
     const { remainingLedgers } = entry.ttl;
     if (!needsAction(remainingLedgers, actionThreshold)) {
       skip(
-        `${assessment.health.toUpperCase()} — ${assessment.reason} ${remainingLedgers.toLocaleString()} ledgers remaining.`,
+        `${assessment.health.toUpperCase()} — ${assessment.reason} ${remainingLedgers.toLocaleString('en-US')} ledgers remaining.`,
       );
       continue;
     }
