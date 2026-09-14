@@ -1,0 +1,33 @@
+{
+  "task": "W3-D17-01",
+  "base": "cbd2a7e598c4ef92fc01d4cd4f8d5ac34275f0a4",
+  "branch": "feat/W3-D17-01-email-channel",
+  "command": "pnpm check",
+  "exitCode": 0,
+  "vitestTests": 714,
+  "nodeTests": 79,
+  "liveEmail": false,
+  "liveRpc": false,
+  "sourceSha256": {
+    ".env.example": "5ff7ec64c4f40deec7c53999f8d518c86f9ba3f93fa76f6e9445abddb1e8d057",
+    "package.json": "e5eec51b7ba9e8dbdbe74ec8cb00341f212f560262aaad7bcb0e0040c347527e",
+    "packages/core/src/config.ts": "d59241ed6e5affbd55f5b20660da02cf423abe1486674531d774240f1a806728",
+    "packages/core/src/index.ts": "c1bf2546ab5a3af242f7f651e394628a27534e4f6759df4bd11e2bff1dc0f2c9",
+    "packages/core/src/notification-templates.ts": "d93939a7ca42dab3845faac93d14029e8418b30f337c98fae7d1320ddd837d7f",
+    "packages/core/test/config.test.ts": "8c96ebf339a113ab8dffa190d583e6a5549a42364c2f0c972c9adf0150797d1f",
+    "packages/core/test/notification-templates.test.ts": "e8579d26e3504515477fe23b27662e3068a48cc40ae0c6827347479282060b20",
+    "packages/engine/src/email-channel.ts": "06db46b43362635c30757dcc6a58e69fa69870aac1156944642a947ca6e83311",
+    "packages/engine/src/email-command.ts": "516f8ed2beba062c640f75cc515fea6683ea3ecc922bfaa99838b7140df19a59",
+    "packages/engine/src/index.ts": "eafec1d1abe8348e010fbb343a05b00f56764cd4dcc3c3153fac6b90b8366145",
+    "packages/engine/src/notification-record.ts": "c59ef35d02b930bc14fc9011e313e9047017272022c5ed21f835e79470759b55",
+    "packages/engine/test/email-artifact.test.ts": "f85bb187fdf65087cb9bf1d18b0831992a517015b5a12d44b138fdffe75e9bbe",
+    "packages/engine/test/email-channel.test.ts": "add38966d8c79155c39cec5f0052368ec76f42b33be749e14a51ba4a97dbad17",
+    "packages/engine/test/email-command.test.ts": "36d66b0b3eb7aa17a0d921e70e2a1b01df85981093edfa2d8ab1abcf1ab1be7a",
+    "packages/engine/test/email-fixtures.ts": "7722242a093a51cfb7446e3e6695a7e112c8e1cc51d0e9860f516b241a1761e0",
+    "packages/engine/test/fixtures/email-preload.mjs": "2910dbcb91396f4897251cad707643ceb0fc1d8069eb4ed1cfb65dc0294c11f2",
+    "scripts/email-notify.mjs": "7c45410cd53ec876b6abf54844d127c434d17e3ae33c1bee502f2e8da8b1608b",
+    "scripts/send-test-email.mjs": "12390353a93790283e14e8421f6d38d55e4bf979b80cb6102d49fc25a5312764",
+    "scripts/send-test-email.test.mjs": "8b553d288fc5ee35a6d91a62b65b41ddcf43a804d1c906184e8972402d7c4d8e"
+  },
+  "reviewFinding": "ContractData owner mismatch; fixed locally"
+}

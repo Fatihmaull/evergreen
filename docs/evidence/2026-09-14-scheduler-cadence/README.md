@@ -5,14 +5,32 @@ cadence**, and `engine-cron.yml` is that deployment. It has run unattended.
 
 ## 🔴 The declared schedule is not the delivered schedule
 
-```
-cron declared            3,18,33,48 * * * *   -> every 15 minutes
-window observed          2026-09-12 17:08 -> 2026-09-14 00:11  (1,862 min)
-expected fires           124
-ACTUAL fires              12      -> 10% of schedule
-median gap               132 min
-worst gap                294 min  (4.9 hours)
-```
+Measured on **two independent workflows** with different creation dates and
+different windows. They agree, which is what makes this a property of the
+platform rather than of one file.
+
+| workflow | live since | window | expected @15min | actual | delivered | gap min/med/max |
+|---|---|---|---|---|---|---|
+| `engine-cron.yml` | 09-12 14:11Z | 2,487 min | 166 | 13 | **7.8%** | 102 / 136 / 294 |
+| `scheduler-smoke.yml` | 09-07 05:20Z | 10,218 min | 681 | 50 | **7.3%** | 109 / 212 / **331** |
+
+**~7.5% of declared slots. Worst observed gap 331 minutes — 5.5 hours.**
+
+### Instrument checks, because a dramatic number is a claim about the instrument
+
+- **Pagination**: the API reports `total_count` 13 and 50 and returned all of
+  both. Nothing truncated.
+- **Retention**: both workflows are days old against a 90-day retention. Nothing
+  pruned.
+- **Window boundary**: the denominator runs from the workflow's first commit on
+  `main`, not from its first run — otherwise the throttling at the start is
+  excluded and the figure flatters itself.
+- **Timezone**: the first attempt reported a scheduled run *four hours before the
+  workflow was committed*. Git emitted `+07:00` and it was parsed as UTC. The
+  corrected window is 3 hours longer and the figure moved from 10% to 7.8%.
+- **Second sample**: `scheduler-smoke` is an independent workflow with a week of
+  data and lands within 0.5 points. One workflow could be unlucky; two agreeing
+  is the platform.
 
 GitHub does not guarantee scheduled workflows; it delays or drops them under
 load, and low-activity repositories are throttled hardest. This is documented
@@ -26,8 +44,8 @@ that, and the row is marked accordingly rather than claimed.** Raw data:
 ## What it means for Sep 20, which is the only deadline that cares
 
 B crosses its alert threshold ~2026-09-20 12:00 UTC and **expires ~09-21 12:00**
-— a **24-hour window**. At the observed worst gap of 294 minutes the engine
-fires **at least 4–5 times** inside it, and at the median roughly 11.
+— a **24-hour window**. At the worst observed gap of **331 minutes** the engine fires **at least 4 times**
+inside it, and at the median roughly 7–10.
 
 **Detection is safe.** The margin comes from the two-tier threshold, not from
 the cadence: 17,280 ledgers is a full day of warning, which absorbs a scheduler

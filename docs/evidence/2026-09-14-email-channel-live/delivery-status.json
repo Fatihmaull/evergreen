@@ -1,0 +1,8 @@
+{
+  "emailId": "7c9ac428-8a6c-43e6-936e-5d774aa88462",
+  "httpStatus": 401,
+  "lastEvent": null,
+  "checkedAt": "2026-09-14T05:46:15.932Z",
+  "readbackAllowed": false,
+  "reason": "Sending-only API key cannot retrieve delivery events; permissions were not expanded."
+}

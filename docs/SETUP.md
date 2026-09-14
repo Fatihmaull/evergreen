@@ -58,10 +58,10 @@ Documented here, values only in your local `.env` / platform secret store.
 | `STELLAR_NETWORK_PASSPHRASE` | Testnet passphrase | `.env` |
 | `EVERGREEN_DEV_SECRET` | Developer key for Testnet setup/tests, separate from the bot | local `.env` only |
 | `EVERGREEN_SIGNER_SECRET` | Ed25519 signer for the bot (**testnet only**) | `.env` local · GitHub Actions secret · hosting env store |
-| `EMAIL_API_KEY` | Resend sending API key for the local email smoke | local `.env` / secret stores only |
+| `EMAIL_API_KEY` | Resend sending API key for explicit EmailChannel sends | local `.env` / secret stores only |
 | `EMAIL_FROM` | One plain sender address; defaults to `onboarding@resend.dev` | local `.env` |
-| `EMAIL_TO` | One smoke-test recipient, initially the Resend account email | local `.env` only |
-| `EVERGREEN_ALERT_TO` | Destination for later engine alerts | `.env` / hosting env store |
+| `EMAIL_TO` | Historical W1 recipient; ignored by W3 EmailChannel | local `.env` only |
+| `EVERGREEN_ALERT_TO` | Private EmailChannel destination selected through notifications.toEnvVar | `.env` / hosting env store |
 | `EVERGREEN_CONFIG_PATH` | Path to `evergreen.config.json` | `.env` |
 
 Use `https://soroban-testnet.stellar.org/` and the exact passphrase `Test SDF Network ; September 2015`. The quotes in `.env.example` preserve the spaces and semicolon. Load it with Node's `--env-file=.env` or an env-file parser; do not print the file or pass a secret as a command-line argument. The email smoke below is separate from the later hosted engine.
@@ -261,21 +261,86 @@ Recorded at `W1-D4-04b` in `docs/SOROBAN-PRIMER.md` § Measured TTL floors. Thre
 | Resend | local email smoke; engine alerts later | `W1-D5-04` | ✅ one local email accepted (HTTP 200) and inbox receipt confirmed; [evidence](evidence/2026-09-07-email-smoke/README.md) |
 | Shared drive | evidence (screenshots, video) | *(W1-D5-06)* | ⬜ |
 
-## Local email smoke — `W1-D5-04`
+## Email notifications — W3-D17-01
 
-Resend is selected for this readiness test. `scripts/send-test-email.mjs` is the single email smoke implementation, integrating the accepted local test with PRs #35/#38. It sends one fixed setup message; it does not implement the Week 3 engine `NotificationChannel` or bump alerts. Retire it when `EmailChannel` lands at `W3-D17-01`.
+The reusable `EmailChannel` implements the existing `NotificationChannel` contract.
+It renders the core templates; the default is preview, with no API-key lookup or
+network request. Engine/scheduler alert wiring and inbox validation remain
+W3-D17-04/05. Installing this channel does not enable cron email or transactions.
 
-1. Create a Resend account and verify its email address.
-2. In [API Keys](https://resend.com/api-keys), create a key named `evergreen-local` with **Sending access**. Save its value directly in the existing ignored `.env` as `EMAIL_API_KEY`; never paste it into chat or a tracked file. Preserve the other environment settings.
-3. Add `EMAIL_FROM=onboarding@resend.dev` and set `EMAIL_TO` to the email associated with that Resend account. The [default sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) permits that mailbox for initial testing. Sending to other people requires your own verified domain. `EMAIL_FROM` and `EMAIL_TO` accept one plain address each, without a display name or recipient list. `EVERGREEN_ALERT_TO` is reserved for the later engine and is not used here. If you followed the preliminary PR #35/#38 script, move your smoke-test recipient into `EMAIL_TO`; the new entry point defaults to preview and needs `--send` to submit.
-4. Run `pnpm email:smoke` to preview the fixed subject/body without making a request. A recipient is required, but an API key is not needed for preview. Logs redact both addresses.
-5. After reviewing the preview, run `pnpm email:smoke --send` once to send. `--send` is the only sending path; live sending is refused when `CI` is set to anything other than `false`. `pnpm test:email` uses mock responses and never sends mail.
+Add this fragment to a valid Testnet Evergreen config:
 
-The command loads `.env` using Node 24; already-set shell environment variables take precedence. It posts to the [Resend Send Email API](https://resend.com/docs/api-reference/emails/send-email) with a 10-second timeout, refuses redirects, and never retries automatically. Repeating the same sender/recipient/body uses the same idempotency key; Resend deduplicates it for 24 hours. After a timeout or malformed response, inspect the Resend dashboard before retrying because the email may already have been accepted.
+```json
+{ "notifications": { "channel": "email", "toEnvVar": "EVERGREEN_ALERT_TO" } }
+```
 
-Success prints `status: "accepted"`, the provider email ID, and `receivedInInbox: "unverified"`. **API acceptance is not proof of inbox receipt.** Check the actual mailbox (including spam), then record the ID, timestamp, sanitized output, and receipt confirmation in [EVIDENCE.md](EVIDENCE.md). Dashboard `Delivered` means the recipient server accepted it, not that a person saw it. Any public screenshot must hide mailbox addresses and API keys; never publish the `.env` or authorization headers.
+Keep `EVERGREEN_ALERT_TO` (one plain recipient address), `EMAIL_FROM` and
+`EMAIL_API_KEY` in the environment or ignored local environment file. There is no
+fallback to the old `EMAIL_TO`. `EMAIL_FROM` defaults to `onboarding@resend.dev`;
+that sender is for the Resend account mailbox, and other recipients require a
+verified sender domain. Never paste an API key into chat, config or evidence.
+The command does not automatically load `.env`.
 
-**Verified 2026-09-07:** one configured test email was accepted and the recipient confirmed inbox receipt. The [evidence record](evidence/2026-09-07-email-smoke/README.md) preserves the original sanitized output and separate receipt confirmation. [Issue #37](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589) accepts that proof; no second send or mailbox screenshot is required for W1. Engine success/failure alerts still require their own Week 3 validation.
+Save **one** BumpRecord from a reviewed execution result in an ignored local file,
+for example `.evergreen/bump-record.json`. Do not pass the entire run object or
+invent a successful record to stand in for a transaction. Input validation checks
+shape and outcome consistency, not chain evidence; output explicitly says
+`chainVerified: false` and `recordSource: provided-record` where applicable.
+
+```sh
+pnpm email:notify --help
+pnpm email:notify --record .evergreen/bump-record.json --config evergreen.config.json
+```
+
+The package command builds first. For explicit local environment-file loading,
+after building, use the source-workspace script directly:
+
+```sh
+node --env-file=.env scripts/email-notify.mjs --record .evergreen/bump-record.json --config evergreen.config.json
+```
+
+Both commands above preview only. Review the recipient and message before an
+actual send; append `--send` only for an authorized test. The local rehearsal
+command refuses sending in CI. Generic channel consumers can use explicit send
+mode in an independently configured integration; this does not grant permission
+to add keys or activate a workflow.
+
+- `succeeded` renders a confirmed-success message based on the supplied record.
+- `submitted` renders UNCONFIRMED and instructs reconciliation before retrying.
+- `failed` says success could not be verified; a hash or intent requires inspection.
+  A failed dry-run explicitly says no transaction was submitted.
+- `simulated` is skipped, including with `--send`; no success email is fabricated.
+
+The single Resend transport refuses redirects, bounds both fetch and response-body
+reading to 10 seconds, and never retries automatically. A stable event/payload
+uses the same hashed idempotency key. Resend deduplicates for 24 hours, not forever:
+[Send Email](https://resend.com/docs/api-reference/emails/send-email),
+[Idempotency Keys](https://resend.com/docs/dashboard/emails/idempotency-keys).
+Timeout, invalid JSON, missing provider ID and transport errors report unknown
+acceptance. Inspect delivery state before another attempt. Diagnostics do not
+print API keys, sender/recipient addresses or raw provider errors.
+
+Exit 0 means preview, skipped or provider-accepted; exit 2 means input or delivery
+failure. An accepted result contains `emailId` and `receivedInInbox: unverified`.
+**Provider acceptance is not proof of inbox receipt.** Confirm actual receipt,
+then record sanitized output, event identity, email ID and receipt evidence. A
+notification failure must not rewrite a successful BumpRecord or re-run a bump.
+
+**Live W3 channel verified 2026-09-14:** one explicitly labelled diagnostic message was accepted by Resend and Rakha separately confirmed inbox receipt. [Evidence](evidence/2026-09-14-email-channel-live/README.md). This completes channel delivery validation, while actual engine outcome and unattended alert proofs remain D17-03/04/05.
+
+### Historical W1 email smoke
+
+`pnpm email:smoke` now displays migration instructions; its old `--send` is
+rejected. `scripts/send-test-email.mjs` no longer owns a provider implementation.
+The nine old provider/preview protections were moved to W3 channel/command tests;
+`pnpm test:email` now tests the offline retirement shim. Default test execution
+uses fixtures and never sends mail.
+
+The **2026-09-07 W1 proof remains valid**: one local setup email was accepted and
+inbox receipt was confirmed. Its [evidence](evidence/2026-09-07-email-smoke/README.md)
+and [acceptance](https://github.com/Fatihmaull/evergreen/issues/37#issuecomment-5573281589)
+remain historical; no replacement W1 send is needed. This proof does not substitute
+for W3 success/failure alert validation.
 
 ## Scheduler smoke test — `W1-D5-03`
 

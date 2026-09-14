@@ -93,7 +93,7 @@ The user always pays their own extend fees ([ADR-004](adr/ADR-004-payment-model.
 | `BumpDecision` | Planned decision rules with resolved payer → engine | Extend one key with a target/payer, or skip with a reason |
 | `Signer` / `ExtendTTLSigningRequest` | Engine resolves signer per payer → signer adapter → engine | Prepared envelope and Testnet passphrase in; signed envelope out |
 | `BumpRecord` | Planned engine → history / notification channel / dashboard | A specific attempt's outcome, entry, consumers, payer and known evidence |
-| `NotificationChannel` | Planned engine → email transport | `notify(record)` consumes a bump record; the channel owns private destination configuration |
+| `NotificationChannel` | Engine → email transport | Existing `notify(record)` interface; EmailChannel owns private destination configuration and defaults to preview |
 
 Money is integer stroops encoded as decimal strings. Consumers can calculate with `BigInt` and serialize back to text; converting fees to JavaScript `number` can lose precision. An omitted `rentEstimate` means no estimate is available, not zero rent.
 
@@ -124,7 +124,7 @@ single-threshold interface remains unchanged. [Configuration and API notes](W3-D
 
 **D15 current path:** `packages/core/src/engine.ts` provides `decideBumps` and
 `runEngine`; `scripts/engine-run.mjs` is the decide-only consumer scheduled by
-`engine-cron.yml`. The engine package itself is still a placeholder. The
+`engine-cron.yml`. The engine package implements separate guarded execution through `runEngineExecution`; this scheduled consumer remains decide-only. The
 W3-D15-04 correction reads the network TTL ceiling, preserves config target
 semantics, requires agreement on shared-entry payer/target, refuses expired
 candidates and feeds one resolved per-key action threshold into both decisions
@@ -132,17 +132,27 @@ and liveness. See [implementation and API notes](W3-D15-04-IMPLEMENTATION.md).
 No transaction is simulated, signed or submitted on this path.
 
 
-A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-scheduled-serverless-engine.md), [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md)). The real loop is planned for W3. The existing [scheduler smoke workflow](../.github/workflows/scheduler-smoke.yml) reads A's instance only and never signs or sends a transaction.
+A scheduled job on Actions + Node 24, not a daemon ([ADR-001](adr/ADR-001-scheduled-serverless-engine.md), [ADR-003](adr/ADR-003-toolchain-hosting-persistence.md)). Execution and notification adapters are available separately; unattended live integration remains a distinct gate. The existing [scheduler smoke workflow](../.github/workflows/scheduler-smoke.yml) reads A's instance only and never signs or sends a transaction.
 
 The engine resolves a `Signer` per payer. Stage 1 uses a plain funded Ed25519 account; Stage 2 adds the capped policy signer ([ADR-002](adr/ADR-002-policy-signer-provider.md), [policy signer plan](POLICY-SIGNER.md)). The same interface supports both. The adapter must verify network, payer, permitted operations and fee policy before signing; its method name does not provide those protections.
+
+**EmailChannel (W3-D17-01):** `packages/engine/src/email-channel.ts` renders core
+success/failure templates behind the unchanged shared `NotificationChannel`.
+`notify(record)` returns void and propagates delivery errors; `deliver(message,
+eventId)` exposes preview/provider-acceptance receipts for the local rehearsal
+command and future run-level alerts. No signer, transaction or scheduler call
+occurs in the channel. The command validates one supplied record, resolves the
+private recipient from config, and requires `--send` to contact Resend. Provider
+acceptance is distinct from inbox receipt. D17-04/05 owns actual outcome wiring
+and alerts for events where no BumpRecord exists; do not fabricate one. The W1
+probe is retired to a help-only shim, leaving one provider implementation.
 
 **Notification extension stubs (W3-D17-02):** the engine exports WebhookChannel,
 TelegramChannel and ChannelNotImplementedError. Both classes satisfy the existing
 NotificationChannel interface, but notify always rejects with
 CHANNEL_NOT_IMPLEMENTED and identifies actual delivery as SOW 2 scope. They accept
 no endpoints or credentials and have no network, fallback or successful no-op
-path. They are not new usable config options. EmailChannel implementation and its
-strict email-only config validation are tracked separately in PR #137.
+path. They are not new usable config options. EmailChannel, described above, is the one implemented transport.
 
 ### `apps/dashboard`
 

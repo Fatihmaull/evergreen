@@ -11,4 +11,14 @@ export type {
 export { runEngineCommand } from './command.js';
 export type { EngineCommandDependencies } from './command.js';
 
+export {
+  EmailChannel,
+  EmailDeliveryError,
+  previewBumpNotification,
+  bumpNotificationEventId,
+} from './email-channel.js';
+export type { EmailChannelOptions, EmailDeliveryResult } from './email-channel.js';
+export { runEmailCommand } from './email-command.js';
+export type { EmailCommandDependencies } from './email-command.js';
+export { parseNotificationRecord, NotificationRecordError } from './notification-record.js';
 export { WebhookChannel, TelegramChannel, ChannelNotImplementedError } from './channel-stubs.js';

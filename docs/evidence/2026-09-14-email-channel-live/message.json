@@ -1,0 +1,10 @@
+{
+  "eventId": "W3-D17-01-email-check-2026-09-14-01",
+  "from": "[redacted]",
+  "to": "[redacted]",
+  "notification": {
+    "severity": "info",
+    "subject": "Evergreen W3 — uji EmailChannel",
+    "body": "Ini satu email uji untuk memverifikasi EmailChannel Evergreen W3. Tidak ada transaksi Stellar atau perubahan TTL yang dijalankan. Jika email ini diterima, jalur pengiriman ke inbox sudah terbukti; alert otomatis dari engine masih diuji terpisah."
+  }
+}

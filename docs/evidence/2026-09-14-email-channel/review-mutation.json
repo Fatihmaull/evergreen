@@ -1,0 +1,7 @@
+{
+  "mutation": "omit ContractData owner matching",
+  "test": "contradict the ContractData owner",
+  "exitCode": 1,
+  "detected": true,
+  "restoredSourceSha256": "c59ef35d02b930bc14fc9011e313e9047017272022c5ed21f835e79470759b55"
+}
