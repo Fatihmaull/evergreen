@@ -147,6 +147,13 @@ acceptance is distinct from inbox receipt. D17-04/05 owns actual outcome wiring
 and alerts for events where no BumpRecord exists; do not fabricate one. The W1
 probe is retired to a help-only shim, leaving one provider implementation.
 
+**Notification extension stubs (W3-D17-02):** the engine exports WebhookChannel,
+TelegramChannel and ChannelNotImplementedError. Both classes satisfy the existing
+NotificationChannel interface, but notify always rejects with
+CHANNEL_NOT_IMPLEMENTED and identifies actual delivery as SOW 2 scope. They accept
+no endpoints or credentials and have no network, fallback or successful no-op
+path. They are not new usable config options. EmailChannel, described above, is the one implemented transport.
+
 ### `apps/dashboard`
 
 The planned W4 P0 product is public and read-only: permissionless scans for any contract ID, plus history for contracts monitored by the demonstration instance. For other contracts, history says "not monitored by this instance"; it does not imply nobody protects them. There are no accounts or registration flows. Pages hosting preparation is separate from the engine runtime and database decision.

@@ -34,8 +34,8 @@ not alter the Evergreen source history or use credentials.
   An existing run/attempt is never automatically reset to retry a transaction.
 - Success/unconfirmed/failure rendering and per-key precedence were traced; a
   separate protected-key alarm is retained beside A's successful bump.
-- Current production package sources have no diff from the proof's `32670fe`.
-  After fresh compilation, all 35 recorded package files/metadata hashes match
+- At local review, before publication reconciliation, production package sources had no diff from the proof's `32670fe`.
+  At that review point, after fresh compilation, all 35 recorded package files/metadata hashes matched
   the original campaign. All six captured script hashes match that commit too.
   The pre-fix builder defect therefore did not invalidate this captured run.
 - Existing complete campaign passes the strengthened readiness check. Original

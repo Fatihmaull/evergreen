@@ -30,6 +30,8 @@ Commits made before 2026-09-05 carry the old trailer. They stay as they are: thr
 
 **PRs:** one task (or one tight cluster) per PR. Title = commit subject. Body must state: what changed, how it was verified, and any evidence captured. CI must be green before merge. `main` is protected — no direct pushes.
 
+**Public naming:** use frozen task IDs and concrete deliverables in PRs, issues, comments and operational docs. Local grouping labels belong in private planning/chat. Preserve historical identifiers and raw evidence rather than renaming recorded runs after the fact.
+
 **Stacked PRs: retarget the child to `main` *before* merging the parent.** Stacking is fine and we do it — a child PR based on a parent's branch keeps the child's diff readable. But GitHub deletes the parent's branch on merge, and **deleting a branch silently closes every PR that was targeting it.** The close is attributed to whoever clicked merge, so it reads like a rejection rather than an accident.
 
 Recovering one is worse than it sounds, because the two repair paths block each other: GitHub refuses to reopen a PR whose base branch is missing, and refuses to change the base of a closed PR. The way out is to push the deleted base back to its old commit, reopen, retarget to `main`, then delete the temporary branch again:
