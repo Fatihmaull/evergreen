@@ -58,3 +58,13 @@ keep rehearsal separate. Nothing here satisfies the Sep 20/Sep 25 crossing gate.
    observations in their windows. No timer has been installed by this change.
 5. Retain/index real event logs and any required alert screenshots. Fatih's
    shared-Wasm handoff remains conditional on accepted B/C evidence.
+
+## Review correction
+
+The locale finding in [internal review](W3-D18-03-REVIEW.md) is corrected locally:
+probe, engine and liveness numeric text uses explicit `en-US` formatting. A new
+cross-process test proves a German-locale capture passes both German- and
+English-locale dated gates. Historical real capture bytes are unchanged and still
+pass semantic replay with runtime-version checking disabled; strict replay retains
+its original-source requirement. The existing test-only clock fix from PR #146 is
+also reused after the known #128 flake surfaced during the full check.

@@ -102,7 +102,9 @@ before parsing. Preserve the entire directory including its dot marker.
 The offline verifier checks checksums and complete inventory, then replays the
 installed producer against recorded responses without network access. It binds
 summaries and stdout to the reads, including control key/XDR ownership. Use the
-recorded source, Node version and locale for strict replay. Hashes detect alteration
+recorded source and Node version for strict replay. New probe/engine/liveness
+messages use explicit `en-US` numeric formatting so operator and CI locales can
+differ; the machine locale is retained as provenance, not a replay requirement. Hashes detect alteration
 relative to the retained manifest; they are not an independently signed RPC receipt.
 
 The dated repository gate verifies sealed bundles semantically using current trusted
