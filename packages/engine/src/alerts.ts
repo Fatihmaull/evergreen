@@ -26,9 +26,13 @@ const SAFE_CODES = new Set([
 export function assertRunId(id: string): void {
   if (!/^[A-Za-z0-9_.-]{1,128}$/.test(id)) throw new Error('Invalid run ID');
 }
+export function safeRunCode(code: string): string {
+  return SAFE_CODES.has(code) ? code : 'RUN_FAILED';
+}
+
 export function runFailureAlert(runId: string, stage: AlertStage, code: string): PlannedAlert {
   assertRunId(runId);
-  const safe = SAFE_CODES.has(code) ? code : 'RUN_FAILED';
+  const safe = safeRunCode(code);
   return {
     id: `${runId}:run-failed:${stage}`,
     kind: 'run-failed',

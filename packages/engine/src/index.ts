@@ -24,3 +24,6 @@ export { parseNotificationRecord, NotificationRecordError } from './notification
 
 export { planRunAlerts, runFailureAlert, assertRunId } from './alerts.js';
 export type { PlannedAlert, AlertStage } from './alerts.js';
+
+export { runWithAlerts, RunStageError } from './notified-run.js';
+export type { NotifiedRun, RunJournal, AlertReceipt, AlertDelivery } from './notified-run.js';
