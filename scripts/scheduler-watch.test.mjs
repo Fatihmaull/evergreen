@@ -89,3 +89,40 @@ test('GitHub observation ignores queue timestamps and selects the actual engine 
   assert.equal(jobs[0].id, '2');
   assert.equal(call, 2);
 });
+test('preview does not suppress sending and uncertain delivery stays visible without resend', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'watch-uncertain-'));
+  const now = Date.now();
+  const opts = {
+    watchId: 'uncertain',
+    stateRoot: root,
+    now,
+    readJobs: async () => [],
+    policy: {
+      startAt: now - 7200000,
+      endAt: now + 7200000,
+      warnMinutes: 30,
+      criticalMinutes: 360,
+      maxRunMinutes: 10,
+    },
+  };
+  let sends = 0;
+  const delivery = {
+    preflight: async () => {},
+    deliver: async () => {
+      sends++;
+      throw Error('ambiguous provider timeout');
+    },
+  };
+  try {
+    assert.equal((await runSchedulerWatch(opts)).status, 'alerted');
+    const first = await runSchedulerWatch({ ...opts, delivery });
+    assert.equal(first.status, 'delivery-unknown');
+    assert.equal(first.exitCode, 2);
+    const repeat = await runSchedulerWatch({ ...opts, delivery });
+    assert.equal(repeat.status, 'delivery-unknown');
+    assert.equal(repeat.exitCode, 2);
+    assert.equal(sends, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

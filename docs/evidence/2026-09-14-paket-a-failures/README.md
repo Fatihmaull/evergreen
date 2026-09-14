@@ -16,10 +16,20 @@ the production workflow disappeared for seven hours. The timer service completed
 successfully. No watcher or runner ever submits a replacement transaction.
 
 Each JSON preserves the execution result and delivery receipt. Provider acceptance
-is distinct from inbox arrival; recipient confirmation is pending. No addresses,
+is distinct from inbox arrival; Rakha confirmed timeout and missed-run in the inbox; insufficient-balance arrived
+in spam and was marked not spam. See inbox-confirmation.json. This proves receipt,
+not reliable inbox placement. No resend was made. No addresses,
 keys or authorization headers are in this bundle. The balance rejection is a
 simulation fixture, not a real insufficient-balance transaction on-chain.
 
 Offline coverage also proves email-provider failure after a successful execution
 preserves its original record/hash and executes only once. That test does not
 manufacture another live transaction just to test transport failure.
+
+The actual GitHub watcher also ran from a finite local timer: it observed the last
+engine job start at 04:54:14 UTC, issued one late warning (provider ID
+5a502113-d1ed-4920-8759-b2eacc0ad546), then deduplicated at the next five-minute
+check. See github-watch/. This warning is observed production history, separate
+from the injected missing-run test. Its inbox placement was not separately
+confirmed. Both watcher and stop timers were stopped after capture; no monitoring
+is left running. Temporary email/proof environment copies were removed.
