@@ -2,14 +2,26 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · D17-01 e2e channel delivery confirmed; closing task
+**Last updated:** 2026-09-14 · Paket A implemented and evidenced locally; review/publication separate
 **Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — D17-01 live email e2e confirmed
+## Current — Paket A implemented locally, ready for separate review
+
+Rakha approved the entire package implementation and relevant e2e tests, with review and publication kept separate. A1–A6 are stacked locally on EmailChannel #137 (4451394); no Paket A push, PR, comment, issue or Notion write was made. [Implementation report](W3-PAKET-A-IMPLEMENTATION.md), [runbook](W3-PAKET-A-RUNBOOK.md). Existing core and Fatih's templates/guards are reused. D16-01/D17-03/04/05 have local completion evidence; no new merge is claimed.
+
+The three controlled failure emails were accepted once each and received: RPC timeout and missed-run in inbox, insufficient-balance initially in spam (Rakha marked not spam). [Failure evidence](evidence/2026-09-14-paket-a-failures/README.md). An actual local watcher additionally observed GitHub's late job, sent one warning, then deduplicated at its next five-minute timer invocation. Provider acceptance does not guarantee inbox placement.
+
+One local user-systemd timer executed the pinned A runner at 08:34:44 UTC. Transaction dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128 succeeded; instance expiry 6,026,591 → 6,370,261, fee 44,725 stroop. Both success and shared-code refusal alerts arrived in inbox. Full RPC, signed-envelope/receipt/metadata verification and explorer screenshot are retained. Five B/C/shared controls unchanged. [Save evidence](evidence/2026-09-14-paket-a-save/README.md). Raised threshold 1.5M, target 1.7M: no natural-decay claim. The preserved alarm correctly leaves exit 1.
+
+**D18-02a remains In progress:** local scheduled execution is evidenced, but Fatih's Shared acceptance via #130 and review/publication remain. Existing GitHub cron stays decide-only; ephemeral live runners still lack durable pre-send intent storage. The same local campaign refuses reuse in the actual readiness gate and a fresh process. An additional timer-refusal test was not run because automatic approval review was at capacity; no second transaction was attempted.
+
+Implementation verification: fresh full `pnpm check` passed (731 Vitest + 91 Node = 822 tests), unchanged gates. The known #128 failure recurred locally; a controlled 1.1-second delay reproduced a frozen-engine-clock versus wall-clock SDK mismatch. Date is now frozen/restored in that test suite only; the identical delayed case passed, then the diagnostic delay was removed. No production time policy or assertion changed; #128 remains open pending publication/CI. Evidence verifier passed and rejected four tampered semantic claims after checksum recomputation. Timer services and screenshot receiver were stopped after capture; temporary environment copies removed, original .env and attempt retained. Notion sync pending at publication: W3-D16-01, W3-D17-03, W3-D17-04, W3-D17-05, W3-D18-02a. Local plan/grouping/handoff files and older stashes remain preserved.
+
+## Earlier — D17-01 live email e2e confirmed
 
 Rakha authorized the reviewed one-email test and clarified the operating preference: carry each task through relevant, necessary e2e validation rather than stopping at mocks or asking again for already-authorized tests. This includes relevant email and Testnet transactions; preserve Testnet-only, capped-purpose operation, B/C/shared-Wasm guards and the existing review/publication workflow. Do not expand tests merely to force a completion claim.
 
