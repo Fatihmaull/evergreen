@@ -9,9 +9,15 @@
 
 ---
 
-## Current — W3-D17-05 failure validation reconciliation
+## Current — W3-D17-05 closed; D17-04 evidence landed
 
-Failure evidence PR #146 now targets main directly; its runtime dependencies are already merged in #142–#144 and diagnostic correction #152. The save-proof harness #145 is not a functional dependency. The historical receipts remain unchanged. The old one-alert assertion was reproduced failing (2 versus 1) and corrected to require both the failed-bump alert and distinct EXECUTION_INCOMPLETE diagnostic with unique IDs. Full pnpm check passed: 750 Vitest + 89 Node = 839 tests. D17-05 acceptance is carried by #146, not by the unmerged save harness. No live email or transaction is repeated.
+**`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
+
+**`W3-D17-04` has its evidence, and acceptance is Fatih's.** #147 carries the success/liveness receipts and #146 the failure receipts; the gate needs both and neither alone. No live email or transaction was repeated to publish either — the original A transaction and its receipts are preserved as recorded.
+
+**`W3-D18-02a` remains In progress** pending Shared acceptance in #130. No Shared acceptance is inferred from a code merge or from B/C control confirmation. **#145** — the reusable save harness — and **#155** — B/C observation capture, which is Saturday's machinery and wants to be in well before the crossing — are the two still open.
+
+The corrected pre-flight stands: September 18 readiness, a real-threshold probe with `BELOW` unset, explicit manual-versus-scheduled provenance, and the C crossing capture the unchanged date gate requires. Isolated fixtures verified B-only red, B+C green, C rehearsal red.
 
 ## Earlier — Deliverable 1 row 3 met; D17 channels merged
 

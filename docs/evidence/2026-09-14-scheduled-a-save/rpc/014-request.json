@@ -1,0 +1,8 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "getTransaction",
+  "params": {
+    "hash": "dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128"
+  }
+}

@@ -1,0 +1,5 @@
+Id=evergreen-paket-a-save.timer
+ActiveState=active
+ActiveEnterTimestamp=Mon 2026-09-14 15:33:44 WIB
+TimersMonotonic={ OnActiveUSec=1min ; next_elapse=4h 45min 43.253803s }
+NextElapseUSecMonotonic=4h 45min 43.253803s

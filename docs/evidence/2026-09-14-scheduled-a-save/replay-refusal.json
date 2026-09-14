@@ -1,0 +1,11 @@
+{
+  "sameCampaign": "paket-a-save-20260914",
+  "refused": true,
+  "reason": "Existing attempt must be reconciled",
+  "attemptSha256Before": "fafc313dc515a68db28f96a818dd202fac64e65587361ea7953c2ab2c5785778",
+  "attemptSha256After": "fafc313dc515a68db28f96a818dd202fac64e65587361ea7953c2ab2c5785778",
+  "networkCalls": 0,
+  "signerAccess": 0,
+  "check": "same actual manifest gate and fresh command process; no second OS timer",
+  "freshProcessExitCode": 2
+}

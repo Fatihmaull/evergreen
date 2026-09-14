@@ -1,0 +1,10 @@
+{
+  "id": "paket-a-save-20260914:liveness:[\"AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7\",[\"CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L\"],\"skipped\"]",
+  "kind": "liveness",
+  "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+  "notification": {
+    "severity": "critical",
+    "subject": "[CRITICAL] Evergreen skipped: AAAAB8flXwrY",
+    "body": "Run: paket-a-save-20260914\nContracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L\nEntry: AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7\nSkipped (620,570 ledgers remain): REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry..\nNext action: extend. No successful extension is claimed for this finding."
+  }
+}

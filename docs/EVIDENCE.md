@@ -340,3 +340,7 @@ Confirmed one Testnet transaction at 2026-09-11 19:41 UTC (2026-09-12 02:41 Asia
 ## Evidence verification integrity — W2-D14-04 / #107
 
 The manual-extension and storage-advice verifier commands now verify every SHA256SUMS entry before inspecting claims, and do not rewrite the recorded results. Run the existing entry point from the repository checkout; a changed/missing file or invalid manifest exits nonzero. [Implementation and validation](W2-D14-04-INTEGRITY.md). Raw RPC, screenshots and recorded outcomes are unchanged; only verifier tooling and its own checksum entries change. This is a tooling correction, not another chain transaction.
+
+## 2026-09-14 — scheduled A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
+
+Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261 from a local user-systemd timer. A instance expiry 6,026,591 → 6,370,261. [Raw RPC, signature/receipt/TTL verifier and actual explorer screenshot](evidence/2026-09-14-scheduled-a-save/README.md). Success/liveness inbox receipt confirmed by Rakha. Raised threshold 1,500,000 and target 1,700,000: not natural decay. B/C/shared controls unchanged and independently checked by Fatih in #149. Source snapshot remains 32670fe; later #152/#154 fixes are not retroactively claimed as that build. Shared platform acceptance stays #130; failure evidence is separately reviewed in [#146](https://github.com/Fatihmaull/evergreen/pull/146).
