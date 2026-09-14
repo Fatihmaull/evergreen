@@ -1,0 +1,19 @@
+# guinea-pig B crossing probe
+observed:   2026-09-14T12:12:58.681Z
+subject:    CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+expires:    2026-09-21 (alert threshold 2026-09-20)
+threshold:  17,280 ledgers
+mode:       dry-run   decisions: 3
+
+SKIP   AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+       HEALTHY — Above threshold. 1,697,383 ledgers remaining.
+SKIP   AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB
+       WARNING — Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed. 120,809 ledgers remaining.
+SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+       HEALTHY — Above threshold. 617,951 ledgers remaining.
+
+ℹ guinea-pig B was seen but is still above the threshold, so nothing was attempted and
+  the guard was never consulted. Before the crossing this is correct. ON THE DAY it means
+  the crossing has not happened yet — re-run later, do not lower the threshold to force it.
+
+Nothing was signed and nothing was submitted.

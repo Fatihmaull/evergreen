@@ -56,17 +56,43 @@ that misses nine slots in ten.
 
 ### 2. The engine detects B, distinguishably from finding nothing
 
-- [ ] B is in `evergreen.config.dogfood.json` under `_doNotWatch` — **leave it
-      there**; the engine still scans and decides, the guard still refuses
-- [ ] a dispatched run now produces a record with `decisions` non-empty
+> **Corrected 2026-09-14.** This section previously said to leave B in
+> `_doNotWatch` because "the engine still scans and decides, the guard still
+> refuses". **That is false and it would have cost Saturday.** `_doNotWatch` is
+> documentation — `config.ts` says so in as many words — and `runEngine`
+> iterates `contracts`. Measured against the real dogfood config: **2 decisions,
+> A's instance and the shared code entry, B absent, no refusal anywhere.** The
+> scheduled cron cannot produce B evidence, and §3 below required it.
+
+- [ ] **B stays in `_doNotWatch`. Do not move it into `contracts`** — that spends
+      one of the two independent layers protecting it for the sake of a log line
+- [ ] the scheduled `engine-cron` run is expected to show **A only**; that is
+      correct and is not the B evidence
+- [ ] a dispatched run still produces a record with `decisions` non-empty
 - [ ] that record distinguishes *"saw no work"* from *"did not run"* — an absent
       artifact is the second, and it is a different failure
 
 ### 3. The guard refuses, and the refusal is in the record
 
-- [ ] the run record contains `REFUSED BY WRITE GUARD` for B once it is below
-      threshold
-- [ ] the step summary shows it too, not only the JSON
+**The refusal comes from `scripts/b-crossing-probe.mjs`, not from the cron.** It
+builds its config in memory, so there is no file on disk the scheduler could ever
+be pointed at, and it is read-only: no payer resolves, no secret is read, the
+engine is decide-only and the guard refuses regardless.
+
+```bash
+node scripts/b-crossing-probe.mjs | tee /tmp/b-crossing.txt; echo "exit=${PIPESTATUS[0]}"
+```
+
+- [ ] run it with **no `BELOW`** — the point is that B is genuinely below the
+      real 17,280 threshold. If it reports *"seen but still above the threshold"*,
+      the crossing has not happened yet: **re-run later, do not lower the
+      threshold to force it**
+- [ ] the output contains `REFUSED BY WRITE GUARD` naming B
+- [ ] A appears in the same record — a run containing only a refusal cannot show
+      the engine was working, because *"refused everything"* and *"decided
+      nothing"* look identical
+- [ ] rehearsed in advance with `BELOW=1500000`, which forces candidacy off-date
+      and was confirmed to produce the refusal on 2026-09-14
 
 ### 4. The record is committed the same day
 
