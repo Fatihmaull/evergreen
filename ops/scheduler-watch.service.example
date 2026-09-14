@@ -1,5 +1,5 @@
 [Unit]
-Description=Evergreen Paket A scheduler observation
+Description=Evergreen scheduler observation
 [Service]
 Type=oneshot
 # Render absolute paths for the pinned runtime and private email-only environment.

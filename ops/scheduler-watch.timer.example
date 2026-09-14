@@ -1,5 +1,5 @@
 [Unit]
-Description=Evergreen Paket A finite-window watcher
+Description=Evergreen finite-window watcher
 [Timer]
 OnActiveSec=5s
 OnUnitInactiveSec=5min
