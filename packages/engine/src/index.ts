@@ -27,3 +27,6 @@ export type { PlannedAlert, AlertStage } from './alerts.js';
 
 export { runWithAlerts, RunStageError } from './notified-run.js';
 export type { NotifiedRun, RunJournal, AlertReceipt, AlertDelivery } from './notified-run.js';
+
+export { assessScheduler, schedulerNotification } from './scheduler-watch.js';
+export type { WatchPolicy, JobObservation, SchedulerAssessment } from './scheduler-watch.js';
