@@ -1,0 +1,110 @@
+{
+  "network": "testnet",
+  "contracts": [
+    {
+      "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+    }
+  ],
+  "entries": {
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+      "kind": "instance",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4672778,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4793687,
+        "remainingLedgers": 120909
+      }
+    },
+    "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+      "kind": "persistent",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4672778,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 4793688,
+        "remainingLedgers": 120910
+      }
+    },
+    "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+      "kind": "code",
+      "endBehavior": "archived",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "observedAtLedger": 4672778,
+      "ttl": {
+        "status": "known",
+        "endsAtLedger": 5290829,
+        "remainingLedgers": 618051
+      }
+    }
+  },
+  "issues": [
+    {
+      "kind": "entry-not-found",
+      "message": "No entry returned. Absence is not proof of archival or deletion.",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "entryKey": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+      "observedAtLedger": 4672778
+    },
+    {
+      "kind": "sharing-undetermined",
+      "contracts": [
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      ],
+      "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+      "observedAtLedger": 4672778,
+      "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+    }
+  ],
+  "coverage": {
+    "mode": "known-keys",
+    "dataKeysSuppliedByContract": {
+      "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": 2
+    }
+  },
+  "health": {
+    "thresholdLedgers": 17280,
+    "worst": "healthy",
+    "sharedEntryCount": 0,
+    "undeterminedSharingCount": 1,
+    "byEntry": {
+      "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Above threshold."
+      },
+      "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+        "health": "healthy",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "undetermined",
+        "reason": "Above threshold."
+      }
+    }
+  }
+}
