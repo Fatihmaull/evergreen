@@ -69,7 +69,22 @@ const failures = [];
 for (const s of subjects) {
   if (today < s.alertThresholdOn) continue;
   const evidence = files.filter((f) => {
+    // The evidence must come FROM the crossing, not from a rehearsal of it.
+    //
+    // Added 2026-09-14, the same day it was needed: committing a rehearsal that
+    // forced the refusal off-date (threshold raised so B became a candidate)
+    // silently turned this check GREEN for 2026-09-20 while the real crossing
+    // was still six days away. A gate that cannot tell a rehearsal from the
+    // event is worse than no gate — it reports success for the one thing in this
+    // sprint that cannot be re-run.
+    //
+    // Evidence directories are `docs/evidence/YYYY-MM-DD-…`, so the capture date
+    // is in the path. Anything dated before the alert threshold is, by
+    // definition, not a capture of that crossing.
+    const dated = /(\d{4}-\d{2}-\d{2})/.exec(f.slice(ROOT.length));
+    if (!dated || dated[1] < s.alertThresholdOn) return false;
     const text = readFileSync(f, 'utf8');
+    if (/RAISED — rehearsal|rehearsal, not the real crossing/.test(text)) return false;
     return text.includes(s.contractId) && /REFUSED BY WRITE GUARD/.test(text);
   });
   if (evidence.length === 0) failures.push(s);
@@ -86,9 +101,13 @@ if (failures.length > 0) {
       '  and a refusal leaves no transaction, no hash and no explorer trace. The\n' +
       '  Actions artifact is a log, not evidence: it expires, and the submission is\n' +
       '  2026-10-02.\n\n' +
-      '  Download the engine-cron run record from the crossing and COMMIT it under\n' +
-      '  docs/evidence/, including the "REFUSED BY WRITE GUARD" line and the\n' +
-      '  contract ID. This check stays red until that file exists.',
+      '  Run `node scripts/b-crossing-probe.mjs` ON OR AFTER the crossing and COMMIT\n' +
+      '  its output under docs/evidence/<date>/, including the "REFUSED BY WRITE\n' +
+      '  GUARD" line and the contract ID. The scheduled cron CANNOT produce this:\n' +
+      '  B is in _doNotWatch, which is documentation, so the engine never selects\n' +
+      '  it and the guard is never consulted. See docs/SEP-20-PREFLIGHT.md §3.\n\n' +
+      '  A directory dated before the alert threshold does not count, and neither\n' +
+      '  does a rehearsal that raised the threshold to force candidacy.',
   );
   process.exit(1);
 }
