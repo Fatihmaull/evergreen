@@ -183,6 +183,26 @@ describe('engine execution — real core primitives over fixture RPC', () => {
       );
     expect(JSON.stringify(s.recorder.record.mock.calls)).not.toContain(s.first.secret());
   });
+  it('🔴 refuses live execution when the attempt journal is not reconciled', async () => {
+    // W3-D16-02's third clause: handle an in-flight tx when overlapping runs
+    // collide. An existing attempt file means a previous run left a hash whose
+    // fate is unknown — submitting again can land the same extension twice, or
+    // spend a fee against a sequence already consumed.
+    //
+    // Added 2026-09-14: removing `assertReady()` from execution.ts left all 637
+    // tests green. The guard existed and nothing reached it.
+    const s = setup();
+    s.recorder.assertReady = vi.fn(async () => {
+      throw new Error('attempt file exists with an unresolved hash');
+    });
+    await expect(
+      runEngineExecution({ ...s.config, mode: 'live' }, s.deps, { submit: true }),
+    ).rejects.toThrow(/RECORDER_UNAVAILABLE|recorder is not ready/i);
+    // Nothing may be sent, and no secret may even be read.
+    expect(s.rpc.sendTransaction).not.toHaveBeenCalled();
+    expect(s.readSecret).not.toHaveBeenCalled();
+  });
+
   it('does not silently activate from live config alone or submit from dry-run config', async () => {
     const s = setup();
     await expect(runEngineExecution({ ...s.config, mode: 'live' }, s.deps)).rejects.toThrow(
