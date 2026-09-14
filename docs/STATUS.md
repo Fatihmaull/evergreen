@@ -2,18 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · D17-01 e2e channel delivery confirmed; closing task
+**Last updated:** 2026-09-14 · #137 merged; #138 reconciled onto it — D17-01 done, D17-02 stubs reviewed
 **Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — D17-01 live email e2e confirmed
+## Current — W3-D17 notification channels: email live-verified, stubs reconciled
+
+#137 merged as 1ab4921: D17-01's `EmailChannel`, its live-delivery evidence and completed tracking are on main. #138 is reconciled onto that main. Both export sets are kept because they are disjoint, and D17-01's completed status is restored everywhere this branch's older base still showed it open — that stale row was a snapshot of an earlier main, not a reversal of the verified result.
 
 Rakha authorized the reviewed one-email test and clarified the operating preference: carry each task through relevant, necessary e2e validation rather than stopping at mocks or asking again for already-authorized tests. This includes relevant email and Testnet transactions; preserve Testnet-only, capped-purpose operation, B/C/shared-Wasm guards and the existing review/publication workflow. Do not expand tests merely to force a completion claim.
 
-The published EmailChannel made exactly one real Resend POST, accepted as 7c9ac428-8a6c-43e6-936e-5d774aa88462 at 2026-09-14T05:45:24.973Z. [Evidence](evidence/2026-09-14-email-channel-live/README.md). Rakha separately confirmed “Sudah masuk inbox”. API read-back was unavailable with the sending-only key and the mailbox connector returned tool-not-found; recipient confirmation provides the final inbox evidence. Exactly one send, no credential-scope expansion. D17-01 is Done for the implemented/verified channel. D17-03/04/05 engine outcome and automatic-alert proof remain separate. No Stellar transaction was needed. The evidence follow-up is being published to #137. Notion read-back confirms Done/Rakha with the matching email ID and separate recipient confirmation.
+The published EmailChannel made exactly one real Resend POST, accepted as 7c9ac428-8a6c-43e6-936e-5d774aa88462 at 2026-09-14T05:45:24.973Z. [Evidence](evidence/2026-09-14-email-channel-live/README.md). Rakha separately confirmed “Sudah masuk inbox”. API read-back was unavailable with the sending-only key and the mailbox connector returned tool-not-found; recipient confirmation provides the final inbox evidence. Exactly one send, no credential-scope expansion. D17-01 is Done for the implemented/verified channel. D17-03/04/05 engine outcome and automatic-alert proof remain separate. No Stellar transaction was needed. The evidence follow-up landed in #137. Notion read-back confirms Done/Rakha with the matching email ID and separate recipient confirmation.
+
+Rakha approved [the local stub plan](W3-D17-02-PLAN.md). Working on feat/W3-D17-02-channel-stubs from main cbd2a7e. D17-02 is Done/Rakha for the defined local stub behavior. [Internal review](W3-D17-02-REVIEW.md) found no blocking issue and required no production change; Fatih review/merge remains. Two unavailable transports now implement the existing interface, with typed rejection and no side effects. [Implementation report](W3-D17-02-IMPLEMENTATION.md). Fresh full pnpm check passed 728 tests (643 Vitest + 85 Node); both built exports were exercised in a guarded fresh process, and removing each rejection fails its tests. No live provider interaction is needed for a deliberately unavailable stub. Rakha explicitly authorized publication. [PR #138](https://github.com/Fatihmaull/evergreen/pull/138) publishes reviewed implementation 731bbf4 directly against main, with Fatih requested as reviewer.
+
+Rakha authorizes relevant, necessary e2e tests without repeated permission requests. For deliberately unavailable stubs, validation is a built public API refusal test: exports reject without network or credential access. This is not a claim of e2e Telegram/webhook delivery. A real Telegram/webhook send would exceed this task's scope. D17-04/05 remains the September 18 operational priority; B/C/shared-Wasm guards remain intact.
 
 ## Earlier — W3-D17-01 published for Fatih review
 
