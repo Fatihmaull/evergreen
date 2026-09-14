@@ -9,6 +9,14 @@
 
 ---
 
+## Current — W3 Stage 1 publication in progress
+
+Rakha authorized publishing the reviewed package. Refreshed origin/main f109d21 includes Fatih's merged #139 scheduler-window warning and revised Sep 20 preflight. #137 was reconciled with #139, then Fatih approved/merged #137 during publication; dependent bases follow the actual open/merged state. Curated the W3 task publication branches include all reviewed fixes. Published slices so far: Alert events https://github.com/Fatihmaull/evergreen/pull/142; Alert runner https://github.com/Fatihmaull/evergreen/pull/143; Scheduler watcher https://github.com/Fatihmaull/evergreen/pull/144; Save-proof harness https://github.com/Fatihmaull/evergreen/pull/145; Failure validation https://github.com/Fatihmaull/evergreen/pull/146. Tracking: https://github.com/Fatihmaull/evergreen/issues/140 and https://github.com/Fatihmaull/evergreen/issues/141; #104 coordination, #130 Shared proof acceptance, #128 test-clock evidence. No merge, new email or transaction during publication. Original reviewed source is retained at archive/W3-D18-02a-reviewed-source; historical proof commit 32670fe is not replaced by a later build.
+
+Notion presence read returned 150 rows with one known retired ID; operational statuses for completed open-PR work had regressed to Pending after the latest main-driven sync even while Notes retained completion evidence. Session-boundary sync will restore verified published outcomes and explicit unmerged PR links per AGENTS; main-driven status regeneration can overwrite these until merge. This is a tracking limitation, not missing delivery evidence.
+
+## Earlier — local review completed
+
 ## Current — D17-01 live email e2e confirmed
 
 Rakha authorized the reviewed one-email test and clarified the operating preference: carry each task through relevant, necessary e2e validation rather than stopping at mocks or asking again for already-authorized tests. This includes relevant email and Testnet transactions; preserve Testnet-only, capped-purpose operation, B/C/shared-Wasm guards and the existing review/publication workflow. Do not expand tests merely to force a completion claim.
