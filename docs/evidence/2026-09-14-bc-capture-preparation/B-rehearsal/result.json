@@ -1,0 +1,225 @@
+{
+  "phase": "rehearsal",
+  "qualifiesCrossing": false,
+  "reason": null,
+  "probeExitCode": 0,
+  "exitCode": 0,
+  "observation": {
+    "probe": {
+      "subject": "B",
+      "contractId": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+      "below": 1500000,
+      "rehearsal": true,
+      "observedAt": "2026-09-14T15:48:34.800Z",
+      "run": {
+        "scan": {
+          "network": "testnet",
+          "contracts": [
+            {
+              "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+              "label": "guinea-pig-A"
+            },
+            {
+              "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+              "label": "guinea-pig B"
+            }
+          ],
+          "entries": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "kind": "instance",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "observedAtLedger": 4675465,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 6370261,
+                "remainingLedgers": 1694796
+              }
+            },
+            "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+              "kind": "instance",
+              "endBehavior": "archived",
+              "contracts": [
+                "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+              ],
+              "observedAtLedger": 4675465,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 4793687,
+                "remainingLedgers": 118222
+              }
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "kind": "code",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+                "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+              ],
+              "observedAtLedger": 4675465,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 5290829,
+                "remainingLedgers": 615364
+              }
+            }
+          },
+          "issues": [
+            {
+              "kind": "coverage-limited",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "message": "No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract."
+            },
+            {
+              "kind": "coverage-limited",
+              "contracts": [
+                "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+              ],
+              "message": "No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract."
+            }
+          ],
+          "coverage": {
+            "mode": "known-keys",
+            "dataKeysSuppliedByContract": {
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0,
+              "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": 0
+            }
+          }
+        },
+        "decisions": [
+          {
+            "action": "skip",
+            "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "reason": "HEALTHY — Above threshold. 1,694,796 ledgers remaining."
+          },
+          {
+            "action": "skip",
+            "entryKey": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+            "contracts": [
+              "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+            ],
+            "reason": "REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig B (CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ)."
+          },
+          {
+            "action": "skip",
+            "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+              "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+            ],
+            "reason": "REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry."
+          }
+        ],
+        "liveness": {
+          "isAlarm": true,
+          "severity": "critical",
+          "findings": [
+            {
+              "entryKey": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+              "contracts": [
+                "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+              ],
+              "reason": "skipped",
+              "severity": "critical",
+              "remediation": "extend",
+              "remainingLedgers": 118222,
+              "isExpired": false,
+              "detail": "Skipped (118,222 ledgers remain): REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig B (CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ).."
+            },
+            {
+              "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+                "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+              ],
+              "reason": "skipped",
+              "severity": "critical",
+              "remediation": "extend",
+              "remainingLedgers": 615364,
+              "isExpired": false,
+              "detail": "Skipped (615,364 ledgers remain): REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry.."
+            }
+          ]
+        },
+        "health": {
+          "byEntry": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "health": "healthy",
+              "needsAction": false,
+              "isExpired": false,
+              "observedContractCount": 1,
+              "blastRadiusAtLeast": 1,
+              "sharingStatus": "exclusive",
+              "reason": "Above threshold."
+            },
+            "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+              "health": "critical",
+              "needsAction": true,
+              "isExpired": false,
+              "observedContractCount": 1,
+              "blastRadiusAtLeast": 1,
+              "sharingStatus": "exclusive",
+              "reason": "At or below action threshold (1500000 ledgers). Low, recoverable, and affects only this contract."
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "health": "critical",
+              "needsAction": true,
+              "isExpired": false,
+              "observedContractCount": 2,
+              "blastRadiusAtLeast": 2,
+              "sharingStatus": "shared",
+              "reason": "At or below action threshold (1500000 ledgers). Low, and shared by 2 contracts — every one of them fails together."
+            }
+          },
+          "thresholdsByEntry": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "warnBelowLedgers": 1500000,
+              "criticalBelowLedgers": 1500000
+            },
+            "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+              "warnBelowLedgers": 1500000,
+              "criticalBelowLedgers": 1500000
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "warnBelowLedgers": 1500000,
+              "criticalBelowLedgers": 1500000
+            }
+          }
+        },
+        "mode": "dry-run"
+      }
+    },
+    "controls": {
+      "ledger": 4675465,
+      "entries": [
+        {
+          "key": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+          "xdr": "AAAABgAAAAAAAAABG5bMFvjwwWfEBjoX+/o/AL07R6xC/juHjQmYgmeEYrsAAAAUAAAAAQAAABMAAAAAx+VfCtie+wYAvBUEixVQmfpNl87hZGb6EkSz3Lzpi/sAAAABAAAAAQAAABAAAAABAAAAAQAAAA8AAAAISW5zdGFuY2UAAAADAAAAAQ==",
+          "endsAt": 6370261
+        },
+        {
+          "key": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+          "xdr": "AAAABgAAAAAAAAABsGd9UPFEDIcgpYDxAvyIRoflXApjpRlIkRBgRml4fqUAAAAUAAAAAQAAABMAAAAAx+VfCtie+wYAvBUEixVQmfpNl87hZGb6EkSz3Lzpi/sAAAABAAAAAQAAABAAAAABAAAAAQAAAA8AAAAISW5zdGFuY2UAAAADAAAAAQ==",
+          "endsAt": 4793687
+        },
+        {
+          "key": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABAAAAABAAAAAQAAAA8AAAAKUGVyc2lzdGVudAAAAAAAAQ==",
+          "xdr": "AAAABgAAAAAAAAABsGd9UPFEDIcgpYDxAvyIRoflXApjpRlIkRBgRml4fqUAAAAQAAAAAQAAAAEAAAAPAAAAClBlcnNpc3RlbnQAAAAAAAEAAAADAAAAAQ==",
+          "endsAt": 4793688
+        },
+        {
+          "key": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+          "xdr": "AAAABwAAAAEAAAAAAAAAAAAAAUYAAAAKAAAAAgAAAAAAAAAIAAAAAQAAAAAAAAAFAAAABwAAACXH5V8K2J77BgC8FQSLFVCZ+k2XzuFkZvoSRLPcvOmL+wAACWgAYXNtAQAAAAEuCGACfn4BfmAAAX5gA39/fwBgA35+fgF+YAN/f34AYAF/AX5gAX4BfmACfn8BfgIfBQFsAV8AAwF2AWcAAAFsATEAAAFiAWoAAAFsATAAAAMLCgQFAgEBAQECBgcFAwEAEQYRAn8BQYCAwAALfwBBpYDAAAsHTAcGbWVtb3J5AgAMZ2V0X2luc3RhbmNlAAgOZ2V0X3BlcnNpc3RlbnQACQ1nZXRfdGVtcG9yYXJ5AAoEcGluZwALBHNlZWQADQFfAwEMAQEKhgUKFAAgABAGIAGtQiCGQgSEIAIQABoLtQECAX8BfiMAQRBrIgEkAAJAAkACQAJAIABB/wFxQQFrDgIBAgALIAFBioDAAEEKEAcMAgsgAUGUgMAAQQkQBwwBCyABQZ2AwABBCBAHCwJAIAEoAgBFBEAgASkDCCECIwBBEGsiACQAIAAgAjcDCCAAQQhqrUIghkIEhEKEgICAEBABIQIgAUIANwMAIAEgAjcDCCAAQRBqJAAgASkDCCECIAEpAwBQDQELAAsgAUEQaiQAIAILOAEBfyMAQRBrIgMkACADIAEgAhAMIAAgAygCAAR+QgEFIAAgAykDCDcDCEIACzcDACADQRBqJAALCABCAkECEA4LCABCAUEAEA4LCABCAEEBEA4LMgIBfwF+IwBBEGsiACQAIABBgIDAAEEKEAwgACkDAEIBUQRAAAsgACkDCCAAQRBqJAALxAECA38BfgJ+AkAgAkEJSw0AIAIhBCABIQUDQCAGQgiGQg6EIARFDQIaAn9BASAFLQAAIgNB3wBGDQAaAkAgA0Ewa0H/AXFBCk8EQCADQcEAa0H/AXFBGkkNASADQeEAa0H/AXFBGk8NBCADQTtrDAILIANBLmsMAQsgA0E1awutQv8BgyAGQgaGhCEGIARBAWshBCAFQQFqIQUMAAsACyABrUIghkIEhCACrUIghkIEhBADCyEGIABCADcDACAAIAY3AwgLMQEBfyAAQv8Bg0IEUgRAAAtBACAAQiCIpyIBQgEQBUEBIAFCABAFQQIgAUICEAVCAgs5AQF+AkAgARAGIgIgABAEQgFRBH4gAiAAEAIiAEL/AYNCBFINASAAQoCAgIBwg0IEhAVCAgsPCwALCy4BAEGAgMAACyVndWluZWFfcGlnUGVyc2lzdGVudFRlbXBvcmFyeUluc3RhbmNlAPcJDmNvbnRyYWN0c3BlY3YwAAAAAgAAAIpTdG9yYWdlIGtleXMuIEtlcHQgYXMgYW4gZW51bSBzbyBldmVyeSBlbnRyeSB0aGlzIGNvbnRyYWN0IHdyaXRlcyBpcwplbnVtZXJhYmxlIGZyb20gb25lIHBsYWNlIOKAlCB0aGUgQ0xJJ3Mgc2NhbiBoYXMgdG8gZmluZCBhbGwgb2YgdGhlbS4AAAAAAAAAAAADS2V5AAAAAAMAAAAAAAAAM0EgcGVyc2lzdGVudCBlbnRyeTogYXJjaGl2ZWQgb24gZXhwaXJ5LCByZXN0b3JhYmxlLgAAAAAKUGVyc2lzdGVudAAAAAAAAAAAADRBIHRlbXBvcmFyeSBlbnRyeTogZGVsZXRlZCBvbiBleHBpcnksIHVucmVjb3ZlcmFibGUuAAAACVRlbXBvcmFyeQAAAAAAAAAAAAA2QW4gaW5zdGFuY2UgZW50cnk6IHNoYXJlcyB0aGUgY29udHJhY3QgaW5zdGFuY2UncyBUVEwuAAAAAAAISW5zdGFuY2UAAAAAAAAAVUEgdHJpdmlhbCBpZGVudGlmeWluZyBjYWxsLCBzbyBhIGRlcGxveSBjYW4gYmUgc21va2UtdGVzdGVkIHdpdGhvdXQKd3JpdGluZyBhbnl0aGluZy4AAAAAAAAEcGluZwAAAAAAAAABAAAAEQAAAAAAAADsV3JpdGUgb25lIGVudHJ5IG9mIGVhY2ggc3RvcmFnZSB0eXBlLCBzbyBhbGwgZm91ciBlbnRyeSB0eXBlcyBleGlzdCBvbgp0aGlzIGNvbnRyYWN0LiBDYWxsIG9uY2UgYWZ0ZXIgZGVwbG95LgoKVGFrZXMgbm8gYXV0aG9yaXphdGlvbjogdGhpcyBpcyBhIHRocm93YXdheSB0ZXN0bmV0IGZpeHR1cmUsIGFuZCBhZGRpbmcKYXV0aCB3b3VsZCBvbmx5IG1ha2UgdGhlIGRlcGxveSBzY3JpcHQgaGFyZGVyIHRvIHJ1bi4AAAAEc2VlZAAAAAEAAAAAAAAABXZhbHVlAAAAAAAABAAAAAAAAAAAAAAAGFJlYWQgdGhlIGluc3RhbmNlIGVudHJ5LgAAAAxnZXRfaW5zdGFuY2UAAAAAAAAAAQAAA+gAAAAEAAAAAAAAALxSZWFkIHRoZSB0ZW1wb3JhcnkgZW50cnkuIFJldHVybnMgYE5vbmVgIG9uY2UgaXQgaGFzIGJlZW4gKipkZWxldGVkKiouClVubGlrZSB0aGUgcGVyc2lzdGVudCBlbnRyeSwgdGhpcyBvbmUgY2Fubm90IGJlIHJlc3RvcmVkLCB3aGljaCBpcyB3aHkKdGhlIENMSSBtdXN0IHJlcG9ydCB0aGUgdHdvIGNhc2VzIGRpZmZlcmVudGx5LgAAAA1nZXRfdGVtcG9yYXJ5AAAAAAAAAAAAAAEAAAPoAAAABAAAAAAAAAB+UmVhZCB0aGUgcGVyc2lzdGVudCBlbnRyeS4gUmV0dXJucyBgTm9uZWAgb25jZSB0aGUgZW50cnkgaGFzIGJlZW4KYXJjaGl2ZWQg4oCUIHdoaWNoIGlzIHRoZSBzdGF0ZSBFdmVyZ3JlZW4gZXhpc3RzIHRvIHByZXZlbnQuAAAAAAAOZ2V0X3BlcnNpc3RlbnQAAAAAAAAAAAABAAAD6AAAAAQAHhFjb250cmFjdGVudm1ldGF2MAAAAAAAAAAbAAAAAABvDmNvbnRyYWN0bWV0YXYwAAAAAAAAAAVyc3ZlcgAAAAAAAAYxLjk4LjEAAAAAAAAAAAAIcnNzZGt2ZXIAAAAvMjcuMC42IzYwOTI2YTIwZDFmOWYwYTY2OWQ1ZmU1NTE2MzZmNDJhMTMwMmYwYzAAAFMOY29udHJhY3RtZXRhdjAAAAAAAAAABmNsaXZlcgAAAAAALzI4LjAuMCMzMDBhYWY2OWFiMTAwNTM2Njc4YmRiNjQxNDI4YjA2ZjA2YjMxOGVhAA==",
+          "endsAt": 5290829
+        }
+      ]
+    }
+  }
+}

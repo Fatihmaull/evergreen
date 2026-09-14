@@ -9,9 +9,11 @@
 
 ---
 
-## Current — W3-D18-03 crossing capture preparation (local)
+## Current — W3-D18-03 crossing capture publication
 
-Rakha authorized local preparation of the B/C read-only collector, offline verifier and operational checklist. Baseline main is 91ad650 (#154); the remaining reviewed fixes stay in independent PRs #145–#147. Reuse the existing crossing producer and protected data keys. No B/C write, timer activation, new message, push or PR is part of this implementation turn. D18-03 is In progress for tooling; actual crossings/expiry and Shared acceptance remain future work. Notion sync is pending the separate publication checkpoint. Local implementation is now validated: `pnpm check` passed (851 tests); real B/C reads and one explicitly marked B rehearsal all replayed offline successfully. B/C are still before the action threshold; no event completion is claimed. Runtime commit `2ac20f4`; see [implementation results](W3-D18-03-IMPLEMENTATION.md) and [operator guide](W3-D18-03-CAPTURE.md). Internal review found and corrected locale-dependent replay: deterministic numeric formatting and a cross-process regression now cover the operator/CI boundary. See [review](W3-D18-03-REVIEW.md). Final post-fix `pnpm check` passed (852 tests); no open review finding remains. Publication remains separate.
+Read-only B/C collector, offline verifier and operator instructions are reviewed and being published from `feat/W3-D18-03-crossing-capture`, directly against main `91ad650` (#154). Full post-review `pnpm check` passed (852 tests), including cross-locale gate regression. [Raw preparation captures](evidence/2026-09-14-bc-capture-preparation/README.md) preserve the original source `2ac20f4` and bytes; B/C remain before action and the B rehearsal cannot qualify. No new transaction, email or timer was run.
+
+D18-03 remains In progress; actual crossings/expiry and Shared acceptance remain outstanding. PRs #145–#147 are still open. The identical test-only fixture clock correction overlaps #146; retain it once when merging. See [implementation](W3-D18-03-IMPLEMENTATION.md), [operator guide](W3-D18-03-CAPTURE.md) and [closed internal review](W3-D18-03-REVIEW.md). Notion publication sync is pending completion of this PR creation.
 
 ## Current — Deliverable 1 row 3 met; D17 channels merged
 

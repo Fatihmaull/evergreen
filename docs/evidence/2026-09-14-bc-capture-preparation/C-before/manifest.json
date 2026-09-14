@@ -1,0 +1,50 @@
+{
+  "captureFormat": "evergreen-crossing-v1",
+  "version": 1,
+  "subject": "C",
+  "threshold": 17280,
+  "rehearsal": false,
+  "startedAt": "2026-09-14T15:48:28.298Z",
+  "endedAt": "2026-09-14T15:48:30.459Z",
+  "rpcCount": 5,
+  "provenance": {
+    "sourceCommit": "2ac20f4cda5dca2b34798287a2a9be412a1e108b",
+    "freshBuild": true
+  },
+  "environment": {
+    "node": "v24.13.0",
+    "locale": "en-US"
+  },
+  "runtimeHashes": {
+    "scripts/b-crossing-probe.mjs": "5b886b2368f46e9b04144d890d04a725fcc9c8fa01e7e5f66e67278de8acdb19",
+    "scripts/capture-crossing-probe.mjs": "abd9b618ce4f699bda3d55bfed03ecdc96ae97567ff717963d65ad98bceba773",
+    "scripts/verify-crossing-capture.mjs": "740365d53c2cf66c5ac70ef419d97c32de30b232acdc56c07d287ece339fc65e",
+    "scripts/crossing-capture-common.mjs": "bbb6ae8a4f6f2b8447960d66a75ceb6df9622274ffc32e64f4b619a4ca4f1fa0",
+    "scripts/verify-evidence-integrity.mjs": "fd70ee8a25a63e260b1574a61ecfa14bdb422c64ce89428711c62748282b643a",
+    "packages/core/package.json": "2b229225997d07e68601539803b62e1999ac906021379829e6ab62f4067e7fe6",
+    "pnpm-lock.yaml": "34a26adac56aced1e4b6fc0ffabaf95b01b8ed87d030704d2493feedbf44b527",
+    "docs/evidence/2026-09-14-bc-control-verification/data-keys-B.json": "25af4787534e7c4991ba31e67f5c405d6fd7356bc65c80cb1efa4b9206c49616",
+    "docs/evidence/2026-09-14-bc-control-verification/data-keys-C.json": "46d97c50dfe154ffd8d608d756f81a14ac64aa4a7c6cb7749fd616b0af9836ef",
+    "packages/core/dist/config.js": "a1efee882735017c296a5e8df27fc2d607002f180fbf975f85418b102676936a",
+    "packages/core/dist/ed25519-signer.js": "840706904ec10882eed85375b7d4064c0da7c9c791c4ab77c5a0a9534cf39884",
+    "packages/core/dist/engine-execution-plan.js": "72c2640b14a112dac4e35783cb8946ee74b6bee1ce898045656fcb2e9101f570",
+    "packages/core/dist/engine.js": "fe2a35e7ddbd783c42ee4744f591a8cf0cee9c4ee8219883a78a1962e18f1c5e",
+    "packages/core/dist/extend-rpc.js": "49539aa14d651c3ac39a5bcad792a12e4642c3f51e442dee0e1896855f839c22",
+    "packages/core/dist/extend.js": "c9f8d570bbdf8ceba6252b5736ee716143b3776adb5708b3a26e42a79e75b6c0",
+    "packages/core/dist/health.js": "be7c7c4ddc5086f2413287a78ab669dbd52f8133849ea5e516d402999f83e817",
+    "packages/core/dist/index.js": "d3d8138cc846013648cf4b6c7256174660fef67a4126f4447c7381c098ecd647",
+    "packages/core/dist/liveness.js": "6c56a823febc6d95a718fa64cbfc6dd8b64f30acb22223389ddffadf6c8f43f4",
+    "packages/core/dist/network-config.js": "5f9623513aab6d862f193caca9dfcb03ff87942edce27f37ae91844dee8fc198",
+    "packages/core/dist/notification-templates.js": "a7d22573aeb6a703f53b8642a382b5014f7318863e5cc4c1097bb9222c62a568",
+    "packages/core/dist/optimizer-evidence.js": "ad876c962be3096d4f59c0b17ffce3e0ee76d8e4ba07c9722f080e672775b2c2",
+    "packages/core/dist/optimizer.js": "fe98c2eeda3c13ccb583c2e174e7d6e664a79d7bf37ef8a7384a8f1716dcb5c0",
+    "packages/core/dist/rent-quoter.js": "730b0a6eebcf01635715d41b8062a93cef5649c5dae9fbf1075754f951436474",
+    "packages/core/dist/rent.js": "a32a143b7127decff88004f290b553d7ffb526cdc420c65a64c171194d5f396c",
+    "packages/core/dist/rpc.js": "dc3aef42d846ef870dd6fbee3428ad7bacfbc6ad34aa583f2e06becf6ea8af67",
+    "packages/core/dist/scan-contract.js": "8bd7565823854c864020ef2ad774a7afe996ad5633f7be89b2dba448e4467a19",
+    "packages/core/dist/scan.js": "a68d0929a6692d4f4fb69d3a7a61ca137c531081954ebf56a0df59220e0a4ff8",
+    "packages/core/dist/ttl.js": "1c2d05210a59942d60ca1319fc81c4728d7bb32149a545a33b1ab8009d84b23c",
+    "packages/core/dist/write-guard.js": "af98b870f127ab37bb3851391f3d6d451cb75605eb972c298ac669bc08c2d116"
+  },
+  "baseline": false
+}
