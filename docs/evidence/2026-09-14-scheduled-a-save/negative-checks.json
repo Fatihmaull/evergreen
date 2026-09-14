@@ -1,0 +1,10 @@
+{
+  "checksumRecomputed": true,
+  "rejectedMutations": [
+    "reported post-expiry",
+    "intent fee",
+    "protected control expiry",
+    "timer invocation identity"
+  ],
+  "originalBundleVerification": "passed"
+}

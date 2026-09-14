@@ -30,6 +30,8 @@ Commits made before 2026-09-05 carry the old trailer. They stay as they are: thr
 
 **PRs:** one task (or one tight cluster) per PR. Title = commit subject. Body must state: what changed, how it was verified, and any evidence captured. CI must be green before merge. `main` is protected — no direct pushes.
 
+**Public naming:** use frozen task IDs and concrete deliverables in PRs, issues, comments and operational docs. Local grouping labels belong in private planning/chat; preserve historical identifiers and raw evidence.
+
 **Stacked PRs: retarget the child to `main` *before* merging the parent.** Stacking is fine and we do it — a child PR based on a parent's branch keeps the child's diff readable. But GitHub deletes the parent's branch on merge, and **deleting a branch silently closes every PR that was targeting it.** The close is attributed to whoever clicked merge, so it reads like a rejection rather than an accident.
 
 Recovering one is worse than it sounds, because the two repair paths block each other: GitHub refuses to reopen a PR whose base branch is missing, and refuses to change the base of a closed PR. The way out is to push the deleted base back to its old commit, reopen, retarget to `main`, then delete the temporary branch again:
@@ -311,6 +313,41 @@ nothing else does"* — and the answer can be narrower than the line looks.
 confuse.** That one says inner layers are untested by construction when an outer
 layer rejects first. This one says a layer that *looks* untested may be a
 redundant one. Both are true, and the all-layers-removed check tells them apart.
+
+### Two numbers that must stand in a relation — enumerate them, then enforce them
+
+Three defects of this exact class landed in one week, and each looked like a
+different bug until they were put side by side:
+
+| Pair | Failure when unenforced | Now enforced by |
+|---|---|---|
+| workflow `timeout-minutes` vs cron interval | a run outlives its own schedule and laps itself | `check-workflow-timeouts.mjs` |
+| action threshold vs measured scheduler gap | the engine cannot fire enough times before expiry | `MIN_SAFE_ACTION_WINDOW_LEDGERS` |
+| watcher `criticalMinutes` vs worst observed gap | alarms on observed-normal behaviour; fatigue hides the real outage | `assessScheduler` policy validation |
+
+The shape is always the same: **two numbers whose correctness is a relation
+between them, each individually plausible, with nothing checking the relation.**
+Reviewing either number alone finds nothing, because neither is wrong.
+
+They are also the defects most likely to be discovered by an operator rather than
+a test, because a plausible wrong value behaves *almost* correctly — the watcher
+with `criticalMinutes: 30` does alert, constantly, which reads as a noisy tool
+rather than a misconfiguration.
+
+**When one of these is found, list the others rather than fixing the one.** The
+ones still unenforced, recorded so the list is a worklist and not a boast:
+
+- **fee cap vs observed fee** — a cap below what a real extend has cost refuses
+  every write, and looks like an RPC problem
+- **action threshold vs `max_entry_ttl`** — a threshold above the ceiling can
+  never be satisfied by any extension
+- **artifact retention vs the dates evidence must outlive** — 90-day retention
+  against an Oct 2 submission is fine; against a claim that must survive review
+  afterwards it is not, and the artifact expires silently
+
+A useful test for whether a pair belongs here: **can you write down a value for
+each that is individually defensible and jointly wrong?** If yes, nothing but an
+explicit check will catch it.
 
 ### Before arming a gate, prove its demand can be satisfied by the allowed path
 

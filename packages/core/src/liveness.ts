@@ -142,8 +142,8 @@ function describe(
     remainingLedgers === undefined
       ? 'its TTL could not be read'
       : isExpired
-        ? `EXPIRED ${Math.abs(remainingLedgers).toLocaleString()} ledgers ago`
-        : `${remainingLedgers.toLocaleString()} ledgers remain`;
+        ? `EXPIRED ${Math.abs(remainingLedgers).toLocaleString('en-US')} ledgers ago`
+        : `${remainingLedgers.toLocaleString('en-US')} ledgers remain`;
   // Said once, here, so no caller has to remember which operation applies.
   const fix = !isExpired
     ? ''

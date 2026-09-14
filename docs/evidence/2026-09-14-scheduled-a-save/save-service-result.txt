@@ -1,0 +1,7 @@
+Id=evergreen-paket-a-save.service
+ActiveState=active
+InvocationID=63214779da9a45a0b9ff26c1e259c2a8
+Result=success
+ExecMainStartTimestamp=Mon 2026-09-14 15:34:44 WIB
+ExecMainExitTimestamp=Mon 2026-09-14 15:34:53 WIB
+ExecMainStatus=1

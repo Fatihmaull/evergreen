@@ -1,14 +1,14 @@
-# Sep 20 pre-flight — run this Friday, not Saturday
+# Sep 20 pre-flight — readiness Friday September 18
 
-**B crosses its alert threshold ~2026-09-20 12:00 UTC and expires ~2026-09-21
+**B crosses its action threshold (17,280 ledgers) ~2026-09-20 12:00 UTC and expires ~2026-09-21
 12:00 UTC.** The expiry cannot be re-armed inside this sprint. C is the only
 spare, five days later.
 
-Most of Saturday is unattended by design, which is the point and also the risk:
-**an unattended run that silently does not happen produces the same evidence as
-one that ran and found nothing.** Everything below exists to tell those apart.
+A supplied the scheduled-save proof. B supplies natural decay and guard refusal,
+observed through the read-only probe. A manual observation is recorded as manual;
+a GitHub cron run cannot stand in for it because dogfood selects only A.
 
-Run every item on **Friday Sep 19**. Nothing here should first be attempted on
+Run every item on **Friday Sep 18**. Nothing here should first be attempted on
 the day.
 
 ---
@@ -38,9 +38,10 @@ trigger.
 So the manual dispatch is the **primary action**, not the fallback. Any
 scheduled run that also lands is a bonus.
 
-Dispatch again at **~18:00** and **~00:00** to bracket the window. Three
-deliberate runs across 24 hours cost nothing and do not depend on a scheduler
-that misses nine slots in ten.
+Dispatch again at **~18:00** and **~00:00** to bracket the window. These
+three checkpoints cover the first twelve hours. Check expiry separately at about
+12:00 UTC on September 21; actual ledger state, not the clock estimate, determines
+whether the boundary has been crossed.
 
 ---
 
@@ -80,14 +81,18 @@ be pointed at, and it is read-only: no payer resolves, no secret is read, the
 engine is decide-only and the guard refuses regardless.
 
 ```bash
-node scripts/b-crossing-probe.mjs | tee /tmp/b-crossing.txt; echo "exit=${PIPESTATUS[0]}"
+probe_capture=$(mktemp /tmp/w3-b-crossing.XXXXXX.txt)
+env -u BELOW node scripts/b-crossing-probe.mjs > "$probe_capture" 2>&1
+probe_exit=$?
+cat "$probe_capture"
+printf 'probe_exit=%s capture=%s\n' "$probe_exit" "$probe_capture"
 ```
 
-- [ ] run it with **no `BELOW`** — the point is that B is genuinely below the
+- [ ] run it with **no `BELOW`** (the command explicitly removes inherited overrides) — the point is that B is genuinely below the
       real 17,280 threshold. If it reports *"seen but still above the threshold"*,
       the crossing has not happened yet: **re-run later, do not lower the
       threshold to force it**
-- [ ] the output contains `REFUSED BY WRITE GUARD` naming B
+- [ ] validate the subject, real 17,280 threshold, actual read/decisions and `REFUSED BY WRITE GUARD` naming B. Exit 0 alone is not qualifying evidence: the probe also exits 0 when the subject is above threshold or absent
 - [ ] A appears in the same record — a run containing only a refusal cannot show
       the engine was working, because *"refused everything"* and *"decided
       nothing"* look identical
@@ -96,7 +101,7 @@ node scripts/b-crossing-probe.mjs | tee /tmp/b-crossing.txt; echo "exit=${PIPEST
 
 ### 4. The record is committed the same day
 
-- [ ] download the run's artifact
+- [ ] save the B probe output as the crossing artifact. Download the cron artifact separately only as scheduler context; it cannot contain the B refusal
 - [ ] commit it under `docs/evidence/2026-09-20-b-crossing/`
 - [ ] **an artifact is a log; a commit is evidence.** Artifacts expire; the
       grant submission is Oct 2
@@ -113,7 +118,7 @@ correct.
 
 ### 6. 🔴 Nobody "fixes" the refusal
 
-**The refusal is the evidence.** On Friday or Saturday, someone looking at a
+**The refusal is the evidence.** On Friday or Sunday, someone looking at a
 `SKIP — REFUSED BY WRITE GUARD` line will think the demo is broken.
 
 It is not. `W3-D18-02b` decided that **B expires and the engine does not save
@@ -123,19 +128,36 @@ live against a real protected subject, and the decay is real.
 Anyone adjusting the target list, editing `_doNotWatch`, or weakening
 `write-guard.ts` to produce a save is **destroying evidence, not repairing a
 bug**. If the engine genuinely needs either weakened, that is a conversation
-before Saturday, not a patch during it.
+before Sunday, not a patch during it.
 
 ---
 
-## Sunday Sep 21 — the expiry
+## Monday Sep 21 — the expiry
 
-- [ ] confirm B's instance is actually expired: `pnpm cli scan <B>` reports it
-      past its end, with `RestoreFootprintOp` guidance rather than extend
-- [ ] capture that scan and commit it alongside the Saturday record
+- [ ] compare a current read with the recorded instance/persistent expiry ledgers. Remaining TTL zero is still live. If RPC no longer returns an entry after its known expiry, retain the actual missing-entry output and a successful A/shared control read; do not invent a CLI verdict or restore B to check it
+- [ ] capture that scan and commit it alongside the Sunday crossing record
 - [ ] `W1-D4-09`'s drift obligation closes here, whether or not drift was ever
       observed
 
 ## Then C, Sep 25–26
 
-Identical sequence, five days later. C is the spare and the only second shot.
-The shared code entry becomes extendable **Sep 26** (`W3-D18-02d`).
+C has two distinct obligations. **Minimum read-only crossing/refusal capture is
+required on September 25**, because the current date gate covers both subjects
+and the shared-code handoff needs C evidence. Run the same probe with `SUBJECT=C`
+and `BELOW` unset. If B succeeded, record C as unused for the *full backup decay
+proof*, with its minimum control capture attached. Full expiry observation on
+September 26 is required if C is used as the replacement proof.
+
+This preserves the existing gate rather than inventing a synthetic refusal or
+making C disappear from it. Shared-code extension remains Fatih's task on the
+September 26 gate, after the required B/C evidence is accepted. The date does not
+automatically unlock the write guard or authorize an override.
+
+## What the September 18 gate means
+
+The allowed B/C observation and capture path, operator/backstop and negative/positive
+rehearsal checks must be ready by Friday September 18. The unattended *save* claim
+belongs to A's separately reviewed proof (#130/#147). These manual B/C instructions
+do not claim unattended B execution. If a reviewer additionally requires unattended
+B observation, schedule the same read-only producer in an agreed bounded window;
+do not enable a live B config to obtain that claim. Shared acceptance remains explicit.

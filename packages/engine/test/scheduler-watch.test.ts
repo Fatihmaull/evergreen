@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { assessScheduler } from '../src/scheduler-watch.js';
+import { WORST_OBSERVED_SCHEDULER_GAP_MINUTES } from '@evergreen-stellar/core';
 const now = Date.parse('2026-09-14T12:00:00Z');
 const policy = {
   startAt: now - 24 * 3600000,
@@ -113,5 +114,36 @@ describe('independent schedule observation', () => {
     expect(() =>
       assessScheduler({ now, policy: { ...policy, warnMinutes: policy.maxRunMinutes }, jobs: [] }),
     ).not.toThrow();
+  });
+  /**
+   * The floor that ties this policy to a measurement instead of to taste.
+   *
+   * Declared cadence is 15 minutes. Measured on 2026-09-14: a 132-minute median
+   * and a 331-minute worst gap. So `criticalMinutes: 30` looks entirely
+   * reasonable to someone reading the cron expression, and alarms almost
+   * continuously — and alarm fatigue on this watcher hides the outage it exists
+   * to catch. Every real policy in the repo already uses 360; nothing enforced
+   * that, and `W3-D21-01e` is Fatih standing the engine up cold from the written
+   * guide, which means writing a policy file from scratch. That test runs once.
+   */
+  it('🔴 refuses a critical tier below the worst gap we have actually measured', () => {
+    expect(WORST_OBSERVED_SCHEDULER_GAP_MINUTES).toBe(331);
+    expect(() =>
+      assessScheduler({
+        now,
+        policy: { ...policy, criticalMinutes: WORST_OBSERVED_SCHEDULER_GAP_MINUTES - 1 },
+        jobs: [],
+      }),
+    ).toThrow(/policy/i);
+    // The measured value itself is legal — this is a floor, not a margin.
+    expect(() =>
+      assessScheduler({
+        now,
+        policy: { ...policy, criticalMinutes: WORST_OBSERVED_SCHEDULER_GAP_MINUTES },
+        jobs: [],
+      }),
+    ).not.toThrow();
+    // And the value every real policy already uses stays legal.
+    expect(() => assessScheduler({ now, policy, jobs: [] })).not.toThrow();
   });
 });

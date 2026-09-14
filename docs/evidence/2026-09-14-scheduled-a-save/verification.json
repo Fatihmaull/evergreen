@@ -1,0 +1,14 @@
+{
+  "hash": "dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128",
+  "sends": 1,
+  "receiptTtlChangeVerified": true,
+  "beforeExpiry": 6026591,
+  "afterExpiry": 6370261,
+  "inclusionLedger": 4670261,
+  "expiryIncrease": 343670,
+  "envelopeFeeStroops": "60683",
+  "feeChargedStroops": "44725",
+  "protectedControlsUnchanged": 5,
+  "successEmailAccepted": true,
+  "sourceCommit": "32670fea3b66f59a9c156cee01126691c4aed86e"
+}

@@ -46,68 +46,105 @@
 import { rpc, Networks } from '@stellar/stellar-sdk';
 import console from 'node:console';
 import process from 'node:process';
-import { createRpcReader, runEngine, PROTECTED_ENTRIES } from '../packages/core/dist/index.js';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import {
+  createRpcReader,
+  runEngine,
+  PROTECTED_ENTRIES,
+  DEFAULT_CRITICAL_LEDGERS,
+} from '../packages/core/dist/index.js';
 
-const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
-const label = (process.env.SUBJECT ?? 'B').toUpperCase();
-const subject = PROTECTED_ENTRIES.find((p) => p.label.endsWith(label));
-if (!subject) throw new Error(`No protected subject "${label}". Use B or C.`);
-
-const below = Number(process.env.BELOW ?? 17_280);
-if (!Number.isSafeInteger(below) || below <= 0) throw new Error('BELOW must be a positive integer');
-
-const server = new rpc.Server('https://soroban-testnet.stellar.org', { timeout: 15_000 });
-if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
-  throw new Error('Refusing to run: not Testnet.');
-
-// A rides along deliberately. A run containing only a refusal cannot show that
-// the engine was working — "refused everything" and "decided nothing" look alike.
-const config = {
-  network: { rpcUrl: 'in-memory', networkPassphrase: Networks.TESTNET },
-  defaults: { bumpWhenRemainingLedgersBelow: below, extendToLedgers: 518_400 },
-  contracts: [
-    { id: A, label: 'guinea-pig-A', payer: 'none' },
-    { id: subject.contractId, label: subject.label, payer: 'none' },
-  ],
-  payers: {},
-  mode: 'dry-run',
-};
-
-const run = await runEngine(createRpcReader(server), config);
-
-console.log(`# ${subject.label} crossing probe`);
-console.log(`observed:   ${new Date().toISOString()}`);
-console.log(`subject:    ${subject.contractId}`);
-console.log(`expires:    ${subject.expiresOn} (alert threshold ${subject.alertThresholdOn})`);
-console.log(
-  `threshold:  ${below.toLocaleString()} ledgers${process.env.BELOW ? '  ⚠ RAISED — rehearsal, not the real crossing' : ''}`,
-);
-console.log(`mode:       ${run.mode}   decisions: ${run.decisions.length}\n`);
-
-for (const d of run.decisions) {
-  console.log(`${d.action.toUpperCase().padEnd(6)} ${d.entryKey}`);
-  console.log(`       ${d.reason}`);
+export const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+export const ACTION_THRESHOLD = DEFAULT_CRITICAL_LEDGERS;
+export function protectedSubject(label) {
+  if (!['B', 'C'].includes(label)) throw Error('Subject must be B or C');
+  return PROTECTED_ENTRIES.find((p) => p.label === 'guinea-pig ' + label);
 }
+export async function runCrossingProbe({
+  subject: label = 'B',
+  below = ACTION_THRESHOLD,
+  rehearsal = false,
+  server,
+  now = () => new Date(),
+} = {}) {
+  const subject = protectedSubject(label);
+  if (!Number.isSafeInteger(below) || below <= 0) throw Error('Threshold must be positive');
+  if (!rehearsal && below !== ACTION_THRESHOLD)
+    throw Error('A real probe uses the normal action threshold');
+  server ??= new rpc.Server('https://soroban-testnet.stellar.org', { timeout: 15000 });
+  if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
+    throw Error('Refusing to run: not Testnet');
+  // A rides along deliberately. A run containing only a refusal cannot show that
+  // the engine was working — "refused everything" and "decided nothing" look alike.
+  const config = {
+    network: { rpcUrl: 'in-memory', networkPassphrase: Networks.TESTNET },
+    defaults: { bumpWhenRemainingLedgersBelow: below, extendToLedgers: 518_400 },
+    contracts: [
+      { id: A, label: 'guinea-pig-A', payer: 'none' },
+      { id: subject.contractId, label: subject.label, payer: 'none' },
+    ],
+    payers: {},
+    mode: 'dry-run',
+  };
 
-const refusal = run.decisions.find(
-  (d) => d.reason.includes('REFUSED BY WRITE GUARD') && d.contracts?.includes(subject.contractId),
-);
-
-console.log('');
-if (refusal) {
-  console.log(`✓ ${subject.label} was REFUSED BY WRITE GUARD, and the refusal is in this record.`);
-  console.log(
-    '  Commit this output under docs/evidence/ — an artifact is a log, a commit is evidence.',
-  );
-} else {
-  const seen = run.decisions.some((d) => d.contracts?.includes(subject.contractId));
-  console.log(
-    seen
-      ? `ℹ ${subject.label} was seen but is still above the threshold, so nothing was attempted and\n` +
-          '  the guard was never consulted. Before the crossing this is correct. ON THE DAY it means\n' +
-          '  the crossing has not happened yet — re-run later, do not lower the threshold to force it.'
-      : `✖ ${subject.label} did not appear in the run at all. That is the defect this probe exists for;\n` +
-          '  do not proceed until it does.',
-  );
+  const run = await runEngine(createRpcReader(server), config);
+  return {
+    subject: label,
+    contractId: subject.contractId,
+    below,
+    rehearsal,
+    observedAt: now().toISOString(),
+    run,
+  };
 }
-console.log('\nNothing was signed and nothing was submitted.');
+export function formatCrossingProbe(probe) {
+  const { run, below, rehearsal, observedAt } = probe;
+  const subject = protectedSubject(probe.subject);
+  const lines = [];
+  const emit = (value) => lines.push(value);
+  emit(`# ${subject.label} crossing probe`);
+  emit(`observed:   ${observedAt}`);
+  emit(`subject:    ${subject.contractId}`);
+  emit(`expires:    ${subject.expiresOn} (alert threshold ${subject.alertThresholdOn})`);
+  emit(
+    `threshold:  ${below.toLocaleString('en-US')} ledgers${rehearsal ? '  ⚠ RAISED — rehearsal, not the real crossing' : ''}`,
+  );
+  emit(`mode:       ${run.mode}   decisions: ${run.decisions.length}\n`);
+
+  for (const d of run.decisions) {
+    emit(`${d.action.toUpperCase().padEnd(6)} ${d.entryKey}`);
+    emit(`       ${d.reason}`);
+  }
+
+  const refusal = run.decisions.find(
+    (d) => d.reason.includes('REFUSED BY WRITE GUARD') && d.contracts?.includes(subject.contractId),
+  );
+
+  emit('');
+  if (refusal) {
+    emit(`✓ ${subject.label} was REFUSED BY WRITE GUARD, and the refusal is in this record.`);
+    emit('  Commit this output under docs/evidence/ — an artifact is a log, a commit is evidence.');
+  } else {
+    const seen = run.decisions.some((d) => d.contracts?.includes(subject.contractId));
+    emit(
+      seen
+        ? `ℹ ${subject.label} was seen but is still above the threshold, so nothing was attempted and\n` +
+            '  the guard was never consulted. Before the crossing this is correct. ON THE DAY it means\n' +
+            '  the crossing has not happened yet — re-run later, do not lower the threshold to force it.'
+        : `✖ ${subject.label} did not appear in the run at all. That is the defect this probe exists for;\n` +
+            '  do not proceed until it does.',
+    );
+  }
+  emit('\nNothing was signed and nothing was submitted.');
+  return lines.join('\n') + '\n';
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const rehearsal = process.env.BELOW !== undefined;
+  const result = await runCrossingProbe({
+    subject: (process.env.SUBJECT ?? 'B').toUpperCase(),
+    below: Number(process.env.BELOW ?? ACTION_THRESHOLD),
+    rehearsal,
+  });
+  console.log(formatCrossingProbe(result).trimEnd());
+}
