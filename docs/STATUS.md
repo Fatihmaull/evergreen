@@ -9,7 +9,11 @@
 
 ---
 
-## Current — Deliverable 1 row 3 met; D17 channels merged
+## Current — W3-D17-05 failure validation reconciliation
+
+Failure evidence PR #146 now targets main directly; its runtime dependencies are already merged in #142–#144 and diagnostic correction #152. The save-proof harness #145 is not a functional dependency. The historical receipts remain unchanged. The old one-alert assertion was reproduced failing (2 versus 1) and corrected to require both the failed-bump alert and distinct EXECUTION_INCOMPLETE diagnostic with unique IDs. Full pnpm check passed: 750 Vitest + 89 Node = 839 tests. D17-05 acceptance is carried by #146, not by the unmerged save harness. No live email or transaction is repeated.
+
+## Earlier — Deliverable 1 row 3 met; D17 channels merged
 
 **SOW §6.1 row 3 is met.** Fatih's terminal captures are committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md): four entry types, both output modes, cost, archive prediction, and the three-contract scan that resolves the shared code entry to `shared with 2 other contracts`. Deliverable 1 now stands at **three of four rows met**; row 2 (npm publish) is `W4-D27-02`, ~Sep 29, and remains correctly open.
 
