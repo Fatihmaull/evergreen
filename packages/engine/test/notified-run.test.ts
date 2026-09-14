@@ -120,4 +120,14 @@ describe('notified execution boundary', () => {
     expect(r.exitCode).toBe(2);
     expect(s.delivery.deliver).not.toHaveBeenCalled();
   });
+  it('persists an alert preflight failure before returning', async () => {
+    const s = setup();
+    s.delivery.preflight.mockRejectedValue(new Error('invalid sink'));
+    const r = await runWithAlerts({ runId: 'test', ...s });
+    expect(s.journal.execution).toHaveBeenCalledWith({
+      runFailure: { stage: 'alerts', code: 'ALERT_PREFLIGHT_FAILED' },
+    });
+    expect(r.storageComplete).toBe(true);
+    expect(s.execute).not.toHaveBeenCalled();
+  });
 });

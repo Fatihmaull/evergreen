@@ -68,7 +68,7 @@ test('proof scope excludes B and an excessive fee cap even with a matching confi
       (c) => (c.contracts[0].id = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ'),
       (c) => (c.payers['bot-testnet'].maxFeeStroops = '2000001'),
     ]) {
-      const c = structuredClone(s.c);
+      const c = globalThis.structuredClone(s.c);
       mutate(c);
       const raw = JSON.stringify(c);
       await writeFile(s.manifest.configPath, raw);

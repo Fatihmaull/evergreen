@@ -64,7 +64,14 @@ export async function runWithAlerts(options: {
   try {
     await journal.start(runId);
     stage = 'alerts';
-    await delivery?.preflight();
+    try {
+      await delivery?.preflight();
+    } catch {
+      runFailure = { stage: 'alerts', code: 'ALERT_PREFLIGHT_FAILED' };
+      stage = 'persist';
+      await journal.execution({ runFailure });
+      return { runId, runFailure, alertReceipts, storageComplete: true, exitCode: 2 };
+    }
     try {
       stage = 'execute';
       execution = await options.execute();

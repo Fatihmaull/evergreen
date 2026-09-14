@@ -36,7 +36,9 @@ test('a config failure reaches the actual wrapper and email adapter without a fa
           ],
         fetchImpl: async () => {
           requests++;
-          return new globalThis.Response(JSON.stringify({ id: '49a3999c-0ce1-4ea6-ab68-afcd6dc2e794' }));
+          return new globalThis.Response(
+            JSON.stringify({ id: '49a3999c-0ce1-4ea6-ab68-afcd6dc2e794' }),
+          );
         },
         rpcFactory: () => {
           throw new Error('No RPC should be created');
