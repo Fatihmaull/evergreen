@@ -1,25 +1,23 @@
-# W3 Stage 1 implementation — 2026-09-14
+# W3 Stage 1 execution and alerts — implementation
 
-Implementation and relevant e2e proof are complete locally. [Internal review](W3-D17-05-REVIEW.md) subsequently reproduced and fixed three P2 defects; 826 tests now pass. Publication remains separate. Nothing from W3 Stage 1 has been pushed, published or merged.
-Base is the existing EmailChannel #137, not a rebuild of it. Core execution,
-Signer, guards, confirmation and truthful templates are reused.
+Implementation, internal review and relevant e2e evidence are complete and published
+in task PRs #142–#147. [Publication report](W3-NOTIFICATIONS-PUBLICATION.md) records
+heads, tracking and acceptance boundaries. Fatih review/merge remains separate.
+The existing core execution, Signer, guards, confirmation and templates are reused.
 
-## Delivered slices
-
-| Slice | Local branch | Delivered |
+| Task / component | Published PR | Behavior |
 | --- | --- | --- |
-| Alert events | feat/W3-D17-05-alert-events | Outcome/liveness event mapping, severity, per-key dedup |
-| Alert runner | feat/W3-D17-05-alert-runner | Execution once; persisted result before notification intent/receipt; explicit sends |
-| Scheduler watcher | feat/W3-D17-05-scheduler-watch | GitHub actual-job observer, finite local timer, persistent incident dedup |
-| Save-proof harness | feat/W3-D18-02a-proof-runner | Pinned code/config, A-only bounded campaign, retained attempt and RPC capture |
-| Failure validation | test/W3-D17-05-failure-proof | Real failure emails through injected RPC/history and the actual runner/watcher |
-| Scheduled-save evidence | evidence/W3-D18-02a-live-alert-proof | Scheduled Testnet A save, success/liveness inbox proof, full evidence |
+| W3-D17-05: event mapping | [#142](https://github.com/Fatihmaull/evergreen/pull/142) | Truthful success/unconfirmed/failure/liveness events with per-key precedence |
+| W3-D17-05: alert runner | [#143](https://github.com/Fatihmaull/evergreen/pull/143) | Execute once; persist result before notification intent and receipt |
+| W3-D17-05: scheduler observer | [#144](https://github.com/Fatihmaull/evergreen/pull/144) | Actual job timestamps, finite local window, durable incident dedup |
+| W3-D18-02a: proof harness | [#145](https://github.com/Fatihmaull/evergreen/pull/145) | Committed runtime/config, A-only bounded campaign, retained attempt and RPC capture |
+| W3-D17-05 / W3-D16-01: failure validation | [#146](https://github.com/Fatihmaull/evergreen/pull/146) | Real failure emails through injected RPC/history; deterministic fixture clock |
+| W3-D16-01 / W3-D17-04 / W3-D18-02a: save evidence | [#147](https://github.com/Fatihmaull/evergreen/pull/147) | Scheduled Testnet A save, verified receipt/TTL, success and liveness inbox confirmation |
 
-Branches are stacked in that order on #137. Tests and docs belong with each slice;
-follow-up verification fixes are separate meaningful local commits. Before publishing,
-reconcile current GitHub heads and choose parent retargeting without rewriting Fatih's
-work. Current parent branches may need the later verification fix applied when their
-PRs are prepared. This is an implementation report, not an internal-review approval.
+PR #142 targets main. The remaining task PRs use their predecessor's branch as a
+base to keep review scope narrow; retarget children before merging/deleting parents.
+All three [internal-review corrections](W3-D17-05-REVIEW.md) are included. Fatih's
+merged #137/#138 and #139 are reconciled without dropping either export set or docs.
 
 ## Observed outcomes
 
@@ -27,50 +25,40 @@ PRs are prepared. This is an implementation report, not an internal-review appro
 injected insufficient-balance simulation failure, and missed-run detection each
 produced one real labelled email. Rakha confirmed timeout/missed-run in inbox;
 balance arrived in spam and was marked not spam. No resends or Stellar writes in
-the fault cases. The missed-run check ran from its own one-shot OS timer. A separate
-real GitHub watcher observed a late job, sent once, and deduplicated on the next
-five-minute timer invocation. That warning's inbox placement is unverified.
+the fault cases. The missed-run check ran from a one-shot OS timer. A separate real
+GitHub watcher sent one late-job warning and deduplicated its next five-minute check;
+that additional warning's inbox placement remains unverified.
 
-[Save evidence](evidence/2026-09-14-scheduled-a-save/README.md): the user-systemd timer
+[Save evidence](evidence/2026-09-14-scheduled-a-save/README.md): a user-systemd timer
 started the pinned runner one minute after arming. Exactly one A-instance extension
 succeeded: `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128`.
 Expiry increased 343,670 ledgers; 44,725 stroop was charged. Five B/C/shared control
-expiries were unchanged. Both the success message and separate shared-code refusal
-message arrived in Rakha's inbox. Exit 1 preserves the shared-entry liveness alarm.
+expiries were unchanged. Success and separate shared-code liveness emails arrived
+in Rakha's inbox. Exit 1 preserves the shared-entry alarm.
 
-The actual signed envelope, signature, receipt and metadata TTL change agree with
-the recorded result. A real explorer screenshot was captured and inspected.
-The verifier checks hashes before semantic assertions; altered result, intent,
-control expiry and timer identity are rejected even after recalculating checksums.
-The same retained campaign is refused by readiness and a fresh command process;
-no second transaction was submitted. A second OS-timer refusal test was blocked by
-automatic reviewer capacity, so it is explicitly not claimed as executed.
+The signed envelope, signature, receipt and metadata TTL change agree with the
+recorded result; an actual explorer screenshot is retained. The verifier checks
+hashes before semantic assertions and rejects altered result/intent/control/timer
+claims even after recomputing checksums. Reusing the original campaign refuses in
+the readiness gate and a fresh command process. No second transaction occurred.
+The original executing source remains 32670fe; later fixes and dependency merges
+are not retroactively claimed as that execution build.
 
-## Validation and remaining boundaries
+## Validation and remaining work
 
-Fresh full `pnpm check` passed: 731 Vitest + 91 Node = 822 tests, unchanged gates.
-Offline tests cover preflight/journal failures, unknown provider results, no resend,
-queued versus actual starts, late/missing/stalled/failed/observer-error cases,
-recovery/dedup, finite windows, changed runtime/config and retained attempts.
-The failure harness invokes the real built command in an offline subprocess.
+Fresh full integrated `pnpm check`: **743 Vitest + 95 Node = 838 tests**, unchanged
+gates. Each published integration head also passed the same full CI pipeline.
+The fixture-clock correction in #146 reproduces the local #128 recurrence with a
+1.1-second boundary delay and fixes only the test clock, preserving signer policy.
 
-- D16-01, D17-03/04/05 have local completion evidence; task ownership is unchanged.
-- D18-02a remains In progress for Shared acceptance of the local timer and publication. Its live proof has been banked; another A transaction
-  is not needed merely to repeat it.
-- Production GitHub cron remains decide-only, without a signer. Ephemeral runners
-  still need a reviewed durable pre-send journal before repeated live execution.
-- No live A proof is called natural decay. B/C ageing and shared Wasm stay protected.
-- All test timers/helper processes were stopped; temporary env copies removed.
-  Private original intent and capture remain. No ongoing watcher is promised.
-- Notion sync and coordination on #104/#130 are pending publication. No new issue
-  or comment was sent during implementation. The local package plans remain local.
+D16-01 and D17-03/04/05 have completed implementation/e2e evidence. D18-02a remains
+In progress for Fatih Shared acceptance of the local OS-timer proof in #130 and
+merge. Production GitHub cron stays decide-only, without a signer; ephemeral
+recurring live execution still needs durable pre-send state. A's threshold was
+raised deliberately, so it is never called natural decay. B/C ageing is protected.
 
-See [runbook](W3-D17-05-RUNBOOK.md) for commands, artifacts and reconciliation rules.
-
-The final gate reproduced the known execution-suite flake tracked by #128. A
-controlled 1.1-second delay exposed mismatched fixture/SDK clocks. Freezing Date
-for that suite makes the same delayed test pass; the diagnostic delay was removed.
-Only the test fixture changed, with real timers restored after each test. See
-[failure and fix](evidence/2026-09-14-stage1-failures/clock-fixture/README.md).
-No production signer validity bound or assertion was relaxed; #128 remains open
-for publication/CI verification.
+Timers/helper processes were stopped; temporary env copies removed. Original intent
+and raw evidence remain intact. Seven affected Notion rows and the Knowledge Base
+were synchronized and verified; notes distinguish published work from merged work.
+No new email, transaction or timer activation occurred during publication.
+See the [runbook](W3-D17-05-RUNBOOK.md) for operation and reconciliation rules.
