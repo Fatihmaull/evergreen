@@ -126,3 +126,52 @@ test('preview does not suppress sending and uncertain delivery stays visible wit
     await rm(root, { recursive: true, force: true });
   }
 });
+test('a temporary observer error does not reopen the same late-job incident', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'watch-observer-flap-'));
+  const now = Date.now();
+  const jobs = [
+    {
+      id: 'old',
+      status: 'completed',
+      startedAt: now - 7200000,
+      completedAt: now - 7190000,
+      conclusion: 'success',
+    },
+  ];
+  let sends = 0;
+  const opts = {
+    watchId: 'flap',
+    stateRoot: root,
+    now,
+    policy: {
+      startAt: now - 3600000,
+      endAt: now + 3600000,
+      warnMinutes: 30,
+      criticalMinutes: 360,
+      maxRunMinutes: 10,
+    },
+    readJobs: async () => jobs,
+    delivery: {
+      preflight: async () => {},
+      deliver: async () => {
+        sends++;
+        return { status: 'accepted', emailId: 'fixture' };
+      },
+    },
+  };
+  try {
+    const initial = await runSchedulerWatch(opts);
+    await runSchedulerWatch({
+      ...opts,
+      readJobs: async () => {
+        throw Error('API timeout');
+      },
+    });
+    const resumed = await runSchedulerWatch(opts);
+    assert.equal(resumed.incidentId, initial.incidentId);
+    assert.equal(resumed.status, 'deduplicated');
+    assert.equal(sends, 2); // One late-job alert, one distinct observer error.
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

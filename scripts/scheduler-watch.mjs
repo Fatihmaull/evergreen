@@ -121,11 +121,15 @@ export async function runSchedulerWatch({
     }
     const assessment = assessScheduler({ now, policy, jobs });
     if (assessment.status === 'healthy') {
-      await save({ ...state, active: null, lastAssessment: assessment });
+      await save({
+        generation: state.generation + (state.active === null ? 0 : 1),
+        active: null,
+        lastAssessment: assessment,
+      });
       return { status: 'healthy', assessment, exitCode: 0 };
     }
     if (state.active !== assessment.incidentId) {
-      state = { generation: state.generation + 1, active: assessment.incidentId };
+      state = { generation: state.generation, active: assessment.incidentId };
       await save({ ...state, lastAssessment: assessment });
     }
     const id = createHash('sha256')
