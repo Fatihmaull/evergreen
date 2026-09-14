@@ -1,3 +1,4 @@
+import { WORST_OBSERVED_SCHEDULER_GAP_MINUTES } from '@evergreen-stellar/core';
 import type { Notification } from '@evergreen-stellar/core';
 export interface WatchPolicy {
   startAt: number;
@@ -37,7 +38,14 @@ export function assessScheduler({
     p.endAt - p.startAt > 7 * 86400000 ||
     p.maxRunMinutes <= 0 ||
     p.warnMinutes < p.maxRunMinutes ||
-    p.criticalMinutes <= p.warnMinutes
+    p.criticalMinutes <= p.warnMinutes ||
+    // A critical tier below the worst gap we have actually measured would have
+    // fired on observed-normal behaviour. Declared cadence is 15 minutes;
+    // measured is a 132-minute median and a 331-minute worst case, so a
+    // plausible-looking `criticalMinutes: 30` alarms continuously and the
+    // fatigue hides the outage this watcher exists to catch. The floor is the
+    // measurement, not a guess, and it lives in core so there is one copy.
+    p.criticalMinutes < WORST_OBSERVED_SCHEDULER_GAP_MINUTES
   )
     throw new Error('Invalid finite watcher policy');
   const base = {

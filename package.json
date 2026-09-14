@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:crossing-capture",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:failure-rehearsal && pnpm test:crossing-capture",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -53,6 +53,7 @@
     "test:alert-journal": "node --test --test-isolation=none scripts/run-journal.test.mjs",
     "scheduler:watch": "pnpm build && node scripts/scheduler-watch.mjs",
     "test:scheduler-watch": "node --test --test-isolation=none scripts/scheduler-watch.test.mjs",
+    "test:failure-rehearsal": "node --test --test-isolation=none scripts/rehearse-engine-alerts.test.mjs",
     "capture:crossing": "node scripts/capture-crossing-probe.mjs",
     "verify:crossing": "node scripts/verify-crossing-capture.mjs",
     "test:crossing-capture": "node --test --test-isolation=none scripts/capture-crossing-probe.test.mjs scripts/verify-crossing-capture.test.mjs"

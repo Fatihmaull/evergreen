@@ -1,0 +1,296 @@
+{
+  "injection": {
+    "scenario": "insufficient-balance",
+    "runId": "paket-a-balance-live-20260914",
+    "injectedRpc": true,
+    "stellarNetworkRequests": 0,
+    "emailRequests": 1,
+    "injectedFailures": 1,
+    "rpcMethods": [
+      "getNetwork",
+      "getLedgerEntries",
+      "getLedgerEntries",
+      "getLedgerEntries",
+      "getLedgerEntries",
+      "getLedgerEntries",
+      "getLedgerEntries",
+      "getNetwork",
+      "getLedgerEntries",
+      "simulateTransaction"
+    ]
+  },
+  "result": {
+    "runId": "paket-a-balance-live-20260914",
+    "execution": {
+      "preview": {
+        "scan": {
+          "network": "testnet",
+          "contracts": [
+            {
+              "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+              "label": "guinea-pig-A"
+            }
+          ],
+          "entries": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "kind": "instance",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "observedAtLedger": 4512641,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 4512691,
+                "remainingLedgers": 50
+              }
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "kind": "code",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "observedAtLedger": 4512641,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 4517641,
+                "remainingLedgers": 5000
+              }
+            }
+          },
+          "issues": [
+            {
+              "kind": "sharing-undetermined",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+              "observedAtLedger": 4512641,
+              "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+            },
+            {
+              "kind": "coverage-limited",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "message": "No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract."
+            }
+          ],
+          "coverage": {
+            "mode": "known-keys",
+            "dataKeysSuppliedByContract": {
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0
+            }
+          }
+        },
+        "decisions": [
+          {
+            "action": "extend",
+            "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "payer": "bot-testnet",
+            "extendToLedgers": 1000,
+            "reason": "CRITICAL — At or below action threshold (100 ledgers). Low, recoverable, and affects only this contract."
+          },
+          {
+            "action": "skip",
+            "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "reason": "WARNING — Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (100 ledgers); warning only, no bump needed. 5,000 ledgers remaining."
+          }
+        ],
+        "liveness": {
+          "isAlarm": true,
+          "severity": "critical",
+          "findings": [
+            {
+              "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "reason": "no-action-recorded",
+              "severity": "critical",
+              "remediation": "extend",
+              "remainingLedgers": 50,
+              "isExpired": false,
+              "detail": "Needs action (50 ledgers remain) and this run recorded nothing for it."
+            }
+          ]
+        },
+        "health": {
+          "byEntry": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "health": "critical",
+              "needsAction": true,
+              "isExpired": false,
+              "observedContractCount": 1,
+              "blastRadiusAtLeast": 1,
+              "sharingStatus": "exclusive",
+              "reason": "At or below action threshold (100 ledgers). Low, recoverable, and affects only this contract."
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "health": "warning",
+              "needsAction": false,
+              "isExpired": false,
+              "observedContractCount": 1,
+              "blastRadiusAtLeast": 1,
+              "sharingStatus": "undetermined",
+              "reason": "Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (100 ledgers); warning only, no bump needed."
+            }
+          },
+          "thresholdsByEntry": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "warnBelowLedgers": 120960,
+              "criticalBelowLedgers": 100
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "warnBelowLedgers": 120960,
+              "criticalBelowLedgers": 100
+            }
+          }
+        },
+        "mode": "dry-run"
+      },
+      "mode": "live",
+      "decisions": [
+        {
+          "action": "extend",
+          "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "payer": "bot-testnet",
+          "extendToLedgers": 1000,
+          "reason": "CRITICAL — At or below action threshold (100 ledgers). Low, recoverable, and affects only this contract."
+        },
+        {
+          "action": "skip",
+          "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "reason": "WARNING — Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (100 ledgers); warning only, no bump needed. 5,000 ledgers remaining."
+        }
+      ],
+      "records": [
+        {
+          "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "payer": "bot-testnet",
+          "before": {
+            "observedAtLedger": 4512641,
+            "endsAtLedger": 4512691
+          },
+          "extendToLedgers": 1000,
+          "recordedAt": "2026-09-14T08:23:47.643Z",
+          "reason": "Engine threshold extension",
+          "outcome": "failed",
+          "mode": "live",
+          "error": {
+            "code": "EXTENSION_FAILED",
+            "message": "Extension rejected or post-state unverified. No replacement was submitted."
+          }
+        }
+      ],
+      "previews": [],
+      "refreshes": [
+        {
+          "network": "testnet",
+          "contracts": [
+            {
+              "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            }
+          ],
+          "entries": {
+            "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+              "kind": "instance",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "observedAtLedger": 4512641,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 4512691,
+                "remainingLedgers": 50
+              }
+            },
+            "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+              "kind": "code",
+              "endBehavior": "archived",
+              "contracts": [
+                "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+              ],
+              "observedAtLedger": 4512641,
+              "ttl": {
+                "status": "known",
+                "endsAtLedger": 4517641,
+                "remainingLedgers": 5000
+              }
+            }
+          },
+          "issues": [],
+          "coverage": {
+            "mode": "known-keys",
+            "dataKeysSuppliedByContract": {
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0
+            }
+          }
+        }
+      ],
+      "liveness": {
+        "isAlarm": true,
+        "severity": "critical",
+        "findings": [
+          {
+            "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "reason": "bump-failed",
+            "severity": "critical",
+            "remediation": "extend",
+            "remainingLedgers": 50,
+            "isExpired": false,
+            "detail": "Attempted and failed (50 ledgers remain): Extension rejected or post-state unverified. No replacement was submitted.."
+          }
+        ]
+      },
+      "feesByPayer": {
+        "bot-testnet": {
+          "estimatedFeeStroops": "0",
+          "reservedFeeStroops": "0",
+          "capStroops": "2000000"
+        }
+      },
+      "warnings": [],
+      "diagnostics": [
+        {
+          "code": "EXECUTION_INCOMPLETE",
+          "message": "Execution stopped. Inspect records and reconcile any possibly-submitted hash before another attempt."
+        }
+      ],
+      "unattempted": [],
+      "ok": false,
+      "exitCode": 2
+    },
+    "alertReceipts": [
+      {
+        "id": "paket-a-balance-live-20260914:bump:AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB:failed",
+        "status": "accepted",
+        "submitted": true,
+        "emailId": "fa079cd0-3f13-41d4-a6cf-e2adb9302092",
+        "receivedInInbox": "unverified"
+      }
+    ],
+    "storageComplete": true,
+    "exitCode": 2
+  }
+}

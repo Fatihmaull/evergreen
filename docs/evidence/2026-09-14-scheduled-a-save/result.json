@@ -1,0 +1,315 @@
+{
+  "runId": "paket-a-save-20260914",
+  "execution": {
+    "preview": {
+      "scan": {
+        "network": "testnet",
+        "contracts": [
+          {
+            "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+            "label": "guinea-pig-A"
+          }
+        ],
+        "entries": {
+          "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+            "kind": "instance",
+            "endBehavior": "archived",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "observedAtLedger": 4670259,
+            "ttl": {
+              "status": "known",
+              "endsAtLedger": 6026591,
+              "remainingLedgers": 1356332
+            }
+          },
+          "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+            "kind": "code",
+            "endBehavior": "archived",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "observedAtLedger": 4670259,
+            "ttl": {
+              "status": "known",
+              "endsAtLedger": 5290829,
+              "remainingLedgers": 620570
+            }
+          }
+        },
+        "issues": [
+          {
+            "kind": "sharing-undetermined",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+            "observedAtLedger": 4670259,
+            "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+          },
+          {
+            "kind": "coverage-limited",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "message": "No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract."
+          }
+        ],
+        "coverage": {
+          "mode": "known-keys",
+          "dataKeysSuppliedByContract": {
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0
+          }
+        }
+      },
+      "decisions": [
+        {
+          "action": "extend",
+          "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "payer": "bot-testnet",
+          "extendToLedgers": 1700000,
+          "reason": "CRITICAL — At or below action threshold (1500000 ledgers). Low, recoverable, and affects only this contract."
+        },
+        {
+          "action": "skip",
+          "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "reason": "REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry."
+        }
+      ],
+      "liveness": {
+        "isAlarm": true,
+        "severity": "critical",
+        "findings": [
+          {
+            "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "reason": "no-action-recorded",
+            "severity": "critical",
+            "remediation": "extend",
+            "remainingLedgers": 1356332,
+            "isExpired": false,
+            "detail": "Needs action (1,356,332 ledgers remain) and this run recorded nothing for it."
+          },
+          {
+            "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "reason": "skipped",
+            "severity": "critical",
+            "remediation": "extend",
+            "remainingLedgers": 620570,
+            "isExpired": false,
+            "detail": "Skipped (620,570 ledgers remain): REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry.."
+          }
+        ]
+      },
+      "health": {
+        "byEntry": {
+          "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+            "health": "critical",
+            "needsAction": true,
+            "isExpired": false,
+            "observedContractCount": 1,
+            "blastRadiusAtLeast": 1,
+            "sharingStatus": "exclusive",
+            "reason": "At or below action threshold (1500000 ledgers). Low, recoverable, and affects only this contract."
+          },
+          "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+            "health": "critical",
+            "needsAction": true,
+            "isExpired": false,
+            "observedContractCount": 1,
+            "blastRadiusAtLeast": 1,
+            "sharingStatus": "undetermined",
+            "reason": "At or below action threshold (1500000 ledgers). Low. This scan saw one contract on it, but a code entry may serve others it cannot see."
+          }
+        },
+        "thresholdsByEntry": {
+          "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+            "warnBelowLedgers": 1500000,
+            "criticalBelowLedgers": 1500000
+          },
+          "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+            "warnBelowLedgers": 1500000,
+            "criticalBelowLedgers": 1500000
+          }
+        }
+      },
+      "mode": "dry-run"
+    },
+    "mode": "live",
+    "decisions": [
+      {
+        "action": "extend",
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "payer": "bot-testnet",
+        "extendToLedgers": 1700000,
+        "reason": "CRITICAL — At or below action threshold (1500000 ledgers). Low, recoverable, and affects only this contract."
+      },
+      {
+        "action": "skip",
+        "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "reason": "REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry."
+      }
+    ],
+    "records": [
+      {
+        "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "payer": "bot-testnet",
+        "before": {
+          "observedAtLedger": 4670259,
+          "endsAtLedger": 6026591
+        },
+        "extendToLedgers": 1700000,
+        "recordedAt": "2026-09-14T08:34:46.873Z",
+        "reason": "Engine threshold extension",
+        "mode": "live",
+        "outcome": "succeeded",
+        "transactionHash": "dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128",
+        "signer": {
+          "kind": "ed25519",
+          "account": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB"
+        },
+        "after": {
+          "observedAtLedger": 4670261,
+          "endsAtLedger": 6370261
+        }
+      }
+    ],
+    "previews": [
+      {
+        "entry": {
+          "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+          "kind": "instance",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "before": {
+            "observedAtLedger": 4670259,
+            "endsAtLedger": 6026591
+          },
+          "extendToLedgers": 1700000,
+          "wasCapped": false,
+          "skip": false
+        },
+        "sourceAccount": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+        "transactionXdr": "AAAAAgAAAACJSE5n7urHY8lt5ezYx6CC/3EutnKEJkLy4LCyBjVRVwAA7QsARPWvAAAABgAAAAEAAAAAAAAAAAAAAABqp7HkAAAAAAAAAAEAAAAAAAAAGQAAAAAAGfCgAAAAAQAAAAAAAAABAAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOynAAAAAA==",
+        "transactionHash": "dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128",
+        "feeStroops": "60683",
+        "simulatedAtLedger": 4670260
+      }
+    ],
+    "refreshes": [
+      {
+        "network": "testnet",
+        "contracts": [
+          {
+            "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          }
+        ],
+        "entries": {
+          "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+            "kind": "instance",
+            "endBehavior": "archived",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "observedAtLedger": 4670259,
+            "ttl": {
+              "status": "known",
+              "endsAtLedger": 6026591,
+              "remainingLedgers": 1356332
+            }
+          },
+          "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+            "kind": "code",
+            "endBehavior": "archived",
+            "contracts": [
+              "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+            ],
+            "observedAtLedger": 4670260,
+            "ttl": {
+              "status": "known",
+              "endsAtLedger": 5290829,
+              "remainingLedgers": 620569
+            }
+          }
+        },
+        "issues": [],
+        "coverage": {
+          "mode": "known-keys",
+          "dataKeysSuppliedByContract": {
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0
+          }
+        }
+      }
+    ],
+    "liveness": {
+      "isAlarm": true,
+      "severity": "critical",
+      "findings": [
+        {
+          "entryKey": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+          "contracts": [
+            "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+          ],
+          "reason": "skipped",
+          "severity": "critical",
+          "remediation": "extend",
+          "remainingLedgers": 620570,
+          "isExpired": false,
+          "detail": "Skipped (620,570 ledgers remain): REFUSED BY WRITE GUARD — Refusing to write: this would extend the SHARED ContractCode entry.."
+        }
+      ]
+    },
+    "feesByPayer": {
+      "bot-testnet": {
+        "estimatedFeeStroops": "60683",
+        "reservedFeeStroops": "60683",
+        "capStroops": "2000000"
+      }
+    },
+    "warnings": [],
+    "diagnostics": [],
+    "unattempted": [],
+    "ok": true,
+    "exitCode": 1
+  },
+  "alertReceipts": [
+    {
+      "id": "paket-a-save-20260914:bump:AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB:succeeded",
+      "status": "accepted",
+      "submitted": true,
+      "emailId": "07992c67-18c1-4dfe-8515-0dce865e8b21",
+      "receivedInInbox": "unverified"
+    },
+    {
+      "id": "paket-a-save-20260914:liveness:[\"AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7\",[\"CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L\"],\"skipped\"]",
+      "status": "accepted",
+      "submitted": true,
+      "emailId": "3429c29c-8c8e-4638-b2f7-cbd99df5277c",
+      "receivedInInbox": "unverified"
+    }
+  ],
+  "storageComplete": true,
+  "exitCode": 1
+}

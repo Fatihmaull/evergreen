@@ -150,7 +150,11 @@ different ledgers; the totals agree because the quote is for the same work.
 
 ## The threshold line changed after these were captured
 
-**Stated here rather than left for a reviewer to notice.** These captures print:
+**These images are what `00ba2a9` produced on 2026-09-14.** That is the point of naming the
+commit: it turns a difference between the screenshots and today's binary from a discrepancy
+a reviewer has to resolve into a dated fact they can check out and reproduce.
+
+These captures print:
 
 ```
 Worst entry health: HEALTHY (threshold 17,280 ledgers)

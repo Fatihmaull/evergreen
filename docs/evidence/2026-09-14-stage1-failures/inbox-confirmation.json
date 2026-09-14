@@ -1,0 +1,7 @@
+{
+  "source": "Rakha confirmation in this session, 2026-09-14",
+  "rpc-timeout": "received in inbox",
+  "missed-run": "received in inbox",
+  "insufficient-balance": "received in spam, recipient marked not spam",
+  "resends": 0
+}

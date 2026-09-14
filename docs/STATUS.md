@@ -9,13 +9,24 @@
 
 ---
 
-## Current — W3-D18-03 crossing capture publication
+## Current — W3-D17-05 closed; D17-04 evidence landed
+
+**`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
+
+**`W3-D17-04` has its evidence, and acceptance is Fatih's.** #147 carries the success/liveness receipts and #146 the failure receipts; the gate needs both and neither alone. No live email or transaction was repeated to publish either — the original A transaction and its receipts are preserved as recorded.
+
+**`W3-D18-02a` remains In progress** pending Shared acceptance in #130. No Shared acceptance is inferred from a code merge or from B/C control confirmation. **#145** — the reusable save harness — and **#155** — B/C observation capture, which is Saturday's machinery and wants to be in well before the crossing — are the two still open.
+
+The corrected pre-flight stands: September 18 readiness, a real-threshold probe with `BELOW` unset, explicit manual-versus-scheduled provenance, and the C crossing capture the unchanged date gate requires. Isolated fixtures verified B-only red, B+C green, C rehearsal red.
+
+## Earlier — Deliverable 1 row 3 met; D17 channels merged
+
+## Earlier — W3-D18-03 crossing capture published
 
 Read-only B/C collector, offline verifier and operator instructions are reviewed and published in [PR #155](https://github.com/Fatihmaull/evergreen/pull/155) from `feat/W3-D18-03-crossing-capture`, directly against main `91ad650` (#154). Full post-review `pnpm check` passed (852 tests), including cross-locale gate regression. [Raw preparation captures](evidence/2026-09-14-bc-capture-preparation/README.md) preserve the original source `2ac20f4` and bytes; B/C remain before action and the B rehearsal cannot qualify. No new transaction, email or timer was run.
 
-D18-03 remains In progress; actual crossings/expiry and Shared acceptance remain outstanding. PRs #145–#147 are still open. The identical test-only fixture clock correction overlaps #146; retain it once when merging. See [implementation](W3-D18-03-IMPLEMENTATION.md), [operator guide](W3-D18-03-CAPTURE.md) and [closed internal review](W3-D18-03-REVIEW.md). Notion D18-03 is synced to In progress with the PR outcome. Full presence check: 148 checkbox tasks + one standing obligation + one retired ID match all 150 Notion rows; no missing or phantom IDs. Fatih review/merge remains pending.
+D18-03 remains In progress; actual crossings/expiry and Shared acceptance remain outstanding. #146 and #147 have since merged; #145 remains open. The identical test-only fixture clock correction arrived with #146; it is retained once. See [implementation](W3-D18-03-IMPLEMENTATION.md), [operator guide](W3-D18-03-CAPTURE.md) and [closed internal review](W3-D18-03-REVIEW.md). Notion D18-03 is synced to In progress with the PR outcome. Full presence check: 148 checkbox tasks + one standing obligation + one retired ID match all 150 Notion rows; no missing or phantom IDs.
 
-## Current — Deliverable 1 row 3 met; D17 channels merged
 
 **SOW §6.1 row 3 is met.** Fatih's terminal captures are committed at [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md): four entry types, both output modes, cost, archive prediction, and the three-contract scan that resolves the shared code entry to `shared with 2 other contracts`. Deliverable 1 now stands at **three of four rows met**; row 2 (npm publish) is `W4-D27-02`, ~Sep 29, and remains correctly open.
 
