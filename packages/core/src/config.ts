@@ -7,7 +7,7 @@ import type {
   TestnetPassphrase,
 } from '@evergreen-stellar/shared-types';
 import { DEFAULT_WARN_LEDGERS, resolveHealthThresholds } from './health.js';
-import { needsAction } from './ttl.js';
+import { needsAction, SECONDS_PER_LEDGER } from './ttl.js';
 import { isValidPayerAccount } from './ed25519-signer.js';
 
 /**
@@ -167,6 +167,62 @@ function parsePayer(value: unknown, id: string): PayerConfig {
   throw new ConfigError(`payers.${id}.signer must be "ed25519" or "policy".`);
 }
 
+/**
+ * The shortest action window a scheduler can actually serve.
+ *
+ * Two configurable numbers have to stand in a relation and nothing enforced it:
+ * the action threshold decides how much warning the engine gets, and the
+ * SCHEDULER decides how often it can act on that warning. Set a threshold
+ * shorter than the scheduler's worst gap and the engine silently never fires
+ * inside its own window — no error, no alarm, an entry archiving while every
+ * run reports healthy.
+ *
+ * Measured 2026-09-14 across two independent workflows: GitHub Actions delivers
+ * ~7.5% of a declared 15-minute cron, **worst observed gap 331 minutes**
+ * (docs/evidence/2026-09-14-scheduler-cadence). The constraint comes from the
+ * scheduler, not from the protocol, and the message says so — a user who reads
+ * "too low" as a Soroban rule will go looking in the wrong documentation.
+ *
+ * Four worst-gaps is the floor: one to notice, and three to survive the failures
+ * that made the gap worst in the first place. At 5 s/ledger that is 15,888
+ * ledgers, which is why the 17,280 default (a full day) clears it and a
+ * "couple of hours" threshold does not.
+ */
+const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 331;
+const MIN_ACTION_RUNS_IN_WINDOW = 4;
+export const MIN_SAFE_ACTION_WINDOW_LEDGERS = Math.ceil(
+  (WORST_OBSERVED_SCHEDULER_GAP_MINUTES * MIN_ACTION_RUNS_IN_WINDOW * 60) / SECONDS_PER_LEDGER,
+);
+
+/**
+ * Warns rather than refuses. A short threshold is legitimate on a scheduler we
+ * have not measured — someone self-hosting on a real cron gets minutes, not
+ * hours — so refusing would block a correct configuration. But it is silent
+ * failure if nobody says anything, and this is the config loader's one chance.
+ */
+function warnIfBelowSchedulerFloor(
+  // NOT a TTL policy comparison, and named so the lint rule can tell. This
+  // compares a CONFIGURED WINDOW against a SCHEDULER FLOOR — neither side is a
+  // remaining TTL. Renaming rather than disabling the rule: a suppression here
+  // would be indistinguishable from a suppression on a real policy comparison.
+  configuredActionLedgers: number,
+  path: string,
+  warnings: string[],
+): void {
+  if (configuredActionLedgers >= MIN_SAFE_ACTION_WINDOW_LEDGERS) return;
+  const hours = ((configuredActionLedgers * SECONDS_PER_LEDGER) / 3600).toFixed(1);
+  warnings.push(
+    `⚠ ${path}.bumpWhenRemainingLedgersBelow is ${configuredActionLedgers.toLocaleString()} ledgers ` +
+      `(~${hours}h of warning), below the ${MIN_SAFE_ACTION_WINDOW_LEDGERS.toLocaleString()} ` +
+      'needed for the engine to act reliably.\n' +
+      '  This is a SCHEDULER limit, not a Soroban one. GitHub Actions was measured on ' +
+      '2026-09-14 delivering ~7.5% of a declared 15-minute cron, worst gap 331 minutes.\n' +
+      '  A window this short can close between runs: the entry archives while every run ' +
+      'reports healthy, with no error anywhere.\n' +
+      '  Raise the threshold, or run the engine on a scheduler whose worst gap you have measured.',
+  );
+}
+
 export function loadConfig(raw: string): ConfigLoadResult {
   assertNoSecrets(raw);
 
@@ -199,6 +255,7 @@ export function loadConfig(raw: string): ConfigLoadResult {
     extendToLedgers: requireLedgerCount(defaults.extendToLedgers, 'defaults.extendToLedgers'),
   };
   validateThresholdPair(thresholds, undefined, 'defaults', warnings);
+  warnIfBelowSchedulerFloor(thresholds.bumpWhenRemainingLedgersBelow, 'defaults', warnings);
 
   const payersRaw = requireRecord(root.payers, 'payers');
   const payers: Record<string, PayerConfig> = {};
