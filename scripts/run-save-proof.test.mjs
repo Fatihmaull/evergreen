@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { checkSaveProof } from './check-save-proof-readiness.mjs';
+import { runSaveProof } from './run-save-proof.mjs';
+import process from 'node:process';
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 async function setup() {
   const root = await mkdtemp(join(tmpdir(), 'save-proof-'));
@@ -103,6 +105,60 @@ test('proof refuses a campaign that omits a changed runtime dependency from its 
     await writeFile(join(s.root, 'scripts/engine-recorder.mjs'), 'changed dependency');
     await assert.rejects(checkSaveProof({ ...s.manifest, files }), /manifest|Runtime/i);
   } finally {
+    await rm(s.root, { recursive: true, force: true });
+  }
+});
+
+/**
+ * Two guards on the live-submit path that survived mutation.
+ *
+ * Found 2026-09-15: making `submit` default to true, and removing the
+ * alerts-plus-systemd requirement, each left all four tests green. Neither is
+ * redundant with anything else — the readiness gate runs in both cases and
+ * passes, because a valid manifest inside its window is precisely the state in
+ * which these two are the only things left saying "not like this".
+ *
+ * They matter because this is the one harness in the repo that can actually
+ * submit. "Dry-run is the default; live submission requires an explicit flag" is
+ * a standing rule, and a default is not a rule until something fails when it
+ * moves.
+ *
+ * Both assertions land before any execution: the readiness gate and the
+ * alerts/invocation check both run ahead of the capture directory being made, so
+ * this never invokes the runtime the fixture only pretends to be.
+ */
+test('🔴 submit is opt-in, and a live submit needs alerts and a recorded invocation', async () => {
+  const s = await setup();
+  const manifestPath = join(s.root, 'campaign.json');
+  await writeFile(manifestPath, JSON.stringify(s.manifest));
+  const invocation = process.env.INVOCATION_ID;
+  delete process.env.INVOCATION_ID;
+  try {
+    // --submit is refused without --send-alerts: a live send is never silent.
+    await assert.rejects(
+      runSaveProof(manifestPath, { submit: true }),
+      /alerts and a recorded systemd invocation/,
+    );
+    // With alerts but no systemd invocation, still refused — a live submit stays
+    // attributable to a timer rather than to somebody's shell.
+    await assert.rejects(
+      runSaveProof(manifestPath, { submit: true, sendAlerts: true }),
+      /alerts and a recorded systemd invocation/,
+    );
+
+    // The default must not take the live branch. An unreconciled attempt file
+    // makes the live readiness gate reject with a distinctive message, so the
+    // default calling that branch would be visible here.
+    await writeFile(s.manifest.attemptFile, 'intent');
+    await assert.rejects(runSaveProof(manifestPath, { submit: true }), /reconciled/);
+    await assert.rejects(
+      runSaveProof(manifestPath),
+      (e) => !/reconciled/.test(String(e?.message ?? e)),
+      'default must not run the live readiness branch',
+    );
+  } finally {
+    if (invocation === undefined) delete process.env.INVOCATION_ID;
+    else process.env.INVOCATION_ID = invocation;
     await rm(s.root, { recursive: true, force: true });
   }
 });

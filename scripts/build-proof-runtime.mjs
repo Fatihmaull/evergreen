@@ -3,14 +3,23 @@ import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
+import { tmpdir } from 'node:os';
 import console from 'node:console';
 // No secrets copied. Dependencies use the already-installed, pinned pnpm package.
 const destination = resolve(process.argv[2] ?? '');
+// The guard is "a temp directory with a name we chose", not "a path beginning
+// /tmp". Hardcoding /tmp made this Linux-only: macOS `os.tmpdir()` is
+// /var/folders/<...>/T, so the destination never matched and the harness threw
+// `Use an explicit temporary runtime destination` on the one machine that has to
+// run it cold for W3-D21-01e. CI is Linux, so CI could not see it.
+//
+// Both roots are accepted rather than just `tmpdir()`: on Linux they are the
+// same path, and keeping the literal makes the Linux behaviour unchanged.
+const NAMES = ['evergreen-w3-save-runtime-', 'evergreen-paket-a-runtime-'];
+const ROOTS = [tmpdir(), '/tmp'];
 if (
   !process.argv[2] ||
-  !['/tmp/evergreen-w3-save-runtime-', '/tmp/evergreen-paket-a-runtime-'].some((prefix) =>
-    destination.startsWith(prefix),
-  )
+  !ROOTS.some((root) => NAMES.some((name) => destination.startsWith(join(resolve(root), name))))
 )
   throw Error('Use an explicit temporary runtime destination');
 const inputs = [
