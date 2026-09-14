@@ -22,6 +22,7 @@ const SAFE_CODES = new Set([
   'RPC_TIMEOUT',
   'STORAGE_FAILED',
   'ALERT_PLAN_FAILED',
+  'EXECUTION_PREFLIGHT_FAILED',
 ]);
 export function assertRunId(id: string): void {
   if (!/^[A-Za-z0-9_.-]{1,128}$/.test(id)) throw new Error('Invalid run ID');
@@ -34,7 +35,7 @@ export function runFailureAlert(runId: string, stage: AlertStage, code: string):
   assertRunId(runId);
   const safe = safeRunCode(code);
   return {
-    id: `${runId}:run-failed:${stage}`,
+    id: `${runId}:run-failed:${stage}:${safe}`,
     kind: 'run-failed',
     notification: {
       severity: 'critical',
@@ -90,7 +91,26 @@ export function planRunAlerts(
       },
     });
   }
-  if (run.diagnostics.length && alerts.length === 0)
-    alerts.push(runFailureAlert(runId, 'execute', run.diagnostics[0]!.code));
+  // Every diagnostic alerts, whether or not anything else did.
+  //
+  // This previously fired only when `alerts.length === 0`, which made a
+  // run-level failure silent exactly when it was most dangerous: execution
+  // pushes EXECUTION_INCOMPLETE and then `break`s, so entries bumped before the
+  // stop have already produced success alerts. The operator was told about the
+  // bumps that worked and never told that the run stopped with a possibly
+  // submitted hash left to reconcile.
+  //
+  // W3-D17-05 is explicit — each failure must alert, not fail silently — and a
+  // gate cannot ship while a known case makes its own requirement false.
+  //
+  // Deduplicated by sanitized code so a repeated diagnostic does not fan out,
+  // and the sanitizing is what keeps provider text out of an email.
+  const reported = new Set<string>();
+  for (const diagnostic of run.diagnostics) {
+    const safe = safeRunCode(diagnostic.code);
+    if (reported.has(safe)) continue;
+    reported.add(safe);
+    alerts.push(runFailureAlert(runId, 'execute', safe));
+  }
   return alerts;
 }

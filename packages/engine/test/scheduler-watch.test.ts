@@ -76,4 +76,42 @@ describe('independent schedule observation', () => {
       }).status,
     ).toBe('observer-error');
   });
+  /**
+   * The policy invariants, which nothing else defends.
+   *
+   * Added 2026-09-14 after a commissioned mutation: deleting
+   * `p.warnMinutes < p.maxRunMinutes` from the validation left all five tests
+   * green, and a job legitimately still running at 7 minutes under
+   * `warn=5, maxRun=10` then reports `late/warn` — a permanent false alarm on a
+   * healthy scheduler. That is the failure this watcher exists to distinguish
+   * from a real one, so the invariant is load-bearing and was untested.
+   *
+   * Checked against the redundancy question before adding: there is no second
+   * layer here. Removing the throw changes observable behaviour on its own.
+   */
+  it('🔴 refuses a policy that would alarm on a normally-running job', () => {
+    // warn below maxRun: anything still running is "late" before it is allowed
+    // to finish.
+    expect(() => assessScheduler({ now, policy: { ...policy, warnMinutes: 5 }, jobs: [] })).toThrow(
+      /policy/i,
+    );
+    // critical must sit strictly above warn, or the two tiers collapse and the
+    // warning horizon disappears.
+    expect(() =>
+      assessScheduler({
+        now,
+        policy: { ...policy, criticalMinutes: policy.warnMinutes },
+        jobs: [],
+      }),
+    ).toThrow(/policy/i);
+    // A window that ends before it starts silently disables the watcher.
+    expect(() =>
+      assessScheduler({ now, policy: { ...policy, endAt: policy.startAt }, jobs: [] }),
+    ).toThrow(/policy/i);
+    // The boundary itself stays legal, so this rejects bad policies rather than
+    // most policies.
+    expect(() =>
+      assessScheduler({ now, policy: { ...policy, warnMinutes: policy.maxRunMinutes }, jobs: [] }),
+    ).not.toThrow();
+  });
 });

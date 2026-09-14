@@ -276,6 +276,89 @@ The asymmetry is what makes this safe to adopt: **a "caught" result is still tru
 
 *(Audited 2026-09-10 after the stale-`dist` discovery: every `packages/core/test/*` file imports `../src/`, so all in-package mutation results — including the `W2-D13-01` config-loader guards — stand unchanged. Only the four CLI tests that import `@evergreen-stellar/core` were affected, and they have since been re-commissioned.)*
 
+### A surviving mutant is not automatically a gap
+
+The rule above says a negative usually means the mutation never landed. There is
+a **second** reason a mutation can survive with the instrument working perfectly:
+**the property is defended more than once.**
+
+*Found 2026-09-14 in `scripts/run-journal.mjs`.* Two mutations survived
+individually — `open(…, 'wx')` → `'w'`, and adding `recursive: true` to the run
+directory's `mkdir`. Neither is a missing test. Each is **separately sufficient**
+to reject a reused run ID: one fails on the directory, the other on the file.
+Removing **both together** fails the test. That is defence in depth, and mutation
+testing reports it identically to missing coverage.
+
+**The discriminating test: remove every redundant layer at once.**
+
+- something fails → the property was covered, and the individual survivors were
+  redundancy
+- nothing fails → a real gap
+
+Both outcomes have happened on the same day. In `packages/engine/src/alerts.ts`,
+dropping `safeRunCode` from the diagnostic loop survived, and removing *both*
+sanitizing calls did fail — redundant, as expected. But the loop's call turned out
+to be load-bearing for something else entirely: **deduplication**. Two different
+unknown codes both collapse to `RUN_FAILED`, so keying on the raw code emits two
+alerts carrying one event id, and the journal's exclusive create then turns the
+second into a `STORAGE_FAILED`. Redundant for one purpose, load-bearing for
+another, in the same expression.
+
+So the question is not *"is this line covered"* but *"what does this line do that
+nothing else does"* — and the answer can be narrower than the line looks.
+
+**This is the counterweight to the layered-defence rule, and the two are easy to
+confuse.** That one says inner layers are untested by construction when an outer
+layer rejects first. This one says a layer that *looks* untested may be a
+redundant one. Both are true, and the all-layers-removed check tells them apart.
+
+### Before arming a gate, prove its demand can be satisfied by the allowed path
+
+**A gate whose demand is unsatisfiable is not strict. It is broken — and it
+breaks on exactly the day it was built for.**
+
+*`check-crossing-evidence.mjs`, armed 2026-09-12, found 2026-09-14, two days before
+it would have fired.* It fails `pnpm check` from guinea-pig B's alert threshold
+onward until a committed file contains `REFUSED BY WRITE GUARD` for B. Three
+things had to hold for that to be obtainable, and one did not:
+
+- `docs/SEP-20-PREFLIGHT.md` said to leave B in `_doNotWatch` because *"the engine
+  still scans and decides, the guard still refuses"*
+- `_doNotWatch` is **documentation** — `config.ts` says so — and `runEngine`
+  iterates `contracts`
+- measured against the real dogfood config: **2 decisions, A's instance and the
+  shared code entry, B absent, no refusal anywhere**
+
+So the cron could never emit the line, the pre-flight's §6 forbade the config edit
+that would produce one, and `pnpm check` would have been red from Sep 20 with no
+legal way to make it green — on the single unrepeatable date in the sprint.
+
+It was found by **measuring the path rather than reading the document that
+described it**. The document was confident and wrong, and had been for two days.
+
+So, when arming any date- or state-triggered gate: **run the allowed path and
+watch the artifact appear, before the gate is armed.** Not the intended path —
+the one the rules actually permit.
+
+### The fix for a check can defeat the check
+
+*Same day, immediately after the above.* The repair for the crossing gate was an
+in-memory probe that produces the refusal without moving B into `contracts`. Its
+rehearsal output was committed as evidence — and that file contained B's contract
+ID and the string `REFUSED BY WRITE GUARD`, which **was the entire matching rule.**
+The gate went green for 2026-09-20 while the real crossing was still six days away.
+
+A gate that cannot tell a rehearsal from the event reports success for the event
+without it happening, quietly, on a green check nobody re-reads.
+
+Repaired with two independent rules — the evidence directory must be dated on or
+after the threshold, **and** a file carrying the rehearsal marker never counts —
+commissioned in four directions, including the case that broke it.
+
+**After changing a check, re-run the case the check exists to catch.** A check is
+not a test of itself, and the most likely thing to disarm it is the commit that
+was trying to help it.
+
 ### Publish exactly one package
 
 `core` and `shared-types` are **bundled into the CLI and never published**. They stay `private: true` permanently and live in the CLI's `devDependencies`, not its `dependencies`.
