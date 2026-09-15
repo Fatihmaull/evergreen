@@ -37,7 +37,7 @@ is untouched and no timer was activated. No new A proof or B/C/shared-Wasm write
 Merged as #160 after review; the escalation test was strengthened to fail when the escalation is removed. Publishes implementation, review and evidence; Fatih review/merge is pending. Notion D15-02b is Done for verified implementation with PR state explicit. Full presence diff: 148 checkbox tasks, one standing obligation and one mirrored retired ID match 150 rows; no missing or phantom IDs.
 
 
-## Current — W3-D17-05 closed; D17-04 evidence landed
+## Earlier — W3-D17-05 closed; D17-04 evidence landed
 
 **`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
 
