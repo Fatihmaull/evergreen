@@ -219,6 +219,28 @@ the sprint. The fallback is therefore stated rather than assumed:
   so the fallback needs no credentials and can do no harm. **The only way to lose
   the evidence is for nobody to run it.**
 
+### 5d. The watcher config that actually starts
+
+**Use [`ops/weekend-watch.json`](../ops/weekend-watch.json).**
+
+```bash
+pnpm scheduler:watch --config ops/weekend-watch.json --send-alerts
+```
+
+The readiness bundle's `watch.json` sets `warnMinutes: 30`, which the floor added
+in #169 rejects — the watcher **throws on startup** and does not run, for the whole
+window including Sunday. Verified: that config exits 2, this one exits 0 and
+reports `inactive` until the window opens.
+
+Only `warnMinutes` differs (30 → 420, between the measured worst gap and the
+agreed bound). Everything else — window, `criticalMinutes`, `maxRunMinutes`,
+repository, workflow, job — is unchanged from the readiness config, and its
+`stateRoot` is repo-relative so the fallback operator in §5b can run it too.
+
+It is a **stand-in**, written so nobody had to wait for a config to be corrected.
+If Rakha ships his own, use that and delete this one. The evidence bundle is
+untouched.
+
 ### 5c. 🔴 If Sunday is missed — C is the only second shot
 
 Written here because somebody discovering this on Sunday night will improvise,

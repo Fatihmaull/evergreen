@@ -278,6 +278,53 @@ The asymmetry is what makes this safe to adopt: **a "caught" result is still tru
 
 *(Audited 2026-09-10 after the stale-`dist` discovery: every `packages/core/test/*` file imports `../src/`, so all in-package mutation results — including the `W2-D13-01` config-loader guards — stand unchanged. Only the four CLI tests that import `@evergreen-stellar/core` were affected, and they have since been re-commissioned.)*
 
+### Before injecting a fault, ask what else your injection changes
+
+**Three times now, the thing done to create a test condition created a different
+condition, and the different one fired first.**
+
+| What was injected | What else it changed | What fired instead |
+|---|---|---|
+| a scenario's upstream failure | — | shadowed the two barriers below it |
+| a hand-built ledger key | the key was invalid | a different clause threw before the guard |
+| an error thrown from a source file | the working tree became dirty | the dirty-tree guard, before the error |
+
+Same shape every time, and the third one bit a test **of a fix** rather than of
+the code — the most expensive place for it, because a shadowed result reads as
+"the fix works".
+
+So it is a pre-check, not a diagnosis. **Before injecting, ask what else the
+injection method changes, then ask what guards read that.** Deleting a tracked
+file dirties the tree. Editing one dirties the tree. Hand-building an input
+produces an invalid input. Raising a threshold moves two comparisons, not one.
+
+Answering that before the run costs a sentence. Answering it afterwards means
+re-reading a result you already believed.
+
+### Never tidy the output of a step whose failure you need to see
+
+**Four instances, and the motive was tidiness every single time:**
+
+| Construct | What it hid |
+|---|---|
+| `>/dev/null` on `gh pr merge` | a merge that did not happen, reported as done |
+| `grep` over an empty directory | a secret scan that scanned nothing, reported clean |
+| `$?` after a pipe | `head`'s exit status, not the command's — reported 0 for an exit 3 |
+| `tail -3` on merge output | three unmerged files, leading to a `commit` that could not run |
+
+Each of these is **fine in a step you are not depending on** and a hazard in a
+step you are. Pipes replace exit codes, redirects discard errors, `head` and
+`tail` truncate, and an empty glob matches nothing silently.
+
+So the rule is a condition rather than a prohibition: **if you are about to act on
+whether a step succeeded, do not put anything between it and you.** Redirect to a
+file and read the file; capture `PIPESTATUS`; count what you globbed before
+trusting that it matched nothing.
+
+The related positive habit: **prove the instrument on a known-positive first.**
+A secret scanner gets a planted decoy before its clean result is believed — a
+clean result and a broken instrument are identical output.
+
 ### A surviving mutant is not automatically a gap
 
 The rule above says a negative usually means the mutation never landed. There is
