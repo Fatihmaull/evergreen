@@ -17,8 +17,8 @@ the day.
 
 | | |
 |---|---|
-| **On the day** | Fatih |
-| **Backstop** | Rakha, if Fatih is unreachable |
+| **On the day** | Rakha — Sep20 and Sep21, each requiring explicit availability confirmation (§5b) |
+| **Backstop** | Fatih is reachable; apply the fallback in §5b if Rakha has not checked in |
 
 ### 🔴 Dispatch by hand at 12:00 UTC. Do not wait for the scheduler.
 
