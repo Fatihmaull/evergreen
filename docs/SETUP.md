@@ -63,6 +63,10 @@ git clone https://github.com/Fatihmaull/evergreen.git && cd evergreen
 pnpm install
 test -e .env || (umask 077 && cp .env.example .env)
 # Fill in missing secrets locally; preserve an existing .env.
+# Preserving it is correct AND silent: an .env from last month can be missing
+# variables added to .env.example since, and nothing says so. This prints them.
+# No output means nothing is missing.
+comm -13 <(grep -oE '^[A-Z_]+' .env | sort -u) <(grep -oE '^[A-Z_]+' .env.example | sort -u)
 pnpm typecheck && pnpm lint && pnpm test
 ```
 
@@ -80,7 +84,7 @@ Documented here, values only in your local `.env` / platform secret store.
 | `EMAIL_FROM` | One plain sender address; defaults to `onboarding@resend.dev` | local `.env` |
 | `EMAIL_TO` | Historical W1 recipient; ignored by W3 EmailChannel | local `.env` only |
 | `EVERGREEN_ALERT_TO` | Private EmailChannel destination selected through notifications.toEnvVar | `.env` / hosting env store |
-| `EVERGREEN_CONFIG_PATH` | Path to `evergreen.config.json` | `.env` |
+| `EVERGREEN_CONFIG_PATH` | Path to your engine config. **No `evergreen.config.json` is tracked** — the repo ships `evergreen.config.dogfood.json` (real IDs, decide-only, what the cron uses), `.example.json` and `.save-proof.json`. Point this at one of those or at your own copy. | `.env` |
 
 Use `https://soroban-testnet.stellar.org/` and the exact passphrase `Test SDF Network ; September 2015`. The quotes in `.env.example` preserve the spaces and semicolon. Load it with Node's `--env-file=.env` or an env-file parser; do not print the file or pass a secret as a command-line argument. The email smoke below is separate from the later hosted engine.
 
@@ -256,7 +260,7 @@ The old instruction was "keep them strictly out of the config." That was written
 
 **But that safety depends entirely on the configured threshold matching the calibration.** So add them as a deliberate, verified step, never as a convenience:
 
-1. Add the contract to `evergreen.config.json` with the threshold the calibration assumed (17,280 ledgers).
+1. Add the contract to your engine config — `evergreen.config.dogfood.json` for this repo's own subjects — with the threshold the calibration assumed (17,280 ledgers).
 2. Run the engine in **dry-run** and confirm it reports **no action needed** for that contract.
 3. Only then let it run live.
 
@@ -307,14 +311,14 @@ shape and outcome consistency, not chain evidence; output explicitly says
 
 ```sh
 pnpm email:notify --help
-pnpm email:notify --record .evergreen/bump-record.json --config evergreen.config.json
+pnpm email:notify --record .evergreen/bump-record.json --config evergreen.config.dogfood.json
 ```
 
 The package command builds first. For explicit local environment-file loading,
 after building, use the source-workspace script directly:
 
 ```sh
-node --env-file=.env scripts/email-notify.mjs --record .evergreen/bump-record.json --config evergreen.config.json
+node --env-file=.env scripts/email-notify.mjs --record .evergreen/bump-record.json --config evergreen.config.dogfood.json
 ```
 
 Both commands above preview only. Review the recipient and message before an
