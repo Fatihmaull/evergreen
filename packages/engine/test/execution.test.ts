@@ -173,6 +173,23 @@ describe('engine execution — real core primitives over fixture RPC', () => {
     expect(s.recorder.assertReady).not.toHaveBeenCalled();
     expect(s.recorder.record).not.toHaveBeenCalled();
   });
+  it('executes exactly a declared opted-in temporary key with verified post-state', async () => {
+    const s = setup();
+    const config = {
+      ...s.config,
+      mode: 'live' as const,
+      payers: { ...s.config.payers, first: { ...s.config.payers.first!, maxFeeStroops: '1800' } },
+      contracts: s.config.contracts.map((c) => ({
+        ...c,
+        dataKeys: [...(c.dataKeys ?? []), temporary],
+        temporaryEntryPolicies: [{ entryKey: temporary, autoExtend: true }],
+      })),
+    };
+    const result = await runEngineExecution(config, s.deps, { submit: true });
+    const record = result.records.find((r) => r.entryKey === temporary);
+    expect(record).toMatchObject({ outcome: 'succeeded' });
+    expect(result.liveness.findings.some((f) => f.entryKey === temporary)).toBe(false);
+  });
   it('executes, records intent first, and confirms the exact selected envelopes', async () => {
     const s = setup();
     const result = await runEngineExecution({ ...s.config, mode: 'live' }, s.deps, {
@@ -321,7 +338,7 @@ describe('engine execution — real core primitives over fixture RPC', () => {
     expect(result.exitCode).toBe(2);
     expect(s.rpc.simulateTransaction).not.toHaveBeenCalled();
   });
-  it('never prepares excluded temporary data', async () => {
+  it('never prepares temporary data without explicit consent', async () => {
     const s = setup();
     const result = await runEngineExecution(
       {
@@ -332,7 +349,7 @@ describe('engine execution — real core primitives over fixture RPC', () => {
     );
     expect(result.decisions.find((d) => d.entryKey === temporary)).toMatchObject({
       action: 'skip',
-      reason: expect.stringContaining('scope'),
+      reason: expect.stringContaining('Temporary retention disabled'),
     });
     expect(result.previews.map((p) => p.entry.entryKey)).not.toContain(temporary);
   });

@@ -1,3 +1,4 @@
+import { temporaryConsent } from './temporary-policy.js';
 import type {
   BumpDecision,
   EvergreenConfig,
@@ -134,6 +135,13 @@ function evaluateBumps(
       );
       continue;
     }
+    if (entry.kind === 'temporary') {
+      const consent = temporaryConsent(config, entryKey, first.id);
+      if (!consent.allowed) {
+        skip(consent.reason);
+        continue;
+      }
+    }
     if (
       registrations.some((rows) => rows.length === 0) ||
       configured.some((c) => !Object.hasOwn(config.payers, c.payer))
@@ -240,6 +248,7 @@ export async function runEngine(
     thresholds: { bumpWhenRemainingLedgersBelow: config.defaults.bumpWhenRemainingLedgersBelow },
     actionThresholdByEntry,
     records: [],
+    config,
     decisions,
   });
   return { scan, decisions, liveness, health, mode: 'dry-run' };

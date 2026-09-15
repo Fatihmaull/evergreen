@@ -1,3 +1,5 @@
+import { temporaryConsent } from './temporary-policy.js';
+import type { EvergreenConfig } from '@evergreen-stellar/shared-types';
 import type {
   BumpDecision,
   BumpRecord,
@@ -69,6 +71,8 @@ export type LivenessReason =
 export type LivenessRemediation = 'extend' | 'restore' | 'investigate';
 
 export interface LivenessFinding {
+  /** Explicit temporary retention at risk; survives notification deduplication. */
+  readonly temporaryRetention?: true;
   readonly entryKey: LedgerKey;
   /**
    * Every contract this entry serves. A shared `ContractCode` entry reports
@@ -167,6 +171,7 @@ function describe(
 }
 
 export function assertLiveness(args: {
+  readonly config?: EvergreenConfig;
   readonly scan: ScanResult;
   readonly thresholds: Pick<BumpThresholds, 'bumpWhenRemainingLedgersBelow'>;
   /** Every record this run produced. An empty array is the silent-run case. */
@@ -220,6 +225,11 @@ export function assertLiveness(args: {
     if (!needsAction(remainingLedgers, args.actionThresholdByEntry?.[entryKey] ?? threshold))
       continue;
 
+    const temporaryRetention =
+      entry.kind === 'temporary' &&
+      args.config !== undefined &&
+      entry.contracts.length === 1 &&
+      temporaryConsent(args.config, entryKey, entry.contracts[0]!).allowed;
     const forEntry = byEntry.get(entryKey) ?? [];
     if (forEntry.some(confirmedBump)) continue;
 
@@ -254,7 +264,8 @@ export function assertLiveness(args: {
       entryKey,
       contracts: entry.contracts,
       reason: chosen.reason,
-      severity: SEVERITY[chosen.reason],
+      severity: temporaryRetention ? 'critical' : SEVERITY[chosen.reason],
+      ...(temporaryRetention ? { temporaryRetention: true as const } : {}),
       remediation: isExpired
         ? entry.endBehavior === 'deleted'
           ? 'investigate'
@@ -262,7 +273,11 @@ export function assertLiveness(args: {
         : 'extend',
       remainingLedgers,
       isExpired,
-      detail: describe(chosen.reason, remainingLedgers, isExpired, chosen.note, entry.endBehavior),
+      detail:
+        describe(chosen.reason, remainingLedgers, isExpired, chosen.note, entry.endBehavior) +
+        (temporaryRetention
+          ? ' Explicit temporary retention is at risk: expiry permanently deletes this data; no restore is possible.'
+          : ''),
     });
   }
 
