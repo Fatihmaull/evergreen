@@ -193,7 +193,7 @@ narrow no-break space that looks like a space and fails a byte comparison
 invisibly.
 
 A reviewer re-running these commands would have seen output that did not match
-the screenshots, and been right to call it a failure to reproduce. Pinned in #160,
+the screenshots, and been right to call it a failure to reproduce. Pinned in #164,
 with `pnpm check:locale` failing the build on any unpinned call so it cannot
 return. Verified identical across `en-US`, `de-DE`, `fr-FR`, `ja-JP` and `ar-EG`.
 
