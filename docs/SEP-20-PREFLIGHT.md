@@ -144,6 +144,38 @@ printf 'probe_exit=%s capture=%s\n' "$probe_exit" "$probe_capture"
 - [ ] rehearsed in advance with `BELOW=1500000`, which forces candidacy off-date
       and was confirmed to produce the refusal on 2026-09-14
 
+### 3b. 🔴 Capture three times. The window is a day, not a moment.
+
+**Being below the alert threshold is a STATE, not an event.** Once B is under
+17,280 remaining it stays under until expiry — roughly twenty-four hours. It does
+not pass by while you are fixing something.
+
+That changes what to do when a capture fails. **A capture that dies on a flaky RPC
+at 12:00 is a retry, not a lost proof.** Somebody who believes they have one shot
+at noon will improvise under pressure; somebody who knows they have a day will
+re-run. The failure mode this page most needs to prevent is a person inventing a
+workaround because they think the evidence is escaping.
+
+**So capture at each of the three dispatches — 12:00, 18:00 and 00:00 UTC — not
+once.**
+
+- [ ] `pnpm capture:crossing --subject B --output <dir>-1200` at ~12:00 UTC
+- [ ] again at ~18:00 into `…-1800`
+- [ ] again at ~00:00 into `…-0000`
+- [ ] each verified with `--require-crossing`, and each committed
+
+This costs nothing extra: the dispatches are already scheduled above. What it buys
+is **a decay sequence rather than a single reading** — B measurably closer to
+expiry at each observation, with the guard refusing at each one. That is the
+difference between *"we observed this state"* and *"we watched it happen"*, and it
+is the stronger claim for the same effort.
+
+It is also redundancy on the least repeatable thing in the sprint. **If any one
+capture fails, the others still carry the proof.**
+
+The crossing gate is satisfied by any one qualifying bundle, so three is
+belt-and-braces rather than three chances to get it wrong.
+
 ### 4. The record is committed the same day
 
 - [ ] commit the **verified capture bundle** as the crossing artifact; keep the probe output beside it as the readable record. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
