@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-15T05:42:00.189Z",
+  "implementationCommit": "2c3a28a",
+  "signedEnvelopeHash": "c696f477bd50ecaa0574d557c2981aac6c28646cf1e71c7e07dcfae4decdb8fd",
+  "receiptLedger": 4685404,
+  "footprintOnlyTemporary": true,
+  "before": {
+    "observedAtLedger": 4685403,
+    "endsAtLedger": 4686093
+  },
+  "after": {
+    "observedAtLedger": 4685404,
+    "endsAtLedger": 4785404
+  },
+  "feesStroops": {
+    "upload": "1669899",
+    "deploy": "19502",
+    "seed": "29928",
+    "extend": "8902"
+  },
+  "totalFeeStroops": "1728231",
+  "defaultOffRecords": 0,
+  "postStateBoundToRawRpc": true,
+  "uniqueWasmSha256": "cade2fb63b422c3537baa276b28bd6ec2d7347c6e8ac749124ef6a139f477332"
+}

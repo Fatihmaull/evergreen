@@ -1,0 +1,8 @@
+{
+  "id": "w3-d15-02b-controlled-failure:bump:AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==:failed",
+  "notification": {
+    "severity": "critical",
+    "subject": "E2E TEST temporary retention — [CRITICAL] ✖ Evergreen failed to extend AAAABgAAAA…",
+    "body": "Controlled validation of the pre-submit failure recorded on a disposable Testnet contract. This is not a current incident.\n\nExtension success could not be verified. Inspect the transaction and current TTL.\nContract: CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7\nEntry: AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==\nReason: EXTENSION_FAILED — Extension rejected or post-state unverified. No replacement was submitted.\nInspect any recorded intent, transaction result and current TTL before retrying.\nAttempted and failed (706 ledgers remain): Extension rejected or post-state unverified. No replacement was submitted.. Explicit temporary retention is at risk: expiry permanently deletes this data; no restore is possible."
+  }
+}

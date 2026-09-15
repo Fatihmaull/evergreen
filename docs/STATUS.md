@@ -26,6 +26,37 @@ still needs confirmation. No claim of unattended B observation. [PR #163](https:
 
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 
+## Earlier — W3-D19 blocker published for Shared decision
+
+Read-only Testnet28 metadata, captive-core-matching source and offline envelope
+checks identify an enforcement mismatch: passkey-kit signs contract invocation auth,
+not the native TTL transaction's G-address payer signature. Direct adapter is a
+no-go recommendation, not a final Shared/ADR decision or a deployed-wallet test.
+[Issue #161](https://github.com/Fatihmaull/evergreen/issues/161) tracks what would
+unblock W3-D19-01/02/03, now Blocked. W3-D20-01 is In progress for Shared review.
+[Findings](W3-POLICY-SIGNER-FEASIBILITY.md) and reproducible evidence are published in [PR #162](https://github.com/Fatihmaull/evergreen/pull/162) for Fatih review. Stage1 and B/C observation remain unblocked. No provider
+installation, deployment, new transaction or timer activation. Notion D19-01/02/03 is Blocked and D20-01 In progress, linked to #161/#162. All-ID presence check found no missing or phantom rows (150 mirrored). Full local gate passed 865 tests; offline reproduction passed separately. No final ADR/SOW change has been made.
+
+## Earlier — W3-D15-02b merged
+
+Per-entry temporary retention is implemented and internally reviewed on
+`feat/W3-D15-02b-temporary-policy` (runtime commit 2c3a28a), from main 5998862.
+Default-off and repeated-registration veto apply at decision and refreshed execution;
+critical opted-in temporary urgency survives alert deduplication. Full check passed
+878 tests after the publication CI clock-coverage correction (#128). The disposable-key Testnet extension confirmed expiry 4,686,093 → 4,785,404;
+all four setup/extension receipts and explorer captures are retained. One critical
+test email reached Rakha's inbox. [Implementation](W3-D15-02b-IMPLEMENTATION.md),
+[review](W3-D15-02b-REVIEW.md), [evidence](evidence/2026-09-15-temporary-policy/README.md).
+
+New local watcher preparation uses critical540 above main's 480-minute floor;
+offline tests cover inactive and missed-run behavior. The old historical config
+is untouched and no timer was activated. No new A proof or B/C/shared-Wasm write.
+Merged as #160 after review; the escalation test was strengthened to fail when the escalation is removed. Publishes implementation, review and evidence; Fatih review/merge is pending. Notion D15-02b is Done for verified implementation with PR state explicit. Full presence diff: 148 checkbox tasks, one standing obligation and one mirrored retired ID match 150 rows; no missing or phantom IDs.
+
+
+## Earlier — W3-D17-05 closed; D17-04 evidence landed
+
+
 **`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
 
 **`W3-D17-04` has its evidence, and acceptance is Fatih's.** #147 carries the success/liveness receipts and #146 the failure receipts; the gate needs both and neither alone. No live email or transaction was repeated to publish either — the original A transaction and its receipts are preserved as recorded.

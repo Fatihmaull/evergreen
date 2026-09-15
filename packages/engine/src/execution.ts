@@ -224,7 +224,7 @@ export async function runEngineExecution(
             const fresh = await scanContract(
               transport.reader,
               { id: owner },
-              entry.kind === 'persistent' ? [entry.entryKey] : [],
+              entry.kind === 'persistent' || entry.kind === 'temporary' ? [entry.entryKey] : [],
             );
             refreshes.push(fresh);
             const observed = fresh.entries[entry.entryKey];
@@ -357,6 +357,7 @@ export async function runEngineExecution(
   }
   const liveness = assertLiveness({
     scan: preview.scan,
+    config,
     thresholds: config.defaults,
     records,
     decisions,

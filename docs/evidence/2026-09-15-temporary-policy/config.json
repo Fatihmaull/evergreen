@@ -1,0 +1,34 @@
+{
+  "network": {
+    "rpcUrl": "https://soroban-testnet.stellar.org",
+    "networkPassphrase": "Test SDF Network ; September 2015"
+  },
+  "mode": "dry-run",
+  "defaults": {
+    "bumpWhenRemainingLedgersBelow": 17280,
+    "extendToLedgers": 100000
+  },
+  "contracts": [
+    {
+      "id": "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7",
+      "payer": "dev",
+      "dataKeys": [
+        "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA=="
+      ],
+      "temporaryEntryPolicies": [
+        {
+          "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+          "autoExtend": true
+        }
+      ]
+    }
+  ],
+  "payers": {
+    "dev": {
+      "signer": "ed25519",
+      "secretEnvVar": "EVERGREEN_DEV_SECRET",
+      "sourceAccount": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+      "maxFeeStroops": "2000000"
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { formatCount } from './format.js';
 import type { BumpRecord, LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import { assessEntry } from './health.js';
 
@@ -40,14 +41,14 @@ export function bumpSucceeded(record: Extract<BumpRecord, { outcome: 'succeeded'
   const gained = record.after.endsAtLedger - record.before.endsAtLedger;
   return {
     severity: 'info',
-    subject: `Evergreen extended ${short(record.entryKey)} (+${gained.toLocaleString()} ledgers)`,
+    subject: `Evergreen extended ${short(record.entryKey)} (+${formatCount(gained)} ledgers)`,
     body: [
       `Extended and CONFIRMED on Stellar Testnet.`,
       '',
       contractsLine(record),
       `Entry: ${record.entryKey}`,
       `Transaction: ${record.transactionHash}`,
-      `Live until: ledger ${record.before.endsAtLedger.toLocaleString()} → ${record.after.endsAtLedger.toLocaleString()}`,
+      `Live until: ledger ${formatCount(record.before.endsAtLedger)} → ${formatCount(record.after.endsAtLedger)}`,
       record.paidFeeStroops ? `Fee paid: ${record.paidFeeStroops} stroops` : '',
       '',
       'Confirmed means the transaction succeeded AND the new TTL was read back.',
@@ -117,7 +118,7 @@ export function approachingCritical(
 ): Notification {
   const a = assessEntry(entry, thresholdLedgers);
   const remaining =
-    entry.ttl.status === 'known' ? entry.ttl.remainingLedgers.toLocaleString() : 'unreadable';
+    entry.ttl.status === 'known' ? formatCount(entry.ttl.remainingLedgers) : 'unreadable';
   return {
     severity: a.health === 'critical' ? 'critical' : a.health === 'unknown' ? 'warn' : 'warn',
     subject:
@@ -129,7 +130,7 @@ export function approachingCritical(
       '',
       `Entry: ${entryKey}`,
       `Remaining: ${remaining} ledgers` +
-        (entry.ttl.status === 'known' ? ` (threshold ${thresholdLedgers.toLocaleString()})` : ''),
+        (entry.ttl.status === 'known' ? ` (threshold ${formatCount(thresholdLedgers)})` : ''),
       a.sharingStatus === 'shared'
         ? `SHARED by ${a.blastRadiusAtLeast} contracts — all of them fail together.`
         : a.sharingStatus === 'undetermined'

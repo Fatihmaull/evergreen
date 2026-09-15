@@ -1,0 +1,18 @@
+{
+  "recordedExtension": {
+    "hash": "c696f477bd50ecaa0574d557c2981aac6c28646cf1e71c7e07dcfae4decdb8fd",
+    "source": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+    "operation": "extendFootprintTtl",
+    "operationFields": [
+      "ext",
+      "extendTo"
+    ],
+    "status": "SUCCESS"
+  },
+  "offlineChecks": {
+    "realExtensionHasNoSorobanAuthSlot": true,
+    "sameUnrestrictedEphemeralKeySignsTtlAndPayment": true,
+    "contractAddressRejectedAsOperationSource": true
+  },
+  "limits": "Ephemeral signatures only: no payment submitted, no funded-account thresholds tested, no provider runtime executed. Policy hook reachability is established by pinned protocol/provider source, not these signatures alone."
+}

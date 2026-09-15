@@ -487,3 +487,12 @@ Grows from real failures we hit (W4-D26-03). Add entries as they happen — the 
 |---|---|---|
 | Everything 404s on testnet | testnet reset | redeploy guinea-pig, update IDs |
 | `liveUntilLedgerSeq` undefined | entry type carries no TTL | handle undefined, don't assert |
+
+## Temporary retention — W3-D15-02b
+
+Engine temporary retention defaults off. Opt in separately for each declared key
+with `temporaryEntryPolicies: [{entryKey, autoExtend: true}]` on every registration
+of its contract. Adding a data key does not inherit consent. Due policy skips still
+alarm, and opted-in temporary entries without a confirmed save are critical because
+expiry deletes them permanently. See [configuration and execution examples](W3-D15-02b-IMPLEMENTATION.md).
+This does not change explicit manual CLI extension or protected-subject guards.
