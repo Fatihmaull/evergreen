@@ -1,7 +1,7 @@
 # W3-D15-02b — temporary retention implementation
 
 Local implementation on `feat/W3-D15-02b-temporary-policy`, based on main 5998862.
-Publication and Fatih merge remain separate checkpoints.
+Published in [PR #160](https://github.com/Fatihmaull/evergreen/pull/160); Fatih review/merge remains pending.
 
 ## User configuration
 

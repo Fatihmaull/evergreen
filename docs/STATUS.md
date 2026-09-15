@@ -9,7 +9,7 @@
 
 ---
 
-## Current — W3-D15-02b locally complete, publication pending
+## Current — W3-D15-02b published for Fatih review
 
 Per-entry temporary retention is implemented and internally reviewed on
 `feat/W3-D15-02b-temporary-policy` (runtime commit 2c3a28a), from main 5998862.
@@ -23,8 +23,7 @@ test email reached Rakha's inbox. [Implementation](W3-D15-02b-IMPLEMENTATION.md)
 New local watcher preparation uses critical540 above main's 480-minute floor;
 offline tests cover inactive and missed-run behavior. The old historical config
 is untouched and no timer was activated. No new A proof or B/C/shared-Wasm write.
-Notion D15-02b sync pending the separate publication checkpoint; no GitHub/Notion
-write this turn. Fatih review/merge is not claimed.
+[PR #160](https://github.com/Fatihmaull/evergreen/pull/160) publishes implementation, review and evidence; Fatih review/merge is pending. Notion D15-02b is Done for verified implementation with PR state explicit. Full presence diff: 148 checkbox tasks, one standing obligation and one mirrored retired ID match 150 rows; no missing or phantom IDs.
 
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 
