@@ -1,0 +1,16 @@
+{
+  "passkeyKit": {
+    "commit": "dac58e6e78ae6e4177d60c73cee763378c142b3c",
+    "version": "0.18.3",
+    "sdkPeer": "^16.3.0"
+  },
+  "observedCaptiveCoreCommit": "947aad8413c189d85504acf72207e85eeda9b021",
+  "evergreenSdk": "17.0.1",
+  "files": {
+    "extend.cpp": "9bbedaf98c5022500545faad1ecb299927600d888f75d4123f04fb5a383665bf",
+    "provider-tx.ts": "1d32e0c6d5807c3416fb525162a448f59c2c45ce24caaa7403ce335b11499a98",
+    "provider-package.json": "3d973099b21133f78b1c3a732a65cefa370e339cfc06d34fe11f1be5e1b911ce",
+    "operation.cpp": "419e28831519e0e23239d12f05ad799bdee4d90622f3cd40fbb9d42b9525f2d8",
+    "wallet.rs": "15eb899e56d22bc6f32b02aa98226d7118fcf5a124fe9b7a6c8c66714b992675"
+  }
+}
