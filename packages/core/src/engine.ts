@@ -1,3 +1,5 @@
+import { formatCount } from './format.js';
+import { temporaryConsent } from './temporary-policy.js';
 import type {
   BumpDecision,
   EvergreenConfig,
@@ -111,7 +113,7 @@ function evaluateBumps(
     const { remainingLedgers } = entry.ttl;
     if (!needsAction(remainingLedgers, actionThreshold)) {
       skip(
-        `${assessment.health.toUpperCase()} — ${assessment.reason} ${remainingLedgers.toLocaleString('en-US')} ledgers remaining.`,
+        `${assessment.health.toUpperCase()} — ${assessment.reason} ${formatCount(remainingLedgers)} ledgers remaining.`,
       );
       continue;
     }
@@ -133,6 +135,13 @@ function evaluateBumps(
           : 'Expired entry requires restoration, not extendTTL.',
       );
       continue;
+    }
+    if (entry.kind === 'temporary') {
+      const consent = temporaryConsent(config, entryKey, first.id);
+      if (!consent.allowed) {
+        skip(consent.reason);
+        continue;
+      }
     }
     if (
       registrations.some((rows) => rows.length === 0) ||
@@ -240,6 +249,7 @@ export async function runEngine(
     thresholds: { bumpWhenRemainingLedgersBelow: config.defaults.bumpWhenRemainingLedgersBelow },
     actionThresholdByEntry,
     records: [],
+    config,
     decisions,
   });
   return { scan, decisions, liveness, health, mode: 'dry-run' };

@@ -1,3 +1,4 @@
+import { temporaryConsent } from './temporary-policy.js';
 import { Address } from '@stellar/stellar-sdk';
 import type { BumpDecision, EvergreenConfig, ScanResult } from '@evergreen-stellar/shared-types';
 import { extensionKey } from './extend.js';
@@ -41,7 +42,7 @@ export function planEngineExecution(
         reason,
       });
     };
-    if (entry.kind !== 'instance' && entry.kind !== 'persistent') {
+    if (entry.kind !== 'instance' && entry.kind !== 'persistent' && entry.kind !== 'temporary') {
       skip(`Execution scope excludes ${entry.kind} entries in D16-01.`);
       continue;
     }
@@ -49,9 +50,13 @@ export function planEngineExecution(
     if (key.type !== 'contractData') throw new Error('Selected key kind mismatch');
     const owner = Address.fromScAddress(key.contractData.contract).toString();
     const kind =
-      key.contractData.key.type === 'scvLedgerKeyContractInstance' ? 'instance' : 'persistent';
+      key.contractData.key.type === 'scvLedgerKeyContractInstance'
+        ? 'instance'
+        : key.contractData.durability.name === 'temporary'
+          ? 'temporary'
+          : 'persistent';
     if (
-      key.contractData.durability.name !== 'persistent' ||
+      (kind === 'instance' && key.contractData.durability.name !== 'persistent') ||
       kind !== entry.kind ||
       entry.contracts.length !== 1 ||
       entry.contracts[0] !== owner ||
@@ -66,6 +71,13 @@ export function planEngineExecution(
       if (!(error instanceof ProtectedEntryError)) throw error;
       skip(`REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`);
       continue;
+    }
+    if (kind === 'temporary') {
+      const consent = temporaryConsent(config, decision.entryKey, owner);
+      if (!consent.allowed) {
+        skip(consent.reason);
+        continue;
+      }
     }
     const registrations = config.contracts.filter((c) => c.id === owner);
     if (

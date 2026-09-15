@@ -58,18 +58,24 @@ export function planRunAlerts(
     if (record.outcome === 'simulated') continue;
     covered.add(record.entryKey);
     const base = record.outcome === 'succeeded' ? bumpSucceeded(record) : bumpFailed(record);
+    const retention = run.liveness.findings.find(
+      (f) => f.entryKey === record.entryKey && f.temporaryRetention,
+    );
     const severity =
       record.outcome === 'succeeded'
         ? 'info'
-        : record.outcome === 'submitted'
-          ? 'warn'
-          : 'critical';
+        : retention
+          ? 'critical'
+          : record.outcome === 'submitted'
+            ? 'warn'
+            : 'critical';
     alerts.push({
       id: `${runId}:bump:${record.entryKey}:${record.outcome}`,
       kind: 'bump',
       entryKey: record.entryKey,
       notification: {
         ...base,
+        ...(retention ? { body: base.body + '\n' + retention.detail } : {}),
         severity,
         subject: `[${severity.toUpperCase()}] ${record.outcome === 'succeeded' ? 'CONFIRMED ' : ''}${base.subject}`,
       },

@@ -31,3 +31,27 @@ Option A: a scheduled serverless job on a 5–15 minute cadence, dry-run by defa
 **Committed:** the engine is stateless between runs; all state lives in the bump-history store (ADR-003).
 
 **Revisit when:** a protocol partner needs sub-minute reaction, or contract churn is high enough that per-run scanning gets expensive. That's the P2 "always-on engine mode" in PRD §7 — a SOW 2 candidate, not a v1 problem.
+
+## Amendment — 2026-09-15: explicit temporary retention (W3-D15-02b)
+
+Fatih's [Shared decision](https://github.com/Fatihmaull/evergreen/issues/125#issuecomment-5668637410)
+sets engine temporary retention **off by default**, with opt-in per declared entry.
+Temporary storage is the contract author's deliberate choice of disposable data;
+the engine must not infer permission to preserve it indefinitely.
+
+Contract registrations may provide `temporaryEntryPolicies: [{entryKey, autoExtend}]`.
+Each key must be a declared temporary key owned by that contract. Every repeated
+registration must explicitly consent for that key; omitted/false vetoes. Adding a
+new data key does not inherit consent. Decision and refreshed execution both enforce
+this policy. The explicit manual CLI extension path is separate and unchanged.
+
+Due entries skipped by policy still alarm. An opted-in temporary entry without a
+confirmed save raises critical urgency, including dry-run and unconfirmed outcomes;
+its message states that expiry deletes data permanently. Existing critical findings
+stay critical; no higher tier or suppression mechanism is introduced. Irreversibility
+explains urgency, not the default. The existing notification templates and transport
+carry this through, including the bump-record branch that suppresses duplicate alerts.
+
+Consent never bypasses known-live TTL, write guard, payer, target, network ceiling,
+fee cap or explicit submit requirements. TTL zero is live. An expired temporary
+entry cannot be extended or restored. B/C and shared-Wasm protection is unchanged.

@@ -1,3 +1,4 @@
+import { formatCount } from '@evergreen-stellar/core';
 import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
   assessEntryWithThresholds,
@@ -205,8 +206,8 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
       lines.push('  ttl:        no TTL metadata returned; health is unknown');
     } else {
       const state = live ? 'live' : `EXPIRED (${entry.endBehavior})`;
-      lines.push(`  remaining:  ${entry.ttl.remainingLedgers.toLocaleString()} ledgers — ${state}`);
-      lines.push(`  ends at:    ledger ${entry.ttl.endsAtLedger.toLocaleString()}`);
+      lines.push(`  remaining:  ${formatCount(entry.ttl.remainingLedgers)} ledgers — ${state}`);
+      lines.push(`  ends at:    ledger ${formatCount(entry.ttl.endsAtLedger)}`);
       const at = estimateEndsAt(entry.ttl, now);
       // "expires", not "approx" or "crosses". `check-decay-drift.py` projects
       // the ALERT THRESHOLD and this projects EXPIRY; they sit exactly 24h
@@ -215,7 +216,7 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
       // label is what let one word cover two events.
       if (at) lines.push(`  expires ~:  ${at.toISOString()} (estimate — ledgers are the truth)`);
     }
-    lines.push(`  observed:   ledger ${entry.observedAtLedger.toLocaleString()}`);
+    lines.push(`  observed:   ledger ${formatCount(entry.observedAtLedger)}`);
     lines.push(`  health:     ${LABEL[assessment.health]} — ${assessment.reason}`);
     lines.push('');
   }
@@ -240,8 +241,8 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
     const shared = assessments.filter((a) => a.sharingStatus === 'shared').length;
     lines.push(
       `Worst entry health: ${paint(worst, LABEL[worst], color)}` +
-        ` (warn below ${tiers(thresholdLedgers).warnBelowLedgers.toLocaleString()}` +
-        ` · act below ${thresholdLedgers.toLocaleString()} ledgers)` +
+        ` (warn below ${formatCount(tiers(thresholdLedgers).warnBelowLedgers)}` +
+        ` · act below ${formatCount(thresholdLedgers)} ledgers)` +
         (shared > 0 ? ` · ${shared} shared entr${shared === 1 ? 'y' : 'ies'}` : ''),
     );
   }
