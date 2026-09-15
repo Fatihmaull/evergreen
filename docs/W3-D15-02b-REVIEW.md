@@ -28,3 +28,14 @@ screenshots. One critical test email reached the user's inbox.
 No confirmed open finding remains within this scope. No B/C/shared-Wasm write,
 policy-signer work, timer activation or publication was performed. Local task
 completion and Fatih's later review/merge remain distinct.
+
+## Publication CI follow-up — #128 clock coverage
+
+CI for PR #160 exposed the same fixture clock race in the separate "review
+boundaries" suite: the old Date-only fake-timer hooks applied only to the first
+suite. A new regression waits 1.1 real seconds after setup and then executes;
+it failed deterministically before the correction. Date-only hooks now cover
+all suites in this fixture file. Real timeout/sleep behavior is not mocked, and
+production execution, policy behavior and recorded live evidence are unchanged.
+
+Post-fix full `pnpm check` exited 0: **766 Vitest + 112 Node = 878 tests**.

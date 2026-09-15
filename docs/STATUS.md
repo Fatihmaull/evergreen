@@ -15,7 +15,7 @@ Per-entry temporary retention is implemented and internally reviewed on
 `feat/W3-D15-02b-temporary-policy` (runtime commit 2c3a28a), from main 5998862.
 Default-off and repeated-registration veto apply at decision and refreshed execution;
 critical opted-in temporary urgency survives alert deduplication. Full check passed
-877 tests. The disposable-key Testnet extension confirmed expiry 4,686,093 → 4,785,404;
+878 tests after the publication CI clock-coverage correction (#128). The disposable-key Testnet extension confirmed expiry 4,686,093 → 4,785,404;
 all four setup/extension receipts and explorer captures are retained. One critical
 test email reached Rakha's inbox. [Implementation](W3-D15-02b-IMPLEMENTATION.md),
 [review](W3-D15-02b-REVIEW.md), [evidence](evidence/2026-09-15-temporary-policy/README.md).

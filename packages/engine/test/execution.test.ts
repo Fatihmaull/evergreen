@@ -149,14 +149,15 @@ function setup(otherPayer = false) {
     },
   };
 }
+// Every suite uses setup(): SDK envelopes and its injected clock must agree.
+// Fake Date only, so transport sleeps and the real-delay regression still run.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 describe('engine execution — real core primitives over fixture RPC', () => {
-  // The injected engine clock and SDK envelope clock must share the same instant.
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
   it('simulates by default, without signer, secret or recorder access', async () => {
     const s = setup();
     const result = await runEngineExecution(s.config, s.deps);
@@ -535,4 +536,11 @@ describe('engine execution — bounded failure and refresh paths', () => {
     expect(result.records.every((r) => r.entryKey !== instanceKey(A))).toBe(true);
     expect(result.liveness.isAlarm).toBe(true);
   });
+});
+
+it('keeps SDK envelope time aligned with the fixture clock after a real delay', async () => {
+  const s = setup();
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  const result = await runEngineExecution({ ...s.config, mode: 'live' }, s.deps, { submit: true });
+  expect(result.records.map((r) => r.outcome)).toEqual(['succeeded', 'succeeded']);
 });
