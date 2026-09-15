@@ -1,0 +1,40 @@
+{
+  "_README": [
+    "STAND-IN weekend watcher config, written 2026-09-15 so the window is covered.",
+    "",
+    "Rakha's readiness config sets warnMinutes: 30. Since #169 the warn tier is",
+    "floored at WORST_OBSERVED_SCHEDULER_GAP_MINUTES (369), so that policy is",
+    "rejected and the watcher would throw on startup — for the whole weekend,",
+    "including Sunday. Its window opens Fri 2026-09-18 00:00 UTC.",
+    "",
+    "This exists so the weekend is covered without waiting on anyone. Rakha should",
+    "replace it with his own numbers if he prefers different ones; then delete this.",
+    "",
+    "Only warnMinutes differs from his: 30 -> 420. It sits between the two floors —",
+    "above the worst gap we have measured (369), below the bound we will not accept",
+    "(480). criticalMinutes 540 already cleared its floor and is unchanged.",
+    "",
+    "stateRoot is repo-relative and gitignored, so either Rakha or the fallback",
+    "operator in SEP-20-PREFLIGHT.md 5b can run this. His own config points at an",
+    "absolute path on his machine; that is fine for him and unusable for anyone else.",
+    "",
+    "The evidence bundle at docs/evidence/2026-09-15-readiness/watch.json is NOT",
+    "edited. It is a checksummed record of what was configured, and rewriting a",
+    "record to match a later decision is the one thing this repo does not do.",
+    "",
+    "Run: pnpm scheduler:watch --config ops/weekend-watch.json --send-alerts"
+  ],
+  "watchId": "w3-weekend-standin",
+  "stateRoot": ".evergreen/weekend-watch/state",
+  "repository": "Fatihmaull/evergreen",
+  "workflow": "engine-cron.yml",
+  "branch": "main",
+  "jobName": "decide",
+  "policy": {
+    "startAt": 1789689600000,
+    "endAt": 1790013600000,
+    "warnMinutes": 420,
+    "criticalMinutes": 540,
+    "maxRunMinutes": 10
+  }
+}

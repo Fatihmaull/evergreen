@@ -234,9 +234,26 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       console.log(JSON.stringify(r, null, 2));
       process.exitCode = r.exitCode;
     }
-  } catch {
+  } catch (error) {
+    // Same defect as capture-crossing-probe had: one generic line for every
+    // failure. Measured 2026-09-15 — the readiness config's `warnMinutes: 30`
+    // is rejected by the floor added in #169, and an operator starting the
+    // weekend watcher on Friday saw only "Watcher failed; inspect retained
+    // state" with no hint that the cause was the policy and the fix one number.
+    //
+    // Allowlisted literals only, the `safeRunCode` rule, so nothing interpolated
+    // can carry a token or URL.
+    const OWN = new Set(['Invalid finite watcher policy', 'Invalid args']);
+    const reason = OWN.has(error?.message) ? error.message : null;
     console.error(
-      'Watcher failed; inspect retained state. No replacement transaction was submitted.',
+      'Watcher failed; inspect retained state. No replacement transaction was submitted.' +
+        (reason === null ? '' : `\n  Reason: ${reason}`) +
+        (reason === 'Invalid finite watcher policy'
+          ? '\n  The policy was refused before the watcher started, so nothing is running.\n' +
+            '  warnMinutes must be at least the worst scheduler gap we have measured, and\n' +
+            '  criticalMinutes at least the agreed floor — see packages/core/src/config.ts.\n' +
+            '  ops/weekend-watch.json is a ready policy that passes both.'
+          : ''),
     );
     process.exitCode = 2;
   }
