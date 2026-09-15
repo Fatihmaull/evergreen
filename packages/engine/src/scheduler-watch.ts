@@ -1,4 +1,7 @@
-import { SCHEDULER_GAP_FLOOR_MINUTES } from '@evergreen-stellar/core';
+import {
+  SCHEDULER_GAP_FLOOR_MINUTES,
+  WORST_OBSERVED_SCHEDULER_GAP_MINUTES,
+} from '@evergreen-stellar/core';
 import type { Notification } from '@evergreen-stellar/core';
 export interface WatchPolicy {
   startAt: number;
@@ -49,6 +52,20 @@ export function assessScheduler({
     // measurement is a running maximum over a growing sample and only ever goes
     // up, so enforcing against it would retroactively invalidate policies that
     // were correct yesterday, every time anyone re-measures.
+    // Two tiers, two meanings, each anchored to a constant that already exists
+    // and already has a refresh procedure — rather than two points on one scale.
+    //
+    //   warn     >= WORST_OBSERVED (369) -> "worse than anything we have seen"
+    //   critical >= FLOOR          (480) -> "past what we are willing to allow"
+    //
+    // The warn floor is the one that was missing, and the gap it left was not
+    // theoretical: the weekend watcher config covering B's crossing shipped with
+    // `warnMinutes: 30` against a 136-minute median, which fires on every gap the
+    // scheduler has ever produced. A watcher that has been crying wolf since
+    // Friday is one nobody reads on Sunday — and Sunday is the night the alert IS
+    // the evidence trail, because nobody is watching. It would have failed by
+    // being ignored, which is the failure mode that reports itself as working.
+    p.warnMinutes < WORST_OBSERVED_SCHEDULER_GAP_MINUTES ||
     p.criticalMinutes < SCHEDULER_GAP_FLOOR_MINUTES
   )
     throw new Error('Invalid finite watcher policy');

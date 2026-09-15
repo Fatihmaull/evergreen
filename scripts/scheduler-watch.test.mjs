@@ -11,9 +11,9 @@ test('watcher retains incidents across invocations and rearms only after recover
   const options = {
     watchId: 'test',
     policy: {
-      startAt: now - 7200000,
-      endAt: now + 7200000,
-      warnMinutes: 30,
+      startAt: now - 12 * 3600000,
+      endAt: now + 12 * 3600000,
+      warnMinutes: 420,
       criticalMinutes: 540,
       maxRunMinutes: 10,
     },
@@ -98,9 +98,9 @@ test('preview does not suppress sending and uncertain delivery stays visible wit
     now,
     readJobs: async () => [],
     policy: {
-      startAt: now - 7200000,
-      endAt: now + 7200000,
-      warnMinutes: 30,
+      startAt: now - 12 * 3600000,
+      endAt: now + 12 * 3600000,
+      warnMinutes: 420,
       criticalMinutes: 540,
       maxRunMinutes: 10,
     },
@@ -133,8 +133,8 @@ test('a temporary observer error does not reopen the same late-job incident', as
     {
       id: 'old',
       status: 'completed',
-      startedAt: now - 7200000,
-      completedAt: now - 7190000,
+      startedAt: now - 450 * 60000,
+      completedAt: now - 449 * 60000,
       conclusion: 'success',
     },
   ];
@@ -144,9 +144,9 @@ test('a temporary observer error does not reopen the same late-job incident', as
     stateRoot: root,
     now,
     policy: {
-      startAt: now - 3600000,
+      startAt: now - 12 * 3600000,
       endAt: now + 3600000,
-      warnMinutes: 30,
+      warnMinutes: 420,
       criticalMinutes: 540,
       maxRunMinutes: 10,
     },

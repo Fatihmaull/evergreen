@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { assessScheduler } from '../src/scheduler-watch.js';
-import { SCHEDULER_GAP_FLOOR_MINUTES } from '@evergreen-stellar/core';
+import {
+  SCHEDULER_GAP_FLOOR_MINUTES,
+  WORST_OBSERVED_SCHEDULER_GAP_MINUTES,
+} from '@evergreen-stellar/core';
 const now = Date.parse('2026-09-14T12:00:00Z');
 const policy = {
   startAt: now - 24 * 3600000,
   endAt: now + 3600000,
-  warnMinutes: 30,
+  warnMinutes: 420,
   criticalMinutes: 540,
   maxRunMinutes: 10,
 };
@@ -20,11 +23,16 @@ describe('independent schedule observation', () => {
     expect(r.severity).toBe('critical');
   });
   it('uses actual job timestamps and grades lateness', () => {
+    // Timed relative to the policy rather than to a literal, so this keeps
+    // testing lateness when the floors move. It was `now - 40 min` against a
+    // warn of 30; the warn tier is now floored at the measured worst gap (369),
+    // which made that job healthy and the assertion vacuous.
+    const late = (policy.warnMinutes + 10) * 60000;
     const job = {
       id: '1',
       status: 'completed' as const,
-      startedAt: now - 40 * 60000,
-      completedAt: now - 35 * 60000,
+      startedAt: now - late,
+      completedAt: now - late + 5 * 60000,
       conclusion: 'success',
     };
     expect(assessScheduler({ now, policy, jobs: [job] })).toMatchObject({
@@ -109,10 +117,15 @@ describe('independent schedule observation', () => {
     expect(() =>
       assessScheduler({ now, policy: { ...policy, endAt: policy.startAt }, jobs: [] }),
     ).toThrow(/policy/i);
-    // The boundary itself stays legal, so this rejects bad policies rather than
-    // most policies.
+    // The boundary that matters is now the measurement floor, not maxRunMinutes:
+    // warn === WORST_OBSERVED stays legal, so this rejects bad policies rather
+    // than most policies.
     expect(() =>
-      assessScheduler({ now, policy: { ...policy, warnMinutes: policy.maxRunMinutes }, jobs: [] }),
+      assessScheduler({
+        now,
+        policy: { ...policy, warnMinutes: WORST_OBSERVED_SCHEDULER_GAP_MINUTES },
+        jobs: [],
+      }),
     ).not.toThrow();
   });
   /**
@@ -145,5 +158,47 @@ describe('independent schedule observation', () => {
     ).not.toThrow();
     // And the value every real policy already uses stays legal.
     expect(() => assessScheduler({ now, policy, jobs: [] })).not.toThrow();
+  });
+  /**
+   * Each tier is anchored to a different constant, because they mean different
+   * things — not two points on one scale.
+   *
+   *   warn     >= WORST_OBSERVED (369)  "worse than anything we have seen"
+   *   critical >= FLOOR          (480)  "past what we are willing to allow"
+   *
+   * The warn floor was missing until 2026-09-15, and the gap was live rather than
+   * theoretical: the weekend watcher config covering guinea-pig B's crossing
+   * shipped with `warnMinutes: 30` against a 136-minute median — a warning on
+   * every gap the scheduler has ever produced. By Sunday nobody reads it, and
+   * Sunday is the night the alert IS the evidence trail because nobody is
+   * watching. It would have failed by being ignored.
+   */
+  it('🔴 anchors warn to the measurement and critical to the policy floor', () => {
+    expect(WORST_OBSERVED_SCHEDULER_GAP_MINUTES).toBe(369);
+    expect(SCHEDULER_GAP_FLOOR_MINUTES).toBe(480);
+    // The tiers cannot collapse onto one constant.
+    expect(WORST_OBSERVED_SCHEDULER_GAP_MINUTES).toBeLessThan(SCHEDULER_GAP_FLOOR_MINUTES);
+
+    // The exact configuration that shipped for B's crossing weekend.
+    expect(() =>
+      assessScheduler({ now, policy: { ...policy, warnMinutes: 30 }, jobs: [] }),
+    ).toThrow(/policy/i);
+    // One minute below the measurement is still refused.
+    expect(() =>
+      assessScheduler({
+        now,
+        policy: { ...policy, warnMinutes: WORST_OBSERVED_SCHEDULER_GAP_MINUTES - 1 },
+        jobs: [],
+      }),
+    ).toThrow(/policy/i);
+    // A warn above the measurement but below the policy floor is legal — that
+    // band is the whole point of having two tiers.
+    expect(() =>
+      assessScheduler({
+        now,
+        policy: { ...policy, warnMinutes: 420, criticalMinutes: SCHEDULER_GAP_FLOOR_MINUTES },
+        jobs: [],
+      }),
+    ).not.toThrow();
   });
 });
