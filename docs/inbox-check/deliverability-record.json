@@ -1,8 +1,6 @@
 {
   "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
-  "contracts": [
-    "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
-  ],
+  "contracts": ["CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"],
   "payer": "bot-testnet",
   "reason": "Deliverability check before the Sep 20/21 crossing weekend. Not a real incident.",
   "extendToLedgers": 518400,
