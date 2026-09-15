@@ -161,6 +161,61 @@ Checking only the green half proves nothing: a check that passes because it
 cannot see the subject looks identical to one that passes because the subject is
 correct.
 
+### 5b. 🔴 Who is at a terminal, and what happens if they are not
+
+**Assigned 2026-09-15: Rakha watches Sunday Sep 20 and Monday Sep 21.**
+
+They are two different jobs and need separate confirmation:
+
+| Day | What it is | Repeatable? |
+|---|---|---|
+| **Sun Sep 20** | dispatch, run the probe, capture the refusal, commit it | the crossing window is hours wide |
+| **Mon Sep 21** | be present for B's expiry | **no** — it happens once |
+
+An assignment is a notification, not a commitment. **This needs an explicit yes
+for each date**, not an absence of objection.
+
+**If the named watcher does not appear.** Fatih has stepped back from watching, so
+as written there is a single point of failure on the least repeatable evidence in
+the sprint. The fallback is therefore stated rather than assumed:
+
+- **Reachable on the day:** Fatih, by the channel already used for coordination.
+  If Rakha has not posted to the tracking issue by **12:00 UTC on the day**,
+  assume he is unavailable and proceed.
+- **What the fallback person does:** §3 of this page, unchanged. The probe is
+  read-only, the guard refuses B regardless, and nothing here requires a signer —
+  so the fallback needs no credentials and can do no harm. **The only way to lose
+  the evidence is for nobody to run it.**
+
+### 5c. 🔴 If Sunday is missed — C is the only second shot
+
+Written here because somebody discovering this on Sunday night will improvise,
+and somebody reading it beforehand will act.
+
+**Guinea-pig C crosses ~2026-09-25 12:00 UTC and expires ~2026-09-26.** It is the
+*only* backup. There is no third subject, and a new one cannot be deployed and
+aged inside this sprint — the measured floor is about seven days, which is why B
+was deployed on Day 4.
+
+Three things must stay true for C to still work, and two of them are things
+somebody could helpfully break:
+
+1. **C is never extended.** `write-guard.ts` refuses it unconditionally, and it
+   stays in `_doNotWatch`. Neither is a date check — both hold regardless.
+2. **The shared `ContractCode` entry is not extended before C's capture.**
+   `W3-D18-02d` is dated **Sat Sep 26, after C's crossing**, and is blocked until
+   `W3-D18-02b` and `W3-D18-02c` are captured. A, B and C share **one** code
+   entry, so it cannot be extended for one contract only — doing it early to be
+   helpful destroys the remaining proof. The row says so; this is the second
+   place it is said.
+3. **Somebody is at a terminal on Sep 25 and Sep 26**, under the same rules as
+   §5b. Sep 25 is a **Friday** — a working day, which is a point in C's favour and
+   an argument for treating B as the proof that may be observed imperfectly.
+
+The crossing gate already enforces the capture for both subjects independently:
+it is RED at Sep 20 for B and RED at Sep 25 for C, and satisfying one does not
+satisfy the other.
+
 ### 6. 🔴 Nobody "fixes" the refusal
 
 **The refusal is the evidence.** On Friday or Sunday, someone looking at a
