@@ -1,3 +1,4 @@
+import { temporaryKey } from './temporary-policy.js';
 import type {
   EvergreenConfig,
   BumpThresholds,
@@ -345,6 +346,30 @@ export function loadConfig(raw: string): ConfigLoadResult {
     if (contract.noDataKeys !== undefined && typeof contract.noDataKeys !== 'boolean') {
       throw new ConfigError(`contracts[${index}].noDataKeys must be true or false.`);
     }
+    let temporaryEntryPolicies: { entryKey: string; autoExtend: boolean }[] | undefined;
+    if (contract.temporaryEntryPolicies !== undefined) {
+      const path = `contracts[${index}].temporaryEntryPolicies`;
+      try {
+        if (!Array.isArray(contract.temporaryEntryPolicies)) throw new Error('Expected array');
+        const seen = new Set<string>();
+        temporaryEntryPolicies = contract.temporaryEntryPolicies.map((value) => {
+          const policy = requireRecord(value, path);
+          const entryKey = temporaryKey(requireString(policy.entryKey, path), id);
+          if (
+            typeof policy.autoExtend !== 'boolean' ||
+            seen.has(entryKey) ||
+            !dataKeys?.some((k) => typeof k === 'string' && k.trim() === entryKey)
+          )
+            throw new Error('Invalid or duplicate policy');
+          seen.add(entryKey);
+          return { entryKey, autoExtend: policy.autoExtend };
+        });
+      } catch {
+        throw new ConfigError(
+          `${path} requires unique declared temporary keys owned by this contract and explicit boolean autoExtend.`,
+        );
+      }
+    }
     const noDataKeys = contract.noDataKeys as boolean | undefined;
     if (noDataKeys === true && dataKeys !== undefined && dataKeys.length > 0) {
       // The same contradiction the CLI rejects. Catching it at load time means
@@ -364,6 +389,7 @@ export function loadConfig(raw: string): ConfigLoadResult {
       ...(label === undefined ? {} : { label }),
       payer,
       ...(dataKeys === undefined ? {} : { dataKeys }),
+      ...(temporaryEntryPolicies === undefined ? {} : { temporaryEntryPolicies }),
       ...(noDataKeys === undefined ? {} : { noDataKeys }),
       ...(overrides === undefined ? {} : { thresholds: overrides }),
     };
