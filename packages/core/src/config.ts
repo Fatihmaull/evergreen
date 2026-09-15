@@ -189,17 +189,61 @@ function parsePayer(value: unknown, id: string): PayerConfig {
  * "couple of hours" threshold does not.
  */
 /**
- * The worst gap actually measured between scheduled runs, 2026-09-14, against a
- * declared 15-minute cron. Median was 132. Exported because two separate
- * policies have to stand in a relation to it and neither can be checked by eye:
- * the action-threshold window below, and the watcher's critical tier.
+ * MEASUREMENT — what the scheduler actually did. Not a policy.
+ *
+ * Sample: 20 `engine-cron` runs, 2026-09-12T19:19Z → 2026-09-15T01:31Z.
+ * Median gap 136 min; worst gap 369 min; declared cron interval 15 min, so the
+ * scheduler delivers about **11% of its declared cadence**.
+ *
+ * **Update this whenever anyone measures.** It should always be true, and it
+ * will keep rising: a running maximum over a growing sample only goes up. It was
+ * 331 when first recorded on 2026-09-14 and 369 nine hours later.
+ *
+ * Nothing enforces a policy against this number directly — that is
+ * `SCHEDULER_GAP_FLOOR_MINUTES` below, and the separation is deliberate.
  */
-export const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 331;
-const MIN_ACTION_RUNS_IN_WINDOW = 4;
-export const MIN_SAFE_ACTION_WINDOW_LEDGERS = Math.ceil(
-  (WORST_OBSERVED_SCHEDULER_GAP_MINUTES * MIN_ACTION_RUNS_IN_WINDOW * 60) / SECONDS_PER_LEDGER,
-);
+export const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 369;
 
+/**
+ * FLOOR — what we are willing to allow. A decision, not an observation.
+ *
+ * Split from the measurement on 2026-09-15 because one constant was doing two
+ * jobs with different update cadences. A floor that tracks the observed maximum
+ * thrashes: every fresh measurement invalidates fixtures and retroactively fails
+ * configurations that were correct the day before. That is a design defect, not
+ * a value that needs updating faster.
+ *
+ * **Why 480 (8 hours):** a round operational boundary roughly 30% above the
+ * current worst observation, chosen so ordinary drift cannot move it. It is not
+ * derived from the measurement — deriving it is precisely what makes it move.
+ *
+ * **Review trigger, not automatic tracking:** if a measured gap ever exceeds 80%
+ * of this floor (394 min), the headroom has been consumed and the floor needs a
+ * deliberate decision. Do not raise it by reflex when a measurement lands.
+ */
+export const SCHEDULER_GAP_FLOOR_MINUTES = 480;
+
+const MIN_ACTION_RUNS_IN_WINDOW = 4;
+
+/**
+ * Deliberately still derived from **331**, the measurement as of 2026-09-14, and
+ * frozen there pending a decision after Sep 26.
+ *
+ * 🔴 **Recorded finding, do not silently fix.** At the current measurement of 369
+ * this window would be `ceil(369 × 4 × 60 / 5) = 17,712` ledgers, and the default
+ * action threshold of 17,280 would fall **below** it — giving **3.9 scheduler
+ * runs** of margin against the 4 this constant exists to guarantee. 17,280 only
+ * ever cleared the old value by accident: it was chosen before the scheduler was
+ * ever measured.
+ *
+ * It is not changed here because raising the number that governs *when the engine
+ * acts* in the week of guinea-pig B's crossing is the wrong week to do it. B
+ * crosses ~2026-09-20 and C ~2026-09-25; revisit after Sep 26.
+ */
+const ACTION_WINDOW_GAP_BASIS_MINUTES = 331;
+export const MIN_SAFE_ACTION_WINDOW_LEDGERS = Math.ceil(
+  (ACTION_WINDOW_GAP_BASIS_MINUTES * MIN_ACTION_RUNS_IN_WINDOW * 60) / SECONDS_PER_LEDGER,
+);
 /**
  * Warns rather than refuses. A short threshold is legitimate on a scheduler we
  * have not measured — someone self-hosting on a real cron gets minutes, not

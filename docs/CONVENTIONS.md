@@ -349,6 +349,32 @@ A useful test for whether a pair belongs here: **can you write down a value for
 each that is individually defensible and jointly wrong?** If yes, nothing but an
 explicit check will catch it.
 
+**And a second test, for pairs that go wrong without anyone touching them: can
+this pair drift apart while both values stay exactly as written?** If one side is
+a measurement of a moving world, it can.
+
+*This happened within nine hours.* `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` was
+recorded as 331 on 2026-09-14 and enforced as the watcher's floor. Re-measuring
+on 2026-09-15 gave **369** — nobody edited anything, and the relation was already
+wrong. A running maximum over a growing sample only ever goes up.
+
+The repair is not a faster update cadence. **It is to split the measurement from
+the policy:**
+
+| | Changes when | Must be |
+|---|---|---|
+| measurement | anyone measures | *true* |
+| floor | someone decides | *cleared*, with headroom |
+
+`WORST_OBSERVED_SCHEDULER_GAP_MINUTES` is now free to rise; `SCHEDULER_GAP_FLOOR_MINUTES`
+is 480 with a stated review trigger at 80% of the floor rather than automatic
+tracking. A floor derived from the measurement thrashes: every fresh measurement
+retroactively invalidates fixtures and fails configurations that were correct the
+day before, which turns a routine measurement into a breaking change.
+
+**Symptom to watch for:** a constant whose doc comment contains both a date and a
+rule. That is one constant doing two jobs.
+
 ### Before arming a gate, prove its demand can be satisfied by the allowed path
 
 **A gate whose demand is unsatisfiable is not strict. It is broken — and it
