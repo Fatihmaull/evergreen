@@ -1,3 +1,4 @@
+import { formatCount } from '@evergreen-stellar/core';
 import { stroopsToXlm } from '@evergreen-stellar/core';
 import type { Stroops } from '@evergreen-stellar/shared-types';
 
@@ -56,18 +57,16 @@ export function approximateXlm(stroops: Stroops): string {
 export function formatCost(cost: CostLine): string[] {
   const lines: string[] = [];
   const entries = `${cost.entryCount} entr${cost.entryCount === 1 ? 'y' : 'ies'}`;
-  lines.push(
-    `Cost to extend ${entries} by ${cost.additionalLedgers.toLocaleString()} more ledgers`,
-  );
+  lines.push(`Cost to extend ${entries} by ${formatCount(cost.additionalLedgers)} more ledgers`);
   // Total first: it is the number the funding decision is made with.
   lines.push(
-    `  total   ${approximateXlm(cost.totalStroops)}  (${Number(cost.totalStroops).toLocaleString()} stroops) — what leaves the account`,
+    `  total   ${approximateXlm(cost.totalStroops)}  (${formatCount(Number(cost.totalStroops))} stroops) — what leaves the account`,
   );
   lines.push(
-    `    rent  ${approximateXlm(cost.rentStroops)}  (${Number(cost.rentStroops).toLocaleString()} stroops)`,
+    `    rent  ${approximateXlm(cost.rentStroops)}  (${formatCount(Number(cost.rentStroops))} stroops)`,
   );
   lines.push(
-    `    fees  ${approximateXlm(cost.otherStroops)}  (${Number(cost.otherStroops).toLocaleString()} stroops) — non-refundable resource + base fee`,
+    `    fees  ${approximateXlm(cost.otherStroops)}  (${formatCount(Number(cost.otherStroops))} stroops) — non-refundable resource + base fee`,
   );
   const rentEntries = Object.entries(cost.rentByEntry);
   if (rentEntries.length > 1) {
@@ -85,7 +84,7 @@ export function formatCost(cost: CostLine): string[] {
   }
   lines.push('');
   lines.push(
-    `  Priced by simulating against the network at ledger ${cost.pricedAtLedger.toLocaleString()}.`,
+    `  Priced by simulating against the network at ledger ${formatCount(cost.pricedAtLedger)}.`,
   );
   // The imprecision is stated, not implied by rounding alone.
   lines.push('  Rent pricing varies with network state — a quote taken on another day has');
@@ -95,7 +94,7 @@ export function formatCost(cost: CostLine): string[] {
     // success — the same shortfall shape as passing a delta where a target belongs.
     lines.push('');
     lines.push(
-      `  ⚠ ${cost.cappedEntryCount} entr${cost.cappedEntryCount === 1 ? 'y was' : 'ies were'} CAPPED at the operation maximum of ${(cost.maxEntryTtl - 1).toLocaleString()} ledgers`,
+      `  ⚠ ${cost.cappedEntryCount} entr${cost.cappedEntryCount === 1 ? 'y was' : 'ies were'} CAPPED at the operation maximum of ${formatCount(cost.maxEntryTtl - 1)} ledgers`,
     );
     lines.push('    (~180 days). Those entries get less than requested; the price above reflects');
     lines.push('    the capped extension, not the request.');

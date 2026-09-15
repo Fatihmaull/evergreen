@@ -1,3 +1,4 @@
+import { formatCount } from './format.js';
 import { temporaryKey } from './temporary-policy.js';
 import type {
   EvergreenConfig,
@@ -263,8 +264,8 @@ function warnIfBelowSchedulerFloor(
   if (configuredActionLedgers >= MIN_SAFE_ACTION_WINDOW_LEDGERS) return;
   const hours = ((configuredActionLedgers * SECONDS_PER_LEDGER) / 3600).toFixed(1);
   warnings.push(
-    `⚠ ${path}.bumpWhenRemainingLedgersBelow is ${configuredActionLedgers.toLocaleString()} ledgers ` +
-      `(~${hours}h of warning), below the ${MIN_SAFE_ACTION_WINDOW_LEDGERS.toLocaleString()} ` +
+    `⚠ ${path}.bumpWhenRemainingLedgersBelow is ${formatCount(configuredActionLedgers)} ledgers ` +
+      `(~${hours}h of warning), below the ${formatCount(MIN_SAFE_ACTION_WINDOW_LEDGERS)} ` +
       'needed for the engine to act reliably.\n' +
       '  This is a SCHEDULER limit, not a Soroban one. GitHub Actions was measured on ' +
       '2026-09-14 delivering ~7.5% of a declared 15-minute cron, worst gap 331 minutes.\n' +
