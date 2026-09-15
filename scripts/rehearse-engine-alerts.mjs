@@ -74,7 +74,7 @@ export async function rehearse({ scenario, root, runId, send = false }) {
         policy: {
           startAt: now - 7 * 3600000,
           endAt: now + 3600000,
-          warnMinutes: 30,
+          warnMinutes: 420,
           criticalMinutes: 540,
           maxRunMinutes: 10,
         },
