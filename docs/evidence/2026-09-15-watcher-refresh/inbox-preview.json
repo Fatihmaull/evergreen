@@ -1,0 +1,11 @@
+{
+  "status": "preview",
+  "submitted": false,
+  "notification": {
+    "severity": "critical",
+    "subject": "✖ Evergreen failed to extend AAAABgAAAA…",
+    "body": "Extension success could not be verified. Inspect the transaction and current TTL.\nContract: CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7\nEntry: AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==\nReason: EXTENSION_FAILED — Deliverability check only. No transaction was attempted.\nInspect any recorded intent, transaction result and current TTL before retrying."
+  },
+  "chainVerified": false,
+  "recordSource": "provided-record"
+}

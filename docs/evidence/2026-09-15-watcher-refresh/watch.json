@@ -1,0 +1,15 @@
+{
+  "watchId": "w3-sep18-readiness",
+  "stateRoot": "/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/state",
+  "repository": "Fatihmaull/evergreen",
+  "workflow": "engine-cron.yml",
+  "branch": "main",
+  "jobName": "decide",
+  "policy": {
+    "startAt": 1789689600000,
+    "endAt": 1790013600000,
+    "warnMinutes": 420,
+    "criticalMinutes": 540,
+    "maxRunMinutes": 10
+  }
+}

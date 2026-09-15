@@ -9,6 +9,23 @@
 
 ---
 
+## Current — weekend observer refreshed after #169/#170
+
+Sep15: operational service now uses a separate pinned main0f14d65 runtime with
+warn420/critical540, preserving its Sep18 00:00–Sep21 18:00 UTC window and all
+historical evidence. Old warn30 config is rejected by the new code; boundary tests
+verify info before420, warn after420 and critical after540. Service inactive test
+passed with exit0; timer remains armed for Sep18 07:00 WIB. No Stellar credentials.
+
+The #170 deliverability command sent one provided-record test to the existing
+weekend mailbox; Resend accepted c4683ea6-d387-48c8-843e-c357ad620065. Rakha confirmed inbox delivery; the prior not-spam training was already reported. No transaction was attempted. Four app reminders
+are configured: Sep20 18:30 WIB; Sep21 01:00,07:00,18:30 WIB. Reminders do not execute
+operations or confirm availability to Fatih. Rakha explicitly confirmed Sep20 19:00 WIB and Sep21 19:00 WIB in #104;
+Sep21 01:00/07:00 handoff requested from Fatih, not yet accepted. PR #177 publishes
+the operational correction and inbox outcome, with replies to #140/#141. Integrated
+full gate882 tests passed; Notion notes synced for D18-01/02b, with no missing or phantom IDs in the150-row presence check. No automation claims
+human availability outside the confirmed slots.
+
 ## Current — September18 readiness prepared; acceptance remains open
 
 Sep15 operational checks completed against main5998862. A separate email-only
