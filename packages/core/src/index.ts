@@ -33,6 +33,7 @@ export {
   TESTNET_PASSPHRASE,
   loadConfig,
   WORST_OBSERVED_SCHEDULER_GAP_MINUTES,
+  SCHEDULER_GAP_FLOOR_MINUTES,
 } from './config.js';
 export {
   PROTECTED_ENTRIES,

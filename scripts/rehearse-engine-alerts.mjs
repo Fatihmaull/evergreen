@@ -57,7 +57,7 @@ export async function rehearse({ scenario, root, runId, send = false }) {
           startAt: now - 7 * 3600000,
           endAt: now + 3600000,
           warnMinutes: 30,
-          criticalMinutes: 360,
+          criticalMinutes: 540,
           maxRunMinutes: 10,
         },
         stateRoot: root,
