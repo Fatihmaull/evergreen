@@ -222,8 +222,35 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const r = await verifyCrossingCapture(args[0]);
     console.log(JSON.stringify(r));
     process.exitCode = args[1] && !r.qualifiesCrossing ? 2 : r.exitCode;
-  } catch {
-    console.error('Capture verification failed; do not count this artifact as crossing evidence.');
+  } catch (error) {
+    // The pre-flight names `--require-crossing` as THE check, so this message is
+    // what an operator reads on a crossing day. One fixed string for every
+    // failure meant a mistyped directory read as "your genuine capture does not
+    // qualify" — the most damaging possible misreading, on the day that cannot
+    // be repeated.
+    //
+    // Allowlisted literals only, the `safeRunCode` rule: assertion failures from
+    // verifyParts carry generated text and are deliberately not surfaced.
+    const OWN = new Set([
+      'Use DIRECTORY [--require-crossing]',
+      'Concurrent verification is unsupported',
+      'Read failed',
+      'Recorded read error',
+      'Use a real live-entry baseline without another baseline',
+    ]);
+    const reason = OWN.has(error?.message) ? error.message : null;
+    console.error(
+      'Capture verification failed; do not count this artifact as crossing evidence.' +
+        (error?.code === 'ENOENT'
+          ? `\n  Missing path: ${error.path ?? 'unknown'}\n` +
+            '  Nothing was read, so nothing is disqualified. Check the directory and re-run.'
+          : reason === null
+            ? '\n  The capture was read and did not verify. This is about the ARTIFACT,\n' +
+              '  not about how the command was invoked.'
+            : `\n  Reason: ${reason}\n` +
+              '  This is about the INVOCATION, not the artifact — the capture was never\n' +
+              '  assessed, so it is not disqualified. Fix the command and re-run.'),
+    );
     process.exitCode = 2;
   }
 }

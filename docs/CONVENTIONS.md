@@ -278,6 +278,66 @@ The asymmetry is what makes this safe to adopt: **a "caught" result is still tru
 
 *(Audited 2026-09-10 after the stale-`dist` discovery: every `packages/core/test/*` file imports `../src/`, so all in-package mutation results — including the `W2-D13-01` config-loader guards — stand unchanged. Only the four CLI tests that import `@evergreen-stellar/core` were affected, and they have since been re-commissioned.)*
 
+### A rule with a judgement clause has a hole shaped like the judgement
+
+**When a rule has failed more than twice, check whether it contains a judgement.
+If it does, remove the judgement or build the tool.**
+
+*Five instances, same rule, escalating fixes.* Backticks in a shell-quoted GitHub
+comment body get command-substituted, so a filename vanishes from the sentence
+naming it. After the second, the rule became *"use `--body-file` for anything with
+backticks."* The fifth happened anyway — on a message classified as **short**,
+where nobody looked for backticks.
+
+The failure landed exactly at the judgement, which is where every conditional rule
+fails: **the moment you decide it does not apply is the moment you stop looking.**
+
+The same hole is in *"never tidy the output of a step whose failure you need to
+see"* — it requires judging which steps you depend on. That one has four
+instances and will get a fifth for the same reason.
+
+Three levels of fix, and only the third is durable:
+
+| | Depends on | Survives |
+|---|---|---|
+| a note | remembering | nothing |
+| a rule with a condition | remembering **and** judging | the easy cases |
+| a tool with no other path | nothing | everything |
+
+For this one the tool is a shell function:
+
+```bash
+ghcomment() { gh issue comment "$1" --body-file "$2"; }
+```
+
+There is then no inline path to take. That is the same move as `--body-file`
+removing the class, taken one step further — **a fix that depends on you, versus
+one that does not.**
+
+### Would this still be true on a machine that is not this one?
+
+Three members in one week, each **invisible on the machine that produced it, by
+definition**:
+
+| | Symptom elsewhere |
+|---|---|
+| locale rendering | `120,909` becomes `120.909`, or `1 682 586` with a U+202F separator |
+| timezone parsing | git's `+07:00` read as UTC — a four-hour error |
+| absolute paths | a config that only starts on the machine that wrote it |
+
+The third is the one that nearly cost something: a weekend watcher config with
+`stateRoot: /home/<user>/…`, where the whole point of naming a fallback operator
+is that **somebody else** runs it. The provision would have failed at the moment
+it was needed.
+
+None of these can be caught by testing on the machine that wrote them — that is
+the definition of the class, not a gap in diligence. **The membership test is the
+question itself: would this still be true on a machine that is not this one?**
+
+Locale is now gated by `check-locale-pinning.mjs`. Timestamps are all
+`toISOString`. Paths are still a judgement, and the rule is: **anything an
+operator other than the author might run takes a repo-relative path.**
+
 ### Before injecting a fault, ask what else your injection changes
 
 **Three times now, the thing done to create a test condition created a different
