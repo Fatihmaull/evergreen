@@ -146,4 +146,59 @@ describe('temporary retention consent', () => {
       temporaryRetention: true,
     });
   });
+  /**
+   * The escalation, tested where it is the ONLY thing that could produce
+   * `critical`.
+   *
+   * The case above reaches `assertLiveness` with reason `skipped`, and
+   * `SEVERITY.skipped` is already `critical` — so it asserts a value that is true
+   * whether or not the retention override exists. Confirmed by deleting the
+   * override: that test stays green. It reads as a check on the escalation and
+   * is not one.
+   *
+   * Only two reasons have a non-critical base — `dry-run-only` (info) and
+   * `submitted-unconfirmed` (warn) — so those are the only places the override
+   * can be observed. A dry run is the realistic one: an opted-in temporary entry
+   * running out during preview is exactly the case Fatih's ruling is about, and
+   * downgrading it to `info` would bury the one finding that has no restore
+   * behind it.
+   */
+  it('🔴 escalates a dry-run finding that would otherwise be info', async () => {
+    const s2 = await scan();
+    const simulated = {
+      entryKey: key,
+      contracts: [A],
+      payer: 'p',
+      reason: 'preview',
+      extendToLedgers: 1000,
+      recordedAt: '2026-09-15T00:00:00.000Z',
+      before: { observedAtLedger: 1000, endsAtLedger: 1050 },
+      mode: 'dry-run' as const,
+      outcome: 'simulated' as const,
+    };
+    const base = assertLiveness({
+      scan: s2,
+      thresholds: config.defaults,
+      records: [simulated],
+      decisions: [decision],
+      config,
+    }).findings.find((f) => f.entryKey === key);
+    const escalated = assertLiveness({
+      scan: s2,
+      thresholds: config.defaults,
+      records: [simulated],
+      decisions: [decision],
+      config: opted(),
+    }).findings.find((f) => f.entryKey === key);
+
+    // Same scan, same record — only consent differs.
+    expect(base?.reason).toBe('dry-run-only');
+    expect(base?.severity).toBe('info');
+    expect(base?.temporaryRetention).toBeUndefined();
+
+    expect(escalated?.reason).toBe('dry-run-only');
+    expect(escalated?.severity).toBe('critical');
+    expect(escalated?.temporaryRetention).toBe(true);
+    expect(escalated?.detail).toContain('no restore is possible');
+  });
 });
