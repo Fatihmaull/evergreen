@@ -33,10 +33,28 @@ The verified local CLI binary is installed at `.stellar/tools/28.0.0/stellar` (g
 
 ```bash
 export PATH="$PWD/.stellar/tools/$(cat .stellar-cli-version):$PATH"
+# Confirm you got the PINNED binary and not one already on PATH.
+command -v stellar
 stellar --version
 ```
 
-For another machine, install the exact version from the [official CLI 28.0.0 release](https://github.com/stellar/stellar-cli/releases/tag/v28.0.0), or use `cargo install --locked stellar-cli --version 28.0.0`. Verify `stellar --version` after installation. The Linux x86_64 release archive used here has SHA-256 `207544486734fccb4df1afc4a7745478f9f1e21688b2f9506f0ef36f60ce3fdc`, verified against the release asset metadata before extraction.
+> **`export` cannot fail, and that is the problem.** If
+> `.stellar/tools/<version>/` is not there — a fresh clone, or a machine where
+> nobody installed it — the prepended path simply matches nothing and `stellar`
+> resolves to whatever was already on `PATH`. On a Mac with Homebrew that is
+> `/opt/homebrew/bin/stellar`, and `stellar --version` then reports **that**
+> version while you believe you activated the pin.
+>
+> Checked on macOS 2026-09-15: it does fall through, and the Homebrew binary
+> happened to be 28.0.0, so nothing looked wrong. That is the failure mode — it
+> is silent when the versions match and silent when they do not. `command -v`
+> above is what makes it visible: the path it prints must be inside the
+> repository, not `/opt/homebrew` or `/usr/local`.
+>
+> **Install before you activate.** The paragraph below is the install step, not
+> an aside for other people.
+
+For another machine, install the exact version from the [official CLI 28.0.0 release](https://github.com/stellar/stellar-cli/releases/tag/v28.0.0), or use `cargo install --locked stellar-cli --version 28.0.0`. Verify `stellar --version` after installation. The Linux x86_64 release archive used here has SHA-256 `207544486734fccb4df1afc4a7745478f9f1e21688b2f9506f0ef36f60ce3fdc`, verified against the release asset metadata before extraction. **No macOS checksum is recorded**, so on a Mac prefer `cargo install --locked`, which pins by lockfile rather than by a hash we do not have.
 
 The deployed guinea-pig Wasm identifies CLI 28.0.0 / Rust 1.98.1 as its build tools. A local rebuild matches its hash. `W1-D4-01` remains in progress until current tooling versions are confirmed on both development machines.
 
