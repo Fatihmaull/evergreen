@@ -375,6 +375,38 @@ day before, which turns a routine measurement into a breaking change.
 **Symptom to watch for:** a constant whose doc comment contains both a date and a
 rule. That is one constant doing two jobs.
 
+### Superseding a document means editing the superseded one
+
+**Twice in two days**, a new operational document referenced an older one and the
+older one gained no link back:
+
+| | |
+|---|---|
+| 2026-09-14 | `W3-D18-03-CAPTURE.md` → `SEP-20-PREFLIGHT.md`, no return link |
+| 2026-09-15 | `W3-SEP18-READINESS.md` → `SEP-20-PREFLIGHT.md`, no return link |
+
+It is structural rather than careless. **The new page's author knows the old page
+exists. The old page's author did not know the new one would be written.** So the
+link that gets written is the one nobody needs, and the link that matters is the
+one requiring someone to go back and edit a document they are not working in.
+
+The operator then opens the *older* page — because it is the one that has been
+referenced longest — and it describes a tool that is no longer primary. On
+2026-09-15 that page still told a reader to commit probe text output, while the
+gate had since gained a verified-bundle path that a rehearsal cannot satisfy.
+
+**Enforced by `scripts/check-reciprocal-links.mjs`.** The rule was written as
+prose on 2026-09-14 and a fresh instance appeared the next day, in the same
+document, from a different author — which is this file's most-repeated finding
+arriving again. Prose did not hold, so a check does it.
+
+Scope is narrow on purpose: only pages someone opens *on a day*. Demanding
+reciprocity everywhere would require `SETUP.md` to link back to every narrative
+page citing it, and `STATUS.md` references everything by design.
+
+The membership test, when deciding whether a page belongs on that list: **if
+someone follows this page literally today, do they use the current tool?**
+
 ### Before arming a gate, prove its demand can be satisfied by the allowed path
 
 **A gate whose demand is unsatisfiable is not strict. It is broken — and it
