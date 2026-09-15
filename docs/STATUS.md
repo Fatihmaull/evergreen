@@ -22,8 +22,7 @@ All18 engine-cron job starts in the refreshed sample: median174.37min, max368.58
 ongoing gap and Sep18 state must still be checked on the day. [Readiness/handoff](W3-SEP18-READINESS.md),
 [evidence](evidence/2026-09-15-readiness/README.md). D17-04, D18-02a/#130 and observer
 acceptance are not inferred from merges. Existing Fatih-primary/Rakha-backup handoff
-still needs confirmation. No claim of unattended B observation. Notion sync pending
-separate publication; no new public coordination message this turn.
+still needs confirmation. No claim of unattended B observation. [PR #163](https://github.com/Fatihmaull/evergreen/pull/163) publishes readiness evidence for Fatih review. Notion D18-01/03 remains In progress with the publication outcome. Explicit acceptance/handoff confirmation is requested in #130; no acceptance is inferred.
 
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 

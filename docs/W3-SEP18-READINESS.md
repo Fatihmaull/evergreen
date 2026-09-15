@@ -71,7 +71,7 @@ Prepared coordination text for the publication checkpoint:
 > is armed Sep18–21, critical540, email-only; it neither submits transactions nor
 > supplies B crossing evidence. Please confirm the existing primary/backup handoff.
 
-No new request has been posted by this readiness turn; publication remains separate.
+Published in [PR #163](https://github.com/Fatihmaull/evergreen/pull/163); the explicit acceptance/handoff request has been posted in #130. Responses remain pending.
 
 ## B/C handoff — use the existing runbook
 
