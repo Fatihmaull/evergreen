@@ -1,6 +1,6 @@
 # W3 weekend readiness update — 2026-09-15
 
-Local update after merged #169/#170; publication remains separate.
+Published in PR #177 after reconciliation with main4db0352; installed runtime remains the verified main0f14d65 snapshot. Integrated pnpm check passed882 tests.
 
 ## Observer
 
@@ -27,15 +27,15 @@ the disposable test contract, never B. Rakha confirmed inbox placement for this 
 ## Four reminders (WIB)
 
 - Sunday Sep20, 18:30 — open terminal/agent and prepare for the19:00 crossing checkpoint.
-- Monday Sep21, 01:00 — extra checkpoint or arrange handoff if unavailable.
-- Monday Sep21, 07:00 — extra checkpoint or arrange handoff if unavailable.
+- Monday Sep21, 01:00 — extra handoff coordination reminder; Rakha has requested a replacement operator.
+- Monday Sep21, 07:00 — extra handoff coordination reminder; Rakha has requested a replacement operator.
 - Monday Sep21, 18:30 — prepare for the19:00 expiry observation.
 
 One app automation holds these four occurrences and stops afterward. It sends
 reminders only: it does not run capture/workflows, publish commits, send GitHub
-messages or assert Rakha's availability. Checkpoint ownership still needs explicit
-human coordination. Fatih's latest chat says he will also help watch; do not infer
-which late-night checkpoint he has taken.
+messages or assert Rakha's availability. Rakha explicitly confirmed Sunday20 19:00 WIB and Monday21 19:00 WIB for himself.
+Monday01:00/07:00 WIB handoff has been requested from Fatih, not yet accepted.
+Confirmation is posted in #104; technical replies are posted in #140/#141.
 
 [Evidence](evidence/2026-09-15-watcher-refresh/README.md) contains only public config,
 service metadata and email result. No watch.env or API key is included.

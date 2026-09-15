@@ -20,9 +20,11 @@ passed with exit0; timer remains armed for Sep18 07:00 WIB. No Stellar credentia
 The #170 deliverability command sent one provided-record test to the existing
 weekend mailbox; Resend accepted c4683ea6-d387-48c8-843e-c357ad620065. Rakha confirmed inbox delivery; the prior not-spam training was already reported. No transaction was attempted. Four app reminders
 are configured: Sep20 18:30 WIB; Sep21 01:00,07:00,18:30 WIB. Reminders do not execute
-operations or confirm availability to Fatih. Operator calendar commitment is not
-inferred from automation. Local operational/evidence update awaits publication;
-Notion sync pending that checkpoint.
+operations or confirm availability to Fatih. Rakha explicitly confirmed Sep20 19:00 WIB and Sep21 19:00 WIB in #104;
+Sep21 01:00/07:00 handoff requested from Fatih, not yet accepted. PR #177 publishes
+the operational correction and inbox outcome, with replies to #140/#141. Integrated
+full gate882 tests passed; Notion publication sync pending. No automation claims
+human availability outside the confirmed slots.
 
 ## Current — September18 readiness prepared; acceptance remains open
 
