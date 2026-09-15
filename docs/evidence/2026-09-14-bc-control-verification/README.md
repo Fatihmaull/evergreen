@@ -27,6 +27,21 @@ B and C were not storage-free: the bootstrap footprints
 show `contractData` entries beyond their instances for both. So the keys had to be built and
 scanned.
 
+> ⚠️ **These two key files are evidence AND runtime input.** `data-keys-B.json`
+> and `data-keys-C.json` are loaded at run time by
+> [`scripts/crossing-capture-common.mjs`](../../../scripts/crossing-capture-common.mjs)
+> — the code that captures the Sep 20 and Sep 25 crossings. They are not inert.
+>
+> **Do not "tidy" them.** Editing them changes what the crossing capture reads, on
+> the one date that cannot be repeated. If a genuine error is ever found in them,
+> fix it deliberately and re-run the capture, rather than correcting the record.
+>
+> They are defended rather than trusted: `controlKeys()` requires exactly two keys,
+> derives the expected owner from `write-guard.ts`'s `PROTECTED_ENTRIES` rather than
+> from this file, and requires one `persistent` and one `temporary` — otherwise it
+> throws. Their hashes are also pinned into each capture's runtime manifest, so a
+> change is recorded rather than silent.
+
 ### How B's and C's data keys were obtained
 
 No keys file existed for either. They were reconstructed from A's
