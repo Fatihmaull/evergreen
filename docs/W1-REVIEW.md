@@ -151,3 +151,5 @@ The asymmetry is the finding. **B and C had a drift check running twice a week; 
 | 2026-09-10 | Session 1 | Same task | `scripts/check-task-ids.mjs` documents what it catches and what it deliberately cannot, but nothing said **what shape makes an ID "registered"** — a checkbox line. Registering a task any other way silently produced dangling references in two files. The constraint was discoverable only by tripping it. |
 
 *Two entries on day one, both from the same small task, both real. That is roughly the rate the earlier observations predicted.*
+
+- 2026-09-15 · W3-D19 feasibility: ADR-002/POLICY-SIGNER assume smart-account auth can constrain the fee-paying native TTL envelope, but do not identify a policy hook on that path. Pinned protocol/provider tracing found the missing link; see W3-POLICY-SIGNER-FEASIBILITY.md. No deploy performed.

@@ -9,6 +9,19 @@
 
 ---
 
+## Current — W3-D19 blocker published for Shared decision
+
+Read-only Testnet28 metadata, captive-core-matching source and offline envelope
+checks identify an enforcement mismatch: passkey-kit signs contract invocation auth,
+not the native TTL transaction's G-address payer signature. Direct adapter is a
+no-go recommendation, not a final Shared/ADR decision or a deployed-wallet test.
+[Issue #161](https://github.com/Fatihmaull/evergreen/issues/161) tracks what would
+unblock W3-D19-01/02/03, now Blocked. W3-D20-01 is In progress for Shared review.
+[Findings](W3-POLICY-SIGNER-FEASIBILITY.md) and reproducible evidence are prepared
+for the companion PR. Stage1 and B/C observation remain unblocked. No provider
+installation, deployment, new transaction or timer activation. Notion sync pending
+this publication checkpoint; no final ADR/SOW change has been made.
+
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 
 **`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
