@@ -7,15 +7,33 @@ import console from 'node:console';
 import { runAlertCommand } from './engine-alert-run.mjs';
 import { runSchedulerWatch } from './scheduler-watch.mjs';
 import { EmailChannel } from '../packages/engine/dist/index.js';
+/**
+ * Barrier 2 of 4: a fault proof must never obtain a signer.
+ *
+ * The config deliberately points `secretEnvVar` at `ARTIFACT_SEED`, which is one
+ * of the names this refuses — so the lookup that would produce a key is the one
+ * guaranteed to throw.
+ */
+export function privateEnvReader(env = process.env) {
+  return (name) => {
+    if (name === 'EVERGREEN_SIGNER_SECRET' || name === 'ARTIFACT_SEED')
+      throw Error('Fault proof must not access a signer');
+    return env[name];
+  };
+}
+
+/** Barrier 3 of 4: only reads may reach RPC. `sendTransaction` is not here. */
+export const READ_ONLY_RPC_METHODS = ['getNetwork', 'getLedgerEntries', 'simulateTransaction'];
+
+export function assertReadOnlyRpc(method) {
+  if (!READ_ONLY_RPC_METHODS.includes(method)) throw Error('Write RPC forbidden in fault proof');
+}
+
 export async function rehearse({ scenario, root, runId, send = false }) {
   if (!['rpc-timeout', 'insufficient-balance', 'missed-run'].includes(scenario))
     throw Error('Unknown scenario');
   const realFetch = globalThis.fetch;
-  const privateEnv = (name) => {
-    if (name === 'EVERGREEN_SIGNER_SECRET' || name === 'ARTIFACT_SEED')
-      throw Error('Fault proof must not access a signer');
-    return process.env[name];
-  };
+  const privateEnv = privateEnvReader();
   const log = {
     scenario,
     runId,
@@ -91,8 +109,7 @@ export async function rehearse({ scenario, root, runId, send = false }) {
             { headers: { 'content-type': 'application/json' } },
           );
         }
-        if (!['getNetwork', 'getLedgerEntries', 'simulateTransaction'].includes(request.method))
-          throw Error('Write RPC forbidden in fault proof');
+        assertReadOnlyRpc(request.method);
         return fixtureFetch(url, options);
       };
       const c = JSON.parse(await readFile('evergreen.config.save-proof.json', 'utf8'));
