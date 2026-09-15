@@ -109,3 +109,5 @@ export { planEngineExecution } from './engine-execution-plan.js';
 export type { EngineExecutionEntry, EngineExecutionSelection } from './engine-execution-plan.js';
 export { validateExtensionEnvelope } from './ed25519-signer.js';
 export { formatCount, EVIDENCE_LOCALE } from './format.js';
+
+export { temporaryConsent } from './temporary-policy.js';

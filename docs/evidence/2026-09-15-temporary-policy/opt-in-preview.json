@@ -1,0 +1,161 @@
+{
+  "scan": {
+    "network": "testnet",
+    "contracts": [
+      {
+        "id": "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+      }
+    ],
+    "entries": {
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABQAAAAB": {
+        "kind": "instance",
+        "endBehavior": "archived",
+        "contracts": [
+          "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+        ],
+        "observedAtLedger": 4685387,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4806332,
+          "remainingLedgers": 120945
+        }
+      },
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==": {
+        "kind": "temporary",
+        "endBehavior": "deleted",
+        "contracts": [
+          "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+        ],
+        "observedAtLedger": 4685387,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4686093,
+          "remainingLedgers": 706
+        }
+      },
+      "AAAAB8reL7Y7Qiw1N7qidrKL1uwtc0fG6Kx0kSTvahOfR3My": {
+        "kind": "code",
+        "endBehavior": "archived",
+        "contracts": [
+          "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+        ],
+        "observedAtLedger": 4685387,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4806321,
+          "remainingLedgers": 120934
+        }
+      }
+    },
+    "issues": [
+      {
+        "kind": "sharing-undetermined",
+        "contracts": [
+          "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+        ],
+        "entryKey": "AAAAB8reL7Y7Qiw1N7qidrKL1uwtc0fG6Kx0kSTvahOfR3My",
+        "observedAtLedger": 4685387,
+        "message": "Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius."
+      }
+    ],
+    "coverage": {
+      "mode": "known-keys",
+      "dataKeysSuppliedByContract": {
+        "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7": 1
+      }
+    }
+  },
+  "decisions": [
+    {
+      "action": "skip",
+      "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABQAAAAB",
+      "contracts": [
+        "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+      ],
+      "reason": "WARNING — Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed. 120,945 ledgers remaining."
+    },
+    {
+      "action": "extend",
+      "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+      "contracts": [
+        "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+      ],
+      "payer": "dev",
+      "extendToLedgers": 100000,
+      "reason": "CRITICAL — At or below action threshold (17280 ledgers). Low, and temporary — this data is DELETED at expiry, not archived. Unrecoverable."
+    },
+    {
+      "action": "skip",
+      "entryKey": "AAAAB8reL7Y7Qiw1N7qidrKL1uwtc0fG6Kx0kSTvahOfR3My",
+      "contracts": [
+        "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+      ],
+      "reason": "WARNING — Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (17280 ledgers); warning only, no bump needed. 120,934 ledgers remaining."
+    }
+  ],
+  "liveness": {
+    "isAlarm": true,
+    "severity": "critical",
+    "findings": [
+      {
+        "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+        "contracts": [
+          "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+        ],
+        "reason": "no-action-recorded",
+        "severity": "critical",
+        "temporaryRetention": true,
+        "remediation": "extend",
+        "remainingLedgers": 706,
+        "isExpired": false,
+        "detail": "Needs action (706 ledgers remain) and this run recorded nothing for it. Explicit temporary retention is at risk: expiry permanently deletes this data; no restore is possible."
+      }
+    ]
+  },
+  "health": {
+    "byEntry": {
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABQAAAAB": {
+        "health": "warning",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed."
+      },
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==": {
+        "health": "critical",
+        "needsAction": true,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "exclusive",
+        "reason": "At or below action threshold (17280 ledgers). Low, and temporary — this data is DELETED at expiry, not archived. Unrecoverable."
+      },
+      "AAAAB8reL7Y7Qiw1N7qidrKL1uwtc0fG6Kx0kSTvahOfR3My": {
+        "health": "warning",
+        "needsAction": false,
+        "isExpired": false,
+        "observedContractCount": 1,
+        "blastRadiusAtLeast": 1,
+        "sharingStatus": "undetermined",
+        "reason": "Low. This scan saw one contract on it, but a code entry may serve others it cannot see. Above action threshold (17280 ledgers); warning only, no bump needed."
+      }
+    },
+    "thresholdsByEntry": {
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABQAAAAB": {
+        "warnBelowLedgers": 120960,
+        "criticalBelowLedgers": 17280
+      },
+      "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==": {
+        "warnBelowLedgers": 120960,
+        "criticalBelowLedgers": 17280
+      },
+      "AAAAB8reL7Y7Qiw1N7qidrKL1uwtc0fG6Kx0kSTvahOfR3My": {
+        "warnBelowLedgers": 120960,
+        "criticalBelowLedgers": 17280
+      }
+    }
+  },
+  "mode": "dry-run"
+}

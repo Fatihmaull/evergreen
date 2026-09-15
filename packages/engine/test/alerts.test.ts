@@ -158,3 +158,27 @@ describe('run alert truth', () => {
     expect(a.length).toBe(new Set(a.map((x) => x.id)).size);
   });
 });
+
+it('keeps opted-in temporary urgency when a submitted record covers liveness', () => {
+  const alerts = planRunAlerts('temporary-unconfirmed', {
+    records: [submitted],
+    diagnostics: [],
+    liveness: {
+      isAlarm: true,
+      severity: 'critical',
+      findings: [
+        {
+          ...finding,
+          entryKey: submitted.entryKey,
+          reason: 'submitted-unconfirmed',
+          temporaryRetention: true,
+          detail: 'Temporary data is DELETED at expiry; no restore.',
+        },
+      ],
+    },
+  });
+  expect(alerts).toHaveLength(1);
+  expect(alerts[0]?.notification.severity).toBe('critical');
+  expect(alerts[0]?.notification.body).toContain('DELETED');
+  expect(alerts[0]?.notification.subject).toContain('UNCONFIRMED');
+});

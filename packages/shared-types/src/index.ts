@@ -236,6 +236,11 @@ export interface EvergreenConfig {
      * silently dropped it would downgrade every configured scan to unknown.
      */
     readonly dataKeys?: readonly LedgerKey[];
+    /** Per-entry consent. Missing/false vetoes across repeated registrations. */
+    readonly temporaryEntryPolicies?: readonly {
+      readonly entryKey: LedgerKey;
+      readonly autoExtend: boolean;
+    }[];
     /**
      * Caller assertion that this contract has no data keys beyond its
      * instance. **A declaration, never verified emptiness** (ADR-006). Only
