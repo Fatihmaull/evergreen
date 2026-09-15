@@ -75,18 +75,51 @@ whether the boundary has been crossed.
 
 ### 3. The guard refuses, and the refusal is in the record
 
-**The refusal comes from `scripts/b-crossing-probe.mjs`, not from the cron.** It
-builds its config in memory, so there is no file on disk the scheduler could ever
-be pointed at, and it is read-only: no payer resolves, no secret is read, the
-engine is decide-only and the guard refuses regardless.
+> **Rehearsed 2026-09-15.** This whole procedure was walked end to end with
+> `EVERGREEN_TODAY=2026-09-20`, and it found two defects — a command that breaks
+> on the re-run this section tells you to do, and a capture tool this document
+> never mentioned. Both are fixed below. The gate was confirmed RED → GREEN →
+> RED, with C staying RED independently.
+
+**Use the capture tool. It is verified; the probe output is not.**
+
+`pnpm capture:crossing` writes a manifest that
+[`verify-crossing-capture.mjs`](../scripts/verify-crossing-capture.mjs) checks,
+and `check-crossing-evidence.mjs` accepts such a bundle only when it genuinely
+qualifies: phase `crossing-refused`, the **real** 17,280 threshold, and an
+observation dated on or after the alert threshold. A rehearsal cannot satisfy it
+even if filed under the right date.
 
 ```bash
-probe_capture=$(mktemp /tmp/w3-b-crossing.XXXXXX.txt)
+pnpm capture:crossing --subject B --output .evergreen/crossing/B-crossing
+pnpm verify:crossing .evergreen/crossing/B-crossing --require-crossing
+```
+
+- [ ] `--require-crossing` exits non-zero unless the capture actually qualifies.
+      **That exit code is the check** — do not read the JSON and decide for yourself
+- [ ] full operator detail, including the C and expiry captures, is in
+      [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md). Read it alongside this page
+
+**The probe stays as the fast human-readable look**, and as the fallback if the
+capture tooling itself fails on the day. It builds its config in memory, so there
+is no file on disk the scheduler could ever be pointed at, and it is read-only:
+no payer resolves, no secret is read, the engine is decide-only and the guard
+refuses regardless.
+
+```bash
+probe_capture=$(mktemp /tmp/w3-b-crossing.XXXXXX)
 env -u BELOW node scripts/b-crossing-probe.mjs > "$probe_capture" 2>&1
 probe_exit=$?
 cat "$probe_capture"
 printf 'probe_exit=%s capture=%s\n' "$probe_exit" "$probe_capture"
 ```
+
+> The template must end in the `X`s. It previously read
+> `/tmp/w3-b-crossing.XXXXXX.txt`, which **BSD/macOS `mktemp` does not
+> substitute** — the first run wrote a literally-named file and the second failed
+> with `mkstemp failed … File exists`, returning an empty path so the redirect
+> broke. On the one day this page exists for, and on the re-run it tells you to
+> do.
 
 - [ ] run it with **no `BELOW`** (the command explicitly removes inherited overrides) — the point is that B is genuinely below the
       real 17,280 threshold. If it reports *"seen but still above the threshold"*,
@@ -101,7 +134,7 @@ printf 'probe_exit=%s capture=%s\n' "$probe_exit" "$probe_capture"
 
 ### 4. The record is committed the same day
 
-- [ ] save the B probe output as the crossing artifact. Download the cron artifact separately only as scheduler context; it cannot contain the B refusal
+- [ ] commit the **verified capture bundle** as the crossing artifact; keep the probe output beside it as the readable record. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
 - [ ] commit it under `docs/evidence/2026-09-20-b-crossing/`
 - [ ] **an artifact is a log; a commit is evidence.** Artifacts expire; the
       grant submission is Oct 2
