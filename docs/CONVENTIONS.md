@@ -375,6 +375,68 @@ day before, which turns a routine measurement into a breaking change.
 **Symptom to watch for:** a constant whose doc comment contains both a date and a
 rule. That is one constant doing two jobs.
 
+### A file that is evidence AND configuration has two opposite update rules
+
+*Found 2026-09-15, five days before it would have mattered.*
+
+`docs/evidence/2026-09-15-readiness/watch.json` looked like a record: absolute
+timestamps, a machine-specific path, inside a checksummed bundle. **Decoding its
+window is what disproved that** — it runs 2026-09-18T00:00Z to 2026-09-21T18:00Z,
+covering guinea-pig B's crossing *and* its expiry. It was the live weekend watcher
+configuration, shipped with `warnMinutes: 30` against a 136-minute median.
+
+The hazard is that **each role hides the other**. A reviewer sees a checksummed
+record and does not think to check whether it is correct; an operator sees a
+config and does not think it is frozen. Evidence must never change; configuration
+must be right. Both cannot be satisfied by the same file.
+
+**The resolution is not to edit the record.** Rewriting a record to match a later
+decision is the one thing this repo does not do. Instead: enforce the correct
+value in code so the stale config fails loudly, and hand the operator a
+replacement. The record stays true about what was configured; the code makes that
+configuration unrunnable.
+
+**Shape, not content, is the wrong classifier.** Absolute timestamps and
+machine-specific paths say "record" and are compatible with "live config". The
+discriminating question is: **does anything read this file, or is any date in it
+still in the future?**
+
+#### The inventory, as of 2026-09-15
+
+| Evidence file | Read by | Defended? |
+|---|---|---|
+| `2026-09-14-bc-control-verification/data-keys-{B,C}.json` | `crossing-capture-common.mjs` — the Sep 20/25 capture | **yes** — owner derived from `PROTECTED_ENTRIES`, shape validated, hash pinned in the capture manifest |
+| `2026-09-12-manual-extend-proof/simulation/06-getLedgerEntries-response.json` | `rpc-preload.mjs`, used by the rehearsal harness | offline fixture; rehearsal only |
+| `2026-09-15-readiness/watch.json` | the operator, for the weekend window | **was not** — fixed by flooring `warnMinutes` in code |
+
+Re-run the sweep when adding anything under `docs/evidence/`: grep the code for
+references into that tree, then check whether any date inside is still ahead.
+
+### A fixture calibrated to a literal stops testing when the literal moves
+
+The quietest member of the family. Not a test that cannot fail — **a test that
+silently stopped testing anything while still passing.** Nothing reports it: the
+suite stays green and the count does not move.
+
+*2026-09-15:* flooring `warnMinutes` at 369 made several watcher fixtures vacuous.
+They positioned a job "40 minutes old against a warn of 30" — once warn moved, the
+same job was healthy and the lateness assertion proved nothing.
+
+**The repair is to express the fixture relative to the policy**, not to a literal:
+`const late = (policy.warnMinutes + 10) * 60000`. It then keeps testing lateness
+whichever side the floor moves to.
+
+**Assertions are the opposite and should stay literal.** `expect(WORST_OBSERVED).toBe(369)`
+*should* fail when the number moves — that is the point. The distinction:
+
+- **calibration** — the literal positions a scenario. Moving it changes what is tested, silently
+- **assertion** — the literal is the claim. Moving it fails loudly
+
+Roughly a dozen calibration sites remain, mostly `const THRESHOLD = 17_280` in CLI
+tests. Those are lower risk than the watcher case: if the default moved they would
+still test the same behaviour, just no longer *at the production default*. Not yet
+individually triaged — recorded here so the list is a worklist rather than a claim.
+
 ### Superseding a document means editing the superseded one
 
 **Twice in two days**, a new operational document referenced an older one and the
