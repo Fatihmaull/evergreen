@@ -17,10 +17,8 @@ not the native TTL transaction's G-address payer signature. Direct adapter is a
 no-go recommendation, not a final Shared/ADR decision or a deployed-wallet test.
 [Issue #161](https://github.com/Fatihmaull/evergreen/issues/161) tracks what would
 unblock W3-D19-01/02/03, now Blocked. W3-D20-01 is In progress for Shared review.
-[Findings](W3-POLICY-SIGNER-FEASIBILITY.md) and reproducible evidence are prepared
-for the companion PR. Stage1 and B/C observation remain unblocked. No provider
-installation, deployment, new transaction or timer activation. Notion sync pending
-this publication checkpoint; no final ADR/SOW change has been made.
+[Findings](W3-POLICY-SIGNER-FEASIBILITY.md) and reproducible evidence are published in [PR #162](https://github.com/Fatihmaull/evergreen/pull/162) for Fatih review. Stage1 and B/C observation remain unblocked. No provider
+installation, deployment, new transaction or timer activation. Notion D19-01/02/03 is Blocked and D20-01 In progress, linked to #161/#162. All-ID presence check found no missing or phantom rows (150 mirrored). Full local gate passed 865 tests; offline reproduction passed separately. No final ADR/SOW change has been made.
 
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 

@@ -99,3 +99,11 @@ limit and available Stage1 path; it must not advertise a proven hardened path.
 SOW treatment remains a human/Shared decision. Public blocker issue, ADR update,
 Notion mirror and any proposal to the funder belong to the approved publication
 checkpoint, not this local research step.
+
+## Publication
+
+Evidence is published in [PR #162](https://github.com/Fatihmaull/evergreen/pull/162).
+[Issue #161](https://github.com/Fatihmaull/evergreen/issues/161) remains open for
+Shared resolution; merging the report must not auto-close the decision. Full local
+pnpm check passed 865 tests; the integrity-checked offline reproduction passed.
+Notion status mirrors the blocker. No final ADR amendment was made.
