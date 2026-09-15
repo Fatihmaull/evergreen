@@ -1,3 +1,4 @@
+import { formatCount } from './format.js';
 import type { LedgerEntryTTL, TTLObservation } from '@evergreen-stellar/shared-types';
 
 /**
@@ -237,8 +238,8 @@ export function measureCadence(samples: readonly LedgerCloseSample[]): LedgerCad
     source: 'measured',
     uncertaintySecondsPerLedger: Math.max(widestDeviation, quantizationFloor),
     basis:
-      `${sorted.length} closes across ${spanLedgers.toLocaleString()} ledgers ` +
-      `(${first.ledgerSeq.toLocaleString()}-${last.ledgerSeq.toLocaleString()})`,
+      `${sorted.length} closes across ${formatCount(spanLedgers)} ledgers ` +
+      `(${formatCount(first.ledgerSeq)}-${formatCount(last.ledgerSeq)})`,
   };
 }
 

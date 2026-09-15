@@ -1,3 +1,4 @@
+import { formatCount } from './format.js';
 import type {
   BumpDecision,
   EvergreenConfig,
@@ -111,7 +112,7 @@ function evaluateBumps(
     const { remainingLedgers } = entry.ttl;
     if (!needsAction(remainingLedgers, actionThreshold)) {
       skip(
-        `${assessment.health.toUpperCase()} — ${assessment.reason} ${remainingLedgers.toLocaleString('en-US')} ledgers remaining.`,
+        `${assessment.health.toUpperCase()} — ${assessment.reason} ${formatCount(remainingLedgers)} ledgers remaining.`,
       );
       continue;
     }

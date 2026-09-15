@@ -183,6 +183,20 @@ were taken on the second attempt after the first set was disqualified — to cha
 one line that does not alter a single claim the evidence makes. If Deliverable 1
 is recaptured for another reason before Oct 2, this line comes along with it.
 
+## Reproducing these numbers on another machine
+
+The figures here group with a comma — `1,698,006` — and **that is now true on every
+machine**, not just the one that captured them. Until 2026-09-15 the CLI formatted
+numbers in the *reader's* locale, so the same command produced `1.698.006` on a
+German system and `1 698 006` on a French one, the latter separated by U+202F, a
+narrow no-break space that looks like a space and fails a byte comparison
+invisibly.
+
+A reviewer re-running these commands would have seen output that did not match
+the screenshots, and been right to call it a failure to reproduce. Pinned in #160,
+with `pnpm check:locale` failing the build on any unpinned call so it cannot
+return. Verified identical across `en-US`, `de-DE`, `fr-FR`, `ja-JP` and `ar-EG`.
+
 ## Scope and limits
 
 - **Testnet only.** Nothing here was submitted; `scan` and `--cost` never sign or send. The
