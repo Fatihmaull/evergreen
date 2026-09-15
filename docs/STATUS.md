@@ -9,7 +9,24 @@
 
 ---
 
-## Current — W3-D19 blocker published for Shared decision
+## Current — September18 readiness prepared; acceptance remains open
+
+Sep15 operational checks completed against main5998862. A separate email-only
+watcher is installed and armed for Sep18 00:00 through Sep21 18:00 UTC; critical540,
+warning30, finite dated calendar and checksum-checked runtime. User linger enabled.
+Early service run returned inactive/exit0; real GitHub preview and sandbox replay
+verified warning/deduplication without sending. B/C captures are before-action and
+verified;16 capture tests and full pnpm check (865 total tests) pass. No new transaction or email.
+
+All18 engine-cron job starts in the refreshed sample: median174.37min, max368.58min;
+ongoing gap and Sep18 state must still be checked on the day. [Readiness/handoff](W3-SEP18-READINESS.md),
+[evidence](evidence/2026-09-15-readiness/README.md). D17-04, D18-02a/#130 and observer
+acceptance are not inferred from merges. Existing Fatih-primary/Rakha-backup handoff
+still needs confirmation. No claim of unattended B observation. [PR #163](https://github.com/Fatihmaull/evergreen/pull/163) publishes readiness evidence for Fatih review. Notion D18-01/03 remains In progress with the publication outcome. Explicit acceptance/handoff confirmation is requested in #130; no acceptance is inferred.
+
+## Current — W3-D17-05 closed; D17-04 evidence landed
+
+## Earlier — W3-D19 blocker published for Shared decision
 
 Read-only Testnet28 metadata, captive-core-matching source and offline envelope
 checks identify an enforcement mismatch: passkey-kit signs contract invocation auth,
@@ -38,6 +55,7 @@ Merged as #160 after review; the escalation test was strengthened to fail when t
 
 
 ## Earlier — W3-D17-05 closed; D17-04 evidence landed
+
 
 **`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
 

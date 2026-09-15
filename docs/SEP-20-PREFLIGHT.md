@@ -55,6 +55,18 @@ whether the boundary has been crossed.
 - [ ] **`timeout-minutes` is still below the cron interval** — `pnpm check`
       enforces this now, so a green check is sufficient
 
+> **Before Saturday, read [`W3-SEP18-READINESS.md`](W3-SEP18-READINESS.md).** It
+> records what was verified at the September 18 gate — cadence, observer, the B and
+> C preflight captures — so this page starts from a known state rather than an
+> assumed one.
+>
+> Linked from here deliberately. The readiness record referenced this page as soon
+> as it was written, because its author knew this page existed; this page had no
+> reason to reference it, because its author did not know it would be written. That
+> asymmetry means the link that gets written is the one nobody needs, and the
+> operator opens the *older* page. Superseding or complementing a document means
+> editing the other one.
+
 ### 2. The engine detects B, distinguishably from finding nothing
 
 > **Corrected 2026-09-14.** This section previously said to leave B in

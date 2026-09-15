@@ -1,0 +1,10 @@
+[Unit]
+Description=Evergreen observer finite Sep18-21 UTC window
+[Timer]
+OnCalendar=2026-09-18..20 *:0/5:00 UTC
+OnCalendar=2026-09-21 00..17:0/5:00 UTC
+AccuracySec=1s
+Persistent=true
+Unit=evergreen-readiness-watch.service
+[Install]
+WantedBy=timers.target
