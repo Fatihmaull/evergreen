@@ -1,0 +1,21 @@
+{
+  "status": "alerted",
+  "assessment": {
+    "status": "late",
+    "severity": "warn",
+    "lastStartedAt": 1789435905000,
+    "overdueMinutes": 296.0316833333333,
+    "incidentId": "late:104218572671:warn"
+  },
+  "incidentId": "watch-01f3822c96c5de349a0ecb3d0559af0571205811ce802e380932a89dd04f6fd6",
+  "receipt": {
+    "status": "preview",
+    "submitted": false,
+    "notification": {
+      "severity": "warn",
+      "subject": "[WARN] Evergreen scheduler late",
+      "body": "Watch: readiness-preview-20260915\nStatus: late\nLast actual job start: 2026-09-15T01:31:45.000Z\nMinutes since anchor: 296\nThis is scheduler observation, not a transaction failure record. Check the runner and retained state; no replacement transaction was submitted."
+    }
+  },
+  "exitCode": 1
+}

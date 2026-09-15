@@ -1,0 +1,19 @@
+# guinea-pig C crossing probe
+observed:   2026-09-15T06:28:48.648Z
+subject:    CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+expires:    2026-09-26 (alert threshold 2026-09-25)
+threshold:  17,280 ledgers
+mode:       dry-run   decisions: 3
+
+SKIP   AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+       HEALTHY — Above threshold. 1,684,233 ledgers remaining.
+SKIP   AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB
+       HEALTHY — Above threshold. 194,069 ledgers remaining.
+SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+       HEALTHY — Above threshold. 604,801 ledgers remaining.
+
+ℹ guinea-pig C was seen but is still above the threshold, so nothing was attempted and
+  the guard was never consulted. Before the crossing this is correct. ON THE DAY it means
+  the crossing has not happened yet — re-run later, do not lower the threshold to force it.
+
+Nothing was signed and nothing was submitted.

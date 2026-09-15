@@ -1,0 +1,15 @@
+Sep 15 13:29:45 fedora systemd[1619]: Starting evergreen-readiness-preview.service - [systemd-run] /home/rakhargo/.nvm/versions/node/v24.13.0/bin/node /home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/node_modules/evergreen-runtime/scripts/scheduler-watch.mjs --config /home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/current-preview-config.json...
+Sep 15 13:29:48 fedora node[37620]: {
+Sep 15 13:29:48 fedora node[37620]:   "status": "deduplicated",
+Sep 15 13:29:48 fedora node[37620]:   "assessment": {
+Sep 15 13:29:48 fedora node[37620]:     "status": "late",
+Sep 15 13:29:48 fedora node[37620]:     "severity": "warn",
+Sep 15 13:29:48 fedora node[37620]:     "lastStartedAt": 1789435905000,
+Sep 15 13:29:48 fedora node[37620]:     "overdueMinutes": 298.02326666666664,
+Sep 15 13:29:48 fedora node[37620]:     "incidentId": "late:104218572671:warn"
+Sep 15 13:29:48 fedora node[37620]:   },
+Sep 15 13:29:48 fedora node[37620]:   "incidentId": "watch-01f3822c96c5de349a0ecb3d0559af0571205811ce802e380932a89dd04f6fd6",
+Sep 15 13:29:48 fedora node[37620]:   "exitCode": 1
+Sep 15 13:29:48 fedora node[37620]: }
+Sep 15 13:29:48 fedora systemd[1619]: Finished evergreen-readiness-preview.service - [systemd-run] /home/rakhargo/.nvm/versions/node/v24.13.0/bin/node /home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/node_modules/evergreen-runtime/scripts/scheduler-watch.mjs --config /home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/current-preview-config.json.
+Sep 15 13:29:48 fedora systemd[1619]: evergreen-readiness-preview.service: Consumed 662ms CPU time, 89.5M memory peak.

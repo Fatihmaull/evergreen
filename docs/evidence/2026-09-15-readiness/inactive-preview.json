@@ -1,0 +1,11 @@
+{
+  "assessment": {
+    "severity": "info",
+    "incidentId": null,
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "inactive"
+  },
+  "status": "inactive",
+  "exitCode": 0
+}

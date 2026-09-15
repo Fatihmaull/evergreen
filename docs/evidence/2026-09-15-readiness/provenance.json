@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "5998862fd2824da14bfea0f039ed8d5157c18ef3",
+  "runtime": "/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/node_modules/evergreen-runtime",
+  "node": "/home/rakhargo/.nvm/versions/node/v24.13.0/bin/node",
+  "window": {
+    "startAt": 1789689600000,
+    "endAt": 1790013600000,
+    "warnMinutes": 30,
+    "criticalMinutes": 540,
+    "maxRunMinutes": 10
+  },
+  "emailOnlyEnvKeys": [
+    "EMAIL_API_KEY",
+    "EMAIL_FROM",
+    "EVERGREEN_ALERT_TO"
+  ]
+}

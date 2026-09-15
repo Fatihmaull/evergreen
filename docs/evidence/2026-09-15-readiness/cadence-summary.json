@@ -1,0 +1,119 @@
+{
+  "totalAvailableRuns": 18,
+  "sampleSize": 18,
+  "oldest": "2026-09-12T17:08:40Z",
+  "latest": "2026-09-15T01:31:45Z",
+  "medianMinutes": 174.36666666666667,
+  "maximumMinutes": 368.5833333333333,
+  "sampleTruncated": false,
+  "jobs": [
+    {
+      "runId": 34707334845,
+      "jobId": 103589649467,
+      "startedAt": "2026-09-12T17:08:40Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34713846570,
+      "jobId": 103607318845,
+      "startedAt": "2026-09-12T19:19:43Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34720219640,
+      "jobId": 103624605429,
+      "startedAt": "2026-09-12T21:31:59Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34724845021,
+      "jobId": 103637072069,
+      "startedAt": "2026-09-12T23:13:31Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34729385456,
+      "jobId": 103649251231,
+      "startedAt": "2026-09-13T00:59:43Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34740986165,
+      "jobId": 103680539262,
+      "startedAt": "2026-09-13T05:43:07Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34752335600,
+      "jobId": 103710852026,
+      "startedAt": "2026-09-13T10:37:23Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34763382727,
+      "jobId": 103739981216,
+      "startedAt": "2026-09-13T14:41:17Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34772286608,
+      "jobId": 103763942921,
+      "startedAt": "2026-09-13T17:40:48Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34778807491,
+      "jobId": 103781895599,
+      "startedAt": "2026-09-13T19:48:26Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34785699904,
+      "jobId": 103800656052,
+      "startedAt": "2026-09-13T22:04:47Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34791869335,
+      "jobId": 103817481691,
+      "startedAt": "2026-09-14T00:11:06Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34807702791,
+      "jobId": 103862701087,
+      "startedAt": "2026-09-14T04:54:14Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34832480786,
+      "jobId": 103938764503,
+      "startedAt": "2026-09-14T10:18:06Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34868641288,
+      "jobId": 104058736829,
+      "startedAt": "2026-09-14T16:26:41Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34892563318,
+      "jobId": 104138572788,
+      "startedAt": "2026-09-14T20:22:57Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34908157569,
+      "jobId": 104189465588,
+      "startedAt": "2026-09-14T23:17:19Z",
+      "conclusion": "success"
+    },
+    {
+      "runId": 34917620964,
+      "jobId": 104218572671,
+      "startedAt": "2026-09-15T01:31:45Z",
+      "conclusion": "success"
+    }
+  ]
+}
