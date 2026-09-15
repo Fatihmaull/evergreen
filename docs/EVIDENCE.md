@@ -348,3 +348,11 @@ The manual-extension and storage-advice verifier commands now verify every SHA25
 ## 2026-09-14 — scheduled A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
 
 Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261 from a local user-systemd timer. A instance expiry 6,026,591 → 6,370,261. [Raw RPC, signature/receipt/TTL verifier and actual explorer screenshot](evidence/2026-09-14-scheduled-a-save/README.md). Success/liveness inbox receipt confirmed by Rakha. Raised threshold 1,500,000 and target 1,700,000: not natural decay. B/C/shared controls unchanged and independently checked by Fatih in #149. Source snapshot remains 32670fe; later #152/#154 fixes are not retroactively claimed as that build. Shared platform acceptance stays #130; failure evidence is separately reviewed in [#146](https://github.com/Fatihmaull/evergreen/pull/146).
+
+- W3-D15-02b upload Testnet transaction: `cc8210e69acdd13b54236614fcd3deae1ae6b4bf7e00d7371afc43b39741cb94`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
+
+- W3-D15-02b deploy Testnet transaction: `5b0dd7ac565a82457f1a033cb490042717e109267344afe868c0960581d43b28`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
+
+- W3-D15-02b seed Testnet transaction: `e893648c48b276af3fcd15ac0705899113de3c7d6a8e01b3034547adb18c3067`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
+
+- W3-D15-02b temporary extension: `c696f477bd50ecaa0574d557c2981aac6c28646cf1e71c7e07dcfae4decdb8fd`; full raw RPC in [evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.

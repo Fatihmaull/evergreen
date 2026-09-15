@@ -9,6 +9,23 @@
 
 ---
 
+## Current — W3-D15-02b locally complete, publication pending
+
+Per-entry temporary retention is implemented and internally reviewed on
+`feat/W3-D15-02b-temporary-policy` (runtime commit 2c3a28a), from main 5998862.
+Default-off and repeated-registration veto apply at decision and refreshed execution;
+critical opted-in temporary urgency survives alert deduplication. Full check passed
+877 tests. The disposable-key Testnet extension confirmed expiry 4,686,093 → 4,785,404;
+all four setup/extension receipts and explorer captures are retained. One critical
+test email reached Rakha's inbox. [Implementation](W3-D15-02b-IMPLEMENTATION.md),
+[review](W3-D15-02b-REVIEW.md), [evidence](evidence/2026-09-15-temporary-policy/README.md).
+
+New local watcher preparation uses critical540 above main's 480-minute floor;
+offline tests cover inactive and missed-run behavior. The old historical config
+is untouched and no timer was activated. No new A proof or B/C/shared-Wasm write.
+Notion D15-02b sync pending the separate publication checkpoint; no GitHub/Notion
+write this turn. Fatih review/merge is not claimed.
+
 ## Current — W3-D17-05 closed; D17-04 evidence landed
 
 **`W3-D17-05` is met.** #146 merged on top of #142–#144 and the #152 diagnostic fix: all three named failure modes — RPC timeout, insufficient balance, missed run — rehearsed against the real runner with committed receipts. Its offline assertions require **both** the failed-bump alert and a distinct `EXECUTION_INCOMPLETE` diagnostic with unique IDs; reverting #152 underneath that test makes it fail, so it pins the behaviour rather than tolerating it. #145 was never a functional dependency.
