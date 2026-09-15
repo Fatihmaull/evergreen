@@ -119,9 +119,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const r = await runAlertCommand(process.argv.slice(2));
     console.log(JSON.stringify(r, null, 2));
     process.exitCode = r.exitCode;
-  } catch {
+  } catch (error) {
+    // Fourth instance of the generic-catch shape in two days. Allowlisted
+    // literals only — anything else keeps the bare line, because a provider or
+    // RPC error here can carry a URL or key material.
+    const OWN = new Set([
+      'Invalid/repeated alert-run arguments',
+      'Explicit run ID/output directory and paired submit/attempt file required',
+      'Email key unavailable',
+      'Signer unavailable',
+    ]);
+    const reason = OWN.has(error?.message) ? error.message : null;
     console.error(
-      'Alert runner failed; inspect the retained journal. No replacement is authorized.',
+      'Alert runner failed; inspect the retained journal. No replacement is authorized.' +
+        (reason === null ? '' : `\n  Reason: ${reason}`) +
+        (error?.code === 'ENOENT' ? `\n  Missing path: ${error.path ?? 'unknown'}` : ''),
     );
     process.exitCode = 2;
   }

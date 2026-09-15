@@ -233,9 +233,59 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       );
       process.exitCode = result.exitCode;
     }
-  } catch {
+  } catch (error) {
+    // A missing INPUT is not a refused capture, and saying so matters at 12:00
+    // UTC on a crossing day. The generic message below tells the operator to
+    // inspect retained artifacts — which sends them looking for output that was
+    // never produced, because the run never started.
+    //
+    // The realistic cause is a tidy-up: `data-keys-{B,C}.json` live under
+    // docs/evidence/ and are read at run time, so they look inert and are not.
+    // Deleting one is a `git rm`, not an edit, so the content validation in
+    // `controlKeys` cannot see it.
+    // Say WHICH guard refused. The generic line below was the only output for
+    // every failure, so an operator at 12:00 UTC on a crossing day was told to
+    // "inspect retained artifacts" when the run had not started and there were
+    // none — which sends them looking for output instead of at the cause.
+    //
+    // Measured 2026-09-15 by deleting `data-keys-B.json`, the realistic failure
+    // for a file that is evidence and runtime input at once: the real reason was
+    // `Commit runtime inputs before a real capture` (a tracked deletion dirties
+    // the tree), and none of it reached the operator.
+    //
+    // Allowlisted rather than echoed, the same rule as `safeRunCode`: these are
+    // our own literal guard strings with no interpolation, so none can carry a
+    // path, URL or provider detail. Anything unrecognised still gets the generic
+    // line.
+    const OWN_GUARDS = new Set([
+      'Another capture/replay is active',
+      'Capture bound reached',
+      'Commit runtime inputs before a real capture',
+      'Control code hash mismatch',
+      'Control data owner mismatch',
+      'Control type mismatch',
+      'Declared control owner mismatch',
+      'Expected declared data keys',
+      'Explicit --output and --subject B|C required',
+      'Invalid control scope',
+      'Invalid threshold',
+      'Invalid/repeated capture arguments',
+      'Only one capture per process',
+      'Read-only capture refuses this request',
+      'Source changed',
+      'Symlink in capture',
+      'Unexpected control type',
+    ]);
+    const reason = OWN_GUARDS.has(error?.message) ? error.message : null;
     console.error(
-      'Capture refused or incomplete. Inspect retained artifacts; never overwrite them or force the crossing.',
+      'Capture refused or incomplete. Inspect retained artifacts; never overwrite them or force the crossing.' +
+        (reason === null ? '' : `\n  Reason: ${reason}`) +
+        (reason === 'Commit runtime inputs before a real capture'
+          ? '\n  Nothing was captured. Run `git status` — a DELETED tracked file does this too,\n' +
+            '  and the data-keys files under docs/evidence/ are runtime input despite living\n' +
+            '  there. Restore with `git checkout -- <path>`, then re-run. The subject stays\n' +
+            '  below its alert threshold until expiry, so this costs minutes, not the proof.'
+          : ''),
     );
     process.exitCode = 2;
   }

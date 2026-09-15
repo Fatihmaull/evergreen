@@ -278,6 +278,113 @@ The asymmetry is what makes this safe to adopt: **a "caught" result is still tru
 
 *(Audited 2026-09-10 after the stale-`dist` discovery: every `packages/core/test/*` file imports `../src/`, so all in-package mutation results — including the `W2-D13-01` config-loader guards — stand unchanged. Only the four CLI tests that import `@evergreen-stellar/core` were affected, and they have since been re-commissioned.)*
 
+### A rule with a judgement clause has a hole shaped like the judgement
+
+**When a rule has failed more than twice, check whether it contains a judgement.
+If it does, remove the judgement or build the tool.**
+
+*Five instances, same rule, escalating fixes.* Backticks in a shell-quoted GitHub
+comment body get command-substituted, so a filename vanishes from the sentence
+naming it. After the second, the rule became *"use `--body-file` for anything with
+backticks."* The fifth happened anyway — on a message classified as **short**,
+where nobody looked for backticks.
+
+The failure landed exactly at the judgement, which is where every conditional rule
+fails: **the moment you decide it does not apply is the moment you stop looking.**
+
+The same hole is in *"never tidy the output of a step whose failure you need to
+see"* — it requires judging which steps you depend on. That one has four
+instances and will get a fifth for the same reason.
+
+Three levels of fix, and only the third is durable:
+
+| | Depends on | Survives |
+|---|---|---|
+| a note | remembering | nothing |
+| a rule with a condition | remembering **and** judging | the easy cases |
+| a tool with no other path | nothing | everything |
+
+For this one the tool is a shell function:
+
+```bash
+ghcomment() { gh issue comment "$1" --body-file "$2"; }
+```
+
+There is then no inline path to take. That is the same move as `--body-file`
+removing the class, taken one step further — **a fix that depends on you, versus
+one that does not.**
+
+### Would this still be true on a machine that is not this one?
+
+Three members in one week, each **invisible on the machine that produced it, by
+definition**:
+
+| | Symptom elsewhere |
+|---|---|
+| locale rendering | `120,909` becomes `120.909`, or `1 682 586` with a U+202F separator |
+| timezone parsing | git's `+07:00` read as UTC — a four-hour error |
+| absolute paths | a config that only starts on the machine that wrote it |
+
+The third is the one that nearly cost something: a weekend watcher config with
+`stateRoot: /home/<user>/…`, where the whole point of naming a fallback operator
+is that **somebody else** runs it. The provision would have failed at the moment
+it was needed.
+
+None of these can be caught by testing on the machine that wrote them — that is
+the definition of the class, not a gap in diligence. **The membership test is the
+question itself: would this still be true on a machine that is not this one?**
+
+Locale is now gated by `check-locale-pinning.mjs`. Timestamps are all
+`toISOString`. Paths are still a judgement, and the rule is: **anything an
+operator other than the author might run takes a repo-relative path.**
+
+### Before injecting a fault, ask what else your injection changes
+
+**Three times now, the thing done to create a test condition created a different
+condition, and the different one fired first.**
+
+| What was injected | What else it changed | What fired instead |
+|---|---|---|
+| a scenario's upstream failure | — | shadowed the two barriers below it |
+| a hand-built ledger key | the key was invalid | a different clause threw before the guard |
+| an error thrown from a source file | the working tree became dirty | the dirty-tree guard, before the error |
+
+Same shape every time, and the third one bit a test **of a fix** rather than of
+the code — the most expensive place for it, because a shadowed result reads as
+"the fix works".
+
+So it is a pre-check, not a diagnosis. **Before injecting, ask what else the
+injection method changes, then ask what guards read that.** Deleting a tracked
+file dirties the tree. Editing one dirties the tree. Hand-building an input
+produces an invalid input. Raising a threshold moves two comparisons, not one.
+
+Answering that before the run costs a sentence. Answering it afterwards means
+re-reading a result you already believed.
+
+### Never tidy the output of a step whose failure you need to see
+
+**Four instances, and the motive was tidiness every single time:**
+
+| Construct | What it hid |
+|---|---|
+| `>/dev/null` on `gh pr merge` | a merge that did not happen, reported as done |
+| `grep` over an empty directory | a secret scan that scanned nothing, reported clean |
+| `$?` after a pipe | `head`'s exit status, not the command's — reported 0 for an exit 3 |
+| `tail -3` on merge output | three unmerged files, leading to a `commit` that could not run |
+
+Each of these is **fine in a step you are not depending on** and a hazard in a
+step you are. Pipes replace exit codes, redirects discard errors, `head` and
+`tail` truncate, and an empty glob matches nothing silently.
+
+So the rule is a condition rather than a prohibition: **if you are about to act on
+whether a step succeeded, do not put anything between it and you.** Redirect to a
+file and read the file; capture `PIPESTATUS`; count what you globbed before
+trusting that it matched nothing.
+
+The related positive habit: **prove the instrument on a known-positive first.**
+A secret scanner gets a planted decoy before its clean result is believed — a
+clean result and a broken instrument are identical output.
+
 ### A surviving mutant is not automatically a gap
 
 The rule above says a negative usually means the mutation never landed. There is
@@ -374,6 +481,68 @@ day before, which turns a routine measurement into a breaking change.
 
 **Symptom to watch for:** a constant whose doc comment contains both a date and a
 rule. That is one constant doing two jobs.
+
+### A file that is evidence AND configuration has two opposite update rules
+
+*Found 2026-09-15, five days before it would have mattered.*
+
+`docs/evidence/2026-09-15-readiness/watch.json` looked like a record: absolute
+timestamps, a machine-specific path, inside a checksummed bundle. **Decoding its
+window is what disproved that** — it runs 2026-09-18T00:00Z to 2026-09-21T18:00Z,
+covering guinea-pig B's crossing *and* its expiry. It was the live weekend watcher
+configuration, shipped with `warnMinutes: 30` against a 136-minute median.
+
+The hazard is that **each role hides the other**. A reviewer sees a checksummed
+record and does not think to check whether it is correct; an operator sees a
+config and does not think it is frozen. Evidence must never change; configuration
+must be right. Both cannot be satisfied by the same file.
+
+**The resolution is not to edit the record.** Rewriting a record to match a later
+decision is the one thing this repo does not do. Instead: enforce the correct
+value in code so the stale config fails loudly, and hand the operator a
+replacement. The record stays true about what was configured; the code makes that
+configuration unrunnable.
+
+**Shape, not content, is the wrong classifier.** Absolute timestamps and
+machine-specific paths say "record" and are compatible with "live config". The
+discriminating question is: **does anything read this file, or is any date in it
+still in the future?**
+
+#### The inventory, as of 2026-09-15
+
+| Evidence file | Read by | Defended? |
+|---|---|---|
+| `2026-09-14-bc-control-verification/data-keys-{B,C}.json` | `crossing-capture-common.mjs` — the Sep 20/25 capture | **yes** — owner derived from `PROTECTED_ENTRIES`, shape validated, hash pinned in the capture manifest |
+| `2026-09-12-manual-extend-proof/simulation/06-getLedgerEntries-response.json` | `rpc-preload.mjs`, used by the rehearsal harness | offline fixture; rehearsal only |
+| `2026-09-15-readiness/watch.json` | the operator, for the weekend window | **was not** — fixed by flooring `warnMinutes` in code |
+
+Re-run the sweep when adding anything under `docs/evidence/`: grep the code for
+references into that tree, then check whether any date inside is still ahead.
+
+### A fixture calibrated to a literal stops testing when the literal moves
+
+The quietest member of the family. Not a test that cannot fail — **a test that
+silently stopped testing anything while still passing.** Nothing reports it: the
+suite stays green and the count does not move.
+
+*2026-09-15:* flooring `warnMinutes` at 369 made several watcher fixtures vacuous.
+They positioned a job "40 minutes old against a warn of 30" — once warn moved, the
+same job was healthy and the lateness assertion proved nothing.
+
+**The repair is to express the fixture relative to the policy**, not to a literal:
+`const late = (policy.warnMinutes + 10) * 60000`. It then keeps testing lateness
+whichever side the floor moves to.
+
+**Assertions are the opposite and should stay literal.** `expect(WORST_OBSERVED).toBe(369)`
+*should* fail when the number moves — that is the point. The distinction:
+
+- **calibration** — the literal positions a scenario. Moving it changes what is tested, silently
+- **assertion** — the literal is the claim. Moving it fails loudly
+
+Roughly a dozen calibration sites remain, mostly `const THRESHOLD = 17_280` in CLI
+tests. Those are lower risk than the watcher case: if the default moved they would
+still test the same behaviour, just no longer *at the production default*. Not yet
+individually triaged — recorded here so the list is a worklist rather than a claim.
 
 ### Superseding a document means editing the superseded one
 

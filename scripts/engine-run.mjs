@@ -29,7 +29,26 @@ const { createRpcReader, loadConfig, runEngine } = await import(
 );
 
 const path = process.env.EVERGREEN_CONFIG ?? 'evergreen.config.json';
-const { config, warnings } = loadConfig(readFileSync(path, 'utf8'));
+// `evergreen.config.json` is NOT in the repo — the tracked configs are
+// .dogfood, .example and .save-proof. The default therefore points at nothing,
+// and readFileSync produced a raw node:fs stack trace that named the missing
+// path but not the fact that it is a default nobody chose. Say so instead.
+let raw;
+try {
+  raw = readFileSync(path, 'utf8');
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error;
+  console.error(
+    `No engine config at ${path}.` +
+      (process.env.EVERGREEN_CONFIG === undefined
+        ? '\n  That path is the DEFAULT, not something you chose, and no such file is tracked.\n' +
+          '  Set EVERGREEN_CONFIG to one of: evergreen.config.dogfood.json (real IDs,\n' +
+          '  decide-only — what the cron uses), or evergreen.config.example.json.'
+        : '\n  EVERGREEN_CONFIG is set to this path and it does not exist.'),
+  );
+  process.exit(2);
+}
+const { config, warnings } = loadConfig(raw);
 for (const w of warnings) console.warn(`⚠ ${w}`);
 
 const server = new rpc.Server(config.network.rpcUrl, { timeout: 15_000 });
