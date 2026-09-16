@@ -556,7 +556,9 @@ rule. That is one constant doing two jobs.
 timestamps, a machine-specific path, inside a checksummed bundle. **Decoding its
 window is what disproved that** — it runs 2026-09-18T00:00Z to 2026-09-21T18:00Z,
 covering guinea-pig B's crossing *and* its expiry. It was the live weekend watcher
-configuration, shipped with `warnMinutes: 30` against a 136-minute median.
+configuration, shipped with `warnMinutes: 30` against a measured median several
+times larger — so it would have warned on every gap the scheduler has ever
+produced.
 
 The hazard is that **each role hides the other**. A reviewer sees a checksummed
 record and does not think to check whether it is correct; an operator sees a

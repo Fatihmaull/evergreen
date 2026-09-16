@@ -63,12 +63,15 @@ gh workflow run engine-cron.yml --ref main
 
 **Corrected 2026-09-14.** An earlier draft said "dispatch if no scheduled run
 appears between 12:00 and 14:00". That trigger was wrong: measured across two
-workflows the scheduler delivers **~7.5%** of declared slots with a **median gap
-of 136–212 minutes and a worst observed gap of 331 minutes**
-([measurement](evidence/2026-09-14-scheduler-cadence/README.md); re-measured at
-**369** the following day — `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` carries the
-current figure, and the 331 here is the dated observation this correction was
-based on, not today's worst). A two-hour
+workflows the scheduler delivers only a **small fraction** of its declared slots,
+with a median gap measured in **hours**
+([the dated measurement](evidence/2026-09-14-scheduler-cadence/README.md)).
+
+**Recompute rather than quote — `pnpm measure:cadence`.** The figures in that
+measurement were already superseded twice: its worst gap was recorded at 331, then
+369 the next day, and the delivery share moved again inside a single session.
+`WORST_OBSERVED_SCHEDULER_GAP_MINUTES` carries the recorded worst and the command
+prints today's. A two-hour
 silence is not a signal — it is the median. A trigger that fires on normal
 behaviour is noise, and noise on the one day that matters is worse than no
 trigger.
