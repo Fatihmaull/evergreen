@@ -51,9 +51,10 @@ Sunday, not a workaround on the day:
 - marking it not-spam once trains that mailbox, and may be enough
 - `EMAIL_FROM` defaults to `onboarding@resend.dev`, a shared Resend sender — a
   verified sender domain is the durable fix, and it is not a Sunday-afternoon job
-- `#141`'s independent watcher is a second channel that does not use this mail
-  path, so it is a partial mitigation. Whether that is sufficient is part of the
-  `#140` decision
+- `#141`'s watcher observes GitHub independently, but its alerts use the same
+  Resend EmailChannel and configured mailbox. It is not an independent delivery
+  channel and cannot compensate for shared provider failure or spam filtering.
+  Inbox placement and the accepted delivery risk remain part of the `#140` decision.
 
 ## What was already checked, so you are not re-doing it
 

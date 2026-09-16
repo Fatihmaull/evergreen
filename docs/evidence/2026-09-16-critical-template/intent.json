@@ -1,0 +1,24 @@
+{
+  "id": "w3-d17-03-critical-template-20260916",
+  "source": "recorded Sep15 pre-extension scan, not current chain state",
+  "entryKey": "AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==",
+  "entry": {
+    "kind": "temporary",
+    "endBehavior": "deleted",
+    "contracts": [
+      "CA55NQWVWCG2W5HXZVOU7QZRAGMPDVOJG26BJBIIL2GD76AU5IN455Y7"
+    ],
+    "observedAtLedger": 4685402,
+    "ttl": {
+      "status": "known",
+      "endsAtLedger": 4686093,
+      "remainingLedgers": 691
+    }
+  },
+  "threshold": 17280,
+  "notification": {
+    "severity": "critical",
+    "subject": "E2E TEST approaching-critical template — 🔴 Evergreen: AAAABgAAAA… is CRITICAL (691 ledgers)",
+    "body": "Low, and temporary — this data is DELETED at expiry, not archived. Unrecoverable.\nEntry: AAAABgAAAAE71sLVsI2rdPfNXU/DMQGY8dXJNrwUhQhejD/4FOobzgAAABAAAAABAAAAAQAAAA8AAAAJVGVtcG9yYXJ5AAAAAAAAAA==\nRemaining: 691 ledgers (threshold 17,280)\nTEMPORARY: this data is DELETED at expiry, not archived. It cannot be restored.\n\nThe engine did not extend it: HISTORICAL TEMPLATE TEST: observed before the successful Sep15 disposable-key extension; no current incident and no transaction is attempted now."
+  }
+}
