@@ -22,7 +22,7 @@ slots are confirmed, Rakha primary/Fatih backup per ops/crossing-schedule.json.
 Stale handoff prose is being reconciled through generated tables, not another manual
 schedule. Watcher independence covers GitHub observation, not email delivery: it
 shares Resend/mailbox with engine alerts. #140/#141 acceptance remains Fatih's call.
-Full gate882 tests and final schedule/link/evidence checks passed. [Technical closeout](W3-ACCEPTANCE-CLOSEOUT.md) is ready locally. Publication and Notion D17-03/D18-01 sync remain the separate next checkpoint.
+Full gate882 tests and final schedule/link/evidence checks passed. [Technical closeout](W3-ACCEPTANCE-CLOSEOUT.md) is ready locally. Published in [PR #181](https://github.com/Fatihmaull/evergreen/pull/181); acceptance requested in #140/#141, with Notion D17-03/D18-01 notes synced. Full150-row presence comparison found no missing or phantom IDs. Fatih acceptance remains pending.
 
 ## Current — September18 readiness prepared; acceptance remains open
 

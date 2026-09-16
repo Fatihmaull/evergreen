@@ -1,7 +1,7 @@
 # W3 Acceptance and operations — technical closeout, Sep16
 
-Local branch `ops/W3-acceptance-closeout`, baseline main8b78efd. No new final
-acceptance, issue closure or publication is claimed by this report.
+Local branch `ops/W3-acceptance-closeout`, baseline main8b78efd. Published in [PR #181](https://github.com/Fatihmaull/evergreen/pull/181). No final
+acceptance or issue closure is claimed by this report.
 
 ## Acceptance matrix
 
@@ -49,4 +49,4 @@ edits, schedule generation, reciprocal links, backlog parsing and evidence index
 were checked again. Both new evidence bundles passed checksum verification. Exact
 approachingCritical re-render, receipt/provider ID and separate inbox confirmation
 were compared successfully. No production-code change or unresolved technical finding
-was identified in this scoped pass. Publication remains separate.
+was identified in this scoped pass. Publication is in PR #181; explicit acceptance requested in #140/#141.
