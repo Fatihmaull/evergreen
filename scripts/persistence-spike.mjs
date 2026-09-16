@@ -263,9 +263,36 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const result = await runSpike({ args: process.argv.slice(2), env: process.env });
     console.log(JSON.stringify(result, null, 2));
     if (result.status === 'failed') process.exitCode = 1;
-  } catch {
+  } catch (error) {
+    // The old string ASSERTED the cause — "refused configuration" — for every
+    // failure, including a database that was reachable and then failed. An
+    // operator sent to re-read their connection string over a live fault looks
+    // in the one place the answer is not.
+    //
+    // Allowlisted literals only: a PostgreSQL driver error routinely carries the
+    // connection string, and that string carries a password.
+    const CONFIG_REFUSAL = new Set([
+      'Use no flags for preview, or exactly --run for a database experiment',
+      'Set PERSISTENCE_DATABASE_URL to a dedicated PostgreSQL test database',
+      'Use a PostgreSQL connection string with a host, username and database',
+      'Unsupported connection option; use a plain PostgreSQL connection string',
+      'Hosted connections require verified TLS',
+      'The disposable localhost probe expects sslmode=disable or no SSL option',
+      'Unsupported channel binding option',
+      'Invalid connection string encoding',
+      'Only an isolated generated spike schema is allowed',
+    ]);
+    const refusal = CONFIG_REFUSAL.has(error?.message);
     console.error(
-      'Persistence probe refused configuration. Use --help and check the dedicated database URL.',
+      'Persistence probe failed.' +
+        (refusal
+          ? `\n  Reason: ${error.message}\n` +
+            '  This is a configuration refusal — the probe never connected. Use --help and\n' +
+            '  check the dedicated database URL.'
+          : '\n  This was NOT a configuration refusal: the probe got past its own guards.\n' +
+            '  The underlying error is withheld because a driver error can carry the\n' +
+            '  connection string, and that string carries a password. Re-run against the\n' +
+            '  disposable database with the driver logs visible.'),
     );
     process.exitCode = 1;
   }
