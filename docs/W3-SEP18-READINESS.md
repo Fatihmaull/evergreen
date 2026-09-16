@@ -1,5 +1,11 @@
 # W3 readiness — verified September 15, gate September 18
 
+> Operational update after #169/#170: see [weekend update](W3-WEEKEND-UPDATE.md).
+> The installed watcher now uses warn420/critical540 and a new runtime; warn30 below
+> records the earlier preparation only. The latest #104 assignment names Rakha for
+> Sep20/21, with Fatih reachable as fallback; each day still needs human confirmation.
+
+
 Operational preparation for W3-D17-04, W3-D18-01/02a/02b/02c/03. This is an early
 readiness check, not acceptance by Fatih and not evidence of a future crossing.
 Full `pnpm check` passed (753 Vitest +112 Node =865 tests). No new Stellar transaction or email was sent. [Recorded checks](evidence/2026-09-15-readiness/README.md).

@@ -1,0 +1,18 @@
+[Unit]
+Description=Evergreen bounded GitHub observer Sep18-21
+[Service]
+Type=oneshot
+WorkingDirectory=/home/rakhargo/projects/evergreen/.evergreen/readiness-update-20260915/node_modules/evergreen-runtime
+EnvironmentFile=/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/watch.env
+UnsetEnvironment=EVERGREEN_SIGNER_SECRET EVERGREEN_DEV_SECRET STELLAR_SECRET_KEY
+ExecStartPre=/usr/bin/sha256sum --quiet -c /home/rakhargo/projects/evergreen/.evergreen/readiness-update-20260915/RUNTIME-SHA256SUMS
+ExecStart=/home/rakhargo/.nvm/versions/node/v24.13.0/bin/node /home/rakhargo/projects/evergreen/.evergreen/readiness-update-20260915/node_modules/evergreen-runtime/scripts/scheduler-watch.mjs --config /home/rakhargo/projects/evergreen/.evergreen/readiness-update-20260915/watch.json --send-alerts
+TimeoutStartSec=90
+SuccessExitStatus=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/state
+InaccessiblePaths=/home/rakhargo/projects/evergreen/.env
+StandardOutput=append:/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/watcher.log
+StandardError=append:/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/watcher.log

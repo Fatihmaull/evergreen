@@ -17,8 +17,8 @@ the day.
 
 | | |
 |---|---|
-| **On the day** | Fatih |
-| **Backstop** | Rakha, if Fatih is unreachable |
+| **On the day** | Rakha confirmed Sep20 and Sep21 at19:00 WIB (12:00 UTC); Monday01:00/07:00 WIB handoff requested, not yet accepted (§5b) |
+| **Backstop** | Fatih is reachable; apply the fallback in §5b if Rakha has not checked in |
 
 ### 🔴 Dispatch by hand at 12:00 UTC. Do not wait for the scheduler.
 
@@ -203,6 +203,10 @@ They are two different jobs and need separate confirmation:
 |---|---|---|
 | **Sun Sep 20** | dispatch, run the probe, capture the refusal, commit it | the crossing window is hours wide |
 | **Mon Sep 21** | be present for B's expiry | **no** — it happens once |
+
+**Rakha's explicit update:** yes to Sunday20 19:00 WIB and Monday21 19:00 WIB.
+The two extra Monday01:00/07:00 WIB checkpoints require a replacement; handoff
+has been requested from Fatih in #104 and must not be treated as accepted yet.
 
 An assignment is a notification, not a commitment. **This needs an explicit yes
 for each date**, not an absence of objection.

@@ -1,0 +1,35 @@
+{
+  "rejectsOld": true,
+  "findings": [
+    {
+      "elapsed": 419,
+      "result": {
+        "status": "healthy",
+        "severity": "info",
+        "lastStartedAt": null,
+        "overdueMinutes": 419,
+        "incidentId": null
+      }
+    },
+    {
+      "elapsed": 421,
+      "result": {
+        "status": "missing",
+        "severity": "warn",
+        "lastStartedAt": null,
+        "overdueMinutes": 421,
+        "incidentId": "missing:1789689600000:warn"
+      }
+    },
+    {
+      "elapsed": 541,
+      "result": {
+        "status": "missing",
+        "severity": "critical",
+        "lastStartedAt": null,
+        "overdueMinutes": 541,
+        "incidentId": "missing:1789689600000:critical"
+      }
+    }
+  ]
+}

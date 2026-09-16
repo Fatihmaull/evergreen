@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "0f14d65161b02656a2bbf92400b7a6b4e34993d2",
+  "replacesSource": "5998862",
+  "runtime": "/home/rakhargo/projects/evergreen/.evergreen/readiness-update-20260915/node_modules/evergreen-runtime",
+  "policy": {
+    "startAt": 1789689600000,
+    "endAt": 1790013600000,
+    "warnMinutes": 420,
+    "criticalMinutes": 540,
+    "maxRunMinutes": 10
+  },
+  "keptPrivateEnvironment": "/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/watch.env",
+  "stateRoot": "/home/rakhargo/projects/evergreen/.evergreen/readiness-20260918/state"
+}
