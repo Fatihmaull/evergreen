@@ -3,7 +3,7 @@
     "SINGLE SOURCE OF TRUTH for the B crossing watch schedule.",
     "Every table in docs/ that names a time, an owner or a trigger is GENERATED",
     "from this file by scripts/render-crossing-schedule.mjs. Do not hand-edit those",
-    "tables — `pnpm check:schedule` fails if they drift from this file.",
+    "tables \u2014 `pnpm check:schedule` fails if they drift from this file.",
     "",
     "WHY: on 2026-09-16 four documents restated this schedule and gave three",
     "different answers. Two operational pages said 'Fatih primary, Rakha backup',",
@@ -36,10 +36,10 @@
       "what": "first decay reading",
       "primary": "Rakha",
       "backup": "Fatih",
-      "status": "requested",
-      "ifDeclined": { "primary": "Fatih", "backup": "Rakha" },
+      "status": "confirmed",
       "requestedIn": "#104, 2026-09-16",
-      "note": "Rakha declined this once as part of the 01:00/07:00 WIB pair. Re-asked now that 01:00 is off the table and this is a morning slot."
+      "note": "Declined once as part of the 01:00/07:00 WIB pair, then accepted as a standalone 07:00 WIB morning slot after 01:00 was dropped.",
+      "confirmedIn": "#104, 2026-09-16"
     },
     {
       "utc": "2026-09-21T06:00Z",
@@ -47,15 +47,15 @@
       "what": "second decay reading",
       "primary": "Rakha",
       "backup": "Fatih",
-      "status": "requested",
-      "ifDeclined": { "primary": "Fatih", "backup": "Rakha" },
+      "status": "confirmed",
       "requestedIn": "#104, 2026-09-16",
-      "note": "New slot, never previously asked. It is the one that fills the twelve-hour hole running into expiry."
+      "note": "Accepted on first asking. It is the slot that fills the twelve-hour gap running into expiry.",
+      "confirmedIn": "#104, 2026-09-16"
     },
     {
       "utc": "2026-09-21T12:00Z",
       "hoursAfterCrossing": 24,
-      "what": "expiry — happens once",
+      "what": "expiry \u2014 happens once",
       "primary": "Rakha",
       "backup": "Fatih",
       "status": "confirmed",
@@ -67,7 +67,7 @@
       "utc": "2026-09-20T18:00Z",
       "hoursAfterCrossing": 6,
       "decidedOn": "2026-09-16",
-      "reason": "Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night."
+      "reason": "Not for want of a volunteer \u2014 it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night."
     }
   ],
   "backupTriggerMinutePastHour": 20
