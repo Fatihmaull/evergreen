@@ -15,12 +15,56 @@ the day.
 
 ## Who is watching, and what they do
 
-| | |
-|---|---|
-| **On the day** | Rakha confirmed Sep20 and Sep21 at19:00 WIB (12:00 UTC); Monday01:00/07:00 WIB handoff requested, not yet accepted (§5b) |
-| **Backstop** | Fatih is reachable; apply the fallback in §5b if Rakha has not checked in |
+<!-- BEGIN GENERATED: crossing-schedule (full) -->
 
-### 🔴 Dispatch by hand at 12:00 UTC. Do not wait for the scheduler.
+**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+
+| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+|---|---|---|---|---|---|
+| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
+| **Mon 2026-09-21 00:00** ❓ | Mon 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
+| **Mon 2026-09-21 06:00** ❓ | Mon 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+
+### The backup trigger is a wall clock, not a judgement
+
+> **If no capture for that window is committed by the time in the last column, the backup runs it.** Not *"if it looks like it did not happen."*
+
+**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
+
+### ❓ 2 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
+
+Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
+
+- **Mon 2026-09-21 00:00 / Mon 07:00 WIB** — asked of Rakha in #104, 2026-09-16. Rakha declined this once as part of the 01:00/07:00 WIB pair. Re-asked now that 01:00 is off the table and this is a morning slot.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Mon 2026-09-21 06:00 / Mon 13:00 WIB** — asked of Rakha in #104, 2026-09-16. New slot, never previously asked. It is the one that fills the twelve-hour hole running into expiry.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
+
+### Deliberately declined
+
+- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+
+Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+
+<!-- END GENERATED: crossing-schedule -->
+
+> 🔧 **The table above is generated from
+> [`ops/crossing-schedule.json`](../ops/crossing-schedule.json). Do not edit it by
+> hand** — `pnpm check:schedule` fails the build if it drifts from that file.
+>
+> It is generated because the hand-written version failed. On 2026-09-15 a §5b was
+> added to this page naming Rakha, while the handoff table three screens above still
+> named Fatih; the document contradicted itself about who was watching, on the one
+> page where that question has a date attached. Two other operational pages said
+> *"Fatih remains primary operator"* at the same time. Four documents, three answers.
+>
+> **A summary table restating the sections below it is a second source of truth**,
+> and whoever edits a section has no reason to scroll up. So the sections below
+> explain *why*, and deliberately do not restate who or when. If you are about to
+> type a name or a time into this page, it belongs in the JSON instead.
+
+### 🔴 Dispatch by hand at each checkpoint. Do not wait for the scheduler.
 
 ```bash
 gh workflow run engine-cron.yml --ref main
@@ -30,7 +74,10 @@ gh workflow run engine-cron.yml --ref main
 appears between 12:00 and 14:00". That trigger was wrong: measured across two
 workflows the scheduler delivers **~7.5%** of declared slots with a **median gap
 of 136–212 minutes and a worst observed gap of 331 minutes**
-([measurement](evidence/2026-09-14-scheduler-cadence/README.md)). A two-hour
+([measurement](evidence/2026-09-14-scheduler-cadence/README.md); re-measured at
+**369** the following day — `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` carries the
+current figure, and the 331 here is the dated observation this correction was
+based on, not today's worst). A two-hour
 silence is not a signal — it is the median. A trigger that fires on normal
 behaviour is noise, and noise on the one day that matters is worse than no
 trigger.
@@ -38,10 +85,9 @@ trigger.
 So the manual dispatch is the **primary action**, not the fallback. Any
 scheduled run that also lands is a bonus.
 
-Dispatch again at **~18:00** and **~00:00** to bracket the window. These
-three checkpoints cover the first twelve hours. Check expiry separately at about
-12:00 UTC on September 21; actual ledger state, not the clock estimate, determines
-whether the boundary has been crossed.
+**Dispatch by hand at every checkpoint in the generated table above** — that is
+where the times live, and it is the only place they are written down. Actual ledger
+state, not the clock estimate, determines whether the boundary has been crossed.
 
 ---
 
@@ -144,7 +190,7 @@ printf 'probe_exit=%s capture=%s\n' "$probe_exit" "$probe_capture"
 - [ ] rehearsed in advance with `BELOW=1500000`, which forces candidacy off-date
       and was confirmed to produce the refusal on 2026-09-14
 
-### 3b. 🔴 Capture three times. The window is a day, not a moment.
+### 3b. 🔴 Capture at every checkpoint. The window is a day, not a moment.
 
 **Being below the alert threshold is a STATE, not an event.** Once B is under
 17,280 remaining it stays under until expiry — roughly twenty-four hours. It does
@@ -156,19 +202,23 @@ at noon will improvise under pressure; somebody who knows they have a day will
 re-run. The failure mode this page most needs to prevent is a person inventing a
 workaround because they think the evidence is escaping.
 
-**So capture at each of the three dispatches — 12:00, 18:00 and 00:00 UTC — not
-once.**
+**So capture at every checkpoint in the generated table, not once.**
 
-- [ ] `pnpm capture:crossing --subject B --output <dir>-1200` at ~12:00 UTC
-- [ ] again at ~18:00 into `…-1800`
-- [ ] again at ~00:00 into `…-0000`
+- [ ] one `pnpm capture:crossing --subject B --output <dir>-HHMM` per row, naming the
+      output directory after that row's UTC time
 - [ ] each verified with `--require-crossing`, and each committed
 
-This costs nothing extra: the dispatches are already scheduled above. What it buys
-is **a decay sequence rather than a single reading** — B measurably closer to
-expiry at each observation, with the guard refusing at each one. That is the
-difference between *"we observed this state"* and *"we watched it happen"*, and it
-is the stronger claim for the same effort.
+This costs nothing extra: the dispatches are already scheduled. What it buys is
+**a decay sequence rather than a single reading** — B measurably closer to expiry
+at each observation, with the guard refusing at each one. That is the difference
+between *"we observed this state"* and *"we watched it happen"*, and it is the
+stronger claim for the same effort.
+
+The spacing is weighted toward the end on purpose. A reader of the evidence asks
+*"what happened between the last reading and expiry"*, not *"what happened in the
+first six hours"* — which is why one evenly-earlier slot was declined rather than
+taken, and the reason is recorded in the table above rather than left to look like
+an oversight.
 
 It is also redundancy on the least repeatable thing in the sprint. **If any one
 capture fails, the others still carry the proof.**
@@ -193,35 +243,30 @@ Checking only the green half proves nothing: a check that passes because it
 cannot see the subject looks identical to one that passes because the subject is
 correct.
 
-### 5b. 🔴 Who is at a terminal, and what happens if they are not
+### 5b. 🔴 Who is at a terminal — the rules behind the table
 
-**Assigned 2026-09-15: Rakha watches Sunday Sep 20 and Monday Sep 21.**
+**Names, times and triggers are in the generated table at the top of this page.**
+This section is the reasoning, and holds no schedule of its own.
 
-They are two different jobs and need separate confirmation:
+**An assignment is a notification, not a commitment.** Every slot needs an explicit
+*yes* from the named person, per slot — not one yes for "the weekend", and never an
+absence of objection. The crossing and the expiry are two different jobs with two
+different failure modes: the crossing window is hours wide, so a late start is
+recoverable; **the expiry happens once**, and the whole natural-decay proof is that
+moment. A single yes covering both hides that difference.
 
-| Day | What it is | Repeatable? |
-|---|---|---|
-| **Sun Sep 20** | dispatch, run the probe, capture the refusal, commit it | the crossing window is hours wide |
-| **Mon Sep 21** | be present for B's expiry | **no** — it happens once |
+**A slot still being asked about is marked as such and is not coverage.** A table
+that quietly lists a name somebody never agreed to is worse than a blank, because
+it stops anyone looking for a replacement.
 
-**Rakha's explicit update:** yes to Sunday20 19:00 WIB and Monday21 19:00 WIB.
-The two extra Monday01:00/07:00 WIB checkpoints require a replacement; handoff
-has been requested from Fatih in #104 and must not be treated as accepted yet.
+**What the backup does.** §3 of this page, unchanged. The probe is read-only, the
+guard refuses B regardless, and nothing here requires a signer — so **the backup
+needs no credentials and can do no harm**. The only way to lose the evidence is for
+nobody to run it.
 
-An assignment is a notification, not a commitment. **This needs an explicit yes
-for each date**, not an absence of objection.
-
-**If the named watcher does not appear.** Fatih has stepped back from watching, so
-as written there is a single point of failure on the least repeatable evidence in
-the sprint. The fallback is therefore stated rather than assumed:
-
-- **Reachable on the day:** Fatih, by the channel already used for coordination.
-  If Rakha has not posted to the tracking issue by **12:00 UTC on the day**,
-  assume he is unavailable and proceed.
-- **What the fallback person does:** §3 of this page, unchanged. The probe is
-  read-only, the guard refuses B regardless, and nothing here requires a signer —
-  so the fallback needs no credentials and can do no harm. **The only way to lose
-  the evidence is for nobody to run it.**
+**What the backup must not assume.** The trigger in the table is a wall clock, not
+an appraisal: if no capture for that window is committed by that time, run it.
+"Someone is probably on it" is how a task with two owners gets done zero times.
 
 ### 5d. The watcher config that actually starts
 
@@ -242,8 +287,29 @@ repository, workflow, job — is unchanged from the readiness config, and its
 `stateRoot` is repo-relative so the fallback operator in §5b can run it too.
 
 It is a **stand-in**, written so nobody had to wait for a config to be corrected.
-If Rakha ships his own, use that and delete this one. The evidence bundle is
-untouched.
+Rakha's installed watcher now runs the same policy (warn 420 / critical 540,
+published in #177), verified at the boundaries: the transitions are at exactly 420
+and 540, inclusive. The evidence bundle is untouched.
+
+### 5e. 🔴 If the watcher fails, its message will not name the cause
+
+**The installed watcher runs a pinned runtime that predates #175.** The pin stays —
+re-pinning it would invalidate the verification already done against that exact
+build — so this is a translation, not a defect to fix on the day.
+
+A failure will print the old generic form:
+
+```
+Watcher failed; inspect retained state
+```
+
+**#175 would have named which guard refused. This build will not.** So: *if you see
+that line, check the watcher policy first.* It covers a config the floor rejected at
+startup — the failure mode that would otherwise take a night of reading source to
+find, on a night when nobody is reading source.
+
+`ops/weekend-watch.json` is the config that starts; the readiness bundle's
+`watch.json` is the one that does not (§5d).
 
 ### 5c. 🔴 If Sunday is missed — C is the only second shot
 

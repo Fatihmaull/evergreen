@@ -7,12 +7,49 @@ are also in pending PR #147; use the calendar dates below while that PR is revie
 
 ## Operator checklist
 
-- Fatih remains primary operator; Rakha is the backup. Agree the handoff before
-  each window. This command does not install a timer or watch continuously.
-- B action crossing is projected **Sunday Sep 20 ~12:00 UTC / 19:00 WIB**;
-  expiry **Monday Sep 21 ~12:00 UTC / 19:00 WIB**. C's corresponding dates are
-  **Friday Sep 25** and **Saturday Sep 26**. Projections are not observations:
-  use measured ledger TTL and repeat a bounded read when needed.
+- **Who is on each checkpoint is in the generated table below, not in this
+  sentence.** This line used to read *"Fatih remains primary operator; Rakha is the
+  backup"*, which Rakha's per-date confirmation in #104 inverted on 2026-09-15 —
+  and this page went on saying it. This command does not install a timer or watch
+  continuously.
+- C's corresponding dates are **Friday Sep 25** and **Saturday Sep 26**.
+  Projections are not observations: use measured ledger TTL and repeat a bounded
+  read when needed.
+
+<!-- BEGIN GENERATED: crossing-schedule (full) -->
+
+**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+
+| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+|---|---|---|---|---|---|
+| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
+| **Mon 2026-09-21 00:00** ❓ | Mon 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
+| **Mon 2026-09-21 06:00** ❓ | Mon 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+
+### The backup trigger is a wall clock, not a judgement
+
+> **If no capture for that window is committed by the time in the last column, the backup runs it.** Not *"if it looks like it did not happen."*
+
+**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
+
+### ❓ 2 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
+
+Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
+
+- **Mon 2026-09-21 00:00 / Mon 07:00 WIB** — asked of Rakha in #104, 2026-09-16. Rakha declined this once as part of the 01:00/07:00 WIB pair. Re-asked now that 01:00 is off the table and this is a morning slot.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Mon 2026-09-21 06:00 / Mon 13:00 WIB** — asked of Rakha in #104, 2026-09-16. New slot, never previously asked. It is the one that fills the twelve-hour hole running into expiry.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
+
+### Deliberately declined
+
+- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+
+Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+
+<!-- END GENERATED: crossing-schedule -->
+
 - Keep B/C and shared Wasm untouched. No funding, restore, signer, simulation,
   submission or protected acknowledgement belongs in this procedure.
 - Use a reviewed, committed checkout with Node 24 and installed locked dependencies.

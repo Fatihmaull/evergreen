@@ -106,8 +106,15 @@ watching. The engine saw it and **refused**:
 
 Then B expired. That was the plan.
 
-⟦SLOT: the decay sequence — three captures at 12:00, 18:00, 00:00 UTC, showing
-remaining ledgers falling and the guard refusing each time.⟧
+⟦SLOT: the decay sequence. The shape it must have, generated from
+[`ops/crossing-schedule.json`](../ops/crossing-schedule.json):
+
+<!-- BEGIN GENERATED: crossing-schedule (compact) -->
+
+4 captures — 2026-09-20 12:00 (17,280 left) → 2026-09-21 00:00 (8,640 left) → 2026-09-21 06:00 (4,320 left) → 2026-09-21 12:00 (0 left) — each showing guinea-pig B closer to expiry with the guard refusing every time.
+
+<!-- END GENERATED: crossing-schedule -->
+⟧
 
 Say what the refusal is protecting: B is the natural-decay proof, and extending it
 would have destroyed the only evidence in the sprint that cannot be recreated.
@@ -146,7 +153,7 @@ Then the thesis, which is one sentence carrying both halves:
 | Slot | Source | Available |
 |---|---|---|
 | B crossing date/time | Sep 20 capture | Sun Sep 20 |
-| B decay sequence (×3) | pre-flight §3b captures | Sun Sep 20 |
+| B decay sequence (×4) | pre-flight §3b captures, one per row of the generated schedule | Sun Sep 20 – Mon Sep 21 |
 | B expiry confirmation | Sep 21 observation | Mon Sep 21 |
 | C, if B is missed | `W3-D18-02c` | Fri Sep 25 |
 | Dashboard URL | `W4-D26` | Week 4 |
