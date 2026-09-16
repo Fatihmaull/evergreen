@@ -23,8 +23,8 @@ are also in pending PR #147; use the calendar dates below while that PR is revie
 | Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
 |---|---|---|---|---|---|
 | **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
-| **Mon 2026-09-21 00:00** ❓ | Mon 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
-| **Mon 2026-09-21 06:00** ❓ | Mon 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Mon 2026-09-21 00:00** | Mon 07:00 | 8,640 | first decay reading | **Rakha** | Fatih, 00:20 UTC |
+| **Mon 2026-09-21 06:00** | Mon 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
 | **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
 
 ### The backup trigger is a wall clock, not a judgement
@@ -32,15 +32,6 @@ are also in pending PR #147; use the calendar dates below while that PR is revie
 > **If no capture for that window is committed by the time in the last column, the backup runs it.** Not *"if it looks like it did not happen."*
 
 **Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
-
-### ❓ 2 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
-
-Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
-
-- **Mon 2026-09-21 00:00 / Mon 07:00 WIB** — asked of Rakha in #104, 2026-09-16. Rakha declined this once as part of the 01:00/07:00 WIB pair. Re-asked now that 01:00 is off the table and this is a morning slot.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
-- **Mon 2026-09-21 06:00 / Mon 13:00 WIB** — asked of Rakha in #104, 2026-09-16. New slot, never previously asked. It is the one that fills the twelve-hour hole running into expiry.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
 
 ### Deliberately declined
 
