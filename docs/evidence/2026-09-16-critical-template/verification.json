@@ -1,0 +1,7 @@
+{
+  "template": "approachingCritical",
+  "renderMatchesIntent": true,
+  "providerIdMatchesReceipt": true,
+  "inboxConfirmed": true,
+  "noNewTransaction": true
+}
