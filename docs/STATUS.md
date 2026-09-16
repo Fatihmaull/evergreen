@@ -9,22 +9,20 @@
 
 ---
 
-## Current — weekend observer refreshed after #169/#170
+## Current — Acceptance and operations closeout, Sep16
 
-Sep15: operational service now uses a separate pinned main0f14d65 runtime with
-warn420/critical540, preserving its Sep18 00:00–Sep21 18:00 UTC window and all
-historical evidence. Old warn30 config is rejected by the new code; boundary tests
-verify info before420, warn after420 and critical after540. Service inactive test
-passed with exit0; timer remains armed for Sep18 07:00 WIB. No Stellar credentials.
+Auditing D17-03 and D18-01 against main8b78efd. Success/failure email evidence was
+already present; the previously untested approachingCritical template has now
+been sent once with an explicit historical/disposable label. Provider acceptance and Rakha's inbox confirmation recorded. The local technical
+checklist is complete; no final acceptance is inferred for #140/#141 or D17-03. No new transaction or A/B/C proof.
 
-The #170 deliverability command sent one provided-record test to the existing
-weekend mailbox; Resend accepted c4683ea6-d387-48c8-843e-c357ad620065. Rakha confirmed inbox delivery; the prior not-spam training was already reported. No transaction was attempted. Four app reminders
-are configured: Sep20 18:30 WIB; Sep21 01:00,07:00,18:30 WIB. Reminders do not execute
-operations or confirm availability to Fatih. Rakha explicitly confirmed Sep20 19:00 WIB and Sep21 19:00 WIB in #104;
-Sep21 01:00/07:00 handoff requested from Fatih, not yet accepted. PR #177 publishes
-the operational correction and inbox outcome, with replies to #140/#141. Integrated
-full gate882 tests passed; Notion notes synced for D18-01/02b, with no missing or phantom IDs in the150-row presence check. No automation claims
-human availability outside the confirmed slots.
+Installed watcher remains the accepted pinned main0f14d65 runtime, warn420/critical540,
+armed for Sep18. Do not re-pin merely to update diagnostic wording. Four capture
+slots are confirmed, Rakha primary/Fatih backup per ops/crossing-schedule.json.
+Stale handoff prose is being reconciled through generated tables, not another manual
+schedule. Watcher independence covers GitHub observation, not email delivery: it
+shares Resend/mailbox with engine alerts. #140/#141 acceptance remains Fatih's call.
+Full gate882 tests and final schedule/link/evidence checks passed. [Technical closeout](W3-ACCEPTANCE-CLOSEOUT.md) is ready locally. Publication and Notion D17-03/D18-01 sync remain the separate next checkpoint.
 
 ## Current — September18 readiness prepared; acceptance remains open
 

@@ -24,18 +24,40 @@ then one explicit send to rakhargo@gmail.com. Resend accepted email
 `c4683ea6-d387-48c8-843e-c357ad620065`. No transaction was attempted; the record names
 the disposable test contract, never B. Rakha confirmed inbox placement for this check; prior not-spam training was already reported. Provider acceptance and recipient confirmation are stored separately.
 
-## Four reminders (WIB)
+## Current operator commitments
 
-- Sunday Sep20, 18:30 — open terminal/agent and prepare for the19:00 crossing checkpoint.
-- Monday Sep21, 01:00 — extra handoff coordination reminder; Rakha has requested a replacement operator.
-- Monday Sep21, 07:00 — extra handoff coordination reminder; Rakha has requested a replacement operator.
-- Monday Sep21, 18:30 — prepare for the19:00 expiry observation.
+The earlier handoff request was superseded by the explicit confirmations in #104
+and #180. The following is generated from the canonical capture schedule; these
+are capture times, not the earlier reminder times.
 
-One app automation holds these four occurrences and stops afterward. It sends
-reminders only: it does not run capture/workflows, publish commits, send GitHub
-messages or assert Rakha's availability. Rakha explicitly confirmed Sunday20 19:00 WIB and Monday21 19:00 WIB for himself.
-Monday01:00/07:00 WIB handoff has been requested from Fatih, not yet accepted.
-Confirmation is posted in #104; technical replies are posted in #140/#141.
+<!-- BEGIN GENERATED: crossing-schedule (full) -->
+
+**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+
+| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+|---|---|---|---|---|---|
+| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
+| **Mon 2026-09-21 00:00** | Mon 07:00 | 8,640 | first decay reading | **Rakha** | Fatih, 00:20 UTC |
+| **Mon 2026-09-21 06:00** | Mon 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
+| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+
+### The backup trigger is a wall clock, not a judgement
+
+> **If no capture for that window is committed by the time in the last column, the backup runs it.** Not *"if it looks like it did not happen."*
+
+**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
+
+### Deliberately declined
+
+- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+
+Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+
+<!-- END GENERATED: crossing-schedule -->
+
+The app automation reminds before the applicable captures and does not run them,
+publish commits or send GitHub messages. Its schedule was checked separately on
+Sep16. Never hand-edit the table above; change ops/crossing-schedule.json and render.
 
 [Evidence](evidence/2026-09-15-watcher-refresh/README.md) contains only public config,
 service metadata and email result. No watch.env or API key is included.
