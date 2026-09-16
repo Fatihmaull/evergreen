@@ -81,12 +81,57 @@ Published in [PR #163](https://github.com/Fatihmaull/evergreen/pull/163); the ex
 
 ## B/C handoff — use the existing runbook
 
-- **Sep20 ~12:00 UTC / 19:00 WIB:** Fatih performs the manual primary checkpoint;
-  Rakha backs up if unreachable. Use [SEP-20-PREFLIGHT](SEP-20-PREFLIGHT.md), including
-  A-only workflow context and the separate B capture. Repeat around18:00/00:00 UTC
-  as specified there; rerun to a new capture path if B has not crossed.
-- **Sep21 ~12:00 UTC / 19:00 WIB:** observe B expiry against the verified baseline.
-  Actual ledger state is decisive; TTL0 remains live. Never restore B to inspect it.
+> ⚠️ **Superseded 2026-09-16, and the change is an inversion.** This section
+> previously read *"Fatih performs the manual primary checkpoint; Rakha backs up if
+> unreachable"*, with the window as three captures at 12:00/18:00/00:00 UTC. That was
+> accurate when written on Sep 15 — and Rakha's per-date confirmation in #104 later
+> the same day reversed the roles. The record of what was true on Sep 15 is preserved
+> in this note; **the schedule itself is no longer written here**, because two other
+> pages held their own copies and the three disagreed.
+>
+> The table below is generated from
+> [`ops/crossing-schedule.json`](../ops/crossing-schedule.json) and is the only place
+> the schedule exists. `pnpm check:schedule` fails if this copy drifts.
+
+<!-- BEGIN GENERATED: crossing-schedule (full) -->
+
+**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+
+| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+|---|---|---|---|---|---|
+| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
+| **Mon 2026-09-21 00:00** ❓ | Mon 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
+| **Mon 2026-09-21 06:00** ❓ | Mon 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+
+### The backup trigger is a wall clock, not a judgement
+
+> **If no capture for that window is committed by the time in the last column, the backup runs it.** Not *"if it looks like it did not happen."*
+
+**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
+
+### ❓ 2 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
+
+Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
+
+- **Mon 2026-09-21 00:00 / Mon 07:00 WIB** — asked of Rakha in #104, 2026-09-16. Rakha declined this once as part of the 01:00/07:00 WIB pair. Re-asked now that 01:00 is off the table and this is a morning slot.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Mon 2026-09-21 06:00 / Mon 13:00 WIB** — asked of Rakha in #104, 2026-09-16. New slot, never previously asked. It is the one that fills the twelve-hour hole running into expiry.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
+
+### Deliberately declined
+
+- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+
+Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+
+<!-- END GENERATED: crossing-schedule -->
+
+Use [SEP-20-PREFLIGHT](SEP-20-PREFLIGHT.md) for the procedure at each checkpoint,
+including A-only workflow context and the separate B capture; rerun to a new capture
+path if B has not crossed. At the expiry checkpoint, observe B against the verified
+baseline — actual ledger state is decisive, TTL0 remains live, and **B is never
+restored to inspect it**.
 - **Sep25:** minimum C crossing/refusal capture remains required, even if B succeeded.
   Full C expiry Sep26 is the replacement proof only if needed.
 - **Sep26:** Fatih's shared-Wasm handoff remains conditional on required evidence

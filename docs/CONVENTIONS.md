@@ -215,6 +215,33 @@ That is the more dangerous version, because staleness at least has a timestamp t
 
 Its cousin, same day: `$?` read after a pipe reports the **last** command's status. `node check.mjs | tail -2` followed by `$?` gives `tail`'s exit code, not the checker's — a result about a subject you did not name. A real bug was nearly diagnosed from that broken instrument, and it would have been wrong in the reassuring direction.
 
+### An API that can prove acceptance cannot prove placement
+
+*2026-09-15.* The weekend alert channel had to be shown to work after a message
+once landed in spam. The provider returns a receipt — `accepted`, with an id. It
+**cannot** say where the message came to rest.
+
+The honest shape, and the one shipped: the receipt keeps
+`receivedInInbox: "unverified"`, and a **separate artifact** records the human
+confirmation with `location: "inbox"`. Two claims, two sources, neither borrowing
+the other's authority.
+
+The tempting shape is a single `deliveredToInbox: true` filled in from the receipt,
+because the receipt is right there and the field reads better. It would be a claim
+nothing supports — and it is exactly the failure this project exists to avoid,
+since the one incident it is meant to rule out is invisible to the API.
+
+**Same discipline as `sharingStatus: "undetermined"`** in the scanner: Soroban
+cannot enumerate reverse dependencies, so a single-contract scan says it does not
+know rather than reporting `false`. **Absence is not health**, and an unverifiable
+field says `unverified` rather than guessing in the reassuring direction.
+
+**The rule:** before a field asserts something, ask which source produced it and
+what that source is capable of observing. When the answer is *"not this"*, the
+field's value is `unverified` and the real check gets its own artifact. The next
+integration will offer the same temptation, and the receipt will always be the
+thing already in hand.
+
 ### A test that cannot fail is worse than no test
 
 An unfailable test **occupies the slot a real test would sit in, and reports success from it.** No test at all is at least honest about the gap.
@@ -227,6 +254,20 @@ An unfailable test **occupies the slot a real test would sit in, and reports suc
 Neither was caught by the suite — a green suite is exactly what an unfailable test produces. **Both were caught by mutation testing or by looking closely at what the assertion actually compares.** So: when an assertion exists to prove a subtle property, break the code on purpose and watch that specific test go red. If it stays green, it was never testing what its name says.
 
 Special suspicion for assertions involving **float literals, `.not.toBe(...)`, and any value the language may coerce before comparing** — those are where an assertion most easily becomes a tautology while reading as a claim.
+
+### Sample at the boundary, or one pass proves nothing
+
+*2026-09-15, #177.* A watcher policy had to be shown to warn at 420 minutes and go
+critical at 540. It was verified at **419, 421 and 541** — not at 400 and 600.
+
+That is why a single pass settled it. Convenient points confirm that a threshold is
+*roughly* where you think; an off-by-one, a `<` that should be `<=`, or an inclusive
+bound read as exclusive all survive them intact and all show up at the boundary. An
+independent reproduction of a convenient-point check merely agrees with it; an
+independent reproduction of a boundary check **extends** it.
+
+**The rule:** when a number is a threshold, the test inputs are the number itself
+and its two neighbours. State which side is inclusive, and assert it.
 
 ### A test can defend a bug — say whether it asserts intent or behaviour
 
@@ -575,6 +616,36 @@ page citing it, and `STATUS.md` references everything by design.
 
 The membership test, when deciding whether a page belongs on that list: **if
 someone follows this page literally today, do they use the current tool?**
+
+### A summary table restating the sections below it is a second source of truth
+
+The reciprocal-link rule above is about two documents. **This is the same failure
+inside one.**
+
+*2026-09-15.* A §5b was added to `SEP-20-PREFLIGHT.md` naming Rakha as the Sunday
+watcher, while the handoff table three screens above still named Fatih. The page
+contradicted itself about who was watching, on the one document where that question
+has a date attached. Caught in review.
+
+*2026-09-16.* The full extent: **four documents held the schedule and gave three
+answers.** Two operational pages — the ones an operator opens on the day — still
+read *"Fatih remains primary operator; Rakha is the backup"*, the inverse of what
+had been agreed, because Rakha's confirmation arrived after they were written.
+
+The mechanism is not carelessness. **Whoever edits a section has no reason to scroll
+up**, and no reason at all to open a different file. The table is nonetheless what
+people read — it is above the fold and it is a grid — so the stale copy is the one
+that gets acted on.
+
+Rewriting the tables would have fixed four instances and nothing else. So: **the
+schedule now has one source, [`ops/crossing-schedule.json`](../ops/crossing-schedule.json),
+every table is generated from it by `scripts/render-crossing-schedule.mjs`, and
+`pnpm check:schedule` fails the build if a rendered block drifts.** Prose sections
+explain *why* and are forbidden from restating who or when.
+
+**The membership test:** if a fact appears in a table in more than one place, and
+being wrong about it costs something on a specific date, it needs one source and a
+check — not a rule asking people to remember to update both.
 
 ### Before arming a gate, prove its demand can be satisfied by the allowed path
 
