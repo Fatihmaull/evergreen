@@ -164,8 +164,40 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         : r.result.status === 'alerted'
           ? 0
           : r.result.exitCode;
-  } catch {
-    console.error('Failure rehearsal failed; inspect retained state without resending.');
+  } catch (error) {
+    // "Inspect retained state without resending" is the right advice for a
+    // rehearsal that ran and failed. It is the WRONG advice when a safety guard
+    // stopped the rehearsal — a fault proof that reached for a signer, or a
+    // write RPC, is a stop to investigate, not state to read.
+    //
+    // Allowlisted literals only: a provider or RPC error can carry a key or URL.
+    const SAFETY_STOP = new Set([
+      'Fault proof must not access a signer',
+      'Write RPC forbidden in fault proof',
+      'Only approved provider',
+      'No provider request in preview',
+    ]);
+    const INVOCATION = new Set([
+      'Use scenario root run-id [--send-alerts]',
+      'Unknown scenario',
+      'Invalid args',
+      'Invalid watcher scope',
+      'No email key',
+    ]);
+    const stop = SAFETY_STOP.has(error?.message);
+    const invocation = INVOCATION.has(error?.message);
+    console.error(
+      'Failure rehearsal failed.' +
+        (stop || invocation ? `\n  Reason: ${error.message}` : '') +
+        (error?.code === 'ENOENT' ? `\n  Missing path: ${error.path ?? 'unknown'}` : '') +
+        (stop
+          ? '\n  🔴 A SAFETY GUARD STOPPED THIS, it is not a flaky rehearsal. The fault proof\n' +
+            '     reached for something it must never touch. Investigate before re-running.'
+          : invocation
+            ? '\n  The rehearsal never started, so there is no retained state to inspect.\n' +
+              '  Fix the command and re-run.'
+            : '\n  Inspect retained state without resending.'),
+    );
     process.exitCode = 2;
   }
 }

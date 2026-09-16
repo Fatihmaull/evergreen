@@ -255,6 +255,31 @@ Neither was caught by the suite — a green suite is exactly what an unfailable 
 
 Special suspicion for assertions involving **float literals, `.not.toBe(...)`, and any value the language may coerce before comparing** — those are where an assertion most easily becomes a tautology while reading as a claim.
 
+### A flag that decides *advice* must not widen what text is allowed out
+
+The `safeRunCode` rule is: surface only our own literal strings, never interpolated
+text, because an RPC or driver error can carry a URL, a key or a password.
+
+*2026-09-16.* Fixing `run-save-proof.mjs`, the catch gained a second flag —
+`missingManifest` — answering a different question: *was anything written before this
+failed?* Both flags then fed one expression:
+
+```js
+(refused || stateful ? `\n  Reason: ${error.message}` : '')   // ← wrong
+```
+
+`refused` now included `missingManifest`, so a **raw Node `ENOENT` message** printed on
+the `Reason:` line. The allowlist was still there and still correct; it had simply been
+routed around by a flag that was never about disclosure.
+
+Caught by driving the branch, not by reading it — the same commissioning pass that had
+just found the original defect.
+
+**The rule:** the predicate gating disclosure is `allowlist.has(error?.message)` and
+nothing else. Any other flag — what advice to print, which exit code, how to categorise
+— gets its own name and never appears in that condition. Two questions, two predicates,
+even when the answers usually coincide.
+
 ### Sample at the boundary, or one pass proves nothing
 
 *2026-09-15, #177.* A watcher policy had to be shown to warn at 420 minutes and go
