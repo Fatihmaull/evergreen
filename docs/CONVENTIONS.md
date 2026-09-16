@@ -215,6 +215,32 @@ That is the more dangerous version, because staleness at least has a timestamp t
 
 Its cousin, same day: `$?` read after a pipe reports the **last** command's status. `node check.mjs | tail -2` followed by `$?` gives `tail`'s exit code, not the checker's — a result about a subject you did not name. A real bug was nearly diagnosed from that broken instrument, and it would have been wrong in the reassuring direction.
 
+### A disclaimer containing a closing keyword still closes the issue
+
+*2026-09-16.* #181's body ended with, in as many words:
+
+> This PR does not close #140/#141 automatically
+
+**Merging it closed #140 two seconds later.** GitHub's linked-issue parser matches
+`close #140` and does not read the negation in front of it. The sentence written
+specifically to promise no auto-close is what performed the auto-close.
+
+Only #140 went. The `/#141` spelling put no keyword next to the second number, so
+the parser saw one pair, not two — which is also why this is easy to miss: the
+outcome is *half* of what the sentence describes, and looks like an unrelated
+inconsistency rather than a parser behaviour.
+
+**The rule:** never put `close`/`closes`/`fixes`/`resolves` adjacent to an issue
+reference unless you mean it, negation included. To mention an issue you are *not*
+closing, write the bare reference — `see #140`, `acceptance requested in #140` — and
+keep the verb out of the sentence.
+
+**The shape, not the instance:** a statement *about* a token contains the token, and
+the machine reading it does not read the disclaimer. It happened twice in one
+session — the other was `check-cadence-quotes.mjs` rejecting a parenthetical that
+explained which figure had been removed by naming the figure. Assume anything that
+scans for a pattern will match your explanation of the pattern.
+
 ### An API that can prove acceptance cannot prove placement
 
 *2026-09-15.* The weekend alert channel had to be shown to work after a message
@@ -556,7 +582,9 @@ rule. That is one constant doing two jobs.
 timestamps, a machine-specific path, inside a checksummed bundle. **Decoding its
 window is what disproved that** — it runs 2026-09-18T00:00Z to 2026-09-21T18:00Z,
 covering guinea-pig B's crossing *and* its expiry. It was the live weekend watcher
-configuration, shipped with `warnMinutes: 30` against a 136-minute median.
+configuration, shipped with `warnMinutes: 30` against a measured median several
+times larger — so it would have warned on every gap the scheduler has ever
+produced.
 
 The hazard is that **each role hides the other**. A reviewer sees a checksummed
 record and does not think to check whether it is correct; an operator sees a

@@ -199,8 +199,12 @@ pnpm check
   where no bump attempt existed. Use the generic delivery seam with an explicitly
   reviewed message/event identity instead.
 - A scheduler that did not start cannot send its own failure email. D17-05 must
-  account for the measured 132-minute median / 294-minute worst gap and an external
+  account for the **measured** gap — `WORST_OBSERVED_SCHEDULER_GAP_MINUTES`, with
+  `SCHEDULER_GAP_FLOOR_MINUTES` as the policy bound — and an external
   detection/backstop path; cron self-reporting alone cannot satisfy that case.
+  *(This line previously named a specific worst-gap figure. The measured worst has
+  since grown past it, so anything designed to that literal would have been
+  under-provisioned — which is why the requirement names the constant instead.)*
 - No live email, secret inspection or Stellar write during implementation/review
   without a concrete authorized test. Actual sending needs reviewed recipient and
   message. Provider acceptance and inbox receipt are recorded separately.

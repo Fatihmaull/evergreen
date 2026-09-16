@@ -91,9 +91,14 @@ That last bullet is worth a sentence: the engine extended exactly what it decide
 to, and nothing else.
 
 > Say that the scheduler was a local OS timer, not the GitHub cron — and why, in
-> one line: *"GitHub delivers about 11% of its declared cadence, so a local timer
-> keeps what the engine does separate from whether the platform fires."* Two claims
-> proved separately, rather than one that quietly depends on both.
+> one line: *"GitHub delivers ⟦SLOT: delivery share — run `pnpm measure:cadence` on
+> the recording day⟧ of its declared cadence, so a local timer keeps what the engine
+> does separate from whether the platform fires."* Two claims proved separately,
+> rather than one that quietly depends on both.
+>
+> **This is a slot, not a fixed number, for the same reason the crossing figures
+> are.** The delivered cadence moves; a value written today is wrong by the
+> recording. Quote what the command prints on the day, and say it is a measurement.
 
 ### 4 · The refusal — 45 seconds ⟦SLOT⟧
 
@@ -156,6 +161,7 @@ Then the thesis, which is one sentence carrying both halves:
 | B decay sequence (×4) | pre-flight §3b captures, one per row of the generated schedule | Sun Sep 20 – Mon Sep 21 |
 | B expiry confirmation | Sep 21 observation | Mon Sep 21 |
 | C, if B is missed | `W3-D18-02c` | Fri Sep 25 |
+| Cron delivery share | `pnpm measure:cadence` | **recording day — it moves** |
 | Dashboard URL | `W4-D26` | Week 4 |
 | Action run link | `W4-D29` | Week 4 |
 
@@ -169,7 +175,7 @@ Then the thesis, which is one sentence carrying both halves:
 | Fee charged | 44,725 stroops (cap 2,000,000) |
 | Shared code entry | 3 consumers, expires ~2026-10-20 |
 | Code-entry share of rent | **98%** four-entry scope / **99%** instance-and-code scope |
-| Measured cron cadence | 136-min median, 369-min worst, vs 15 declared (~11%) |
+| Measured cron cadence | ⟦SLOT — `pnpm measure:cadence` on the recording day⟧. **Not final**, unlike every other row here: the chain figures above are fixed forever, this one moves. |
 
 All four transaction figures were verified against the chain rather than against
 the evidence bundle, on 2026-09-15.
