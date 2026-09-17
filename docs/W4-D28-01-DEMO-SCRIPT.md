@@ -58,6 +58,18 @@ dependencies — so the risk is invisible from inside any single contract.
 npx @evergreen-stellar/cli scan <A> <B> <C>
 ```
 
+> 🔴 **VERIFIED FAILING 2026-09-17 — this exact line exits 1 with `E404`**, because
+> `@evergreen-stellar/cli` is not published yet (`W4-D27-02`, Rakha, planned Sep 29;
+> he has been asked in #104 to bring it to Sep 22–23).
+>
+> **Do not record this beat until the package is published.** Everything else in
+> this section works today and was re-run to confirm: the three-contract scan emits
+> the shared-entry line, the single-contract scan emits `sharing-undetermined`, and
+> the result reads `PARTIAL — 3 issue(s)`. Only the install line is blocked.
+>
+> If the publish slips past the recording, the honest fallback is `pnpm cli scan …`
+> from a clone **narrated as such** — not an `npx` line edited to look like it ran.
+
 Show the real terminal. The point of passing three contracts together is the line
 that appears only then:
 
