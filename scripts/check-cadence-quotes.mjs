@@ -94,8 +94,12 @@ for (const file of files) {
   text.split('\n').forEach((line, i) => {
     for (const { re, what } of PATTERNS) {
       re.lastIndex = 0;
-      const m = re.exec(line);
-      if (m) hits.push({ file, line: i + 1, what, text: m[0].trim() });
+      // `matchAll`, not `exec`. A line carrying two figures of the same kind
+      // reported one — found by asking this file's own audit question of itself:
+      // can the output shape represent the failure? It could name the line, so
+      // this was an under-count rather than a blind spot, but `check-task-ids.mjs`
+      // already had the right shape and there is no reason to have two.
+      for (const m of line.matchAll(re)) hits.push({ file, line: i + 1, what, text: m[0].trim() });
     }
   });
 }

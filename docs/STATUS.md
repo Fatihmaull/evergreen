@@ -1104,8 +1104,8 @@ Packages renamed to **`@evergreen-stellar/cli`** and **`@evergreen-stellar/core`
 
 ### Two new tasks, both sequenced before the first publish
 
-- **`W4-D27-00`** — enable 2FA on the npm account. Currently disabled, and a public scope other people install from with an unprotected account is a supply-chain risk. Cheapest now, while nothing depends on the scope.
-- **`W4-D27-00b`** — invite Rakha to the org. Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership. Blocked on his npm username, tracked so it does not surface on Sep 29.
+- **`W4-D27-00`** — enable 2FA on the npm account. ✅ **Done 2026-09-12 on both accounts.** *(This line read "Currently disabled" until 2026-09-17, four days after it stopped being true — and it was read as current, reported upward, and acted on. Present tense inside a dated section is how that happens.)* A public scope other people install from with an unprotected account is a supply-chain risk.
+- **`W4-D27-00b`** — invite Rakha to the org. ✅ **Done 2026-09-12**; his npm username is `rakhargo`. *(Was "Blocked on his npm username" — the blocker was an unasked question, not his delay.)* Publishing moved to him in the Week 4 rebalance and he cannot publish to the scope without membership. 🔴 **Membership is not the same as publish rights** — his role is still unverified and is asked in #104.
 
 ## 🔴 Orphan sweep found a real sequencing bug — Stage 1 failure modes sat AFTER the proof
 

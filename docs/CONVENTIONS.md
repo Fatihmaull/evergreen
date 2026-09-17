@@ -83,6 +83,25 @@ Each weekly snapshot states its refresh date, outcomes, task IDs, formal owners,
 
 ### Identifiers in documentation — precision goes where it is acted on
 
+**The rule covers quoting someone else's identifier, not just producing your own.**
+
+*2026-09-17.* A task ID `W4-D29` was named in a report, relayed into a prompt, and
+assigned as work. **It does not exist** — zero occurrences in `BACKLOG.md`. The real
+rows are `W4-D25-01/-02/-03`, and they belong to a different owner.
+
+Three parties handled that string and none looked it up. The only reason no work was
+wasted is that it was checked before being absorbed, at the fourth handling.
+
+A relayed identifier feels verified precisely *because* someone else wrote it — it
+arrives with the authority of having already been used. **It has not been checked; it
+has been repeated.** `grep -c` costs nothing and is the whole of the fix.
+
+The same session produced the same shape twice more: a stale `W4-D27-00` status was
+reported as open, relayed, and acted on — 2FA was enabled again on something already
+done since Sep 12 — and a `## ✅ closed` section still said *"Currently disabled"*.
+**Look up the row, not the sentence about the row.**
+
+
 **An identifier a reader must act on has to be complete and exact. An identifier a reader must avoid can be abbreviated.**
 
 These are opposite requirements and the instinct gets them backwards, because the dangerous ones *feel* like they deserve the full string. A warning marker reads fine as `CCYGO7KQ…LTTQ`. Anything someone will type, paste, or compare against must be the whole thing, cross-checked against [`SETUP.md`](SETUP.md), which is the source of truth for contract IDs and public keys.
@@ -240,6 +259,58 @@ the machine reading it does not read the disclaimer. It happened twice in one
 session — the other was `check-cadence-quotes.mjs` rejecting a parenthetical that
 explained which figure had been removed by naming the figure. Assume anything that
 scans for a pattern will match your explanation of the pattern.
+
+### A checker's output shape bounds what it can report
+
+Distinct from *"suspect the instrument when the result surprises you"*, and harder,
+because **this result will not surprise you.**
+
+*2026-09-17.* `scripts/check-policy-constants.mjs` held its copy sites in a map keyed
+by the owned value:
+
+```js
+const copies = { thresholdLedgers: pick(drift, …), secondsPerLedger: pick(ttl, …) };
+```
+
+**One copy per value, by construction.** Three copies of the action threshold existed;
+it reported one. The checker was not broken — it ran correctly, inside a shape that
+could not represent the problem it was written to find. Meanwhile `scan.ts` carried a
+comment saying it was pinned by that checker, which had never opened the file.
+
+A map keyed by owner, reporting one entry per owner, **looks exactly like a correct
+answer**. There is nothing anomalous to investigate. That is why this needs its own
+name: the instrument rule is triggered by surprise, and this failure produces none.
+
+`#154` is this defect having already reached production — `scan` reporting `HEALTHY`
+for guinea-pig B while the engine reported `WARNING`, minutes apart, on identical
+chain state.
+
+**The membership test, which generalises past this repo:** *can the check's output
+shape represent the failure it is looking for?*
+
+- a count that cannot exceed one cannot report duplication
+- a boolean cannot report *undetermined* — the reason `sharingStatus` is a string
+- **a map keyed by the thing you are deduplicating cannot report duplicates**
+
+It is a different question from *"does this check work"*, and the checks that pass the
+first question are exactly the ones that hide the second.
+
+**Audit, 2026-09-17.** Every checker was put to that question. Reported honestly,
+because inflating it would make the next audit worthless:
+
+| Checker | Shape | Verdict |
+|---|---|---|
+| `check-policy-constants` | map keyed by owner | 🔴 **the instance** — now a list |
+| `check-crossing-evidence` | `Map` keyed by bundle path | ✅ a memo cache; findings go to an array |
+| `check-evidence-hashes` | `Map` keyed by hash → first file | ✅ the hash is the subject; one location suffices to find it |
+| `check-cadence-quotes` | array, but `exec` per line | ⚠️ under-**counted** a line holding two figures. Not blind — the line was still named and the build still failed. Fixed to `matchAll`, which `check-task-ids` already used |
+| `check-locale-pinning`, `check-conflict-markers` | array, one finding per line | ✅ line-summary by design; the line is the unit of fix |
+| the rest | arrays | ✅ |
+
+**One true instance.** The distinction between *blind* and *under-counting* is the
+whole point: a blind checker reports success while the defect exists; an
+under-counting one fails the build and names the place, and cannot go green until the
+last instance is gone.
 
 ### A guard that covers one copy looks identical to a guard that covers all of them
 
