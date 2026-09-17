@@ -72,7 +72,7 @@ D21-02 remains In progress until Shared reconciles actual schedule displacement.
 - D21-02 final Shared slack accounting, without invented time estimates.
 
 No schedule, runtime, provider, transaction or SOW decision changed. This preparation
-and its integrity repair are local pending internal review/publication.
+and its integrity repair are published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192) for Fatih review/merge; final W3 gate is not claimed.
 
 ## Internal review and validation
 

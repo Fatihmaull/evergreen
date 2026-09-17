@@ -254,7 +254,7 @@ Snapshot counts:115 early Sep5,123 late Sep5,144 checkbox+one standing Sep10,
 148 checkbox+one standing now. Zero slack days are recorded as charged, but actual
 effort/slack consumption cannot be inferred from these counts. D21-01/02 In progress;
 all future-event, independent-test and Shared gate outcomes remain open. No watcher
-startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Notion sync pending publication.
+startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192); Notion D21-01/02 is In progress with the verified outcome. Full150-row presence check found no missing or phantom IDs. Fatih review/merge and final W3 gate remain pending.
 
 ## Earlier — Acceptance publication snapshot, Sep16
 
