@@ -9,7 +9,7 @@
 
 ---
 
-## Current — D20 decision packet and truthful signer guide in preparation
+## Current — D20 proposal and current signer guide published for Shared review
 
 Sep17: answered Fatih's #104 publication questions with current versus prior facts:
 local npm login renewed successfully as rakhargo; authenticated org role is developer; user
@@ -18,10 +18,10 @@ confirms no previous npm publication. Rakha reports the npm account UI shows "En
 no package published. Sep22–23 is a proposed publishing target, subject to auth/release
 checks; this does not defer the W3 weekend duties.
 
-Preparing a local D20-01 decision packet for Shared review and replacing D20-03's
+Published [PR #191](https://github.com/Fatihmaull/evergreen/pull/191) with the D20-01 decision packet for Shared review and replacing D20-03's
 unsupported hardened-path promise with verified status and Stage1 limits. D20-03 is
 In progress. D19 remains Blocked; D20-02 stays conditional. No final ADR/SOW decision,
-provider pivot, transaction or timer change. Local D20-01 decision packet and D20-03 guide are ready for review; full gate884 tests and an offline unsupported-policy/no-secret check passed. See docs/W3-D20-01-DECISION.md and docs/W3-D20-REVIEW.md. Notion sync pending publication.
+provider pivot, transaction or timer change. Local D20-01 decision packet and D20-03 guide are ready for review; full gate884 tests and an offline unsupported-policy/no-secret check passed. See docs/W3-D20-01-DECISION.md and docs/W3-D20-REVIEW.md. Notion D20-01/03 is In progress with the published outcome; full150-row presence diff has no missing/phantom IDs. Explicit decision requested in #183; no final acceptance inferred.
 
 ## Current — Acceptance and operations closeout, Sep16
 

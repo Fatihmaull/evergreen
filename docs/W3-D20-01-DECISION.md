@@ -1,6 +1,6 @@
 # W3-D20-01 — proposed Stage2 disposition
 
-**For Rakha/Fatih review, Sep17. Not accepted; do not treat as an ADR amendment.**
+**For Rakha/Fatih review, Sep17. Published in [PR #191](https://github.com/Fatihmaull/evergreen/pull/191). Not accepted; do not treat as an ADR amendment.**
 Source: merged feasibility #162 and outstanding decision #183. Investigation need
 not be repeated; this document makes the remaining decision concrete.
 
