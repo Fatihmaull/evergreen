@@ -87,13 +87,35 @@ export function createEd25519Signer(
       if (request.networkPassphrase !== Networks.TESTNET)
         throw new Error('Only Testnet signing is permitted');
       const tx = validateExtensionEnvelope(request.transactionXdr, options);
+      // Decided by OUR control flow, never by inspecting the caught error. The
+      // earlier draft matched `error.message === 'Wrong key'`, which works but
+      // makes a security boundary depend on a string the SDK could also produce.
+      // A flag cannot be spoofed by an upstream message.
+      let accountMismatch = false;
       try {
         const key = Keypair.fromSecret(options.readSecret());
-        if (key.publicKey() !== options.sourceAccount) throw new Error('Wrong key');
+        if (key.publicKey() !== options.sourceAccount) {
+          accountMismatch = true;
+          throw new Error('Wrong key');
+        }
         tx.sign(key);
         return tx.toXDR();
       } catch {
-        throw new Error('Unable to sign the validated extension');
+        // 🔴 THE MOST DELIBERATE SUPPRESSION IN THIS REPO — reviewed 2026-09-17.
+        // `Keypair.fromSecret` receives the raw signing secret and SDK parse
+        // errors echo their input, so nothing derived from the caught error may
+        // reach the message. The catch stays blind ON PURPOSE: binding it would
+        // satisfy `preserve-caught-error` by attaching a `cause`, which is exactly
+        // the chain that must not carry key material.
+        //
+        // The distinction is still worth keeping. A wrong source account and a
+        // malformed secret are different operator actions — reconfigure, versus
+        // replace a corrupted key — and collapsing both lost that for no gain.
+        throw new Error(
+          accountMismatch
+            ? 'Unable to sign the validated extension: the secret does not match the expected source account'
+            : 'Unable to sign the validated extension',
+        );
       }
     },
   };

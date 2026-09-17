@@ -228,6 +228,34 @@ describe('engine execution — real core primitives over fixture RPC', () => {
     expect(s.readSecret).not.toHaveBeenCalled();
   });
 
+  /**
+   * The pre-flight block calls `assertReady()` and `checkDeadline()` inside ONE
+   * try whose catch discarded the error. `checkDeadline()` throws our own
+   * EngineExecutionError('RUN_DEADLINE', …), so a live run that merely ran out of
+   * time was reported as RECORDER_UNAVAILABLE — *"Reconcile existing state before
+   * any new live attempt"* — sending an operator to reconcile recorder state that
+   * was never at fault, on the one path where reconciling is expensive.
+   *
+   * The test above passes either way: its recorder genuinely is unavailable. This
+   * one drives the other branch through the same catch.
+   */
+  it('🔴 reports a run deadline as a deadline, not as an unreconciled recorder', async () => {
+    const s = setup();
+    // Deadline already elapsed before the pre-flight block runs.
+    let t = Date.parse('2026-09-17T00:00:00Z');
+    const deps = { ...s.deps, now: () => new Date((t += 10 * 60_000)) };
+    const failure = await runEngineExecution({ ...s.config, mode: 'live' }, deps, {
+      submit: true,
+      maxRunMs: 1,
+    }).then(
+      () => new Error('expected a rejection'),
+      (error: Error) => error,
+    );
+    expect(failure.message).toMatch(/RUN_DEADLINE|deadline/i);
+    expect(failure.message).not.toMatch(/recorder is not ready|RECORDER_UNAVAILABLE/i);
+    expect(s.rpc.sendTransaction).not.toHaveBeenCalled();
+  });
+
   it('does not silently activate from live config alone or submit from dry-run config', async () => {
     const s = setup();
     await expect(runEngineExecution({ ...s.config, mode: 'live' }, s.deps)).rejects.toThrow(

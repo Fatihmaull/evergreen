@@ -117,6 +117,13 @@ async function captureImplementation(
         signal: globalThis.AbortSignal.timeout(Math.max(1, Math.min(15000, deadline - Date.now()))),
       });
     } catch {
+      // DELIBERATE SUPPRESSION — reviewed 2026-09-17, keep.
+      // Two reasons, either sufficient: the caught error is an RPC transport
+      // failure whose message can carry the endpoint URL, and this line writes
+      // into a bundle that gets COMMITTED as crossing evidence. A leaked endpoint
+      // in a permanent artifact cannot be un-leaked.
+      // `Read failed` is allowlisted by verify-crossing-capture.mjs, so the
+      // operator still gets a named reason.
       await put(dir, stem + '-transport.json', JSON.stringify({ error: 'READ_FAILED' }));
       throw Error('Read failed');
     }

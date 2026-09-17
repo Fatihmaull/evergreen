@@ -158,7 +158,19 @@ export async function runEngineExecution(
     try {
       await deps.recorder!.assertReady();
       transport.checkDeadline();
-    } catch {
+    } catch (error) {
+      // `checkDeadline()` throws our own EngineExecutionError('RUN_DEADLINE', …).
+      // The blind catch replaced it with RECORDER_UNAVAILABLE, so a live run that
+      // simply ran out of time reported "Submission recorder is not ready.
+      // Reconcile existing state before any new live attempt." — sending an
+      // operator to reconcile recorder state that was never at fault, on the one
+      // path where reconciling is expensive and the wrong action is costly.
+      //
+      // Our own typed error is safe to pass through: EngineExecutionError carries
+      // only our literals, never provider text. Anything else is still collapsed,
+      // because the recorder wraps storage whose errors can carry a connection
+      // string.
+      if (error instanceof EngineExecutionError) throw error;
       throw new EngineExecutionError(
         'RECORDER_UNAVAILABLE',
         'Submission recorder is not ready. Reconcile existing state before any new live attempt.',

@@ -150,4 +150,55 @@ describe('local extension signer', () => {
       );
     }
   });
+
+  /**
+   * The test above asserts a SUBSTRING, so it passes whether or not the two
+   * failures are distinguishable — which is why it did not notice that they were
+   * collapsed into one string. A wrong source account and a malformed secret are
+   * different operator actions: reconfigure, versus replace a corrupted key.
+   *
+   * Asserts the distinction AND that neither message carries key material, since
+   * the whole reason this catch discards its error is that `Keypair.fromSecret`
+   * echoes its input.
+   */
+  it('distinguishes a wrong account from a malformed secret, and leaks neither', async () => {
+    const { request } = setup();
+    const other = Keypair.random();
+    const MALFORMED = 'SNOTAVALIDSECRETATALLXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+    const signerWith = (readSecret: () => string) =>
+      createEd25519Signer({
+        payer: 'manual',
+        sourceAccount: key.publicKey(),
+        entryKey,
+        extendToLedgers: 120,
+        expectedHash: Buffer.from(
+          TransactionBuilder.fromXDR(request.transactionXdr, Networks.TESTNET).hash(),
+        ).toString('hex'),
+        maxFeeStroops: '600',
+        readSecret,
+      });
+
+    const message = async (readSecret: () => string): Promise<string> => {
+      try {
+        await signerWith(readSecret).signExtendTTL(request);
+        return '(no throw)';
+      } catch (error) {
+        return (error as Error).message;
+      }
+    };
+
+    const wrongAccount = await message(() => other.secret());
+    const malformed = await message(() => MALFORMED);
+
+    expect(wrongAccount).not.toBe(malformed);
+    expect(wrongAccount).toContain('does not match the expected source account');
+    expect(malformed).toBe('Unable to sign the validated extension');
+
+    for (const m of [wrongAccount, malformed]) {
+      expect(m).not.toContain(MALFORMED);
+      expect(m).not.toContain(other.secret());
+      expect(m).not.toContain(key.secret());
+      expect(m).not.toMatch(/S[A-Z2-7]{40,}/);
+    }
+  });
 });
