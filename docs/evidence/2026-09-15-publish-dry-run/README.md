@@ -79,3 +79,12 @@ for `W2-D14-02b`.
 
 The tarball is `0.0.0`. `W4-D27-02` sets the real version at publish time; nothing
 here asserts what it should be.
+
+## Recorded package digest (clarified Sep17)
+
+[PACKAGE-DIGEST.txt](PACKAGE-DIGEST.txt) preserves the original recorded tarball hash
+byte-for-byte. It was formerly named SHA256SUMS, but it is not a manifest of this
+folder: the named tarball is not retained here and the line includes a descriptive
+`(pnpm pack)` annotation. The filename now distinguishes a historical digest record
+from a locally verifiable evidence-bundle manifest. No tarball verification is
+claimed by the repository's evidence-integrity gate for this record.
