@@ -1,15 +1,14 @@
 # W3 Acceptance and operations — technical closeout, Sep16
 
-Local branch `ops/W3-acceptance-closeout`, baseline main8b78efd. Published in [PR #181](https://github.com/Fatihmaull/evergreen/pull/181). No final
-acceptance or issue closure is claimed by this report.
+Local branch `ops/W3-acceptance-closeout`, baseline main8b78efd. Published in [PR #181](https://github.com/Fatihmaull/evergreen/pull/181). Merged and explicitly accepted in #140/#141 on Sep16. This update records those decisions; it does not expand their scope.
 
 ## Acceptance matrix
 
 | Item | Verified state | Remaining action |
 | --- | --- | --- |
 | D17-03 templates | Code/tests merged; success/failure receipts #146/#147; now a separately sent approachingCritical template with inbox confirmation | Fatih confirms task acceptance; the old "send real test emails" blocker is no longer the technical gap |
-| #140 failure alert acceptance | Named failures/evidence merged; #170 mailbox check passed and was reported; no repeat needed | Explicit acceptance/closure by Fatih, with shared-provider risk stated correctly |
-| #141 independent observer | Corrected warn420/critical540 config installed and published #177; timer armed; runtime hashes and service state rechecked | Explicit acceptance/closure by Fatih; actual Sep18 firing still future |
+| #140 failure alert acceptance | Named failures/evidence merged; #170 mailbox check passed and was reported; no repeat needed | Accepted/closed by Fatih in #140; shared-provider risk explicitly accepted, not solved |
+| #141 independent observer | Corrected warn420/critical540 config installed and published #177; timer armed; runtime hashes and service state rechecked | Accepted/closed by Fatih in #141; actual Sep18 firing still future |
 | D17-04 and D18-02a | Already accepted in #166 / #130 | No new proof or acceptance request needed |
 | B watch roles | All four primary/backup roles confirmed in #104/#180 | Execute on schedule; preparation is not event evidence |
 
@@ -31,16 +30,16 @@ acceptance or issue closure is claimed by this report.
    No repinning just for diagnostic text, extra mail test or speculative code change.
    [Operation read-back](evidence/2026-09-16-operations-check/README.md).
 
-## Review and publication packet
+## Acceptance reconciliation — Sep17
 
-At the separate publication checkpoint, include the new template evidence and the
-three documentation corrections. The specific request to Fatih is acceptance of
-D17-03, #140 and #141 on the now-complete technical evidence; do not ask again for
-already accepted D17-04/D18-02a or for already confirmed dates.
+#181 is merged. #140 and #141 are explicitly accepted/closed; do not reopen them or
+ask for their acceptance again. D17-03 remains In progress because #140 explicitly
+excluded that task's own status reconciliation. The original technical evidence
+and historical verification counts remain unchanged.
 
-Do not mark #140/#141 closed on Fatih's behalf. Future-event work stays open:
-Sep18 runtime firing check, four B captures, minimum C crossing and conditional
-shared-Wasm handoff. No Stage2 or W4 work is absorbed into this closeout.
+Future work remains Sep18 firing/readiness, B/C observations and same-day evidence.
+Stage2 direction is separately tracked in #183 after closure of the feasibility
+issue #161. No new test email, runtime change or scope decision is made here.
 
 ## Verification
 
@@ -49,4 +48,4 @@ edits, schedule generation, reciprocal links, backlog parsing and evidence index
 were checked again. Both new evidence bundles passed checksum verification. Exact
 approachingCritical re-render, receipt/provider ID and separate inbox confirmation
 were compared successfully. No production-code change or unresolved technical finding
-was identified in this scoped pass. Publication is in PR #181; explicit acceptance requested in #140/#141.
+was identified in this scoped pass. Publication is in PR #181; explicit acceptance recorded in the closed #140/#141.
