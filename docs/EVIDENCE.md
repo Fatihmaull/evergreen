@@ -5,6 +5,13 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## Sep17 integrity reconciliation — accepted A-save proof
+
+The Sep14 scheduled-save bundle again verifies against its original manifest.
+The later #166 acceptance annotation is preserved [separately](evidence/2026-09-17-save-acceptance-reconciliation/README.md)
+so the sealed README retains its original bytes. Acceptance in #130 remains valid;
+no transaction or raw artifact was replaced. See the W3 closeout inventory report.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
