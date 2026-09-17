@@ -241,6 +241,30 @@ session — the other was `check-cadence-quotes.mjs` rejecting a parenthetical t
 explained which figure had been removed by naming the figure. Assume anything that
 scans for a pattern will match your explanation of the pattern.
 
+### A guard that covers one copy looks identical to a guard that covers all of them
+
+`scripts/check-policy-constants.mjs` exists because *"a comment saying 'matches
+X' is documented intent, not an enforced link"*. **Its own data structure allowed
+exactly one copy per owned value** — a `{ owner: copy }` map — so when a second and
+third copy of the action threshold appeared in TypeScript, neither was checked and
+the check kept passing.
+
+*Measured 2026-09-17, not assumed:* moving `DEFAULT_CRITICAL_LEDGERS` to 15,000 left
+the check **green**. So did moving the CLI's `DEFAULT_THRESHOLD_LEDGERS`. And
+`scan.ts` carried the comment *"pinned by scripts/check-policy-constants.mjs"* —
+the exact false claim the checker was written to eliminate, in a file the checker
+did not read.
+
+The cost is on the record. #154 fixed `scan` reporting `HEALTHY` for guinea-pig B
+while the engine reported `WARNING`, minutes apart, on identical chain state: two
+thresholds that had to agree, with nothing making them.
+
+**The rule:** a pinning check's coverage is a **list**, never a map keyed by the
+owner. The moment its shape assumes one copy, a second copy is invisible rather
+than wrong. When adding a constant that restates a policy, add the copy site to the
+check in the same commit — and drive the check by moving the new literal, because a
+check that has never failed for that site has not been shown to cover it.
+
 ### An API that can prove acceptance cannot prove placement
 
 *2026-09-15.* The weekend alert channel had to be shown to work after a message

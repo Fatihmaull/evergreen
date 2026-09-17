@@ -7,6 +7,9 @@ export function connectionOptions(value) {
   try {
     url = new URL(value);
   } catch {
+    // DELIBERATE SUPPRESSION — reviewed 2026-09-17, keep. `value` IS the
+    // connection string, and a URL parse error echoes its input, which here
+    // contains a password. The message is already the actionable one.
     throw new Error('Set PERSISTENCE_DATABASE_URL to a dedicated PostgreSQL test database');
   }
   if (
@@ -48,6 +51,8 @@ export function connectionOptions(value) {
       application_name: 'evergreen-w1-persistence-spike',
     };
   } catch {
+    // DELIBERATE SUPPRESSION — reviewed 2026-09-17, keep. Same hazard as above:
+    // a decoding failure reports the string it failed to decode.
     throw new Error('Invalid connection string encoding');
   }
 }
