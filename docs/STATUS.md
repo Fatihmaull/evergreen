@@ -9,6 +9,20 @@
 
 ---
 
+## Current — D20 decision packet and truthful signer guide in preparation
+
+Sep17: answered Fatih's #104 publication questions with current versus prior facts:
+local npm auth now E401; earlier authenticated check was rakhargo/developer; user
+confirms no previous npm publication. Mode of 2FA remains unverified and is being
+checked by the user. Public registry reads work. No credential setting changed and
+no package published. Sep22–23 is a proposed publishing target, subject to auth/release
+checks; this does not defer the W3 weekend duties.
+
+Preparing a local D20-01 decision packet for Shared review and replacing D20-03's
+unsupported hardened-path promise with verified status and Stage1 limits. D20-03 is
+In progress. D19 remains Blocked; D20-02 stays conditional. No final ADR/SOW decision,
+provider pivot, transaction or timer change. Local D20-01 decision packet and D20-03 guide are ready for review; full gate884 tests and an offline unsupported-policy/no-secret check passed. See docs/W3-D20-01-DECISION.md and docs/W3-D20-REVIEW.md. Notion sync pending publication.
+
 ## Current — Acceptance and operations closeout, Sep16
 
 Auditing D17-03 and D18-01 against main8b78efd. Success/failure email evidence was

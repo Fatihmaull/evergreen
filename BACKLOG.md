@@ -382,7 +382,7 @@ The old plan spent the riskiest week's first two days on a spike the whole deliv
 *Planned: Tue Sep 22 — may slip; the D-number does not.*
 - [~] **W3-D20-01** (S) **Go/no-go on Stage 2.** Go → wire it in behind the `Signer` interface as the documented hardened path. No-go → fall back to OpenZeppelin (ADR-002 Option B; Rakha's Rust is solid, and this is no longer on the critical path so it can take the time it takes) **or** ship policy scoping documented as partial with full scoping deferred to SOW 2. Record the outcome in ADR-002's update log — amend, don't rewrite.
 - [ ] **W3-D20-02** (R) **Stage 2 failure mode only:** a **policy rejection** alerts rather than failing silently. Applies only if `W3-D20-01` is a go — if the spike is a no-go this task does not exist. *(Rescoped 2026-09-08 by the orphan sweep: the other three failure modes moved to `W3-D17-05`, because they are Stage 1 concerns that the Sunday crossing depends on and this day falls two days after it.)*
-- [ ] **W3-D20-03** (R) `docs/POLICY-SIGNER.md` setup guide — required SOW evidence for Deliverable 2. Present it as **the hardened path for self-hosters**: in v1 the hot key sits on the user's server with the user's lumens on it, so capping it protects *them*. That is the reason worth reading, not the SOW line item.
+- [~] **W3-D20-03** (R) `docs/POLICY-SIGNER.md` setup guide — required SOW evidence for Deliverable 2. Present it as **the hardened path for self-hosters**: in v1 the hot key sits on the user's server with the user's lumens on it, so capping it protects *them*. That is the reason worth reading, not the SOW line item.
 
 ### Day 21 · W3 review
 *Planned: Wed Sep 23 — may slip; the D-number does not.*
