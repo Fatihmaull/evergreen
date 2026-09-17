@@ -12,9 +12,9 @@
 ## Current — D20 decision packet and truthful signer guide in preparation
 
 Sep17: answered Fatih's #104 publication questions with current versus prior facts:
-local npm auth now E401; earlier authenticated check was rakhargo/developer; user
+local npm login renewed successfully as rakhargo; authenticated org role is developer; user
 confirms no previous npm publication. Rakha reports the npm account UI shows "Enabled for authorization and publishing"
-(auth-and-writes). This answers the mode question; it does not renew the CLI session. Public registry reads work. No credential setting changed and
+(auth-and-writes). The account mode is user-confirmed; CLI login was separately re-verified after renewal. Public registry reads work. No credential setting changed and
 no package published. Sep22–23 is a proposed publishing target, subject to auth/release
 checks; this does not defer the W3 weekend duties.
 
