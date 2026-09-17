@@ -57,7 +57,15 @@ export const EXIT_BELOW_THRESHOLD = 1;
 export const EXIT_ERROR = 2;
 export const EXIT_INCOMPLETE = 3;
 
-/** Matches evergreen.config.example.json; pinned by scripts/check-policy-constants.mjs. */
+/**
+ * The action threshold. Owned by `evergreen.config.example.json`
+ * (`defaults.bumpWhenRemainingLedgersBelow`) and **now actually pinned** to it by
+ * `scripts/check-policy-constants.mjs`, alongside core's `DEFAULT_CRITICAL_LEDGERS`.
+ *
+ * This comment previously claimed the pin already existed. It did not: moving this
+ * literal left the check green, which is the documented-intent-versus-enforced-link
+ * failure that check's own header warns about. Measured and closed 2026-09-17.
+ */
 export const DEFAULT_THRESHOLD_LEDGERS = 17_280;
 
 /**

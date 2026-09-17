@@ -50,6 +50,8 @@ function pick(source, label, where, pattern) {
 const config = JSON.parse(read('evergreen.config.example.json'));
 const ttl = read('packages/core/src/ttl.ts');
 const drift = read('scripts/check-decay-drift.py');
+const health = read('packages/core/src/health.ts');
+const cliScan = read('packages/cli/src/scan.ts');
 
 const owners = {
   thresholdLedgers: {
@@ -67,20 +69,63 @@ const owners = {
   },
 };
 
-const copies = {
-  thresholdLedgers: pick(
-    drift,
-    'THRESHOLD_LEDGERS',
-    'scripts/check-decay-drift.py',
-    /^THRESHOLD_LEDGERS = ([\d_]+)/m,
-  ),
-  secondsPerLedger: pick(
-    drift,
-    'SECONDS_PER_LEDGER',
-    'scripts/check-decay-drift.py',
-    /^SECONDS_PER_LEDGER = ([\d_.]+)/m,
-  ),
-};
+/**
+ * Every place that RESTATES an owned value. One owner may have many copies, so
+ * this is a list rather than a map — the original shape allowed exactly one copy
+ * per owner, which is why the two TypeScript thresholds below were never covered.
+ *
+ * 🔴 The TS entries were added 2026-09-17 after measuring the gap. Moving
+ * `DEFAULT_CRITICAL_LEDGERS` to 15_000 left this check GREEN, and so did moving
+ * `DEFAULT_THRESHOLD_LEDGERS`. `scan.ts` even carried the comment "pinned by
+ * scripts/check-policy-constants.mjs" — which was not true, and is exactly the
+ * documented-intent-versus-enforced-link failure this file's header warns about.
+ *
+ * The cost of that gap is already on the record: #154 fixed `scan` reporting
+ * HEALTHY for guinea-pig B while the engine reported WARNING, minutes apart, on
+ * the same chain state. Two thresholds that must agree, with nothing making them.
+ */
+const copies = [
+  {
+    owner: 'thresholdLedgers',
+    where: 'scripts/check-decay-drift.py → THRESHOLD_LEDGERS',
+    value: pick(
+      drift,
+      'THRESHOLD_LEDGERS',
+      'scripts/check-decay-drift.py',
+      /^THRESHOLD_LEDGERS = ([\d_]+)/m,
+    ),
+  },
+  {
+    owner: 'secondsPerLedger',
+    where: 'scripts/check-decay-drift.py → SECONDS_PER_LEDGER',
+    value: pick(
+      drift,
+      'SECONDS_PER_LEDGER',
+      'scripts/check-decay-drift.py',
+      /^SECONDS_PER_LEDGER = ([\d_.]+)/m,
+    ),
+  },
+  {
+    owner: 'thresholdLedgers',
+    where: 'packages/core/src/health.ts → DEFAULT_CRITICAL_LEDGERS',
+    value: pick(
+      health,
+      'DEFAULT_CRITICAL_LEDGERS',
+      'packages/core/src/health.ts',
+      /export const DEFAULT_CRITICAL_LEDGERS = ([\d_]+)/,
+    ),
+  },
+  {
+    owner: 'thresholdLedgers',
+    where: 'packages/cli/src/scan.ts → DEFAULT_THRESHOLD_LEDGERS',
+    value: pick(
+      cliScan,
+      'DEFAULT_THRESHOLD_LEDGERS',
+      'packages/cli/src/scan.ts',
+      /export const DEFAULT_THRESHOLD_LEDGERS = ([\d_]+)/,
+    ),
+  },
+];
 
 const problems = [...missing];
 for (const [name, { value, owner }] of Object.entries(owners)) {
@@ -88,10 +133,10 @@ for (const [name, { value, owner }] of Object.entries(owners)) {
     problems.push(`${name}: could not read the owning value from ${owner}`);
     continue;
   }
-  if (copies[name] !== value) {
-    problems.push(
-      `${name}: scripts/check-decay-drift.py has ${copies[name]}, but ${owner} says ${value}`,
-    );
+  for (const copy of copies.filter((c) => c.owner === name)) {
+    if (copy.value !== value) {
+      problems.push(`${name}: ${copy.where} has ${copy.value}, but ${owner} says ${value}`);
+    }
   }
 }
 
@@ -99,14 +144,15 @@ if (problems.length > 0) {
   console.error('✖ policy constants have diverged across the language boundary:\n');
   for (const p of problems) console.error(`  ${p}`);
   console.error(
-    '\n  The Python drift check copies values it does not own. Update the copy to' +
-      '\n  match its owner, or move the owner if the policy genuinely changed.' +
+    '\n  These sites copy a value they do not own. Update the copy to match its' +
+      '\n  owner, or move the owner if the policy genuinely changed — but move it' +
+      '\n  everywhere, in one commit.' +
       '\n  See docs/CONVENTIONS.md § One home for a policy.',
   );
   process.exit(1);
 }
 
 console.log(
-  `✓ policy constants agree across TS/JSON/Python ` +
+  `✓ policy constants agree across ${copies.length} copy site(s) in TS/JSON/Python ` +
     `(threshold ${owners.thresholdLedgers.value}, cadence ${owners.secondsPerLedger.value}s)`,
 );
