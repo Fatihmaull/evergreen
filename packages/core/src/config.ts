@@ -282,6 +282,11 @@ export function loadConfig(raw: string): ConfigLoadResult {
   try {
     parsed = JSON.parse(raw);
   } catch {
+    // DELIBERATE SUPPRESSION — reviewed 2026-09-17, keep. V8's SyntaxError for
+    // JSON.parse embeds a SNIPPET OF THE DOCUMENT ("Unexpected token '}' … is not
+    // valid JSON"), and this document is a config that may carry payer accounts.
+    // `assertNoSecrets(raw)` runs above but checks for seeds, not for everything
+    // that should stay out of a log. The advice below is what an operator acts on.
     throw new ConfigError('Config is not valid JSON. Check for a trailing comma or a stray quote.');
   }
   const root = requireRecord(parsed, 'config');

@@ -164,6 +164,10 @@ export function parseNotificationRecord(raw: string): BumpRecord {
     }
     throw new NotificationRecordError();
   } catch {
+    // DELIBERATE CATCH-ALL — reviewed 2026-09-17, keep as-is.
+    // Deliberately collapses an unexpected fault into the same typed error the
+    // block throws on purpose. Callers branch on the type, never on a message, so
+    // there is no diagnostic here for an operator to lose.
     throw new NotificationRecordError();
   }
 }
