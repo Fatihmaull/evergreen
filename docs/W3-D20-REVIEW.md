@@ -18,4 +18,4 @@ The two README claims are corrected as present capability statements; that does
 not predetermine the outcome of the pending scope decision.
 
 No new implementation or live proof is justified until the decision chooses a
-specific path. This work remains local pending review/publication.
+specific path. Published in PR #191 for review; Shared decision remains pending in #183.
