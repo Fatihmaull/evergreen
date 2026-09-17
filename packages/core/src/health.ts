@@ -114,7 +114,16 @@ export interface HealthThresholds {
 
 /** ~7 days at the measured cadence. Six daily runs of margin. */
 export const DEFAULT_WARN_LEDGERS = 120_960;
-/** ~1 day. The previous single threshold, kept where tightness is the point. */
+/**
+ * ~1 day. The previous single threshold, kept where tightness is the point.
+ *
+ * Must equal `evergreen.config.example.json`'s
+ * `defaults.bumpWhenRemainingLedgersBelow` and the CLI's
+ * `DEFAULT_THRESHOLD_LEDGERS`; `scripts/check-policy-constants.mjs` enforces it.
+ * Unpinned until 2026-09-17, which is how #154 happened — `scan` graded against
+ * one threshold and the engine against another, and they disagreed about
+ * guinea-pig B minutes apart on identical chain state.
+ */
 export const DEFAULT_CRITICAL_LEDGERS = 17_280;
 
 export const DEFAULT_THRESHOLDS: HealthThresholds = {
