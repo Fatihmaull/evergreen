@@ -2,14 +2,44 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-14 · D1 §6.1 row 3 met (captures committed); #137/#138 merged
-**Sprint day:** 12 of 30 · **Deadline:** 2026-10-02 · **15 build days left** (weekdays only)
+**Last updated:** 2026-09-17 · acceptance reconciled against main c42561d and GitHub decisions
+**Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — Acceptance and operations closeout, Sep16
+## Current — reconciled September17 state
+
+- **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
+  #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
+  fixture-clock race). #181 merged; #182 merged and main CI passed. D17-04 and
+  D18-02a remain accepted under #166/#130; do not request their acceptance again.
+- **Residual risk accepted, not removed:** engine and watcher share the Resend/mailbox
+  delivery path. Manual wall-clock B captures do not depend on receiving an alert.
+- **D17-03 remains In progress/Fatih:** technical evidence complete; #140 explicitly
+  excludes this task's own status reconciliation from its closure. No further email
+  is needed absent a new specific requirement. D18-01 remains In progress for actual
+  scheduler/operational checks, not because observer acceptance is missing.
+- **Operations:** pinned main0f14d65 watcher unchanged, warn420/critical540, armed for
+  Sep18. Recheck actual startup on that date. `pnpm measure:cadence` supplies fresh
+  measurements; do not restate a moving median as current policy.
+- **People/times:** all four B capture slots are confirmed in the canonical
+  `ops/crossing-schedule.json` (#180), Rakha primary/Fatih backup. Use generated
+  runbook tables; reminders do not execute captures. Future B/C events and D18-03
+  evidence collection are still open.
+- **Stage2:** #162 report merged and #161 closed as historical provenance. The
+  unresolved Shared D20-01 decision is now tracked in [#183](https://github.com/Fatihmaull/evergreen/issues/183).
+  D19-01/02/03 remain Blocked; D20-02 conditional and D20-03 guide scope unresolved.
+  No replacement architecture or final ADR/SOW decision is inferred.
+- **W3 closeout:** D21 evidence review, fresh-machine test, independent Fatih cold
+  start, READY decision and slack accounting remain Pending. W4 work is not part
+  of this reconciliation. W3 checkbox totals remain17 Done,4 In progress,10 Pending,
+  3 Blocked; no completion was inferred from an issue closure with narrower scope.
+
+Earlier sections below are dated publication/history snapshots, not current status.
+
+## Earlier — Acceptance publication snapshot, Sep16
 
 Auditing D17-03 and D18-01 against main8b78efd. Success/failure email evidence was
 already present; the previously untested approachingCritical template has now
@@ -24,7 +54,7 @@ schedule. Watcher independence covers GitHub observation, not email delivery: it
 shares Resend/mailbox with engine alerts. #140/#141 acceptance remains Fatih's call.
 Full gate882 tests and final schedule/link/evidence checks passed. [Technical closeout](W3-ACCEPTANCE-CLOSEOUT.md) is ready locally. Published in [PR #181](https://github.com/Fatihmaull/evergreen/pull/181); acceptance requested in #140/#141, with Notion D17-03/D18-01 notes synced. Full150-row presence comparison found no missing or phantom IDs. Fatih acceptance remains pending.
 
-## Current — September18 readiness prepared; acceptance remains open
+## Earlier — September15 readiness snapshot (superseded by #177/#180/#181)
 
 Sep15 operational checks completed against main5998862. A separate email-only
 watcher is installed and armed for Sep18 00:00 through Sep21 18:00 UTC; critical540,
@@ -38,8 +68,6 @@ ongoing gap and Sep18 state must still be checked on the day. [Readiness/handoff
 [evidence](evidence/2026-09-15-readiness/README.md). D17-04, D18-02a/#130 and observer
 acceptance are not inferred from merges. Existing Fatih-primary/Rakha-backup handoff
 still needs confirmation. No claim of unattended B observation. [PR #163](https://github.com/Fatihmaull/evergreen/pull/163) publishes readiness evidence for Fatih review. Notion D18-01/03 remains In progress with the publication outcome. Explicit acceptance/handoff confirmation is requested in #130; no acceptance is inferred.
-
-## Current — W3-D17-05 closed; D17-04 evidence landed
 
 ## Earlier — W3-D19 blocker published for Shared decision
 
@@ -66,7 +94,7 @@ test email reached Rakha's inbox. [Implementation](W3-D15-02b-IMPLEMENTATION.md)
 New local watcher preparation uses critical540 above main's 480-minute floor;
 offline tests cover inactive and missed-run behavior. The old historical config
 is untouched and no timer was activated. No new A proof or B/C/shared-Wasm write.
-Merged as #160 after review; the escalation test was strengthened to fail when the escalation is removed. Publishes implementation, review and evidence; Fatih review/merge is pending. Notion D15-02b is Done for verified implementation with PR state explicit. Full presence diff: 148 checkbox tasks, one standing obligation and one mirrored retired ID match 150 rows; no missing or phantom IDs.
+Merged as #160 after review; the escalation test was strengthened to fail when the escalation is removed. Implementation, review and evidence are merged; the older pending-review language is superseded. Notion D15-02b is Done for verified implementation with PR state explicit. Full presence diff: 148 checkbox tasks, one standing obligation and one mirrored retired ID match 150 rows; no missing or phantom IDs.
 
 
 ## Earlier — W3-D17-05 closed; D17-04 evidence landed
@@ -213,7 +241,7 @@ Task Done refers to the verified branch implementation, not a PR or merge. #107 
 
 Starting from origin/main ba72ea8 on `fix/W2-D14-04-evidence-integrity`. Previous review and proof branches remain preserved. #102/#105 are merged; #106 fixes were post-reviewed, and W2's closeout remains accepted. New frozen correction ID W2-D14-04 tracks the separately assigned #107. Both advertised evidence verifiers will check SHA256SUMS first and remain offline. Tests precede implementation. Raw RPC, original screenshots and recorded JSON outcomes must remain byte-for-byte unchanged; only verifier tooling, its own manifest entries and documentation may change. No new signing, transaction or live Notion automation run.
 
-## Current — D11-01/02/03 evidence published for review
+## Earlier — D11-01/02/03 evidence publication snapshot
 
 Rakha approved publication after internal review. [PR #105](https://github.com/Fatihmaull/evergreen/pull/105) targets main c3ba97b from `docs/W2-D11-02-live-proof-plan`, with Fatih requested as reviewer. Reviewed evidence head: 2bab347. The PR links #103 for closure on merge; #98 remains superseded context. No new issue duplicates #103. Evidence/plan/tracking only; runtime diff against main is empty. D11-01/02/03 remain Done for the verified live proof, but its evidence PR is **open, not merged**. Final-head CI is checked separately. No further transaction or task started; Fatih handles merge.
 
@@ -306,8 +334,8 @@ Local `main` was synchronized to remote `ad18ad4` (#80, merged during this turn)
 ## Historical handover and execution log
 
 The entries below retain their original dated state; current merge/ADR/task state is the section above. In particular, the Sep 9 Proposed/open-PR notes are historical and must not drive new work.
-## Current — W2-D12-01 implementation
-## Current — W2-D12-02 read-only validation
+## Earlier — W2-D12-01 implementation
+## Earlier — W2-D12-02 read-only validation
 
 **Published after Rakha approval:** [PR #97](https://github.com/Fatihmaull/evergreen/pull/97), stacked on optimizer #88 at `38e6543`; [Issue #96](https://github.com/Fatihmaull/evergreen/issues/96) tracks review/acceptance, assigned to and mentioning Fatih. Reviewed validation `99ee901`; final publication tracking edits are Markdown only. Fatih is requested as reviewer and handles merge. Retarget this child before #88's branch is deleted, then synchronize/revalidate after the parent lands. D12-02 remains Done for verified branch work, not merged. No new live read, quote, signing or transaction. Local full check passed 376 tests; final-head remote CI is checked separately.
 
