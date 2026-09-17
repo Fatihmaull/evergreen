@@ -18,12 +18,12 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:failure-rehearsal && pnpm test:crossing-capture && pnpm test:save-proof && pnpm test:proof-runtime",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:scheduler && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:failure-rehearsal && pnpm test:crossing-capture && pnpm test:save-proof && pnpm test:proof-runtime && pnpm test:evidence-inventory",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "check": "pnpm check:locale && pnpm check:links && pnpm check:schedule && pnpm check:cadence && pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm check:evidence && pnpm check:crossing && pnpm check:workflows && pnpm lint && pnpm format:check && pnpm test",
+    "check": "pnpm check:locale && pnpm check:links && pnpm check:schedule && pnpm check:cadence && pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm check:evidence && pnpm check:evidence-integrity && pnpm check:crossing && pnpm check:workflows && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
     "engine:run": "node scripts/engine-run.mjs",
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
@@ -64,7 +64,9 @@
     "check:schedule": "node scripts/render-crossing-schedule.mjs --check",
     "schedule:render": "node scripts/render-crossing-schedule.mjs",
     "check:cadence": "node scripts/check-cadence-quotes.mjs",
-    "measure:cadence": "pnpm build && node scripts/measure-scheduler-cadence.mjs"
+    "measure:cadence": "pnpm build && node scripts/measure-scheduler-cadence.mjs",
+    "check:evidence-integrity": "node scripts/check-evidence-integrity.mjs",
+    "test:evidence-inventory": "node --test --test-isolation=none scripts/check-evidence-integrity.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
