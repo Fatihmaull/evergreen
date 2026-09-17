@@ -38,7 +38,7 @@ The last two snapshots therefore contain145 and149 registered task IDs respectiv
 The150-row Notion mirror additionally retains a retired identifier. W1-D4-09's move
 from checkbox to standing task is not lost work. Full added/removed ID sets are in
 the inventory JSON so the arithmetic can be inspected rather than asserted. The
-early removed W2-D12-02b is the same code-sharing measurement later registered as
+early removed ~~W2-D12-02b~~ is the same code-sharing measurement later registered as
 F-01, not a task cancelled or added from nothing.
 
 The slack ledger has **zero days explicitly charged out of six**. There is no
