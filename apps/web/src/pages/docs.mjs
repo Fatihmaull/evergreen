@@ -53,7 +53,8 @@ export function render(ctx) {
   <section class="card card-pad stack">
     <h2 class="section">Run it before it is published</h2>
     <p class="muted">
-      Clone the repository, install, build, and scan the public test contract — no key and no account. The exact
+      Clone the repository, install, build, and scan the public test contract — no key and no account. Needs
+      Node 24 and pnpm (<span class="mono">.nvmrc</span> pins the major). The exact
       commands are the README quickstart, which was executed before it was written. No install line is shown here
       until publishing is verified from a clean machine.
     </p>
