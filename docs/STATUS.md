@@ -221,7 +221,7 @@ This verifies actual startup, not just an armed timer, and a real observer-failu
 notification/recovery. No runtime/policy change, extra mail or transaction was made.
 D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
 The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
-inferred from this bounded snapshot. Notion sync pending this publication.
+inferred from this bounded snapshot. Published in [PR #201](https://github.com/Fatihmaull/evergreen/pull/201), with summary in #104. Notion D18-01/03 notes synced, statuses remain In progress; full150-row presence check found no missing or phantom IDs. Fatih review/merge pending.
 
 ## Reference — reconciled September17 state
 
