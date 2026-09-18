@@ -107,6 +107,12 @@ confirmation.
 sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
 five-second cadence, and no drift figure is claimed. Both READMEs say so.
 
+## W3-D18-01 — Sep18 actual observer startup
+
+[Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
+automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
+Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
