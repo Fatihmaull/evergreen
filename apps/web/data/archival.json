@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-09-18T09:21:19.180Z",
+  "settings": {
+    "maxEntryTtl": 3110400,
+    "minTemporaryTtl": 720,
+    "minPersistentTtl": 120960,
+    "persistentRentRateDenominator": "1215",
+    "temporaryRentRateDenominator": "2430",
+    "observedAtLedger": 4739938
+  }
+}

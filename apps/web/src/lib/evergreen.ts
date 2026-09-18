@@ -22,7 +22,7 @@ import {
   estimateEndsAt,
   estimateRent,
   isValidContractId,
-  readStateArchivalSettings,
+  readStateArchivalSettings as readArchivalSettings,
   resolveExtendTarget,
   resolveHealthThresholds,
   scanContract,
@@ -97,6 +97,11 @@ export function health(result: ScanResult): unknown {
 
 export async function reader() {
   return connectTestnet(RPC_URL);
+}
+
+/** The network's own archival configuration, read live — never hard-coded. */
+export async function archivalSettings() {
+  return readArchivalSettings(new rpc.Server(RPC_URL));
 }
 
 export async function scanOne(id: string, dataKeys: readonly string[] = []): Promise<ScanResult> {

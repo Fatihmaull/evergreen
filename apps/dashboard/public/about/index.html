@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About — Evergreen</title>
+    <meta name="description" content="Who builds Evergreen, under which grant, and how the work is evidenced." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item active" href="/about/" aria-current="page">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">About · the team and the terms</p>
+            <h1>Built by Apex, evidenced like it matters</h1>
+            <p class="lead">Evergreen is built by Apex — Fatih Maulana and Rakha — in the Stellar Ambassador Chapter Indonesia, under a funded Stellar Instawards grant: $4,800, thirty days, 3 September to 2 October 2026. The chapter is where the team sits; it does not govern the code.</p>
+          </header>
+          <section class="cards-3">
+    <article class="card card-pad stack">
+      <h3>Fatih Maulana</h3>
+      <p class="small muted">Product, coordination, evidence — and the SOW's primary contact. CLI, dashboard, docs, demo video, Ambassador liaison.</p>
+    </article>
+    <article class="card card-pad stack">
+      <h3>Rakha</h3>
+      <p class="small muted">Engine, contracts, infrastructure. The auto-bump worker, threshold rules, the notification channel — and the signatures on the transactions.</p>
+    </article>
+    <article class="card card-pad stack">
+      <h3>The grant</h3>
+      <p class="small muted">Stellar Instawards. A follow-on SCF Build Award application is the stated next step — it appears here as a possible follow-on, not as the program this is.</p>
+    </article>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Method: measured rather than assumed</h2>
+    <p class="muted">
+      The TTL floor per entry type was measured on a fresh deploy, not read from documentation. The permissionless
+      property was confirmed by extending someone else's contract on testnet, not by quoting the docs. The rent
+      model was validated against a real fee recorded a day earlier — and the first implementation failed that
+      comparison, so it was replaced. Corrections stay in the record: the repository keeps its architecture
+      decision records amended, never rewritten, because the reasoning at the time is the valuable part.
+    </p>
+    <p class="muted">
+      The work is public at <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
+      under MIT. Nothing on this page — no title, no ID, no privilege — exists outside that repository, the PRD
+      or the statement of work.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    
+  </body>
+</html>

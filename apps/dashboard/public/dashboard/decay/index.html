@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TTL decay — Evergreen</title>
+    <meta name="description" content="Recorded remaining-TTL observations for our three testnet subjects: the control that decays, the contract that was extended, and the shared code entry. Every point cites its evidence." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item active" href="/dashboard/decay/" aria-current="page">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">TTL decay · recorded evidence, not a simulation</p>
+            <h1>One chart, both halves of the claim</h1>
+            <p class="lead">The thing left alone declines; the thing watched over steps back up. Every dot is a committed observation — irregularly spaced, because that is when the readings happened. B’s expiry marker stays after the event: the timeline is evidence, not a status display.</p>
+          </header>
+          <section class="stack"><article class="card card-pad stack">
+    <h3>guinea-pig B · instance</h3>
+    <p class="muted">The control. Deployed 5 September, calibrated once that day with a disclosed extend, and left alone since. Nothing has extended it since, so both observations agree on the same expiry.</p>
+    <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig B · instance. Dots are recorded observations; steps are real extensions.">
+    <line class="decay-band" x1="92" y1="136.1019423099201" x2="916" y2="136.1019423099201" /><text class="decay-band-label" x="916" y="131.1019423099201" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="238.8717060442743" x2="916" y2="238.8717060442743" /><text class="decay-band-label" x="916" y="233.8717060442743" text-anchor="end">act 17,280</text>
+    <path class="decay-line" d="M92.0 50.6 L681.5 197.6" />
+    <line class="decay-dash" x1="681.542456655211" y1="197.56853006967162" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="681.542456655211" cy="197.56853006967162" r="4.5" /><text class="decay-expiry" x="916" y="288" text-anchor="end">expires 2026-09-21 · ledger 4,793,687</text>
+    <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
+  </svg></div>
+    <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
+    <details>
+      <summary>Every point behind this panel, with its source</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
+        <tbody><tr><td class="num">4,586,511</td><td class="num">207,176</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,734,738</td><td class="num">58,949</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr></tbody>
+      </table></div>
+    </details>
+  </article><article class="card card-pad stack">
+    <h3>guinea-pig A · instance</h3>
+    <p class="muted">The watched one. Its decay was arranged by raising the alert threshold above its remaining TTL; the response was not. Each upward step names its actor and transaction.</p>
+    <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig A · instance. Dots are recorded observations; steps are real extensions.">
+    <line class="decay-band" x1="92" y1="241.38823529411764" x2="916" y2="241.38823529411764" /><text class="decay-band-label" x="916" y="236.38823529411764" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="253.91260504201682" x2="916" y2="253.91260504201682" /><text class="decay-band-label" x="916" y="248.91260504201682" text-anchor="end">act 17,280</text>
+    <path class="decay-line" d="M92.0 82.1 L317.6 87.0 L317.6 86.9 L559.8 92.2 L559.8 50.6 L916.0 58.4" />
+    <circle class="decay-dot" cx="92" cy="82.05042016806726" r="4.5" /><circle class="decay-dot" cx="916" cy="58.43157037815129" r="4.5" /><circle class="decay-step" cx="317.5946469637745" cy="86.86205882352942" r="5.5" /><text class="decay-step-label" x="317.5946469637745" y="74.86205882352942" text-anchor="middle">manual CLI · <a href="https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a">e18e0822…</a></text><circle class="decay-step" cx="559.7854226310602" cy="50.64285714285717" r="5.5" /><text class="decay-step-label" x="559.7854226310602" y="38.64285714285717" text-anchor="middle">engine, local timer · <a href="https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128">dae63da8…</a></text>
+    <text class="decay-axis" x="92" y="288">ledger 4,585,589</text>
+  </svg></div>
+    <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
+    <details>
+      <summary>Every point behind this panel, with its source</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
+        <tbody><tr><td class="num">4,585,589</td><td class="num">1,440,000</td><td>observed · <span class="mono">docs/evidence/2026-09-09-guinea-pig-a-extend/README.md</span></td></tr><tr><td class="num">4,734,738</td><td class="num">1,635,523</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr><tr><td class="num">4,626,423</td><td class="num">1,399,166 → 1,400,168</td><td>manual CLI · <a class="mono" href="https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a">e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a</a> · +1,000 ledgers requested; expiry +1,002 including inclusion delay. Fee charged 5,064 stroops. <span class="mono">docs/evidence/2026-09-12-manual-extend-proof/README.md</span></td></tr><tr><td class="num">4,670,261</td><td class="num">1,356,330 → 1,700,000</td><td>engine, local timer · <a class="mono" href="https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128">dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128</a> · Alert threshold raised to 1,500,000 so the engine would act — arranged timing, genuine response. Fee charged 44,725 stroops. No row here is labelled scheduled cron: as far as the record goes, the production cron has never extended anything. <span class="mono">docs/evidence/2026-09-14-scheduled-a-save/README.md</span></td></tr></tbody>
+      </table></div>
+    </details>
+  </article><article class="card card-pad stack">
+    <h3>shared code entry</h3>
+    <p class="muted">One entry all three contracts depend on — A, B and C were built from one Wasm. Due to be extended at W3-D18-02d; touching it touches both decay proofs, which is why the write guard refuses it by key.</p>
+    <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for shared code entry. Dots are recorded observations; steps are real extensions.">
+    <line class="decay-band" x1="92" y1="220.7318398791455" x2="916" y2="220.7318398791455" /><text class="decay-band-label" x="916" y="215.7318398791455" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="250.9616914113065" x2="916" y2="250.9616914113065" /><text class="decay-band-label" x="916" y="245.9616914113065" text-anchor="end">act 17,280</text>
+    <path class="decay-line" d="M92.0 50.6 L265.4 93.9" />
+    <line class="decay-dash" x1="265.41463373078636" y1="93.86122329889136" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="265.41463373078636" cy="93.86122329889136" r="4.5" /><text class="decay-expiry" x="916" y="288" text-anchor="end">expires 2026-10-20 · ledger 5,290,829</text>
+    <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
+  </svg></div>
+    <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
+    <details>
+      <summary>Every point behind this panel, with its source</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
+        <tbody><tr><td class="num">4,586,511</td><td class="num">704,318</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,734,738</td><td class="num">556,091</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr></tbody>
+      </table></div>
+    </details>
+  </article></section>
+  <section>
+    <h2 class="section">How to read this</h2>
+    <p class="muted">
+      A sawtooth is the product working: decay, then an extension, then decay again. A straight decline is
+      the control: guinea-pig B was calibrated once on 5 September and left alone, so its two observations
+      agree on one expiry — ledger 4,793,687, about 21 September 2026. A's steps each link to the transaction
+      that made them; the second step's timing was arranged by raising the threshold, the response was not.
+      The shared code entry binds all three contracts and expires about 20 October 2026 at ledger 5,290,829.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    
+  </body>
+</html>

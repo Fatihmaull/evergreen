@@ -3,85 +3,180 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Evergreen — Soroban state-archival autopilot</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font:
-          16px/1.6 ui-sans-serif,
-          system-ui,
-          -apple-system,
-          sans-serif;
-        padding: 2rem;
-      }
-      main {
-        max-width: 34rem;
-      }
-      h1 {
-        font-size: 1.5rem;
-        margin: 0 0 0.5rem;
-      }
-      .tag {
-        display: inline-block;
-        font-size: 0.75rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        opacity: 0.6;
-        margin-bottom: 1rem;
-      }
-      p {
-        margin: 0 0 1rem;
-      }
-      ul {
-        padding-left: 1.2rem;
-        margin: 0 0 1rem;
-      }
-      a {
-        color: inherit;
-      }
-      code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 0.9em;
-      }
-      footer {
-        font-size: 0.85rem;
-        opacity: 0.65;
-        margin-top: 2rem;
-      }
-    </style>
+    <title>Evergreen — Soroban contract rent, configured once</title>
+    <meta name="description" content="Soroban contract state expires on a schedule nobody is watching. Evergreen reports what expires first, what it costs, and what fails with it." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
   </head>
-  <body>
-    <main>
-      <span class="tag">Deploy target · placeholder</span>
-      <h1>Evergreen</h1>
-      <p>
-        A Soroban state-archival autopilot. Soroban ledger entries expire; when a contract's TTL
-        hits zero its state is archived and the contract stops working. Evergreen watches TTL and
-        extends it before that happens.
-      </p>
-      <p>
-        <strong>This page exists to prove the deploy pipeline works.</strong> The real dashboard
-        lands in Week 4 and will show:
-      </p>
-      <ul>
-        <li>Scan any contract's TTL health — no wallet, no signup</li>
-        <li>Bump history for contracts this instance monitors</li>
-      </ul>
-      <p>
-        Evergreen is non-custodial because <code>extendTTL</code> is permissionless: anyone may
-        extend any ledger entry's TTL by paying the resource fee, so there is no authority over your
-        contract to grant.
-      </p>
-      <footer>
-        Testnet only ·
-        <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
-      </footer>
+  <body class="landing">
+    <a class="skip" href="#main">Skip to content</a>
+
+    <section class="hero">
+      <div class="wrap">
+        <p class="hero-eyebrow">Stellar testnet · built by Apex</p>
+        <h1><span class="serif">Your contract expires.</span><span class="sans">You just don't know when.</span></h1>
+        <p class="hero-lead">
+          Soroban state has a time to live measured in ledgers, about five seconds each. Every closed ledger takes one
+          off. When it reaches zero, most entries are archived and temporary ones are deleted — and nothing tells you it
+          is coming.
+        </p>
+        <p class="hero-actions">
+          <a class="pill solid" href="/dashboard/">Open the dashboard →</a>
+          <a class="pill ghost" href="https://github.com/Fatihmaull/evergreen">The code on GitHub</a>
+        </p>
+      </div>
+    </section>
+
+    <main id="main">
+      <section class="band">
+        <div class="wrap stack">
+          <p class="eyebrow">The four kinds of entry</p>
+          <h2 class="section">Three are recoverable. One is not.</h2>
+          <div class="kinds">
+            <div class="kind">
+              <p class="kind-name">instance</p>
+              <p class="kind-holds">The contract's own state pointer.</p>
+              <p class="kind-fate"><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind">
+              <p class="kind-name">code</p>
+              <p class="kind-holds">The compiled Wasm. Every contract built from it shares this one entry.</p>
+              <p class="kind-fate"><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind">
+              <p class="kind-name">persistent</p>
+              <p class="kind-holds">Durable stored values.</p>
+              <p class="kind-fate"><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind inverted">
+              <p class="kind-name">temporary</p>
+              <p class="kind-holds">Disposable stored values. Gone permanently, with no restore.</p>
+              <p class="kind-fate"><span class="chip expired"><span class="shape"></span>deleted</span></p>
+            </div>
+          </div>
+          <p class="small muted">
+            Read from the network's own configuration: a temporary entry's minimum is 720 ledgers, about an hour. Our own
+            temporary entry had 688 left when it was first sampled.
+          </p>
+        </div>
+      </section>
+
+      <section class="band dark">
+        <div class="wrap thesis">
+          <div class="stack">
+            <p class="eyebrow on-dark">The thesis</p>
+            <h2 class="display">One entry. Every contract built from that Wasm. They fail together.</h2>
+            <p class="on-dark">
+              A contract's instance can be healthy until December while the code it runs expires in October. Without the
+              code it cannot execute, so the real expiry is the earliest entry — and that entry is shared by every
+              contract deployed from the same Wasm.
+            </p>
+            <p class="hero-actions"><a class="pill solid" href="/dashboard/blast-radius/">See it on our three contracts →</a></p>
+          </div>
+          <div class="stat-cell">
+            <p class="stat-label">of the rent</p>
+            <p class="stat-figure">98%</p>
+            <p class="stat-caption">
+              is that one shared code entry — 8,116,648 of 8,264,289 stroops, across all four of guinea-pig A's entries.
+              Scanning only its instance and code, the same entry is 99%: identical rent, different denominator. The
+              scope travels with the number.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="wrap stack">
+          <p class="eyebrow">What the tool actually prints</p>
+          <h2 class="section">The honest parts are the persuasive parts</h2>
+          <p class="muted">
+            A real scan of guinea-pig A. It reports what it read, says that a single-contract scan cannot settle whether
+            the code entry is shared, and says that storage it was not given keys for is unread.
+          </p>
+          <div class="terminal">Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,400,453 ledgers — live
+  ends at:    ledger 6,025,589
+  approx:     2026-12-01T18:58:52.518Z (estimate — ledgers are the truth)
+  observed:   ledger 4,625,136
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Whether others depend on this entry cannot be
+              determined from a single-contract scan — pass them together.
+  remaining:  665,693 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:52.518Z (estimate — ledgers are the truth)
+  observed:   ledger 4,625,136
+  health:     HEALTHY — Above threshold.
+
+! sharing-undetermined: Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+Scan is PARTIAL — 2 issue(s). Absence is not health.</div>
+          <p class="small muted">Captured on 2026-09-12 and committed at <span class="mono">docs/evidence/2026-09-12-w2-review/scan-a-human.txt</span>. Its ledger numbers are from that day; the dashboard reads the chain now.</p>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="wrap stack">
+          <p class="eyebrow">How it works</p>
+          <h2 class="section">Scan, watch, extend</h2>
+          <div class="cards-3">
+            <article class="card card-pad stack">
+              <h3>Scan</h3>
+              <p class="small">
+                Read a contract's entries through Soroban RPC: what remains, what expires first, what it costs to keep
+                alive, and whether the code entry is shared — or whether that cannot be determined.
+              </p>
+            </article>
+            <article class="card card-pad stack">
+              <h3>Watch</h3>
+              <p class="small">
+                A scheduled job re-reads the entries you configure and alerts before they cross the thresholds: seven
+                days for a warning, one day to act.
+              </p>
+            </article>
+            <article class="card card-pad stack">
+              <h3>Extend</h3>
+              <p class="small">
+                Evergreen has no authority over your contract. Extending a TTL needs no permission from anyone — it is a
+                property of the chain, not a promise from us. It can pay rent, and nothing else.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band dark closing">
+        <div class="wrap stack">
+          <h2 class="display">Make TTL something you configure once instead of remember.</h2>
+          <p class="hero-actions"><a class="pill solid" href="/dashboard/">Open the dashboard →</a></p>
+        </div>
+      </section>
     </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <p>Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p>
+          Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.
+          <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
+        </p>
+        <p class="mono">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+      </div>
+    </footer>
   </body>
 </html>

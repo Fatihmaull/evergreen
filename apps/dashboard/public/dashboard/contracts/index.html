@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Our contracts — Evergreen</title>
+    <meta name="description" content="The three testnet contracts this project runs against: what each is for, its health, and the entry that binds it." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item active" href="/dashboard/contracts/" aria-current="page">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Our contracts · three, for three different reasons</p>
+            <h1>The contracts this project runs against</h1>
+            <p class="lead">A is the working subject, B is the control left to decay, C is the backup proof. All three were built from one Wasm, so one code entry binds them all — and touching it touches both proofs, which is why the write guard refuses it by key.</p>
+          </header>
+          <section>
+    <p class="small muted">Health graded by core from the snapshot committed with this build: as of ledger NaN. Not current — <a href="/dashboard/">the overview</a> reads the chain live.</p>
+    <div class="contract-grid"><article class="card card-pad stack">
+      <div class="row"><span class="name">guinea-pig A</span><span class="chip healthy"><span class="shape"></span>healthy</span></div>
+      <div class="id mono">CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</div>
+      <p class="muted">The working subject. Bump it, break it, redeploy it freely — it is what every scan, screenshot and live proof is verified against.</p>
+      <dl class="facts">
+        <dt>binds</dt><dd>contract code</dd>
+        <dt>remaining</dt><dd>550,891 ledgers</dd>
+        <dt>expires</dt><dd>~NaN undefined NaN · ledger <span class="mono">5,290,829</span></dd>
+      </dl>
+      <p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>NaN undefined NaN</strong> at ledger <span class="mono">5,290,829</span>, shared with B and C.</p>
+    </article><article class="card card-pad stack">
+      <div class="row"><span class="name">guinea-pig B</span><span class="chip warning"><span class="shape"></span>warning</span></div>
+      <div class="id mono">CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ</div>
+      <p class="muted">The natural-decay control. Calibrated once on 5 September with a disclosed extend, then left alone. It crosses the alert threshold on 20 September and expires on the 21st — be present for the second date, that is the unrepeatable event.</p>
+      <dl class="facts">
+        <dt>binds</dt><dd>contract instance</dd>
+        <dt>remaining</dt><dd>53,749 ledgers</dd>
+        <dt>expires</dt><dd>~NaN undefined NaN · ledger <span class="mono">4,793,687</span></dd>
+      </dl>
+      <p class="small">Alert threshold 20 September 2026 · <strong>expires 21 September 2026</strong> at ledger <span class="mono">4,793,687</span>. That expiry is the unrepeatable event.</p>
+    </article><article class="card card-pad stack">
+      <div class="row"><span class="name">guinea-pig C</span><span class="chip healthy"><span class="shape"></span>healthy</span></div>
+      <div class="id mono">CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL</div>
+      <p class="muted">The backup proof, five days behind B: threshold crossing 25 September, expiry the 26th. The only second shot if B is missed.</p>
+      <dl class="facts">
+        <dt>binds</dt><dd>contract instance</dd>
+        <dt>remaining</dt><dd>140,159 ledgers</dd>
+        <dt>expires</dt><dd>~NaN undefined NaN · ledger <span class="mono">4,880,097</span></dd>
+      </dl>
+      <p class="small">Alert threshold 25 September 2026 · <strong>expires 26 September 2026</strong> at ledger <span class="mono">4,880,097</span>.</p>
+    </article></div>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">The shared code entry</h2>
+    <p class="muted">
+      Key <span class="mono">AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7</span>, from Wasm hash
+      <span class="mono">c7e55f0a…98bfb</span>. Ends at ledger <span class="mono">5,290,829</span>,
+      ~NaN undefined NaN. A scan of one contract reports it with one
+      consumer, because the chain does not index reverse dependencies — <a href="/dashboard/blast-radius/">scan
+      all three together</a> to see the real number. Due to be extended at W3-D18-02d, after the proofs are captured.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    
+  </body>
+</html>

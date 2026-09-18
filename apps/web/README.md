@@ -1,34 +1,48 @@
-# `apps/web` — prototype
+# `apps/web` — twelve-page preview
 
-A working dashboard for a demo on 2026-09-18. **This branch does not merge.**
+A second preview for a demo, on `feat/W4-D22-02a-full-prototype`. **This branch does not merge.**
 
-- **Live scanning** runs `@evergreen-stellar/core` in the browser. Core does not
-  yet work there on its own (#194), so `src/shim/buffer-shim.js` supplies the one
-  Node global it reaches for. The shim is held to `test/shim-parity.test.mjs`
-  against Node's real `Buffer`, and both are deleted the day #194 lands.
-- **Health, thresholds, sharing and blast radius** come from core. The verdict
-  and the health block come from the CLI's library entry, which imports only
-  core. Nothing is re-derived here; #195 moves the rest of the CLI's presentation
-  rules into core.
-- **The built site is committed** into `apps/dashboard/public`, because that is
-  the directory the Cloudflare Pages project publishes and its build settings are
-  shared with production. Building there gives this branch a preview deployment
-  without touching those settings — and is one more reason this branch never
-  merges.
+Twelve routes, one shared shell (sidebar, status bar, footer — `src/chrome.mjs`):
+
+- `/` — landing, static, no JavaScript (kept from the first prototype)
+- `/dashboard/` — overview: live stat strip + contract cards, snapshot fallback
+- `/dashboard/scanner/` — one-contract scan console with rent estimate
+- `/dashboard/blast-radius/` — multi-contract dependency graph
+- `/dashboard/decay/` — three panels of recorded evidence, build-time SVG
+- `/dashboard/contracts/` — what A, B and C are for, health graded by core
+- `/dashboard/engine/` — what the scheduled job decided, refused, and delivered
+- `/dashboard/history/` — every extension with its hash, fee and trigger
+- `/docs/archival/` — live network config plus our measurements
+- `/docs/` — CLI reference generated from the tool at build time
+- `/evidence/` — bundle count, the verifier, honest deliverable status
+- `/about/` — team, grant, method
 
 ## Commands
 
 ```bash
-node apps/web/scripts/make-snapshot.mjs   # read-only scan of A, B and C → data/snapshot.json
-node apps/web/build.mjs                   # build into apps/dashboard/public
-node apps/web/build.mjs --commission      # prove the write-path guard can fail
-node apps/web/scripts/serve.mjs 4317      # serve the built site locally
+node apps/web/scripts/make-snapshot.mjs   # read-only scan of A, B and C + live archival settings → data/
+node apps/web/scripts/grade-snapshot.mjs   # grade the snapshot with core's health rules → data/snapshot-grades.json
+node apps/web/build.mjs                    # build into apps/dashboard/public
+node apps/web/build.mjs --commission       # prove the write-path guard can fail
+node apps/web/scripts/serve.mjs 4317       # serve the built site locally
 node --test apps/web/test/shim-parity.test.mjs
 ```
+
+`grade-snapshot.mjs` must run after every `make-snapshot.mjs`: the build refuses
+grades that are not from the committed snapshot.
 
 ## What it will not do
 
 No extend, renew, broadcast or XDR export — not even disabled. Nothing is signed
-or submitted; the page makes read calls only. Every figure on screen is read live
-or comes from the committed snapshot, which is labelled with the ledger it was
-recorded at.
+or submitted; live pages make read calls only. Static pages render committed
+data at build time and say which ledger it was recorded at. Every figure on
+screen is read live or comes from `docs/evidence/` with its source named. A
+panel with no real number shows no number.
+
+## Reuse, do not re-derive
+
+Health, thresholds, sharing and blast radius come from `@evergreen-stellar/core`,
+and the verdict and exit mapping from the CLI's library entry. Static health
+grades are computed by core itself (`grade-snapshot.mjs`), never by the page.
+The `/docs` page is extracted from `packages/cli/src/command.ts` and `scan.ts`;
+the build fails when those sources move.

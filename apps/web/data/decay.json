@@ -1,0 +1,88 @@
+{
+  "note": "Every point is a recorded observation with the file it came from. Segments are solid only where the before/after record shows nothing was extended in between; dashed only from the last observation to a known expiry ledger. Nothing is drawn past an expiry. Remaining ledgers are endsAtLedger minus the observation ledger — derived at build time, never stored here.",
+  "series": [
+    {
+      "id": "b-instance",
+      "contract": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+      "label": "guinea-pig B · instance",
+      "role": "The control. Deployed 5 September, calibrated once that day with a disclosed extend, and left alone since. Nothing has extended it since, so both observations agree on the same expiry.",
+      "expiryLedger": 4793687,
+      "expiryApprox": "2026-09-21",
+      "observations": [
+        {
+          "ledger": 4586511,
+          "endsAt": 4793687,
+          "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
+        },
+        {
+          "ledger": 4734738,
+          "endsAt": 4793687,
+          "source": "apps/web/data/snapshot.json"
+        }
+      ],
+      "steps": []
+    },
+    {
+      "id": "a-instance",
+      "contract": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+      "label": "guinea-pig A · instance",
+      "role": "The watched one. Its decay was arranged by raising the alert threshold above its remaining TTL; the response was not. Each upward step names its actor and transaction.",
+      "expiryLedger": null,
+      "expiryApprox": null,
+      "observations": [
+        {
+          "ledger": 4585589,
+          "endsAt": 6025589,
+          "source": "docs/evidence/2026-09-09-guinea-pig-a-extend/README.md"
+        },
+        {
+          "ledger": 4734738,
+          "endsAt": 6370261,
+          "source": "apps/web/data/snapshot.json"
+        }
+      ],
+      "steps": [
+        {
+          "atLedger": 4626423,
+          "before": 6025589,
+          "after": 6026591,
+          "actor": "manual CLI",
+          "hash": "e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a",
+          "note": "+1,000 ledgers requested; expiry +1,002 including inclusion delay. Fee charged 5,064 stroops.",
+          "source": "docs/evidence/2026-09-12-manual-extend-proof/README.md"
+        },
+        {
+          "atLedger": 4670261,
+          "before": 6026591,
+          "after": 6370261,
+          "actor": "engine, local timer",
+          "hash": "dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128",
+          "note": "Alert threshold raised to 1,500,000 so the engine would act — arranged timing, genuine response. Fee charged 44,725 stroops. No row here is labelled scheduled cron: as far as the record goes, the production cron has never extended anything.",
+          "source": "docs/evidence/2026-09-14-scheduled-a-save/README.md"
+        }
+      ]
+    },
+    {
+      "id": "shared-code",
+      "contract": null,
+      "label": "shared code entry",
+      "role": "One entry all three contracts depend on — A, B and C were built from one Wasm. Due to be extended at W3-D18-02d; touching it touches both decay proofs, which is why the write guard refuses it by key.",
+      "key": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+      "expiryLedger": 5290829,
+      "expiryApprox": "2026-10-20",
+      "observations": [
+        {
+          "ledger": 4586511,
+          "endsAt": 5290829,
+          "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
+        },
+        {
+          "ledger": 4734738,
+          "endsAt": 5290829,
+          "source": "apps/web/data/snapshot.json"
+        }
+      ],
+      "steps": []
+    }
+  ]
+}

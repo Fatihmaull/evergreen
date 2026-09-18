@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Overview — Evergreen</title>
+    <meta name="description" content="Remaining TTL for our three testnet contracts, read live. No wallet, no signup. Read-only." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item active" href="/dashboard/" aria-current="page">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Overview · Stellar testnet</p>
+            <h1>Three contracts, one shared code entry</h1>
+            <p class="lead">Remaining ledgers per contract, read live from testnet when it loads. When the live read fails, the snapshot committed with this build stands in — labelled with its ledger, never presented as current.</p>
+          </header>
+          <section>
+      <div class="stat-strip" id="strip" aria-live="polite">
+        <p class="muted">Reading the chain…</p>
+      </div>
+    </section>
+    <section>
+      <h2 class="section">Our contracts</h2>
+      <p class="small muted" id="ours-note">Reading the chain…</p>
+      <div class="contract-grid" id="ours"></div>
+      <p class="small muted">
+        Three contracts deployed from one Wasm, so all three depend on a single code entry —
+        <a href="/dashboard/blast-radius/">see the dependency graph</a>, or
+        <a href="/dashboard/contracts/">what each contract is for</a>.
+        Their remaining TTL over time is on <a href="/dashboard/decay/">the decay chart</a>.
+      </p>
+    </section>
+    <section>
+      <h2 class="section">Check your own contract</h2>
+      <p class="muted">
+        Scanning is a permissionless read. Paste any testnet contract ID into
+        <a href="/dashboard/scanner/">the scanner</a> — no wallet, no signup —
+        or <a href="/dashboard/blast-radius/">scan several together</a> when they share a Wasm.
+      </p>
+    </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    <script src="/assets/overview.js"></script>
+  </body>
+</html>

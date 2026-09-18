@@ -18,7 +18,8 @@ const repo = join(web, '../..');
 const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild');
 
 const entry = `
-import { connectTestnet, scanContracts } from ${JSON.stringify(join(repo, 'packages/core/src/index'))};
+import { connectTestnet, readStateArchivalSettings, scanContracts } from ${JSON.stringify(join(repo, 'packages/core/src/index'))};
+import { rpc } from '@stellar/stellar-sdk';
 const IDS = [
   'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L',
   'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',
@@ -26,7 +27,8 @@ const IDS = [
 ];
 const reader = await connectTestnet('https://soroban-testnet.stellar.org');
 const result = await scanContracts(reader, IDS.map((id) => ({ contract: { id } })));
-console.log(JSON.stringify({ capturedAt: new Date().toISOString(), result }));
+const archival = await readStateArchivalSettings(new rpc.Server('https://soroban-testnet.stellar.org'));
+console.log(JSON.stringify({ capturedAt: new Date().toISOString(), result, archival }));
 `;
 
 const bundle = join(web, '.snapshot-entry.mjs');
@@ -44,7 +46,17 @@ const json = execFileSync('node', [bundle], { encoding: 'utf8', timeout: 120_000
 const parsed = JSON.parse(json);
 const entryCount = Object.keys(parsed.result.entries).length;
 if (entryCount === 0) throw new Error('refusing to write an empty snapshot');
+if (!parsed.archival || typeof parsed.archival.maxEntryTtl !== 'number') {
+  throw new Error('refusing to write a snapshot without the live archival settings');
+}
 
 mkdirSync(join(web, 'data'), { recursive: true });
-writeFileSync(join(web, 'data/snapshot.json'), `${JSON.stringify(parsed, null, 2)}\n`);
+writeFileSync(
+  join(web, 'data/snapshot.json'),
+  `${JSON.stringify({ capturedAt: parsed.capturedAt, result: parsed.result }, null, 2)}\n`,
+);
+writeFileSync(
+  join(web, 'data/archival.json'),
+  `${JSON.stringify({ capturedAt: parsed.capturedAt, settings: parsed.archival }, null, 2)}\n`,
+);
 console.log(`snapshot written: ${entryCount} entries, captured ${parsed.capturedAt}`);

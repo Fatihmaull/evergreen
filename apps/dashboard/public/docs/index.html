@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CLI reference — Evergreen</title>
+    <meta name="description" content="The evergreen scan command: flags, exit codes and JSON shape, generated from the tool itself." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item active" href="/docs/" aria-current="page">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Reference · generated from the tool at build time</p>
+            <h1>The CLI does one thing on the page</h1>
+            <p class="lead">Scan. Everything below is the tool describing itself — usage and flags from its own help text, exit codes from its exported constants. Until the package is published, run it from a clone: the install line appears here the day npx resolves from a clean machine.</p>
+          </header>
+          <section class="card card-pad stack">
+    <h2 class="section">Usage and flags</h2>
+    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]
+
+Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
+Keys file: { &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }
+
+PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts
+built from the same Wasm share ONE ContractCode ledger entry, and a scan of one
+contract cannot tell whether others depend on it — the chain does not index
+reverse dependencies from a single query, so that entry reports &quot;sharing
+undetermined&quot;. Naming them together resolves it:
+
+  evergreen scan &lt;A&gt;              code entry: 1 consumer, sharing UNDETERMINED
+  evergreen scan &lt;A&gt; &lt;B&gt; &lt;C&gt;      code entry: 3 consumers, SHARED, they fail together
+
+Every scan prints which contracts it actually scanned, so a mistyped or dropped
+argument is visible rather than inferred. --keys-file takes exactly one contract,
+because data keys belong to a specific contract and the file does not say which.
+
+Exit: 0 everything scanned is healthy; 1 observed low TTL; 2 error;
+      3 the scan came back incomplete (entry missing, TTL unavailable,
+        executable not followable, or nothing observed).
+Precedence: 2 &gt; 3 &gt; 1 &gt; 0. Exit status never authorizes a transaction.
+
+Scanning reads the keys it is given; it cannot enumerate a contract&#39;s storage,
+so a clean exit means &quot;everything I was asked to check is healthy&quot; and never
+&quot;this contract is fully healthy&quot;. Coverage is printed with every scan.
+
+--no-data-keys        assert this contract has no data keys beyond its instance.
+                      Only its author can know that; it is a caller declaration
+                      and is never independently verified.
+--require-declared-scope
+                      also exit 3 when scope was not declared. Intended for CI on
+                      a contract you own; evergreen-check sets it by default.
+--json                machine-readable output. The human view is a summary; JSON
+                      is the complete record, including every issue.
+--optimize            append conditional storage advice with evidence and scope
+                      limits. Reads network minimum lifetimes; no payer needed.
+                      Add --cost for current rent quotes. No storage is changed.
+--cost [--ledgers N]  estimate what extending every entry by N more ledgers
+                      would cost, priced by simulating against the network.
+                      Default N is 518,400 (~30 days). Nothing is submitted.
+
+                      &quot;--ledgers N&quot; means &quot;give me N MORE ledgers&quot;. The protocol
+                      wants an absolute target, so the CLI computes it for you
+                      and caps it at max_entry_ttl - 1, saying so when it does.
+                      Costs are estimates: rent pricing varies with network
+                      state and has differed ~18% between days.
+
+Health states, printed per entry and as a worst-of summary:
+  HEALTHY   above threshold.
+  WARNING   low, recoverable, and affects only this contract.
+  CRITICAL  expired, OR temporary (deleted at expiry, unrecoverable), OR low and
+            SHARED — a code entry shared by N contracts at 3 days is N contracts
+            at 3 days, not one.
+  UNKNOWN   TTL could not be read. Not healthy; unread.
+
+Colour is added only for an interactive terminal and honours NO_COLOR. The state
+word always prints, so piped output and screenshots lose nothing.</div>
+    <p class="small muted">Source: <span class="mono">packages/cli/src/command.ts</span> — this page fails to build when that help text moves.</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Exit codes</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Exit</th><th scope="col">Meaning</th></tr></thead>
+      <tbody><tr><td class="num">0</td><td>everything scanned is healthy</td></tr><tr><td class="num">1</td><td>observed low TTL</td></tr><tr><td class="num">2</td><td>error — invalid input, RPC failure, or the network refused</td></tr><tr><td class="num">3</td><td>incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed</td></tr></tbody>
+    </table></div>
+    <p class="small muted">Precedence 2 &gt; 3 &gt; 1 &gt; 0, from <span class="mono">packages/cli/src/scan.ts</span>. A degraded read still exits 3; blast radius changes severity, not the exit category. Exit status never authorizes a transaction.</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">JSON shape</h2>
+    <p class="muted">
+      <span class="mono">--json</span> prints the <span class="mono">ScanResult</span> — entries keyed by ledger
+      key, each carrying the contracts it serves — plus <span class="mono">health</span>,
+      <span class="mono">cost</span> and <span class="mono">optimization</span> blocks. The shape is declared in
+      <span class="mono">packages/shared-types/src/index.ts</span>; that declaration is authoritative and is not
+      copied here, because a copy drifts. Every page with a JSON panel on this site prints the same shape the CLI
+      prints.
+    </p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Run it before it is published</h2>
+    <p class="muted">
+      Clone the repository, install, build, and scan the public test contract — no key and no account. The exact
+      commands are the README quickstart, which was executed before it was written. No install line is shown here
+      until publishing is verified from a clean machine.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    
+  </body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engine runs — Evergreen</title>
+    <meta name="description" content="What the scheduled auto-bump engine decided, refused, and actually did — including what its scheduler really delivers." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item active" href="/dashboard/engine/" aria-current="page">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Engine runs · a scheduled job, not a daemon</p>
+            <h1>What the engine did, and what its scheduler delivers</h1>
+            <p class="lead">There is no daemon, no uptime, no CPU telemetry: ADR-001 made the engine a cron-scheduled job. Its runs are visible as workflow runs in the repository. What follows is what the record actually supports — including the part that flatters nobody.</p>
+          </header>
+          <section class="card card-pad stack">
+    <h2 class="section">The scheduler delivers about 7% of its declared cadence</h2>
+    <p class="muted">
+      Declared: every 15 minutes. Observed across 18 consecutive cron starts: median gap 174 minutes,
+      worst 368 minutes — roughly three hours typical, six at worst, about 7.5% of declared slots.
+      Sources: <span class="mono">docs/evidence/2026-09-14-scheduler-cadence/</span> and the operations
+      check of 16 September.
+    </p>
+    <p class="muted">
+      This is survivable because the action threshold is a full day of warning — 17,280 ledgers at five
+      seconds each. Even the worst observed gap fires at least four times inside a 24-hour window, seven
+      to ten at the median. The margin comes from the threshold, not from the scheduler.
+    </p>
+    <p class="small muted">Last run: see the workflow runs in the repository — a static page cannot know it. No countdown is shown anywhere here, because there is no honest number for one.</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">What it decided</h2>
+    <p class="muted">
+      Decide-only runs read the watched entries, resolve one target per key, refuse expired candidates and
+      protected subjects, and record skips with reasons. The correction history is committed:
+      <span class="mono">docs/evidence/2026-09-12-engine-decision-correction/</span> (targets, expiry refusal,
+      shared-payer agreement) and <span class="mono">docs/evidence/2026-09-13-engine-thresholds/</span>
+      (warning tier visible without becoming action).
+    </p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">What it actually extended</h2>
+    <p class="muted">
+      One unattended extension is on the record: guinea-pig A's instance on 14 September, decided and
+      submitted from a local timer at ledger 4,670,261, fee charged 44,725 stroops — with the threshold
+      deliberately raised to 1,500,000 so it would act. As far as the record goes, the production cron has
+      never extended anything; no row on this site claims otherwise.
+      Every extension, whoever triggered it, is on <a href="/dashboard/history/">the extension history</a>.
+    </p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">What it refused</h2>
+    <p class="muted">
+      Guinea-pigs B and C sit outside the watched config until their crossings, and the write guard refuses
+      them — and the shared code entry — by default, naming the date an override would spend. If the engine
+      saw them early it would dutifully bump them and destroy weeks of ageing with no error anywhere. The
+      refusal is the feature.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+          <p class="mono small">Prototype on branch feat/W4-D22-02a-full-prototype — not merged.</p>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    
+  </body>
+</html>

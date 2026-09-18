@@ -1,9 +1,10 @@
 /**
- * Scan & Status. A scan field on top, then our own contracts.
+ * Scanner console. One contract ID, optional data keys, then the verdict, the
+ * entry table, the blast-radius panel, a rent estimate and the JSON — the same
+ * order the reference lays out, with the tool's own wording throughout.
  *
- * Live reads can fail in front of an audience, so the contract cards fall back
- * to a snapshot committed with the build and say which ledger it was recorded
- * at. They never present a stale reading as current.
+ * Read-only: `scanContract` and simulated pricing. Nothing here signs,
+ * submits, renews or broadcasts, and there is no control that implies it.
  */
 import {
   OUR_CONTRACTS,
@@ -11,56 +12,14 @@ import {
   isValidContractId,
   quoteRent,
   report,
-  scanMany,
   scanOne,
-  worstHealth,
   type ScanReport,
   type ScanResult,
 } from '../lib/evergreen';
-import { approxXlm, esc, formatCount, short, stamp } from '../lib/format';
-import { blastRadiusPanel, contractCard, entryTable, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
+import { approxXlm, esc, formatCount } from '../lib/format';
+import { blastRadiusPanel, entryTable, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
-
-function subReport(full: ScanReport, contractId: string): ScanReport {
-  const entries = full.entries.filter((e) => e.entry.contracts.includes(contractId));
-  return {
-    ...full,
-    entries,
-    worst: worstHealth(entries.map((e) => e.assessment)),
-    result: { ...full.result, contracts: [{ id: contractId }] },
-  };
-}
-
-async function loadOurContracts(): Promise<void> {
-  const target = $('ours');
-  const note = $('ours-note');
-  const ids = OUR_CONTRACTS.map((c) => c.id);
-  try {
-    const result = await scanMany(ids);
-    if (Object.keys(result.entries).length === 0) throw new Error('no entries returned');
-    renderOurs(result, `Read live from testnet at ledger ${formatCount(report(result).observedAtLedger ?? 0)}.`);
-  } catch {
-    try {
-      const response = await fetch('/assets/snapshot.json', { cache: 'no-store' });
-      const snapshot = (await response.json()) as { capturedAt: string; result: ScanResult };
-      const at = report(snapshot.result).observedAtLedger ?? 0;
-      renderOurs(
-        snapshot.result,
-        `The live read failed, so this is the snapshot committed with this build: as of ledger ${formatCount(at)}, recorded ${stamp(snapshot.capturedAt)}. It is not current.`,
-      );
-    } catch {
-      note.textContent = 'The live read failed and no snapshot is available. Nothing is shown rather than something stale.';
-      target.innerHTML = '';
-    }
-  }
-
-  function renderOurs(result: ScanResult, noteText: string): void {
-    const full = report(result);
-    note.textContent = noteText;
-    target.innerHTML = OUR_CONTRACTS.map((c) => contractCard(c.label, c.id, subReport(full, c.id))).join('');
-  }
-}
 
 let lastScan: { result: ScanResult; report: ScanReport } | undefined;
 
@@ -90,10 +49,10 @@ async function runScan(event: Event): Promise<void> {
       blastRadiusPanel(rep, [id]),
       `<div class="card card-pad stack" id="cost-panel">
          <div class="row">
-           <button class="secondary" type="button" id="cost-button">Estimate rent to extend every entry</button>
+           <button class="secondary" type="button" id="cost-button">Estimate rent to extend</button>
            <label class="small muted">by <input type="number" id="cost-ledgers" value="518400" min="1" step="1" style="width:9.5rem;display:inline-block"> more ledgers (about 30 days)</label>
          </div>
-         <p class="small muted">Pricing asks the network to simulate the extension, one entry at a time, so it takes a moment.</p>
+         <p class="small muted">Pricing asks the network to simulate the extension, one entry at a time, so it takes a moment. Nothing is submitted.</p>
        </div>`,
       jsonPanel(result, health(result)),
     ].join('');
@@ -132,13 +91,13 @@ async function runCost(): Promise<void> {
             const pct = total > 0n ? Number((BigInt(stroops) * 100n) / total) : 0;
             // A share that rounds to zero is not zero; saying "0%" of a real amount is a small lie.
             const shown = pct === 0 && BigInt(stroops) > 0n ? '<1%' : `${pct}%`;
-            return `<tr><td class="num">${esc(short(key, 10, 6))}</td><td class="num">${esc(approxXlm(stroops))}</td><td class="num">${shown}</td></tr>`;
+            return `<tr><td class="num">${esc(key.slice(0, 10))}…${esc(key.slice(-6))}</td><td class="num">${esc(approxXlm(stroops))}</td><td class="num">${shown}</td></tr>`;
           })
           .join('')}
       </tbody></table></div>
       ${
         share >= 60
-          ? `<p class="small">${share}% of that rent is one entry (<span class="mono">${esc(short(topKey, 10, 6))}</span>). Code entries hold the Wasm and are usually the expensive one — and the one shared between contracts.</p>`
+          ? `<p class="small">${share}% of that rent is one entry (<span class="mono">${esc(topKey.slice(0, 10))}…${esc(topKey.slice(-6))}</span>). Code entries hold the Wasm and are usually the expensive one — and the one shared between contracts.</p>`
           : ''
       }
       <p class="small muted">Priced by simulating against the network at ledger ${esc(formatCount(quote.pricedAtLedger))}. Rent pricing varies with network state — a quote taken on another day has differed by ~18%. This is an estimate to budget against, not a quoted price.</p>
@@ -151,11 +110,12 @@ async function runCost(): Promise<void> {
 
 function start(): void {
   $('scan-form').addEventListener('submit', (e) => void runScan(e));
-  $<HTMLInputElement>('contract-id').value = OUR_CONTRACTS[0].id;
+  const fromQuery = new URLSearchParams(location.search).get('id');
+  $<HTMLInputElement>('contract-id').value =
+    fromQuery && isValidContractId(fromQuery) ? fromQuery : OUR_CONTRACTS[0].id;
   $('example-button').addEventListener('click', () => {
     $<HTMLInputElement>('contract-id').value = OUR_CONTRACTS[0].id;
   });
-  void loadOurContracts();
 }
 
 start();
