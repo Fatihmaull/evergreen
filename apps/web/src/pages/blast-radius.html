@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blast Radius — Evergreen</title>
+    <meta name="description" content="Contracts built from the same Wasm share one code entry. Scan them together to see what fails with it." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="masthead">
+      <div class="wrap">
+        <a class="brand" href="/">Evergreen</a>
+        <nav class="views" aria-label="Views">
+          <a class="pill" href="/dashboard/">Scan &amp; Status</a>
+          <a class="pill" href="/dashboard/blast-radius/" aria-current="page">Blast Radius</a>
+        </nav>
+        <a class="quiet-link" href="/">← the site</a>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <section>
+        <p class="eyebrow">Blast Radius · Stellar testnet</p>
+        <h1 class="page">One entry. Every contract built from that Wasm.</h1>
+        <p class="muted">
+          Contracts built from the same Wasm share one code entry. A scan of one contract cannot see the others, so it
+          says <em>undetermined</em>. Give it all of them and it can answer.
+        </p>
+        <form class="card card-pad stack" id="form">
+          <div>
+            <label class="field-label" for="ids">Contract addresses — one per line</label>
+            <textarea id="ids" spellcheck="false" placeholder="C…&#10;C…"></textarea>
+          </div>
+          <div class="row">
+            <button id="scan-button" type="submit">Scan together</button>
+            <button id="example-button" class="secondary" type="button">Use our three contracts</button>
+            <span class="small muted" id="count"></span>
+          </div>
+        </form>
+      </section>
+
+      <section><div id="result"></div></section>
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <p>Testnet only. This page reads the chain and never signs or submits anything.</p>
+        <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+        <p class="mono">Prototype on branch feat/W4-D22-02-prototype — not merged.</p>
+      </div>
+    </footer>
+    <script src="/assets/blast-radius.js"></script>
+  </body>
+</html>

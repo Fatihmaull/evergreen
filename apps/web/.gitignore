@@ -1,0 +1,3 @@
+# Throwaway entries written by build.mjs and make-snapshot.mjs.
+.commission-probe.*
+.snapshot-entry.mjs
