@@ -9,7 +9,7 @@
  * fail, instead of assuming it.
  */
 import { createRequire } from 'node:module';
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -26,13 +26,33 @@ const FORBIDDEN = ['extend.ts', 'extend-rpc.ts', 'ed25519-signer.ts', 'engine.ts
 const PAGES = [
   { entry: 'src/pages/dashboard.ts', js: 'assets/dashboard.js', html: 'src/pages/dashboard.html', to: 'dashboard/index.html' },
   { entry: 'src/pages/blast-radius.ts', js: 'assets/blast-radius.js', html: 'src/pages/blast-radius.html', to: 'dashboard/blast-radius/index.html' },
-  { entry: 'src/pages/landing.ts', js: 'assets/landing.js', html: 'src/pages/landing.html', to: 'index.html', optional: true },
+  { html: 'src/pages/landing.html', to: 'index.html' },
 ];
 
+const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
+
+function escapeHtml(text) {
+  return text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+}
+
+/**
+ * The landing shows a real scan, so the terminal block is the committed capture
+ * itself, injected at build time. Nothing on that page is typed by hand.
+ */
 function writePage(htmlFrom, to) {
   const target = join(out, to);
   mkdirSync(dirname(target), { recursive: true });
-  cpSync(join(here, htmlFrom), target);
+  let html = readFileSync(join(here, htmlFrom), 'utf8');
+  if (html.includes('<!--TERMINAL_CAPTURE-->')) {
+    const capture = readFileSync(join(repo, CAPTURE), 'utf8').trimEnd();
+    html = html
+      .replace('<!--TERMINAL_CAPTURE-->', escapeHtml(capture))
+      .replace(
+        '<!--TERMINAL_PROVENANCE-->',
+        `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
+      );
+  }
+  writeFileSync(target, html);
 }
 
 function guard(metafile, label) {
@@ -93,7 +113,11 @@ async function commission() {
 
 console.log('building the prototype into apps/dashboard/public');
 for (const page of PAGES) {
-  if (page.optional && !existsSync(join(here, page.entry))) continue;
+  if (!page.entry) {
+    writePage(page.html, page.to);
+    console.log(`  ${page.to.padEnd(32)} static, no script`);
+    continue;
+  }
   await buildPage(page);
 }
 mkdirSync(join(out, 'assets'), { recursive: true });
