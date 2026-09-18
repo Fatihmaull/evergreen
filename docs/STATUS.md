@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-17 · acceptance reconciled against main c42561d and GitHub decisions
+**Last updated:** 2026-09-18 · actual observer startup snapshot published for review
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
@@ -21,7 +21,7 @@ This verifies actual startup, not just an armed timer, and a real observer-failu
 notification/recovery. No runtime/policy change, extra mail or transaction was made.
 D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
 The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
-inferred from this bounded snapshot. Notion sync pending this publication.
+inferred from this bounded snapshot. Published in [PR #201](https://github.com/Fatihmaull/evergreen/pull/201), with summary in #104. Notion D18-01/03 notes synced, statuses remain In progress; full150-row presence check found no missing or phantom IDs. Fatih review/merge pending.
 
 ## Earlier — reconciled September17 state (startup superseded above)
 
