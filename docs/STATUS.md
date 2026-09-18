@@ -9,7 +9,21 @@
 
 ---
 
-## Current — reconciled September17 state
+## Current — Sep18 observer startup and recovered incident verified
+
+The installed systemd observer started automatically at07:00 WIB. Snapshot09:08
+covers26 five-minute starts through09:05:25 healthy assessments and one observer-error
+at07:30. Its critical email was provider-accepted and separately confirmed in the
+recipient inbox; the observer recovered at07:35 and had no active incident at the
+snapshot. Exact transport/root cause is not established by these logs. [Evidence](evidence/2026-09-18-watcher-startup/README.md).
+
+This verifies actual startup, not just an armed timer, and a real observer-failure
+notification/recovery. No runtime/policy change, extra mail or transaction was made.
+D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
+The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
+inferred from this bounded snapshot. Notion sync pending this publication.
+
+## Earlier — reconciled September17 state (startup superseded above)
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
