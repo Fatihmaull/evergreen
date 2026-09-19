@@ -196,7 +196,7 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 | 2026-09-12 | W2-D11-02 | manual CLI instance extension succeeded; expiry +1,002 ledgers | guinea-pig A instance | Rakha dev key | [e18e0822…](https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a) | [Full SUCCESS RPC](evidence/2026-09-12-manual-extend-proof/live/14-getTransaction-response.json) | [Screenshot](evidence/2026-09-12-manual-extend-proof/explorer.jpg) |
 | | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
 | | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
-| | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
+| | **W3-D18-02b** | **natural-decay proof — detection + guard refusal; B is NOT bumped** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(crossing ~Sep 20 12:00 UTC, expiry ~Sep 21 12:00 UTC)* | ⬜ | ⬜ |
 | | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
 ### ⚠️ Disclosure: guinea-pig B's TTL was deliberately calibrated
@@ -239,11 +239,15 @@ One thing worth stating because it is not obvious: B and C were deployed from th
 
 **`W3-D18-02a` — threshold proof (insurance, banked early ~Sep 17).** Set the bump threshold *above* the contract's current TTL and the engine fires on its next scheduled run. Proves the engine detects and bumps, unattended, on a real cron. Cheap, repeatable, available on demand.
 
-**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
+**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own.
+
+🔴 **B is NOT saved. B expires, deliberately, and the engine refuses to touch it.** Corrected 2026-09-19: this paragraph said it *"proves a contract that would otherwise have been archived was saved"*, which is the opposite of what `W3-D18-02b` decided and of what [`SEP-20-PREFLIGHT.md` §6](SEP-20-PREFLIGHT.md) instructs. **A save and an expiry on the same contract are mutually exclusive**, and the repo asked for both — so A carries the save (threshold raised above its remaining TTL) and B carries the decay.
+
+Three proofs come out of B's sequence, and none of them is a bump: **detection works** on a contract that decayed on its own, **the write guard refuses a real protected subject live**, and **the decay is real**. That is the version that survives a skeptical reader, because the refusal is falsifiable and a save on a contract we also control is not.
 
 Whether B is achievable depends on the TTL floors measured at `W1-D4-04b` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
 
-> ⚠️ **Guinea-pig B must stay OUT of the engine's watched-contract config until the moment of proof.** If it lands in the config during Week 3 testing, the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
+> 🔴 **Guinea-pig B must stay OUT of the engine's watched-contract config — permanently, not "until the moment of proof".** There is no later moment at which it is correct to put B in the config: the proof IS the refusal. This line previously read *"until the moment of proof"*, which invited exactly the bump it warns against. If B lands in the config the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
 
 ## Scheduler runtime evidence — `W1-D5-03`
 
