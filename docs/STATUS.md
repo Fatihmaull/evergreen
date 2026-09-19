@@ -2,14 +2,28 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-17 · acceptance reconciled against main c42561d and GitHub decisions
+**Last updated:** 2026-09-18 · actual observer startup snapshot published for review
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — reconciled September17 state
+## Current — Sep18 observer startup and recovered incident verified
+
+The installed systemd observer started automatically at07:00 WIB. Snapshot09:08
+covers26 five-minute starts through09:05:25 healthy assessments and one observer-error
+at07:30. Its critical email was provider-accepted and separately confirmed in the
+recipient inbox; the observer recovered at07:35 and had no active incident at the
+snapshot. Exact transport/root cause is not established by these logs. [Evidence](evidence/2026-09-18-watcher-startup/README.md).
+
+This verifies actual startup, not just an armed timer, and a real observer-failure
+notification/recovery. No runtime/policy change, extra mail or transaction was made.
+D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
+The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
+inferred from this bounded snapshot. Published in [PR #201](https://github.com/Fatihmaull/evergreen/pull/201), with summary in #104. Notion D18-01/03 notes synced, statuses remain In progress; full150-row presence check found no missing or phantom IDs. Fatih review/merge pending.
+
+## Earlier — reconciled September17 state (startup superseded above)
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed

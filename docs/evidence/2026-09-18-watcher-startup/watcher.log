@@ -1,0 +1,326 @@
+{
+  "assessment": {
+    "severity": "info",
+    "incidentId": null,
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "inactive"
+  },
+  "status": "inactive",
+  "exitCode": 0
+}
+{
+  "assessment": {
+    "severity": "info",
+    "incidentId": null,
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "inactive"
+  },
+  "status": "inactive",
+  "exitCode": 0
+}
+{
+  "assessment": {
+    "severity": "info",
+    "incidentId": null,
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "inactive"
+  },
+  "status": "inactive",
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 53.557316666666665,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 58.55563333333333,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 63.5557,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 68.55573333333334,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 73.55578333333334,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 78.55585,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "alerted",
+  "assessment": {
+    "severity": "critical",
+    "incidentId": "observer-error:1789689600000",
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "observer-error"
+  },
+  "incidentId": "watch-2895db5c212c0d1aa24c0270d4bd819c442ded07f8e1fb0f9cafe8fdfc814408",
+  "receipt": {
+    "status": "accepted",
+    "submitted": true,
+    "emailId": "01a0b1eb-bde2-70a8-b497-27fb32f3f2e9",
+    "receivedInInbox": "unverified"
+  },
+  "exitCode": 2
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 88.55598333333333,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 93.55573333333334,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 98.55561666666667,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 103.5558,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 108.55568333333333,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 113.55566666666667,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 118.55578333333334,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 123.55571666666667,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789686388000,
+    "overdueMinutes": 128.5555,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 3.339,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 8.338883333333333,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 13.339116666666667,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 18.339033333333333,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 23.338983333333335,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 28.339016666666666,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 33.338966666666664,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 38.33925,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 43.33906666666667,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
+{
+  "status": "healthy",
+  "assessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 48.3391,
+    "incidentId": null
+  },
+  "exitCode": 0
+}
