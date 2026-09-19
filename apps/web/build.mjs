@@ -14,7 +14,7 @@
  * fail, instead of assuming it.
  */
 import { createRequire } from 'node:module';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -197,6 +197,15 @@ async function commission() {
 }
 
 console.log('building the twelve-page preview into apps/dashboard/public');
+/**
+ * Start from an empty directory. A previous build's orphan is worse than a
+ * missing file: it keeps serving, it is committed, and nothing regenerates it
+ * — a stale bundle pointed at an unreachable RPC survived one rebuild here
+ * before this line existed.
+ */
+rmSync(out, { recursive: true, force: true });
+mkdirSync(out, { recursive: true });
+
 for (const page of PAGES) {
   await buildPage(page);
 }

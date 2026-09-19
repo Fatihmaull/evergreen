@@ -47,12 +47,32 @@
             <p class="lead">There is no daemon, no uptime, no CPU telemetry: ADR-001 made the engine a cron-scheduled job. Its runs are visible as workflow runs in the repository. What follows is what the record actually supports — including the part that flatters nobody.</p>
           </header>
           <section class="card card-pad stack">
-    <h2 class="section">The scheduler delivers about 7% of its declared cadence</h2>
+    <h2 class="section">The scheduler delivers about 7.5% of its declared cadence</h2>
     <p class="muted">
-      Declared: every 15 minutes. Observed across 18 consecutive cron starts: median gap 174 minutes,
-      worst 368 minutes — roughly three hours typical, six at worst, about 7.5% of declared slots.
-      Sources: <span class="mono">docs/evidence/2026-09-14-scheduler-cadence/</span> and the operations
-      check of 16 September.
+      Declared: every 15 minutes. Measured on <strong>two independent workflows</strong> with different
+      creation dates and different windows — which is what makes this a property of the platform rather
+      than of one file.
+    </p>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th scope="col">Workflow</th><th scope="col">Window</th><th scope="col">Expected</th>
+        <th scope="col">Actual</th><th scope="col">Delivered</th><th scope="col">Gap min / median / max</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="mono">engine-cron.yml</td><td class="num">2,487 min</td><td class="num">166</td>
+          <td class="num">13</td><td class="num"><strong>7.8%</strong></td>
+          <td class="num">102 / 136 / 294 min</td></tr>
+        <tr><td class="mono">scheduler-smoke.yml</td><td class="num">10,218 min</td><td class="num">681</td>
+          <td class="num">50</td><td class="num"><strong>7.3%</strong></td>
+          <td class="num">109 / 212 / 331 min</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted">
+      About 7.5% of declared slots, and a worst observed gap of 331 minutes — 5.5 hours. GitHub does not
+      guarantee scheduled workflows; it delays or drops them under load, and low-activity repositories are
+      throttled hardest. Documented platform behaviour, not a misconfiguration — but the workflow file says
+      every 15 minutes and reality is roughly every two hours.
+      Source: <span class="mono">docs/evidence/2026-09-14-scheduler-cadence/</span>.
     </p>
     <p class="muted">
       This is survivable because the action threshold is a full day of warning — 17,280 ledgers at five

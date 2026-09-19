@@ -15,7 +15,7 @@
           "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
         },
         {
-          "ledger": 4734738,
+          "ledger": 4756697,
           "endsAt": 4793687,
           "source": "apps/web/data/snapshot.json"
         }
@@ -36,7 +36,7 @@
           "source": "docs/evidence/2026-09-09-guinea-pig-a-extend/README.md"
         },
         {
-          "ledger": 4734738,
+          "ledger": 4756697,
           "endsAt": 6370261,
           "source": "apps/web/data/snapshot.json"
         }
@@ -77,7 +77,7 @@
           "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
         },
         {
-          "ledger": 4734738,
+          "ledger": 4756697,
           "endsAt": 5290829,
           "source": "apps/web/data/snapshot.json"
         }

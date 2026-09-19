@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-18T09:21:19.180Z",
+  "capturedAt": "2026-09-19T08:37:56.122Z",
   "result": {
     "network": "testnet",
     "contracts": [
@@ -20,11 +20,11 @@
         "contracts": [
           "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
         ],
-        "observedAtLedger": 4739938,
+        "observedAtLedger": 4756697,
         "ttl": {
           "status": "known",
           "endsAtLedger": 6370261,
-          "remainingLedgers": 1630323
+          "remainingLedgers": 1613564
         }
       },
       "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
@@ -33,11 +33,11 @@
         "contracts": [
           "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
         ],
-        "observedAtLedger": 4739938,
+        "observedAtLedger": 4756697,
         "ttl": {
           "status": "known",
           "endsAtLedger": 4793687,
-          "remainingLedgers": 53749
+          "remainingLedgers": 36990
         }
       },
       "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB": {
@@ -46,11 +46,11 @@
         "contracts": [
           "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
         ],
-        "observedAtLedger": 4739938,
+        "observedAtLedger": 4756697,
         "ttl": {
           "status": "known",
           "endsAtLedger": 4880097,
-          "remainingLedgers": 140159
+          "remainingLedgers": 123400
         }
       },
       "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
@@ -61,11 +61,11 @@
           "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
           "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
         ],
-        "observedAtLedger": 4739938,
+        "observedAtLedger": 4756697,
         "ttl": {
           "status": "known",
           "endsAtLedger": 5290829,
-          "remainingLedgers": 550891
+          "remainingLedgers": 534132
         }
       }
     },
