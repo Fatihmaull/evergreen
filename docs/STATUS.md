@@ -9,6 +9,13 @@
 
 ---
 
+## Current — web surface registered, 2026-09-17
+
+- **Two agents now work this repository, split by path.** The web agent owns `apps/` and `web-reference/`; the CLI/engine agent owns `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `scripts/`, `.github/workflows/` and `ops/`. Nobody edits `docs/evidence/`. `AGENTS.md` still describes one session; `W4-D22-15` corrects it.
+- **Registered:** the web surface as `W4-D22-03` to `W4-D22-10` (F), and the changes it needs from the CLI/engine side as `W4-D22-11` to `W4-D22-15` (R), each tracked in an issue (#194–#198). `W4-D22-11` is the priority: core's scan returns zero entries in a real browser, with no error, which blocks the dashboard's scan interface.
+- **Web merges before 2026-09-22:** none that change the lockfile, the build or the workflows.
+- **Notion:** rows for the thirteen new IDs are created once this registration is on `main`; the sync writes status and owner only and never creates a row.
+
 ## Current — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
