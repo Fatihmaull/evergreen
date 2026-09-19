@@ -53,8 +53,13 @@ future service guarantee. The watcher does not improve GitHub's delivery cadence
    systemd state. Check both fresh successful jobs and any new maximum gap.
 2. Verify the runtime checksum and email-only configuration remain usable. Preserve
    the protected subjects and action threshold17,280. Do not force B candidacy.
-3. Confirm **Fatih primary, Rakha backup** and the manual crossing/expiry windows.
-   This is the existing runbook assignment, not a new acknowledgment from Fatih.
+3. Confirm the assignment against the generated table below — **Rakha is primary on
+   all four checkpoints and Fatih is backup on all four**, per
+   [`ops/crossing-schedule.json`](../ops/crossing-schedule.json) and Rakha's
+   per-date confirmations in #104. *(This step read "Fatih primary, Rakha backup"
+   until 2026-09-19 — the inverted assignment, in the step whose whole job is
+   confirming it. The prose sat outside the generated markers, so
+   `pnpm check:schedule` could not see it.)*
 4. Obtain explicit acceptance for the evidence below. Do not close those gates
    just because code merged or this watcher is armed.
 
