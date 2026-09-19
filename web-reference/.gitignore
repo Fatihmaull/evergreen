@@ -1,0 +1,11 @@
+# Only this folder's README, the product & design spec and the design-token file are
+# committed. The page exports stay on Fatih's machine (decided 2026-09-17): they carry
+# placeholder data and claims the project never made. See README.md.
+# `git add -f` overrides these rules; they stop accidents, not decisions.
+/*
+!/.gitignore
+!/README.md
+!/EVERGREEN-PRODUCT-AND-DESIGN-SPEC.md
+!/evergreen_protocol/
+/evergreen_protocol/*
+!/evergreen_protocol/DESIGN.md
