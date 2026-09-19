@@ -198,9 +198,11 @@ workaround because they think the evidence is escaping.
 
 **So capture at every checkpoint in the generated table, not once.**
 
-- [ ] one `pnpm capture:crossing --subject B --output <dir>-HHMM` per row, naming the
-      output directory after that row's UTC time
-- [ ] each verified with `--require-crossing`, and each committed
+- [ ] one capture per row of the table, into its own **new** directory under the
+      gitignored `.evergreen/crossing/` — e.g.
+      `pnpm capture:crossing --subject B --output .evergreen/crossing/B-20260921-0600`
+- [ ] each verified with `--require-crossing`, and each committed (§4 — **the
+      committed directory's date must be that capture's own UTC date**)
 
 This costs nothing extra: the dispatches are already scheduled. What it buys is
 **a decay sequence rather than a single reading** — B measurably closer to expiry
@@ -217,13 +219,37 @@ an oversight.
 It is also redundancy on the least repeatable thing in the sprint. **If any one
 capture fails, the others still carry the proof.**
 
-The crossing gate is satisfied by any one qualifying bundle, so three is
-belt-and-braces rather than three chances to get it wrong.
+The crossing gate is satisfied by any one qualifying bundle, so the later
+captures are belt-and-braces rather than more chances to get it wrong. *(This
+sentence said "three" until 2026-09-19, when the table had held four for three
+days — the same summary-versus-table drift this page is generated to prevent,
+in the one paragraph an operator reads immediately before acting. It no longer
+states a count: the table does.)*
 
 ### 4. The record is committed the same day
 
 - [ ] commit the **verified capture bundle** as the crossing artifact; keep the probe output beside it as the readable record. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
-- [ ] commit it under `docs/evidence/2026-09-20-b-crossing/`
+- [ ] 🔴 **one committed directory per capture, named for THAT capture's own UTC
+      date** — `docs/evidence/2026-09-20-b-crossing/` for the Sunday one,
+      `docs/evidence/2026-09-21-b-crossing-0000/`, `…-0600/`, `…-1200/` for the
+      Monday ones. Copy each verified bundle out of `.evergreen/crossing/`, which
+      is gitignored and therefore commits nothing on its own.
+
+> 🔴 **Why the date is not cosmetic.** `check-crossing-evidence.mjs` requires the
+> directory's date to EQUAL the bundle's own `observedAt` date
+> (`dated[1] === result.observedAt.slice(0, 10)`, line 119). **Three of the four
+> captures happen on Sep 21.** A Monday bundle committed under a `2026-09-20-…`
+> path is silently not counted — the file is there, it verifies, and the gate
+> still reports the evidence missing.
+>
+> This instruction previously named a single `2026-09-20-b-crossing/` directory,
+> which contradicted [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md) — *"use the
+> actual UTC capture date in the eventual published evidence path"* — on exactly
+> this point. The Sunday capture alone would still have turned the gate green, so
+> nothing would have looked wrong; but in §3b's own planned failure mode, where
+> Sunday's capture dies on a flaky RPC and Monday's is the proof, following this
+> page literally left a correct capture uncounted and a red gate to debug at
+> midnight. Corrected 2026-09-19.
 - [ ] **an artifact is a log; a commit is evidence.** Artifacts expire; the
       grant submission is Oct 2
 
