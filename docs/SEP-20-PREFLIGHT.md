@@ -228,7 +228,15 @@ states a count: the table does.)*
 
 ### 4. The record is committed the same day
 
-- [ ] commit the **verified capture bundle** as the crossing artifact; keep the probe output beside it as the readable record. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
+- [ ] commit the **verified capture bundle** as the crossing artifact. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
+- [ ] 🔴 **keep the probe output NEXT TO the bundle directory, never inside it.** The
+      bundle's manifest lists its own files; an extra file dropped in makes
+      `verify:crossing` fail — measured 2026-09-19: **exit 0 before, exit 2 after**,
+      on a bundle that is otherwise perfectly good. Put it at
+      `docs/evidence/<date>-b-crossing/probe.txt` **beside** `…/capture/`, or give the
+      bundle its own subdirectory. *(This bullet said only "beside it" until
+      2026-09-19, which an operator at midnight can reasonably read as "in the same
+      folder" — the reading that breaks the artifact.)*
 - [ ] 🔴 **one committed directory per capture, named for THAT capture's own UTC
       date** — `docs/evidence/2026-09-20-b-crossing/` for the Sunday one,
       `docs/evidence/2026-09-21-b-crossing-0000/`, `…-0600/`, `…-1200/` for the
@@ -237,7 +245,7 @@ states a count: the table does.)*
 
 > 🔴 **Why the date is not cosmetic.** `check-crossing-evidence.mjs` requires the
 > directory's date to EQUAL the bundle's own `observedAt` date
-> (`dated[1] === result.observedAt.slice(0, 10)`, line 119). **Three of the four
+> (`dated[1] === result.observedAt.slice(0, 10)`, line 120). **Three of the four
 > captures happen on Sep 21.** A Monday bundle committed under a `2026-09-20-…`
 > path is silently not counted — the file is there, it verifies, and the gate
 > still reports the evidence missing.
