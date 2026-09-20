@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+const root = '/home/rakhargo/projects/evergreen';
+const pin = JSON.parse(await readFile(root + '/.evergreen/crossing-session-20260920/runtime-pin.json', 'utf8'));
+const { runtimeHashes } = await import(pathToFileURL(root + '/scripts/crossing-capture-common.mjs'));
+const { captureCrossingProbe } = await import(pathToFileURL(root + '/scripts/capture-crossing-probe.mjs'));
+const { verifyCrossingCapture } = await import(pathToFileURL(root + '/scripts/verify-crossing-capture.mjs'));
+await assertPin();
+async function assertPin() {
+  assert.deepEqual(await runtimeHashes(), pin.runtimeHashes, 'Pinned capture runtime changed; stop without rebuilding');
+}
+const [mode, output, baseline] = process.argv.slice(2);
+assert(['check', 'capture', 'verify'].includes(mode), 'Use check, capture OUTPUT [BASELINE], or verify DIRECTORY');
+if (mode === 'check') {
+  assert(!output && !baseline);
+  console.log(JSON.stringify({ pinned: true, sourceCommit: pin.provenance.sourceCommit, files: Object.keys(pin.runtimeHashes).length }));
+} else if (mode === 'capture') {
+  assert(output && resolve(output).startsWith(root + '/.evergreen/crossing-session-20260920/'));
+  if (baseline) await verifyCrossingCapture(resolve(baseline));
+  const result = await captureCrossingProbe({ directory: resolve(output), subject: 'B', ...(baseline ? { baselineDirectory: resolve(baseline) } : {}) }, { provenance: pin.provenance });
+  await assertPin();
+  const verified = await verifyCrossingCapture(resolve(output));
+  await assertPin();
+  assert.equal(result.phase, verified.phase);
+  console.log(JSON.stringify(verified));
+  process.exitCode = verified.exitCode;
+} else {
+  assert(output && !baseline);
+  const result = await verifyCrossingCapture(resolve(output));
+  await assertPin();
+  console.log(JSON.stringify(result));
+  process.exitCode = result.exitCode;
+}
