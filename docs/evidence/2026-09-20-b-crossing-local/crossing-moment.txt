@@ -1,0 +1,5 @@
+  threshold ledger  = endsAt 4,793,687 - 17,280 = 4,776,407
+  last good reading = 11:58:28Z  ledger 4,776,384  remaining 17,303
+  delta             = 23 ledgers x 5s = 115s
+  => B CROSSED AT   2026-09-20T12:00:23.000Z  (ledger 4,776,407)
+     WIB           19:00:23
