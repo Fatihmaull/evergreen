@@ -2,14 +2,26 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-17 · acceptance reconciled against main c42561d and GitHub decisions
+**Last updated:** 2026-09-20 · first B crossing captured; publication/review tracked below
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — reconciled September17 state
+## Current — September20 B checkpoint
+
+B crossing observed at12:00:29.335 UTC, ledger4,776,408: instance17,279 remaining,
+normal threshold17,280, `crossing-refused` and `qualifiesCrossing: true`.
+[Sealed evidence](evidence/2026-09-20-b-crossing/README.md) includes five read-only
+RPC calls and live A/shared controls. No transaction or email. Runtime01394cc
+retained without per-capture rebuild; publication checks use a separate worktree.
+Original capture remains available as Monday's live baseline. D18-03 stays
+In progress: three Monday B checkpoints, C capture and final acceptance remain.
+Notion D18-03 mirror validation/sync pending: canonical data-source lookup returned
+`data_source_not_found` at preflight. Earlier acceptance decisions are unchanged.
+
+## Reference — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
