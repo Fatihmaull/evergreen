@@ -2,20 +2,25 @@
 
 **Captured by the primary watcher on Fatih's machine.** Duplicate by design: Fatih captures the same slot independently from a second machine, and two bundles of the same state are redundancy, not a conflict.
 
-## The moment
+## What was observed, and what is calculated
 
-**B crossed at `2026-09-20T12:00:23Z` — 19:00:23 WIB — at ledger 4,776,407.**
+**Observed, from the sealed bundle:** B already actionable at **2026-09-20T12:06:59.653Z**, ledger **4,776,486**, `remaining` **17,201**. Capture started 12:06:58.250Z.
 
-Derived from ledger arithmetic, not read directly, because the poller was blind across the crossing (see below):
+**Calculated, not observed:** the first actionable ledger is **4,776,407** — `endsAt 4,793,687 − 17,280`, and `needsAction` compares `remainingLedgers <= thresholdLedgers` (`packages/core/src/ttl.ts:117`), so remaining of exactly 17,280 is already actionable. That ledger number is arithmetic and is sound.
+
+🔴 **Its wall-clock time is an ESTIMATE, not a measurement.** An earlier version of this file stated "B crossed at 12:00:23Z" as fact. That figure came from multiplying 23 ledgers by an assumed constant five-second cadence, starting from a reading at 11:58:28Z. **Ledger close times vary; a constant cadence is an assumption, not an observation.** Corrected 2026-09-20 after review.
+
+The estimate, kept because it is useful and now labelled:
 
 ```
-threshold ledger  = endsAt 4,793,687 − 17,280 = 4,776,407
-last good reading = 11:58:28Z, ledger 4,776,384, remaining 17,303
-delta             = 23 ledgers × 5s = 115s
-                  → 12:00:23Z
+first actionable ledger = 4,793,687 − 17,280 = 4,776,407        (arithmetic, sound)
+last reading above      = 11:58:28Z, ledger 4,776,384, rem 17,303
+23 ledgers × ~5s        ≈ 12:00:23Z                             (ESTIMATE — assumes constant cadence)
 ```
 
-The projection from `write-guard.ts` was `alertThresholdOn: 2026-09-20`. Observed crossing: **12:00:23Z on 2026-09-20**. Drift measured all morning at **+0.0h**.
+Rakha's independent capture in `2026-09-20-b-crossing/` observes ledger **4,776,408** at **12:00:29.335Z** with `remaining` 17,279. That **confirms the state at 4,776,408**. It does not timestamp ledger 4,776,407, and neither bundle does.
+
+**No drift claim is made here.** An earlier version said "drift +0.0h"; that came from the projection-comparison tool, not from any measurement of when the crossing actually occurred, and it is withdrawn.
 
 ## What is here
 
