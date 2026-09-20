@@ -260,6 +260,61 @@ session — the other was `check-cadence-quotes.mjs` rejecting a parenthetical t
 explained which figure had been removed by naming the figure. Assume anything that
 scans for a pattern will match your explanation of the pattern.
 
+### A non-zero exit from our own tooling is usually a finding, not a failure
+
+*2026-09-20, 12:00:29Z.* The watcher polling guinea-pig B logged three consecutive
+`SCAN_FAIL`s starting seconds after B crossed its alert threshold. **The chain was
+fine the entire time.** `EXIT_BELOW_THRESHOLD = 1`, and the poll loop was written as
+
+```bash
+if node packages/cli/dist/bin.js scan "$B" --json > last.json; then   # wrong
+```
+
+so any non-zero exit read as a broken scan. **The instrument went blind precisely
+because the event it existed to detect had occurred.** The CLI was reporting the
+crossing, in the exit code, and the loop had been written to hear that as breakage.
+
+Cost: the crossing time had to be reconstructed from ledger arithmetic instead of
+observed, and the capture ran six minutes late. The evidence survived only because a
+second operator was capturing independently — his bundle caught B at `remaining`
+17,279, one ledger below the threshold, while this watcher was reporting failure.
+
+**Our exit codes are a vocabulary, not a health bit:**
+
+| | |
+|---|---|
+| `0` | ok |
+| `1` | **below threshold** — the thing the tool exists to tell you |
+| `2` | a real error, or verification failed / does not qualify |
+| `3` | incomplete — a key was asked for and not found |
+
+`1` and `3` are the tool having something to say. Only `2` and above are breakage.
+
+**The discriminator is output shape, not the exit code.** During the diagnosis the
+answer was already on disk and unread: `last.json` held 2,768 bytes of valid JSON and
+`last.err` was empty. **A finding produces well-formed output; a break does not.** That
+is checkable, so it beats remembering which codes mean what:
+
+```bash
+node …/bin.js scan "$B" --json > out.json 2>err.txt; rc=$?
+if [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ] || [ "$rc" -eq 3 ]; then …
+```
+
+**Sweep, same day.** `.github/workflows/engine-cron.yml` had the sibling defect in the
+opposite direction — `pnpm engine:run | tee` exiting with `tee`'s status, so a failing
+unattended run reported success. Already fixed by `shell: bash`, which GitHub runs with
+`-eo pipefail`; the comment there records the first cron run dying invisibly. The
+`execFileSync` call sites wrap `git`, `tsc`, `gh` and `esbuild`, where non-zero genuinely
+is failure, and are correct as written.
+
+**The pair worth noticing.** The same day, the same area, opposite outcomes. The poll
+loop called `node …/bin.js` directly rather than `pnpm cli` — which happens to skip a
+rebuild and so protected a runtime fingerprint the whole weekend depended on. That was
+**luck, not judgement**; it was not chosen for that reason. The exit-code handling in the
+same loop was not lucky. **One accident in each direction, in code written in the same
+five minutes** — which is the argument for checking a property rather than trusting that
+the person writing it had the property in mind.
+
 ### A checker's output shape bounds what it can report
 
 Distinct from *"suspect the instrument when the result surprises you"*, and harder,
