@@ -204,8 +204,10 @@ workaround because they think the evidence is escaping.
 - [ ] one capture per row of the table, into its own **new** directory under the
       gitignored `.evergreen/crossing/` — e.g.
       `pnpm capture:crossing --subject B --output .evergreen/crossing/B-20260921-0600`
-- [ ] each verified with `--require-crossing`, and each committed (§4 — **the
-      committed directory's date must be that capture's own UTC date**)
+- [ ] the three captures **while B is still live** verified with
+      `--require-crossing`; the **expiry capture is the exception** — see the box
+      below. Each committed (§4 — **the committed directory's date must be that
+      capture's own UTC date**)
 
 > 🔴 **`--require-crossing` is for the three captures while B is BELOW the
 > threshold and still live. Do NOT use it on the Monday 12:00 expiry capture.**
@@ -214,10 +216,26 @@ workaround because they think the evidence is escaping.
 > that happens once. Verified on this build 2026-09-20: plain `pnpm verify:crossing
 > <dir>` **exit 0**, the same directory with `--require-crossing` **exit 2**.
 >
-> **For the expiry capture use plain `pnpm verify:crossing <dir>` with no flag.**
-> Found by Rakha's audit, not by ours. His correction adds a distinct
-> `expiry-observed` phase and is still unpublished — until it lands, the flag
-> stays off for that one capture.
+> 🔴 **But exit 0 is NOT the expiry acceptance criterion. Require phase
+> `expiry-observed`.**
+>
+> **For expiry, use an earlier verified live B baseline, run plain
+> `pnpm verify:crossing <dir>` without `--require-crossing`, and require phase
+> `expiry-observed`.** That phase already exists on this build —
+> `scripts/crossing-capture-common.mjs:171`, with its own `EXPIRY_NOT_PROVEN` and
+> `BASELINE_OR_CONTROL_CHANGED` guards. **A live `before-action` or
+> `crossing-refused` bundle also verifies with exit 0**, so an operator treating
+> exit 0 as the criterion could declare the expiry proven *before it happened*.
+>
+> TTL zero is still live: retain boundary observations and retry after both the
+> instance and persistent expiry ledgers have passed.
+>
+> *Corrected 2026-09-20 after review. An earlier version of this box said
+> `expiry-observed` was unpublished and coming in a separate change. That was
+> wrong — it is on `main` and has been. The claim came from grepping
+> `capture-crossing-probe.mjs`, finding the baseline-validation list
+> `['before-action', 'crossing-refused']`, and reading it as the full phase set.
+> The phase is assigned in a different file.*
 
 This costs nothing extra: the dispatches are already scheduled. What it buys is
 **a decay sequence rather than a single reading** — B measurably closer to expiry
