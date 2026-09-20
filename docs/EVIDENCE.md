@@ -5,6 +5,16 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03 — B crossing checkpoint (2026-09-20)
+
+[Verified B crossing bundle](evidence/2026-09-20-b-crossing/README.md): observed
+12:00:29.335 UTC / 19:00:29.335 WIB at ledger4,776,408, B instance17,279 remaining
+under the normal17,280 threshold. The engine/write guard refused B; strict replay
+returns `crossing-refused`, `qualifiesCrossing: true`. Five read-only RPC calls,
+A/shared controls live, no transaction or email. This independent operator-initiated
+capture supplies a live baseline for Monday. Three further B checkpoints, C's
+crossing and full decay acceptance remain open; D18-03 stays In progress.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
