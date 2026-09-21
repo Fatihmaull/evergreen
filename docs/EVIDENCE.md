@@ -15,6 +15,24 @@ A/shared controls live, no transaction or email. This independent operator-initi
 capture supplies a live baseline for Monday. Three further B checkpoints, C's
 crossing and full decay acceptance remain open; D18-03 stays In progress.
 
+### Second independent bundle, same checkpoint
+
+[Secondary B crossing bundle](evidence/2026-09-20-b-crossing-local/README.md): a
+separate capture of the same checkpoint from the other operator's machine, observed
+**12:06:59.653 UTC** at ledger **4,776,486**, B instance **17,201** remaining. Strict
+replay returns `crossing-refused`, `qualifiesCrossing: true`; all 31 runtime hashes
+match the bundle above, so either is usable as Monday's `--baseline`.
+
+**Two bundles, two machines, one checkpoint — deliberate redundancy on the least
+repeatable evidence in the sprint**, not a duplicate to be tidied away. The bundle
+above is the closer reading and is the primary record; this one is the independent
+confirmation.
+
+🔴 **Neither bundle timestamps the crossing itself.** The first actionable ledger is
+**4,776,407** by arithmetic (`endsAt − 17,280`; `needsAction` uses `<=`), and that is
+sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
+five-second cadence, and no drift figure is claimed. Both READMEs say so.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
