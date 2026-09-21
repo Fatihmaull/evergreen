@@ -1,0 +1,16 @@
+{
+  "command": [
+    "node",
+    "/tmp/evergreen-b-frozen-capture-20260920.mjs",
+    "capture",
+    "/home/rakhargo/projects/evergreen/.evergreen/crossing-session-20260920/B-20260921-0700"
+  ],
+  "startedAt": "2026-09-21T00:00:16.830439+00:00",
+  "displayedAt": "2026-09-21T00:00:20.615676+00:00",
+  "collectorExit": 0,
+  "collectorStdout": "{\"subject\":\"B\",\"observedAt\":\"2026-09-21T00:00:19.735Z\",\"phase\":\"crossing-refused\",\"qualifiesCrossing\":true,\"exitCode\":0,\"reason\":null}\n",
+  "collectorStderr": "",
+  "verifierExit": 0,
+  "verifierStdout": "{\"subject\":\"B\",\"observedAt\":\"2026-09-21T00:00:19.735Z\",\"phase\":\"crossing-refused\",\"qualifiesCrossing\":true,\"exitCode\":0,\"reason\":null}\n",
+  "verifierStderr": ""
+}

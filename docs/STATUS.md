@@ -2,14 +2,38 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-20 · first B crossing captured; publication/review tracked below
+**Last updated:** 2026-09-21 · B midday checkpoint captured with raw and visual evidence
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — September20 B checkpoint
+## Current — September21 midday B checkpoint
+
+Checkpoint3/4 observed06:00:30.776 UTC /13:00:30.776 WIB: B instance4,319 remaining
+at ledger4,789,368; `crossing-refused`, `qualifiesCrossing: true`.
+[Midday evidence](evidence/2026-09-21-b-crossing-0600/README.md) includes the complete
+sealed raw bundle and an inspected native terminal screenshot of its later replay.
+B/shared expiry ledgers unchanged, A/shared controls live, no transaction/email.
+All31 capture-runtime hashes unchanged; publication checks isolated. Sunday#206
+and morning#210 are merged. Final19:00 WIB expiry, C and acceptance remain open;
+D18-03 stays In progress. Notion sync remains pending from the unavailable source.
+
+## Reference — September21 morning B checkpoint
+
+Checkpoint 2/4 captured at 00:00:19.735 UTC / 07:00:19.735 WIB: ledger 4,785,046,
+B instance 8,641 remaining, `crossing-refused`, `qualifiesCrossing: true`.
+[Morning evidence](evidence/2026-09-21-b-crossing-0000/README.md) retains the sealed
+raw JSON/RPC and TXT bundle plus an inspected native terminal screenshot. A/shared
+controls live; expiry ledgers unchanged from Sunday. No transaction or email.
+Capture runtime retains all31 fingerprints without rebuild; publication worktree
+is separate. Sunday #206 is merged and its live baseline remains preserved.
+D18-03 stays In progress: today13:00/19:00 WIB, later C capture and final acceptance
+remain open. Notion D18-03 mirror sync remains pending (data-source unavailable
+in the most recent lookup); no completion is inferred from this checkpoint.
+
+## Reference — September20 B checkpoint
 
 B crossing observed at12:00:29.335 UTC, ledger4,776,408: instance17,279 remaining,
 normal threshold17,280, `crossing-refused` and `qualifiesCrossing: true`.

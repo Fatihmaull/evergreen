@@ -50,6 +50,26 @@ Strict verification of the original and publication copy both returned exit0,
 `crossing-refused`, `qualifiesCrossing: true`; fingerprints remained unchanged.
 The checksum inventory contains 21 entries per sealed bundle (22 files including
 `SHA256SUMS`). Keep notes and any later screenshots outside those directories.
+
+## `terminal-B-critical.png` — and the one line in it that misleads
+
+![B at CRITICAL](terminal-B-critical.png)
+
+A live `evergreen scan` of guinea-pig B taken on the day, showing `CRITICAL`,
+`remaining` **15,735** at ledger **4,777,952**, and the two-tier health line
+`warn below 120,960 · act below 17,280`.
+
+🔴 **The last line reads `ELIFECYCLE Command failed with exit code 1.` in red. Nothing
+failed.** `exit 1` is `EXIT_BELOW_THRESHOLD` — the scan reporting that an entry is below
+the action threshold, which is the finding this evidence exists to show. `pnpm` wraps
+any non-zero exit as *"Command failed"*, so the wrapper is describing a successful
+detection as an error.
+
+This is documented rather than recaptured, because the wrapper's behaviour is itself
+worth knowing: see [`CONVENTIONS.md` § A non-zero exit from our own tooling is usually a
+finding](../../CONVENTIONS.md). **For later captures, prefer
+`node packages/cli/dist/bin.js scan <id> ; echo "exit=$?"`** — same output, explicit exit
+code, no wrapper editorialising.
 A guard refusal has no transaction hash or explorer transaction screenshot.
 
 To verify on a matching runtime, run:

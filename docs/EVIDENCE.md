@@ -5,6 +5,25 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03 — B checkpoint 3 of 4 (2026-09-21 06:00 UTC)
+
+[Midday raw bundle and native terminal screenshot](evidence/2026-09-21-b-crossing-0600/README.md):
+observed06:00:30.776 UTC /13:00:30.776 WIB, ledger4,789,368, B instance4,319 remaining.
+Strict replay confirms `crossing-refused`, `qualifiesCrossing: true`. B/shared expiry
+ledgers unchanged; A/shared controls live. Full JSON/RPC, TXT and checksums retained
+with an actual terminal screenshot of the later labelled replay (not an image at
+the observation instant). No transaction/email. Final19:00 checkpoint and C remain.
+
+## W3-D18-03 — B checkpoint 2 of 4 (2026-09-21 00:00 UTC)
+
+[Morning bundle and native terminal screenshot](evidence/2026-09-21-b-crossing-0000/README.md):
+observed 00:00:19.735 UTC / 07:00:19.735 WIB, ledger 4,785,046. B instance remains
+live at 8,641 ledgers, down from Sunday's 17,279 with unchanged expiry. Strict
+replay confirms `crossing-refused`, `qualifiesCrossing: true`. Five raw read-only
+RPC calls, original JSON/TXT/checksums and the screenshot are retained together;
+A/shared controls live, no transaction or email. Two B checkpoints and C's
+required crossing remain; D18-03 stays In progress.
+
 ## W3-D18-03 — B crossing checkpoint (2026-09-20)
 
 [Verified B crossing bundle](evidence/2026-09-20-b-crossing/README.md): observed
