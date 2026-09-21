@@ -452,88 +452,65 @@ before Sunday, not a patch during it.
 
 ## Monday Sep 21 — the expiry
 
-> ## 🔴 What slot 4 actually looks like — read this BEFORE 19:00 WIB
+> ## 🔴 What an expired entry actually looks like — MEASURED 2026-09-21
 >
-> **No capture in this repository has ever observed an absent instance.** This code path
-> has not run on real data, so "something unexpected appeared" and "it worked" are
-> otherwise indistinguishable under time pressure. Derived from
-> `scripts/crossing-capture-common.mjs:125–172` and `packages/core/src/ttl.ts:72`,
-> 2026-09-21.
+> **An earlier version of this block was derived from a code read and was wrong.**
+> It said the instance would go *absent*, `scan` would report `entry-not-found` and
+> exit 3, and `EXPIRY_NOT_PROVEN` would be the wait case. **None of that happens.**
+> It was written to help an operator recognise success and it described a signature
+> that does not occur. Only observation could settle this, and observation was
+> impossible before the event — so the honest form would have been *"expected, from
+> a code read, not observed."* Replaced below with what was measured.
 >
-> ### The numbers that decide it
+> ### What is actually returned
 >
-> B has **two** entries that must both expire, one ledger apart:
->
-> | entry | ends at ledger |
-> |---|---|
-> | instance | **4,793,687** |
-> | persistent | **4,793,688** |
->
-> `hasExpired(r)` is `r < 0`, so **`remaining: 0` is still live.** Both entries must be
-> *past* their end, so `expiry-observed` needs an observed ledger of **4,793,689 or
-> higher**. Not 4,793,687.
->
-> ### ✅ Success — what you should see
+> The entry **is still returned**. It does not disappear:
 >
 > ```
-> pnpm capture:crossing --subject B --baseline <sunday-bundle>/capture --output <dir>
->   -> {"phase":"expiry-observed", ...}
-> pnpm verify:crossing <dir>          # NO --require-crossing
->   -> exit 0, phase expiry-observed
+> instance   ttl.status=known   endsAt=0   remaining=-4,796,976   exit 1
 > ```
 >
-> A manual `scan` at that point reports `entry-not-found` for B's instance and persistent,
-> with *"Absence is not proof of archival or deletion"*, and **exits 3**
-> (`EXIT_INCOMPLETE`). **Exit 3 is correct here**, not a failure.
+> `endsAt` is **zero** and `remaining` is `0 − observedLedger`, a large negative
+> number. The public `getLedgerEntries` contract permits a zero `liveUntilLedgerSeq`
+> for an entry that is no longer live; the v1 verifier was written expecting absence.
 >
-> ### ⏳ Wait and retry — B has not fully expired
+> ### What the v1 classifier does with it
 >
-> | You see | Why | Do |
-> |---|---|---|
-> | `crossing-refused` | B still resolves. Remaining 0 is still live | wait, re-run |
-> | `EXPIRY_NOT_PROVEN` | **the most likely one** — instance gone but persistent not yet past 4,793,688 | wait until the observed ledger is ≥ 4,793,689, re-run |
-> | `before-action` | should not happen while B is below threshold | re-run once; if it repeats, escalate |
+> `entry?.ttl.status === 'known'` is **true**, so it takes the **crossing** path, not
+> the expiry path. Then `hasExpired(remaining)` is true, and it returns:
 >
-> **None of these is a failure and none needs a workaround.** The window after expiry does
-> not close — retry is always correct.
->
-> ### 🔴 Stop and escalate — do not retry
->
-> | You see | What it means |
-> |---|---|
-> | `SUBJECT_EXPIRY_CHANGED` | **B's `endsAt` moved — B was extended.** The proof is destroyed |
-> | `BASELINE_OR_CONTROL_CHANGED` | **the shared `ContractCode` entry's `endsAt` changed — someone extended it.** Destroys C's proof too |
-> | `CONTROL_UNAVAILABLE` | A or the shared entry no longer live |
-> | `UNPINNED_RUNTIME` | the capture runtime changed under the baseline |
->
-> ### One that is neither
->
-> `BASELINE_REQUIRED` means `--baseline` was omitted. Fix the command and re-run — it is a
-> typo, not an incident.
-
-
-> 🔴 **TONIGHT'S CAPTURE IS A PREREQUISITE FOR THIS, NOT INSURANCE AGAINST IT.**
-> The expiry capture takes `--baseline` pointing at an earlier capture of B taken
-> while it was **still live**, and `capture-crossing-probe.mjs` refuses a baseline
-> that is a rehearsal, that carries its own baseline, or whose phase is not
-> `before-action` / `crossing-refused` (lines 57–61). **No live baseline, no expiry
-> proof** — "we observed it gone" without a verified reading of it alive is not the
-> claim.
->
-> ```bash
-> pnpm capture:crossing --subject B \
->   --baseline docs/evidence/2026-09-20-b-crossing/capture \
->   --output .evergreen/crossing/B-expiry
+> ```
+> {"phase":"unverified","reason":"INVALID_SUBJECT_TTL","exitCode":2}
 > ```
 >
-> **So do not clear `.evergreen/crossing/` between Sunday and Monday**, and if you
-> do, point `--baseline` at the committed copy under
-> `docs/evidence/2026-09-20-b-crossing/capture` instead — which is the reason §4
-> says to commit it the same day rather than at the end of the weekend.
+> **That is the expected result from the v1 tooling at expiry. It is not a failed
+> capture and not a broken chain** — it is a tool declining to classify an
+> observation it was not built to recognise. Retain it; do not retry hoping for a
+> different verdict, and do not force one.
 >
-> Neither this page nor `W3-D18-03-CAPTURE.md` stated the dependency; the flag
-> appears in a code block there with no explanation. Found by Rakha's audit,
-> written here 2026-09-20.
+> ### How the verdict is rendered
+>
+> `pnpm verify:expiry <dir>` (`W3-D18-03a`) assesses the sealed record offline and
+> emits `phase: expiry-observed` with `representation: "rpc-non-live-zero"`, while
+> **preserving** the original `recordedVerdict` as `unverified`. It requires a
+> verified live baseline, both end ledgers passed, and unchanged A/shared controls.
+>
+> ### 🔴 The same thing happens to C on 25–26 September
+>
+> Measured 2026-09-21: C's **instance ends at ledger 4,880,097** and its
+> **persistent at 4,880,099**. Expect exactly the shape above — entry returned,
+> `endsAt: 0`, `INVALID_SUBJECT_TTL` from the v1 verifier, `expiry-observed` from the
+> assessor. **Both** entries must be past, so the assessment needs a ledger **above
+> 4,880,099**.
+>
+> Capture at the slot, **retain the `unverified` verdict as evidence**, and run the
+> assessor. Do not wait for the entry to vanish; it will not.
+>
+> ### Still stop and escalate
+>
+> `SUBJECT_EXPIRY_CHANGED` (the subject was extended) · `BASELINE_OR_CONTROL_CHANGED`
+> (the shared code entry was extended — destroys the remaining proof) ·
+> `CONTROL_UNAVAILABLE` · `UNPINNED_RUNTIME`.
 
 - [ ] compare a current read with the recorded instance/persistent expiry ledgers. Remaining TTL zero is still live. If RPC no longer returns an entry after its known expiry, retain the actual missing-entry output and a successful A/shared control read; do not invent a CLI verdict or restore B to check it
 - [ ] 🔴 commit that scan in **its own dated directory**,

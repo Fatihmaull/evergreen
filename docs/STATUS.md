@@ -9,7 +9,24 @@
 
 ---
 
-## Current — September21 final B checkpoint blocked
+## Current — September21 final B checkpoint: observed, verdict unrenderable
+
+> 🔴 **This is a tooling gap, not an evidence gap, and the difference matters to
+> anyone opening this in October.**
+>
+> **The chain state at B's expiry was observed and recorded at the right moment** —
+> three read-only attempts at 12:00:35, 12:02:24 and 12:04:29 UTC, each with its
+> sealed bundle, raw RPC responses, embedded Sunday baseline and a native terminal
+> screenshot. The observation is complete and committed.
+>
+> What is missing is **a tool that can say "this is an expiry."** The v1 verifier was
+> written expecting an expired entry to be *absent*; the public `getLedgerEntries`
+> contract instead permits a returned entry with `liveUntilLedgerSeq: 0`, which is
+> what happened. The verifier therefore declines to classify a good observation.
+>
+> *"Slot 4 was missed"* and *"slot 4's verdict is unrenderable"* describe very
+> different situations. This is the second. `W3-D18-03a` closes it by assessing the
+> sealed record offline, without modifying the frozen verifier or any existing bundle.
 
 The19:00 checkpoint was collected with raw bundles and native screenshot, but three
 attempts reproduce `unverified` / `INVALID_SUBJECT_TTL`, exit2. The public RPC returns
