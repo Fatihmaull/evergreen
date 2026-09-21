@@ -2,14 +2,14 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-21 · final B observations retained; expiry acceptance blocked
+**Last updated:** 2026-09-22 · final B observations retained; separate expiry assessment ready for review
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — September21 final B checkpoint: observed, verdict unrenderable
+## Current — September21 final B observed; v1 verdict retained, separate assessment ready
 
 > 🔴 **This is a tooling gap, not an evidence gap, and the difference matters to
 > anyone opening this in October.**
@@ -19,14 +19,26 @@
 > sealed bundle, raw RPC responses, embedded Sunday baseline and a native terminal
 > screenshot. The observation is complete and committed.
 >
-> What is missing is **a tool that can say "this is an expiry."** The v1 verifier was
+> What the v1 tooling cannot do is **say "this is an expiry."** The verifier was
 > written expecting an expired entry to be *absent*; the public `getLedgerEntries`
 > contract instead permits a returned entry with `liveUntilLedgerSeq: 0`, which is
 > what happened. The verifier therefore declines to classify a good observation.
 >
 > *"Slot 4 was missed"* and *"slot 4's verdict is unrenderable"* describe very
-> different situations. This is the second. `W3-D18-03a` closes it by assessing the
+> different situations. This is the second. `W3-D18-03a` addresses it by assessing the
 > sealed record offline, without modifying the frozen verifier or any existing bundle.
+
+W3-D18-03a / #214 is published in #216 as a separate offline assessment. It first
+authenticates and replays the sealed original verdict with the existing verifier,
+then evaluates the documented non-live response using the verified same-subject
+live baseline and unchanged shared-code control. All three original final reads
+produce separate `expiry-observed` reports; their original `unverified` verdicts
+remain unchanged. Regression tests reject still-live/boundary data, absent or
+invalid baselines, control changes, malformed zero representations and tampered
+captures. Internal review and Fatih's comment-level technical verification are
+complete; formal PR review/merge and Shared acceptance remain open. Notion sync
+remains pending while the source is unavailable. See the
+[compatibility assessment](W3-D18-03a-EXPIRY-REASSESSMENT.md).
 
 The19:00 checkpoint was collected with raw bundles and native screenshot, but three
 attempts reproduce `unverified` / `INVALID_SUBJECT_TTL`, exit2. The public RPC returns
@@ -35,8 +47,8 @@ the current verifier only accepts their absence. [Evidence and interpretation](e
 No capture runtime changes, transaction or altered manifest. All31 fingerprints
 match; the live Sunday baseline remains verified. Three prior checkpoints passed,
 not four. D18-03 is Blocked on [#214](https://github.com/Fatihmaull/evergreen/issues/214);
-new W3-D18-03a is Pending for separate offline compatibility review/fix. C and final
-acceptance remain open. Notion sync/presence validation pending for D18-03 and new
+W3-D18-03a is In progress with #216 awaiting formal review/merge. C and final
+acceptance remain open. Notion sync/presence validation pending for D18-03 and
 D18-03a because the canonical data source was unavailable at the last lookup.
 
 ## Reference — September21 midday B checkpoint

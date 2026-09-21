@@ -95,6 +95,16 @@ The current verifier requires matching runtime fingerprints for both captures;
 keep the reviewed capture checkout stable across the window. If code must change,
 retain the original checkout and captures rather than editing their manifests.
 
+## Non-live RPC compatibility
+
+A returned entry with absolute `liveUntilLedgerSeq: 0` can be non-live even though
+its XDR is still present. The version1 collector may retain this as `unverified` /
+`INVALID_SUBJECT_TTL`; do not edit that sealed verdict or equate it with remaining
+TTL zero. Use the [separate offline expiry assessment](W3-D18-03a-EXPIRY-REASSESSMENT.md)
+to verify the original record and its live baseline under the documented response
+semantics. Keep its report outside the bundle. The command does not change the
+frozen runtime or perform a new chain operation.
+
 ## What the result means
 
 | Phase | Interpretation |

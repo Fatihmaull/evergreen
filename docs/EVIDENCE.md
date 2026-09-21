@@ -5,6 +5,15 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03a — offline expiry reassessment (local, pending review)
+
+[Separate assessments](evidence/2026-09-21-b-expiry-assessment/README.md) reproduce
+expiry-observed for the three retained final reads using the documented explicit
+non-live zero representation, verified live baseline and unchanged controls. The
+original sealed verdicts remain unverified and byte-identical. No new chain action.
+Compatibility code and reports await review/publication; Shared acceptance remains
+open in [#214](https://github.com/Fatihmaull/evergreen/issues/214).
+
 ## W3-D18-03 — final B checkpoint attempts (2026-09-21 12:00 UTC)
 
 [Original responses, failed verification and native screenshot](evidence/2026-09-21-b-crossing-1200/README.md):
