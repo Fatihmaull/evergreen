@@ -1,0 +1,6 @@
+{
+  "exitCode": 0,
+  "stdout": "{\"subject\":\"B\",\"observedAt\":\"2026-09-21T06:00:30.776Z\",\"phase\":\"crossing-refused\",\"qualifiesCrossing\":true,\"exitCode\":0,\"reason\":null}\n",
+  "stderr": "",
+  "displayedAt": "2026-09-21T06:05:06.169266+00:00"
+}
