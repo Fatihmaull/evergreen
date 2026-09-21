@@ -5,6 +5,16 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03 — final B checkpoint attempts (2026-09-21 12:00 UTC)
+
+[Original responses, failed verification and native screenshot](evidence/2026-09-21-b-crossing-1200/README.md):
+three attempts retained at12:00:35.746,12:02:24.652 and12:04:29 UTC. All classify
+`unverified` / `INVALID_SUBJECT_TTL`, exit2, despite a verified live baseline.
+RPC returns B instance/persistent entries with absolute `liveUntilLedgerSeq: 0`,
+a documented non-live representation the absence-based verifier does not accept.
+No transaction or runtime change. **Not expiry-observed and not4/4 accepted**;
+follow-up [#214](https://github.com/Fatihmaull/evergreen/issues/214), W3-D18-03a.
+
 ## W3-D18-03 — B checkpoint 3 of 4 (2026-09-21 06:00 UTC)
 
 [Midday raw bundle and native terminal screenshot](evidence/2026-09-21-b-crossing-0600/README.md):

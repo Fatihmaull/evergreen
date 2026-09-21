@@ -2,14 +2,27 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-21 · B midday checkpoint captured with raw and visual evidence
+**Last updated:** 2026-09-21 · final B observations retained; expiry acceptance blocked
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
 
 ---
 
-## Current — September21 midday B checkpoint
+## Current — September21 final B checkpoint blocked
+
+The19:00 checkpoint was collected with raw bundles and native screenshot, but three
+attempts reproduce `unverified` / `INVALID_SUBJECT_TTL`, exit2. The public RPC returns
+B instance/persistent data with `liveUntilLedgerSeq: 0` after the baseline end ledgers;
+the current verifier only accepts their absence. [Evidence and interpretation](evidence/2026-09-21-b-crossing-1200/README.md).
+No capture runtime changes, transaction or altered manifest. All31 fingerprints
+match; the live Sunday baseline remains verified. Three prior checkpoints passed,
+not four. D18-03 is Blocked on [#214](https://github.com/Fatihmaull/evergreen/issues/214);
+new W3-D18-03a is Pending for separate offline compatibility review/fix. C and final
+acceptance remain open. Notion sync/presence validation pending for D18-03 and new
+D18-03a because the canonical data source was unavailable at the last lookup.
+
+## Reference — September21 midday B checkpoint
 
 Checkpoint3/4 observed06:00:30.776 UTC /13:00:30.776 WIB: B instance4,319 remaining
 at ledger4,789,368; `crossing-refused`, `qualifiesCrossing: true`.
