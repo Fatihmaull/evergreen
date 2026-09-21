@@ -1,0 +1,26 @@
+guinea-pig B — crossing: what is observed vs what is calculated
+
+OBSERVED (sealed bundle, this directory)
+  capture started    2026-09-20T12:06:58.250Z
+  observedAt         2026-09-20T12:06:59.653Z
+  B observedAtLedger 4,776,486
+  B remaining        17,201   (threshold 17,280, needsAction uses <=)
+
+OBSERVED (Rakha's independent bundle, 2026-09-20-b-crossing/)
+  observedAt         2026-09-20T12:00:29.335Z
+  B observedAtLedger 4,776,408
+  B remaining        17,279
+
+CALCULATED — sound
+  first actionable ledger = endsAt 4,793,687 - 17,280 = 4,776,407
+  (ttl.ts:117 compares remainingLedgers <= thresholdLedgers)
+
+ESTIMATED — NOT a measurement
+  last reading above threshold: 11:58:28Z, ledger 4,776,384, remaining 17,303
+  23 ledgers x ~5s ~= 12:00:23Z
+
+  This assumes a constant five-second ledger cadence. Ledger close times vary.
+  No bundle timestamps ledger 4,776,407. Treat 12:00:23Z as an estimate.
+
+  An earlier version of this file stated it as an observed fact, and also claimed
+  zero drift. Both corrected 2026-09-20 after review.
