@@ -1,0 +1,17 @@
+{
+  "command": [
+    "node",
+    "/tmp/evergreen-b-frozen-capture-20260920.mjs",
+    "capture",
+    "/home/rakhargo/projects/evergreen/.evergreen/crossing-session-20260920/B-20260921-1900",
+    "/home/rakhargo/projects/evergreen/.evergreen/crossing-session-20260920/B-1900"
+  ],
+  "startedAt": "2026-09-21T12:00:32.990590+00:00",
+  "displayedAt": "2026-09-21T12:00:36.667672+00:00",
+  "collectorExit": 2,
+  "collectorStdout": "{\"subject\":\"B\",\"observedAt\":\"2026-09-21T12:00:35.746Z\",\"phase\":\"unverified\",\"qualifiesCrossing\":false,\"exitCode\":2,\"reason\":\"INVALID_SUBJECT_TTL\"}\n",
+  "collectorStderr": "",
+  "verifierExit": 2,
+  "verifierStdout": "{\"subject\":\"B\",\"observedAt\":\"2026-09-21T12:00:35.746Z\",\"phase\":\"unverified\",\"qualifiesCrossing\":false,\"exitCode\":2,\"reason\":\"INVALID_SUBJECT_TTL\"}\n",
+  "verifierStderr": ""
+}

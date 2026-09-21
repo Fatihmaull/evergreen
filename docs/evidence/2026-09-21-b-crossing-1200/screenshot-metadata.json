@@ -1,0 +1,12 @@
+{
+  "kind": "native-terminal-screenshot",
+  "observationTime": "2026-09-21T12:00:35.746Z",
+  "displayTime": "2026-09-21T12:00:36.667672+00:00",
+  "screenshotFile": "terminal-B-first-expiry-attempt.png",
+  "screenshotSha256": "3df2a4884be3dfc5ff258ed2121ad43815d11a34ed2dc533621e6c8ab924004e",
+  "sourceManifestSha256": "2f987a6fcfb219888fdf63ee47c2710860063cec2fbb5d0ae66fe767701bf30e",
+  "method": "Konsole live read-only capture plus actual offline verification; Spectacle active-window screenshot",
+  "visualInspection": "Correct terminal, unverified phase and exit2 visible, no unrelated desktop content",
+  "edited": false,
+  "qualification": "Not expiry-observed; not a passing checkpoint"
+}
