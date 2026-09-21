@@ -452,6 +452,66 @@ before Sunday, not a patch during it.
 
 ## Monday Sep 21 — the expiry
 
+> ## 🔴 What slot 4 actually looks like — read this BEFORE 19:00 WIB
+>
+> **No capture in this repository has ever observed an absent instance.** This code path
+> has not run on real data, so "something unexpected appeared" and "it worked" are
+> otherwise indistinguishable under time pressure. Derived from
+> `scripts/crossing-capture-common.mjs:125–172` and `packages/core/src/ttl.ts:72`,
+> 2026-09-21.
+>
+> ### The numbers that decide it
+>
+> B has **two** entries that must both expire, one ledger apart:
+>
+> | entry | ends at ledger |
+> |---|---|
+> | instance | **4,793,687** |
+> | persistent | **4,793,688** |
+>
+> `hasExpired(r)` is `r < 0`, so **`remaining: 0` is still live.** Both entries must be
+> *past* their end, so `expiry-observed` needs an observed ledger of **4,793,689 or
+> higher**. Not 4,793,687.
+>
+> ### ✅ Success — what you should see
+>
+> ```
+> pnpm capture:crossing --subject B --baseline <sunday-bundle>/capture --output <dir>
+>   -> {"phase":"expiry-observed", ...}
+> pnpm verify:crossing <dir>          # NO --require-crossing
+>   -> exit 0, phase expiry-observed
+> ```
+>
+> A manual `scan` at that point reports `entry-not-found` for B's instance and persistent,
+> with *"Absence is not proof of archival or deletion"*, and **exits 3**
+> (`EXIT_INCOMPLETE`). **Exit 3 is correct here**, not a failure.
+>
+> ### ⏳ Wait and retry — B has not fully expired
+>
+> | You see | Why | Do |
+> |---|---|---|
+> | `crossing-refused` | B still resolves. Remaining 0 is still live | wait, re-run |
+> | `EXPIRY_NOT_PROVEN` | **the most likely one** — instance gone but persistent not yet past 4,793,688 | wait until the observed ledger is ≥ 4,793,689, re-run |
+> | `before-action` | should not happen while B is below threshold | re-run once; if it repeats, escalate |
+>
+> **None of these is a failure and none needs a workaround.** The window after expiry does
+> not close — retry is always correct.
+>
+> ### 🔴 Stop and escalate — do not retry
+>
+> | You see | What it means |
+> |---|---|
+> | `SUBJECT_EXPIRY_CHANGED` | **B's `endsAt` moved — B was extended.** The proof is destroyed |
+> | `BASELINE_OR_CONTROL_CHANGED` | **the shared `ContractCode` entry's `endsAt` changed — someone extended it.** Destroys C's proof too |
+> | `CONTROL_UNAVAILABLE` | A or the shared entry no longer live |
+> | `UNPINNED_RUNTIME` | the capture runtime changed under the baseline |
+>
+> ### One that is neither
+>
+> `BASELINE_REQUIRED` means `--baseline` was omitted. Fix the command and re-run — it is a
+> typo, not an incident.
+
+
 > 🔴 **TONIGHT'S CAPTURE IS A PREREQUISITE FOR THIS, NOT INSURANCE AGAINST IT.**
 > The expiry capture takes `--baseline` pointing at an earlier capture of B taken
 > while it was **still live**, and `capture-crossing-probe.mjs` refuses a baseline
