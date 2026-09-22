@@ -2,54 +2,49 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-23 · Stage 2 no-go recorded; truthful signer guide ready
+**Last updated:** 2026-09-23 · CLI 0.1.0 release conflict resolving on current main; dashboard live
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **nine days out, four SOW evidence types do not exist** — npm package, live dashboard, demo video and npm links · ✅ **policy-signer guide truthfully supplies the D2 artifact while the named capability remains Partial** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Health:** 🟡 **nine days out, three SOW evidence types do not exist** — npm package, demo video and npm links · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
-## Current — Stage 2 no-go recorded; truthful guide ready
+## Current — W4-D27-02 CLI release preparation
+
+Rakha's npm authentication is live: `npm whoami` returns `rakhargo` and the
+`evergreen-stellar` org reports role `developer`. Fatih confirmed the first version
+as `0.1.0` in [#226](https://github.com/Fatihmaull/evergreen/issues/226) and independently
+proved the packed/clean-installed CLI exits 0/1/2/3 as the Action expects. The public
+package still returns `E404`; no version has been published or overwritten. The
+candidate is binary-only and the command remains `pnpm publish`, never
+`npm publish`. PR #227 is being rebased onto current main after #191 and #231–#234;
+the merged tree must be packed and verified again before any registry write. Notion
+sync remains pending until the release outcome merges.
+
+## Current — Stage 2 no-go recorded; truthful guide merged
 
 Fatih accepted Option 3 in #183: no-go for the direct passkey-kit adapter, no
 automatic OpenZeppelin pivot without separate enforcement evidence, retain the
 verified Stage 1 route, and ship policy scoping honestly as partial with full
-scoping deferred to SOW 2. ADR-002 records that outcome on main through #230.
+scoping deferred to SOW 2. ADR-002 records that outcome through #230; #191 merged
+the corresponding public guide and task reconciliation. No provider was deployed,
+no policy-signer transaction occurred and no historical evidence was rewritten.
+The remaining funder/lead scope conversation is a human action.
 
-PR #191 now carries the corresponding public guide and task reconciliation:
-D19-01/02/03 are dropped rather than left blocked, D20-01 is complete, the
-conditional D20-02 is dropped, and D20-03 supplies the required SOW §6.1 guide
-without claiming the absent capped-signer capability from §4.1. No provider was
-deployed, no policy-signer transaction occurred and no historical evidence was
-rewritten. The remaining funder/lead scope conversation is a human action. Notion
-sync remains pending until the repo change merges.
-
-## Current — web surface registered; the dashboard printed a wrong number for B and no longer does
+## Current — real dashboard live; web and CLI/engine ownership remain split
 
 **Two agents work this repository, split by path.** The standing statement of
 who owns what is in `BACKLOG.md` beside the web rows; neither track edits the
 other's paths, and nobody edits `docs/evidence/`.
 
-- **Registered:** the web surface and the five changes it needs from the
-  CLI/engine side, `W4-D22-03` to `W4-D22-19`, each (R) row tracked in an issue
-  (#194–#198). The web block carries its own cut order.
-- 🔴 **`D3.dashboard` starts blocking `pnpm check` on 2026-09-29.**
-  `check-sow-completeness.mjs` passes that row only when
-  `apps/dashboard/src/index.ts` is real; it is a 1,432-byte placeholder today,
-  and production still serves the 2,362-byte placeholder page. Landing the
-  dashboard is therefore on every track's critical path, not just the web one.
-- **A twelve-page preview exists** on `feat/W4-D22-02a-full-prototype` and is
-  not merged.
-- **What B's expiry revealed.** An archived entry is still returned with
-  `liveUntilLedgerSeq: 0`, so core reports `ttl.status: 'known'`,
-  `endsAtLedger: 0` and a large negative remaining, with `isExpired` alongside.
-  Twelve places in the web read those raw figures instead of the assessment and
-  printed `-4,810,562 ledgers` and `~Dec 18, 2025` — the failure this product
-  exists to name, in its own interface. Raw TTL is now confined to one module,
-  with a test that fails if that stops being true. **The CLI prints the same
-  fabricated figures, labelled `EXPIRED (archived)`; core returning a
-  fabricated zero as `status: 'known'` is unresolved and belongs to the
-  CLI/engine track.**
+- **The real dashboard merged in #234**, replacing the production placeholder
+  with twelve routes and making the SOW `D3.dashboard` evidence type present.
+- Browser scan/runtime guards cover route completeness, read-only bundling,
+  rendering and fabricated figures. Rent is available through the read-only path.
+- **Still on the CLI/engine track:** an archived entry may be returned with
+  `liveUntilLedgerSeq: 0`; core exposes raw zero/negative figures and the CLI can
+  print them while correctly labelling the entry expired. The dashboard confines
+  raw TTL reads and refuses to render those fabricated values.
 
 ## Current — original engine alert screenshots captured
 
