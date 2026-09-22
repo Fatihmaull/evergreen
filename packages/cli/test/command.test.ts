@@ -21,6 +21,54 @@ function dependencies(file = JSON.stringify({ dataKeys: DATA_KEYS })) {
 }
 
 describe('scan CLI', () => {
+  // `--threshold` is what `evergreen-check` sets in CI, so a repository can fail
+  // its build on ITS margin rather than ours. Everything here is a REPORTING
+  // change: no flag on `scan` can authorize a write.
+  describe('--threshold', () => {
+    it('grades against the value given, not the built-in default', async () => {
+      const healthy = await runCli(['scan', A, '--no-data-keys', '--json'], dependencies());
+      expect(healthy.exitCode).toBe(0);
+
+      // Above every remaining TTL in the fixture, so everything is below it.
+      const strict = await runCli(
+        ['scan', A, '--no-data-keys', '--threshold', '9999999', '--json'],
+        dependencies(),
+      );
+      expect(strict.exitCode).toBe(1);
+      const parsed = JSON.parse(strict.stdout) as { health: { thresholdLedgers: number } };
+      expect(parsed.health.thresholdLedgers).toBe(9999999);
+    });
+
+    it('carries the threshold into the report rather than only the exit code', async () => {
+      const result = await runCli(
+        ['scan', A, '--no-data-keys', '--threshold', '120960', '--json'],
+        dependencies(),
+      );
+      const parsed = JSON.parse(result.stdout) as { health: { thresholdLedgers: number } };
+      expect(parsed.health.thresholdLedgers).toBe(120960);
+    });
+
+    // A silently-ignored bad threshold is the dangerous failure: CI would go
+    // green against 17,280 while the repository believed it had asked for a
+    // week. Reject rather than fall back.
+    it.each([['0'], ['-5'], ['abc'], ['17_280'], ['1.5']])(
+      'refuses %s instead of falling back to the default',
+      async (value) => {
+        const result = await runCli(
+          ['scan', A, '--no-data-keys', '--threshold', value],
+          dependencies(),
+        );
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toContain('positive whole number of ledgers');
+      },
+    );
+
+    it('refuses a missing value rather than swallowing the next argument', async () => {
+      const result = await runCli(['scan', A, '--no-data-keys', '--threshold'], dependencies());
+      expect(result.exitCode).toBe(2);
+    });
+  });
+
   it('emits four entry kinds and coverage as valid JSON without human text', async () => {
     const deps = dependencies();
     const result = await runCli(['scan', A, '--keys-file', 'keys.json', '--json'], deps);

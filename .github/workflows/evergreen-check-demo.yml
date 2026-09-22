@@ -1,0 +1,66 @@
+# The evergreen-check Action, run against a real Testnet contract twice:
+# once where it must pass, once where it must fail.
+#
+# This is the evidence for W4-D25-03 ("screenshot a red run and a green one")
+# and for README outcome 3 — a stranger adding the check to CI and seeing it
+# both pass AND fail.
+#
+# Both jobs scan guinea-pig A, and only the THRESHOLD differs. That is honest
+# rather than staged: the claim being demonstrated is "the job fails when an
+# entry is at or below the threshold you configured", and a configured threshold
+# above A's remaining TTL is exactly that claim. It is NOT a claim that A is
+# decaying — A runs to ~December and nothing here says otherwise.
+#
+# Doing it this way needs no dedicated failure contract (guinea-pig D,
+# W4-D25-01b), so the Action's red run no longer waits on a deployment.
+#
+# Read-only throughout: `scan` never signs or submits. guinea-pig B and C must
+# never appear here.
+#
+# Manual only. Until @evergreen-stellar/cli is published both jobs fail on
+# `npx` with E404 — that is the dependency, not a defect in the Action.
+#
+# ⚠ THE GREEN JOB HAS AN EXPIRY. A's binding entry is the SHARED CODE entry
+# (478,780 ledgers left on 2026-09-22), not its instance. It reaches the
+# 17,280 default roughly 26 days later — derived at an assumed ~5 s/ledger,
+# so around 2026-10-18 — and from then "green" goes red for a true reason.
+# That is after submission, and W3-D18-02d (extend the shared code entry) is
+# what keeps it green. Re-read this before recording anything after mid-October.
+name: evergreen-check demo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  green:
+    name: green · must pass
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+          # require-declared-scope is on by default, so A's persistent and
+          # temporary keys must be named or the job exits 3 for the wrong
+          # reason. Read from committed evidence, never copied or edited.
+          keys-file: docs/evidence/2026-09-08-scan-entry-types/data-keys.json
+
+  red:
+    name: red · must fail (threshold above A's remaining TTL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+          keys-file: docs/evidence/2026-09-08-scan-entry-types/data-keys.json
+          # Measured 2026-09-22: A's instance has 1,558,187 ledgers left, its
+          # persistent and temporary entries ~1,213,520, and the shared code
+          # entry 478,754. 2,000,000 is above all four, so every entry is at or
+          # below it and the job must fail — verified locally, exit 1.
+          threshold: '2000000'
