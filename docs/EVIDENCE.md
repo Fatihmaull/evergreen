@@ -91,11 +91,19 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Status at a glance
 
+> 📄 **The SOW is now in the repository** — [`docs/SOW.md`](SOW.md), source at [`docs/sow/`](sow/). Until 2026-09-22 every requirement below was a restatement of a document nobody here could open. The restatements were checked clause by clause against the source and were substantively accurate; **`alert screenshots` is verbatim.**
+>
+> 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
+
+**Measured 2026-09-22, ten days out. 6 of 13 requirements met, 3 partial, 4 absent.**
+
 | Deliverable | Evidence required (SOW §6.1) | State |
 |---|---|---|
-| **1 — Core CLI** | Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 W1 instance-scan snapshot captured; full CLI and npm release remain W2/W4 |
-| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 Manual/permissionless foundation evidence recorded; unattended engine proofs remain W3 |
-| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 Hosting placeholder live; functional dashboard, product Action and release artifacts remain W4 |
+| **1 — Core CLI** | Public repo, npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 **3 of 4.** Repo, screenshots ([13 PNGs](evidence/2026-09-14-d1-capture/README.md)) and coverage are met. ❌ **npm package unpublished** — `@evergreen-stellar/cli` returns 404 |
+| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 **2 of 4.** Tx hashes and engine logs met. ❌ **zero alert screenshots exist** — `mailboxScreenshotCaptured: false`; ❌ **`POLICY-SIGNER.md` is a self-declared stub**, untouched since 2026-09-08 |
+| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🔴 **0 of 5 complete.** Dashboard URL serves a 2,356-byte placeholder; ❌ **zero `action.yml` repo-wide**; demo is a script skeleton; docs partial; npm links blocked on D1 |
+
+> ⚠️ **All 17 `pnpm check` gates pass while four requirements have no artifact at all.** Every gate verifies evidence *integrity* — checksums, reciprocity, secrets, cadence. **None verifies completeness against §6.1.** Nothing here goes red on a missing package, a missing Action or a missing screenshot. The screenshot index below, with 6 of 8 rows blank, is the closest thing to a completeness signal and it fails silently by being empty.
 
 ## Deliverable 1 — readiness at the Sep 16 gate
 
@@ -180,7 +188,9 @@ Conditions, all four:
 
 ### 4 — Test coverage report ✅
 
-[Committed 2026-09-10](evidence/2026-09-10-coverage/README.md). 93.95% statements, 85.71% branches, 98.85% functions, 95.28% lines.
+[Committed 2026-09-10](evidence/2026-09-10-coverage/README.md). **93.24% statements, 85.29% branches, 97.64% functions, 94.57% lines** — read from `coverage-report.txt` in that bundle.
+
+> 🔴 **Corrected 2026-09-22.** This line read `93.95 / 85.71 / 98.85 / 95.28` from the day it was written (2026-09-12) until today. **All four numbers were inflated above the artifact the same sentence links to**, and `BACKLOG.md` quoted the artifact correctly the whole time, so the canonical list and the evidence index disagreed on a figure in the SOW §6.1 Deliverable 1 row. Later full-repo runs measured higher again (`94.32 / 90.10 / 95.06 / 96.47` on 2026-09-14; `94.31 / 90.32 / 94.40 / 96.42` on 2026-09-19) — **those are different runs, not this artifact**, and are not quoted here. There is no `check:coverage-quotes` guard; `check:cadence` covers only scheduler figures, and only in `.md`.
 
 **Correction, 2026-09-12.** From Sep 10 to Sep 12 this section and the check-in deck both said the floor was *"enforced in CI"*. **It was not.** The thresholds were configured in `vitest.config.ts`, but `pnpm check` ran `vitest run` without `--coverage`, so they were never evaluated. Proved by setting `statements: 99.9` — impossible — and watching `pnpm check` pass clean.
 
@@ -261,7 +271,7 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 |---|---|---|---|---|---|---|---|
 | 2026-09-12 | W2-D11-02 | manual CLI instance extension succeeded; expiry +1,002 ledgers | guinea-pig A instance | Rakha dev key | [e18e0822…](https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a) | [Full SUCCESS RPC](evidence/2026-09-12-manual-extend-proof/live/14-getTransaction-response.json) | [Screenshot](evidence/2026-09-12-manual-extend-proof/explorer.jpg) |
 | | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
-| | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
+| 2026-09-14 | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | [dae63da8…](https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128) | [Full SUCCESS RPC](evidence/2026-09-14-scheduled-a-save/README.md) | [Screenshot](evidence/2026-09-14-scheduled-a-save/explorer.jpg) |
 | | **W3-D18-02b** | **natural-decay proof — detection + guard refusal; B is NOT bumped** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(crossing ~Sep 20 12:00 UTC, expiry ~Sep 21 12:00 UTC)* | ⬜ | ⬜ |
 | | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
