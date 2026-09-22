@@ -1,0 +1,160 @@
+# evergreen-check — fail a CI job when a Soroban contract's TTL is running out.
+#
+# Usage, in any repository:
+#
+#   - uses: Fatihmaull/evergreen@v1
+#     with:
+#       contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+#       threshold: 120960   # optional; ledgers, default 17,280 (~1 day)
+#
+# Read-only. It scans with the published `@evergreen-stellar/cli` and never
+# signs, submits or extends anything — an exit status never authorizes a write.
+#
+# SECURITY: every input reaches the shell through `env`, never through `${{ }}`
+# interpolation inside a `run:` body. This action runs in other people's CI, and
+# an input interpolated into a script is a script-injection vector for anyone
+# who can influence a workflow's `with:` values.
+name: evergreen-check
+description: Fail the job when any watched Soroban ledger entry is at or below your TTL threshold.
+author: Apex (Fatih Maulana, Rakha Dhifiargo)
+branding:
+  icon: clock
+  color: green
+
+inputs:
+  contracts:
+    description: One or more Soroban contract IDs (C…, 56 characters), separated by spaces or newlines.
+    required: true
+  threshold:
+    description: >-
+      Act-now threshold in LEDGERS. An entry at or below it fails the job — the boundary is
+      inclusive. Default 17,280 (~1 day at ~5 s/ledger). Both health tiers move with it.
+    required: false
+    default: '17280'
+  keys-file:
+    description: >-
+      Path to a JSON file `{ "dataKeys": [...] }` listing the contract's persistent and temporary
+      ledger keys. Exactly one contract when set. Without it (or no-data-keys) the scan can read
+      only the instance and code entries.
+    required: false
+    default: ''
+  no-data-keys:
+    description: >-
+      'true' to declare that the contract has no data keys beyond its instance. A caller
+      declaration — only the contract's author can know it. Mutually exclusive with keys-file.
+    required: false
+    default: 'false'
+  require-declared-scope:
+    description: >-
+      'true' (the default) fails the job when a contract's data-key scope was not declared via
+      keys-file or no-data-keys. Leave it on for a contract you own: without it, a green build
+      means only "the entries I could see are healthy" and says nothing about persistent storage.
+    required: false
+    default: 'true'
+  version:
+    description: Version of @evergreen-stellar/cli to run. Pin it for reproducible CI.
+    required: false
+    default: latest
+
+outputs:
+  exit-code:
+    description: '0 healthy · 1 at or below threshold · 2 error · 3 scan incomplete'
+    value: ${{ steps.scan.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: '24'
+
+    - id: scan
+      shell: bash
+      env:
+        EVERGREEN_CONTRACTS: ${{ inputs.contracts }}
+        EVERGREEN_THRESHOLD: ${{ inputs.threshold }}
+        EVERGREEN_VERSION: ${{ inputs.version }}
+        EVERGREEN_KEYS_FILE: ${{ inputs.keys-file }}
+        EVERGREEN_NO_DATA_KEYS: ${{ inputs.no-data-keys }}
+        EVERGREEN_REQUIRE_SCOPE: ${{ inputs.require-declared-scope }}
+      run: |
+        set -uo pipefail
+
+        # Validate BEFORE anything runs. A malformed input is an error in the
+        # caller's workflow and must fail loudly, never fall back to a default:
+        # a CI check that silently graded against 17,280 while the repository
+        # believed it had asked for a week is worse than no check at all.
+        if ! [[ "$EVERGREEN_THRESHOLD" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error title=evergreen-check::threshold must be a positive whole number of ledgers, got '$EVERGREEN_THRESHOLD'"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+        fi
+        if ! [[ "$EVERGREEN_VERSION" =~ ^(latest|[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?)$ ]]; then
+          echo "::error title=evergreen-check::version must be 'latest' or a semver, got '$EVERGREEN_VERSION'"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+        fi
+        read -r -a ids <<< "$(echo "$EVERGREEN_CONTRACTS" | tr '\n' ' ')"
+        if [ "${#ids[@]}" -eq 0 ]; then
+          echo "::error title=evergreen-check::no contract IDs given"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+        fi
+        for id in "${ids[@]}"; do
+          if ! [[ "$id" =~ ^C[A-Z2-7]{55}$ ]]; then
+            echo "::error title=evergreen-check::not a contract ID: '$id'"
+            echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+          fi
+        done
+
+        flags=(--threshold "$EVERGREEN_THRESHOLD")
+        for pair in "no-data-keys=$EVERGREEN_NO_DATA_KEYS" "require-declared-scope=$EVERGREEN_REQUIRE_SCOPE"; do
+          case "${pair#*=}" in
+            true|false) ;;
+            *) echo "::error title=evergreen-check::${pair%%=*} must be 'true' or 'false', got '${pair#*=}'"
+               echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2 ;;
+          esac
+        done
+        if [ -n "$EVERGREEN_KEYS_FILE" ]; then
+          if [ ! -f "$EVERGREEN_KEYS_FILE" ]; then
+            echo "::error title=evergreen-check::keys-file not found: '$EVERGREEN_KEYS_FILE'"
+            echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+          fi
+          flags+=(--keys-file "$EVERGREEN_KEYS_FILE")
+        fi
+        [ "$EVERGREEN_NO_DATA_KEYS" = true ] && flags+=(--no-data-keys)
+        # On by default — see the input's description. This is what
+        # packages/cli/README.md has promised evergreen-check does since the flag
+        # was introduced.
+        [ "$EVERGREEN_REQUIRE_SCOPE" = true ] && flags+=(--require-declared-scope)
+
+        set +e
+        npx --yes "@evergreen-stellar/cli@${EVERGREEN_VERSION}" scan "${ids[@]}" \
+          "${flags[@]}" 2>&1 | tee evergreen-check.log
+        code=${PIPESTATUS[0]}
+        set -e
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+
+        # A summary a reviewer can read without opening the log.
+        case "$code" in
+          0) verdict="✅ **Healthy** — every entry scanned is above ${EVERGREEN_THRESHOLD} ledgers." ;;
+          1) verdict="🔴 **At or below threshold** — at least one entry has ${EVERGREEN_THRESHOLD} ledgers or fewer left. Extend it before it archives." ;;
+          3) verdict="⚠️ **Scan incomplete** — an entry was missing, its TTL was unavailable, or the contract's data-key scope was not declared (set keys-file or no-data-keys). Not a pass." ;;
+          *) verdict="❌ **Error** — the scan did not complete. See the log." ;;
+        esac
+        {
+          echo "### evergreen-check"
+          echo
+          echo "$verdict"
+          echo
+          echo "Threshold: \`${EVERGREEN_THRESHOLD}\` ledgers · CLI \`@evergreen-stellar/cli@${EVERGREEN_VERSION}\` · exit \`$code\`"
+          echo
+          echo '<details><summary>Scan output</summary>'
+          echo
+          echo '```'
+          cat evergreen-check.log
+          echo '```'
+          echo '</details>'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        # 1 and 3 fail the job as well as 2: an incomplete scan is not evidence
+        # of health, and treating it as a pass is the failure mode this exists
+        # to prevent.
+        exit "$code"

@@ -23,7 +23,7 @@ import {
 const DEFAULT_EXTEND_LEDGERS = 518_400;
 
 const USAGE =
-  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]';
+  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]';
 const HELP = `${USAGE}
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
@@ -50,6 +50,16 @@ Precedence: 2 > 3 > 1 > 0. Exit status never authorizes a transaction.
 Scanning reads the keys it is given; it cannot enumerate a contract's storage,
 so a clean exit means "everything I was asked to check is healthy" and never
 "this contract is fully healthy". Coverage is printed with every scan.
+
+--threshold N         act-now threshold in LEDGERS, default 17,280 (~1 day).
+                      What evergreen-check sets in CI: a repository that wants
+                      a week of warning fails its build at 120,960, not at ours.
+                      Both health tiers move with it — WARNING widens as the
+                      action threshold rises, so raising it never silently
+                      narrows the earlier warning. Exit 1 means an entry is at
+                      or below this value; the boundary is inclusive, because
+                      remaining exactly N is already the margin you set out to
+                      keep. Changes what is REPORTED and never what is written.
 
 --no-data-keys        assert this contract has no data keys beyond its instance.
                       Only its author can know that; it is a caller declaration
@@ -174,6 +184,7 @@ export async function runCli(
   let noDataKeys = false;
   let requireDeclaredScope = false;
   let keysPath: string | undefined;
+  let thresholdLedgers = DEFAULT_THRESHOLD_LEDGERS;
   for (let i = argIndex; i < args.length; i++) {
     if (args[i] === '--json' && !asJson) asJson = true;
     else if (args[i] === '--cost' && !withCost) withCost = true;
@@ -185,6 +196,13 @@ export async function runCli(
         return fail(`--ledgers needs a positive whole number of ledgers.\n${USAGE}`);
       }
       additionalLedgers = parsed;
+    } else if (args[i] === '--threshold') {
+      const raw = args[++i];
+      const parsed = Number(raw);
+      if (!raw || !/^\d+$/.test(raw) || !Number.isInteger(parsed) || parsed <= 0) {
+        return fail(`--threshold needs a positive whole number of ledgers.\n${USAGE}`);
+      }
+      thresholdLedgers = parsed;
     } else if (args[i] === '--no-data-keys' && !noDataKeys) noDataKeys = true;
     else if (args[i] === '--require-declared-scope' && !requireDeclaredScope)
       requireDeclaredScope = true;
@@ -300,7 +318,7 @@ export async function runCli(
           ? JSON.stringify(
               {
                 ...result,
-                health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS),
+                health: healthReport(result, thresholdLedgers),
                 ...(optimization === undefined ? {} : { optimization }),
               },
               null,
@@ -308,10 +326,10 @@ export async function runCli(
             )
           : `${formatHuman(result, dependencies.now(), {
               color: dependencies.color === true,
-              thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
+              thresholdLedgers,
             })}\n\n! Could not price an extend: the network declined to simulate it.\n  The TTL results above are unaffected.${optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`}`,
         stderr: '',
-        exitCode: exitCodeFor(result, DEFAULT_THRESHOLD_LEDGERS, { requireDeclaredScope }),
+        exitCode: exitCodeFor(result, thresholdLedgers, { requireDeclaredScope }),
       };
     }
   }
@@ -324,7 +342,7 @@ export async function runCli(
         JSON.stringify(
           {
             ...result,
-            health: healthReport(result, DEFAULT_THRESHOLD_LEDGERS),
+            health: healthReport(result, thresholdLedgers),
             ...(cost === undefined ? {} : { cost }),
             ...(optimization === undefined ? {} : { optimization }),
           },
@@ -333,13 +351,13 @@ export async function runCli(
         )
       : formatHuman(result, dependencies.now(), {
           color: dependencies.color === true,
-          thresholdLedgers: DEFAULT_THRESHOLD_LEDGERS,
+          thresholdLedgers,
         }) +
         (cost === undefined ? '' : `\n\n${formatCost(cost).join('\n')}`) +
         (optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`),
     stderr: '',
     // Same constant the display grades against, so the printed health and the
     // exit code can never describe different thresholds.
-    exitCode: exitCodeFor(result, DEFAULT_THRESHOLD_LEDGERS, { requireDeclaredScope }),
+    exitCode: exitCodeFor(result, thresholdLedgers, { requireDeclaredScope }),
   };
 }
