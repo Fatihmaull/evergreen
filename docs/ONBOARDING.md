@@ -61,7 +61,7 @@ Compute in **ledgers**. Convert to wall-clock only at the display edge. **Never 
 
 Naming carries the unit: `remainingLedgers`, `liveUntilLedgerSeq`, `estimatedRentStroops`. Never a bare `cost` or `ttl`.
 
-**Temporary entries are a trap of their own.** Measured floors: persistent/instance/code get ~120,927 ledgers (~7 days); **temporary gets 688 (~57 minutes)** — two orders of magnitude — and temporary entries are **deleted, not archived**, so they cannot be restored. Reporting "gone" for restorable data, or "recoverable" for deleted data, is a serious UX bug.
+**Temporary entries are a trap of their own.** Network minimums, read from the live configuration rather than inferred: persistent/instance/code get **120,960** ledgers (~7 days); **temporary gets 720 (~60 minutes)** — two orders of magnitude — and temporary entries are **deleted, not archived**, so they cannot be restored. *(This said 688 until 2026-09-22. 688 was the remaining TTL of a fixture sampled 31 ledgers after creation, not a floor; `min_temporary_ttl` is 720, and `W1-D4-13` confirmed the inclusive 720-ledger lifetime directly at the L/L+1 boundary. `SOROBAN-PRIMER.md` carried the correction from 2026-09-05 and it never reached here.)* Reporting "gone" for restorable data, or "recoverable" for deleted data, is a serious UX bug.
 
 ### 3. Testnet only — and the guard is deliberate friction
 
