@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Soroban state-archival autopilot \u2014 monitor TTL, predict archival, extend automatically.",
+  "description": "Soroban state-archival autopilot — monitor TTL, predict archival, extend automatically.",
   "license": "MIT",
   "engines": {
     "node": ">=24",
@@ -23,7 +23,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "check": "pnpm check:locale && pnpm check:links && pnpm check:schedule && pnpm check:cadence && pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm check:evidence && pnpm check:crossing && pnpm check:workflows && pnpm lint && pnpm format:check && pnpm test",
+    "check": "pnpm check:locale && pnpm check:links && pnpm check:schedule && pnpm check:cadence && pnpm check:conflicts && pnpm check:task-ids && pnpm check:policy && pnpm typecheck && pnpm check:bundle && pnpm check:publish && pnpm check:backlog && pnpm check:evidence && pnpm check:crossing && pnpm check:sow && pnpm check:workflows && pnpm lint && pnpm format:check && pnpm test",
     "scheduler:smoke": "node scripts/scheduler-smoke.mjs",
     "engine:run": "node scripts/engine-run.mjs",
     "test:scheduler": "node --test --test-isolation=none scripts/scheduler-smoke.test.mjs",
@@ -66,7 +66,8 @@
     "check:cadence": "node scripts/check-cadence-quotes.mjs",
     "measure:cadence": "pnpm build && node scripts/measure-scheduler-cadence.mjs",
     "verify:expiry": "node scripts/reassess-expiry-capture.mjs",
-    "test:expiry-assessment": "node --test --test-isolation=none scripts/reassess-expiry-capture.test.mjs"
+    "test:expiry-assessment": "node --test --test-isolation=none scripts/reassess-expiry-capture.test.mjs",
+    "check:sow": "node scripts/check-sow-completeness.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

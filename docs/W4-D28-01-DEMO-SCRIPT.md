@@ -128,7 +128,7 @@ Then B expired. That was the plan.
 
 <!-- BEGIN GENERATED: crossing-schedule (compact) -->
 
-4 captures — 2026-09-20 12:00 (17,280 left) → 2026-09-21 00:00 (8,640 left) → 2026-09-21 06:00 (4,320 left) → 2026-09-21 12:00 (0 left) — each showing guinea-pig B closer to expiry with the guard refusing every time.
+4 captures — 2026-09-25 12:00 (17,280 left) → 2026-09-26 00:00 (8,640 left) → 2026-09-26 06:00 (4,320 left) → 2026-09-26 12:00 (0 left) — each showing guinea-pig C closer to expiry with the guard refusing every time. Threshold 2026-09-25, **expiry 2026-09-26**.
 
 <!-- END GENERATED: crossing-schedule -->
 ⟧
