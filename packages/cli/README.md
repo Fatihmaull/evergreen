@@ -134,10 +134,9 @@ The public npm package is `@evergreen-stellar/cli`, with command name `evergreen
 `publishConfig.access: public` is part of the package manifest. The `scan` command
 is read-only and submits no transactions.
 
-
 ## Manual extension (Testnet)
 
-Build with `pnpm typecheck`, then simulate using your funded public Testnet payer:
+Simulate using your funded public Testnet payer; the package is already built:
 
 ```bash
 npx @evergreen-stellar/cli extend <contract-id> --ledgers 1000 --source-account <G-public-account> --json
