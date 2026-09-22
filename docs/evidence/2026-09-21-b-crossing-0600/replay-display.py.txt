@@ -1,0 +1,18 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import subprocess,json
+root=Path('/home/rakhargo/projects/evergreen')
+out=root/'.evergreen/crossing-session-20260920/B-20260921-1300-visual'
+cap=root/'.evergreen/crossing-session-20260920/B-20260921-1300'
+print('EVERGREEN | B CHECKPOINT 3/4 | MONDAY 13:00 WIB',flush=True)
+print('MIDDAY CAPTURE RESULT / OFFLINE REPLAY -- ORIGINAL OBSERVATION TIME BELOW',flush=True)
+print('Displayed at: '+datetime.now(timezone.utc).isoformat(),flush=True)
+print('Command: cat B-20260921-1300/stdout.txt; frozen verifier replay B-20260921-1300\n',flush=True)
+print((cap/'stdout.txt').read_text(),flush=True)
+r=subprocess.run(['node','/tmp/evergreen-b-frozen-capture-20260920.mjs','verify',str(cap)],cwd=root,text=True,capture_output=True)
+print('ACTUAL VERIFIER OUTPUT:',flush=True)
+print(r.stdout,end='',flush=True)
+print(r.stderr,end='',flush=True)
+print('Verifier exit code:',r.returncode,flush=True)
+print('\nRead-only preparation. No rebuild, transaction, or new chain capture.',flush=True)
+(out/'verification.json').write_text(json.dumps({'exitCode':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'displayedAt':datetime.now(timezone.utc).isoformat()},indent=2)+'\n')

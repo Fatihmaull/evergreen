@@ -1,0 +1,18 @@
+# guinea-pig B crossing probe
+observed:   2026-09-20T12:00:29.335Z
+subject:    CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+expires:    2026-09-21 (alert threshold 2026-09-20)
+threshold:  17,280 ledgers
+mode:       dry-run   decisions: 3
+
+SKIP   AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+       HEALTHY — Above threshold. 1,593,853 ledgers remaining.
+SKIP   AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB
+       REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig B (CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ).
+SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+       HEALTHY — Above threshold. 514,421 ledgers remaining.
+
+✓ guinea-pig B was REFUSED BY WRITE GUARD, and the refusal is in this record.
+  Commit this output under docs/evidence/ — an artifact is a log, a commit is evidence.
+
+Nothing was signed and nothing was submitted.

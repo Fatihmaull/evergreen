@@ -1,0 +1,33 @@
+from pathlib import Path
+from datetime import datetime,timezone
+import subprocess,json,sys
+root=Path('/home/rakhargo/projects/evergreen')
+cap=root/'.evergreen/crossing-session-20260920/B-20260921-1300'
+out=root/'.evergreen/crossing-session-20260920/B-20260921-1300-visual'
+runner='/tmp/evergreen-b-frozen-capture-20260920.mjs'
+now=datetime.now(timezone.utc)
+if now<datetime(2026,9,21,6,0,tzinfo=timezone.utc):sys.exit('Checkpoint not due yet')
+print('EVERGREEN | W3-D18-03 | B CHECKPOINT 3/4 | MON 21 SEPTEMBER 13:00 WIB',flush=True)
+print('Live read-only capture, followed by offline verification. No transaction.',flush=True)
+print('Started UTC:',now.isoformat(),flush=True)
+command=['node',runner,'capture',str(cap)]
+print('$ '+' '.join(command),flush=True)
+r=subprocess.run(command,cwd=root,text=True,capture_output=True)
+print(r.stdout,end='',flush=True);print(r.stderr,end='',flush=True)
+print('Collector exit:',r.returncode,flush=True)
+if not (cap/'result.json').exists():sys.exit(r.returncode or 2)
+v=json.loads((cap/'result.json').read_text());o=v.get('observation',{});probe=o.get('probe',{})
+print('\nRECORDED PRODUCER STDOUT:',flush=True)
+print((cap/'stdout.txt').read_text(),flush=True)
+if o.get('controls'):
+ print('CONTROL LEDGER:',o['controls']['ledger'],flush=True)
+ for e in probe.get('run',{}).get('scan',{}).get('entries',{}).values():
+  ttl=e.get('ttl',{});print('Entry',e['kind'],'| contracts',','.join(e['contracts']),'| remaining',ttl.get('remainingLedgers'),'| expires at',ttl.get('endsAtLedger'),flush=True)
+print('\n$ frozen verifier replay '+str(cap),flush=True)
+vr=subprocess.run(['node',runner,'verify',str(cap)],cwd=root,text=True,capture_output=True)
+print(vr.stdout,end='',flush=True);print(vr.stderr,end='',flush=True)
+print('Verifier exit:',vr.returncode,flush=True)
+end=datetime.now(timezone.utc).isoformat();print('Displayed UTC:',end,flush=True)
+print('Screenshot accompanies original JSON/RPC + TXT + checksums; it does not replace them.',flush=True)
+(out/'terminal-result.json').write_text(json.dumps({'command':command,'startedAt':now.isoformat(),'displayedAt':end,'collectorExit':r.returncode,'collectorStdout':r.stdout,'collectorStderr':r.stderr,'verifierExit':vr.returncode,'verifierStdout':vr.stdout,'verifierStderr':vr.stderr},indent=2)+'\n')
+sys.exit(vr.returncode or r.returncode)

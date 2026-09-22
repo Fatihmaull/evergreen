@@ -61,7 +61,7 @@ Compute in **ledgers**. Convert to wall-clock only at the display edge. **Never 
 
 Naming carries the unit: `remainingLedgers`, `liveUntilLedgerSeq`, `estimatedRentStroops`. Never a bare `cost` or `ttl`.
 
-**Temporary entries are a trap of their own.** Measured floors: persistent/instance/code get ~120,927 ledgers (~7 days); **temporary gets 688 (~57 minutes)** — two orders of magnitude — and temporary entries are **deleted, not archived**, so they cannot be restored. Reporting "gone" for restorable data, or "recoverable" for deleted data, is a serious UX bug.
+**Temporary entries are a trap of their own.** Network minimums, read from the live configuration rather than inferred: persistent/instance/code get **120,960** ledgers (~7 days); **temporary gets 720 (~60 minutes)** — two orders of magnitude — and temporary entries are **deleted, not archived**, so they cannot be restored. *(This said 688 until 2026-09-22. 688 was the remaining TTL of a fixture sampled 31 ledgers after creation, not a floor; `min_temporary_ttl` is 720, and `W1-D4-13` confirmed the inclusive 720-ledger lifetime directly at the L/L+1 boundary. `SOROBAN-PRIMER.md` carried the correction from 2026-09-05 and it never reached here.)* Reporting "gone" for restorable data, or "recoverable" for deleted data, is a serious UX bug.
 
 ### 3. Testnet only — and the guard is deliberate friction
 
@@ -71,18 +71,24 @@ Never target mainnet. Not a flag, not a branch, not a "just in case" code path. 
 
 Testnet keys are still treated as secrets. Not because they're valuable, but because the habit is what protects the mainnet keys later.
 
-### 4. Guinea-pigs B and C must not enter the engine config early
+### 4. Guinea-pigs B and C are never bumped — and each has TWO dates
 
-Two contracts are deliberately ageing toward a threshold crossing so the engine can be caught saving them unattended. That is the single most important proof in the grant.
+Two contracts are deliberately ageing so that the engine is caught **detecting the crossing and the write guard refusing**, and then so the entry is observed **expiring**. That refusal-then-expiry is the single most important proof in the grant.
 
-| | Contract | Crossing |
-|---|---|---|
-| **B** | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` | **2026-09-20 ~12:00 UTC** |
-| **C** | `CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL` | **2026-09-25 ~12:00 UTC** |
+> 🔴 **B is NOT saved. B expires.** Decided 2026-09-12 (`BACKLOG.md`, `W3-D18-02b`) and recorded again in `evergreen.config.dogfood.json`. An earlier version of this section said the engine would be "caught saving them unattended" — that is the opposite of the intended outcome, and acting on it destroys the proof. B expired on 2026-09-21 exactly as planned; see [`W3-B-WATCH-CLOSING.md`](W3-B-WATCH-CLOSING.md).
 
-**If the engine sees them before their crossing, it will dutifully bump them and destroy weeks of ageing.** There is no way to recover that inside the sprint, and it fails silently — nothing errors, the evidence simply never exists.
+**Each subject has an alert-threshold date and an expiry date, one day apart. They are not interchangeable.**
 
-They can be added to the config *when the engine is genuinely ready*, but only as a verified step: add → run **dry-run** → confirm the engine reports **no action needed** → then live. A threshold accidentally too high bumps them immediately.
+| | Contract | Alert threshold | **Expiry — the unrepeatable event** |
+|---|---|---|---|
+| **B** | `CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ` | 2026-09-20 ~12:00 UTC | **2026-09-21 ~12:00 UTC** — done, observed |
+| **C** | `CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL` | 2026-09-25 ~12:00 UTC | **2026-09-26 ~12:00 UTC** — Saturday, and the last shot |
+
+Both dates are owned by `PROTECTED_ENTRIES` in [`packages/core/src/write-guard.ts`](../packages/core/src/write-guard.ts) (`alertThresholdOn`, `expiresOn`). Its own comment names the trap: *someone scheduling evidence capture from the threshold field alone arrives a day early for the expiry — and the expiry is the unrepeatable event.* **This document published only the threshold dates until 2026-09-22.** Note that C's expiry falls on a Saturday, against the weekends-are-not-working-days assumption further down this page.
+
+**What actually stops a write is the write guard, not the config list.** `packages/core/src/write-guard.ts` refuses every write touching B or C **unconditionally — there is no date logic in it at all**, proven against mutation. `_doNotWatch` in the engine config is *documentation*; `config.ts` says so, and `runEngine` iterates `contracts`. Two mechanisms exist so a misconfiguration and a code path have to fail together — but only one of them is enforcement, and it is the one that used to be named in none of these documents.
+
+They can be added to the config *when the engine is genuinely ready*, and since both are calibrated against a specific threshold the engine will correctly do nothing until the crossing — see [`SETUP.md` § Putting B and C into the engine config](SETUP.md). Still do it as a verified step: add → run **dry-run** → confirm the engine reports **no action needed** → then live.
 
 Guinea-pig **A** — `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` — is the working subject. Bump it, break it, redeploy it freely; it is what you verify against. Full details, plus the redeploy script for after a testnet reset, in [`SETUP.md`](SETUP.md).
 
@@ -178,12 +184,14 @@ The plan is [`BACKLOG.md`](../BACKLOG.md): 30 day-blocks, a slack ledger, and a 
 
 | Date | What |
 |---|---|
-| **Fri 2026-09-18** | 🔴 Hard gate — engine running unattended against guinea-pig B |
-| **Sun 2026-09-20** | B's threshold crossing |
-| **Fri 2026-09-25** | C's threshold crossing |
+| ~~Fri 2026-09-18~~ | ~~Hard gate — engine running unattended against B~~ — passed; the engine has run unattended since |
+| ~~Sun 2026-09-20~~ | ~~B's alert threshold~~ — captured, four slots |
+| ~~Mon 2026-09-21~~ | ~~B's expiry~~ — observed and assessed |
+| **Fri 2026-09-25** | **C's alert threshold**, ~12:00 UTC |
+| 🔴 **Sat 2026-09-26** | **C's EXPIRY, ~12:00 UTC — the last unrepeatable event in the sprint** |
 | **Fri 2026-10-02** | Grant deadline |
 
-The Sep 18 gate is Friday deliberately: Sep 19 is a Saturday and Sep 20 a Sunday, and the plan assumes weekends are not working days. Friday is the gate; Saturday is margin.
+**C's expiry is on a Saturday and it is not optional.** The plan otherwise assumes weekends are not working days; this is the documented exception. B's expiry was nearly lost to exactly this kind of assumption — the secondary machine slept through it — so C has no margin behind it.
 
 ### Explicitly out of scope
 
@@ -193,11 +201,11 @@ Some of these must stay *possible* without being *built* — the data model must
 
 ## Decisions already made
 
-Five accepted ADRs in [`docs/adr/`](adr/) and one proposed, plus the Decisions page in Notion where the humans go for "why".
+**Six accepted ADRs** in [`docs/adr/`](adr/), plus the Decisions page in Notion where the humans go for "why".
 
 **These are settled.** Reopening one needs an ADR amendment with a reason — not a fresh argument in a PR. Amend, never rewrite: the reasoning we had at the time is the valuable part.
 
-Currently: the engine is a scheduled job, not a daemon; the policy signer is `passkey-kit`, amended to sit off the critical path; the toolchain, the scheduler (GitHub Actions cron) and hosting (Cloudflare Pages, live) are all decided, with PostgreSQL on Neon accepted but deferred to Week 4; the user always pays their own fees; and the shared domain types are JSON-compatible with money as decimal text rather than `number`. **ADR-006 is still Proposed** — the `scan` exit-code scheme — so don't build on it yet.
+Currently: the engine is a scheduled job, not a daemon; the policy signer is `passkey-kit`, amended to sit off the critical path; the toolchain, the scheduler (GitHub Actions cron) and hosting (Cloudflare Pages, live) are all decided, with PostgreSQL on Neon accepted but deferred to Week 4; the user always pays their own fees; and the shared domain types are JSON-compatible with money as decimal text rather than `number`. **ADR-006 — the `scan` exit-code scheme — was accepted 2026-09-10 as amended** and the exit codes are documented in the public `README.md`. Build on it. *(This line said "still Proposed — don't build on it yet" until 2026-09-22, twelve days after it merged.)*
 
 ---
 
@@ -207,7 +215,7 @@ If you can answer these, start work. If not, the answer is in a linked document 
 
 1. **Why is Evergreen non-custodial?** *(If your answer mentions a scoped signer, re-read "Why it's non-custodial".)*
 2. **What is the unit of work in a scan, and why not the contract?**
-3. **What happens if you add guinea-pig C to the engine config today?**
+3. **What actually prevents guinea-pig C from being bumped today — and what only looks like it does?** *(Two mechanisms, one file each. If your answer is the config, re-read §4.)*
 4. **Where does task state get authored, and what do you do if you can't reach Notion?**
 5. **When do you open a GitHub Issue — and when do you not?**
 6. **A task's code is written and the tests pass. Is it `[x]`?**

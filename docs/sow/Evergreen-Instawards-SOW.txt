@@ -1,0 +1,251 @@
+
+
+===== PAGE 1 =====
+Instawards Statement of Work (SOW)
+30-Day Scoped Engagement
+1. Project & Team Information
+Project Name: Evergreen: a Soroban State-Archival Autopilot
+Builder / Team Name: Apex
+Primary Contact (Name + Email): Fatih Maulana - fatihmaulanamail@gmail.com
+Ambassador Chapter: Indonesia
+Ambassador Chapter Lead: Kenny Rivaldi
+Date Submitted: 31-07-2026
+Suggested Sprint Start Date: 17-08-2026
+2. Instawards Overview & Intent
+2.1 Instawards Purpose (for Builder Context)
+Instawards are designed to support short, clearly scoped, execution-focused work that helps a
+project make tangible progress toward building on Stellar. Instawards are meant to fund specific,
+achievable outcomes that can be completed and demonstrated within 30 days or less.
+This SOW represents a shared commitment between the Builder and the Ambassador Chapter
+Lead on what will be delivered, why it matters, and how success will be verified.
+3. Problem Statement & Objective
+Problem Being
+Addressed
+What specific problem,
+gap, or blocker is this
+Instaward intended to
+solve?
+Soroban smart contracts rely on ledger entries
+with a Time-To-Live (TTL), requiring developers
+to extend them before expiration to prevent
+state archival. If overlooked, contracts become
+unavailable until their state is restored, leading
+to unexpected downtime.
+Unlike other blockchain ecosystems, Stellar
+does not yet provide a dedicated tool to
+automate TTL management. Developers still
+need to monitor and extend TTL manually,
+creating unnecessary operational overhead and
+increasing the risk of production failures.
+Objective of
+This Instaward
+In one or two
+sentences, what will be
+This project will deliver an open-source toolkit
+for automated Soroban TTL management,
+
+===== PAGE 2 =====
+Instawards Statement of Work (SOW)
+30-Day Scoped Engagement
+true at the end of 30
+days if this Instaward is
+successful?
+consisting of a CLI, a non-custodial auto-bump
+engine, and a lightweight dashboard. The toolkit
+helps developers monitor contract health,
+prevent state archival, and optimize storage
+costs with minimal manual effort.
+Example prompts for builders: What is currently preventing progress? What is unclear,
+missing, or unbuilt today? Why is this problem worth solving now?
+4. Scope of Work (30-Day Deliverables)
+Important guidance: This scope must be achievable within 30 calendar days. If the work feels
+larger, it should be reduced or split into more achievable phases.
+4.1 In-Scope Deliverables
+Deliverable Description (What will be built or produced?) Why this matters
+Deliverable
+1: Core CLI
+(evergreen)
+A TypeScript-based npm package and CLI for
+scanning a contract’s ledger entries through
+Soroban RPC. It reports remaining TTL, estimates
+archive timing and rent cost, and highlights
+potential storage inefficiencies. The package
+includes JSON and human-readable output, unit
+tests, and a quickstart README.
+Developers can quickly check
+a contract's TTL health and
+estimate future storage costs
+from a single command,
+replacing repetitive manual
+checks.
+Deliverable
+2:
+Auto-Bump
+Engine
+(non-custodia
+l, testnet)
+A monitoring service that watches contract TTLs
+and automatically submits extendTTL before they
+expire. It uses a capped policy-signer, applies
+configurable threshold rules, and supports
+webhook or email alerts. The workflow is fully
+validated on Stellar testnet.
+Automating TTL extensions
+reduces manual maintenance
+while keeping the solution
+non-custodial and aligned
+with Stellar's native smart
+account capabilities.
+Deliverable
+3: Dashboard
++ CI Check +
+Docs / Demo
+A lightweight dashboard displaying contract
+status, bump history, and estimated storage costs.
+The deliverable also includes the
+evergreen-check GitHub Action, complete
+documentation, a 3–5 minute demo video, and
+published npm packages.
+It completes the workflow by
+combining monitoring,
+automation, and developer
+tooling into a single
+experience that is easy to
+adopt and verify.
+
+===== PAGE 3 =====
+Instawards Statement of Work (SOW)
+30-Day Scoped Engagement
+Out-of-Scope (Explicitly Not Included)
+List anything that might be assumed but is not included in this Instaward scope.
+This does not include production mainnet
+auto-bump, real billing, hosted billing or rent
+management, enterprise APM, multi-sig custody,
+support for non-Soroban chains, or formal
+verification/audit tooling. These are planned for a
+later phase.
+4.2 Deliverable-Aligned Budget Request
+Requested Budget Amount Rationale for Budget Request
+$4,800 (6 hours/day x 30 days x $30/hour) This budget covers the builder’s time and the
+resources needed to complete the scoped
+deliverables within the 30 day period, from
+research and implementation to testing,
+documentation, and public release.
+5. 30-Day Execution Plan & Timeline
+5.1 Weekly Breakdown
+Week Planned Work Expected Output
+Week
+1
+Set up the TypeScript monorepo with
+Jest and ESLint. Research Soroban
+state archival, including TTL, rent,
+restore flow, storage types, extendTTL
+and RPC APIs. Build the initial scan
+command and cost model.
+Working monorepo with an initial scan
+command running on testnet, including TTL
+analysis, archive prediction, cost estimation,
+and the first technical specification draft.
+Week
+2
+Implement manual extendTTL, improve
+the prediction model, build the storage
+optimizer, and add unit tests.
+Successful TTL extension on testnet with
+transaction hashes as proof, accurate
+predictions, and optimizer recommendations
+for storage improvements.
+Week
+3
+Develop the auto-bump service with a
+capped policy-signer, configure threshold
+rules and alerts, and perform end-to-end
+testing on testnet.
+Fully functional auto-bump workflow that
+prevents state archival on testnet, complete
+with transaction proofs, alert notifications,
+and validated non-custodial authorization.
+
+===== PAGE 4 =====
+Instawards Statement of Work (SOW)
+30-Day Scoped Engagement
+Week
+4
+Build the dashboard, publish the
+evergreen-check GitHub Action, finalize
+documentation, record the demo video,
+and publish the npm packages.
+Live dashboard on testnet, published GitHub
+Action and npm packages, complete
+documentation, demo video, and a project
+ready for review.
+6. Evidence of Completion (Required)
+Important guidance: Evidence should be clear, verifiable, and easy to review by the
+Ambassador Chapter Lead with minimal technical expertise.
+6.1 Planned Evidence to Be Submitted
+Deliverable Evidence Type
+(link, repo, demo, screenshot, doc, tx hash, etc.)
+Description
+Deliverable 1 GitHub repository, npm package, CLI
+screenshots, and test coverage report
+Public repository,
+published npm package,
+sample scan output
+showing TTL, archive
+prediction, and cost
+estimates, along with unit
+test coverage.
+Deliverable 2 Testnet transaction hashes, engine logs, alert
+screenshots, and setup documentation
+Proof of successful
+extendTTL transactions on
+Stellar testnet, auto-bump
+execution logs, alert
+notifications, and
+policy-signer configuration
+guide.
+Deliverable 3 Dashboard URL, GitHub Action, demo video,
+documentation, and npm links
+Live testnet dashboard,
+published
+evergreen-check GitHub
+Action, complete
+documentation, a 3–5
+minute demo, and links to
+the published npm
+packages.
+6.2 Evidence Verification Checklist (For Ambassador Use)
+For each deliverable, the Ambassador Chapter Lead will assess whether evidence is present
+and sufficient.
+
+===== PAGE 5 =====
+Instawards Statement of Work (SOW)
+30-Day Scoped Engagement
+Deliverable Evidence
+Present
+Evidence
+Partial
+Evidence
+Missing
+Comments
+Deliverable 1 ☐ ☐ ☐
+Deliverable 2 ☐ ☐ ☐
+Deliverable 3 ☐ ☐ ☐
+7. Next-Step Alignment
+7.1 Anticipated Next Step After Completion
+After this Instaward, the most likely next step is:
+Apply to SCF Build Award
+Continue development independently
+Apply for a follow-on Instaward (if eligible)
+Seek other ecosystem support
+Other:
+8. Instawards Constraints Acknowledgement
+By submitting this SOW, the Builder acknowledges:
+This scope will be completed within 30 days or less.
+Instawards support execution, not open-ended exploration.
+A project may receive no more than two follow-on Instawards.
+Each Instaward is capped at $5,000.
+Total Instawards funding may not exceed $15,000.
+9. Submission Confirmation
+Once finalized, this Statement of Work will be submitted by the Ambassador Chapter Lead via
+the Instawards Airtable submission form for review and approval.
