@@ -161,18 +161,19 @@ const REQUIREMENTS = [
     text: 'alert screenshots',
     find: () => {
       // An alert screenshot is an IMAGE of a delivered notification. Receipts,
-      // provider responses and inbox-confirmation JSON are proof of sending,
-      // which is a different claim — and `mailboxScreenshotCaptured: false` is
-      // recorded in the evidence itself.
-      const found = [
-        'docs/evidence/2026-09-14-email-channel-live',
-        'docs/evidence/2026-09-16-critical-template',
-        'docs/evidence/2026-09-14-stage1-failures',
-        'docs/inbox-check',
-      ].flatMap(images);
-      return found.length > 0 ? `${found.length} images` : null;
+      // provider responses and inbox-confirmation JSON are proof of sending or
+      // receipt, which is a different claim. The SOW asks for actual images.
+      const dir = 'docs/evidence/2026-09-22-alert-screenshots';
+      const required = [
+        join(dir, 'success-alert-inbox.png'),
+        join(dir, 'shared-code-refusal-alert-inbox.png'),
+      ];
+      const found = images(dir).filter(
+        (path) => required.includes(path) && statSync(path).size > 0,
+      );
+      return found.length === required.length ? `${found.length} inbox images` : null;
     },
-    fix: 'W3-D17-03 — open the two confirmed messages (Resend IDs are in the bundles), capture the mailbox, drop the images beside the JSON and flip `mailboxScreenshotCaptured`.',
+    fix: 'W3-D17-03 — capture the two confirmed messages in a new dated evidence folder and bind them to the retained Resend IDs; do not rewrite the historical no-screenshot record.',
   },
   {
     id: 'D2.signer-guide',
