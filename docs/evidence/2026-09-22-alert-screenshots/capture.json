@@ -1,0 +1,31 @@
+{
+  "task": "W3-D17-03",
+  "capturedAt": "2026-09-22",
+  "mailbox": "Rakha recipient inbox (address not committed)",
+  "source": "Manual screenshots from the recipient Gmail message view, supplied by Rakha",
+  "messages": [
+    {
+      "kind": "bump-success",
+      "emailId": "07992c67-18c1-4dfe-8515-0dce865e8b21",
+      "subject": "[INFO] CONFIRMED Evergreen extended AAAABgAAAA… (+343,670 ledgers)",
+      "receivedAt": "2026-09-14T15:34+07:00",
+      "screenshot": "success-alert-inbox.png",
+      "sha256": "8e8f105a60bda2fbf7ad7fc9f70697cc1d74db306ddd54f8c732d82163c0526e",
+      "sourceIntent": "../2026-09-14-scheduled-a-save/alerts/dc1b0e2ed5cb240c979571ea26cef4291e063166893a512b492585a7cf9db9e6.intent.json",
+      "sourceReceipt": "../2026-09-14-scheduled-a-save/alerts/dc1b0e2ed5cb240c979571ea26cef4291e063166893a512b492585a7cf9db9e6.receipt.json"
+    },
+    {
+      "kind": "shared-code-refusal",
+      "emailId": "3429c29c-8c8e-4638-b2f7-cbd99df5277c",
+      "subject": "[CRITICAL] Evergreen skipped: AAAAB8flXwrY",
+      "receivedAt": "2026-09-14T15:34+07:00",
+      "screenshot": "shared-code-refusal-alert-inbox.png",
+      "sha256": "1e66339dc4c06588dc5fdc047f729d512109179bd83c7a4bce9d21e892ee8194",
+      "sourceIntent": "../2026-09-14-scheduled-a-save/alerts/417489320a374a835d41b2526877802f32c87744e234d1b450162508c3863e37.intent.json",
+      "sourceReceipt": "../2026-09-14-scheduled-a-save/alerts/417489320a374a835d41b2526877802f32c87744e234d1b450162508c3863e37.receipt.json"
+    }
+  ],
+  "originalConfirmationRewritten": false,
+  "resent": false,
+  "stellarInteraction": false
+}
