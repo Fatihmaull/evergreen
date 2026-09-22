@@ -18,7 +18,11 @@ interface ArchivalFallback {
   };
 }
 
-function rows(settings: { maxEntryTtl: number; minTemporaryTtl: number; minPersistentTtl: number }): string {
+function rows(settings: {
+  maxEntryTtl: number;
+  minTemporaryTtl: number;
+  minPersistentTtl: number;
+}): string {
   return `<div class="table-wrap"><table>
     <thead><tr><th scope="col">Parameter</th><th scope="col">Ledgers</th><th scope="col">About</th></tr></thead>
     <tbody>
@@ -45,7 +49,8 @@ async function load(): Promise<void> {
       target.innerHTML = rows(fallback.settings);
       note.textContent = `The live read failed, so these are the values committed with this build, read at ledger ${formatCount(fallback.settings.observedAtLedger)}. They are not current.`;
     } catch {
-      note.textContent = 'The live read failed and no committed reading is available. Nothing is shown rather than a remembered number.';
+      note.textContent =
+        'The live read failed and no committed reading is available. Nothing is shown rather than a remembered number.';
       target.innerHTML = '';
     }
   }

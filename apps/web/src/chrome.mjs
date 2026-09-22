@@ -70,7 +70,17 @@ function statusBar(cadence) {
     </div>`;
 }
 
-export function shell({ title, description, active, eyebrow, heading, lead, body, script, cadence }) {
+export function shell({
+  title,
+  description,
+  active,
+  eyebrow,
+  heading,
+  lead,
+  body,
+  script,
+  cadence,
+}) {
   return `<!doctype html>
 <html lang="en">
   <head>

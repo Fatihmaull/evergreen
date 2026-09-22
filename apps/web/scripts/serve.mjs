@@ -33,4 +33,6 @@ createServer((request, response) => {
   }
   response.writeHead(200, { 'content-type': TYPES[extname(path)] ?? 'application/octet-stream' });
   createReadStream(path).pipe(response);
-}).listen(port, '127.0.0.1', () => console.log(`serving apps/dashboard/public on http://127.0.0.1:${port}`));
+}).listen(port, '127.0.0.1', () =>
+  console.log(`serving apps/dashboard/public on http://127.0.0.1:${port}`),
+);

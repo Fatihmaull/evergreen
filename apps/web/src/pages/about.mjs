@@ -7,8 +7,7 @@ import { esc } from './_shared.mjs';
 
 export const meta = {
   title: 'About — Evergreen',
-  description:
-    'Who builds Evergreen, under which grant, and how the work is evidenced.',
+  description: 'Who builds Evergreen, under which grant, and how the work is evidenced.',
   active: '/about/',
   eyebrow: 'About · the team and the terms',
   heading: 'Built by Apex, evidenced like it matters',

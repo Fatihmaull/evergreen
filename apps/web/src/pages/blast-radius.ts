@@ -3,7 +3,14 @@
  * list somewhere. The result is a dependency graph, and the notice that even
  * this proves only a lower bound.
  */
-import { OUR_CONTRACTS, health, isValidContractId, report, scanMany, type ScanReport } from '../lib/evergreen';
+import {
+  OUR_CONTRACTS,
+  health,
+  isValidContractId,
+  report,
+  scanMany,
+  type ScanReport,
+} from '../lib/evergreen';
 import { approxDate, esc, formatCount } from '../lib/format';
 import { entryTable, graph, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
 import { estimateEndsAt } from '../lib/evergreen';
@@ -34,7 +41,10 @@ function sharedSentence(rep: ScanReport, now = new Date()): string {
   const lines = shared.map((e) => {
     const ttl = e.entry.ttl;
     const when = ttl.status === 'known' ? approxDate(estimateEndsAt(ttl, now)) : 'an unread date';
-    const at = ttl.status === 'known' ? ` (ledger <span class="mono">${esc(formatCount(ttl.endsAtLedger))}</span>)` : '';
+    const at =
+      ttl.status === 'known'
+        ? ` (ledger <span class="mono">${esc(formatCount(ttl.endsAtLedger))}</span>)`
+        : '';
     return `These ${e.assessment.observedContractCount} contracts share 1 ${esc(e.entry.kind)} entry. It expires <strong>${esc(when)}</strong>${at}. They fail together.`;
   });
   return lines.map((l) => `<p class="headline">${l}</p>`).join('');

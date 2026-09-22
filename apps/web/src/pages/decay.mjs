@@ -28,7 +28,8 @@ function validate(series) {
     if (s.observations.length === 0) throw new Error(`decay: ${s.id} has no observations`);
     let current = null;
     for (const o of s.observations) {
-      if (o.endsAt - o.ledger < 0) throw new Error(`decay: ${s.id} observes an already-expired entry`);
+      if (o.endsAt - o.ledger < 0)
+        throw new Error(`decay: ${s.id} observes an already-expired entry`);
       if (!o.source) throw new Error(`decay: ${s.id} has an observation without a source`);
       current = current === null ? o.endsAt : current;
     }
@@ -40,12 +41,15 @@ function validate(series) {
         );
       }
       if (step.after <= step.before) throw new Error(`decay: ${s.id} step does not go up`);
-      if (!/^[0-9a-f]{64}$/.test(step.hash)) throw new Error(`decay: ${s.id} step has no real transaction hash`);
+      if (!/^[0-9a-f]{64}$/.test(step.hash))
+        throw new Error(`decay: ${s.id} step has no real transaction hash`);
       current = step.after;
     }
     const last = s.observations[s.observations.length - 1];
     if (last.endsAt !== current) {
-      throw new Error(`decay: ${s.id} last observation ends at ${last.endsAt} but the steps leave ${current}`);
+      throw new Error(
+        `decay: ${s.id} last observation ends at ${last.endsAt} but the steps leave ${current}`,
+      );
     }
     if (s.expiryLedger !== null && s.expiryLedger < last.ledger) {
       throw new Error(`decay: ${s.id} expiry is before its last observation`);
@@ -61,10 +65,19 @@ function panel(s, refLedger, refIso) {
   const pts = [];
   const ordered = [...s.steps].sort((a, b) => a.atLedger - b.atLedger);
   let current = s.observations[0].endsAt;
-  pts.push({ ledger: s.observations[0].ledger, remaining: current - s.observations[0].ledger, dot: true });
+  pts.push({
+    ledger: s.observations[0].ledger,
+    remaining: current - s.observations[0].ledger,
+    dot: true,
+  });
   for (const step of ordered) {
     pts.push({ ledger: step.atLedger, remaining: step.before - step.atLedger, corner: true, step });
-    pts.push({ ledger: step.atLedger, remaining: step.after - step.atLedger, corner: true, stepped: step });
+    pts.push({
+      ledger: step.atLedger,
+      remaining: step.after - step.atLedger,
+      corner: true,
+      stepped: step,
+    });
     current = step.after;
   }
   const last = s.observations[s.observations.length - 1];
@@ -76,7 +89,9 @@ function panel(s, refLedger, refIso) {
   const X = (l) => PAD.l + ((l - xMin) / (xMax - xMin)) * (W - PAD.l - PAD.r);
   const Y = (r) => H - PAD.b - (r / yMax) * (H - PAD.t - PAD.b);
 
-  const solid = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.ledger).toFixed(1)} ${Y(p.remaining).toFixed(1)}`).join(' ');
+  const solid = pts
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${X(p.ledger).toFixed(1)} ${Y(p.remaining).toFixed(1)}`)
+    .join(' ');
   const dashed =
     s.expiryLedger !== null
       ? `<line class="decay-dash" x1="${X(last.ledger)}" y1="${Y(last.endsAt - last.ledger)}" x2="${X(s.expiryLedger)}" y2="${Y(0)}" />`
@@ -144,7 +159,9 @@ function panel(s, refLedger, refIso) {
 
 export function render(ctx) {
   validate(ctx.decay.series);
-  const panels = ctx.decay.series.map((s) => panel(s, ctx.snapshotLedger, ctx.snapshotCapturedAt)).join('');
+  const panels = ctx.decay.series
+    .map((s) => panel(s, ctx.snapshotLedger, ctx.snapshotCapturedAt))
+    .join('');
   return `<section class="stack">${panels}</section>
   <section>
     <h2 class="section">How to read this</h2>

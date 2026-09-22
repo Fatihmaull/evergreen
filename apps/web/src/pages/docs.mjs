@@ -22,7 +22,10 @@ export function render(ctx) {
     ['0', 'everything scanned is healthy'],
     ['1', 'observed low TTL'],
     ['2', 'error — invalid input, RPC failure, or the network refused'],
-    ['3', 'incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed'],
+    [
+      '3',
+      'incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed',
+    ],
   ]
     .map(([code, meaning]) => `<tr><td class="num">${code}</td><td>${esc(meaning)}</td></tr>`)
     .join('');

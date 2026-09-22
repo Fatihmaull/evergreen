@@ -60,7 +60,10 @@ async function load(): Promise<void> {
   try {
     const result = await scanMany(ids);
     if (Object.keys(result.entries).length === 0) throw new Error('no entries returned');
-    render(result, `Read live from testnet at ledger ${formatCount(report(result).observedAtLedger ?? 0)}.`);
+    render(
+      result,
+      `Read live from testnet at ledger ${formatCount(report(result).observedAtLedger ?? 0)}.`,
+    );
   } catch {
     try {
       const response = await fetch('/assets/snapshot.json', { cache: 'no-store' });
@@ -71,7 +74,8 @@ async function load(): Promise<void> {
         `The live read failed, so this is the snapshot committed with this build: as of ledger ${formatCount(at)}, recorded ${stamp(snapshot.capturedAt)}. It is not current.`,
       );
     } catch {
-      note.textContent = 'The live read failed and no snapshot is available. Nothing is shown rather than something stale.';
+      note.textContent =
+        'The live read failed and no snapshot is available. Nothing is shown rather than something stale.';
       strip.innerHTML = '';
       target.innerHTML = '';
     }
@@ -81,7 +85,9 @@ async function load(): Promise<void> {
     const full = report(result);
     note.textContent = noteText;
     strip.innerHTML = statStrip(full);
-    target.innerHTML = OUR_CONTRACTS.map((c) => contractCard(c.label, c.id, subReport(full, c.id))).join('');
+    target.innerHTML = OUR_CONTRACTS.map((c) =>
+      contractCard(c.label, c.id, subReport(full, c.id)),
+    ).join('');
   }
 }
 

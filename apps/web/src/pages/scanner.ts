@@ -39,7 +39,12 @@ async function runScan(event: Event): Promise<void> {
   button.textContent = 'Scanning…';
   out.innerHTML = '<p class="muted">Reading the chain…</p>';
   try {
-    const dataKeys = keysRaw ? keysRaw.split('\n').map((k) => k.trim()).filter(Boolean) : [];
+    const dataKeys = keysRaw
+      ? keysRaw
+          .split('\n')
+          .map((k) => k.trim())
+          .filter(Boolean)
+      : [];
     const result = await scanOne(id, dataKeys);
     const rep = report(result);
     lastScan = { result, report: rep };

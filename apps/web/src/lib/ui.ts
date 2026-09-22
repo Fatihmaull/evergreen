@@ -56,7 +56,8 @@ export function verdict(report: ScanReport, now = new Date()): string {
 
   let headline: string;
   if (report.verdict === 'error') {
-    headline = 'The scan could not be completed. The contract is unaffected by our failure to read it.';
+    headline =
+      'The scan could not be completed. The contract is unaffected by our failure to read it.';
   } else if (!binding) {
     headline = 'Nothing was read. Absence is not proof of archival or deletion.';
   } else {
@@ -90,7 +91,10 @@ export function verdict(report: ScanReport, now = new Date()): string {
 
   const failures = report.issues
     .filter((i) => i.kind !== 'coverage-limited' && i.kind !== 'sharing-undetermined')
-    .map((i) => `<p class="small muted"><span class="mono">${esc(i.kind)}</span> — ${esc(i.message)}</p>`)
+    .map(
+      (i) =>
+        `<p class="small muted"><span class="mono">${esc(i.kind)}</span> — ${esc(i.message)}</p>`,
+    )
     .join('');
 
   const chipHtml =

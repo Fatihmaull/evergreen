@@ -31,7 +31,11 @@ import {
 } from '../../../../packages/core/src/index';
 import type { EntryAssessment, EntryHealth } from '../../../../packages/core/src/index';
 import { exitCodeFor, healthReport } from '../../../../packages/cli/src/index';
-import type { LedgerEntryTTL, ScanIssue, ScanResult } from '../../../../packages/shared-types/src/index';
+import type {
+  LedgerEntryTTL,
+  ScanIssue,
+  ScanResult,
+} from '../../../../packages/shared-types/src/index';
 import { Networks, rpc } from '@stellar/stellar-sdk';
 
 export const RPC_URL = 'https://soroban-testnet.stellar.org';
