@@ -1,8 +1,8 @@
 # Primary watcher — closing summary, guinea-pig B
 
-**Watch ran 2026-09-20 10:28 UTC → 2026-09-21 17:55 UTC.** Secondary capture machine; Rakha ran the primary captures from his own host. Every number below is marked **measured** (read from a sealed bundle, the chain, or a log) or **derived** (computed, with its assumption named).
+**Watch ran 2026-09-20 10:28 UTC → 2026-09-21 18:01 UTC.** Secondary capture machine; Rakha ran the primary captures from his own host. Every number below is marked **measured** (read from a sealed bundle, the chain, or a log) or **derived** (computed, with its assumption named).
 
-Raw logs: [`poll.log`](evidence/2026-09-21-b-watch-log/poll.log) · [`fingerprint.log`](evidence/2026-09-21-b-watch-log/fingerprint.log).
+Raw logs: [`poll.log`](evidence/2026-09-21-b-watch-log/poll.log) · [`fingerprint.log`](evidence/2026-09-21-b-watch-log/fingerprint.log) · [bundle README](evidence/2026-09-21-b-watch-log/README.md).
 
 ## The two transitions
 
