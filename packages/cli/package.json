@@ -17,13 +17,12 @@
     "node": ">=24"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
     "evergreen": "./dist/evergreen.mjs"
   },
   "files": [
-    "dist"
+    "dist/evergreen.mjs",
+    "dist/evergreen.mjs.map"
   ],
   "scripts": {
     "build": "tsc --build",
