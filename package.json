@@ -67,7 +67,8 @@
     "measure:cadence": "pnpm build && node scripts/measure-scheduler-cadence.mjs",
     "verify:expiry": "node scripts/reassess-expiry-capture.mjs",
     "test:expiry-assessment": "node --test --test-isolation=none scripts/reassess-expiry-capture.test.mjs",
-    "check:sow": "node scripts/check-sow-completeness.mjs"
+    "check:sow": "node scripts/check-sow-completeness.mjs",
+    "ready:fresh": "node scripts/ready-fresh-machine.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
