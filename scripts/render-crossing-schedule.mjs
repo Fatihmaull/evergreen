@@ -58,6 +58,21 @@ const BEGIN = /<!-- BEGIN GENERATED: crossing-schedule \((\w+)\) -->/;
 const END = '<!-- END GENERATED: crossing-schedule -->';
 
 const schedule = JSON.parse(readFileSync(SOURCE, 'utf8'));
+
+/**
+ * Which watch is rendered — the first still ahead of us, else the last one.
+ *
+ * Added 2026-09-22, and the reason is worth keeping. This file held a single
+ * `subject` whose four checkpoints were all in the past, so five operational
+ * pages rendered a table for a finished event while the next one was four days
+ * away. `--check` passed the whole time, because it verifies that the documents
+ * match this file and never that this file matches the calendar. A generated
+ * block is only as current as its source: single-sourcing removes disagreement
+ * between copies, not staleness in the original.
+ */
+const watches = schedule.watches ?? [{ status: 'upcoming', ...schedule }];
+const watch = watches.find((w) => w.status === 'upcoming') ?? watches.at(-1);
+const done = watches.filter((w) => w !== watch && w.status === 'complete');
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const n = (value) => value.toLocaleString('en-US');
 
@@ -84,20 +99,29 @@ function trigger(utcIso) {
 
 function remaining(cp) {
   const left =
-    schedule.subject.actionThresholdLedgers - cp.hoursAfterCrossing * schedule.ledgersPerHour;
+    watch.subject.actionThresholdLedgers - cp.hoursAfterCrossing * schedule.ledgersPerHour;
   if (left < 0) throw Error(`Checkpoint ${cp.utc} is past expiry (${left} ledgers)`);
   return left;
 }
 
 function renderFull() {
   const out = [];
+  const s = watch.subject;
+  const day = (iso) => iso.slice(0, 10);
+  if (done.length > 0)
+    out.push(
+      `*${done.map((w) => `${w.subject.label}'s watch is complete (${day(w.subject.crossesAtUtc)} → ${day(w.subject.expiresAtUtc)})`).join('; ')}. The table below is the NEXT one.*`,
+      '',
+    );
   out.push(
-    `**${schedule.subject.label} is below its action threshold for ${schedule.checkpoints.at(-1).hoursAfterCrossing} hours** — from ~${schedule.subject.crossesAtUtc.replace('T', ' ').replace('Z', ' UTC')} to ~${schedule.subject.expiresAtUtc.replace('T', ' ').replace('Z', ' UTC')}. Four captures across that window give a decay curve rather than two endpoints.`,
+    `🔴 **${s.label} has two dates, one day apart, and they are not interchangeable.** The **alert threshold** is ~${s.crossesAtUtc.replace('T', ' ').replace('Z', ' UTC')}; the **expiry is ~${s.expiresAtUtc.replace('T', ' ').replace('Z', ' UTC')}**, and the expiry is the unrepeatable one. Scheduling from the threshold alone arrives a day early — \`write-guard.ts\` owns both as \`alertThresholdOn\` and \`expiresOn\`.`,
     '',
-    '| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |',
+    `**${s.label} is below its action threshold for ${watch.checkpoints.at(-1).hoursAfterCrossing} hours.** ${watch.checkpoints.length} captures across that window give a decay curve rather than two endpoints. Its instance entry ends at ledger ${n(s.expiresAtLedger)}${s.persistentExpiresAtLedger ? ` and its persistent entry at ${n(s.persistentExpiresAtLedger)} — an expiry assessment needs a ledger above the **later** of the two` : ''}.`,
+    '',
+    `| Time (UTC) | WIB | ${s.label.replace('guinea-pig ', '')} remaining | What it is | Primary | Backup — runs it if nothing is committed by |`,
     '|---|---|---|---|---|---|',
   );
-  for (const cp of schedule.checkpoints) {
+  for (const cp of watch.checkpoints) {
     const pending = cp.status === 'requested';
     const mark = pending ? ' ❓' : '';
     const primary = pending ? `**${cp.primary}** — *unconfirmed*` : `**${cp.primary}**`;
@@ -114,7 +138,7 @@ function renderFull() {
     '**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.',
   );
 
-  const pending = schedule.checkpoints.filter((cp) => cp.status === 'requested');
+  const pending = watch.checkpoints.filter((cp) => cp.status === 'requested');
   if (pending.length > 0) {
     out.push(
       '',
@@ -132,9 +156,9 @@ function renderFull() {
     }
   }
 
-  if (schedule.declined?.length > 0) {
+  if (watch.declined?.length > 0) {
     out.push('', '### Deliberately declined', '');
-    for (const d of schedule.declined)
+    for (const d of watch.declined)
       out.push(
         `- **${utcLabel(d.utc)} / ${wib(d.utc)} WIB** — declined ${d.decidedOn}. ${d.reason}`,
       );
@@ -147,10 +171,10 @@ function renderFull() {
 }
 
 function renderCompact() {
-  const times = schedule.checkpoints.map(
+  const times = watch.checkpoints.map(
     (cp) => `${utcLabel(cp.utc).slice(4)} (${n(remaining(cp))} left)`,
   );
-  return `${schedule.checkpoints.length} captures — ${times.join(' → ')} — each showing ${schedule.subject.label} closer to expiry with the guard refusing every time.`;
+  return `${watch.checkpoints.length} captures — ${times.join(' → ')} — each showing ${watch.subject.label} closer to expiry with the guard refusing every time. Threshold ${watch.subject.crossesAtUtc.slice(0, 10)}, **expiry ${watch.subject.expiresAtUtc.slice(0, 10)}**.`;
 }
 
 const VARIANTS = { full: renderFull, compact: renderCompact };
