@@ -1,9 +1,21 @@
 {
   "name": "@evergreen-stellar/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
   "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fatihmaull/evergreen.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Fatihmaull/evergreen#readme",
+  "bugs": {
+    "url": "https://github.com/Fatihmaull/evergreen/issues"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

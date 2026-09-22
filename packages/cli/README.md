@@ -8,19 +8,11 @@ Soroban ledger entries have a TTL measured in ledgers, not seconds. Every closed
 
 ## Quickstart
 
-> **Not on npm yet.** Publication is scheduled for Week 4. Until then, run it from a clone — the command and output are identical.
+Scan any Testnet contract directly from npm — you do not need to own it, and no
+wallet or signup is involved:
 
 ```bash
-git clone https://github.com/Fatihmaull/evergreen.git
-cd evergreen
-pnpm install --frozen-lockfile
-pnpm build
-```
-
-Then scan any Testnet contract — you do not need to own it, and no wallet or signup is involved:
-
-```bash
-pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+npx @evergreen-stellar/cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 ```
 
 That contract is our public test subject, so the command works before you have one of your own.
@@ -41,7 +33,7 @@ HEALTHY  instance  AAAABgAAAA…
 HEALTHY  code  AAAAB8flXw…
   …
 
-Worst entry health: HEALTHY (threshold 17,280 ledgers)
+Worst entry health: HEALTHY (warn below 120,960 · act below 17,280 ledgers)
 ```
 
 **That coverage block is the first thing printed, deliberately.** A scan reads the keys it is given and cannot enumerate a contract's storage, so `HEALTHY` means *"everything I was asked to check is healthy"* and never *"this contract is healthy"*. Ledger numbers drift between runs; yours will differ.
@@ -49,7 +41,7 @@ Worst entry health: HEALTHY (threshold 17,280 ledgers)
 ### What will it cost to keep alive?
 
 ```bash
-pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L --cost --ledgers 518400
+npx @evergreen-stellar/cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L --cost --ledgers 518400
 ```
 
 ```
@@ -67,7 +59,7 @@ Prices come from simulating the real operation against the network, not from a f
 ### For CI
 
 ```bash
-pnpm cli scan <contract-id> --json
+npx @evergreen-stellar/cli scan <contract-id> --json
 ```
 
 Exit code `0` healthy, `1` low TTL, `2` error, `3` incomplete scan. See [Coverage and exit codes](#coverage-and-exit-codes) — the distinction between `1` and `3` matters more than it looks.
@@ -111,7 +103,7 @@ The optional keys file contains only this property:
 }
 ```
 
-Supply `ContractData` keys for the requested contract, with persistent or temporary durability. Instance keys, code keys, foreign-contract keys and malformed XDR are rejected. Instance/code keys are discovered automatically; duplicate supplied keys count once. See the [recorded public A keys](../../docs/evidence/2026-09-08-scan-entry-types/data-keys.json) for a concrete example. These keys identify that test contract only; a missing entry is possible on later reads.
+Supply `ContractData` keys for the requested contract, with persistent or temporary durability. Instance keys, code keys, foreign-contract keys and malformed XDR are rejected. Instance/code keys are discovered automatically; duplicate supplied keys count once. See the [recorded public A keys](https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-08-scan-entry-types/data-keys.json) for a concrete example. These keys identify that test contract only; a missing entry is possible on later reads.
 
 ## Coverage and exit codes
 
@@ -130,7 +122,7 @@ Supply `ContractData` keys for the requested contract, with persistent or tempor
 
 `--require-declared-scope` additionally exits `3` when a contract's scope was not declared. **Use it in CI on a contract you own** — `evergreen-check` sets it by default. It is off otherwise, because scanning a contract you did not write makes declaring scope impossible, and an exit code every default invocation triggers is not a signal. Programmatic callers get the same choice through `exitCodeFor(result, threshold, { requireDeclaredScope })`.
 
-Precedence is **2 > 3 > 1 > 0**. If a low TTL is observed alongside a missing entry, exit is `3` and JSON still contains both findings. Exit `1` reports low TTL; it never requests or authorizes an extension — a future engine must evaluate observations, issues, policy, payer and budgets itself. See [ADR-006](../../docs/adr/ADR-006-scan-health-exit-codes.md), accepted 2026-09-10 as amended.
+Precedence is **2 > 3 > 1 > 0**. If a low TTL is observed alongside a missing entry, exit is `3` and JSON still contains both findings. Exit `1` reports low TTL; it never requests or authorizes an extension — a future engine must evaluate observations, issues, policy, payer and budgets itself. See [ADR-006](https://github.com/Fatihmaull/evergreen/blob/main/docs/adr/ADR-006-scan-health-exit-codes.md), accepted 2026-09-10 as amended.
 
 Zero applies only to the supplied/discovered keys; it never guarantees complete storage coverage. Missing entries are reported as issues, not asserted to be archived or deleted. Temporary entries expire by deletion; other supported entry types archive. Zero remaining ledgers is still the final live ledger.
 
@@ -138,7 +130,9 @@ Zero applies only to the supplied/discovered keys; it never guarantees complete 
 
 ## Publication
 
-The npm name is `@evergreen-stellar/cli`, with command name `evergreen`. The package remains private pending `W4-D27-02`; repository execution above is the current workflow. Future publishing uses `publishConfig.access: public`. This scan command submits no transactions.
+The public npm package is `@evergreen-stellar/cli`, with command name `evergreen`.
+`publishConfig.access: public` is part of the package manifest. The `scan` command
+is read-only and submits no transactions.
 
 
 ## Manual extension (Testnet)
@@ -146,7 +140,7 @@ The npm name is `@evergreen-stellar/cli`, with command name `evergreen`. The pac
 Build with `pnpm typecheck`, then simulate using your funded public Testnet payer:
 
 ```bash
-node packages/cli/dist/bin.js extend <contract-id> --ledgers 1000 --source-account <G-public-account> --json
+npx @evergreen-stellar/cli extend <contract-id> --ledgers 1000 --source-account <G-public-account> --json
 ```
 
 `--ledgers N` adds N ledgers to each selected entry. The target is computed separately for every entry and capped at `max_entry_ttl - 1` from live network configuration. Capping is reported. Instance only is the default; `--keys-file keys.json` adds explicit persistent/temporary keys. Shared Wasm requires `--include-code`: extending it also benefits contracts outside this scan. Selected scope never establishes whole-contract protection. Expired or unreadable selected keys are refused; restore is not automated.
@@ -156,7 +150,7 @@ The public payer can also come from `EVERGREEN_SOURCE_ACCOUNT`. There is no fall
 After reviewing the selected keys, target and fee, an explicit live request is:
 
 ```bash
-node packages/cli/dist/bin.js extend <contract-id> --ledgers 1000 --source-account <G-public-account> --submit --secret-env EVERGREEN_SECRET_KEY --max-fee-stroops <reviewed-total-budget> --json
+npx @evergreen-stellar/cli extend <contract-id> --ledgers 1000 --source-account <G-public-account> --submit --secret-env EVERGREEN_SECRET_KEY --max-fee-stroops <reviewed-total-budget> --json
 ```
 
 Export the secret through your private shell environment or secret manager first; never paste it into command arguments or commit it. `--secret-env` names a variable, not a secret. This command does not automatically load `.env`. A wrong key/payer, operation, footprint, network, fee or validity interval is rejected before signing. This plain local adapter is not the W3 on-chain policy signer.
@@ -167,14 +161,14 @@ Previews go to stderr **before signing**, including the prepared hash (not yet s
 
 Live success checks the absolute expiry ledger against the before observation and inclusion ledger plus target. Later remaining-TTL readings naturally decrease as ledgers advance. A concurrent third-party extension may also improve post-state; the CLI does not prove exclusive causation.
 
-For the sprint proof use **A's instance only** after review. Do not submit for B/C or shared A/B/C Wasm while decay proofs are pending. [D11 simulation evidence](../../docs/evidence/2026-09-10-manual-extend-simulation/README.md) is unsigned and is not a live extension proof.
+For the sprint proof use **A's instance only** after review. Do not submit for B/C or shared A/B/C Wasm while decay proofs are pending. [D11 simulation evidence](https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-10-manual-extend-simulation/README.md) is unsigned and is not a live extension proof.
 ## Storage advice
 
 Add `--optimize` to a scan for conditional design recommendations with evidence:
 
 ```bash
-pnpm cli scan <contract-id> --keys-file keys.json --optimize
-pnpm cli scan <contract-id> --keys-file keys.json --optimize --cost --ledgers 1000 --json
+npx @evergreen-stellar/cli scan <contract-id> --keys-file keys.json --optimize
+npx @evergreen-stellar/cli scan <contract-id> --keys-file keys.json --optimize --cost --ledgers 1000 --json
 ```
 
 The report covers temporary retention, persistent-data durability choices, and shared-code dependencies. It reads network minimum lifetimes but requires no payer or simulation unless `--cost` is also requested. Plain scans retain their existing output and network work.
@@ -183,4 +177,4 @@ Recommendations are scoped to observed keys. They do not infer payload size, dup
 
 Current per-key rent quotes retain their pricing context when `--cost` is supplied. Missing, invalid or stale quotes remain unavailable, never zero. The historical A rent comparison is separately labelled; its approximately 1.95x ratio is not a promise of savings. Current network minimum lifetime is not the current entry's expiry: the report retains each entry's actual observed TTL. If settings cannot be read, a dated historical reference and limitation replace them.
 
-JSON adds `optimization` alongside unchanged scan/health/cost fields. Advice does not change scan exit precedence; a healthy exit is not a complete-storage audit. Even when optional pricing fails, the scan and qualified advice remain visible. [Read-only A evidence](../../docs/evidence/2026-09-10-storage-advice/README.md) includes full RPC and both output modes.
+JSON adds `optimization` alongside unchanged scan/health/cost fields. Advice does not change scan exit precedence; a healthy exit is not a complete-storage audit. Even when optional pricing fails, the scan and qualified advice remain visible. [Read-only A evidence](https://github.com/Fatihmaull/evergreen/blob/main/docs/evidence/2026-09-10-storage-advice/README.md) includes full RPC and both output modes.
