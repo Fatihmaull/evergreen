@@ -95,15 +95,16 @@ This costs about a minute per transaction if done at capture time and is unrecov
 >
 > 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
 
-**Measured 2026-09-22, ten days out. 6 of 13 requirements met, 3 partial, 4 absent.**
+**Measured 2026-09-22, ten days out. 7 of 13 evidence types exist; 6 are absent.**
+All three deliverables still grade Partial because each has at least one absent type.
 
 | Deliverable | Evidence required (SOW §6.1) | State |
 |---|---|---|
 | **1 — Core CLI** | Public repo, npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 **3 of 4.** Repo, screenshots ([13 PNGs](evidence/2026-09-14-d1-capture/README.md)) and coverage are met. ❌ **npm package unpublished** — `@evergreen-stellar/cli` returns 404 |
-| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 **2 of 4.** Tx hashes and engine logs met. ❌ **zero alert screenshots exist** — `mailboxScreenshotCaptured: false`; ❌ **`POLICY-SIGNER.md` is a self-declared stub**, untouched since 2026-09-08 |
-| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🔴 **0 of 5 complete.** Dashboard URL serves a 2,356-byte placeholder; ❌ **zero `action.yml` repo-wide**; demo is a script skeleton; docs partial; npm links blocked on D1 |
+| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 **3 of 4.** Tx hashes, engine logs and [two original inbox alert screenshots](evidence/2026-09-22-alert-screenshots/README.md) are met. ❌ **`POLICY-SIGNER.md` is a self-declared stub**, untouched since 2026-09-08 |
+| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 **1 of 5.** Documentation exists. Dashboard URL serves a 2,356-byte placeholder; ❌ **zero `action.yml` repo-wide**; the demo has not been recorded; npm links are blocked on D1 |
 
-> ⚠️ **All 17 `pnpm check` gates pass while four requirements have no artifact at all.** Every gate verifies evidence *integrity* — checksums, reciprocity, secrets, cadence. **None verifies completeness against §6.1.** Nothing here goes red on a missing package, a missing Action or a missing screenshot. The screenshot index below, with 6 of 8 rows blank, is the closest thing to a completeness signal and it fails silently by being empty.
+> ⚠️ **The integrity gates were green while four requirements had no artifact at all.** `check:sow` now verifies completeness separately; this capture moves alert screenshots from absent to present without weakening any integrity gate.
 
 ## Deliverable 1 — readiness at the Sep 16 gate
 
@@ -375,7 +376,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | 2026-09-08 | W1-D7-03 | working instance scan against Testnet; presentation of captured stdout | [Image and raw record](evidence/2026-09-08-w1-review/README.md#working-scan) |
 | 2026-09-12 | W2-D11-03 | TTL before/after a manual extend | [Before](evidence/2026-09-12-manual-extend-proof/before.jpg) · [After](evidence/2026-09-12-manual-extend-proof/after.jpg) |
 | | W2-D14-03 | CLI output (human + `--json`), coverage report | |
-| | W3-D17-03 | alert emails (success + failure) | |
+| 2026-09-22 | W3-D17-03 | original inbox alerts: confirmed extension + critical shared-code refusal | [Screenshots and source bindings](evidence/2026-09-22-alert-screenshots/README.md) |
 | | W3-D18-03 | engine run logs on the scheduler | |
 | | W4-D24-02 | dashboard: public scan of an arbitrary contract | |
 | | W4-D24-02 | dashboard: bump history with real data | |
@@ -428,6 +429,11 @@ The manual-extension and storage-advice verifier commands now verify every SHA25
 ## 2026-09-14 — scheduled A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
 
 Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261 from a local user-systemd timer. A instance expiry 6,026,591 → 6,370,261. [Raw RPC, signature/receipt/TTL verifier and actual explorer screenshot](evidence/2026-09-14-scheduled-a-save/README.md). Success/liveness inbox receipt confirmed by Rakha. Raised threshold 1,500,000 and target 1,700,000: not natural decay. B/C/shared controls unchanged and independently checked by Fatih in #149. Source snapshot remains 32670fe; later #152/#154 fixes are not retroactively claimed as that build. Shared platform acceptance stays #130; failure evidence is separately reviewed in [#146](https://github.com/Fatihmaull/evergreen/pull/146).
+
+The two original delivered messages were opened again on 2026-09-22 and retained as
+[mailbox screenshots](evidence/2026-09-22-alert-screenshots/README.md). Their visible
+subjects and bodies match the source intents and Resend IDs in the Sep14 bundle. No
+message was resent and the original confirmation record remains unchanged.
 
 - W3-D15-02b upload Testnet transaction: `cc8210e69acdd13b54236614fcd3deae1ae6b4bf7e00d7371afc43b39741cb94`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
 

@@ -2,12 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-22 · final B observations retained; separate expiry assessment ready for review
+**Last updated:** 2026-09-22 · original engine alert screenshots captured; six SOW evidence types remain absent
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **ten days out, four SOW evidence items do not exist** — npm package, alert screenshots, policy-signer guide, GitHub Action · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Health:** 🟡 **ten days out, six SOW evidence types do not exist** — npm package, policy-signer guide, live dashboard, GitHub Action, demo video and npm links · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
+
+## Current — original engine alert screenshots captured
+
+The two messages from the accepted Sep14 scheduled A-save proof are now retained as
+[dated Gmail screenshots](evidence/2026-09-22-alert-screenshots/README.md): the
+confirmed instance extension and the critical shared-code write-guard refusal.
+Their visible subjects and bodies match the original intents, Resend IDs and
+transaction/entry data. They were captured on Sep22 from the original messages;
+no email was resent and no Stellar interaction occurred. The original Sep14 record
+stays unchanged. SOW Deliverable2 now has three of four evidence types; the truthful
+policy-signer guide remains the missing type. W3-D17-03 stays In progress pending
+Fatih's status reconciliation. Notion mirror sync is pending.
 
 ## Current — September21 final B observed; v1 verdict retained, separate assessment ready
 
