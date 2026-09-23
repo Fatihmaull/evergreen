@@ -82,7 +82,7 @@ export function verdict(report: ScanReport, now = new Date()): string {
     if (view.state === 'expired') {
       // Not an error the page is coping with. It is the finished answer.
       headline = many
-        ? `The earliest entry in this scan is a ${kind} entry, and it has already ${view.word}.` +
+        ? `The earliest entry in this scan is a ${kind} entry, and it is already ${view.word}.` +
           `${endedAt(view)} ${esc(view.reason)} It binds the contract it belongs to, not all of them.`
         : `<strong>This contract has stopped working.</strong> Its ${kind} entry is ${view.word}.` +
           `${endedAt(view)} ${esc(view.reason)}`;
