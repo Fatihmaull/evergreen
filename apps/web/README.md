@@ -25,7 +25,6 @@ node apps/web/scripts/grade-snapshot.mjs   # grade the snapshot with core's heal
 node apps/web/build.mjs                    # build into apps/dashboard/public
 node apps/web/build.mjs --commission       # prove the write-path guard can fail
 node apps/web/scripts/serve.mjs 4317       # serve the built site locally
-node --test apps/web/test/shim-parity.test.mjs
 ```
 
 `grade-snapshot.mjs` must run after every `make-snapshot.mjs`: the build refuses

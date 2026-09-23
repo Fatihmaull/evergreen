@@ -7,12 +7,6 @@
  * is re-derived here — that is the rule the spec calls "reuse, do not
  * re-derive", and #195 moves the rest of the CLI's presentation rules into core.
  */
-import { installBufferShim } from '../shim/buffer-shim.js';
-
-// Must run before any core call. Core reads `Buffer` inside its functions, not
-// at import time, so installing here is early enough. Temporary — see #194.
-export const bufferSource = installBufferShim();
-
 import {
   DEFAULT_CRITICAL_LEDGERS,
   assessEntryWithThresholds,
