@@ -119,8 +119,8 @@ Supply `ContractData` keys for the requested contract, with persistent or tempor
 |---|---|
 | `2` | Invalid arguments/input/response, network refusal or RPC failure |
 | `3` | The scan came back **degraded** — an entry not returned, a TTL unavailable, an executable that cannot be followed, or nothing observed |
-| `1` | All observations are available and at least one TTL is below 17,280 ledgers |
-| `0` | Everything the command was asked to check has known TTL at or above the threshold |
+| `1` | All observations are available and at least one TTL is at or below the selected threshold (default 17,280 ledgers) |
+| `0` | Everything the command was asked to check has known TTL above the selected threshold |
 
 **`0` means "everything I was asked to check is healthy", never "this contract is healthy".** The command reads the keys it is given and cannot enumerate storage, so coverage is printed on every scan and belongs in how you read the result.
 
