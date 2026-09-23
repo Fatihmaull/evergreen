@@ -93,12 +93,21 @@ polish, sharing visualisation. All are `W4-D23`/`W4-D24` and all are depth.
 
 ## Verification, and it cannot be Node
 
-`W4-D22-11` was invisible to every Node test — jsdom still has a global
-`Buffer`, so 466 tests passed while the bug shipped. The web app's regression
+[#194](https://github.com/Fatihmaull/evergreen/issues/194) was invisible to every
+Node test — jsdom still has a global `Buffer`, so 466 tests passed while the bug
+shipped. The web app's regression
 test has to run in a **real browser** against the built bundle
 ([#197](https://github.com/Fatihmaull/evergreen/issues/197)). `.github/workflows/`
 is not the web agent's path: **say when the scaffold exists and the CI job is
 mine to add.**
+
+> ⚠️ **The web track's task IDs are not in the plan.** Issues #194–#198 each cite
+> a row (`W4-D22-11` … `W4-D22-15`) that exists only in
+> [#199](https://github.com/Fatihmaull/evergreen/pull/199), open and conflicting
+> since 2026-09-17. `pnpm check:task-ids` refuses a bare reference to any of
+> them — *"an ID that appears in a doc but nowhere in the plan is work nobody is
+> tracking"* — which is why this page cites issue numbers instead. **Landing
+> #199 registers all five.**
 
 ## Dates
 
