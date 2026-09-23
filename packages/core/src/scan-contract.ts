@@ -20,12 +20,31 @@ function ledger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 0xffff_ffff;
 }
 
+/**
+ * Canonical base64 only: the text must survive a decode/encode round trip
+ * unchanged. A lenient decoder silently "repairs" invalid characters or missing
+ * padding, and a repaired key is a different key.
+ *
+ * `atob`/`btoa`, NOT Node's global `Buffer`. This used `Buffer` until
+ * 2026-09-22, and `Buffer` does not exist in a browser: every key raised a
+ * ReferenceError, was reported as "RPC returned a malformed ledger key", and a
+ * scan of a live contract returned ZERO entries and a rent of "0" with no error
+ * (#194, measured in headless Chrome 152). Every test ran on Node, where the
+ * global is always present, so all of them passed while it shipped.
+ * `test/browser-no-buffer.test.ts` now runs without it.
+ */
+function isCanonicalBase64(text: string): boolean {
+  try {
+    return btoa(atob(text)) === text;
+  } catch {
+    return false;
+  }
+}
+
 function parseKey(value: unknown): xdr.LedgerKey {
   if (typeof value !== 'string') throw new Error('Invalid ledger key');
   const text = value.trim();
-  // Buffer's base64 decoder ignores invalid characters; do not accept that repair.
-  if (!text || Buffer.from(text, 'base64').toString('base64') !== text)
-    throw new Error('Invalid ledger key');
+  if (!text || !isCanonicalBase64(text)) throw new Error('Invalid ledger key');
   const key = xdr.LedgerKey.fromXDR(text, 'base64');
   if (key.toXDR('base64') !== text) throw new Error('Invalid ledger key');
   return key;
