@@ -623,10 +623,10 @@ Wallet connection. Extending from the interface. Any write to the chain. Mainnet
 
 | Question | Decision |
 |---|---|
-| Status and scan | **One combined surface** at `/dashboard` |
+| Status and scan | **One combined surface** at `/dashboard` — intent kept, route count amended 2026-09-23; see *Amended* below |
 | Landing vs dashboard | **Separate.** Landing carries product, docs and profile and has **no tooling**. The tool is reached by entering the dashboard. |
 | Multi-contract | **Its own entry point** at `/dashboard/blast-radius` |
-| Decay story | **Timeline of recorded evidence**, not present-state only. The expiry marker persists after the event. Three panels of entries, not two lines of contracts (§18.3, 2026-09-17). |
+| Decay story | **Timeline of recorded evidence**, not present-state only. The expiry marker persists after the event; expired is a rendered state (amended 2026-09-23). Three panels of entries, not two lines of contracts (§18.3, 2026-09-17). |
 | Language | **English only.** Strings in one module; no i18n scaffolding yet. |
 | Logo | **Does not exist.** Three directions to mock per §9 before choosing. |
 | Page exports | **Not committed.** Only this spec and `DESIGN.md` are; every web PR attaches a render of what it built (2026-09-17). |
@@ -638,6 +638,47 @@ Wallet connection. Extending from the interface. Any write to the chain. Mainnet
 1. **The decay chart anchors the landing page too** — as the same build-time SVG, captioned. If two caption lines cannot carry §18.3's captions honestly, the landing links to the chart instead.
 2. **A cold visit with no ID and no JavaScript** gets the recorded state, pre-rendered: the chart and one card per contract, each labelled with the ledger it was recorded at. The scan and blast-radius inputs are not rendered without JavaScript; one sentence says scanning runs in the browser and that the CLI runs the same scan. With JavaScript, the cards refresh from a live read-only scan and say so.
 3. **`/docs` is generated from the tool** — its help text, its exported exit codes, the annotated type declarations and marked README sections — and the build fails when a source moves.
+
+**Amended 2026-09-23 — what changed, and why.**
+
+*This section records departures from the decisions above. The decisions were
+not wrong when taken; the build and the chain moved.*
+
+1. **Twelve routes ship, not five.** This document specifies `/`, `/docs`,
+   `/dashboard`, `/dashboard/blast-radius` and `/about`. What ships adds
+   `/dashboard/scanner`, `/dashboard/decay`, `/dashboard/contracts`,
+   `/dashboard/engine`, `/dashboard/history`, `/docs/archival` and `/evidence`.
+
+   **The intent of "one combined surface" is kept.** That decision was never
+   about a route count — it was that a stranger must not have to assemble an
+   answer from several pages. So `/dashboard` alone is sufficient: the scan
+   field and its complete result — verdict, binding entry, coverage, blast
+   radius, rent — live on it, and nobody needs a second page to learn what they
+   came to learn. **The other eleven are depth, not steps.** A reviewer who
+   wants the record can follow them; a stranger who wants an answer never has
+   to. If any of them ever becomes a step — a place a visitor *must* pass
+   through to finish a task — this amendment has been violated and the route
+   should fold back into `/dashboard`.
+
+2. **Shareable result URLs are cut.** `/dashboard/s/:ids` and
+   `/dashboard/b/:ids` appear in the IA and were never specified further. They
+   need result state encoded into a URL, and ten days do not hold it. Cost: a
+   reviewer cannot link someone directly to a scan result; they link to the
+   scanner and paste the ID, which is what the example buttons are for.
+
+3. **Open question 4 is answered by measurement, and the premise was wrong.**
+   It asked what to draw for "observations after an expiry, **when the entry is
+   absent**". The entry is not absent. Measured on guinea-pig B on 2026-09-21:
+   `getLedgerEntries` still returns an archived entry, with
+   `liveUntilLedgerSeq: 0`, so core reports `ttl.status: 'known'`,
+   `endsAtLedger: 0` and a remaining of `0 − observedLedger`, with `isExpired`
+   set alongside. The proposed answer still holds — **the line ends at the
+   expiry** — but for a different reason than the question assumed, and with a
+   consequence the question did not anticipate: any renderer that reads the raw
+   TTL instead of the assessment prints a large negative count and a date in the
+   past. Expired is therefore a rendered **state**, carrying core's own sentence
+   and the ledger it ended at from `ops/crossing-schedule.json`, because the
+   chain can no longer report that ledger once the entry is archived.
 
 **Still open, with proposed defaults:**
 
