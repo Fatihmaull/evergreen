@@ -1,0 +1,82 @@
+{
+  "capturedAt": "2026-09-23T03:07:12.241Z",
+  "result": {
+    "network": "testnet",
+    "contracts": [
+      {
+        "id": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+      },
+      {
+        "id": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+      },
+      {
+        "id": "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+      }
+    ],
+    "entries": {
+      "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB": {
+        "kind": "instance",
+        "endBehavior": "archived",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+        ],
+        "observedAtLedger": 4821848,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 6370261,
+          "remainingLedgers": 1548413
+        }
+      },
+      "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB": {
+        "kind": "instance",
+        "endBehavior": "archived",
+        "contracts": [
+          "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ"
+        ],
+        "observedAtLedger": 4821848,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 0,
+          "remainingLedgers": -4821848
+        }
+      },
+      "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB": {
+        "kind": "instance",
+        "endBehavior": "archived",
+        "contracts": [
+          "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+        ],
+        "observedAtLedger": 4821848,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 4880097,
+          "remainingLedgers": 58249
+        }
+      },
+      "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7": {
+        "kind": "code",
+        "endBehavior": "archived",
+        "contracts": [
+          "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+          "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
+          "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL"
+        ],
+        "observedAtLedger": 4821848,
+        "ttl": {
+          "status": "known",
+          "endsAtLedger": 5290829,
+          "remainingLedgers": 468981
+        }
+      }
+    },
+    "issues": [],
+    "coverage": {
+      "mode": "known-keys",
+      "dataKeysSuppliedByContract": {
+        "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": 0,
+        "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": 0,
+        "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": 0
+      }
+    }
+  }
+}

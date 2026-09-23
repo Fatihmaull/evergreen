@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+
+    // The browser bundle is built by esbuild, which resolves extensionless
+    // relative imports. `NodeNext` from the base config would demand `.js`
+    // suffixes the bundler neither needs nor uses, so this matches the tool
+    // that actually builds these files.
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "allowJs": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "data/known-ends.json"]
+}

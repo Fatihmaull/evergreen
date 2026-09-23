@@ -33,3 +33,15 @@ packages/core/test/fixtures/
 
 # Preserve recorded RPC responses and exported workflow logs byte-for-byte.
 docs/evidence/
+
+# Recorded scans and data generated from committed sources, rewritten by
+# `apps/web/scripts/*`. Same reason as the core fixtures above: a recorded
+# response is kept as it was produced, and formatting it means the formatter
+# and the generator overwrite each other on every refresh.
+apps/web/data/
+
+# Build output. `apps/web/build.mjs` writes the dashboard here and Cloudflare
+# Pages publishes this directory, so the files are committed — but they are
+# generated, and reformatting them means Prettier and the build overwrite each
+# other forever. The sources under `apps/web/src/` are formatted and checked.
+apps/dashboard/public/

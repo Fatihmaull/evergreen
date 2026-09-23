@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>State archival — Evergreen</title>
+    <meta name="description" content="How Soroban state archival works on testnet: the live network configuration plus our own measurements." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item active" href="/docs/archival/" aria-current="page">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Reference · read from the network, not from documentation</p>
+            <h1>What the network says about archival</h1>
+            <p class="lead">The configuration below is read live from testnet when the page loads. Rent is not a flat per-byte rate — the CLI prices it by simulating against the network precisely because that formula does not hold, so no such rate appears here.</p>
+          </header>
+          <section>
+    <div id="live-config"><div class="table-wrap"><table>
+      <thead><tr><th scope="col">Parameter</th><th scope="col">Ledgers</th><th scope="col">About</th></tr></thead>
+      <tbody>
+        <tr><td class="num">max_entry_ttl</td><td class="num">3,110,400</td>
+          <td>No entry lives past this. Any figure above it is a live impossibility.</td></tr>
+        <tr><td class="num">min_persistent_ttl</td><td class="num">120,960</td>
+          <td>Fresh instance, code and persistent entries start here — about seven days.</td></tr>
+        <tr><td class="num">min_temporary_ttl</td><td class="num">720</td>
+          <td>Fresh temporary entries start here — about an hour. Two orders of magnitude below the rest.</td></tr>
+      </tbody></table></div></div>
+    <p class="small muted" id="live-note">Committed with this build, read at ledger 4,821,849. Refreshing live…</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">What happens at zero</h2>
+    <p class="muted">
+      An entry is still live at its final ledger — remaining zero means one ledger left, not expired. Past it,
+      instance, code and persistent entries are <strong>archived</strong>: unusable until someone pays to restore
+      them, slower and more expensive than a normal read. Temporary entries are <strong>deleted outright</strong>
+      and cannot be restored at any price. Reporting those two fates the same way is a serious interface bug,
+      so they are never the same chip anywhere on this site.
+    </p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Measured, not read from documentation</h2>
+    <p class="muted">
+      Ledger close <strong>5.000000 s, ± 0.000050</strong> — sampled from 11 testnet closes 2,000 ledgers apart
+      and run through the same measurement the CLI uses. The precision is the finding: across a full maximum
+      TTL the uncertainty band is over an hour wide, so wall-clock dates are estimates and ledgers are the truth.
+    </p>
+    <p class="muted">
+      Temporary floor: the configured minimum is 720 ledgers, about an hour; our own temporary entry had 688
+      left when first sampled — the ~57 minutes. Those are two different things and they are stated together
+      so they are not conflated.
+    </p>
+    <p class="muted">
+      Durability, not size: persistent rent measured about <strong>1.95×</strong> temporary at byte-identical
+      size. The price follows what the entry is, not only how big it is — which is itself the argument for
+      simulating rather than computing.
+    </p>
+  </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    <script src="/assets/archival.js"></script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-09-23T03:07:12.241Z",
+  "thresholds": {
+    "warnBelowLedgers": 120960,
+    "criticalBelowLedgers": 17280
+  },
+  "grades": {
+    "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L": {
+      "worst": "healthy",
+      "binding": {
+        "key": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
+        "health": "healthy",
+        "isExpired": false,
+        "reason": "Above threshold.",
+        "endBehavior": "archived",
+        "endsAt": 5290829,
+        "remaining": 468981,
+        "kind": "code",
+        "observedAtLedger": 4821848
+      },
+      "observedAtLedger": 4821848
+    },
+    "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": {
+      "worst": "critical",
+      "binding": {
+        "key": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
+        "health": "critical",
+        "isExpired": true,
+        "reason": "Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.",
+        "endBehavior": "archived",
+        "endsAt": null,
+        "remaining": null,
+        "kind": "instance",
+        "observedAtLedger": 4821848
+      },
+      "observedAtLedger": 4821848
+    },
+    "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": {
+      "worst": "warning",
+      "binding": {
+        "key": "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB",
+        "health": "warning",
+        "isExpired": false,
+        "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed.",
+        "endBehavior": "archived",
+        "endsAt": 4880097,
+        "remaining": 58249,
+        "kind": "instance",
+        "observedAtLedger": 4821848
+      },
+      "observedAtLedger": 4821848
+    }
+  }
+}
