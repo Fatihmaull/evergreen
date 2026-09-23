@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-23 · CLI 0.1.0 release conflict resolving on current main; dashboard live
+**Last updated:** 2026-09-23 · CLI 0.1.0 rebased and awaiting final review/merge; dashboard live
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **nine days out, three SOW evidence types do not exist** — npm package, demo video and npm links · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
@@ -17,9 +17,10 @@ as `0.1.0` in [#226](https://github.com/Fatihmaull/evergreen/issues/226) and ind
 proved the packed/clean-installed CLI exits 0/1/2/3 as the Action expects. The public
 package still returns `E404`; no version has been published or overwritten. The
 candidate is binary-only and the command remains `pnpm publish`, never
-`npm publish`. PR #227 is being rebased onto current main after #191 and #231–#234;
-the merged tree must be packed and verified again before any registry write. Notion
-sync remains pending until the release outcome merges.
+`npm publish`. PR #227 is rebased onto current main after #191 and #231–#234;
+the full gate and packed clean-install proof have been repeated; Fatih's final
+review/merge remains before any registry write. Notion sync remains pending until
+the release outcome merges.
 
 ## Current — Stage 2 no-go recorded; truthful guide merged
 
@@ -54,11 +55,12 @@ confirmed instance extension and the critical shared-code write-guard refusal.
 Their visible subjects and bodies match the original intents, Resend IDs and
 transaction/entry data. They were captured on Sep22 from the original messages;
 no email was resent and no Stellar interaction occurred. The original Sep14 record
-stays unchanged. SOW Deliverable2 now has three of four evidence types; the truthful
-policy-signer guide remains the missing type. W3-D17-03 stays In progress pending
-Fatih's status reconciliation. Notion mirror sync is pending.
+stays unchanged. SOW Deliverable2 now has all four evidence types; the policy-signer
+guide merged in #191 while the named capped-signer capability remains Partial.
+W3-D17-03 stays In progress pending Fatih's status reconciliation. Notion mirror
+sync is pending.
 
-## Current — September21 final B observed; v1 verdict retained, separate assessment ready
+## Reference — September21 final B observed; v1 verdict retained, assessment merged
 
 > 🔴 **This is a tooling gap, not an evidence gap, and the difference matters to
 > anyone opening this in October.**
@@ -77,16 +79,15 @@ Fatih's status reconciliation. Notion mirror sync is pending.
 > different situations. This is the second. `W3-D18-03a` addresses it by assessing the
 > sealed record offline, without modifying the frozen verifier or any existing bundle.
 
-W3-D18-03a / #214 is published in #216 as a separate offline assessment. It first
+W3-D18-03a / #214 was merged in #216 as a separate offline assessment. It first
 authenticates and replays the sealed original verdict with the existing verifier,
 then evaluates the documented non-live response using the verified same-subject
 live baseline and unchanged shared-code control. All three original final reads
 produce separate `expiry-observed` reports; their original `unverified` verdicts
 remain unchanged. Regression tests reject still-live/boundary data, absent or
 invalid baselines, control changes, malformed zero representations and tampered
-captures. Internal review and Fatih's comment-level technical verification are
-complete; formal PR review/merge and Shared acceptance remain open. Notion sync
-remains pending while the source is unavailable. See the
+captures. Internal review and Fatih's technical verification completed before
+merge; Shared acceptance of the broader D18-03 row remains separate. See the
 [compatibility assessment](W3-D18-03a-EXPIRY-REASSESSMENT.md).
 
 The19:00 checkpoint was collected with raw bundles and native screenshot, but three
@@ -95,10 +96,9 @@ B instance/persistent data with `liveUntilLedgerSeq: 0` after the baseline end l
 the current verifier only accepts their absence. [Evidence and interpretation](evidence/2026-09-21-b-crossing-1200/README.md).
 No capture runtime changes, transaction or altered manifest. All31 fingerprints
 match; the live Sunday baseline remains verified. Three prior checkpoints passed,
-not four. D18-03 is Blocked on [#214](https://github.com/Fatihmaull/evergreen/issues/214);
-W3-D18-03a is In progress with #216 awaiting formal review/merge. C and final
-acceptance remain open. Notion sync/presence validation pending for D18-03 and
-D18-03a because the canonical data source was unavailable at the last lookup.
+not four. [#214](https://github.com/Fatihmaull/evergreen/issues/214) is resolved and
+W3-D18-03a is Done through #216. D18-03 remains In progress for C and final Shared
+acceptance; no earlier blocker or pending merge is implied.
 
 ## Reference — September21 midday B checkpoint
 
