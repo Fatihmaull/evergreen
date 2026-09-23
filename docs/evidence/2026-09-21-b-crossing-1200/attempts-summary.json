@@ -1,0 +1,32 @@
+[
+  {
+    "directory": "attempts/120035",
+    "observedAt": "2026-09-21T12:00:35.746Z",
+    "ledger": 4793689,
+    "phase": "unverified",
+    "reason": "INVALID_SUBJECT_TTL",
+    "exitCode": 2,
+    "baselineEmbedded": true,
+    "rpcCount": 5
+  },
+  {
+    "directory": "attempts/120224",
+    "observedAt": "2026-09-21T12:02:24.652Z",
+    "ledger": 4793711,
+    "phase": "unverified",
+    "reason": "INVALID_SUBJECT_TTL",
+    "exitCode": 2,
+    "baselineEmbedded": true,
+    "rpcCount": 5
+  },
+  {
+    "directory": "attempts/120429",
+    "observedAt": "2026-09-21T12:04:29.000Z",
+    "ledger": 4793736,
+    "phase": "unverified",
+    "reason": "INVALID_SUBJECT_TTL",
+    "exitCode": 2,
+    "baselineEmbedded": true,
+    "rpcCount": 5
+  }
+]

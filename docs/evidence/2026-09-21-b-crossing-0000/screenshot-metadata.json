@@ -1,0 +1,12 @@
+{
+  "kind": "native-terminal-screenshot",
+  "observationTime": "2026-09-21T00:00:19.735Z",
+  "terminalDisplayTime": "2026-09-21T00:00:20.615676+00:00",
+  "screenshotFile": "terminal-B-0700.png",
+  "screenshotSha256": "d33f6745aff26f26d701d0b8e03b74dcdf3078ed66713d7e5b44025e4bbb3f93",
+  "sourceManifestSha256": "0320563fe399b575e4e6ca3fe9d22040789abbcad48fce09319744045ca9a524",
+  "method": "Konsole executing live read-only collector then offline verifier; Spectacle active-window capture",
+  "review": "Image inspected: correct terminal, capture output and verification visible, no unrelated desktop content",
+  "screenshotRole": "Visual companion; original JSON RPC, stdout and checksums retained separately",
+  "edited": false
+}

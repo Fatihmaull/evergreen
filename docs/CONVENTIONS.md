@@ -260,6 +260,108 @@ session — the other was `check-cadence-quotes.mjs` rejecting a parenthetical t
 explained which figure had been removed by naming the figure. Assume anything that
 scans for a pattern will match your explanation of the pattern.
 
+### A watcher must check its own continuity at the cadence it claims to run at
+
+*2026-09-21.* The guinea-pig B watcher polled every ten minutes and checked its own
+log for gaps **only at each slot's T−7** — roughly every six hours. It therefore had a
+**six-hour blind spot by construction**, whatever else it verified.
+
+It used that blind spot. Between 10:49 and 15:17 the machine slept and the poll loop
+lost **268 minutes**, covering B's expiry and the capture slot. The next continuity
+check was scheduled for 11:53 and did not run, because the wake timer was suspended
+with everything else. The gap was discovered at 16:34, four hours after the event.
+
+**The rule was already written down.** The day before: *"treat a gap as a finding, not
+as missing data — it tells you the watcher was not watching."* The rule existed, the
+instrument existed and was correct, and nothing read it often enough to matter.
+
+**`caffeinate` is the worked example of why this must be an outcome check.** It held
+all three assertions — `PreventSystemSleep`, `PreventUserIdleSystemSleep`,
+`PreventUserIdleDisplaySleep` — continuously, on one pid, across 29 hours that
+included several sleeps. `pmset -g assertions` reported it holding the entire time.
+`pmset -g log` showed `Entering Sleep state due to 'Maintenance Sleep' ... Using Batt`.
+**The mechanism was working and the outcome was not**, which is the exact distinction
+commissioning exists to draw — and I verified the mechanism.
+
+**The rule:** a watcher's continuity check runs at its own poll cadence, not at the
+cadence of whatever consumes it. A ten-minute loop that self-checks every six hours is
+a six-hour loop wearing a ten-minute label.
+
+### Redundancy earns its keep on failures nobody predicted
+
+The second capture machine was added for **availability** — so a missed slot would not
+lose unrepeatable evidence. It has since covered two failures, and **neither was the
+one it was added for**:
+
+| | what happened | what actually saved it |
+|---|---|---|
+| the crossing | the primary watcher read `EXIT_BELOW_THRESHOLD=1` as a broken scan and went blind **at the moment B crossed** | the second machine captured at ledger 4,776,408, one ledger below the threshold |
+| the expiry | the primary machine slept through the event and its wake timer slept with it | the second machine captured at 12:00:35, 12:02:24 and 12:04:29 |
+
+An exit-code misreading and a sleeping host. Neither was foreseen, and no amount of
+thinking about *availability* would have produced either as a scenario.
+
+**That is the argument for redundancy that does not depend on enumerating failure
+modes.** The value was not in predicting what would go wrong; it was in there being a
+second observer whose failure was uncorrelated with the first's. Two processes on one
+machine are one machine — which is what the expiry proved, since both watchers on the
+primary host gapped together while the second machine was unaffected.
+
+### A non-zero exit from our own tooling is usually a finding, not a failure
+
+*2026-09-20, 12:00:29Z.* The watcher polling guinea-pig B logged three consecutive
+`SCAN_FAIL`s starting seconds after B crossed its alert threshold. **The chain was
+fine the entire time.** `EXIT_BELOW_THRESHOLD = 1`, and the poll loop was written as
+
+```bash
+if node packages/cli/dist/bin.js scan "$B" --json > last.json; then   # wrong
+```
+
+so any non-zero exit read as a broken scan. **The instrument went blind precisely
+because the event it existed to detect had occurred.** The CLI was reporting the
+crossing, in the exit code, and the loop had been written to hear that as breakage.
+
+Cost: the crossing time had to be reconstructed from ledger arithmetic instead of
+observed, and the capture ran six minutes late. The evidence survived only because a
+second operator was capturing independently — his bundle caught B at `remaining`
+17,279, one ledger below the threshold, while this watcher was reporting failure.
+
+**Our exit codes are a vocabulary, not a health bit:**
+
+| | |
+|---|---|
+| `0` | ok |
+| `1` | **below threshold** — the thing the tool exists to tell you |
+| `2` | a real error, or verification failed / does not qualify |
+| `3` | incomplete — a key was asked for and not found |
+
+`1` and `3` are the tool having something to say. Only `2` and above are breakage.
+
+**The discriminator is output shape, not the exit code.** During the diagnosis the
+answer was already on disk and unread: `last.json` held 2,768 bytes of valid JSON and
+`last.err` was empty. **A finding produces well-formed output; a break does not.** That
+is checkable, so it beats remembering which codes mean what:
+
+```bash
+node …/bin.js scan "$B" --json > out.json 2>err.txt; rc=$?
+if [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ] || [ "$rc" -eq 3 ]; then …
+```
+
+**Sweep, same day.** `.github/workflows/engine-cron.yml` had the sibling defect in the
+opposite direction — `pnpm engine:run | tee` exiting with `tee`'s status, so a failing
+unattended run reported success. Already fixed by `shell: bash`, which GitHub runs with
+`-eo pipefail`; the comment there records the first cron run dying invisibly. The
+`execFileSync` call sites wrap `git`, `tsc`, `gh` and `esbuild`, where non-zero genuinely
+is failure, and are correct as written.
+
+**The pair worth noticing.** The same day, the same area, opposite outcomes. The poll
+loop called `node …/bin.js` directly rather than `pnpm cli` — which happens to skip a
+rebuild and so protected a runtime fingerprint the whole weekend depended on. That was
+**luck, not judgement**; it was not chosen for that reason. The exit-code handling in the
+same loop was not lucky. **One accident in each direction, in code written in the same
+five minutes** — which is the argument for checking a property rather than trusting that
+the person writing it had the property in mind.
+
 ### A checker's output shape bounds what it can report
 
 Distinct from *"suspect the instrument when the result surprises you"*, and harder,

@@ -60,3 +60,10 @@ desktop.ini
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# ...but a log committed as evidence is evidence. `*.log` above silently dropped
+# both raw logs from #218 while `git commit` reported success and the document
+# that links them merged green — the commit subject said "with its raw logs" and
+# there were no logs. The two survivors under 2026-09-07-scheduler-runs/ were
+# force-added, so the trap was worked around twice and never closed.
+!docs/evidence/**/*.log

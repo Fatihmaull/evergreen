@@ -53,8 +53,13 @@ future service guarantee. The watcher does not improve GitHub's delivery cadence
    systemd state. Check both fresh successful jobs and any new maximum gap.
 2. Verify the runtime checksum and email-only configuration remain usable. Preserve
    the protected subjects and action threshold17,280. Do not force B candidacy.
-3. Confirm **Fatih primary, Rakha backup** and the manual crossing/expiry windows.
-   This is the existing runbook assignment, not a new acknowledgment from Fatih.
+3. Confirm the assignment against the generated table below — **Rakha is primary on
+   all four checkpoints and Fatih is backup on all four**, per
+   [`ops/crossing-schedule.json`](../ops/crossing-schedule.json) and Rakha's
+   per-date confirmations in #104. *(This step read "Fatih primary, Rakha backup"
+   until 2026-09-19 — the inverted assignment, in the step whose whole job is
+   confirming it. The prose sat outside the generated markers, so
+   `pnpm check:schedule` could not see it.)*
 4. Obtain explicit acceptance for the evidence below. Do not close those gates
    just because code merged or this watcher is armed.
 
@@ -95,14 +100,18 @@ Published in [PR #163](https://github.com/Fatihmaull/evergreen/pull/163); the ex
 
 <!-- BEGIN GENERATED: crossing-schedule (full) -->
 
-**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+*guinea-pig B's watch is complete (2026-09-20 → 2026-09-21). The table below is the NEXT one.*
 
-| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+🔴 **guinea-pig C has two dates, one day apart, and they are not interchangeable.** The **alert threshold** is ~2026-09-25 12:00 UTC; the **expiry is ~2026-09-26 12:00 UTC**, and the expiry is the unrepeatable one. Scheduling from the threshold alone arrives a day early — `write-guard.ts` owns both as `alertThresholdOn` and `expiresOn`.
+
+**guinea-pig C is below its action threshold for 24 hours.** 4 captures across that window give a decay curve rather than two endpoints. Its instance entry ends at ledger 4,880,097 and its persistent entry at 4,880,099 — an expiry assessment needs a ledger above the **later** of the two.
+
+| Time (UTC) | WIB | C remaining | What it is | Primary | Backup — runs it if nothing is committed by |
 |---|---|---|---|---|---|
-| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
-| **Mon 2026-09-21 00:00** | Mon 07:00 | 8,640 | first decay reading | **Rakha** | Fatih, 00:20 UTC |
-| **Mon 2026-09-21 06:00** | Mon 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
-| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+| **Fri 2026-09-25 12:00** ❓ | Fri 19:00 | 17,280 | the alert threshold | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
+| **Sat 2026-09-26 00:00** ❓ | Sat 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
+| **Sat 2026-09-26 06:00** ❓ | Sat 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Sat 2026-09-26 12:00** ❓ | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
 
 ### The backup trigger is a wall clock, not a judgement
 
@@ -110,11 +119,18 @@ Published in [PR #163](https://github.com/Fatihmaull/evergreen/pull/163); the ex
 
 **Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
 
-### Deliberately declined
+### ❓ 4 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
 
-- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
 
-Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+- **Fri 2026-09-25 12:00 / Fri 19:00 WIB** — asked of Rakha in #104, 2026-09-22. Same shape as B's slot 1. Nobody has accepted it yet.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — asked of Rakha in #104, 2026-09-22. 07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 06:00 / Sat 13:00 WIB** — asked of Rakha in #104, 2026-09-22. Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — asked of Rakha in #104, 2026-09-22. A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
 
 <!-- END GENERATED: crossing-schedule -->
 

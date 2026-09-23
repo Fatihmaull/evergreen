@@ -1,0 +1,12 @@
+{
+  "kind": "native-terminal-screenshot-of-recorded-checkpoint",
+  "observationTime": "2026-09-21T06:00:30.776Z",
+  "replayDisplayTime": "2026-09-21T06:05:06.169266+00:00",
+  "screenshotFile": "terminal-B-1300.png",
+  "screenshotSha256": "2c43789cc4823f80c4effcc889838d3cd4795d82f76a257bdf58cf6256c68e68",
+  "sourceManifestSha256": "24b53f77fd7f295ee13fcb72c5178e8d607a056e9e3d5e6d48bc0a972b5ceeb3",
+  "method": "Actual Konsole displaying original checkpoint stdout and fresh offline verifier; Spectacle active-window screenshot",
+  "limitation": "Initial attempts captured unrelated windows and were excluded. Final image is a later labelled replay, not a photograph at the observation instant. No new chain read was performed for the image.",
+  "visualInspection": "Correct terminal, replay label, original observation timestamp, refusal and verifier exit0 visible",
+  "edited": false
+}

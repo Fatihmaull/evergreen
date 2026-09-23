@@ -8,8 +8,10 @@ A supplied the scheduled-save proof. B supplies natural decay and guard refusal,
 observed through the read-only probe. A manual observation is recorded as manual;
 a GitHub cron run cannot stand in for it because dogfood selects only A.
 
-Run every item on **Friday Sep 18**. Nothing here should first be attempted on
-the day.
+**If you are reading this ON the day — Sun Sep 20 or Mon Sep 21 — go straight to
+§3, §3b and §4.** The "Friday checklist" below was the readiness pass; it ran on
+Sep 18 and nothing in it has to be repeated tonight. Nothing on this page should
+first be *attempted* on the day, which is what that pass was for.
 
 ---
 
@@ -17,14 +19,18 @@ the day.
 
 <!-- BEGIN GENERATED: crossing-schedule (full) -->
 
-**guinea-pig B is below its action threshold for 24 hours** — from ~2026-09-20 12:00 UTC to ~2026-09-21 12:00 UTC. Four captures across that window give a decay curve rather than two endpoints.
+*guinea-pig B's watch is complete (2026-09-20 → 2026-09-21). The table below is the NEXT one.*
 
-| Time (UTC) | WIB | B remaining | What it is | Primary | Backup — runs it if nothing is committed by |
+🔴 **guinea-pig C has two dates, one day apart, and they are not interchangeable.** The **alert threshold** is ~2026-09-25 12:00 UTC; the **expiry is ~2026-09-26 12:00 UTC**, and the expiry is the unrepeatable one. Scheduling from the threshold alone arrives a day early — `write-guard.ts` owns both as `alertThresholdOn` and `expiresOn`.
+
+**guinea-pig C is below its action threshold for 24 hours.** 4 captures across that window give a decay curve rather than two endpoints. Its instance entry ends at ledger 4,880,097 and its persistent entry at 4,880,099 — an expiry assessment needs a ledger above the **later** of the two.
+
+| Time (UTC) | WIB | C remaining | What it is | Primary | Backup — runs it if nothing is committed by |
 |---|---|---|---|---|---|
-| **Sun 2026-09-20 12:00** | Sun 19:00 | 17,280 | the crossing | **Rakha** | Fatih, 12:20 UTC |
-| **Mon 2026-09-21 00:00** | Mon 07:00 | 8,640 | first decay reading | **Rakha** | Fatih, 00:20 UTC |
-| **Mon 2026-09-21 06:00** | Mon 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
-| **Mon 2026-09-21 12:00** | Mon 19:00 | 0 | expiry — happens once | **Rakha** | Fatih, 12:20 UTC |
+| **Fri 2026-09-25 12:00** ❓ | Fri 19:00 | 17,280 | the alert threshold | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
+| **Sat 2026-09-26 00:00** ❓ | Sat 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
+| **Sat 2026-09-26 06:00** ❓ | Sat 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
+| **Sat 2026-09-26 12:00** ❓ | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
 
 ### The backup trigger is a wall clock, not a judgement
 
@@ -32,11 +38,18 @@ the day.
 
 **Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
 
-### Deliberately declined
+### ❓ 4 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
 
-- **Sun 2026-09-20 18:00 / Mon 01:00 WIB** — declined 2026-09-16. Not for want of a volunteer — it is the wrong place for a checkpoint. It would have made the sequence dense early and left a twelve-hour gap running into expiry, which is the interval a reader actually asks about. The 06:00 UTC slot fills that gap instead, and costs a lunchtime rather than a night.
+Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
 
-Recorded rather than omitted: a slot that is simply missing reads as an oversight, and the next person re-proposes it.
+- **Fri 2026-09-25 12:00 / Fri 19:00 WIB** — asked of Rakha in #104, 2026-09-22. Same shape as B's slot 1. Nobody has accepted it yet.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — asked of Rakha in #104, 2026-09-22. 07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 06:00 / Sat 13:00 WIB** — asked of Rakha in #104, 2026-09-22. Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
+- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — asked of Rakha in #104, 2026-09-22. A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097.
+  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
 
 <!-- END GENERATED: crossing-schedule -->
 
@@ -89,8 +102,9 @@ state, not the clock estimate, determines whether the boundary has been crossed.
 
 ### 1. The schedule covers the window
 
-- [ ] `gh run list --workflow engine-cron.yml --json event` shows recent
-      `schedule` runs succeeding
+- [ ] `gh run list --workflow engine-cron.yml --json event,status,conclusion,createdAt`
+      shows recent `schedule` runs succeeding. *(`--json event` alone cannot show
+      success — it emits only the trigger. Corrected 2026-09-20.)*
 - [ ] worst observed gap is still well under 24h — recompute, do not assume
 - [ ] **`timeout-minutes` is still below the cron interval** — `pnpm check`
       enforces this now, so a green check is sufficient
@@ -198,9 +212,41 @@ workaround because they think the evidence is escaping.
 
 **So capture at every checkpoint in the generated table, not once.**
 
-- [ ] one `pnpm capture:crossing --subject B --output <dir>-HHMM` per row, naming the
-      output directory after that row's UTC time
-- [ ] each verified with `--require-crossing`, and each committed
+- [ ] one capture per row of the table, into its own **new** directory under the
+      gitignored `.evergreen/crossing/` — e.g.
+      `pnpm capture:crossing --subject B --output .evergreen/crossing/B-20260921-0600`
+- [ ] the three captures **while B is still live** verified with
+      `--require-crossing`; the **expiry capture is the exception** — see the box
+      below. Each committed (§4 — **the committed directory's date must be that
+      capture's own UTC date**)
+
+> 🔴 **`--require-crossing` is for the three captures while B is BELOW the
+> threshold and still live. Do NOT use it on the Monday 12:00 expiry capture.**
+> It exits 2 unless the capture qualifies as `crossing-refused`, and at expiry it
+> will not — so the flag fails on a perfectly good observation, on the one event
+> that happens once. Verified on this build 2026-09-20: plain `pnpm verify:crossing
+> <dir>` **exit 0**, the same directory with `--require-crossing` **exit 2**.
+>
+> 🔴 **But exit 0 is NOT the expiry acceptance criterion. Require phase
+> `expiry-observed`.**
+>
+> **For expiry, use an earlier verified live B baseline, run plain
+> `pnpm verify:crossing <dir>` without `--require-crossing`, and require phase
+> `expiry-observed`.** That phase already exists on this build —
+> `scripts/crossing-capture-common.mjs:171`, with its own `EXPIRY_NOT_PROVEN` and
+> `BASELINE_OR_CONTROL_CHANGED` guards. **A live `before-action` or
+> `crossing-refused` bundle also verifies with exit 0**, so an operator treating
+> exit 0 as the criterion could declare the expiry proven *before it happened*.
+>
+> TTL zero is still live: retain boundary observations and retry after both the
+> instance and persistent expiry ledgers have passed.
+>
+> *Corrected 2026-09-20 after review. An earlier version of this box said
+> `expiry-observed` was unpublished and coming in a separate change. That was
+> wrong — it is on `main` and has been. The claim came from grepping
+> `capture-crossing-probe.mjs`, finding the baseline-validation list
+> `['before-action', 'crossing-refused']`, and reading it as the full phase set.
+> The phase is assigned in a different file.*
 
 This costs nothing extra: the dispatches are already scheduled. What it buys is
 **a decay sequence rather than a single reading** — B measurably closer to expiry
@@ -217,13 +263,61 @@ an oversight.
 It is also redundancy on the least repeatable thing in the sprint. **If any one
 capture fails, the others still carry the proof.**
 
-The crossing gate is satisfied by any one qualifying bundle, so three is
-belt-and-braces rather than three chances to get it wrong.
+The crossing gate is satisfied by any one qualifying bundle, so the later
+captures are belt-and-braces rather than more chances to get it wrong. *(This
+sentence said "three" until 2026-09-19, when the table had held four for three
+days — the same summary-versus-table drift this page is generated to prevent,
+in the one paragraph an operator reads immediately before acting. It no longer
+states a count: the table does.)*
 
 ### 4. The record is committed the same day
 
-- [ ] commit the **verified capture bundle** as the crossing artifact; keep the probe output beside it as the readable record. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
-- [ ] commit it under `docs/evidence/2026-09-20-b-crossing/`
+- [ ] commit the **verified capture bundle** as the crossing artifact. Download the cron artifact separately only as scheduler context — it cannot contain the B refusal
+- [ ] 🔴 **Use exactly this layout. One committed directory per capture, named for
+      THAT capture's own UTC date, with the bundle in a `capture/` subdirectory and
+      the probe output beside it — not in it.**
+
+```
+docs/evidence/2026-09-20-b-crossing/          <- Sunday 12:00
+                 capture/                     <- the whole verified bundle
+                     manifest.json
+                     …
+                 probe.txt                    <- OUTSIDE capture/
+docs/evidence/2026-09-21-b-crossing-0000/     <- Monday 00:00, its own directory
+docs/evidence/2026-09-21-b-crossing-0600/     <- Monday 06:00
+docs/evidence/2026-09-21-b-crossing-1200/     <- Monday 12:00, the expiry
+```
+
+Verify the bundle by its own path: `pnpm verify:crossing docs/evidence/<dir>/capture`.
+Copy each bundle out of `.evergreen/crossing/`, which is gitignored and commits
+nothing on its own.
+
+> 🔴 **Measured 2026-09-20 — the two layouts are not equivalent.** Bundle and
+> `probe.txt` flat in one directory: `verify:crossing` **exit 2**. Bundle in
+> `capture/` with `probe.txt` in the parent: **exit 0**. A capture bundle's manifest
+> lists its own files, so any extra file dropped inside fails verification.
+>
+> Until this morning §4 carried both shapes in adjacent bullets — one bullet said
+> "beside `…/capture/`" and the next named `2026-09-20-b-crossing/` as the directory
+> itself. Each was correct alone; followed in the order written they produce the
+> flat layout, which is the failing one. Two fixes made hours apart on 2026-09-19,
+> each closing a real defect, together opening this one.
+
+> 🔴 **Why the date is not cosmetic.** `check-crossing-evidence.mjs` requires the
+> directory's date to EQUAL the bundle's own `observedAt` date
+> (`dated[1] === result.observedAt.slice(0, 10)`, line 120). **Three of the four
+> captures happen on Sep 21.** A Monday bundle committed under a `2026-09-20-…`
+> path is silently not counted — the file is there, it verifies, and the gate
+> still reports the evidence missing.
+>
+> This instruction previously named a single `2026-09-20-b-crossing/` directory,
+> which contradicted [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md) — *"use the
+> actual UTC capture date in the eventual published evidence path"* — on exactly
+> this point. The Sunday capture alone would still have turned the gate green, so
+> nothing would have looked wrong; but in §3b's own planned failure mode, where
+> Sunday's capture dies on a flaky RPC and Monday's is the proof, following this
+> page literally left a correct capture uncounted and a red gate to debug at
+> midnight. Corrected 2026-09-19.
 - [ ] **an artifact is a log; a commit is evidence.** Artifacts expire; the
       grant submission is Oct 2
 
@@ -236,6 +330,13 @@ belt-and-braces rather than three chances to get it wrong.
 Checking only the green half proves nothing: a check that passes because it
 cannot see the subject looks identical to one that passes because the subject is
 correct.
+
+> ⚠️ **The RED output tells you to run `node scripts/b-crossing-probe.mjs`. §3
+> demotes that tool.** The gate accepts either a verified capture bundle or probe
+> text carrying the refusal, so its advice is not wrong — but **§3 is the current
+> path**: capture first, probe as the readable record beside it. The gate's message
+> predates the capture tool and has not been rewritten, because changing a script
+> today is not worth the risk. Ignore that one line; follow §3. Flagged 2026-09-20.
 
 ### 5b. 🔴 Who is at a terminal — the rules behind the table
 
@@ -272,8 +373,12 @@ pnpm scheduler:watch --config ops/weekend-watch.json --send-alerts
 
 The readiness bundle's `watch.json` sets `warnMinutes: 30`, which the floor added
 in #169 rejects — the watcher **throws on startup** and does not run, for the whole
-window including Sunday. Verified: that config exits 2, this one exits 0 and
-reports `inactive` until the window opens.
+window including Sunday. Verified: that config exits 2, this one exits 0.
+
+> ⚠️ **`inactive` is no longer what you will see.** That was the expected output
+> before the window opened. The window runs **Sep 18 00:00 → Sep 21 18:00 UTC** and
+> is open now, so this command reports an **active** assessment with a live
+> `overdueMinutes` — which is correct, not a fault. Corrected 2026-09-20.
 
 Only `warnMinutes` differs (30 → 420, between the measured worst gap and the
 agreed bound). Everything else — window, `criticalMinutes`, `maxRunMinutes`,
@@ -291,11 +396,17 @@ and 540, inclusive. The evidence bundle is untouched.
 re-pinning it would invalidate the verification already done against that exact
 build — so this is a translation, not a defect to fix on the day.
 
-A failure will print the old generic form:
+A failure will print a **generic** line naming no guard. The exact wording depends
+on which build is running:
 
 ```
 Watcher failed; inspect retained state
 ```
+
+> ⚠️ **That literal string is what Rakha's pinned runtime emits, not what this
+> repository builds today.** Do not pattern-match on it. The point survives either
+> way: **the message will not name the cause**, whichever of the two you are
+> looking at. Checked 2026-09-20.
 
 **#175 would have named which guard refused. This build will not.** So: *if you see
 that line, check the watcher policy first.* It covers a config the floor rejected at
@@ -352,8 +463,74 @@ before Sunday, not a patch during it.
 
 ## Monday Sep 21 — the expiry
 
+> ## 🔴 What an expired entry actually looks like — MEASURED 2026-09-21
+>
+> **An earlier version of this block was derived from a code read and was wrong.**
+> It said the instance would go *absent*, `scan` would report `entry-not-found` and
+> exit 3, and `EXPIRY_NOT_PROVEN` would be the wait case. **None of that happens.**
+> It was written to help an operator recognise success and it described a signature
+> that does not occur. Only observation could settle this, and observation was
+> impossible before the event — so the honest form would have been *"expected, from
+> a code read, not observed."* Replaced below with what was measured.
+>
+> ### What is actually returned
+>
+> The entry **is still returned**. It does not disappear:
+>
+> ```
+> instance   ttl.status=known   endsAt=0   remaining=-4,796,976   exit 1
+> ```
+>
+> `endsAt` is **zero** and `remaining` is `0 − observedLedger`, a large negative
+> number. The public `getLedgerEntries` contract permits a zero `liveUntilLedgerSeq`
+> for an entry that is no longer live; the v1 verifier was written expecting absence.
+>
+> ### What the v1 classifier does with it
+>
+> `entry?.ttl.status === 'known'` is **true**, so it takes the **crossing** path, not
+> the expiry path. Then `hasExpired(remaining)` is true, and it returns:
+>
+> ```
+> {"phase":"unverified","reason":"INVALID_SUBJECT_TTL","exitCode":2}
+> ```
+>
+> **That is the expected result from the v1 tooling at expiry. It is not a failed
+> capture and not a broken chain** — it is a tool declining to classify an
+> observation it was not built to recognise. Retain it; do not retry hoping for a
+> different verdict, and do not force one.
+>
+> ### How the verdict is rendered
+>
+> `pnpm verify:expiry <dir>` (`W3-D18-03a`) assesses the sealed record offline and
+> emits `phase: expiry-observed` with `representation: "rpc-non-live-zero"`, while
+> **preserving** the original `recordedVerdict` as `unverified`. It requires a
+> verified live baseline, both end ledgers passed, and unchanged A/shared controls.
+>
+> ### 🔴 The same thing happens to C on 25–26 September
+>
+> Measured 2026-09-21: C's **instance ends at ledger 4,880,097** and its
+> **persistent at 4,880,099**. Expect exactly the shape above — entry returned,
+> `endsAt: 0`, `INVALID_SUBJECT_TTL` from the v1 verifier, `expiry-observed` from the
+> assessor. **Both** entries must be past, so the assessment needs a ledger **above
+> 4,880,099**.
+>
+> Capture at the slot, **retain the `unverified` verdict as evidence**, and run the
+> assessor. Do not wait for the entry to vanish; it will not.
+>
+> ### Still stop and escalate
+>
+> `SUBJECT_EXPIRY_CHANGED` (the subject was extended) · `BASELINE_OR_CONTROL_CHANGED`
+> (the shared code entry was extended — destroys the remaining proof) ·
+> `CONTROL_UNAVAILABLE` · `UNPINNED_RUNTIME`.
+
 - [ ] compare a current read with the recorded instance/persistent expiry ledgers. Remaining TTL zero is still live. If RPC no longer returns an entry after its known expiry, retain the actual missing-entry output and a successful A/shared control read; do not invent a CLI verdict or restore B to check it
-- [ ] capture that scan and commit it alongside the Sunday crossing record
+- [ ] 🔴 commit that scan in **its own dated directory**,
+      `docs/evidence/2026-09-21-b-crossing-1200/`, under the §4 layout — **not**
+      inside the Sunday directory. *(This bullet read "commit it alongside the
+      Sunday crossing record" until 2026-09-20. The gate requires the directory's
+      date to equal the capture's `observedAt` date, so a Monday capture filed
+      under a `2026-09-20-…` path is silently not counted — the same defect §4 was
+      corrected for on 2026-09-19, surviving in this section.)*
 - [ ] `W1-D4-09`'s drift obligation closes here, whether or not drift was ever
       observed
 

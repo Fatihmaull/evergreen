@@ -1,0 +1,52 @@
+{
+  "captureFormat": "evergreen-crossing-v1",
+  "version": 1,
+  "subject": "B",
+  "threshold": 17280,
+  "rehearsal": false,
+  "startedAt": "2026-09-20T10:21:58.876Z",
+  "endedAt": "2026-09-20T10:22:01.893Z",
+  "rpcCount": 5,
+  "provenance": {
+    "sourceCommit": "01394cc220eef63e74738a4afb6ec85fb5eac940",
+    "freshBuild": true
+  },
+  "environment": {
+    "node": "v24.13.0",
+    "locale": "en-US"
+  },
+  "runtimeHashes": {
+    "scripts/b-crossing-probe.mjs": "f1f17ffc5a9badd3542d8c171cb87ce807e4760440dcb8513b0b23d29820bd64",
+    "scripts/capture-crossing-probe.mjs": "0c5450c6b46baedf24d80d121a1bec87062c8adfa3c4b20dcebf07769f6db07f",
+    "scripts/verify-crossing-capture.mjs": "f482378bcd569e9d58a5a911d9d0352f80e7393afaf5b9fa7c10601d5d470347",
+    "scripts/crossing-capture-common.mjs": "bbb6ae8a4f6f2b8447960d66a75ceb6df9622274ffc32e64f4b619a4ca4f1fa0",
+    "scripts/verify-evidence-integrity.mjs": "fd70ee8a25a63e260b1574a61ecfa14bdb422c64ce89428711c62748282b643a",
+    "packages/core/package.json": "2b229225997d07e68601539803b62e1999ac906021379829e6ab62f4067e7fe6",
+    "pnpm-lock.yaml": "34a26adac56aced1e4b6fc0ffabaf95b01b8ed87d030704d2493feedbf44b527",
+    "docs/evidence/2026-09-14-bc-control-verification/data-keys-B.json": "25af4787534e7c4991ba31e67f5c405d6fd7356bc65c80cb1efa4b9206c49616",
+    "docs/evidence/2026-09-14-bc-control-verification/data-keys-C.json": "46d97c50dfe154ffd8d608d756f81a14ac64aa4a7c6cb7749fd616b0af9836ef",
+    "packages/core/dist/config.js": "22c12b7b5ed5ab0e8d5d3a65664bd77a650e9b2a823246d37ffaf8e70710787e",
+    "packages/core/dist/ed25519-signer.js": "9f35d27ec0ca5b02c205a4ccd8fe4f01e79d1fcaf7ae0b940e21365364bde07c",
+    "packages/core/dist/engine-execution-plan.js": "2f382b6153e832eceaffb31b1d3c5e2be77ed7b5043d9da42ae247b5f4c7bc59",
+    "packages/core/dist/engine.js": "8ebacc31f3f6153f8811cf82fff8a30a8960f317071954d98ad342ad94c7fba9",
+    "packages/core/dist/extend-rpc.js": "49539aa14d651c3ac39a5bcad792a12e4642c3f51e442dee0e1896855f839c22",
+    "packages/core/dist/extend.js": "c9f8d570bbdf8ceba6252b5736ee716143b3776adb5708b3a26e42a79e75b6c0",
+    "packages/core/dist/format.js": "ad18bce1084bf39e6d3c19495cc3a5f9c1b399b5c533d893ce0f821f10520ff7",
+    "packages/core/dist/health.js": "2e9adc07a64f15ab4cb6bf3bd97fb1f95eb137fb04f7be66fa9fd634816abc8d",
+    "packages/core/dist/index.js": "9f02ab45cf82ad5ff6ef888d5b4b8d7fc5f4669c63ea6c4e62da3a9df4e7ad19",
+    "packages/core/dist/liveness.js": "d21b5b6d8df8194396e146722dbea4186e04bce979e3b6b34dfb5746ad5bf84d",
+    "packages/core/dist/network-config.js": "5f9623513aab6d862f193caca9dfcb03ff87942edce27f37ae91844dee8fc198",
+    "packages/core/dist/notification-templates.js": "a48287935a98dd70f08f0fb07b4dae5ec7d41a3ab65e0774ac749b859e252d61",
+    "packages/core/dist/optimizer-evidence.js": "ad876c962be3096d4f59c0b17ffce3e0ee76d8e4ba07c9722f080e672775b2c2",
+    "packages/core/dist/optimizer.js": "fe98c2eeda3c13ccb583c2e174e7d6e664a79d7bf37ef8a7384a8f1716dcb5c0",
+    "packages/core/dist/rent-quoter.js": "730b0a6eebcf01635715d41b8062a93cef5649c5dae9fbf1075754f951436474",
+    "packages/core/dist/rent.js": "a32a143b7127decff88004f290b553d7ffb526cdc420c65a64c171194d5f396c",
+    "packages/core/dist/rpc.js": "dc3aef42d846ef870dd6fbee3428ad7bacfbc6ad34aa583f2e06becf6ea8af67",
+    "packages/core/dist/scan-contract.js": "8bd7565823854c864020ef2ad774a7afe996ad5633f7be89b2dba448e4467a19",
+    "packages/core/dist/scan.js": "a68d0929a6692d4f4fb69d3a7a61ca137c531081954ebf56a0df59220e0a4ff8",
+    "packages/core/dist/temporary-policy.js": "9c1f29033c608ef67bd90e7a3db8faabac9e27c0fa8cc7230d87afaedb2660ee",
+    "packages/core/dist/ttl.js": "a232679f727f3afb0ed6db4acf2a5485a701f7509d8f4db297e5ce0650828db4",
+    "packages/core/dist/write-guard.js": "af98b870f127ab37bb3851391f3d6d451cb75605eb972c298ac669bc08c2d116"
+  },
+  "baseline": false
+}

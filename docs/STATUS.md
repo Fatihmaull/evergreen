@@ -2,14 +2,104 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-17 · acceptance reconciled against main c42561d and GitHub decisions
+**Last updated:** 2026-09-22 · original engine alert screenshots captured; six SOW evidence types remain absent
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟢 on track · **`W1-D4-06` confirmed** · **decay proof armed (Sun Sep 20 / Fri Sep 25)** · 🔴 **hard gate Fri Sep 18** · 🟡 **shared code entry expires 2026-10-20 (`W3-D18-02d`)**
+**Health:** 🟡 **ten days out, six SOW evidence types do not exist** — npm package, policy-signer guide, live dashboard, GitHub Action, demo video and npm links · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
-## Current — reconciled September17 state
+## Current — original engine alert screenshots captured
+
+The two messages from the accepted Sep14 scheduled A-save proof are now retained as
+[dated Gmail screenshots](evidence/2026-09-22-alert-screenshots/README.md): the
+confirmed instance extension and the critical shared-code write-guard refusal.
+Their visible subjects and bodies match the original intents, Resend IDs and
+transaction/entry data. They were captured on Sep22 from the original messages;
+no email was resent and no Stellar interaction occurred. The original Sep14 record
+stays unchanged. SOW Deliverable2 now has three of four evidence types; the truthful
+policy-signer guide remains the missing type. W3-D17-03 stays In progress pending
+Fatih's status reconciliation. Notion mirror sync is pending.
+
+## Current — September21 final B observed; v1 verdict retained, separate assessment ready
+
+> 🔴 **This is a tooling gap, not an evidence gap, and the difference matters to
+> anyone opening this in October.**
+>
+> **The chain state at B's expiry was observed and recorded at the right moment** —
+> three read-only attempts at 12:00:35, 12:02:24 and 12:04:29 UTC, each with its
+> sealed bundle, raw RPC responses, embedded Sunday baseline and a native terminal
+> screenshot. The observation is complete and committed.
+>
+> What the v1 tooling cannot do is **say "this is an expiry."** The verifier was
+> written expecting an expired entry to be *absent*; the public `getLedgerEntries`
+> contract instead permits a returned entry with `liveUntilLedgerSeq: 0`, which is
+> what happened. The verifier therefore declines to classify a good observation.
+>
+> *"Slot 4 was missed"* and *"slot 4's verdict is unrenderable"* describe very
+> different situations. This is the second. `W3-D18-03a` addresses it by assessing the
+> sealed record offline, without modifying the frozen verifier or any existing bundle.
+
+W3-D18-03a / #214 is published in #216 as a separate offline assessment. It first
+authenticates and replays the sealed original verdict with the existing verifier,
+then evaluates the documented non-live response using the verified same-subject
+live baseline and unchanged shared-code control. All three original final reads
+produce separate `expiry-observed` reports; their original `unverified` verdicts
+remain unchanged. Regression tests reject still-live/boundary data, absent or
+invalid baselines, control changes, malformed zero representations and tampered
+captures. Internal review and Fatih's comment-level technical verification are
+complete; formal PR review/merge and Shared acceptance remain open. Notion sync
+remains pending while the source is unavailable. See the
+[compatibility assessment](W3-D18-03a-EXPIRY-REASSESSMENT.md).
+
+The19:00 checkpoint was collected with raw bundles and native screenshot, but three
+attempts reproduce `unverified` / `INVALID_SUBJECT_TTL`, exit2. The public RPC returns
+B instance/persistent data with `liveUntilLedgerSeq: 0` after the baseline end ledgers;
+the current verifier only accepts their absence. [Evidence and interpretation](evidence/2026-09-21-b-crossing-1200/README.md).
+No capture runtime changes, transaction or altered manifest. All31 fingerprints
+match; the live Sunday baseline remains verified. Three prior checkpoints passed,
+not four. D18-03 is Blocked on [#214](https://github.com/Fatihmaull/evergreen/issues/214);
+W3-D18-03a is In progress with #216 awaiting formal review/merge. C and final
+acceptance remain open. Notion sync/presence validation pending for D18-03 and
+D18-03a because the canonical data source was unavailable at the last lookup.
+
+## Reference — September21 midday B checkpoint
+
+Checkpoint3/4 observed06:00:30.776 UTC /13:00:30.776 WIB: B instance4,319 remaining
+at ledger4,789,368; `crossing-refused`, `qualifiesCrossing: true`.
+[Midday evidence](evidence/2026-09-21-b-crossing-0600/README.md) includes the complete
+sealed raw bundle and an inspected native terminal screenshot of its later replay.
+B/shared expiry ledgers unchanged, A/shared controls live, no transaction/email.
+All31 capture-runtime hashes unchanged; publication checks isolated. Sunday#206
+and morning#210 are merged. Final19:00 WIB expiry, C and acceptance remain open;
+D18-03 stays In progress. Notion sync remains pending from the unavailable source.
+
+## Reference — September21 morning B checkpoint
+
+Checkpoint 2/4 captured at 00:00:19.735 UTC / 07:00:19.735 WIB: ledger 4,785,046,
+B instance 8,641 remaining, `crossing-refused`, `qualifiesCrossing: true`.
+[Morning evidence](evidence/2026-09-21-b-crossing-0000/README.md) retains the sealed
+raw JSON/RPC and TXT bundle plus an inspected native terminal screenshot. A/shared
+controls live; expiry ledgers unchanged from Sunday. No transaction or email.
+Capture runtime retains all31 fingerprints without rebuild; publication worktree
+is separate. Sunday #206 is merged and its live baseline remains preserved.
+D18-03 stays In progress: today13:00/19:00 WIB, later C capture and final acceptance
+remain open. Notion D18-03 mirror sync remains pending (data-source unavailable
+in the most recent lookup); no completion is inferred from this checkpoint.
+
+## Reference — September20 B checkpoint
+
+B crossing observed at12:00:29.335 UTC, ledger4,776,408: instance17,279 remaining,
+normal threshold17,280, `crossing-refused` and `qualifiesCrossing: true`.
+[Sealed evidence](evidence/2026-09-20-b-crossing/README.md) includes five read-only
+RPC calls and live A/shared controls. No transaction or email. Runtime01394cc
+retained without per-capture rebuild; publication checks use a separate worktree.
+Original capture remains available as Monday's live baseline. D18-03 stays
+In progress: three Monday B checkpoints, C capture and final acceptance remain.
+Notion D18-03 mirror validation/sync pending: canonical data-source lookup returned
+`data_source_not_found` at preflight. Earlier acceptance decisions are unchanged.
+
+## Reference — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed

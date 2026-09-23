@@ -5,6 +5,72 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03a — offline expiry reassessment (local, pending review)
+
+[Separate assessments](evidence/2026-09-21-b-expiry-assessment/README.md) reproduce
+expiry-observed for the three retained final reads using the documented explicit
+non-live zero representation, verified live baseline and unchanged controls. The
+original sealed verdicts remain unverified and byte-identical. No new chain action.
+Compatibility code and reports await review/publication; Shared acceptance remains
+open in [#214](https://github.com/Fatihmaull/evergreen/issues/214).
+
+## W3-D18-03 — final B checkpoint attempts (2026-09-21 12:00 UTC)
+
+[Original responses, failed verification and native screenshot](evidence/2026-09-21-b-crossing-1200/README.md):
+three attempts retained at12:00:35.746,12:02:24.652 and12:04:29 UTC. All classify
+`unverified` / `INVALID_SUBJECT_TTL`, exit2, despite a verified live baseline.
+RPC returns B instance/persistent entries with absolute `liveUntilLedgerSeq: 0`,
+a documented non-live representation the absence-based verifier does not accept.
+No transaction or runtime change. **Not expiry-observed and not4/4 accepted**;
+follow-up [#214](https://github.com/Fatihmaull/evergreen/issues/214), W3-D18-03a.
+
+## W3-D18-03 — B checkpoint 3 of 4 (2026-09-21 06:00 UTC)
+
+[Midday raw bundle and native terminal screenshot](evidence/2026-09-21-b-crossing-0600/README.md):
+observed06:00:30.776 UTC /13:00:30.776 WIB, ledger4,789,368, B instance4,319 remaining.
+Strict replay confirms `crossing-refused`, `qualifiesCrossing: true`. B/shared expiry
+ledgers unchanged; A/shared controls live. Full JSON/RPC, TXT and checksums retained
+with an actual terminal screenshot of the later labelled replay (not an image at
+the observation instant). No transaction/email. Final19:00 checkpoint and C remain.
+
+## W3-D18-03 — B checkpoint 2 of 4 (2026-09-21 00:00 UTC)
+
+[Morning bundle and native terminal screenshot](evidence/2026-09-21-b-crossing-0000/README.md):
+observed 00:00:19.735 UTC / 07:00:19.735 WIB, ledger 4,785,046. B instance remains
+live at 8,641 ledgers, down from Sunday's 17,279 with unchanged expiry. Strict
+replay confirms `crossing-refused`, `qualifiesCrossing: true`. Five raw read-only
+RPC calls, original JSON/TXT/checksums and the screenshot are retained together;
+A/shared controls live, no transaction or email. Two B checkpoints and C's
+required crossing remain; D18-03 stays In progress.
+
+## W3-D18-03 — B crossing checkpoint (2026-09-20)
+
+[Verified B crossing bundle](evidence/2026-09-20-b-crossing/README.md): observed
+12:00:29.335 UTC / 19:00:29.335 WIB at ledger4,776,408, B instance17,279 remaining
+under the normal17,280 threshold. The engine/write guard refused B; strict replay
+returns `crossing-refused`, `qualifiesCrossing: true`. Five read-only RPC calls,
+A/shared controls live, no transaction or email. This independent operator-initiated
+capture supplies a live baseline for Monday. Three further B checkpoints, C's
+crossing and full decay acceptance remain open; D18-03 stays In progress.
+
+### Second independent bundle, same checkpoint
+
+[Secondary B crossing bundle](evidence/2026-09-20-b-crossing-local/README.md): a
+separate capture of the same checkpoint from the other operator's machine, observed
+**12:06:59.653 UTC** at ledger **4,776,486**, B instance **17,201** remaining. Strict
+replay returns `crossing-refused`, `qualifiesCrossing: true`; all 31 runtime hashes
+match the bundle above, so either is usable as Monday's `--baseline`.
+
+**Two bundles, two machines, one checkpoint — deliberate redundancy on the least
+repeatable evidence in the sprint**, not a duplicate to be tidied away. The bundle
+above is the closer reading and is the primary record; this one is the independent
+confirmation.
+
+🔴 **Neither bundle timestamps the crossing itself.** The first actionable ledger is
+**4,776,407** by arithmetic (`endsAt − 17,280`; `needsAction` uses `<=`), and that is
+sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
+five-second cadence, and no drift figure is claimed. Both READMEs say so.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
@@ -25,11 +91,20 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Status at a glance
 
+> 📄 **The SOW is now in the repository** — [`docs/SOW.md`](SOW.md), source at [`docs/sow/`](sow/). Until 2026-09-22 every requirement below was a restatement of a document nobody here could open. The restatements were checked clause by clause against the source and were substantively accurate; **`alert screenshots` is verbatim.**
+>
+> 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
+
+**Measured 2026-09-22, ten days out. 7 of 13 evidence types exist; 6 are absent.**
+All three deliverables still grade Partial because each has at least one absent type.
+
 | Deliverable | Evidence required (SOW §6.1) | State |
 |---|---|---|
-| **1 — Core CLI** | Public repo, published npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 W1 instance-scan snapshot captured; full CLI and npm release remain W2/W4 |
-| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 Manual/permissionless foundation evidence recorded; unattended engine proofs remain W3 |
-| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 Hosting placeholder live; functional dashboard, product Action and release artifacts remain W4 |
+| **1 — Core CLI** | Public repo, npm package, CLI screenshots showing TTL/archive prediction/cost, test coverage report | 🟡 **3 of 4.** Repo, screenshots ([13 PNGs](evidence/2026-09-14-d1-capture/README.md)) and coverage are met. ❌ **npm package unpublished** — `@evergreen-stellar/cli` returns 404 |
+| **2 — Auto-Bump Engine** | Testnet `extendTTL` tx hashes, engine logs, alert screenshots, policy-signer setup guide | 🟡 **3 of 4.** Tx hashes, engine logs and [two original inbox alert screenshots](evidence/2026-09-22-alert-screenshots/README.md) are met. ❌ **`POLICY-SIGNER.md` is a self-declared stub**, untouched since 2026-09-08 |
+| **3 — Dashboard + CI + Docs** | Live dashboard URL, published GitHub Action, 3–5 min demo video, docs, npm links | 🟡 **1 of 5.** Documentation exists. Dashboard URL serves a 2,356-byte placeholder; ❌ **zero `action.yml` repo-wide**; the demo has not been recorded; npm links are blocked on D1 |
+
+> ⚠️ **The integrity gates were green while four requirements had no artifact at all.** `check:sow` now verifies completeness separately; this capture moves alert screenshots from absent to present without weakening any integrity gate.
 
 ## Deliverable 1 — readiness at the Sep 16 gate
 
@@ -114,7 +189,9 @@ Conditions, all four:
 
 ### 4 — Test coverage report ✅
 
-[Committed 2026-09-10](evidence/2026-09-10-coverage/README.md). 93.95% statements, 85.71% branches, 98.85% functions, 95.28% lines.
+[Committed 2026-09-10](evidence/2026-09-10-coverage/README.md). **93.24% statements, 85.29% branches, 97.64% functions, 94.57% lines** — read from `coverage-report.txt` in that bundle.
+
+> 🔴 **Corrected 2026-09-22.** This line read `93.95 / 85.71 / 98.85 / 95.28` from the day it was written (2026-09-12) until today. **All four numbers were inflated above the artifact the same sentence links to**, and `BACKLOG.md` quoted the artifact correctly the whole time, so the canonical list and the evidence index disagreed on a figure in the SOW §6.1 Deliverable 1 row. Later full-repo runs measured higher again (`94.32 / 90.10 / 95.06 / 96.47` on 2026-09-14; `94.31 / 90.32 / 94.40 / 96.42` on 2026-09-19) — **those are different runs, not this artifact**, and are not quoted here. There is no `check:coverage-quotes` guard; `check:cadence` covers only scheduler figures, and only in `.md`.
 
 **Correction, 2026-09-12.** From Sep 10 to Sep 12 this section and the check-in deck both said the floor was *"enforced in CI"*. **It was not.** The thresholds were configured in `vitest.config.ts`, but `pnpm check` ran `vitest run` without `--coverage`, so they were never evaluated. Proved by setting `statements: 99.9` — impossible — and watching `pnpm check` pass clean.
 
@@ -195,8 +272,8 @@ Add the row the moment you see the hash. `Signer` records which signing path pro
 |---|---|---|---|---|---|---|---|
 | 2026-09-12 | W2-D11-02 | manual CLI instance extension succeeded; expiry +1,002 ledgers | guinea-pig A instance | Rakha dev key | [e18e0822…](https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a) | [Full SUCCESS RPC](evidence/2026-09-12-manual-extend-proof/live/14-getTransaction-response.json) | [Screenshot](evidence/2026-09-12-manual-extend-proof/explorer.jpg) |
 | | W3-D19-03 | `extendTTL` via the scoped policy signer (headless) | | Stage 2 | | ⬜ | ⬜ |
-| | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | | ⬜ | ⬜ |
-| | **W3-D18-02b** | **unattended bump — natural-decay proof** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(due ~Sep 20 12:00 UTC)* | ⬜ | ⬜ |
+| 2026-09-14 | **W3-D18-02a** | **unattended bump — threshold proof** | guinea-pig A | Stage 1 | [dae63da8…](https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128) | [Full SUCCESS RPC](evidence/2026-09-14-scheduled-a-save/README.md) | [Screenshot](evidence/2026-09-14-scheduled-a-save/explorer.jpg) |
+| | **W3-D18-02b** | **natural-decay proof — detection + guard refusal; B is NOT bumped** | guinea-pig B `CCYGO7KQ…LTTQ` | Stage 1 | *(crossing ~Sep 20 12:00 UTC, expiry ~Sep 21 12:00 UTC)* | ⬜ | ⬜ |
 | | **W3-D18-02c** | *spare* — natural-decay proof, staggered | guinea-pig C `CCLW55OI…33FL` | Stage 1 | *(due ~Sep 25 12:00 UTC)* | ⬜ | ⬜ |
 
 ### ⚠️ Disclosure: guinea-pig B's TTL was deliberately calibrated
@@ -239,11 +316,15 @@ One thing worth stating because it is not obvious: B and C were deployed from th
 
 **`W3-D18-02a` — threshold proof (insurance, banked early ~Sep 17).** Set the bump threshold *above* the contract's current TTL and the engine fires on its next scheduled run. Proves the engine detects and bumps, unattended, on a real cron. Cheap, repeatable, available on demand.
 
-**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own. Proves a contract *that would otherwise have been archived* was saved — which is the claim the demo video makes and the only version that survives a skeptical reader.
+**`W3-D18-02b` — natural-decay proof (the compelling one).** Guinea-pig B was deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and left to age so its TTL decays toward the threshold on its own.
+
+🔴 **B is NOT saved. B expires, deliberately, and the engine refuses to touch it.** Corrected 2026-09-19: this paragraph said it *"proves a contract that would otherwise have been archived was saved"*, which is the opposite of what `W3-D18-02b` decided and of what [`SEP-20-PREFLIGHT.md` §6](SEP-20-PREFLIGHT.md) instructs. **A save and an expiry on the same contract are mutually exclusive**, and the repo asked for both — so A carries the save (threshold raised above its remaining TTL) and B carries the decay.
+
+Three proofs come out of B's sequence, and none of them is a bump: **detection works** on a contract that decayed on its own, **the write guard refuses a real protected subject live**, and **the decay is real**. That is the version that survives a skeptical reader, because the refusal is falsifiable and a save on a contract we also control is not.
 
 Whether B is achievable depends on the TTL floors measured at `W1-D4-04b` (recorded in `docs/SOROBAN-PRIMER.md`). If the floor is longer than the sprint, say so in STATUS.md and ship A as the proof, described honestly.
 
-> ⚠️ **Guinea-pig B must stay OUT of the engine's watched-contract config until the moment of proof.** If it lands in the config during Week 3 testing, the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
+> 🔴 **Guinea-pig B must stay OUT of the engine's watched-contract config — permanently, not "until the moment of proof".** There is no later moment at which it is correct to put B in the config: the proof IS the refusal. This line previously read *"until the moment of proof"*, which invited exactly the bump it warns against. If B lands in the config the engine will dutifully bump it and destroy the very thing it was deployed to demonstrate. The config file carries a comment saying so; `docs/SETUP.md` repeats it. Losing this to an accidental bump would be an entirely self-inflicted way to lose the strongest evidence in the grant.
 
 ## Scheduler runtime evidence — `W1-D5-03`
 
@@ -295,7 +376,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | 2026-09-08 | W1-D7-03 | working instance scan against Testnet; presentation of captured stdout | [Image and raw record](evidence/2026-09-08-w1-review/README.md#working-scan) |
 | 2026-09-12 | W2-D11-03 | TTL before/after a manual extend | [Before](evidence/2026-09-12-manual-extend-proof/before.jpg) · [After](evidence/2026-09-12-manual-extend-proof/after.jpg) |
 | | W2-D14-03 | CLI output (human + `--json`), coverage report | |
-| | W3-D17-03 | alert emails (success + failure) | |
+| 2026-09-22 | W3-D17-03 | original inbox alerts: confirmed extension + critical shared-code refusal | [Screenshots and source bindings](evidence/2026-09-22-alert-screenshots/README.md) |
 | | W3-D18-03 | engine run logs on the scheduler | |
 | | W4-D24-02 | dashboard: public scan of an arbitrary contract | |
 | | W4-D24-02 | dashboard: bump history with real data | |
@@ -348,6 +429,11 @@ The manual-extension and storage-advice verifier commands now verify every SHA25
 ## 2026-09-14 — scheduled A save (W3-D16-01 / W3-D17-04 / W3-D18-02a)
 
 Transaction `dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128` succeeded at ledger 4,670,261 from a local user-systemd timer. A instance expiry 6,026,591 → 6,370,261. [Raw RPC, signature/receipt/TTL verifier and actual explorer screenshot](evidence/2026-09-14-scheduled-a-save/README.md). Success/liveness inbox receipt confirmed by Rakha. Raised threshold 1,500,000 and target 1,700,000: not natural decay. B/C/shared controls unchanged and independently checked by Fatih in #149. Source snapshot remains 32670fe; later #152/#154 fixes are not retroactively claimed as that build. Shared platform acceptance stays #130; failure evidence is separately reviewed in [#146](https://github.com/Fatihmaull/evergreen/pull/146).
+
+The two original delivered messages were opened again on 2026-09-22 and retained as
+[mailbox screenshots](evidence/2026-09-22-alert-screenshots/README.md). Their visible
+subjects and bodies match the source intents and Resend IDs in the Sep14 bundle. No
+message was resent and the original confirmation record remains unchanged.
 
 - W3-D15-02b upload Testnet transaction: `cc8210e69acdd13b54236614fcd3deae1ae6b4bf7e00d7371afc43b39741cb94`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
 

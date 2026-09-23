@@ -172,7 +172,7 @@ Used for everyday development, manual extends, and the threshold proof (`W3-D18-
 
 ### B — the natural-decay subject ⚠️
 
-Deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and then left alone to age, so its TTL decays on its own toward the threshold. It exists for exactly one moment: `W3-D18-02b`, the proof that a contract *which would otherwise have been archived* was saved unattended. The [W1 recovered transaction bundle](evidence/2026-09-08-w1-review/README.md) records deployment, seeding and calibration separately, including the later shared-code extension made while preparing C.
+Deployed and initially calibrated on **2026-09-05 (W1-D4-04c)** and then left alone to age, so its TTL decays on its own toward the threshold. It exists for exactly one moment: `W3-D18-02b`, the proof that the engine **detects the crossing and the write guard refuses**, and that the entry then **expires**. 🔴 **B is not saved.** This sentence said "was saved unattended" until 2026-09-22; the decision to let B expire was taken 2026-09-12 and the sweep that corrected `EVIDENCE.md`, `BACKLOG.md` and `W3-SEP18-READINESS.md` on 2026-09-19 missed this file. B expired 2026-09-21 — see [`W3-B-WATCH-CLOSING.md`](W3-B-WATCH-CLOSING.md). The [W1 recovered transaction bundle](evidence/2026-09-08-w1-review/README.md) records deployment, seeding and calibration separately, including the later shared-code extension made while preparing C.
 
 | Field | Value |
 |---|---|
@@ -235,10 +235,13 @@ Insurance against a single unrecoverable date. Same method as B, different targe
 | Contract ID | `CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL` |
 | Deployed | 2026-09-05, ledger ≈ 4,513,212 |
 | Calibrated | +366,871 ledgers on instance and persistent |
-| **Threshold crossing** | **2026-09-25 ~12:00 UTC** — five days after B |
+| **Alert threshold** | **2026-09-25 ~12:00 UTC** — five days after B |
+| 🔴 **Expiry** | 🔴 **2026-09-26 ~12:00 UTC — a Saturday, and the last unrepeatable event in the sprint** |
 | Interventions since | none, and none permitted |
 
-> **B and C have different crossing dates. Do not reason about them interchangeably.** B is the plan; C is the spare. If B's proof lands, C is documented as an unused spare and costs nothing.
+> **B and C have different dates, and each subject has TWO of them.** The alert threshold and the expiry are one day apart and are not interchangeable — `write-guard.ts` owns both as `alertThresholdOn` and `expiresOn`, and its comment warns that reading only the first makes you *"arrive a day early for the expiry — and the expiry is the unrepeatable event."* **This table published only the threshold until 2026-09-22.**
+
+> ⚠️ **C is no longer a free spare.** B's expiry was captured, but only by one operator — the secondary machine slept through the window. C is the only remaining chance at a second independent expiry bundle, it falls on a weekend, and nothing comes after it.
 
 ### The shared code entry ⚠️
 
@@ -256,7 +259,7 @@ python3 scripts/check-decay-drift.py
 
 ### Putting B and C into the engine config
 
-The old instruction was "keep them strictly out of the config." That was written before calibration existed. Now that both are calibrated against a specific threshold, they can sit in the config early — the engine will correctly do nothing until the crossing.
+The old instruction was "keep them strictly out of the config." That was written before calibration existed. Now that both are calibrated against a specific threshold, they can sit in the config early — the engine will correctly do nothing until the crossing. **And underneath that, `write-guard.ts` refuses every write touching B or C unconditionally, with no date logic at all** — so a wrong threshold and a code path would both have to fail together. [`ONBOARDING.md` §4](ONBOARDING.md) carried the superseded "must not enter the engine config early" heading until 2026-09-22 and now points here.
 
 **But that safety depends entirely on the configured threshold matching the calibration.** So add them as a deliberate, verified step, never as a convenience:
 

@@ -167,7 +167,19 @@ packages/
   cli/                  the `evergreen` command
   engine/               scheduled auto-bump worker
 apps/
-  dashboard/            public read-only web dashboard (+ P1 user-signed extend)
+  dashboard/            public read-only web dashboard. READ-ONLY, full stop —
+                        the P1 user-signed extend was CUT 2026-09-10 (W4-D24-04,
+                        cut order #3) and is a SOW 2 direction, not a deferred task
+scripts/                every gate, capture and instrument. `pnpm check` runs the
+                        check:* ones; capture-crossing-probe and
+                        verify-crossing-capture are the evidence pair
+ops/                    crossing-schedule.json — the SINGLE SOURCE for capture
+                        times, owners and backup triggers. Five docs are
+                        generated from it; `pnpm check:schedule` fails on drift
+contracts/              guinea-pig Wasm and the deploy script
+docs/evidence/          dated capture bundles. APPEND ONLY — never edit or
+                        delete another operator's capture; if one looks wrong,
+                        report it
 ```
 
 ## Where decisions live
@@ -251,9 +263,28 @@ A cost with nothing to compare against cannot be judged. Measured on this repo, 
 
 Read that as a price, not as waste. The two audits bought the packaging defect, the public README domain error, the inert `CODEOWNERS` and the contradictory `SETUP` rules — the first of which would otherwise have shipped. **The point of the baseline is that "was this finding worth 7M tokens?" becomes a question with an answer**, instead of a cost nobody can see.
 
-## Single session — the two-session rules are historical
+## Sessions — two agents, split by path
 
-**2026-09-10: Session 1 ended. There is one session.** The parallel-session protocol that ran Sep 10 is retired: the `[S2]` prefix on `docs/STATUS.md` entries, `git pull` before every write to a shared file, split ownership between W1 evaluation and W2 execution, and "sync Notion only for tasks you own."
+**2026-09-17: there are two agents again, and they are split by PATH, not by task.**
+Recorded here rather than left in a brief, because `docs/CONVENTIONS.md` says
+coordination between sessions belongs in the repo and a split that lives in a
+message is a split the next session cannot read.
+
+| owner | paths |
+|---|---|
+| **web agent** | `apps/`, `web-reference/` |
+| **CLI / engine agent** | `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `scripts/`, `.github/workflows/`, `ops/` |
+| **nobody** | `docs/evidence/` — append only, never edit another operator's capture |
+
+Shared and therefore the usual conflict source: `BACKLOG.md`, `docs/STATUS.md`,
+`docs/EVIDENCE.md`. Three open PRs were stale for five days in September because
+all three touched the first two. Rebase before you write to them, not after.
+
+The rules below are the ones retired when the *first* two-session arrangement
+ended, and they have not been reinstated — the current split is by path, so it
+needs no prefix protocol and no per-task Notion rule.
+
+**2026-09-10: Session 1 ended. There was one session.** The parallel-session protocol that ran Sep 10 is retired: the `[S2]` prefix on `docs/STATUS.md` entries, `git pull` before every write to a shared file, split ownership between W1 evaluation and W2 execution, and "sync Notion only for tasks you own."
 
 Existing `[S2]` entries stay as written — they are an accurate record of who wrote what — but nothing new needs the prefix.
 
