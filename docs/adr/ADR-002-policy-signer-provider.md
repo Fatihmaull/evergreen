@@ -60,4 +60,18 @@ Option C is explicitly out of scope for this grant. If both A and B prove insuff
   **Consequence for SOW 2.** Stage 2's machinery — an account the user owns, from which a scoped signer may draw only to pay `extendTTL` fees — is the foundation of a hosted engine that stays non-custodial. See ADR-004.
 
   **Scope note.** The SOW names the capped policy signer in both the Deliverable 2 description and its required evidence, so this is a resequencing, not a drop. Fatih owns raising it with the Ambassador Chapter Lead in Week 1 rather than at review.
-- *(`W3-D20-01`: record spike outcome — go with A, or fall back to B, and why. Was filed here as W3-D16-03 pre-rescope.)*
+- **2026-09-22 — `W3-D20-01` DECIDED: no-go on Stage 2. Policy scoping ships partial; full scoping deferred to SOW 2.** Decided by Fatih on Rakha's proposal in [#183](https://github.com/Fatihmaull/evergreen/issues/183) / [#191](https://github.com/Fatihmaull/evergreen/pull/191). **Amended here, not rewritten** — the no-go reasoning is worth more to a later reader than a clean ADR.
+
+  **The finding, and it is a property of the mechanism rather than of the library:** contract-invocation authorization does not constrain the *native TTL payer's transaction signature*. A smart account can police what a contract call may do; it does not police the ordinary Stellar transaction that pays for `extendTTL`. So the engine still holds an unrestricted key, which is precisely the blast radius Option A existed to cap. Recorded in `docs/W3-POLICY-SIGNER-FEASIBILITY.md`.
+
+  **Why Option B was not taken instead.** A different contract-auth framework inherits the same gap — it adds no enforcement hook to the native payer path. Option B remains genuinely available for SOW 2, but swapping frameworks would have been motion, not a solution, and neither option has a row scheduled to produce the enforcement evidence either would need.
+
+  **What ships instead.** The verified Stage 1 path: a plain funded Ed25519 account the self-hoster owns and funds (ADR-004), with `docs/POLICY-SIGNER.md` describing what exists today, its hot-key limits, and what a future hardened path requires. This is the exit this ADR pre-authorised — *"if the spike fails, we ship the core proof anyway and document policy scoping as partial"* — so taking it follows the plan rather than abandoning it.
+
+  🔴 **The cost, recorded rather than discovered at review.** SOW §4.1 names the capped policy signer in **Deliverable 2's own description**, not only in its evidence list, so D2 is expected to grade **Partial** rather than Present under §6.2. That was true under every option; the others simply arrived at it later and with a thinner guide. The §6.1 evidence item — *"policy-signer configuration guide"* — is satisfied honestly either way, which is the difference between a **Missing** row and a **Partial** one.
+
+  **Task dispositions:** `W3-D19-01/02/03` recorded as no-go with the reason, out of Blocked. `W3-D20-02` **does not exist** under a no-go and is dropped rather than started — this decision deleted work. `W3-D20-03` becomes the truthful guide.
+
+  ⚠️ **Still open, and it is a human action:** the Scope note above assigns Fatih the conversation with the Ambassador Chapter Lead, *"in Week 1 rather than at review."* It is Week 4 and it has not happened. It pairs with the Oct 2 deadline confirmation `docs/PRD.md` has wanted since 2026-09-04.
+
+- *(`W3-D20-01`: record spike outcome — go with A, or fall back to B, and why. Was filed here as W3-D16-03 pre-rescope. **Closed by the entry above.**)*

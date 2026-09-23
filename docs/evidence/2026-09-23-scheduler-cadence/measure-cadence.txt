@@ -1,0 +1,14 @@
+$ tsc --build
+# delivered scheduler cadence — engine-cron.yml
+sample:          72 scheduled runs, 2026-09-12T17:08:38.000Z → 2026-09-23T05:28:02.000Z
+span:            252.3 h
+median gap:      197 min
+WORST gap:       403 min
+delivered:       7.1% of a 15-min declared cron
+worst six gaps:  324, 326, 333, 343, 369, 403 min
+recorded worst   369 min  (WORST_OBSERVED_SCHEDULER_GAP_MINUTES)
+review trigger   384 min  (80% of the floor)
+floor            480 min  (SCHEDULER_GAP_FLOOR_MINUTES)
+🔴 NEW WORST — exceeds the recorded 369. Update the constant and its sample.
+🔴 crossed the 384-min review trigger — the floor needs a decision
+✓ below the 480-min floor

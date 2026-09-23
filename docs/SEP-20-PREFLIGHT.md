@@ -1,4 +1,4 @@
-# Sep 20 pre-flight — readiness Friday September 18
+# Crossing pre-flight — B (Sep 20–21, done) and C (Sep 25–26, next)
 
 **B crosses its action threshold (17,280 ledgers) ~2026-09-20 12:00 UTC and expires ~2026-09-21
 12:00 UTC.** The expiry cannot be re-armed inside this sprint. C is the only
@@ -8,10 +8,19 @@ A supplied the scheduled-save proof. B supplies natural decay and guard refusal,
 observed through the read-only probe. A manual observation is recorded as manual;
 a GitHub cron run cannot stand in for it because dogfood selects only A.
 
-**If you are reading this ON the day — Sun Sep 20 or Mon Sep 21 — go straight to
-§3, §3b and §4.** The "Friday checklist" below was the readiness pass; it ran on
-Sep 18 and nothing in it has to be repeated tonight. Nothing on this page should
-first be *attempted* on the day, which is what that pass was for.
+> 🔴 **READING THIS FOR C, on Fri 25 or Sat 26 September?** Then most of this page
+> is about a finished event. **Go to [§C](#then-c-sep-2526) first — it carries the
+> commands for your day** — and treat §3b's capture rules as background that §C
+> corrects. B's sections stay because they are the record of what was done, not
+> because they are your instructions.
+>
+> **The "Friday checklist" below ran on Sep 18 for B. It has NOT been run for C.**
+> Whoever is on the Sep 25 slot runs §1, §2 and §5 again with `SUBJECT=C` before
+> the day, not on it.
+
+**If you are reading this ON the day — Sun Sep 20 or Mon Sep 21 —** go straight to
+§3, §3b and §4. Those dates are past; the paragraph is kept because the day-of
+routing is what this page is for, and C's equivalent is the box above.
 
 ---
 
@@ -214,7 +223,15 @@ workaround because they think the evidence is escaping.
 
 - [ ] one capture per row of the table, into its own **new** directory under the
       gitignored `.evergreen/crossing/` — e.g.
-      `pnpm capture:crossing --subject B --output .evergreen/crossing/B-20260921-0600`
+      `pnpm capture:crossing --subject C --output .evergreen/crossing/C-20260926-1200`
+- [ ] 🔴 **the EXPIRY capture also takes `--baseline <an earlier live capture of
+      the SAME subject>`.** Until 2026-09-23 this flag was named nowhere on this
+      page, and without it the expiry verdict cannot be rendered at all —
+      `pnpm verify:expiry` exits 2 with `BASELINE_REQUIRED`, because it reads the
+      baseline from inside the bundle and there is none. Measured today: a bundle
+      captured without it (`2026-09-20-b-crossing/capture`) is refused exactly
+      that way. **For C that means Friday's capture directory IS Saturday's
+      baseline — keep it.**
 - [ ] the three captures **while B is still live** verified with
       `--require-crossing`; the **expiry capture is the exception** — see the box
       below. Each committed (§4 — **the committed directory's date must be that
@@ -227,16 +244,30 @@ workaround because they think the evidence is escaping.
 > that happens once. Verified on this build 2026-09-20: plain `pnpm verify:crossing
 > <dir>` **exit 0**, the same directory with `--require-crossing` **exit 2**.
 >
-> 🔴 **But exit 0 is NOT the expiry acceptance criterion. Require phase
-> `expiry-observed`.**
+> 🔴 **CORRECTED 2026-09-23 — this box used to tell you to require phase
+> `expiry-observed` from `pnpm verify:crossing`. That never happens, and
+> following it would have cost C's expiry.**
 >
-> **For expiry, use an earlier verified live B baseline, run plain
-> `pnpm verify:crossing <dir>` without `--require-crossing`, and require phase
-> `expiry-observed`.** That phase already exists on this build —
-> `scripts/crossing-capture-common.mjs:171`, with its own `EXPIRY_NOT_PROVEN` and
-> `BASELINE_OR_CONTROL_CHANGED` guards. **A live `before-action` or
-> `crossing-refused` bundle also verifies with exit 0**, so an operator treating
-> exit 0 as the criterion could declare the expiry proven *before it happened*.
+> Measured today on B's sealed 12:00 bundle:
+>
+> ```
+> pnpm verify:crossing docs/evidence/2026-09-21-b-crossing-1200/attempts/120429
+>   -> exit 2
+>   "Capture verification failed; do not count this artifact as crossing evidence."
+>
+> pnpm verify:expiry   <same directory>
+>   -> exit 0   phase = expiry-observed   recordedVerdict = unverified
+> ```
+>
+> So an operator following the old text at C's expiry sees a loud *"do not count
+> this artifact"* on a **perfectly good observation**, and the obvious reaction —
+> recapture, or conclude the slot failed — is exactly what
+> [§ Monday Sep 21](#monday-sep-21--the-expiry) forbids. **The v1 verifier is not
+> the acceptance path at expiry. `pnpm verify:expiry` is.**
+>
+> **A live `before-action` or `crossing-refused` bundle verifies with exit 0**, so
+> exit 0 was never the criterion either: an operator treating it as one could
+> declare the expiry proven *before it happened*.
 >
 > TTL zero is still live: retain boundary observations and retry after both the
 > instance and persistent expiry ledgers have passed.
@@ -536,12 +567,73 @@ before Sunday, not a patch during it.
 
 ## Then C, Sep 25–26
 
-C has two distinct obligations. **Minimum read-only crossing/refusal capture is
-required on September 25**, because the current date gate covers both subjects
-and the shared-code handoff needs C evidence. Run the same probe with `SUBJECT=C`
-and `BELOW` unset. If B succeeded, record C as unused for the *full backup decay
-proof*, with its minimum control capture attached. Full expiry observation on
-September 26 is required if C is used as the replacement proof.
+> ✅ **Walked end to end on 2026-09-23, read-only, against live C.** Every command
+> below was run; the outputs quoted are measured, not expected. The walk found
+> three defects on this page and they are fixed above: the title and day-of banner
+> addressed only Sep 20–21, §3b told you to require `expiry-observed` from the
+> wrong command, and **`--baseline` was named nowhere at all**.
+
+**C has TWO dates and they are one day apart.** `write-guard.ts` owns both.
+
+| | when | what you are capturing |
+|---|---|---|
+| **Fri 25 Sep ~12:00 UTC** | alert threshold | the guard refusing while C is still live |
+| 🔴 **Sat 26 Sep ~12:00 UTC** | **EXPIRY** | the unrepeatable one. Nothing comes after it |
+
+**C's two entries end at different ledgers: instance 4,880,097, persistent
+4,880,099.** Both must be past, so **the expiry assessment needs a ledger above
+4,880,099** — not above the instance. Measured 2026-09-21.
+
+### Friday — the threshold capture
+
+```bash
+pnpm capture:crossing --subject C --output .evergreen/crossing/C-20260925-1200
+pnpm verify:crossing  .evergreen/crossing/C-20260925-1200 --require-crossing
+```
+
+Accept on **exit 0** with phase `crossing-refused`. Commit under §4's layout in a
+directory dated **2026-09-25**.
+
+🔴 **Do not delete that directory.** It is Saturday's `--baseline`.
+
+### Saturday — the expiry capture
+
+```bash
+pnpm capture:crossing --subject C --output .evergreen/crossing/C-20260926-1200 \
+    --baseline .evergreen/crossing/C-20260925-1200
+pnpm verify:expiry    .evergreen/crossing/C-20260926-1200
+```
+
+**Accept on `phase: expiry-observed` from `verify:expiry`** — not on an exit code
+from `verify:crossing`.
+
+Three things measured on 2026-09-23 that the old text did not say:
+
+- **`--baseline` is mandatory.** `verify:expiry` reads it from inside the bundle.
+  Without it: `Expiry assessment failed: BASELINE_REQUIRED`, exit 2 — the
+  observation is taken and cannot be rendered.
+- **The baseline must be the SAME subject.** Passing B's sealed Sunday capture as
+  C's baseline exits **2**. Only a C capture works.
+- **`pnpm verify:crossing` on the expiry bundle exits 2** with *"do not count this
+  artifact as crossing evidence"*. That is expected at expiry and is not a failed
+  capture. **Retain the `unverified` verdict as evidence; do not recapture chasing
+  a different one.**
+
+### What the rehearsal also confirmed
+
+Run against C today, above its threshold: `phase: before-action`, exit 0,
+read-only, and the **31-file runtime fingerprint did not move** (`f959694f…`
+before and after). `pnpm verify:expiry` on a still-live C bundle refuses cleanly
+with `UNSUPPORTED_RECORDED_VERDICT`, exit 2 — so a premature run cannot be
+mistaken for success.
+
+### If B's proof stands
+
+A minimum read-only crossing/refusal capture is still **required on September
+25**: the date gate covers both subjects and the shared-code handoff needs C
+evidence. If B succeeded, record C as unused for the *full backup decay proof*
+with its minimum control capture attached. Full expiry observation on September
+26 is required if C is used as the replacement proof.
 
 This preserves the existing gate rather than inventing a synthetic refusal or
 making C disappear from it. Shared-code extension remains Fatih's task on the
