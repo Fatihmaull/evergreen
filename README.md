@@ -11,7 +11,7 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 | Component | What it does |
 |---|---|
 | **`evergreen` CLI** | Scan any contract: remaining TTL, projected archive date, estimated rent cost, storage inefficiencies. Human-readable or `--json`. |
-| **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its account; it can do nothing except pay to extend TTL. Email alerts on every bump. |
+| **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its hot payer account; the normal engine path restricts operations and fees, but the raw v1 key is not cryptographically scoped. Email alerts on every bump. |
 | **Dashboard + `evergreen-check`** | A public read-only view — scan any contract's TTL health, no wallet or signup — plus a GitHub Action that fails CI when a contract's TTL gets dangerously low. |
 
 ## Why this is non-custodial
@@ -25,7 +25,7 @@ Two consequences worth stating plainly:
 - **You always pay your own rent.** Evergreen supplies the automation, not the money. Apex never funds another party's extend fees — see [`docs/adr/ADR-004`](docs/adr/ADR-004-payment-model.md).
 - **Connecting a wallet authorizes a payment, never access.** The dashboard's optional "extend now" asks your wallet to pay a fee. It never asks for control of anything.
 
-The engine's signing key is a hot key that sits on a server with lumens on it — and in v1 that server and that key are **yours**. Capping what it can do therefore protects *you*, which is what [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) is for: the hardened path for self-hosters, documented and demonstrated, not mandatory.
+The engine's signing key is a hot key on **your** server, paying from **your** funded account. Stage 1 checks operations and fees in its normal execution path, but a leaked raw key can bypass those software checks. A hardened policy signer is **not currently available**; the accepted v1 disposition is to ship policy scoping as partial and defer full scoping to SOW 2. [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) explains the implemented path and its limits.
 
 ## Quickstart
 

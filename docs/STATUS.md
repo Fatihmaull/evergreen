@@ -2,12 +2,27 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-22 · original engine alert screenshots captured; six SOW evidence types remain absent
+**Last updated:** 2026-09-23 · Stage 2 no-go recorded; truthful signer guide ready
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **ten days out, six SOW evidence types do not exist** — npm package, policy-signer guide, live dashboard, GitHub Action, demo video and npm links · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Health:** 🟡 **nine days out, four SOW evidence types do not exist** — npm package, live dashboard, demo video and npm links · ✅ **policy-signer guide truthfully supplies the D2 artifact while the named capability remains Partial** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
+
+## Current — Stage 2 no-go recorded; truthful guide ready
+
+Fatih accepted Option 3 in #183: no-go for the direct passkey-kit adapter, no
+automatic OpenZeppelin pivot without separate enforcement evidence, retain the
+verified Stage 1 route, and ship policy scoping honestly as partial with full
+scoping deferred to SOW 2. ADR-002 records that outcome on main through #230.
+
+PR #191 now carries the corresponding public guide and task reconciliation:
+D19-01/02/03 are dropped rather than left blocked, D20-01 is complete, the
+conditional D20-02 is dropped, and D20-03 supplies the required SOW §6.1 guide
+without claiming the absent capped-signer capability from §4.1. No provider was
+deployed, no policy-signer transaction occurred and no historical evidence was
+rewritten. The remaining funder/lead scope conversation is a human action. Notion
+sync remains pending until the repo change merges.
 
 ## Current — web surface registered; the dashboard printed a wrong number for B and no longer does
 
