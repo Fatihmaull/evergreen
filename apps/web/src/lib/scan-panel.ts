@@ -126,7 +126,20 @@ async function runCost(): Promise<void> {
           : ''
       }`;
   } catch (error) {
-    panel.innerHTML = `<p class="small">Could not price an extend: the network declined to simulate it. The TTL results above are unaffected.</p><p class="small muted">${esc((error as Error).message)}</p>`;
+    // Do not name a cause this did not establish. Until 2026-09-23 every throw
+    // here read "the network declined to simulate it" — including the
+    // ReferenceError from a mis-aliased import, which blamed the network for a
+    // fault in this page on every single press of the button.
+    //
+    // A refusal by the network is not an exception anyway: core reports one as
+    // `no-quote-returned` in its excluded list, which is rendered above.
+    const ours = error instanceof ReferenceError || error instanceof TypeError;
+    panel.innerHTML = `<p class="small"><strong>The rent estimate did not complete.</strong> ${
+      ours
+        ? 'This is a fault in this page, not a refusal by the network.'
+        : 'The cause is below, as reported.'
+    } The TTL results above are unaffected.</p>
+      <p class="small muted mono">${esc((error as Error).message)}</p>`;
   }
 }
 
