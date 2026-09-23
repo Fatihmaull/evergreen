@@ -1019,3 +1019,66 @@ svg.decay {
   font-size: 10.5px;
   fill: var(--ink-3);
 }
+
+/* ---------------------------------------------------------------------------
+   Expired.
+
+   Not a failure state the page is coping with — for guinea-pig B it is the
+   finished proof, and it should read as the most settled cell on the page.
+   The inverted cell is the spec's `--status-expired`, and inversion is
+   Stellar's own mechanism for emphasis rather than for error.
+   --------------------------------------------------------------------------- */
+.expired-card {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+.expired-card .id,
+.expired-card dt,
+.expired-card .small {
+  color: rgba(252, 249, 248, 0.72);
+}
+.expired-card dd,
+.expired-card .name {
+  color: var(--surface);
+}
+.expired-headline {
+  font-family: var(--serif);
+  font-size: var(--step-3);
+  line-height: 1.05;
+  margin: 0.25rem 0 0.5rem;
+  color: var(--surface);
+}
+.stat-expired {
+  background: var(--ink);
+  color: var(--surface);
+}
+.stat-expired .stat-label,
+.stat-expired .stat-caption {
+  color: rgba(252, 249, 248, 0.72);
+}
+.stat-expired .stat-figure {
+  font-family: var(--serif);
+  color: var(--surface);
+}
+.expired-cell {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--surface);
+  font-family: var(--mono);
+  font-size: var(--step--1);
+}
+tr.row-expired td {
+  background: rgba(15, 15, 15, 0.04);
+}
+.excluded {
+  border-top: 1px solid var(--hair);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+.excluded ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}

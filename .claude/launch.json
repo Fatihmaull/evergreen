@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-prototype",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "/Users/fatihmaull/Documents/evergreen/.claude/worktrees/web-agent-onboarding-4b7cb6/apps/web/scripts/serve.mjs",
+        "4317"
+      ],
+      "port": 4317
+    }
+  ]
+}

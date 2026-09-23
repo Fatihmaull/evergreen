@@ -23,7 +23,7 @@ export const meta = {
   script: null,
 };
 
-function validate(series) {
+export function validate(series) {
   for (const s of series) {
     if (s.observations.length === 0) throw new Error(`decay: ${s.id} has no observations`);
     let current = null;

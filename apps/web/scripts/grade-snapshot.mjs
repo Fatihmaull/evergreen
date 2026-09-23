@@ -24,9 +24,14 @@ const thresholds = resolveHealthThresholds({ bumpWhenRemainingLedgersBelow: DEFA
 const out = {};
 for (const contract of snapshot.result.contracts) {
   const entries = Object.entries(snapshot.result.entries).filter(([, e]) => e.contracts.includes(contract.id));
-  const assessed = entries.map(([key, e]) => ({ key, health: assessEntryWithThresholds(e, thresholds).health, endsAt: e.ttl.status === 'known' ? e.ttl.endsAtLedger : null, remaining: e.ttl.status === 'known' ? e.ttl.remainingLedgers : null, kind: e.kind }));
-  const known = assessed.filter((a) => a.endsAt !== null);
-  const binding = known.length > 0 ? known.reduce((a, b) => (a.endsAt <= b.endsAt ? a : b)) : null;
+  // Carry isExpired and core's reason, not just the health word. Without them a
+  // static page cannot tell "critical because low" from "critical because it is
+  // already archived", and renders the archived entry's endsAt 0 as a date.
+  const assessed = entries.map(([key, e]) => { const a = assessEntryWithThresholds(e, thresholds); return { key, health: a.health, isExpired: a.isExpired, reason: a.reason, endBehavior: e.endBehavior, endsAt: a.isExpired || e.ttl.status !== 'known' ? null : e.ttl.endsAtLedger, remaining: a.isExpired || e.ttl.status !== 'known' ? null : e.ttl.remainingLedgers, kind: e.kind, observedAtLedger: e.observedAtLedger }; });
+  const expired = assessed.filter((a) => a.isExpired);
+  const live = assessed.filter((a) => !a.isExpired && a.endsAt !== null);
+  // Expired binds absolutely; among live, the earliest.
+  const binding = expired.length > 0 ? expired[0] : live.length > 0 ? live.reduce((a, b) => (a.endsAt <= b.endsAt ? a : b)) : null;
   out[contract.id] = {
     worst: worstHealth(entries.map(([ , e]) => assessEntryWithThresholds(e, thresholds))),
     binding,

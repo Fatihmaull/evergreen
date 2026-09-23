@@ -4,7 +4,7 @@
  * the interface and the tool cannot say different things about one scan.
  */
 import type { AssessedEntry, ScanReport } from './evergreen';
-import { estimateEndsAt } from './evergreen';
+import { bindingEntry as pickBinding, entryView, type EntryView } from './view';
 import { approxDate, approxDateShort, esc, formatCount, short } from './format';
 
 const KIND_WORD: Record<string, string> = {
@@ -15,10 +15,10 @@ const KIND_WORD: Record<string, string> = {
 };
 
 export function chip(entry: AssessedEntry): string {
-  const { assessment, entry: e } = entry;
-  if (assessment.isExpired) {
-    const word = e.endBehavior === 'deleted' ? 'deleted' : 'archived';
-    return `<span class="chip expired"><span class="shape"></span>${word}</span>`;
+  const { assessment } = entry;
+  const view = entryView(entry);
+  if (view.state === 'expired') {
+    return `<span class="chip expired"><span class="shape"></span>${view.word}</span>`;
   }
   if (assessment.health === 'unknown') {
     return '<span class="chip undetermined"><span class="shape"></span>unread</span>';
@@ -37,15 +37,29 @@ export function sharingCell(entry: AssessedEntry): string {
   return '<span class="small muted">this contract only</span>';
 }
 
-/** The entry that expires first: the real expiry, and not the first number a naive tool shows. */
-export function bindingEntry(report: ScanReport): AssessedEntry | undefined {
-  const known = report.entries.filter((e) => e.entry.ttl.status === 'known');
-  if (known.length === 0) return undefined;
-  return known.reduce((a, b) =>
-    (a.entry.ttl.status === 'known' ? a.entry.ttl.endsAtLedger : Infinity) <=
-    (b.entry.ttl.status === 'known' ? b.entry.ttl.endsAtLedger : Infinity)
-      ? a
-      : b,
+/** The entry that decides the contract's fate — expired binds first. See `view.ts`. */
+export function bindingEntry(report: ScanReport, now = new Date()): AssessedEntry | undefined {
+  return pickBinding(report.entries, now);
+}
+
+/**
+ * Where an expired entry ended, when a committed measurement recorded it.
+ *
+ * The chain cannot answer this: an archived entry reports `liveUntilLedgerSeq`
+ * 0, so the ledger it ended at is gone from the scan. For anything but our own
+ * subjects there is no honest number, and this says so instead of guessing.
+ */
+function endedAt(view: Extract<EntryView, { state: 'expired' }>): string {
+  if (view.endedAtLedger === undefined) {
+    return (
+      ` The chain reports an archived entry as <span class="mono">liveUntilLedgerSeq 0</span>, so the ledger it ` +
+      `ended at can no longer be read from a scan — only that it is past. Read at ledger ` +
+      `<span class="mono">${esc(formatCount(view.observedAtLedger))}</span>.`
+    );
+  }
+  return (
+    ` It ended at ledger <span class="mono">${esc(formatCount(view.endedAtLedger))}</span>` +
+    `${view.endedOn ? `, ${esc(approxDateShort(new Date(view.endedOn)))}` : ''}.`
   );
 }
 
@@ -61,16 +75,27 @@ export function verdict(report: ScanReport, now = new Date()): string {
   } else if (!binding) {
     headline = 'Nothing was read. Absence is not proof of archival or deletion.';
   } else {
-    const ttl = binding.entry.ttl;
-    const ends = ttl.status === 'known' ? ttl.endsAtLedger : undefined;
+    const view = entryView(binding, now);
     const kind = esc(KIND_WORD[binding.entry.kind] ?? binding.entry.kind);
-    const when = esc(approxDate(estimateEndsAt(ttl, now)));
-    const at = `<span class="mono">${esc(formatCount(ends ?? 0))}</span>`;
-    headline =
-      report.result.contracts.length > 1
+    const many = report.result.contracts.length > 1;
+
+    if (view.state === 'expired') {
+      // Not an error the page is coping with. It is the finished answer.
+      headline = many
+        ? `The earliest entry in this scan is a ${kind} entry, and it has already ${view.word}.` +
+          `${endedAt(view)} ${esc(view.reason)} It binds the contract it belongs to, not all of them.`
+        : `<strong>This contract has stopped working.</strong> Its ${kind} entry is ${view.word}.` +
+          `${endedAt(view)} ${esc(view.reason)}`;
+    } else if (view.state === 'unread') {
+      headline = `The ${kind} entry that binds this contract returned no TTL. Unread is not healthy.`;
+    } else {
+      const when = esc(approxDate(view.endsAt));
+      const at = `<span class="mono">${esc(formatCount(view.endsAtLedger))}</span>`;
+      headline = many
         ? `The earliest entry in this scan is a ${kind} entry, expiring <strong>${when}</strong> at ledger ${at}. ` +
           `It binds the contract it belongs to, not all of them — each contract's own binding entry is in the table.`
         : `This contract stops working on <strong>${when}</strong>, at ledger ${at} — its ${kind} entry expires first.`;
+    }
   }
 
   const partial = report.partial
@@ -120,16 +145,26 @@ export function entryTable(report: ScanReport, now = new Date()): string {
   const binding = report.result.contracts.length === 1 ? bindingEntry(report) : undefined;
   const rows = report.entries
     .map((e) => {
-      const ttl = e.entry.ttl;
-      const known = ttl.status === 'known';
+      const view = entryView(e, now);
       const isBinding = binding && binding.key === e.key;
-      return `<tr>
+      // An expired row carries no remaining count, no projected date and no
+      // expiry ledger, because the chain no longer holds any of the three. The
+      // row states what it is instead of filling the columns with a zero's
+      // arithmetic.
+      const cells =
+        view.state === 'expired'
+          ? `<td class="num" colspan="3"><span class="expired-cell">${view.word}</span>
+               ${view.endedAtLedger === undefined ? '<span class="small">ledger no longer readable</span>' : `<span class="small mono">ended at ${esc(formatCount(view.endedAtLedger))}</span>`}</td>`
+          : view.state === 'unread'
+            ? `<td class="num">—</td><td class="num">—</td><td class="num">—</td>`
+            : `<td class="num">${esc(formatCount(view.remainingLedgers))}</td>
+               <td class="num">${esc(approxDateShort(view.endsAt))}</td>
+               <td class="num">${esc(formatCount(view.endsAtLedger))}</td>`;
+      return `<tr${view.state === 'expired' ? ' class="row-expired"' : ''}>
         <td>${esc(KIND_WORD[e.entry.kind] ?? e.entry.kind)}${isBinding ? '<span class="binding-tag">binds</span>' : ''}</td>
         <td class="num">${esc(short(e.key, 16, 12))}
           <button class="copy" type="button" data-copy="${esc(e.key)}">copy</button></td>
-        <td class="num">${known ? esc(formatCount(ttl.remainingLedgers)) : '—'}</td>
-        <td class="num">${known ? esc(approxDateShort(estimateEndsAt(ttl, now))) : '—'}</td>
-        <td class="num">${known ? esc(formatCount(ttl.endsAtLedger)) : '—'}</td>
+        ${cells}
         <td>${chip(e)}</td>
         <td>${sharingCell(e)}</td>
       </tr>`;
@@ -183,24 +218,44 @@ export function contractCard(
   report: ScanReport,
   now = new Date(),
 ): string {
-  const binding = bindingEntry(report);
-  const ttl = binding?.entry.ttl;
-  const known = ttl?.status === 'known';
+  const binding = bindingEntry(report, now);
+  const view = binding ? entryView(binding, now) : undefined;
   const worst = report.worst;
   const chipHtml =
-    worst === undefined
+    worst === undefined || worst === 'unknown'
       ? '<span class="chip undetermined"><span class="shape"></span>unread</span>'
-      : worst === 'unknown'
-        ? '<span class="chip undetermined"><span class="shape"></span>unread</span>'
-        : `<span class="chip ${worst}"><span class="shape"></span>${worst}</span>`;
+      : `<span class="chip ${worst}"><span class="shape"></span>${worst}</span>`;
+  const kind = esc(binding ? (KIND_WORD[binding.entry.kind] ?? binding.entry.kind) : '—');
+
+  // The expired card is the most confident cell on the page, not a degraded
+  // one: this contract was left alone, and here is what became of it.
+  if (view?.state === 'expired') {
+    return `<article class="card contract-card expired-card">
+      <div class="row"><span class="name">${esc(label)}</span>
+        <span class="chip expired"><span class="shape"></span>${view.word}</span></div>
+      <div class="id">${esc(id)}</div>
+      <p class="expired-headline">${view.word}</p>
+      <dl>
+        <dt>entry</dt><dd>${kind}</dd>
+        ${
+          view.endedAtLedger === undefined
+            ? `<dt>ended at</dt><dd>no longer readable</dd>`
+            : `<dt>ended at</dt><dd>ledger ${esc(formatCount(view.endedAtLedger))}${view.endedOn ? ` · ${esc(approxDateShort(new Date(view.endedOn)))}` : ''}</dd>`
+        }
+        <dt>read at</dt><dd>ledger ${esc(formatCount(view.observedAtLedger))}</dd>
+      </dl>
+      <p class="small">${esc(view.reason)}</p>
+    </article>`;
+  }
+
   return `<article class="card contract-card">
     <div class="row"><span class="name">${esc(label)}</span>${chipHtml}</div>
     <div class="id">${esc(id)}</div>
     <dl>
-      <dt>binds</dt><dd>${esc(binding ? (KIND_WORD[binding.entry.kind] ?? binding.entry.kind) : '—')}</dd>
-      <dt>remaining</dt><dd>${known ? esc(formatCount(ttl.remainingLedgers)) : '—'}</dd>
-      <dt>expires</dt><dd>${known ? esc(approxDateShort(estimateEndsAt(ttl, now))) : '—'}</dd>
-      <dt>at ledger</dt><dd>${known ? esc(formatCount(ttl.endsAtLedger)) : '—'}</dd>
+      <dt>binds</dt><dd>${kind}</dd>
+      <dt>remaining</dt><dd>${view?.state === 'live' ? esc(formatCount(view.remainingLedgers)) : '—'}</dd>
+      <dt>expires</dt><dd>${view?.state === 'live' ? esc(approxDateShort(view.endsAt)) : '—'}</dd>
+      <dt>at ledger</dt><dd>${view?.state === 'live' ? esc(formatCount(view.endsAtLedger)) : '—'}</dd>
     </dl>
   </article>`;
 }
@@ -250,7 +305,7 @@ export function graph(report: ScanReport, now = new Date()): string {
       const shared = e.assessment.observedContractCount > 1;
       const h = shared ? 72 : 56;
       const y = cy(j, entries.length, rowE) - h / 2;
-      const ttl = e.entry.ttl;
+      const view = entryView(e, now);
       const cls = shared ? ' on-pine' : '';
       const line3 = shared
         ? `<text class="dim${cls}" x="${rightX + 16}" y="${y + 58}">shared by ${e.assessment.observedContractCount} · they fail together</text>`
@@ -260,9 +315,11 @@ export function graph(report: ScanReport, now = new Date()): string {
           shared ? '' : ` · of ${esc(short(e.entry.contracts[0] ?? '', 4, 4))}`
         } · ${esc(short(e.key, 10, 8))}</text>
         <text class="dim${cls}" x="${rightX + 16}" y="${y + 40}">${
-          ttl.status === 'known'
-            ? `${esc(formatCount(ttl.remainingLedgers))} ledgers left · ${esc(approxDateShort(estimateEndsAt(ttl, now)))}`
-            : 'no TTL metadata returned'
+          view.state === 'live'
+            ? `${esc(formatCount(view.remainingLedgers))} ledgers left · ${esc(approxDateShort(view.endsAt))}`
+            : view.state === 'expired'
+              ? `${view.word}${view.endedAtLedger === undefined ? '' : ` · ended at ledger ${esc(formatCount(view.endedAtLedger))}`}`
+              : 'no TTL metadata returned'
         }</text>${line3}</g>`;
     })
     .join('');

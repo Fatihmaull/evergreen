@@ -14,6 +14,7 @@
  * fail, instead of assuming it.
  */
 import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
 import {
   cpSync,
   existsSync,
@@ -50,6 +51,40 @@ const CADENCE = { value: '5.000000 s ± 0.000050' };
 
 function readJson(path) {
   return JSON.parse(readFileSync(join(here, path), 'utf8'));
+}
+
+/**
+ * Where our own subjects actually ended, from `ops/crossing-schedule.json` —
+ * which declares itself the single source of truth for the crossings.
+ *
+ * The chain cannot supply this: an archived entry reports `liveUntilLedgerSeq`
+ * 0, so after expiry the ledger it ended at is unreadable from a scan. These
+ * were measured before that happened. Nothing else may be shown as an end
+ * ledger, which is why this reads from the schedule rather than a constant.
+ */
+function readKnownEnds() {
+  const schedule = JSON.parse(readFileSync(join(repo, 'ops/crossing-schedule.json'), 'utf8'));
+  const ends = {};
+  for (const watch of schedule.watches ?? []) {
+    const s = watch.subject;
+    if (!s?.contractId) continue;
+    ends[s.contractId] = {
+      ...(typeof s.expiresAtLedger === 'number' ? { instance: s.expiresAtLedger } : {}),
+      ...(typeof s.persistentExpiresAtLedger === 'number'
+        ? { persistent: s.persistentExpiresAtLedger }
+        : {}),
+      // Date only. The closing record says the wall-clock crossing time is
+      // "derived, and not observed", so no time of day is published here.
+      ...(typeof s.expiresAtUtc === 'string' ? { endsOn: s.expiresAtUtc.slice(0, 10) } : {}),
+      status: watch.status,
+    };
+  }
+  if (Object.keys(ends).length === 0) {
+    throw new Error(
+      'ops/crossing-schedule.json yielded no subjects; expired entries would lose their end ledger',
+    );
+  }
+  return ends;
 }
 
 function readGuard() {
@@ -121,6 +156,17 @@ const decay = readJson('data/decay.json');
 const archival = readJson('data/archival.json');
 const guard = readGuard();
 const cli = readCli();
+const knownEnds = readKnownEnds();
+
+/**
+ * Written rather than injected with esbuild's `define`.
+ *
+ * A `define` turned out to disable cross-module tree-shaking: the bundle went
+ * from 6 core modules to 22 and pulled the entire write path in with it. The
+ * write-path guard caught that, which is the whole reason it exists. A plain
+ * JSON import tree-shakes normally and is typed.
+ */
+writeFileSync(join(here, 'data/known-ends.json'), `${JSON.stringify(knownEnds, null, 2)}\n`);
 const evidence = {
   count: readdirSync(join(repo, 'docs/evidence'), { withFileTypes: true }).filter((d) =>
     d.isDirectory(),
@@ -141,6 +187,7 @@ const ctx = {
   guard,
   cli,
   evidence,
+  knownEnds,
 };
 
 const PAGES = [
@@ -272,6 +319,25 @@ console.log('building the twelve-page preview into apps/dashboard/public');
  * — a stale bundle pointed at an unreachable RPC survived one rebuild here
  * before this line existed.
  */
+/**
+ * Typecheck before emitting anything.
+ *
+ * `apps/web` had no tsconfig, so nothing ever typechecked it, and
+ * `readStateArchivalSettings` — imported under an alias and then called by its
+ * original name — shipped to the deployed preview. Every rent estimate threw a
+ * ReferenceError, and the catch told the visitor the NETWORK had declined to
+ * simulate. `tsc` names that in under a second.
+ */
+console.log('typechecking apps/web');
+try {
+  execFileSync('npx', ['tsc', '-p', join(here, 'tsconfig.json')], {
+    cwd: repo,
+    stdio: 'inherit',
+  });
+} catch {
+  throw new Error('apps/web does not typecheck; refusing to build');
+}
+
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
@@ -303,5 +369,34 @@ mkdirSync(join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
+/**
+ * No rendered page may contain the residue of a lookup that did not resolve.
+ *
+ * `/dashboard/contracts` shipped "as of ledger NaN" and "expires ~NaN undefined
+ * NaN" because a page read `grades.observedAtLedger`, which lives on each
+ * grade rather than at the top level. Nothing asserted the lookup resolved, so
+ * a typo became three rendered figures. This is that assertion.
+ */
+function guardRenderedPages() {
+  const RESIDUE = /\bNaN\b|\bundefined\b|\bInfinity\b|\[object Object\]/;
+  const offenders = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.html')) {
+        const match = RESIDUE.exec(readFileSync(path, 'utf8'));
+        if (match) offenders.push(`${path.slice(out.length + 1)} contains ${match[0]}`);
+      }
+    }
+  };
+  walk(out);
+  if (offenders.length > 0) {
+    throw new Error(`rendered pages carry unresolved values:\n  ${offenders.join('\n  ')}`);
+  }
+}
+
+guardRenderedPages();
+
 if (process.argv.includes('--commission')) await commission();
 console.log('done');

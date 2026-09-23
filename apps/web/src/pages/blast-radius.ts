@@ -13,7 +13,7 @@ import {
 } from '../lib/evergreen';
 import { approxDate, esc, formatCount } from '../lib/format';
 import { entryTable, graph, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
-import { estimateEndsAt } from '../lib/evergreen';
+import { entryView } from '../lib/view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -39,13 +39,23 @@ function sharedSentence(rep: ScanReport, now = new Date()): string {
     return `<p class="headline">No entry in this scan is shared by more than one of the contracts you listed. That is not proof that none is shared — it is what these contracts, read together, can show.</p>`;
   }
   const lines = shared.map((e) => {
-    const ttl = e.entry.ttl;
-    const when = ttl.status === 'known' ? approxDate(estimateEndsAt(ttl, now)) : 'an unread date';
+    const view = entryView(e, now);
+    const count = e.assessment.observedContractCount;
+    // A shared entry that has already expired took every contract with it —
+    // past tense, and no projected date, because there is nothing to project.
+    if (view.state === 'expired') {
+      return (
+        `These ${count} contracts shared 1 ${esc(e.entry.kind)} entry, and it is ${view.word}` +
+        `${view.endedAtLedger === undefined ? '' : ` (ended at ledger <span class="mono">${esc(formatCount(view.endedAtLedger))}</span>)`}. ` +
+        `They failed together. ${esc(view.reason)}`
+      );
+    }
+    const when = view.state === 'live' ? approxDate(view.endsAt) : 'an unread date';
     const at =
-      ttl.status === 'known'
-        ? ` (ledger <span class="mono">${esc(formatCount(ttl.endsAtLedger))}</span>)`
+      view.state === 'live'
+        ? ` (ledger <span class="mono">${esc(formatCount(view.endsAtLedger))}</span>)`
         : '';
-    return `These ${e.assessment.observedContractCount} contracts share 1 ${esc(e.entry.kind)} entry. It expires <strong>${esc(when)}</strong>${at}. They fail together.`;
+    return `These ${count} contracts share 1 ${esc(e.entry.kind)} entry. It expires <strong>${esc(when)}</strong>${at}. They fail together.`;
   });
   return lines.map((l) => `<p class="headline">${l}</p>`).join('');
 }

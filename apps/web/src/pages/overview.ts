@@ -15,7 +15,7 @@ import {
 } from '../lib/evergreen';
 import { approxDateShort, esc, formatCount, stamp } from '../lib/format';
 import { bindingEntry, contractCard } from '../lib/ui';
-import { estimateEndsAt } from '../lib/evergreen';
+import { entryView } from '../lib/view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -33,18 +33,32 @@ function statStrip(full: ScanReport): string {
   const cells = OUR_CONTRACTS.map((c) => {
     const sub = subReport(full, c.id);
     const binding = bindingEntry(sub);
-    const ttl = binding?.entry.ttl;
-    const known = ttl?.status === 'known';
+    const view = binding ? entryView(binding) : undefined;
     const worst = sub.worst ?? 'unknown';
     const tone = worst === 'unknown' ? 'undetermined' : worst;
+
+    // An expired subject gets the word, not a count. `-4,810,562 ledgers left`
+    // is the arithmetic of a zero, and there is no remaining to report.
+    if (view?.state === 'expired') {
+      return `<div class="stat stat-expired">
+        <p class="stat-label">${esc(c.label)}</p>
+        <p class="stat-figure">${view.word}</p>
+        <p class="stat-caption">${
+          view.endedAtLedger === undefined
+            ? `read at ledger ${esc(formatCount(view.observedAtLedger))}`
+            : `ended at ledger ${esc(formatCount(view.endedAtLedger))}${view.endedOn ? ` · ${esc(approxDateShort(new Date(view.endedOn)))}` : ''}`
+        }</p>
+      </div>`;
+    }
+
     return `<div class="stat">
       <p class="stat-label">${esc(c.label)}</p>
       <p class="stat-figure ${tone}">${
-        known ? esc(formatCount(ttl.remainingLedgers)) : 'unread'
+        view?.state === 'live' ? esc(formatCount(view.remainingLedgers)) : 'unread'
       }</p>
       <p class="stat-caption">${
-        known
-          ? `ledgers left · binds on ${esc(binding?.entry.kind ?? '')} · expires ${esc(approxDateShort(estimateEndsAt(ttl, new Date())))}`
+        view?.state === 'live'
+          ? `ledgers left · binds on ${esc(binding?.entry.kind ?? '')} · expires ${esc(approxDateShort(view.endsAt))}`
           : 'the read did not return a TTL — absence is not health'
       }</p>
     </div>`;
@@ -60,18 +74,25 @@ async function load(): Promise<void> {
   try {
     const result = await scanMany(ids);
     if (Object.keys(result.entries).length === 0) throw new Error('no entries returned');
+    const at = report(result).observedAtLedger;
+    // `?? 0` here would print "ledger 0" — the same fabricated figure, from the
+    // same habit of filling a hole with a number.
     render(
       result,
-      `Read live from testnet at ledger ${formatCount(report(result).observedAtLedger ?? 0)}.`,
+      at === undefined
+        ? 'Read live from testnet; the response carried no observed ledger.'
+        : `Read live from testnet at ledger ${formatCount(at)}.`,
     );
   } catch {
     try {
       const response = await fetch('/assets/snapshot.json', { cache: 'no-store' });
       const snapshot = (await response.json()) as { capturedAt: string; result: ScanResult };
-      const at = report(snapshot.result).observedAtLedger ?? 0;
+      const at = report(snapshot.result).observedAtLedger;
       render(
         snapshot.result,
-        `The live read failed, so this is the snapshot committed with this build: as of ledger ${formatCount(at)}, recorded ${stamp(snapshot.capturedAt)}. It is not current.`,
+        `The live read failed, so this is the snapshot committed with this build: ${
+          at === undefined ? 'no observed ledger recorded' : `as of ledger ${formatCount(at)}`
+        }, recorded ${stamp(snapshot.capturedAt)}. It is not current.`,
       );
     } catch {
       note.textContent =

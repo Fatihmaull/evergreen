@@ -5,7 +5,7 @@
       "id": "b-instance",
       "contract": "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ",
       "label": "guinea-pig B · instance",
-      "role": "The control. Deployed 5 September, calibrated once that day with a disclosed extend, and left alone since. Nothing has extended it since, so both observations agree on the same expiry.",
+      "role": "The control. Deployed 5 September, calibrated once that day with a disclosed extend, then left alone — and it expired on 21 September, as intended. Six measured readings run into the expiry; nothing extended it at any point.",
       "expiryLedger": 4793687,
       "expiryApprox": "2026-09-21",
       "observations": [
@@ -15,9 +15,29 @@
           "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
         },
         {
-          "ledger": 4756697,
+          "ledger": 4776408,
           "endsAt": 4793687,
-          "source": "apps/web/data/snapshot.json"
+          "source": "docs/W3-B-WATCH-CLOSING.md"
+        },
+        {
+          "ledger": 4776486,
+          "endsAt": 4793687,
+          "source": "docs/W3-B-WATCH-CLOSING.md"
+        },
+        {
+          "ledger": 4785103,
+          "endsAt": 4793687,
+          "source": "docs/W3-B-WATCH-CLOSING.md"
+        },
+        {
+          "ledger": 4789368,
+          "endsAt": 4793687,
+          "source": "docs/W3-B-WATCH-CLOSING.md"
+        },
+        {
+          "ledger": 4789426,
+          "endsAt": 4793687,
+          "source": "docs/W3-B-WATCH-CLOSING.md"
         }
       ],
       "steps": []
@@ -36,7 +56,7 @@
           "source": "docs/evidence/2026-09-09-guinea-pig-a-extend/README.md"
         },
         {
-          "ledger": 4756697,
+          "ledger": 4821462,
           "endsAt": 6370261,
           "source": "apps/web/data/snapshot.json"
         }
@@ -77,7 +97,7 @@
           "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
         },
         {
-          "ledger": 4756697,
+          "ledger": 4821462,
           "endsAt": 5290829,
           "source": "apps/web/data/snapshot.json"
         }

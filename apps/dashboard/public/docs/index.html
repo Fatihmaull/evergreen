@@ -48,7 +48,7 @@
           </header>
           <section class="card card-pad stack">
     <h2 class="section">Usage and flags</h2>
-    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--json] [--cost [--ledgers N]] [--optimize]
+    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
 Keys file: { &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }
@@ -74,6 +74,16 @@ Precedence: 2 &gt; 3 &gt; 1 &gt; 0. Exit status never authorizes a transaction.
 Scanning reads the keys it is given; it cannot enumerate a contract&#39;s storage,
 so a clean exit means &quot;everything I was asked to check is healthy&quot; and never
 &quot;this contract is fully healthy&quot;. Coverage is printed with every scan.
+
+--threshold N         act-now threshold in LEDGERS, default 17,280 (~1 day).
+                      What evergreen-check sets in CI: a repository that wants
+                      a week of warning fails its build at 120,960, not at ours.
+                      Both health tiers move with it — WARNING widens as the
+                      action threshold rises, so raising it never silently
+                      narrows the earlier warning. Exit 1 means an entry is at
+                      or below this value; the boundary is inclusive, because
+                      remaining exactly N is already the margin you set out to
+                      keep. Changes what is REPORTED and never what is written.
 
 --no-data-keys        assert this contract has no data keys beyond its instance.
                       Only its author can know that; it is a caller declaration

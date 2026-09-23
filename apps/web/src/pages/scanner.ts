@@ -107,7 +107,19 @@ async function runCost(): Promise<void> {
       }
       <p class="small muted">Priced by simulating against the network at ledger ${esc(formatCount(quote.pricedAtLedger))}. Rent pricing varies with network state — a quote taken on another day has differed by ~18%. This is an estimate to budget against, not a quoted price.</p>
       <p class="small muted">Rent only. The CLI's total also carries the non-refundable resource and base fees; that assembly lives in the CLI and moves into core under #195.</p>
-      ${quote.cappedEntries > 0 ? `<p class="small">⚠ ${quote.cappedEntries} entr${quote.cappedEntries === 1 ? 'y was' : 'ies were'} capped at the protocol maximum, so they get less than requested.</p>` : ''}`;
+      ${quote.cappedEntries > 0 ? `<p class="small">⚠ ${quote.cappedEntries} entr${quote.cappedEntries === 1 ? 'y was' : 'ies were'} capped at the protocol maximum, so they get less than requested.</p>` : ''}
+      ${
+        quote.excluded.length > 0
+          ? `<div class="excluded"><p class="small"><strong>${quote.excluded.length} entr${quote.excluded.length === 1 ? 'y is' : 'ies are'} not in this estimate.</strong>
+               Core leaves them out rather than pricing an operation that cannot be performed:</p>
+             <ul class="small">${quote.excluded
+               .map(
+                 (x) =>
+                   `<li><span class="mono">${esc(x.entryKey.slice(0, 10))}…</span> — ${esc(x.detail)}</li>`,
+               )
+               .join('')}</ul></div>`
+          : ''
+      }`;
   } catch (error) {
     panel.innerHTML = `<p class="small">Could not price an extend: the network declined to simulate it. The TTL results above are unaffected.</p><p class="small muted">${esc((error as Error).message)}</p>`;
   }

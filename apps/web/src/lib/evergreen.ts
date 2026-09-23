@@ -21,6 +21,7 @@ import {
   createSimulatingQuoter,
   estimateEndsAt,
   estimateRent,
+  hasExpired,
   isValidContractId,
   readStateArchivalSettings as readArchivalSettings,
   resolveExtendTarget,
@@ -47,7 +48,7 @@ export const OUR_CONTRACTS = [
   { id: 'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL', label: 'guinea-pig C' },
 ] as const;
 
-export { isValidContractId, estimateEndsAt, worstHealth, DEFAULT_CRITICAL_LEDGERS };
+export { isValidContractId, estimateEndsAt, hasExpired, worstHealth, DEFAULT_CRITICAL_LEDGERS };
 export type { EntryAssessment, EntryHealth, LedgerEntryTTL, ScanIssue, ScanResult };
 
 export interface AssessedEntry {
@@ -125,6 +126,17 @@ export interface RentQuote {
   readonly pricedAtLedger: number;
   readonly additionalLedgers: number;
   readonly cappedEntries: number;
+  /**
+   * Entries core deliberately left out of the quote, with its own reason.
+   * `rent.ts` says of this list: "Never silently dropped." The web dropped it
+   * silently anyway, so an archived entry vanished from the bill with no word
+   * about why it could not be priced.
+   */
+  readonly excluded: readonly {
+    readonly entryKey: string;
+    readonly reason: string;
+    readonly detail: string;
+  }[];
 }
 
 /**
@@ -135,11 +147,15 @@ export interface RentQuote {
  */
 export async function quoteRent(scan: ScanResult, additionalLedgers: number): Promise<RentQuote> {
   const server = new rpc.Server(RPC_URL);
-  const settings = await readStateArchivalSettings(server);
+  const settings = await readArchivalSettings(server);
   const targets: Record<string, number> = {};
   let cappedEntries = 0;
   for (const [key, entry] of Object.entries(scan.entries)) {
     if (entry.ttl.status !== 'known') continue;
+    // `extendTTL` cannot reach an entry past its final live ledger; core
+    // excludes those itself. Asking for a target for one is meaningless, and
+    // `hasExpired` is core's boundary rather than a local `< 0`.
+    if (hasExpired(entry.ttl.remainingLedgers)) continue;
     const resolved = resolveExtendTarget({
       currentRemainingLedgers: entry.ttl.remainingLedgers,
       additionalLedgers,
@@ -149,12 +165,13 @@ export async function quoteRent(scan: ScanResult, additionalLedgers: number): Pr
     targets[key] = resolved.extendToLedgers;
   }
   const quoter = createSimulatingQuoter(server, { networkPassphrase: Networks.TESTNET });
-  const { estimate } = await estimateRent(scan, { extendToLedgers: targets }, quoter);
+  const { estimate, excluded } = await estimateRent(scan, { extendToLedgers: targets }, quoter);
   return {
     totalRentStroops: estimate.totalEstimatedRentStroops,
     byEntry: estimate.estimatedRentStroopsByEntry,
     pricedAtLedger: settings.observedAtLedger,
     additionalLedgers,
     cappedEntries,
+    excluded: excluded.map((x) => ({ entryKey: x.entryKey, reason: x.reason, detail: x.detail })),
   };
 }

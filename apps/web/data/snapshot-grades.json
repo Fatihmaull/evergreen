@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-19T08:37:56.122Z",
+  "capturedAt": "2026-09-23T02:34:58.038Z",
   "thresholds": {
     "warnBelowLedgers": 120960,
     "criticalBelowLedgers": 17280
@@ -10,33 +10,45 @@
       "binding": {
         "key": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
         "health": "healthy",
+        "isExpired": false,
+        "reason": "Above threshold.",
+        "endBehavior": "archived",
         "endsAt": 5290829,
-        "remaining": 534132,
-        "kind": "code"
+        "remaining": 469367,
+        "kind": "code",
+        "observedAtLedger": 4821462
       },
-      "observedAtLedger": 4756697
+      "observedAtLedger": 4821462
     },
     "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": {
-      "worst": "warning",
+      "worst": "critical",
       "binding": {
         "key": "AAAABgAAAAGwZ31Q8UQMhyClgPEC/IhGh+VcCmOlGUiREGBGaXh+pQAAABQAAAAB",
-        "health": "warning",
-        "endsAt": 4793687,
-        "remaining": 36990,
-        "kind": "instance"
+        "health": "critical",
+        "isExpired": true,
+        "reason": "Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.",
+        "endBehavior": "archived",
+        "endsAt": null,
+        "remaining": null,
+        "kind": "instance",
+        "observedAtLedger": 4821462
       },
-      "observedAtLedger": 4756697
+      "observedAtLedger": 4821462
     },
     "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": {
-      "worst": "healthy",
+      "worst": "warning",
       "binding": {
         "key": "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB",
-        "health": "healthy",
+        "health": "warning",
+        "isExpired": false,
+        "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed.",
+        "endBehavior": "archived",
         "endsAt": 4880097,
-        "remaining": 123400,
-        "kind": "instance"
+        "remaining": 58635,
+        "kind": "instance",
+        "observedAtLedger": 4821462
       },
-      "observedAtLedger": 4756697
+      "observedAtLedger": 4821462
     }
   }
 }
