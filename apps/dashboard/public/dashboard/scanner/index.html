@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contract scanner — Evergreen</title>
+    <meta name="description" content="Scan one Soroban testnet contract for TTL health, the entry that binds its expiry, and a rent estimate. Read-only." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
+        </a>
+        <nav aria-label="Sections"><div class="nav-group">
+        <p class="nav-section">Live reads</p>
+        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item active" href="/dashboard/scanner/" aria-current="page">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Our own record</p>
+        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
+      </div><div class="nav-group">
+        <p class="nav-section">Reference</p>
+        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+      </div></nav>
+        <div class="sidebar-foot">
+          <p class="mono">testnet only</p>
+          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+        </div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
+      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
+      <span class="status-item right dim">read-only · these pages never sign or submit</span>
+    </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Contract scanner · Stellar testnet</p>
+            <h1>Scan one contract</h1>
+            <p class="lead">A permissionless read: TTL health, which entry expires first, and what extending costs — priced by simulating against the network. A single-contract scan cannot settle whether the code entry is shared; that reads undetermined, with a link into Blast Radius.</p>
+          </header>
+          <section>
+      <form class="card card-pad stack" id="scan-form">
+        <div>
+          <label class="field-label" for="contract-id">Testnet contract address</label>
+          <input id="contract-id" type="text" spellcheck="false" autocomplete="off" placeholder="C…" />
+        </div>
+        <div class="row">
+          <button id="scan-button" type="submit">Scan</button>
+          <button id="example-button" class="secondary" type="button">Use guinea-pig A</button>
+          <span class="small muted">Checking several contracts that share a Wasm? <a href="/dashboard/blast-radius/">Use Blast Radius</a>.</span>
+        </div>
+        <details>
+          <summary>Data keys — optional, and what they change</summary>
+          <p class="small muted">
+            Contract storage cannot be enumerated: a scan reads the keys it is handed. Without any, only the instance
+            and code entries are visible, and the result says so. One base64 <span class="mono">LedgerKey</span> per
+            line — the same values the CLI takes in <span class="mono">--keys-file</span>.
+          </p>
+          <textarea id="data-keys" spellcheck="false" placeholder="AAAABgAAAAE…"></textarea>
+        </details>
+      </form>
+    </section>
+    <section><div id="result" aria-live="polite"></div></section>
+    <section>
+      <h2 class="section">Reading the result</h2>
+      <p class="muted">
+        The verdict names the entry that expires first — a contract stops working when its earliest entry does,
+        and that is rarely the instance. A clean scan means everything asked-for is healthy, never that the
+        contract is fully healthy: coverage travels with the verdict. Exit codes and flags are on
+        <a href="/docs/">the CLI reference</a>.
+      </p>
+    </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <script src="/assets/chrome.js"></script>
+    <script src="/assets/scanner.js"></script>
+  </body>
+</html>
