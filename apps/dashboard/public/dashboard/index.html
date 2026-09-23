@@ -63,13 +63,33 @@
       </p>
     </section>
     <section>
-      <h2 class="section">Check your own contract</h2>
+      <h2 class="section">Scan any contract</h2>
       <p class="muted">
-        Scanning is a permissionless read. Paste any testnet contract ID into
-        <a href="/dashboard/scanner/">the scanner</a> — no wallet, no signup —
-        or <a href="/dashboard/blast-radius/">scan several together</a> when they share a Wasm.
+        A permissionless read — no wallet, no signup. Paste any testnet contract ID for its TTL health, the entry
+        that binds its expiry, and what extending would cost. Several contracts that share a Wasm belong on
+        <a href="/dashboard/blast-radius/">Blast Radius</a>.
       </p>
+      <form class="card card-pad stack" id="scan-form">
+        <div>
+          <label class="field-label" for="contract-id">Testnet contract address</label>
+          <input id="contract-id" type="text" spellcheck="false" autocomplete="off" placeholder="C…" />
+        </div>
+        <div class="row">
+          <button id="scan-button" type="submit">Scan</button>
+          <button id="example-button" class="secondary" type="button">Use guinea-pig A</button>
+        </div>
+        <details>
+          <summary>Data keys — optional, and what they change</summary>
+          <p class="small muted">
+            Contract storage cannot be enumerated: a scan reads the keys it is handed. Without any, only the
+            instance and code entries are visible, and the result says so. One base64
+            <span class="mono">LedgerKey</span> per line.
+          </p>
+          <textarea id="data-keys" spellcheck="false" placeholder="AAAABgAAAAE…"></textarea>
+        </details>
+      </form>
     </section>
+    <section><div id="result" aria-live="polite"></div></section>
         </main>
         <footer class="site">
           <div class="foot-row">

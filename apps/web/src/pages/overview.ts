@@ -16,6 +16,7 @@ import {
 import { approxDateShort, esc, formatCount, stamp } from '../lib/format';
 import { bindingEntry, contractCard } from '../lib/ui';
 import { entryView } from '../lib/view';
+import { mountScanPanel } from '../lib/scan-panel';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -111,5 +112,10 @@ async function load(): Promise<void> {
     ).join('');
   }
 }
+
+// `/dashboard` must answer a stranger's question on its own — see the spec's
+// amendment of 2026-09-23. The scan panel is the same one `/dashboard/scanner`
+// mounts, not a second implementation.
+mountScanPanel();
 
 void load();
