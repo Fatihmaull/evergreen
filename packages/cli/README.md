@@ -59,10 +59,15 @@ Prices come from simulating the real operation against the network, not from a f
 ### For CI
 
 ```bash
-npx @evergreen-stellar/cli scan <contract-id> --json
+npx @evergreen-stellar/cli scan <contract-id> --threshold 120960 --require-declared-scope --json
 ```
 
-Exit code `0` healthy, `1` low TTL, `2` error, `3` incomplete scan. See [Coverage and exit codes](#coverage-and-exit-codes) — the distinction between `1` and `3` matters more than it looks.
+`--threshold N` sets the act-now boundary in ledgers for this run. A repository
+that wants about a week of warning can use `120960`; the CLI default remains
+`17280` (about one day). Both health tiers move with the selected threshold.
+Exit code `0` is healthy, `1` is at or below the threshold, `2` is an error and
+`3` is an incomplete scan. See [Coverage and exit codes](#coverage-and-exit-codes)
+— the distinction between `1` and `3` matters more than it looks.
 
 ## The two things people get wrong
 
@@ -86,6 +91,7 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 --keys-file <path>         supply explicit persistent/temporary data keys
 --no-data-keys             assert this contract has none beyond its instance
 --require-declared-scope   also exit 3 when scope was not declared (for CI on a contract you own)
+--threshold N              act-now threshold in ledgers (default 17,280)
 --help                     usage, without connecting
 ```
 
