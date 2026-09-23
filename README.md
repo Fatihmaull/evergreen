@@ -148,6 +148,10 @@ npx @evergreen-stellar/cli scan <contract-id> --threshold 120960
 
 ## Documentation
 
+**Assessing this for the Stellar Instawards grant?** Start at
+[`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md) — one row per SOW §6.1
+evidence item, browser-openable artifact first, nothing that needs a terminal.
+
 | Doc | Read it for |
 |---|---|
 | [`docs/PRD.md`](docs/PRD.md) | What we're building, for whom, and what's explicitly out of scope |
