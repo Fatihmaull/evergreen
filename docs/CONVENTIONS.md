@@ -478,6 +478,24 @@ Neither was caught by the suite — a green suite is exactly what an unfailable 
 
 Special suspicion for assertions involving **float literals, `.not.toBe(...)`, and any value the language may coerce before comparing** — those are where an assertion most easily becomes a tautology while reading as a claim.
 
+### A test that asserts the scaffold is still a scaffold
+
+`apps/dashboard/test/placeholder.test.ts` asserted `DASHBOARD_PLACEHOLDER === true`. It passed on every run for three weeks **while the published URL served a placeholder page** — which `check-sow-completeness.mjs` counts as a MISSING deliverable, not a partial one. The test was green about the wrong subject: it proved the package was importable, which nobody doubted, and said nothing about the thing the deliverable names.
+
+A scaffold test is fine on the day the scaffold is written. It becomes a liability the moment it is the only test, because **it reports success from the slot a real test would occupy** — the same failure as [a test that cannot fail](#a-test-that-cannot-fail-is-worse-than-no-test), arriving by a different route.
+
+Replaced with a **route manifest the build depends on**: `apps/dashboard/src/index.ts` lists the published routes, `apps/web/build.mjs` refuses to finish if the pages it emitted and the routes claimed disagree in either direction, and the test asserts a built page exists behind every claim. The manifest can now be wrong, which is what makes checking it worth anything.
+
+**When a placeholder is replaced, delete its test rather than keeping it beside the real one.** A passing assertion about the scaffold is indistinguishable from a passing assertion about the product.
+
+### A caption is a claim, and the rendering has to support it
+
+The decay chart's caption reads *"every dot is a committed observation"*. The code plotted the first observation and the last one, and drew a straight line between them — a drawing of an average, under a sentence promising measurements.
+
+It was invisible while each series had two readings, and became wrong the moment guinea-pig B's crossing watch added four more. Counting the dots by hand once is not a check; it does not survive the next data drop. The build now **asserts the dot count equals the observation count** and names the series, both numbers and the caption's claim when they diverge.
+
+Generally: where a visualisation states in words what its marks mean — every dot is an observation, every step is a real transaction, the solid segment means nothing was extended in between — **that sentence is an assertion about the rendering, and something should fail when it stops being true.** The same applies to a figure's scope ("98% across four entries") and to any label that describes how the data was obtained.
+
 ### A flag that decides *advice* must not widen what text is allowed out
 
 The `safeRunCode` rule is: surface only our own literal strings, never interpolated

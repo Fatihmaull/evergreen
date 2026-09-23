@@ -118,8 +118,24 @@ function panel(s) {
     )
     .join('');
 
-  const dots = pts
-    .filter((p) => p.dot)
+  const dotted = pts.filter((p) => p.dot);
+  /**
+   * The caption under this chart says every dot is a committed observation.
+   * That is a CLAIM, and the rendering has to support it.
+   *
+   * This plotted only the first and last observation until 2026-09-23 —
+   * invisible while each series had two readings, and wrong the moment the
+   * crossing watch added four more, because a straight line between endpoints
+   * is a drawing of an average. Counting once does not survive guinea-pig C's
+   * readings landing, so the count is asserted rather than checked by hand.
+   */
+  if (dotted.length !== s.observations.length) {
+    throw new Error(
+      `decay: ${s.id} has ${s.observations.length} observation(s) but would draw ${dotted.length} dot(s) — ` +
+        'the caption claims every dot is a recorded observation',
+    );
+  }
+  const dots = dotted
     .map((p) => `<circle class="decay-dot" cx="${X(p.ledger)}" cy="${Y(p.remaining)}" r="4.5" />`)
     .join('');
 
