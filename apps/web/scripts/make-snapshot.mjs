@@ -6,7 +6,7 @@
  * than presenting it as current.
  */
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -60,3 +60,9 @@ writeFileSync(
   `${JSON.stringify({ capturedAt: parsed.capturedAt, settings: parsed.archival }, null, 2)}\n`,
 );
 console.log(`snapshot written: ${entryCount} entries, captured ${parsed.capturedAt}`);
+
+// The bundle is a throwaway. Leaving it behind put a 48,000-line minified file
+// in the working tree, where `pnpm lint` read it and reported 132 problems
+// about code nobody wrote — and a stray `git add -A` from another branch swept
+// it into a pull request.
+rmSync(bundle, { force: true });

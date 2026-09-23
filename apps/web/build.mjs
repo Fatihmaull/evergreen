@@ -309,6 +309,9 @@ async function commission() {
     process.exitCode = 1;
   } catch (error) {
     console.log(`✓ the guard refuses a write-path bundle: ${error.message}`);
+  } finally {
+    // Throwaway. Left behind, it is linted as source.
+    rmSync(probe, { force: true });
   }
 }
 

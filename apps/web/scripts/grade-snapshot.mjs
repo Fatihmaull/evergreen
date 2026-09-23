@@ -5,7 +5,7 @@
  * follow — run it after make-snapshot.mjs.
  */
 import { createRequire } from 'node:module';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -57,3 +57,9 @@ const parsed = JSON.parse(json);
 if (Object.keys(parsed.grades).length === 0) throw new Error('refusing to write empty grades');
 writeFileSync(join(web, 'data/snapshot-grades.json'), `${JSON.stringify(parsed, null, 2)}\n`);
 console.log(`grades written for ${Object.keys(parsed.grades).length} contracts`);
+
+// The bundle is a throwaway. Leaving it behind put a 48,000-line minified file
+// in the working tree, where `pnpm lint` read it and reported 132 problems
+// about code nobody wrote — and a stray `git add -A` from another branch swept
+// it into a pull request.
+rmSync(bundle, { force: true });

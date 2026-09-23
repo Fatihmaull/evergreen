@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-23T02:34:58.038Z",
+  "capturedAt": "2026-09-23T03:06:00.374Z",
   "thresholds": {
     "warnBelowLedgers": 120960,
     "criticalBelowLedgers": 17280
@@ -14,11 +14,11 @@
         "reason": "Above threshold.",
         "endBehavior": "archived",
         "endsAt": 5290829,
-        "remaining": 469367,
+        "remaining": 468995,
         "kind": "code",
-        "observedAtLedger": 4821462
+        "observedAtLedger": 4821834
       },
-      "observedAtLedger": 4821462
+      "observedAtLedger": 4821834
     },
     "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": {
       "worst": "critical",
@@ -31,9 +31,9 @@
         "endsAt": null,
         "remaining": null,
         "kind": "instance",
-        "observedAtLedger": 4821462
+        "observedAtLedger": 4821834
       },
-      "observedAtLedger": 4821462
+      "observedAtLedger": 4821834
     },
     "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": {
       "worst": "warning",
@@ -44,11 +44,11 @@
         "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed.",
         "endBehavior": "archived",
         "endsAt": 4880097,
-        "remaining": 58635,
+        "remaining": 58263,
         "kind": "instance",
-        "observedAtLedger": 4821462
+        "observedAtLedger": 4821834
       },
-      "observedAtLedger": 4821462
+      "observedAtLedger": 4821834
     }
   }
 }
