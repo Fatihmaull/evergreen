@@ -2,8 +2,23 @@
 
 This supplements [the crossing runbook](SEP-20-PREFLIGHT.md). It prepares evidence
 collection; it does not complete the crossing, expiry or unattended-operation gate.
-Readiness is **Friday 2026-09-18**. The runbook date/manual-vs-unattended corrections
-are also in pending PR #147; use the calendar dates below while that PR is reviewed.
+
+> 📌 **Updated 2026-09-23. B's window is finished; this page is now for C —
+> threshold Friday 2026-09-25, EXPIRY Saturday 2026-09-26.** The generated table
+> below shows C's slots.
+>
+> It used to open with *"Readiness is Friday 2026-09-18. The runbook corrections are
+> also in pending PR #147; use the calendar dates below while that PR is reviewed."*
+> **#147 merged on 2026-09-14**, so for nine days this page routed the operator
+> around a review that had already closed, and dated its readiness to a gate that
+> had already passed.
+>
+> 🔴 **For the expiry capture, read
+> [SEP-20-PREFLIGHT § Then C](SEP-20-PREFLIGHT.md#then-c-sep-2526) first.** It
+> carries the two things this page does not: the capture takes `--baseline <Friday's
+> capture directory>`, and acceptance is `phase: expiry-observed` from
+> `pnpm verify:expiry` — **not** an exit code from `pnpm verify:crossing`, which
+> exits 2 on a good expiry observation.
 
 ## Operator checklist
 
