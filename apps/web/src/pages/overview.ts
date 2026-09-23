@@ -59,7 +59,7 @@ function statStrip(full: ScanReport): string {
       }</p>
       <p class="stat-caption">${
         view?.state === 'live'
-          ? `ledgers left · binds on ${esc(binding?.entry.kind ?? '')} · expires ${esc(approxDateShort(view.endsAt))}`
+          ? `ledgers left${binding ? ` · binds on ${esc(binding.entry.kind)}` : ''} · expires ${esc(approxDateShort(view.endsAt))}`
           : 'the read did not return a TTL — absence is not health'
       }</p>
     </div>`;
@@ -75,9 +75,21 @@ async function load(): Promise<void> {
   const target = $('ours');
   const note = $('ours-note');
   const ids = OUR_CONTRACTS.map((c) => c.id);
+  // The READ is what may fail and fall back to the snapshot. Rendering is not:
+  // wrapping both in one `try` meant a fault in our own rendering would be
+  // reported to the visitor as "the live read failed" and quietly swap in
+  // stale data — the same misattribution the rent panel was making, in the
+  // path that decides which figures a stranger sees.
+  let result: ScanResult | undefined;
   try {
-    const result = await scanMany(ids);
-    if (Object.keys(result.entries).length === 0) throw new Error('no entries returned');
+    const live = await scanMany(ids);
+    if (Object.keys(live.entries).length === 0) throw new Error('no entries returned');
+    result = live;
+  } catch {
+    result = undefined;
+  }
+
+  if (result !== undefined) {
     const at = report(result).observedAtLedger;
     // `?? 0` here would print "ledger 0" — the same fabricated figure, from the
     // same habit of filling a hole with a number.
@@ -87,7 +99,10 @@ async function load(): Promise<void> {
         ? 'Read live from testnet; the response carried no observed ledger.'
         : `Read live from testnet at ledger ${formatCount(at)}.`,
     );
-  } catch {
+    return;
+  }
+
+  {
     try {
       const response = await fetch('/assets/snapshot.json', { cache: 'no-store' });
       const snapshot = (await response.json()) as { capturedAt: string; result: ScanResult };

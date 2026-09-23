@@ -82,7 +82,7 @@ export function verdict(report: ScanReport, now = new Date()): string {
     if (view.state === 'expired') {
       // Not an error the page is coping with. It is the finished answer.
       headline = many
-        ? `The earliest entry in this scan is a ${kind} entry, and it has already ${view.word}.` +
+        ? `The earliest entry in this scan is a ${kind} entry, and it is already ${view.word}.` +
           `${endedAt(view)} ${esc(view.reason)} It binds the contract it belongs to, not all of them.`
         : `<strong>This contract has stopped working.</strong> Its ${kind} entry is ${view.word}.` +
           `${endedAt(view)} ${esc(view.reason)}`;
@@ -196,7 +196,14 @@ export function blastRadiusPanel(report: ScanReport, ids: readonly string[]): st
     </div>`;
   }
   if (undetermined.length === 0) return '';
-  const message = report.issues.find((i) => i.kind === 'sharing-undetermined')?.message ?? '';
+  // `?? ''` here rendered an empty paragraph: the caveat silently disappeared
+  // and the panel showed a heading with nothing under it. A coverage caveat
+  // that vanishes is worse than a missing panel, because the heading still
+  // implies one was given.
+  const message =
+    report.issues.find((i) => i.kind === 'sharing-undetermined')?.message ??
+    'A single-contract scan cannot determine whether other contracts depend on this entry. ' +
+      'The chain does not index reverse dependencies from one query.';
   return `<div class="panel undetermined">
     <h3><span class="chip undetermined"><span class="shape"></span>undetermined</span> Blast radius</h3>
     <p>${esc(message)}</p>
@@ -312,7 +319,9 @@ export function graph(report: ScanReport, now = new Date()): string {
         : '';
       return `<g><rect class="node${shared ? ' shared' : ''}" x="${rightX}" y="${y}" width="${rightW}" height="${h}" rx="6"/>
         <text class="${cls.trim()}" x="${rightX + 16}" y="${y + 22}">${esc(KIND_WORD[e.entry.kind] ?? e.entry.kind)}${
-          shared ? '' : ` · of ${esc(short(e.entry.contracts[0] ?? '', 4, 4))}`
+          shared || e.entry.contracts[0] === undefined
+            ? ''
+            : ` · of ${esc(short(e.entry.contracts[0], 4, 4))}`
         } · ${esc(short(e.key, 10, 8))}</text>
         <text class="dim${cls}" x="${rightX + 16}" y="${y + 40}">${
           view.state === 'live'
@@ -333,9 +342,17 @@ export function graph(report: ScanReport, now = new Date()): string {
 export function wireCopyButtons(root: ParentNode = document): void {
   for (const button of root.querySelectorAll<HTMLButtonElement>('button.copy')) {
     button.addEventListener('click', () => {
-      // Copies the full value, never the truncation.
-      void navigator.clipboard?.writeText(button.dataset.copy ?? '');
+      // Copies the full value, never the truncation — and never an empty
+      // string, which would report "copied" while putting nothing on the
+      // clipboard.
+      const value = button.dataset.copy;
       const original = button.textContent;
+      if (value === undefined || value === '') {
+        button.textContent = 'nothing to copy';
+        setTimeout(() => (button.textContent = original), 1200);
+        return;
+      }
+      void navigator.clipboard?.writeText(value);
       button.textContent = 'copied';
       setTimeout(() => (button.textContent = original), 1200);
     });

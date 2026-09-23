@@ -1093,3 +1093,114 @@ tr.row-expired td {
 .stat-expired .stat-caption {
   overflow-wrap: anywhere;
 }
+
+/* The status bar already wrapped between items, but each item was an
+   unbreakable flex child: "ledger close 5.000000 s ± 0.000050 · measured, not
+   assumed" is 437px, so at 390px it stretched the whole shell and every page
+   scrolled sideways. Found by the layout check, not by looking — it is on
+   every page and showed up on two.
+
+   Information is wrapped rather than hidden; a status bar that drops the
+   measurement on a phone is a status bar that lies by omission. */
+.statusbar .status-item {
+  /* `min-width: 0` alone is not enough: in a wrapping flex container an item
+     wider than the line gets its own line and keeps its max-content width.
+     `max-width: 100%` is what makes it fit. */
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .statusbar .right {
+    margin-left: 0;
+  }
+}
+
+/* A contract ID is 56 unbreakable characters. At 467px it set the width of its
+   card, then the grid, then the whole shell, and every page scrolled sideways
+   on a phone — which the SOW says the assessor may be using. Mono strings that
+   are addresses wrap; they are read in pieces anyway. */
+.id,
+.row-id,
+.contract-card .id,
+.id.mono {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* Grid blowout. `main.main` and the page sections are grids with no explicit
+   column, so their implicit track sized to the widest min-content on the page
+   — a 56-character contract address — and every ancestor inherited that width.
+   `minmax(0, 1fr)` lets a track be narrower than its content, which is what
+   allows the address to wrap instead of setting the width of the site.
+
+   This is why the two pages that overflowed were the two with a full contract
+   ID rendered outside a scroll container. */
+main.main,
+.content,
+.stack,
+.card,
+.contract-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Sections are grid items of `main`; without this they size to min-content and
+   re-create the blowout one level down. */
+.main > section {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Ledger keys and Wasm hashes are long unbreakable base64 run inline through
+   prose. They are read in pieces, so they may break anywhere rather than set
+   the width of the paragraph that contains them. */
+.mono {
+  overflow-wrap: anywhere;
+}
+
+/* On a phone the sidebar stacks above the content, and twelve stacked links
+   filled the entire first screen: a visitor landed on a page whose content
+   began below the fold, on every route. Found in the visual pass, not by the
+   overflow check — nothing was overflowing, it was just all in the way.
+
+   Below the two-column breakpoint the nav becomes a compact horizontal strip
+   that scrolls sideways on its own. Every link stays reachable; none of them
+   stands between the visitor and the page they asked for. */
+@media (max-width: 959px) {
+  .sidebar {
+    gap: 10px;
+    padding: 12px 0 8px;
+  }
+  .sidebar .brand {
+    padding: 0 16px;
+  }
+  .sidebar nav {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 0 16px 4px;
+    scrollbar-width: thin;
+  }
+  .nav-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 0;
+  }
+  .nav-section {
+    margin: 0 4px 0 0;
+    white-space: nowrap;
+    opacity: 0.55;
+  }
+  .nav-item {
+    white-space: nowrap;
+    padding: 6px 10px;
+  }
+  .sidebar-foot {
+    padding: 0 16px;
+    font-size: 12px;
+  }
+  .sidebar-foot p:first-child {
+    display: none;
+  }
+}

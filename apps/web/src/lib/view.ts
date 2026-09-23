@@ -13,9 +13,45 @@
  * Those figures are artefacts of a zero, not data. There is nothing to show, so
  * this returns a shape with nowhere to put them rather than a labelled lie.
  *
- * A test (`test/no-raw-ttl.test.ts`) fails if any other file under `src/`
- * reads `ttl.remainingLedgers`, `ttl.endsAtLedger` or calls `estimateEndsAt`.
- * Fix the class here, once.
+ * A test (`test/raw-ttl-is-confined.test.ts`) fails if any other file under
+ * `src/` reads `ttl.remainingLedgers`, `ttl.endsAtLedger` or calls
+ * `estimateEndsAt`. Fix the class here, once.
+ *
+ * ---
+ *
+ * WHAT THIS IS COUPLED TO, AND WHAT SHOULD HAPPEN WHEN THAT CHANGES
+ *
+ * This file is a workaround for a defect in core that is not ours to fix.
+ *
+ * **The coupling.** For an archived entry the RPC still returns the entry, with
+ * `liveUntilLedgerSeq: 0`. Core passes that through as
+ * `ttl.status: 'known'`, `endsAtLedger: 0`, `remainingLedgers: 0 - observed` —
+ * a value it does not know, reported as one it does. `entryView` keys on
+ * `hasExpired(ttl.remainingLedgers) || assessment.isExpired` and then refuses
+ * to render `endsAtLedger` or any date derived from it, because both are the
+ * arithmetic of that zero rather than measurements. The real end ledger comes
+ * from `ops/crossing-schedule.json`, which recorded it before the chain
+ * stopped being able to.
+ *
+ * **When core is fixed** — reporting an archived entry as its own state rather
+ * than as a `known` TTL of zero — this file's handling changes meaning
+ * silently, and that is the hazard worth writing down. Specifically:
+ *
+ *   - If core adds a distinct status (say `ttl.status: 'expired'`), the
+ *     `status !== 'known'` branch above will start catching archived entries
+ *     and return `unread` for them. `unread` and `archived` are different
+ *     answers, and the dashboard would quietly start giving the wrong one.
+ *     The fix is to map that status to the `expired` branch, not to leave it.
+ *   - If core keeps `known` but reports the true final ledger, the
+ *     `KNOWN_ENDS` lookup becomes redundant rather than wrong — prefer core's
+ *     value and keep the schedule only as a fallback for subjects it lacks.
+ *   - If core starts throwing on archived entries, none of this runs and the
+ *     scan fails instead. That would be worse than today and should be argued
+ *     against.
+ *
+ * Raised on #194 when the browser fix landed; it is the CLI/engine track's
+ * call. Whoever changes this: the test file named above renders an archived
+ * entry from a recorded scan, so it will tell you which of the three happened.
  */
 import { estimateEndsAt, hasExpired, type AssessedEntry } from './evergreen';
 
