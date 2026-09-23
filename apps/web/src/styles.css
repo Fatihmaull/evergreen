@@ -1157,3 +1157,50 @@ main.main,
 .mono {
   overflow-wrap: anywhere;
 }
+
+/* On a phone the sidebar stacks above the content, and twelve stacked links
+   filled the entire first screen: a visitor landed on a page whose content
+   began below the fold, on every route. Found in the visual pass, not by the
+   overflow check — nothing was overflowing, it was just all in the way.
+
+   Below the two-column breakpoint the nav becomes a compact horizontal strip
+   that scrolls sideways on its own. Every link stays reachable; none of them
+   stands between the visitor and the page they asked for. */
+@media (max-width: 959px) {
+  .sidebar {
+    gap: 10px;
+    padding: 12px 0 8px;
+  }
+  .sidebar .brand {
+    padding: 0 16px;
+  }
+  .sidebar nav {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 0 16px 4px;
+    scrollbar-width: thin;
+  }
+  .nav-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 0;
+  }
+  .nav-section {
+    margin: 0 4px 0 0;
+    white-space: nowrap;
+    opacity: 0.55;
+  }
+  .nav-item {
+    white-space: nowrap;
+    padding: 6px 10px;
+  }
+  .sidebar-foot {
+    padding: 0 16px;
+    font-size: 12px;
+  }
+  .sidebar-foot p:first-child {
+    display: none;
+  }
+}
