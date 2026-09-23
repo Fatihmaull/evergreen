@@ -13,7 +13,7 @@ It never holds a key of yours beyond that, and never needs one — `extendTTL` i
 ## Two signer stages
 
 - **Stage 1 (default, what the quickstart teaches):** a plain funded Ed25519 account holding only enough XLM to pay extend fees.
-- **Stage 2 (hardened):** the same signer scoped by a policy to `extendTTL` only, so a leaked key cannot drain the account it sits on. Since that account is yours, this protects you. See `docs/POLICY-SIGNER.md` (W3).
+- **Stage 2 (hardened path, unavailable in v1):** the proposed direct smart-account adapter does not constrain the native TTL fee-payer signature. The accepted disposition is no-go/partial with full scoping deferred to SOW 2; do not treat the config/type seam as an implemented signer. See [signer status and limits](../../docs/POLICY-SIGNER.md).
 
 ## Non-obvious requirements
 

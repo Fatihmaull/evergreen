@@ -116,22 +116,29 @@ to, and nothing else.
 
 **The beat most demos would cut, and the one that earns trust.**
 
-Guinea-pig B crossed its alert threshold on ⟦SLOT: date/time UTC⟧ with nobody
+Guinea-pig B was first observed below its 17,280-ledger alert threshold at
+**2026-09-20 12:00:29 UTC**, ledger 4,776,408, with **17,279** left — nobody
 watching. The engine saw it and **refused**:
 
 > `SKIP — REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig B`
 
-Then B expired. That was the plan.
+Then B expired, on 2026-09-21. That was the plan.
 
-⟦SLOT: the decay sequence. The shape it must have, generated from
-[`ops/crossing-schedule.json`](../ops/crossing-schedule.json):
+**The decay sequence, every figure measured from a sealed bundle:**
 
-<!-- BEGIN GENERATED: crossing-schedule (compact) -->
+| observed (UTC) | ledger | remaining |
+|---|---|---|
+| Sun 2026-09-20 12:00:29 | 4,776,408 | **17,279** |
+| Mon 2026-09-21 00:00:19 | 4,785,046 | **8,641** |
+| Mon 2026-09-21 06:00:30 | 4,789,368 | **4,319** |
+| Mon 2026-09-21 12:00:35 | 4,793,689 | **expired** — `endsAt: 0` |
 
-4 captures — 2026-09-25 12:00 (17,280 left) → 2026-09-26 00:00 (8,640 left) → 2026-09-26 06:00 (4,320 left) → 2026-09-26 12:00 (0 left) — each showing guinea-pig C closer to expiry with the guard refusing every time. Threshold 2026-09-25, **expiry 2026-09-26**.
+Instance ended at ledger 4,793,687, persistent at 4,793,688. Guard refused at
+every one of the first three. Bundles: `docs/evidence/2026-09-20-b-crossing/`,
+`…-0000/`, `…-0600/`, `…-1200/`.
 
-<!-- END GENERATED: crossing-schedule -->
-⟧
+> 📌 **Say the halving out loud — it is the whole point of four captures rather
+> than two endpoints.** 17,279 → 8,641 → 4,319 → gone.
 
 Say what the refusal is protecting: B is the natural-decay proof, and extending it
 would have destroyed the only evidence in the sprint that cannot be recreated.
@@ -167,15 +174,23 @@ Then the thesis, which is one sentence carrying both halves:
 
 ## Slots, collected
 
-| Slot | Source | Available |
-|---|---|---|
-| B crossing date/time | Sep 20 capture | Sun Sep 20 |
-| B decay sequence (×4) | pre-flight §3b captures, one per row of the generated schedule | Sun Sep 20 – Mon Sep 21 |
-| B expiry confirmation | Sep 21 observation | Mon Sep 21 |
-| C, if B is missed | `W3-D18-02c` | Fri Sep 25 |
-| Cron delivery share | `pnpm measure:cadence` | **recording day — it moves** |
-| Dashboard URL | `W4-D26` | Week 4 |
-| Action run link | `W4-D29` | Week 4 |
+**Walked and re-classified 2026-09-23.** Three slots that read as pending were
+already final — B's event finished on Sep 21 and its figures cannot move again.
+They are now filled in beat 4 rather than left as slots.
+
+| Slot | State |
+|---|---|
+| B crossing date/time | ✅ **filled** — first observed below threshold 2026-09-20 12:00:29 UTC, ledger 4,776,408 |
+| B decay sequence (×4) | ✅ **filled** — 17,279 → 8,641 → 4,319 → expired, measured from the sealed bundles |
+| B expiry confirmation | ✅ **filled** — instance ended 4,793,687, persistent 4,793,688 |
+| C, if B is missed | ⛔ **VOID — B was not missed.** C is captured Sep 25–26 as the documented spare; the demo does not need it and should not wait for it |
+| Cron delivery share | 🔄 **moves** — run `pnpm measure:cadence` on the recording day and read it off. Do not quote a figure from here; `check:cadence` refuses one, and it has already been wrong twice. The 2026-09-23 reading is recorded in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md) |
+| Dashboard URL | ⏳ web track; wanted before recording |
+| Action run link | ⏳ unblocks the moment `0.1.0` publishes — the demo workflow produces red and green in one dispatch |
+
+> 🔴 **Only ONE slot genuinely waits on something outside the recording: the
+> install line in beat 2**, which 404s until `@evergreen-stellar/cli@0.1.0` is
+> published. Nothing in this script waits on C.
 
 ## Figures already final — do not re-derive
 
@@ -187,7 +202,7 @@ Then the thesis, which is one sentence carrying both halves:
 | Fee charged | 44,725 stroops (cap 2,000,000) |
 | Shared code entry | 3 consumers, expires ~2026-10-20 |
 | Code-entry share of rent | **98%** four-entry scope / **99%** instance-and-code scope |
-| Measured cron cadence | ⟦SLOT — `pnpm measure:cadence` on the recording day⟧. **Not final**, unlike every other row here: the chain figures above are fixed forever, this one moves. |
+| Measured cron cadence | ⟦read `pnpm measure:cadence` on the recording day⟧. **Not final**, unlike every other row here: the chain figures are fixed forever, this one moves. ⚠️ On 2026-09-23 the worst gap passed the recorded `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` **and** the review trigger, staying below `SCHEDULER_GAP_FLOOR_MINUTES` — dated record and the reason the constant was not changed before C's window in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md). |
 
 All four transaction figures were verified against the chain rather than against
 the evidence bundle, on 2026-09-15.
