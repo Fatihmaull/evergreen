@@ -24,6 +24,33 @@ deployed, no policy-signer transaction occurred and no historical evidence was
 rewritten. The remaining funder/lead scope conversation is a human action. Notion
 sync remains pending until the repo change merges.
 
+## Current — web surface registered; the dashboard printed a wrong number for B and no longer does
+
+**Two agents work this repository, split by path.** The standing statement of
+who owns what is in `BACKLOG.md` beside the web rows; neither track edits the
+other's paths, and nobody edits `docs/evidence/`.
+
+- **Registered:** the web surface and the five changes it needs from the
+  CLI/engine side, `W4-D22-03` to `W4-D22-19`, each (R) row tracked in an issue
+  (#194–#198). The web block carries its own cut order.
+- 🔴 **`D3.dashboard` starts blocking `pnpm check` on 2026-09-29.**
+  `check-sow-completeness.mjs` passes that row only when
+  `apps/dashboard/src/index.ts` is real; it is a 1,432-byte placeholder today,
+  and production still serves the 2,362-byte placeholder page. Landing the
+  dashboard is therefore on every track's critical path, not just the web one.
+- **A twelve-page preview exists** on `feat/W4-D22-02a-full-prototype` and is
+  not merged.
+- **What B's expiry revealed.** An archived entry is still returned with
+  `liveUntilLedgerSeq: 0`, so core reports `ttl.status: 'known'`,
+  `endsAtLedger: 0` and a large negative remaining, with `isExpired` alongside.
+  Twelve places in the web read those raw figures instead of the assessment and
+  printed `-4,810,562 ledgers` and `~Dec 18, 2025` — the failure this product
+  exists to name, in its own interface. Raw TTL is now confined to one module,
+  with a test that fails if that stops being true. **The CLI prints the same
+  fabricated figures, labelled `EXPIRED (archived)`; core returning a
+  fabricated zero as `status: 'known'` is unresolved and belongs to the
+  CLI/engine track.**
+
 ## Current — original engine alert screenshots captured
 
 The two messages from the accepted Sep14 scheduled A-save proof are now retained as
@@ -115,6 +142,8 @@ Notion D18-03 mirror validation/sync pending: canonical data-source lookup retur
 `data_source_not_found` at preflight. Earlier acceptance decisions are unchanged.
 
 ## Reference — reconciled September17 state
+
+## Current — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
