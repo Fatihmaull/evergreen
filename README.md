@@ -11,7 +11,7 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 | Component | What it does |
 |---|---|
 | **`evergreen` CLI** | Scan any contract: remaining TTL, projected archive date, estimated rent cost, storage inefficiencies. Human-readable or `--json`. |
-| **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its account; it can do nothing except pay to extend TTL. Email alerts on every bump. |
+| **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its hot payer account; the normal engine path restricts operations and fees, but the raw v1 key is not cryptographically scoped. Email alerts on every bump. |
 | **Dashboard + `evergreen-check`** | A public read-only view — scan any contract's TTL health, no wallet or signup — plus a GitHub Action that fails CI when a contract's TTL gets dangerously low. |
 
 ## Why this is non-custodial
