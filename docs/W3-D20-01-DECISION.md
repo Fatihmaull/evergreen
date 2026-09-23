@@ -1,10 +1,11 @@
-# W3-D20-01 — proposed Stage2 disposition
+# W3-D20-01 — accepted Stage2 disposition
 
-**For Rakha/Fatih review, Sep17. Published in [PR #191](https://github.com/Fatihmaull/evergreen/pull/191). Not accepted; do not treat as an ADR amendment.**
-Source: merged feasibility #162 and outstanding decision #183. Investigation need
-not be repeated; this document makes the remaining decision concrete.
+**Accepted by Fatih on 2026-09-22 in [#183](https://github.com/Fatihmaull/evergreen/issues/183); ADR-002 amended through merged [#230](https://github.com/Fatihmaull/evergreen/pull/230).**
+Source: merged feasibility #162 and the decision packet published in
+[PR #191](https://github.com/Fatihmaull/evergreen/pull/191). Investigation need not
+be repeated; this document preserves the disposition that was accepted.
 
-## Proposed decision
+## Accepted decision
 
 1. **No-go for the direct passkey-kit adapter described by the original ADR-002.**
    Contract-invocation authorization does not constrain the native TTL payer's
@@ -21,7 +22,7 @@ not be repeated; this document makes the remaining decision concrete.
    signing boundary. Funder acceptance of any SOW scope adjustment is a separate
    human action, not implied by this technical recommendation.
 
-## Task effects if Shared accepts
+## Task effects
 
 | ID | Disposition |
 | --- | --- |
@@ -30,8 +31,9 @@ not be repeated; this document makes the remaining decision concrete.
 | D20-02 | Not applicable/dropped with the decision reason if there is no Stage2 implementation; never mark its rejection-alert test passed without one |
 | D20-03 | Deliver the truthful guide/status, limitations and available Stage1 route. Documentation completion does not satisfy an undelivered hardened-path demonstration |
 
-Until accepted, existing Blocked/In progress/Pending statuses remain except that
-D20-03 is now actively being written. No unilateral scope cut is made here.
+The accepted no-go moves D19-01/02/03 out of Blocked as explicitly dropped,
+completes D20-01, drops the conditional D20-02 and lets D20-03 publish the truthful
+guide. No provider deployment or hardened-path demonstration is inferred.
 
 ## If Shared instead requests an alternative
 
@@ -45,9 +47,9 @@ Classic account thresholds may reject payments but permit other operations or fe
 expenditure. Neither is already the accepted smart-account design or a free fallback.
 Do not implement either on speculation.
 
-## Required human decision
+## Remaining human action
 
-Rakha/Fatih must choose whether to accept the disposition above or authorize a
-specific alternative proposal. Fatih handles any required conversation with the
-funder/lead about the SOW. Then append the agreed text to ADR-002, update frozen
-backlog IDs, mirror Notion and publish the guide without contradictory promises.
+Fatih handles the required conversation with the funder/lead about the SOW impact.
+That conversation is not evidence of technical capability and is not performed by
+this repository update. The repo records the accepted decision and publishes the
+guide without contradictory promises.

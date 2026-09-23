@@ -25,7 +25,7 @@ Two consequences worth stating plainly:
 - **You always pay your own rent.** Evergreen supplies the automation, not the money. Apex never funds another party's extend fees — see [`docs/adr/ADR-004`](docs/adr/ADR-004-payment-model.md).
 - **Connecting a wallet authorizes a payment, never access.** The dashboard's optional "extend now" asks your wallet to pay a fee. It never asks for control of anything.
 
-The engine's signing key is a hot key on **your** server, paying from **your** funded account. Stage 1 checks operations and fees in its normal execution path, but a leaked raw key can bypass those software checks. A hardened policy signer is **not currently available**; [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) explains the implemented path, its limits and the pending Stage 2 decision.
+The engine's signing key is a hot key on **your** server, paying from **your** funded account. Stage 1 checks operations and fees in its normal execution path, but a leaked raw key can bypass those software checks. A hardened policy signer is **not currently available**; the accepted v1 disposition is to ship policy scoping as partial and defer full scoping to SOW 2. [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) explains the implemented path and its limits.
 
 ## Quickstart
 

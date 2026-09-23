@@ -1,5 +1,10 @@
 # D20 decision/guide preparation review — Sep17
 
+> Historical preparation review. The decision described below was subsequently
+> accepted as Option 3 in #183 and recorded in ADR-002 by merged #230. The current
+> task dispositions and public wording are reconciled in #191; references below to
+> a pending decision describe the Sep17 review point, not current project state.
+
 Baseline mainbd7f245. Documentation-only changes: a proposed Shared disposition,
 a truthful POLICY-SIGNER guide and two README corrections that previously implied
 a hardened path was already available/demonstrated. No ADR history was rewritten.

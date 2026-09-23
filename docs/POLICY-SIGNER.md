@@ -5,10 +5,12 @@ uses a plain funded Ed25519 account (Stage1). A policy signer is represented in 
 config/type seam for future adapters, but the current engine rejects that payer
 kind; it is not an activation switch for an implemented provider.
 
-This guide is being completed under W3-D20-03. The final Stage2 disposition is
-pending Shared decision in [#183](https://github.com/Fatihmaull/evergreen/issues/183).
-The [feasibility report](W3-POLICY-SIGNER-FEASIBILITY.md) is merged evidence; it is
-not proof of a deployed policy wallet or final acceptance of reduced SOW scope.
+The final Stage2 disposition is **no-go for the direct adapter, no automatic
+framework pivot, and honest partial delivery with full scoping deferred to SOW 2**.
+Fatih accepted that decision in [#183](https://github.com/Fatihmaull/evergreen/issues/183),
+and ADR-002 records it through merged PR #230. The
+[feasibility report](W3-POLICY-SIGNER-FEASIBILITY.md) remains technical evidence;
+it is not proof of a deployed policy wallet.
 
 ## Why the planned direct adapter does not provide the promised protection
 
@@ -65,9 +67,11 @@ The broader independent setup test and production guide remain D21-01e/D26-02.
 No current artifact establishes all these properties. The Stage1 proof, the temporary
 retention policy and its successful extension do not count as a policy-signer proof.
 
-## Scope decision still pending
+## Accepted scope disposition
 
-ADR-002's accepted history is preserved. The proposed current disposition is to
-retain Stage1 and describe Stage2 as partial/unavailable rather than invent a setup
-recipe. Shared approval and any necessary SOW/funder handling must happen before
-calling that the final grant outcome. No Stage2 task is declared Done by this guide.
+ADR-002's history is preserved and amended with the accepted no-go reasoning.
+Evergreen retains Stage1 and describes Stage2 as partial/unavailable rather than
+inventing a setup recipe. Full policy scoping is deferred to SOW 2. The remaining
+conversation with the Ambassador Chapter Lead about the SOW impact is a human action;
+this guide neither performs it nor upgrades the missing capped-signer capability to
+Present. It truthfully supplies the required configuration/status artifact.
