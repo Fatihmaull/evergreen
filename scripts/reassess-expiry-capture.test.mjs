@@ -101,7 +101,17 @@ test('retained real RPC zero response is assessed without rewriting its failed o
     ),
   );
   const before = await readFile(join(dir, 'SHA256SUMS'));
-  const original = await verifyCrossingCapture(dir);
+  // `checkRuntime: false`, matching what the assessor itself does
+  // (reassess-expiry-capture.mjs:53). Strict runtime asserts that
+  // packages/core/dist has not changed since the bundle was sealed on
+  // 2026-09-20 — true of the capture-time gate and `verify:crossing` on the
+  // day, and wrong here. What this test is about is the VERDICT on sealed
+  // bytes: `unverified` before the assessment and still `unverified` after.
+  // Left strict, it froze the whole of core: the 2026-09-22 browser fix
+  // (#194) changed one dist file and broke it, and every future core change
+  // would too — including an October reviewer's, on a tree they never touched.
+  // Integrity still comes from the bundle's own SHA256SUMS, asserted below.
+  const original = await verifyCrossingCapture(dir, { checkRuntime: false });
   assert.equal(original.phase, 'unverified');
   assert.equal(original.reason, 'INVALID_SUBJECT_TTL');
   const result = await assess(dir);
@@ -114,7 +124,7 @@ test('retained real RPC zero response is assessed without rewriting its failed o
   );
   assert.equal(result.source.checksumsSha256, sha(before));
   assert.deepEqual(await readFile(join(dir, 'SHA256SUMS')), before);
-  assert.equal((await verifyCrossingCapture(dir)).phase, 'unverified');
+  assert.equal((await verifyCrossingCapture(dir, { checkRuntime: false })).phase, 'unverified');
 });
 test('absence and mixed absent/zero representations also require baseline proof', async () => {
   for (const zeroKinds of [[], ['instance'], ['persistent'], ['instance', 'persistent']])
