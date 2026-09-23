@@ -549,6 +549,43 @@ Two things follow. **Dead code cannot leak**, which is a real and useful propert
 
 The sharper version of the hazard is that it corrupts *mutation testing across the package boundary*: a mutation that does not reach `dist` reads as "no test covers this", which is the reassuring answer and the wrong one.
 
+### A reproduction is not evidence until fixing the bug makes it stop reproducing
+
+The rule above covers a **negative** result — "not caught", which is usually the
+instrument. This is its third shape, and it is the dangerous one: **a positive
+result that confirms a real defect for the wrong reason.**
+
+2026-09-23, `#194`. core returned zero entries in a browser because it validated
+ledger keys with Node's global `Buffer`. The reproduction deleted `globalThis.Buffer`
+and called `scanContract(A, reader)` — and got zero entries, and was reported as
+*"reproduced #194 exactly in Node."*
+
+The real signature is `scanContract(reader, { id }, dataKeys)` — **reader first**.
+The call was malformed, so it returned zero entries *regardless of `Buffer`*. The
+bug was real, the diagnosis was right, the fix was correct, **and the evidence was
+worthless.**
+
+That is worse than being wrong, because **nothing prompts you to check a result
+that agrees with what you already believe.** A failing test that fails for the
+reason you expected feels like confirmation; it is only confirmation if the
+expectation is what produced it.
+
+**What caught it was commissioning the fix afterwards.** Mutating the fix back out
+forced the test to be re-run against a tree where only `Buffer` differed — and the
+call signature had to be right for that comparison to mean anything.
+
+So the practical form, and it costs one extra run:
+
+> **Confirming the symptom is half. The other half is watching the symptom
+> disappear for the reason you claim.** A reproduction you have never seen stop
+> reproducing is a coincidence you have not ruled out.
+
+Two doors down, same session: a mutation disproved a claim written in a test's own
+comment — that its strictness cases would catch a lenient base64 check. They do
+not; a second guard refuses those inputs. **The comment was corrected rather than
+left.** A comment a mutation has disproved is a false statement sitting next to
+true code, and it will be believed, because it is adjacent to something that works.
+
 ### A "not caught" result is a hypothesis about the instrument
 
 **Every negative mutation result this project has produced has been an instrument failure. Five for five.**

@@ -115,6 +115,37 @@ a contract's storage, so coverage is printed with every scan.
 npx @evergreen-stellar/cli scan <contract-id>
 ```
 
+## Use it in CI
+
+`evergreen-check` fails a job when any watched ledger entry is at or below your
+TTL threshold. It is read-only — it scans, and never signs or submits.
+
+```yaml
+- uses: Fatihmaull/evergreen@v1
+  with:
+    contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+    threshold: '120960'        # ledgers; default 17,280 (~1 day)
+    keys-file: evergreen.keys.json
+```
+
+**Set `threshold` to the margin you actually want.** A repository that wants a
+week of warning fails at 120,960, not at our default of one day.
+
+**`require-declared-scope` is on by default, and leaving it on is the point.** A
+scan with no declared data keys reads only the instance and code entries, so a
+green build would mean *"the entries I could see are healthy"* — silent about
+persistent storage. Declare scope with `keys-file`, or assert `no-data-keys: 'true'`
+if the contract genuinely has none.
+
+The job fails on **1** (at or below threshold), **2** (error) and **3**
+(incomplete) — an incomplete scan is not evidence of health.
+
+Same threshold from the CLI:
+
+```bash
+npx @evergreen-stellar/cli scan <contract-id> --threshold 120960
+```
+
 ## Documentation
 
 | Doc | Read it for |
