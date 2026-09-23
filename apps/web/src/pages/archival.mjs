@@ -3,7 +3,7 @@
  * core in the browser, with the committed reading as labelled fallback. Our
  * own measurements sit beside them, with the reason each one is worth having.
  */
-import { esc } from './_shared.mjs';
+import {} from './_shared.mjs';
 
 export const meta = {
   title: 'State archival — Evergreen',

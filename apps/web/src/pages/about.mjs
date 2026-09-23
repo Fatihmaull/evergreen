@@ -3,7 +3,7 @@
  * repository, the PRD or the SOW. No peer review claimed, no chapter IDs, no
  * governance invented, no "gas".
  */
-import { esc } from './_shared.mjs';
+import {} from './_shared.mjs';
 
 export const meta = {
   title: 'About — Evergreen',

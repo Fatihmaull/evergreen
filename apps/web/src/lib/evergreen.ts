@@ -94,12 +94,14 @@ export function health(result: ScanResult): unknown {
   return healthReport(result, DEFAULT_CRITICAL_LEDGERS);
 }
 
-export async function reader() {
+export async function reader(): Promise<Awaited<ReturnType<typeof connectTestnet>>> {
   return connectTestnet(RPC_URL);
 }
 
 /** The network's own archival configuration, read live — never hard-coded. */
-export async function archivalSettings() {
+export async function archivalSettings(): Promise<
+  Awaited<ReturnType<typeof readArchivalSettings>>
+> {
   return readArchivalSettings(new rpc.Server(RPC_URL));
 }
 

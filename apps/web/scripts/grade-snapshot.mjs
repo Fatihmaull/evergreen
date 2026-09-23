@@ -5,7 +5,7 @@
  * follow — run it after make-snapshot.mjs.
  */
 import { createRequire } from 'node:module';
-import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';

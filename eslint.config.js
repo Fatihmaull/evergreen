@@ -10,6 +10,11 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/target/**',
       '**/*.tsbuildinfo',
+      // Build output, not source. `apps/web/build.mjs` writes the dashboard
+      // here and Cloudflare Pages publishes it, so the files are committed —
+      // but they are minified bundles, and linting one reports 132 problems
+      // about code nobody wrote. Their sources under `apps/web/src/` are linted.
+      'apps/dashboard/public/**',
     ],
   },
   js.configs.recommended,

@@ -4,7 +4,7 @@
  * fee, and who triggered it. Fees are in stroops. "Gas" is not Stellar
  * terminology and appears nowhere here.
  */
-import { esc, fmt, txLink } from './_shared.mjs';
+import { esc, txLink } from './_shared.mjs';
 
 export const meta = {
   title: 'Extension history — Evergreen',

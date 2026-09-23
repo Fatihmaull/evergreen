@@ -3,7 +3,7 @@
  * real count, the one verification claim that can be made true, and milestones
  * stated as they stand. Nothing here is delivered that is not done.
  */
-import { esc, fmt } from './_shared.mjs';
+import { fmt } from './_shared.mjs';
 
 export const meta = {
   title: 'Evidence — Evergreen',

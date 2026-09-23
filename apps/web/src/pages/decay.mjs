@@ -7,7 +7,7 @@
  * observation to a known expiry ledger; nothing past an expiry. The build
  * validates every one of those claims and fails when the data breaks them.
  */
-import { approxDate, esc, explorerTx, fmt } from './_shared.mjs';
+import { esc, explorerTx, fmt } from './_shared.mjs';
 
 const WARN = 120960;
 const CRIT = 17280;
@@ -57,31 +57,43 @@ export function validate(series) {
   }
 }
 
-function panel(s, refLedger, refIso) {
+function panel(s) {
   const W = 940;
   const H = 300;
   const PAD = { l: 92, r: 24, t: 26, b: 44 };
   // Path in (ledger, remaining) space: observations interleaved with steps.
-  const pts = [];
   const ordered = [...s.steps].sort((a, b) => a.atLedger - b.atLedger);
-  let current = s.observations[0].endsAt;
-  pts.push({
-    ledger: s.observations[0].ledger,
-    remaining: current - s.observations[0].ledger,
-    dot: true,
-  });
-  for (const step of ordered) {
-    pts.push({ ledger: step.atLedger, remaining: step.before - step.atLedger, corner: true, step });
-    pts.push({
-      ledger: step.atLedger,
-      remaining: step.after - step.atLedger,
-      corner: true,
-      stepped: step,
-    });
-    current = step.after;
-  }
+
+  // EVERY observation is a point, not just the first and the last. This drew
+  // only the endpoints until 2026-09-23, which was invisible while each series
+  // had two readings and wrong the moment B's crossing watch added four more:
+  // a straight line between endpoints is a drawing of an average, and the
+  // caption underneath calls each dot a committed observation.
+  const pts = [
+    ...s.observations.map((o) => ({
+      ledger: o.ledger,
+      remaining: o.endsAt - o.ledger,
+      dot: true,
+      order: 1,
+    })),
+    ...ordered.flatMap((step) => [
+      {
+        ledger: step.atLedger,
+        remaining: step.before - step.atLedger,
+        corner: true,
+        step,
+        order: 0,
+      },
+      {
+        ledger: step.atLedger,
+        remaining: step.after - step.atLedger,
+        corner: true,
+        stepped: step,
+        order: 2,
+      },
+    ]),
+  ].sort((a, b) => a.ledger - b.ledger || a.order - b.order);
   const last = s.observations[s.observations.length - 1];
-  pts.push({ ledger: last.ledger, remaining: last.endsAt - last.ledger, dot: true });
 
   const xMax = s.expiryLedger ?? last.ledger;
   const xMin = Math.min(s.observations[0].ledger, ...ordered.map((t) => t.atLedger));
@@ -159,9 +171,7 @@ function panel(s, refLedger, refIso) {
 
 export function render(ctx) {
   validate(ctx.decay.series);
-  const panels = ctx.decay.series
-    .map((s) => panel(s, ctx.snapshotLedger, ctx.snapshotCapturedAt))
-    .join('');
+  const panels = ctx.decay.series.map((s) => panel(s)).join('');
   return `<section class="stack">${panels}</section>
   <section>
     <h2 class="section">How to read this</h2>
