@@ -52,15 +52,34 @@
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig B · instance. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="136.1019423099201" x2="916" y2="136.1019423099201" /><text class="decay-band-label" x="916" y="131.1019423099201" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="238.8717060442743" x2="916" y2="238.8717060442743" /><text class="decay-band-label" x="916" y="233.8717060442743" text-anchor="end">act 17,280</text>
     <path class="decay-line" d="M92.0 50.6 L847.3 238.9 L847.6 239.0 L881.9 247.5 L898.8 251.7 L899.1 251.8" />
-    <line class="decay-dash" x1="899.0527474224814" y1="251.77640853325536" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="847.2763254431015" cy="238.8726972649893" r="4.5" /><circle class="decay-dot" cx="847.5865544271537" cy="238.9500124807617" r="4.5" /><circle class="decay-dot" cx="881.8589025755879" cy="247.49136138217887" r="4.5" /><circle class="decay-dot" cx="898.8220643317759" cy="251.7189177317836" r="4.5" /><circle class="decay-dot" cx="899.0527474224814" cy="251.77640853325536" r="4.5" /><text class="decay-expiry" x="916" y="288" text-anchor="end">expires 2026-09-21 · ledger 4,793,687</text>
+    <line class="decay-dash" x1="899.0527474224814" y1="251.77640853325536" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="847.2763254431015" cy="238.8726972649893" r="4.5" /><circle class="decay-dot" cx="847.5865544271537" cy="238.9500124807617" r="4.5" /><circle class="decay-dot" cx="881.8589025755879" cy="247.49136138217887" r="4.5" /><circle class="decay-dot" cx="898.8220643317759" cy="251.7189177317836" r="4.5" /><circle class="decay-dot" cx="899.0527474224814" cy="251.77640853325536" r="4.5" /><text class="decay-expiry observed" x="916" y="288" text-anchor="end">expired 2026-09-21 · ledger 4,793,687</text>
     <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
   </svg></div>
+    
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
       <summary>Every point behind this panel, with its source</summary>
       <div class="table-wrap"><table>
         <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
         <tbody><tr><td class="num">4,586,511</td><td class="num">207,176</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,776,408</td><td class="num">17,279</td><td>observed · <span class="mono">docs/W3-B-WATCH-CLOSING.md</span></td></tr><tr><td class="num">4,776,486</td><td class="num">17,201</td><td>observed · <span class="mono">docs/W3-B-WATCH-CLOSING.md</span></td></tr><tr><td class="num">4,785,103</td><td class="num">8,584</td><td>observed · <span class="mono">docs/W3-B-WATCH-CLOSING.md</span></td></tr><tr><td class="num">4,789,368</td><td class="num">4,319</td><td>observed · <span class="mono">docs/W3-B-WATCH-CLOSING.md</span></td></tr><tr><td class="num">4,789,426</td><td class="num">4,261</td><td>observed · <span class="mono">docs/W3-B-WATCH-CLOSING.md</span></td></tr></tbody>
+      </table></div>
+    </details>
+  </article><article class="card card-pad stack">
+    <h3>guinea-pig C · instance</h3>
+    <p class="muted">The backup proof, staggered five days behind B. Deployed 5 September and left alone on the same terms; nothing has extended it. It crosses its alert threshold on 25 September and expires on the 26th.</p>
+    <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig C · instance. Dots are recorded observations; steps are real extensions.">
+    <line class="decay-band" x1="92" y1="171.39106088164968" x2="916" y2="171.39106088164968" /><text class="decay-band-label" x="916" y="166.39106088164968" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="243.91300869737853" x2="916" y2="243.91300869737853" /><text class="decay-band-label" x="916" y="238.91300869737853" text-anchor="end">act 17,280</text>
+    <path class="decay-line" d="M92.0 50.6 L752.5 215.3" />
+    <line class="decay-dash" x1="752.5140844590683" y1="215.25606733875009" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="752.5140844590683" cy="215.25606733875009" r="4.5" /><text class="decay-expiry upcoming" x="916" y="288" text-anchor="end">expires ~2026-09-26 · ledger 4,880,097 · not yet</text>
+    <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
+  </svg></div>
+    <p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>
+    <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
+    <details>
+      <summary>Every point behind this panel, with its source</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
+        <tbody><tr><td class="num">4,586,511</td><td class="num">293,586</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,821,848</td><td class="num">58,249</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr></tbody>
       </table></div>
     </details>
   </article><article class="card card-pad stack">
@@ -72,6 +91,7 @@
     <circle class="decay-dot" cx="92" cy="82.05042016806726" r="4.5" /><circle class="decay-dot" cx="916" cy="68.90768382352942" r="4.5" /><circle class="decay-step" cx="234.64971404103056" cy="86.86205882352942" r="5.5" /><text class="decay-step-label" x="234.64971404103056" y="74.86205882352942" text-anchor="middle">manual CLI · <a href="https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a">e18e0822…</a></text><circle class="decay-step" cx="387.7936177519258" cy="50.64285714285717" r="5.5" /><text class="decay-step-label" x="387.7936177519258" y="38.64285714285717" text-anchor="middle">engine, local timer · <a href="https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128">dae63da8…</a></text>
     <text class="decay-axis" x="92" y="288">ledger 4,585,589</text>
   </svg></div>
+    <p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
       <summary>Every point behind this panel, with its source</summary>
@@ -86,9 +106,10 @@
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for shared code entry. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="220.7318398791455" x2="916" y2="220.7318398791455" /><text class="decay-band-label" x="916" y="215.7318398791455" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="250.9616914113065" x2="916" y2="250.9616914113065" /><text class="decay-band-label" x="916" y="245.9616914113065" text-anchor="end">act 17,280</text>
     <path class="decay-line" d="M92.0 50.6 L366.9 119.1" />
-    <line class="decay-dash" x1="366.8753034850735" y1="119.1472345283969" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="366.8753034850735" cy="119.1472345283969" r="4.5" /><text class="decay-expiry" x="916" y="288" text-anchor="end">expires 2026-10-20 · ledger 5,290,829</text>
+    <line class="decay-dash" x1="366.8753034850735" y1="119.1472345283969" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="366.8753034850735" cy="119.1472345283969" r="4.5" /><text class="decay-expiry upcoming" x="916" y="288" text-anchor="end">expires ~2026-10-20 · ledger 5,290,829 · not yet</text>
     <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
   </svg></div>
+    <p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
       <summary>Every point behind this panel, with its source</summary>

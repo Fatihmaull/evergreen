@@ -488,6 +488,22 @@ Replaced with a **route manifest the build depends on**: `apps/dashboard/src/ind
 
 **When a placeholder is replaced, delete its test rather than keeping it beside the real one.** A passing assertion about the scaffold is indistinguishable from a passing assertion about the product.
 
+### A negative result from an unverified instrument is not evidence
+
+**2026-09-23.** After merging the dashboard's mobile fix, a check for whether production had picked it up ran `grep 'stacked links filled'` against the deployed stylesheet. It returned 0. The conclusion drawn — and reported — was that the deploy had not landed.
+
+It had. The comment in the CSS wraps, so the file contains `stacked links` then a newline then `filled`. The pattern could never have matched. Local, `main` and production all had the change the whole time; a marker that sits on one line confirmed it in one command.
+
+**The instrument rule does not get a size exemption.** This was committed in the middle of three days spent building detectors against exactly this failure — a layout check that was commissioned, a parity test that was commissioned, a dot-count assertion that was commissioned — by the one check that did not feel like an instrument, because it was "just a grep".
+
+So, before reporting that something is absent:
+
+- **Watch the pattern match something first.** A grep that has never returned a hit has not been shown to work. Run it against a case you know is present — the local file, an earlier build — and only then trust a zero.
+- **Prefer a marker you control over prose you wrote.** Comment text wraps, gets reflowed by a formatter, and gets reworded. A declaration, a class name or a literal is stable and sits on one line.
+- **Say which it is.** "The pattern did not match" and "the thing is not there" are different findings, and only the second one is a fact about the world.
+
+The general form, and the reason it belongs beside [a test that cannot fail](#a-test-that-cannot-fail-is-worse-than-no-test): **an unverified detector reporting absence is indistinguishable from a verified one reporting a true absence.** The difference is entirely in whether anyone watched it succeed.
+
 ### A caption is a claim, and the rendering has to support it
 
 The decay chart's caption reads *"every dot is a committed observation"*. The code plotted the first observation and the last one, and drew a straight line between them — a drawing of an average, under a sentence promising measurements.

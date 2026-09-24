@@ -57,7 +57,31 @@ export function validate(series) {
   }
 }
 
-function panel(s) {
+/**
+ * An expiry is one of three things, and the chart must not conflate them.
+ *
+ *   observed   — the watch completed and the event was captured.
+ *   upcoming   — the date has not arrived yet.
+ *   unobserved — the date passed and nothing captured it.
+ *
+ * Derived, never flagged by hand: `ops/crossing-schedule.json` records whether
+ * each watch is complete, and the date says whether it is still ahead. So the
+ * panel tells the truth on Saturday, on Sunday and on Monday without anyone
+ * remembering to change it — and if guinea-pig C's capture does not happen,
+ * the page says so by itself rather than simply stopping.
+ *
+ * A series that stops with no explanation reads as a chart that ran out of
+ * data. SOW §6.2 is graded by one person with minimal technical expertise, and
+ * to that reader unfinished and unexplained look identical.
+ */
+function expiryState(series, knownEnds, now) {
+  const known = knownEnds?.[series.contract];
+  if (known?.status === 'complete') return 'observed';
+  const endsOn = known?.endsOn ?? series.expiryApprox;
+  return Date.parse(`${endsOn}T23:59:59Z`) < now.getTime() ? 'unobserved' : 'upcoming';
+}
+
+function panel(s, state, crossesOn) {
   const W = 940;
   const H = 300;
   const PAD = { l: 92, r: 24, t: 26, b: 44 };
@@ -147,9 +171,14 @@ function panel(s) {
     )
     .join('');
 
+  const MARKER = {
+    observed: `expired ${esc(s.expiryApprox)} · ledger ${fmt(s.expiryLedger)}`,
+    upcoming: `expires ~${esc(s.expiryApprox)} · ledger ${fmt(s.expiryLedger)} · not yet`,
+    unobserved: `expiry ~${esc(s.expiryApprox)} · ledger ${fmt(s.expiryLedger)} · not observed`,
+  };
   const expiryMark =
     s.expiryLedger !== null
-      ? `<text class="decay-expiry" x="${X(s.expiryLedger)}" y="${H - 12}" text-anchor="end">expires ${esc(s.expiryApprox)} · ledger ${fmt(s.expiryLedger)}</text>`
+      ? `<text class="decay-expiry ${state}" x="${X(s.expiryLedger)}" y="${H - 12}" text-anchor="end">${MARKER[state]}</text>`
       : '';
 
   const svg = `<div class="graph-wrap"><svg class="decay" viewBox="0 0 ${W} ${H}" role="img" aria-label="Remaining ledgers over time for ${esc(s.label)}. Dots are recorded observations; steps are real extensions.">
@@ -174,6 +203,13 @@ function panel(s) {
     <h3>${esc(s.label)}</h3>
     <p class="muted">${esc(s.role)}</p>
     ${svg}
+    ${
+      state === 'unobserved'
+        ? `<p class="small caution"><strong>The expiry was not observed.</strong> ${esc(s.label.split(' · ')[0])} crossed its alert threshold${crossesOn ? ` on ${esc(crossesOn)}` : ''} and expired ~${esc(s.expiryApprox)} at ledger ${fmt(s.expiryLedger)}. Nothing captured the moment, so this series ends at its last recorded reading and the dashed segment is a projection rather than a measurement.</p>`
+        : state === 'upcoming'
+          ? `<p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>`
+          : ''
+    }
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
       <summary>Every point behind this panel, with its source</summary>
@@ -185,9 +221,13 @@ function panel(s) {
   </article>`;
 }
 
-export function render(ctx) {
+export function render(ctx, now = new Date()) {
   validate(ctx.decay.series);
-  const panels = ctx.decay.series.map((s) => panel(s)).join('');
+  const panels = ctx.decay.series
+    .map((s) =>
+      panel(s, expiryState(s, ctx.knownEnds, now), ctx.knownEnds?.[s.contract]?.crossesOn),
+    )
+    .join('');
   return `<section class="stack">${panels}</section>
   <section>
     <h2 class="section">How to read this</h2>
