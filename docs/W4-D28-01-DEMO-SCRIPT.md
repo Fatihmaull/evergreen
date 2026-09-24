@@ -146,8 +146,17 @@ would have destroyed the only evidence in the sprint that cannot be recreated.
 
 ### 5 · Dashboard and CI — 45 seconds
 
-⟦SLOT: dashboard URL — `W4-D26`⟧ and the `evergreen-check` Action ⟦SLOT: workflow
-run link — `W4-D29`⟧.
+**[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)**
+— paste a contract ID, no wallet and no signup — and the `evergreen-check` Action
+⟦SLOT: workflow run link — `W4-D29`⟧.
+
+> **Open `/dashboard/`, not the root.** The root is a landing page; the scanner
+> is one level down. Verified live 2026-09-24.
+>
+> **The dashboard shows no rent figure, and that is deliberate** — `estimateRent`'s
+> quoter is not browser-safe, so the page renders rent as unavailable rather than
+> as `0`. Do not narrate a cost number over this beat; the cost claim belongs to
+> beat 2, on the CLI.
 
 Keep this short. It is the least differentiated part of the product and the part a
 reviewer can most easily imagine.
@@ -185,12 +194,20 @@ They are now filled in beat 4 rather than left as slots.
 | B expiry confirmation | ✅ **filled** — instance ended 4,793,687, persistent 4,793,688 |
 | C, if B is missed | ⛔ **VOID — B was not missed.** C is captured Sep 25–26 as the documented spare; the demo does not need it and should not wait for it |
 | Cron delivery share | 🔄 **moves** — run `pnpm measure:cadence` on the recording day and read it off. Do not quote a figure from here; `check:cadence` refuses one, and it has already been wrong twice. The 2026-09-23 reading is recorded in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md) |
-| Dashboard URL | ⏳ web track; wanted before recording |
+| Dashboard URL | ✅ **filled 2026-09-24** — [`/dashboard/`](https://evergreen-stellar.pages.dev/dashboard/) is live and scans. **The root is a landing page; the scanner is one level down.** Shipped by the web track in #234/#236/#237 |
 | Action run link | ⏳ unblocks the moment `0.1.0` publishes — the demo workflow produces red and green in one dispatch |
 
-> 🔴 **Only ONE slot genuinely waits on something outside the recording: the
-> install line in beat 2**, which 404s until `@evergreen-stellar/cli@0.1.0` is
-> published. Nothing in this script waits on C.
+> 🔴 **TWO slots wait on something outside the recording, and they are the same
+> thing.** An earlier version of this line said one, which under-counted the
+> publish: `action.yml:129` installs the CLI with
+> `npx --yes "@evergreen-stellar/cli@…"`, so **the Action cannot run either**
+> until `0.1.0` is on the registry — the demo workflow has zero runs to date for
+> exactly that reason, not because it is broken. So the publish gates beat 2's
+> install line *and* beat 5's run link.
+>
+> **Do not dispatch the demo workflow before the publish to "get a red run".**
+> Both jobs would fail on `npx` E404, and a red job that failed for the wrong
+> reason looks like the demonstration worked. Nothing in this script waits on C.
 
 ## Figures already final — do not re-derive
 
