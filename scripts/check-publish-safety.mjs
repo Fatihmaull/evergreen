@@ -45,6 +45,27 @@ if (cli.private !== false) {
     'packages/cli must be publishable (private:false) — it is the one package that ships.',
   );
 }
+if (cli.main !== undefined || cli.types !== undefined || cli.exports !== undefined) {
+  problems.push(
+    'packages/cli exposes a library entry point, but only its evergreen binary is bundled. ' +
+      'Publishing tsc library output would import the private core/shared-types packages at runtime.',
+  );
+}
+const expectedBin = './dist/evergreen.mjs';
+if (cli.bin?.evergreen !== expectedBin || Object.keys(cli.bin ?? {}).length !== 1) {
+  problems.push(`packages/cli must expose exactly one binary: evergreen -> ${expectedBin}.`);
+}
+const expectedFiles = ['dist/evergreen.mjs', 'dist/evergreen.mjs.map'];
+if (
+  !Array.isArray(cli.files) ||
+  cli.files.length !== expectedFiles.length ||
+  expectedFiles.some((file, index) => cli.files[index] !== file)
+) {
+  problems.push(
+    `packages/cli files must be exactly ${JSON.stringify(expectedFiles)} so unbundled tsc output ` +
+      'cannot become an accidental public runtime surface.',
+  );
+}
 for (const dep of Object.keys(cli.dependencies ?? {})) {
   if (dep.startsWith('@evergreen-stellar/')) {
     problems.push(
@@ -71,5 +92,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  '✓ publishing safety: one publishable package, workspace deps bundled, runtime deps pinned',
+  '✓ publishing safety: one binary-only package, workspace deps bundled, runtime deps pinned',
 );
