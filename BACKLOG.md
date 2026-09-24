@@ -516,8 +516,8 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### Day 29
 *Planned: Thu Oct 1 — may slip; the D-number does not.*
-- [ ] **B-D29-01** (S) Assemble the evidence bundle exactly per SOW §6.1: repo link, npm links, CLI screenshots, coverage report, tx hashes, engine logs, alert screenshots, policy-signer guide, dashboard URL, Action link, demo video.
-- [ ] **B-D29-02** (F) Write a one-page verification walkthrough for Kenny — a non-technical reviewer should be able to confirm each deliverable in under 10 minutes.
+- [~] **B-D29-01** (S) ⚙️ **Structure done 2026-09-23 via `B-D29-02`'s index; three items still empty.** `pnpm check:sow` reports the same Present/Partial reading independently of the index, so the two cannot drift silently. Assemble the evidence bundle exactly per SOW §6.1: repo link, npm links, CLI screenshots, coverage report, tx hashes, engine logs, alert screenshots, policy-signer guide, dashboard URL, Action link, demo video.
+- [~] **B-D29-02** (F) ⚙️ **WRITTEN 2026-09-23, eight days early — [`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md).** One row per SOW §6.1 item, in §6.1's own order, with the browser-openable artifact FIRST and the sealed record behind it. **Nothing on it requires a terminal.** Pulled forward because §6.2 grades three rows whole, by one person, to a *"minimal technical expertise"* standard — and 59 directories of manifests and checksums are rigorous and close to unreadable to that reader. The rigour is what makes the claims true; it is not what gets read. Stays `[~]` until the three open rows fill (npm package, npm links, demo video) and the figures are re-checked on the day. Every link was verified to resolve: 29 relative, 0 broken; 5 external, all 200. Write a one-page verification walkthrough for Kenny — a non-technical reviewer should be able to confirm each deliverable in under 10 minutes.
 - [ ] **B-D29-03** (S) Fresh-machine test: clone, install, run, following only the README. Fix whatever breaks.
 
 ### Day 30 · Submit
@@ -525,6 +525,13 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **B-D30-01** (F) Send the evidence bundle to the Ambassador Chapter Lead for the Airtable submission.
 - [ ] **B-D30-02** (S) Retro: what slipped, what we cut, what we learned.
 - [ ] **B-D30-03** (S) Draft the SOW 2 candidate list (mainnet auto-bump, Telegram/webhook channels, always-on mode, custom policy contract if A/B fell short).
+
+### After submission — deferred deliberately, not dropped
+
+*Nothing here is graded. Each row names what deferred it and when it comes back, because a park without a date is how something quietly never happens.*
+
+- [ ] **B-D31-01** (S) 📅 **After 2026-10-02 — decide the scheduler gap floor. THE REVIEW TRIGGER HAS ALREADY FIRED.** Measured 2026-09-23: worst delivered gap **403 min**, past the recorded `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` (369) **and** past the 384-min review trigger, still below the 480-min floor. The trigger exists precisely so a person decides rather than a number quietly tracking upward — so this is **deferred, not skipped**, and the deferral has a date. Not done on 2026-09-23 because the constant is pinned by `pnpm check:policy` and read by the engine's floor warning, and moving engine behaviour in the week of guinea-pig C's window, for a reason unrelated to the proof, is the wrong trade. The margin holds meanwhile: at a 6.7-hour worst gap the engine still fires three or more times inside C's 24-hour window, and that margin comes from the two-tier threshold rather than the cadence. Dated record: [`docs/evidence/2026-09-23-scheduler-cadence/`](docs/evidence/2026-09-23-scheduler-cadence/README.md). **Decide: update the constant to the new observation, raise the floor, or accept the drift with a reason.**
+- [ ] **B-D31-02** (F) 📅 **After 2026-10-02 — the parked checker work.** `check:cadence` beyond `.md` (12 live hits in `.ts` it cannot see), the `pnpm check` gate-list generator (five prose copies, three different wrong numbers), link-existence in `check:links`, `check-decay-drift.py`'s `ABSENT` branch returning 0 on the catastrophe it watches for, `check:locale` ROOTS, and the five stray threshold constants. **Good engineering, none of it graded**, all of it parked on 2026-09-22 to protect D3. Each is written up in the Sep 22 audit.
 
 ---
 
