@@ -91,6 +91,11 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 ## Status at a glance
 
+> 📄 **For the assessor, read [`SUBMISSION-INDEX.md`](SUBMISSION-INDEX.md) instead
+> of this file.** It maps each §6.1 item to the artifact that satisfies it, in
+> §6.1's order, human-readable first. This page is the working tracker: complete,
+> and denser than anyone grading needs.
+
 > 📄 **The SOW is now in the repository** — [`docs/SOW.md`](SOW.md), source at [`docs/sow/`](sow/). Until 2026-09-22 every requirement below was a restatement of a document nobody here could open. The restatements were checked clause by clause against the source and were substantively accurate; **`alert screenshots` is verbatim.**
 >
 > 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
