@@ -150,6 +150,19 @@ would have destroyed the only evidence in the sprint that cannot be recreated.
 — paste a contract ID, no wallet and no signup — and the `evergreen-check` Action
 ⟦SLOT: workflow run link — `W4-D29`⟧.
 
+> 🔴 **DO NOT dispatch the `evergreen-check demo` workflow to fill that slot
+> until `0.1.0` is on the registry.**
+>
+> `action.yml:129` installs the CLI with `npx --yes "@evergreen-stellar/cli@…"`,
+> so **both jobs fail on E404** before the publish — including the one named
+> *"red · must fail"*. A red job that failed for the wrong reason is
+> indistinguishable from a working demonstration to anyone who does not open the
+> log, and this artifact exists for a reviewer who will not open the log. That is
+> a false green placed in the evidence by us.
+>
+> The workflow has **zero runs to date** for this reason, not because it is
+> broken. After the publish, one dispatch produces both colours.
+
 > **Open `/dashboard/`, not the root.** The root is a landing page; the scanner
 > is one level down. Verified live 2026-09-24.
 >
@@ -201,13 +214,12 @@ They are now filled in beat 4 rather than left as slots.
 > thing.** An earlier version of this line said one, which under-counted the
 > publish: `action.yml:129` installs the CLI with
 > `npx --yes "@evergreen-stellar/cli@…"`, so **the Action cannot run either**
-> until `0.1.0` is on the registry — the demo workflow has zero runs to date for
-> exactly that reason, not because it is broken. So the publish gates beat 2's
-> install line *and* beat 5's run link.
+> until `0.1.0` is on the registry. The publish gates beat 2's install line *and*
+> beat 5's run link.
 >
-> **Do not dispatch the demo workflow before the publish to "get a red run".**
-> Both jobs would fail on `npx` E404, and a red job that failed for the wrong
-> reason looks like the demonstration worked. Nothing in this script waits on C.
+> **The warning about dispatching that workflow early lives in beat 5**, where
+> the operator is standing when the temptation arrives — not here. Nothing in
+> this script waits on C.
 
 ## Figures already final — do not re-derive
 
