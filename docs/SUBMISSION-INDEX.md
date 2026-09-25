@@ -20,6 +20,12 @@ records themselves.
 > Our own reading is stated at the head of each section — including where it is
 > partial, and why. We would rather name a gap than have it found.
 
+> 🧭 **Would you rather be walked through it than read a table?**
+> [`SUBMISSION-WALKTHROUGH.md`](SUBMISSION-WALKTHROUGH.md) is the same evidence as
+> a route — ten steps, about ten minutes, ordered by what settles the question
+> fastest, and saying at each step what seeing it *proves*. **This page is for
+> checking coverage; that one is for forming a view.**
+
 ---
 
 ## Deliverable 1 — Core CLI
