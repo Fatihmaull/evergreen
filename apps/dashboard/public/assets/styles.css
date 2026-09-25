@@ -846,23 +846,24 @@ body.site .hero .lead {
 }
 
 /* The hero's artefact slot.
-   Reserved at 16:9 so the space exists before the image does — 695px tall
-   inside the 1300px container, and dropping a file in reflows nothing. Empty,
-   it is a hairline in an alpha of the hero's foreground and nothing else: no
-   placeholder text, no icon, no dashed edge, no shimmer. Filled, the hairline
-   goes, because the image is then the edge. */
+   4:3, because the artefact is: 1920x1440. At the full 1236px container that
+   would stand 927px tall — past the 600-700px this was briefed at, and enough
+   to push everything under it off a second screen. Capped at 900px it is
+   675px, inside the target, and the artefact fills it with no letterboxing.
+
+   The ratio lives on the container, so the space exists before the file does
+   and dropping one in reflows nothing. Empty, it is a hairline in an alpha of
+   the hero's foreground and nothing else: no placeholder text, no icon, no
+   dashed edge, no shimmer. */
 .hero-art {
   margin-top: 44px;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-width: 100%;
+  max-width: 900px;
+  aspect-ratio: 4 / 3;
   border: 1px solid rgba(252, 249, 248, 0.18);
   overflow: hidden;
 }
-.hero-art:not(:empty) {
-  border-color: transparent;
-}
-.hero-art img {
+.hero-media {
   display: block;
   width: 100%;
   height: 100%;

@@ -18,6 +18,7 @@ import { execFileSync } from 'node:child_process';
 import {
   cpSync,
   existsSync,
+  statSync,
   mkdirSync,
   readFileSync,
   readdirSync,
@@ -190,37 +191,69 @@ const capture = {
 };
 
 /**
- * The hero image, if one has been dropped in.
+ * The hero artefact, if one has been dropped in.
  *
- * `apps/web/src/assets/hero.<ext>` plus `hero.txt` beside it. Absent, the page
- * renders the reserved slot and nothing else, which is the current state. The
- * alternative text is required rather than defaulted: a generic alt on an
- * image nobody here has seen is a caption that is probably wrong, and a wrong
- * one is worse for a screen reader than the honest refusal to guess.
+ * `apps/web/src/assets/hero.<ext>` plus `hero.txt` beside it — an image or an
+ * mp4. Absent, the page renders the reserved slot and nothing else.
+ *
+ * The description is required rather than defaulted: a generic one on a file
+ * nobody here has seen is a caption that is probably wrong, and a wrong one is
+ * worse for a screen reader than the honest refusal to guess.
+ *
+ * A video also wants `hero-poster.jpg`. Without it the slot is the hero's own
+ * green until the first frame decodes, and a visitor on a slow connection
+ * opens the site on an empty rectangle.
  */
+const HERO = /^hero\.(png|jpg|jpeg|webp|avif|svg|mp4)$/i;
+
 function readHeroImage() {
   const dir = join(here, 'src/assets');
   if (!existsSync(dir)) return null;
-  const found = readdirSync(dir).filter((name) =>
-    /^hero\.(png|jpg|jpeg|webp|avif|svg)$/i.test(name),
-  );
+  const found = readdirSync(dir).filter((name) => HERO.test(name));
   if (found.length === 0) return null;
   if (found.length > 1) {
     throw new Error(
-      `apps/web/src/assets holds ${found.length} hero images: ${found.join(', ')} — keep one`,
+      `apps/web/src/assets holds ${found.length} hero files: ${found.join(', ')} — keep one`,
     );
   }
   const altPath = join(dir, 'hero.txt');
   if (!existsSync(altPath)) {
     throw new Error(
-      `${found[0]} has no alternative text. Write one sentence describing it to ` +
+      `${found[0]} has no description. Write one sentence describing it to ` +
         'apps/web/src/assets/hero.txt — the hero is the first thing on the site and it is not shipping undescribed.',
     );
   }
   const alt = readFileSync(altPath, 'utf8').trim();
-  if (alt.length < 10)
-    throw new Error('apps/web/src/assets/hero.txt is empty or too short to describe an image');
-  return { file: found[0], src: `/assets/${found[0]}`, alt, width: 2472, height: 1390 };
+  if (alt.length < 10) {
+    throw new Error('apps/web/src/assets/hero.txt is empty or too short to describe the artefact');
+  }
+  const video = found[0].toLowerCase().endsWith('.mp4');
+  const poster = video && existsSync(join(dir, 'hero-poster.jpg')) ? 'hero-poster.jpg' : null;
+  if (video && !poster) {
+    throw new Error(
+      'hero.mp4 has no hero-poster.jpg beside it; the slot would be empty until the video decodes',
+    );
+  }
+  /**
+   * Cloudflare Pages refuses any single file over 25 MiB, and the whole site is
+   * served from the committed build — so a file that is too large does not fail
+   * loudly at deploy time, it fails as a hero that never loads.
+   */
+  const bytes = statSync(join(dir, found[0])).size;
+  if (bytes > 20 * 1024 * 1024) {
+    throw new Error(
+      `${found[0]} is ${(bytes / 1048576).toFixed(1)} MB; Cloudflare Pages refuses files over 25 MiB. Re-encode it smaller.`,
+    );
+  }
+  return {
+    file: found[0],
+    src: `/assets/${found[0]}`,
+    alt,
+    video,
+    poster: poster ? `/assets/${poster}` : null,
+    posterFile: poster,
+    bytes,
+  };
 }
 
 const heroImage = readHeroImage();
@@ -406,7 +439,16 @@ cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {
   cpSync(join(here, 'src/assets', heroImage.file), join(out, 'assets', heroImage.file));
-  console.log(`  hero image: ${heroImage.file}`);
+  if (heroImage.posterFile) {
+    cpSync(
+      join(here, 'src/assets', heroImage.posterFile),
+      join(out, 'assets', heroImage.posterFile),
+    );
+  }
+  console.log(
+    `  hero ${heroImage.video ? 'video' : 'image'}: ${heroImage.file} ` +
+      `(${(heroImage.bytes / 1048576).toFixed(2)} MB)${heroImage.posterFile ? ` + ${heroImage.posterFile}` : ''}`,
+  );
 }
 /**
  * No rendered page may contain the residue of a lookup that did not resolve.

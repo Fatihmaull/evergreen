@@ -63,8 +63,38 @@ export function render(ctx) {
    * and refuses to build an image with no alternative text rather than ship
    * one the screen reader cannot describe.
    */
-  const heroArt = ctx.heroImage
-    ? `<img src="${esc(ctx.heroImage.src)}" alt="${esc(ctx.heroImage.alt)}" width="${ctx.heroImage.width}" height="${ctx.heroImage.height}" />`
+  const art = ctx.heroImage;
+  const heroArt = !art
+    ? ''
+    : art.video
+      ? /**
+         * Muted, looping, inline, and with no controls: it is an artefact, not
+         * a player. `preload="metadata"` plus the poster means the slot is
+         * filled on first paint and the file downloads after, rather than the
+         * page opening on an empty rectangle on a slow connection.
+         */
+        `<video class="hero-media" autoplay muted loop playsinline preload="metadata"
+            poster="${esc(art.poster)}" aria-label="${esc(art.alt)}"
+          ><source src="${esc(art.src)}" type="video/mp4" /></video>`
+      : `<img class="hero-media" src="${esc(art.src)}" alt="${esc(art.alt)}" />`;
+
+  /**
+   * Reduced motion is a setting a person chose, and a 20-second loop behind the
+   * first thing they read is exactly what they turned off. CSS cannot stop an
+   * autoplaying video, so this is the one script on the page — five lines, and
+   * without it the video simply plays, which is what every visitor gets today.
+   */
+  const motionScript = art?.video
+    ? `<script>
+      (function () {
+        var v = document.querySelector('.hero-media');
+        if (!v || !window.matchMedia) return;
+        var m = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var apply = function () { if (m.matches) { v.pause(); v.removeAttribute('loop'); } else { v.play().catch(function () {}); } };
+        apply();
+        m.addEventListener('change', apply);
+      })();
+    </script>`
     : '';
 
   const b = ctx.knownEnds[B];
@@ -229,5 +259,5 @@ export function render(ctx) {
         </div>
       </section>`;
 
-  return [hero, blastRadius, capture, death, kinds, how, closing].join('\n');
+  return [hero, blastRadius, capture, death, kinds, how, closing, motionScript].join('\n');
 }

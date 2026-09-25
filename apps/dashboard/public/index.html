@@ -34,7 +34,9 @@
             <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
             <a class="site-more" href="https://github.com/Fatihmaull/evergreen">The code on GitHub <span aria-hidden="true">→</span></a>
           </p>
-          <div class="hero-art"></div>
+          <div class="hero-art"><video class="hero-media" autoplay muted loop playsinline preload="metadata"
+            poster="/assets/hero-poster.jpg" aria-label="Evergreen&#39;s dashboard, shown as a slow slideshow: the blast-radius page scanning three contracts together to resolve what one scan cannot, and guinea-pig B&#39;s archived contract entry beside it."
+          ><source src="/assets/hero.mp4" type="video/mp4" /></video></div>
         </div>
       </section>
 <section class="feature">
@@ -210,6 +212,16 @@ Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
           </p>
         </div>
       </section>
+<script>
+      (function () {
+        var v = document.querySelector('.hero-media');
+        if (!v || !window.matchMedia) return;
+        var m = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var apply = function () { if (m.matches) { v.pause(); v.removeAttribute('loop'); } else { v.play().catch(function () {}); } };
+        apply();
+        m.addEventListener('change', apply);
+      })();
+    </script>
     </main>
     <footer class="site-foot">
       <div class="site-wrap">
