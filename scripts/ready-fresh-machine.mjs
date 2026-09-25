@@ -12,8 +12,8 @@
  * repository after you helped it, which is the one state no stranger will ever
  * see. Fix on a later commit, then re-run and watch the row change.
  *
- * **IT IS EXPECTED TO FAIL on 2026-09-23.** That is the whole point of moving it
- * earlier. `B-D29-03` originally put the first and only attempt on Thu Oct 1,
+ * **IT IS EXPECTED TO FAIL from its first run (2026-09-23) until the last gaps
+ * close.** That is the whole point of moving it earlier. `B-D29-03` originally put the first and only attempt on Thu Oct 1,
  * one day before submission, where a failure has nowhere to go.
  *
  * What it can and cannot decide
@@ -44,7 +44,16 @@ import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
 
-const DASHBOARD = 'https://evergreen-stellar.pages.dev';
+/**
+ * The site has two pages and outcome 2 needs both.
+ *
+ * `ENTRY` is where a stranger arrives — it is the URL in the README and the one
+ * a person types. Since 2026-09-23 it is a landing page, by the web track's
+ * design, and the scanner moved to `SCANNER`. So a check that fetches `ENTRY`
+ * and looks for an input now reports a failure that is not one.
+ */
+const ENTRY = 'https://evergreen-stellar.pages.dev';
+const SCANNER = `${ENTRY}/dashboard/`;
 /** Guinea-pig A. Public, live, and NOT a decay subject — scanning is read-only. */
 const SCAN_TARGET = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 
@@ -109,24 +118,54 @@ if (registry.ok) {
 // ── 2 · Open the dashboard and check any contract's TTL ─────────────────────
 // Reachability is necessary and nowhere near sufficient: the placeholder also
 // returns 200. What decides it is whether the page can scan anything.
-const page = sh('curl', ['-sS', '-w', '\\n%{http_code}', '--max-time', '20', DASHBOARD]);
-const status = page.ok ? page.out.slice(page.out.lastIndexOf('\n') + 1) : 'unreachable';
-const body = page.ok ? page.out.slice(0, page.out.lastIndexOf('\n')) : '';
+//
+// TWO conditions, because the stranger's path has two steps and either one can
+// break on its own:
+//
+//   a. the scanner page serves a real scan affordance — the placeholder test;
+//   b. the entry page ROUTES there. Checking only (a) would have made this row
+//      go green the day the landing page appeared, while a stranger holding the
+//      README's URL was stranded on a page with nothing to scan. Repointing a
+//      check at the surface that still passes is how a false negative becomes a
+//      blind spot, and this row exists to find exactly that class of gap.
+const fetchPage = (url) => {
+  const r = sh('curl', ['-sS', '-w', '\\n%{http_code}', '--max-time', '20', url]);
+  return r.ok
+    ? {
+        status: r.out.slice(r.out.lastIndexOf('\n') + 1),
+        body: r.out.slice(0, r.out.lastIndexOf('\n')),
+      }
+    : { status: 'unreachable', body: '' };
+};
 // An AFFORDANCE, not a mention. The first draft of this line also accepted the
 // word "contract" anywhere in the page — and passed, because the placeholder's
 // own prose says "contract". A predicate that a static holding page satisfies
 // cannot report a static holding page, which is the failure it exists to find.
-const interactive = /<input\b|<form\b|fetch\(|addEventListener\(/i.test(body);
+//
+// MEASURED 2026-09-24, so the next reader knows which legs carry weight: of the
+// four alternates, only `<input` and `<form` match. The app's JS is an external
+// bundle, so neither page's served HTML contains `fetch(` or `addEventListener(`
+// — those two legs have never fired here and must not be mistaken for cover.
+const scans = (body) => /<input\b|<form\b|fetch\(|addEventListener\(/i.test(body);
+const scanner = fetchPage(SCANNER);
+const entry = fetchPage(ENTRY);
+const canScan = scanner.status === '200' && scans(scanner.body);
+const routed = /href="[^"]*\/dashboard\/?"/i.test(entry.body);
 record(
   2,
   "Open the dashboard and check any contract's TTL",
-  status === '200' && interactive ? 'PASS' : 'FAIL',
-  status !== '200'
-    ? `${DASHBOARD} returned ${status}`
-    : interactive
-      ? `${DASHBOARD} serves a page that accepts a contract (${body.length} bytes)`
-      : `${DASHBOARD} returns 200 but serves a static placeholder (${body.length} bytes, no input and no fetch) — a stranger cannot check any contract's TTL. W4-D22-01 → W4-D24-02.`,
-  { status, bytes: body.length, interactive },
+  canScan && routed ? 'PASS' : 'FAIL',
+  scanner.status !== '200'
+    ? `${SCANNER} returned ${scanner.status}`
+    : !canScan
+      ? `${SCANNER} returns 200 but serves no scan affordance (${scanner.body.length} bytes, no input and no form) — a stranger cannot check any contract's TTL. W4-D22-01 → W4-D24-02.`
+      : !routed
+        ? `${SCANNER} scans, but ${ENTRY} — the URL a stranger is given — does not link to it, so they never reach it.`
+        : `${SCANNER} accepts a contract (${scanner.body.length} bytes) and ${ENTRY} links to it`,
+  {
+    scanner: { url: SCANNER, status: scanner.status, bytes: scanner.body.length, scans: canScan },
+    entry: { url: ENTRY, status: entry.status, bytes: entry.body.length, routes: routed },
+  },
 );
 
 // ── 3 · Add `evergreen-check` to their own repo's CI ────────────────────────
@@ -191,7 +230,10 @@ const block = [
   '|---|---|---|---|',
   ...results.map((r) => `| ${r.n} | ${r.outcome} | **${r.verdict}** | ${r.detail} |`),
   '',
-  `Outcome 4 is recorded as a human call by design: automating it would measure the harness rather than the documentation. ${tally.FAIL ?? 0} of the four are failing today, which is the expected shape on 2026-09-23 and the reason this was moved earlier — failing now is information, failing on Oct 1 is a crisis.`,
+  // `today`, not a literal. This sentence used to hardcode 2026-09-23, so every
+  // later run asserted "the expected shape" for a date that had already passed —
+  // and it would have said it loudest on Oct 1, when a failure has nowhere to go.
+  `Outcome 4 is recorded as a human call by design: automating it would measure the harness rather than the documentation. ${(tally.FAIL ?? 0) === 1 ? '1 of the four is' : `${tally.FAIL ?? 0} of the four are`} failing as of ${today} — failing now is information, failing on Oct 1 is a crisis, and that gap is why this was moved earlier.`,
 ].join('\n');
 
 if (write) {
