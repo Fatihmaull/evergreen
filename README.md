@@ -151,8 +151,11 @@ npx @evergreen-stellar/cli scan <contract-id> --threshold 120960
 ## Documentation
 
 **Assessing this for the Stellar Instawards grant?** Start at
-[`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md) — one row per SOW §6.1
-evidence item, browser-openable artifact first, nothing that needs a terminal.
+[`docs/SUBMISSION-WALKTHROUGH.md`](docs/SUBMISSION-WALKTHROUGH.md) — ten steps,
+about ten minutes, no terminal, with what each step proves and every incomplete
+item named at the step where you meet it. For coverage rather than a route,
+[`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md) has one row per SOW §6.1
+evidence item, browser-openable artifact first.
 
 | Doc | Read it for |
 |---|---|
