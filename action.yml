@@ -67,6 +67,22 @@ runs:
     - uses: actions/setup-node@v5
       with:
         node-version: '24'
+        # MUST stay false. `package-manager-cache` defaults to TRUE in
+        # setup-node@v5: it detects the caller's lockfile and shells out to that
+        # package manager. In a repository with a `pnpm-lock.yaml` and no pnpm on
+        # the runner — the default for anyone using pnpm — that is a hard failure
+        # before this action has run a single line of its own:
+        #
+        #   Unable to locate executable file: pnpm
+        #
+        # Measured 2026-09-25 in run 36095134361, where BOTH demo jobs died here
+        # and the scan step was skipped. It looked like the publish had not worked.
+        #
+        # This action installs with `npx --yes` and never reads a lockfile, so it
+        # has nothing to cache. Turning the feature off is not a workaround; the
+        # feature does not apply to us, and leaving it on made the action depend
+        # on the CALLER's toolchain for no benefit.
+        package-manager-cache: false
 
     - id: scan
       shell: bash
