@@ -3,12 +3,14 @@
     "instance": 4793687,
     "persistent": 4793688,
     "endsOn": "2026-09-21",
+    "crossesOn": "2026-09-20",
     "status": "complete"
   },
   "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": {
     "instance": 4880097,
     "persistent": 4880099,
     "endsOn": "2026-09-26",
+    "crossesOn": "2026-09-25",
     "status": "upcoming"
   }
 }
