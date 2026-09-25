@@ -37,14 +37,28 @@ const FOOTER_LINKS = [
   { href: 'https://github.com/Fatihmaull/evergreen', label: 'GitHub' },
 ];
 
-function nav(active) {
+/**
+ * The header is not fixed and does not react to scroll.
+ *
+ * It was fixed, solid and permanently visible, which is free on a site that is
+ * one colour from top to bottom. Ours is not: the landing's hero is dark green
+ * and everything below it is the warm surface, so a fixed light bar would sit
+ * on the green with its pill dissolved into it. The two ways out are a header
+ * that changes colour as you scroll — which is the scroll-reactive navbar this
+ * rework removed, in a different costume — or a header that scrolls away. On a
+ * 3,783px page nobody needs a permanently available nav, so it scrolls away.
+ *
+ * `tone` is the page's own background behind the bar, not a state: 'dark' on
+ * the landing, where the bar is part of the hero's green field.
+ */
+function nav(active, tone) {
   const centre = CENTRE.map(
     (item) =>
       `<a class="site-link${item.href === active ? ' current' : ''}" href="${item.href}"${
         item.href === active ? ' aria-current="page"' : ''
       }>${item.label}</a>`,
   ).join('');
-  return `<header class="site-nav">
+  return `<header class="site-nav${tone === 'dark' ? ' on-dark' : ''}">
       <nav class="site-nav-inner" aria-label="Site">
         <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
         <div class="site-centre">${centre}</div>
@@ -71,7 +85,7 @@ function footer() {
  * which weights are fetched. Only 400 is loaded for Newsreader here; a weight
  * that is not downloaded cannot be reached for by accident.
  */
-export function siteShell({ title, description, active, eyebrow, heading, lead, body }) {
+export function siteShell({ title, description, active, eyebrow, heading, lead, body, navTone }) {
   /**
    * The landing supplies its own opening section and passes no heading. The
    * reference pages get this one: eyebrow, heading, lead, and nothing else —
@@ -98,7 +112,7 @@ export function siteShell({ title, description, active, eyebrow, heading, lead, 
   </head>
   <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-    ${nav(active)}
+    ${nav(active, navTone)}
     <main id="main">
     ${intro}
 ${body}

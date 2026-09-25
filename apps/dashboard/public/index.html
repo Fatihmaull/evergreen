@@ -12,7 +12,7 @@
   </head>
   <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-    <header class="site-nav">
+    <header class="site-nav on-dark">
       <nav class="site-nav-inner" aria-label="Site">
         <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
         <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link" href="/docs/">Docs</a></div>
@@ -34,6 +34,7 @@
             <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
             <a class="site-more" href="https://github.com/Fatihmaull/evergreen">The code on GitHub <span aria-hidden="true">→</span></a>
           </p>
+          <div class="hero-art"></div>
         </div>
       </section>
 <section class="feature">
@@ -48,8 +49,9 @@
               without its code a contract cannot execute at all.
             </p>
             <p>
-              The real expiry is therefore the earliest entry, which is rarely the obvious one. That
-              is the failure this exists to catch: a fleet reported healthy right up until it stops
+              The real expiry is therefore the earliest entry, which is rarely the obvious one, and
+              it is shared by every contract built from the same Wasm. That is the failure this
+              exists to catch: a fleet of contracts reported healthy right up until they stop
               together.
             </p>
             <p><a class="site-more" href="/dashboard/blast-radius/">See it on our three contracts <span aria-hidden="true">→</span></a></p>

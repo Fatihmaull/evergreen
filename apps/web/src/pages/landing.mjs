@@ -26,6 +26,7 @@ export const meta = {
     'Soroban contract state expires on a schedule nobody is watching. Evergreen reports what expires first, what it costs, and what fails with it.',
   active: '/',
   layout: 'site',
+  navTone: 'dark',
 };
 
 /** A narrow column of at most three things, beside an artefact that is large. */
@@ -44,6 +45,28 @@ function feature({ eyebrow, heading, body, link, artefact, flip = false }) {
 }
 
 export function render(ctx) {
+  /**
+   * The hero's artefact slot.
+   *
+   * A 28px headline is not a small headline — it is a caption for something
+   * large directly beneath it. Take the artefact away and the result is not a
+   * restrained hero, it is an empty one, and the page opens with nothing to
+   * look at. This reserves the space at the right ratio so that dropping the
+   * image in later changes nothing about the layout.
+   *
+   * Empty it is a hairline and nothing else: no placeholder text, no icon, no
+   * dashed border, no shimmer. A slot that advertises its own emptiness is
+   * worse than one that simply waits.
+   *
+   * To fill it, put the file at `apps/web/src/assets/hero.<ext>` with its
+   * alternative text at `apps/web/src/assets/hero.txt`. The build finds it,
+   * and refuses to build an image with no alternative text rather than ship
+   * one the screen reader cannot describe.
+   */
+  const heroArt = ctx.heroImage
+    ? `<img src="${esc(ctx.heroImage.src)}" alt="${esc(ctx.heroImage.alt)}" width="${ctx.heroImage.width}" height="${ctx.heroImage.height}" />`
+    : '';
+
   const b = ctx.knownEnds[B];
   if (!b || typeof b.instance !== 'number' || typeof b.endsOn !== 'string') {
     throw new Error(
@@ -64,6 +87,7 @@ export function render(ctx) {
             <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
             <a class="site-more" href="https://github.com/Fatihmaull/evergreen">The code on GitHub <span aria-hidden="true">→</span></a>
           </p>
+          <div class="hero-art">${heroArt}</div>
         </div>
       </section>`;
 
@@ -77,8 +101,9 @@ export function render(ctx) {
               without its code a contract cannot execute at all.
             </p>
             <p>
-              The real expiry is therefore the earliest entry, which is rarely the obvious one. That
-              is the failure this exists to catch: a fleet reported healthy right up until it stops
+              The real expiry is therefore the earliest entry, which is rarely the obvious one, and
+              it is shared by every contract built from the same Wasm. That is the failure this
+              exists to catch: a fleet of contracts reported healthy right up until they stop
               together.
             </p>`,
     link: `<p><a class="site-more" href="/dashboard/blast-radius/">See it on our three contracts <span aria-hidden="true">→</span></a></p>`,

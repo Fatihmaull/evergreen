@@ -12,6 +12,10 @@
   --rule: rgba(15, 15, 15, 0.1);
   --rule-strong: rgba(15, 15, 15, 0.44);
   --pine: #1a3a2e;
+  /* The export's `primary`. Deeper than `--pine` on purpose: the hero is a
+     full-width field of it, and if it matched the 98% slab exactly the slab
+     would stop reading as the page's one dominant element. */
+  --pine-deep: #022419;
   --pine-soft: rgba(26, 58, 46, 0.07);
   --sage: #7fa893;
   --off-black: #262626;
@@ -583,11 +587,13 @@ body.site {
   --t-body: 14px;
   --t-label: 12px;
 
+  /* The height of the hero's fade into the surface below it. Not part of the
+     section rhythm — it is a transition, and it is the only one on the site. */
+  --hero-fade: clamp(120px, 12vw, 180px);
+
   background: var(--surface);
   font: 400 var(--t-body) / 1.5 var(--sans);
   letter-spacing: 0.01em;
-  /* The nav is fixed and never hides, so the document starts below it. */
-  padding-top: 52px;
 }
 body.site main {
   display: block;
@@ -646,13 +652,29 @@ body.site .provenance {
   margin-top: 20px;
 }
 
-/* Nav — fixed, solid, 52px, three zones, never hides ------------------------ */
+/* Nav — static, 52px, three zones. It scrolls away; see site.mjs for why. --- */
 .site-nav {
-  position: fixed;
-  inset: 0 0 auto;
   height: 52px;
   background: var(--surface);
-  z-index: 10;
+}
+/* On the landing the bar is part of the hero's green field, so it takes the
+   hero's background rather than sitting on top of it. This is the page's own
+   colour, decided at build time — nothing here reacts to scrolling. */
+.site-nav.on-dark {
+  background: var(--pine-deep);
+}
+.site-nav.on-dark .site-brand {
+  color: var(--surface);
+}
+.site-nav.on-dark .site-mark {
+  background: rgba(252, 249, 248, 0.82);
+}
+.site-nav.on-dark .site-link {
+  color: rgba(252, 249, 248, 0.62);
+}
+.site-nav.on-dark .site-link:hover,
+.site-nav.on-dark .site-link.current {
+  color: var(--surface);
 }
 .site-nav-inner {
   max-width: var(--m-max);
@@ -748,6 +770,20 @@ body.site .provenance {
 .site-cta:hover {
   background: #0f2b20;
 }
+/* Filled foreground with background-coloured text, both ways round: a dark
+   pill on the warm surface, a light pill on the hero's green. */
+.site-nav.on-dark .site-cta,
+body.site .hero .site-cta {
+  background: var(--surface);
+  color: var(--pine-deep);
+}
+.site-nav.on-dark .site-cta:hover,
+body.site .hero .site-cta:hover {
+  background: #ffffff;
+}
+body.site .hero .site-more {
+  color: var(--surface);
+}
 /* Accent, and only here: an inline text link that continues the sentence. */
 .site-more {
   font-size: var(--t-body);
@@ -767,15 +803,66 @@ body.site .provenance {
   margin-top: 28px;
 }
 
-/* Hero — the one section with its own top padding -------------------------- */
+/* Hero — green, and the only gradient on the site -------------------------- */
 body.site .hero {
-  padding-block: 7rem var(--m-rhythm);
+  position: relative;
+  background: var(--pine-deep);
+  color: var(--surface);
+  /* The rhythm value is still the rhythm value; the fade is added to it so the
+     content clears the transition rather than sitting inside it. */
+  padding-block: 7rem calc(var(--m-rhythm) + var(--hero-fade));
+}
+/* One transition, at the single most important one on the page, and nowhere
+   else. `in oklab` because sRGB interpolation between a dark green and a warm
+   off-white runs through a grey mud in the middle; the sRGB declaration above
+   it is the fallback for anything that cannot parse the second. */
+body.site .hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--hero-fade);
+  pointer-events: none;
+  background: linear-gradient(to bottom, #022419 0%, #fcf9f8 100%);
+  background: linear-gradient(to bottom in oklab, #022419 0%, #fcf9f8 100%);
+}
+body.site .hero .site-wrap {
+  position: relative;
+  z-index: 1;
+}
+body.site .hero .eyebrow {
+  color: rgba(252, 249, 248, 0.62);
 }
 body.site .hero h1 {
   margin-top: 18px;
 }
 body.site .hero .lead {
   margin-top: 20px;
+  color: rgba(252, 249, 248, 0.82);
+}
+
+/* The hero's artefact slot.
+   Reserved at 16:9 so the space exists before the image does — 695px tall
+   inside the 1300px container, and dropping a file in reflows nothing. Empty,
+   it is a hairline in an alpha of the hero's foreground and nothing else: no
+   placeholder text, no icon, no dashed edge, no shimmer. Filled, the hairline
+   goes, because the image is then the edge. */
+.hero-art {
+  margin-top: 44px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  border: 1px solid rgba(252, 249, 248, 0.18);
+  overflow: hidden;
+}
+.hero-art:not(:empty) {
+  border-color: transparent;
+}
+.hero-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  object-fit: cover;
 }
 
 /* Feature — a narrow caption beside a large artefact, about 31/69 ----------- */

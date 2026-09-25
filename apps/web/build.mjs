@@ -15,7 +15,15 @@
  */
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -181,6 +189,42 @@ const capture = {
   provenance: `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
 };
 
+/**
+ * The hero image, if one has been dropped in.
+ *
+ * `apps/web/src/assets/hero.<ext>` plus `hero.txt` beside it. Absent, the page
+ * renders the reserved slot and nothing else, which is the current state. The
+ * alternative text is required rather than defaulted: a generic alt on an
+ * image nobody here has seen is a caption that is probably wrong, and a wrong
+ * one is worse for a screen reader than the honest refusal to guess.
+ */
+function readHeroImage() {
+  const dir = join(here, 'src/assets');
+  if (!existsSync(dir)) return null;
+  const found = readdirSync(dir).filter((name) =>
+    /^hero\.(png|jpg|jpeg|webp|avif|svg)$/i.test(name),
+  );
+  if (found.length === 0) return null;
+  if (found.length > 1) {
+    throw new Error(
+      `apps/web/src/assets holds ${found.length} hero images: ${found.join(', ')} — keep one`,
+    );
+  }
+  const altPath = join(dir, 'hero.txt');
+  if (!existsSync(altPath)) {
+    throw new Error(
+      `${found[0]} has no alternative text. Write one sentence describing it to ` +
+        'apps/web/src/assets/hero.txt — the hero is the first thing on the site and it is not shipping undescribed.',
+    );
+  }
+  const alt = readFileSync(altPath, 'utf8').trim();
+  if (alt.length < 10)
+    throw new Error('apps/web/src/assets/hero.txt is empty or too short to describe an image');
+  return { file: found[0], src: `/assets/${found[0]}`, alt, width: 2472, height: 1390 };
+}
+
+const heroImage = readHeroImage();
+
 const ctx = {
   snapshot,
   snapshotLedger: Math.max(
@@ -195,6 +239,7 @@ const ctx = {
   evidence,
   knownEnds,
   capture,
+  heroImage,
 };
 
 const PAGES = [
@@ -275,6 +320,7 @@ async function buildPage(page) {
     title: meta.title,
     description: meta.description,
     active: meta.active,
+    navTone: meta.navTone,
     eyebrow: meta.eyebrow,
     heading: meta.heading,
     lead: meta.lead,
@@ -358,6 +404,10 @@ mkdirSync(join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
+if (heroImage) {
+  cpSync(join(here, 'src/assets', heroImage.file), join(out, 'assets', heroImage.file));
+  console.log(`  hero image: ${heroImage.file}`);
+}
 /**
  * No rendered page may contain the residue of a lookup that did not resolve.
  *

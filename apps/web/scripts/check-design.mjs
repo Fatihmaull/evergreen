@@ -47,7 +47,10 @@ const web = join(here, '..');
  * the check fails on the next regression rather than on the next release.
  */
 const BUDGET = [
-  { route: '/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 1 },
+  // One gradient, and it is deliberate: the hero's fade into the surface
+  // below it, at the single most important transition on the page. Budgeted
+  // rather than forbidden, so a second one fails.
+  { route: '/', fontSizes: 5, cards: 0, icons: 0, gradients: 1, over40: 1 },
   { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
   { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
 ];
@@ -100,9 +103,20 @@ const PROBE = `(() => {
     if (edged && radius >= 4 && el.clientHeight > 40 && el.children.length > 0) cards.push(name);
     if (border > 0 && cs.borderTopStyle !== 'none') borders.add(cs.borderTopColor);
     if (/gradient/.test(cs.backgroundImage)) gradients.push(name);
+    // ::before and ::after too. The first version of this walked only real
+    // elements and reported ZERO gradients on a page that had one — the
+    // hero's fade lives on a pseudo-element, which is exactly where a
+    // decorative gradient would be written. A check with a blind spot over
+    // the place the thing actually goes is worse than no check, because it
+    // reports a clean page.
+    for (const pseudo of ['::before', '::after']) {
+      const ps = getComputedStyle(el, pseudo);
+      if (ps.content === 'none') continue;
+      if (/gradient/.test(ps.backgroundImage)) gradients.push(name + pseudo);
+      if (/url\\(/.test(ps.content)) icons.push(name + pseudo);
+    }
     // An <svg> with no role is decoration; one with role="img" is an artefact.
     if (el.tagName.toLowerCase() === 'svg' && !el.getAttribute('role')) icons.push(name);
-    if (cs.content && /url\\(/.test(cs.content)) icons.push(name + '::before');
   }
   return JSON.stringify({
     fontSizes: [...sizes.entries()].sort((a, b) => b[0] - a[0]),
@@ -193,6 +207,16 @@ async function main() {
         // and prove it is seen. A gate nobody has watched fail is a decoration.
         await rpc(socket, (id += 1), 'Runtime.evaluate', {
           expression: `(() => {
+            // A pseudo-element gradient, which the first version of this
+            // check could not see at all.
+            const sheet = document.createElement('style');
+            sheet.textContent = '.planted-pseudo::after{content:"";display:block;height:40px;' +
+              'background-image:linear-gradient(#fff,#eee)}';
+            document.head.append(sheet);
+            const pseudo = document.createElement('div');
+            pseudo.className = 'planted-pseudo';
+            document.body.append(pseudo);
+
             const el = document.createElement('div');
             el.style.cssText = 'border:1px solid #c1c8c3;border-radius:8px;height:80px;' +
               'background-image:linear-gradient(#fff,#eee);font-size:96px';
