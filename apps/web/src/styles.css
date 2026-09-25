@@ -547,96 +547,366 @@ footer.site .wrap {
   z-index: 5;
 }
 
-/* Landing ------------------------------------------------------------------ */
-.landing .hero {
-  background: #0f1512;
-  color: var(--surface);
-  padding-block: clamp(56px, 12vw, 132px);
+/* Marketing surface — `/`, `/docs/`, `/about/` -------------------------------
+   Everything here is scoped under `body.site`. The dashboard's twelve routes
+   use `body.app` and share only the tokens at the top of this file, so a
+   decision made for the landing cannot reach a live read.
+
+   Three rules govern the whole surface, and each one is a measurement rather
+   than a taste:
+
+   1. FIVE type sizes, and nothing is bold. Hierarchy is carried by size and
+      colour alone. The reference this was taken from sets every element in its
+      own typeface at weight 400 — the 600s in its DOM belong to simulated app
+      UI inside screenshots. Eleven sizes used eleven times is a scale with no
+      hierarchy, which is the same defect as having no point of view.
+
+   2. Tracking flips at 16px. Below it, positive (+0.01em); above it, negative
+      and scaling with size (−0.0125em at 28px, −0.03em at 72px). Standard
+      typographic practice, free, and legible as craft.
+
+   3. ONE element over 40px on any page. A page that shouts on every screen has
+      no dominant element anywhere. `scripts/check-design.mjs` asserts this.
+
+   What is deliberately absent: gradients, decorative icons, drop shadows, a
+   nav that moves when you scroll, and any border that is a grey hex rather
+   than an alpha of the foreground. */
+body.site {
+  --m-max: 1300px;
+  --m-gutter: clamp(20px, 5vw, 32px);
+  --m-rhythm: 4.2rem;
+  --m-ease: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --t-figure: 72px;
+  --t-head: 28px;
+  --t-lead: 16px;
+  --t-body: 14px;
+  --t-label: 12px;
+
+  background: var(--surface);
+  font: 400 var(--t-body) / 1.5 var(--sans);
+  letter-spacing: 0.01em;
+  /* The nav is fixed and never hides, so the document starts below it. */
+  padding-top: 52px;
 }
-.landing .hero .wrap {
-  display: grid;
-  gap: 22px;
+body.site main {
+  display: block;
+  padding: 0;
 }
-.hero-eyebrow {
+body.site section {
+  display: block;
+  padding-block: var(--m-rhythm);
+}
+.site-wrap {
+  max-width: var(--m-max);
+  margin: 0 auto;
+  padding-inline: var(--m-gutter);
+}
+body.site p {
   margin: 0;
-  font: 400 12.5px/1.3 var(--mono);
-  color: rgba(252, 249, 248, 0.62);
+  max-width: 68ch;
 }
-.landing h1 {
+body.site p + p {
+  margin-top: 12px;
+}
+
+/* Type — the whole scale, in one place ------------------------------------- */
+body.site h1,
+body.site h2 {
   margin: 0;
-  display: grid;
-  gap: 2px;
-  letter-spacing: -0.03em;
+  font: 400 var(--t-head) / 1.22 var(--serif);
+  letter-spacing: -0.0125em;
+  max-width: 26ch;
 }
-.landing h1 .serif {
-  font: 400 var(--step-5)/1.02 var(--serif);
+body.site h1 {
+  max-width: 22ch;
 }
-.landing h1 .sans {
-  font: 600 var(--step-5)/1.02 var(--sans);
-  letter-spacing: -0.045em;
+body.site h3 {
+  margin: 0;
+  font: 400 var(--t-lead) / 1.5 var(--sans);
+  letter-spacing: 0.005em;
 }
-.hero-lead {
-  max-width: 58ch;
-  color: rgba(252, 249, 248, 0.82);
-  font-size: var(--step-1);
+body.site .lead {
+  font-size: var(--t-lead);
   line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+body.site .eyebrow,
+body.site .note,
+body.site .provenance {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  max-width: 70ch;
+}
+body.site .note,
+body.site .provenance {
+  margin-top: 20px;
+}
+
+/* Nav — fixed, solid, 52px, three zones, never hides ------------------------ */
+.site-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 52px;
+  background: var(--surface);
+  z-index: 10;
+}
+.site-nav-inner {
+  max-width: var(--m-max);
+  margin: 0 auto;
+  padding-inline: var(--m-gutter);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+/* Measured, not guessed. At 390px the three zones are 92 + 89 + 160 = 341px
+   of content, and 20px gutters with 16px gaps ask for 413px of a 390px bar.
+   These four reductions return 29px, which is the difference plus six pixels
+   of slack — the layout check asserts the result at that width. */
+@media (max-width: 759px) {
+  .site-nav-inner {
+    padding-inline: 16px;
+    gap: 10px;
+  }
+  .site-brand {
+    gap: 8px;
+  }
+  .site-centre {
+    gap: 12px;
+  }
+  .site-nav-inner > .site-cta {
+    padding-inline: 11px;
+  }
+}
+@media (min-width: 760px) {
+  .site-nav-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .site-centre {
+    justify-self: center;
+  }
+  .site-nav-inner > .site-cta {
+    justify-self: end;
+  }
+}
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 400 var(--t-lead) / 1 var(--serif);
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-mark {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 4px;
+  background: var(--pine);
+}
+.site-centre {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 3vw, 26px);
+}
+.site-link {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+  white-space: nowrap;
+}
+.site-link:hover,
+.site-link.current {
+  color: var(--ink);
+}
+
+/* The only button on the surface: filled foreground, background-coloured text. */
+.site-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  padding: 7px 14px;
+  border-radius: 100vw;
+  background: var(--pine);
+  color: var(--surface);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--m-ease);
+}
+.site-cta:hover {
+  background: #0f2b20;
+}
+/* Accent, and only here: an inline text link that continues the sentence. */
+.site-more {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--pine);
+  text-decoration: none;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.site-more:hover {
+  opacity: 0.66;
 }
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 6px 0 0;
-}
-.pill.solid {
-  background: var(--surface);
-  color: #0f1512;
-  border-color: var(--surface);
-  text-decoration: none;
-  font-weight: 600;
-}
-.pill.ghost {
-  background: transparent;
-  color: var(--surface);
-  border-color: rgba(252, 249, 248, 0.32);
-  text-decoration: none;
-}
-.pill.ghost:hover {
-  background: rgba(252, 249, 248, 0.08);
-}
-.band {
-  padding-block: clamp(44px, 7vw, 80px);
-}
-.band .stack {
-  gap: 16px;
-}
-.band.dark {
-  background: var(--pine);
-  color: var(--surface);
-}
-.band.dark p,
-.band.dark .on-dark {
-  color: rgba(252, 249, 248, 0.84);
-}
-.eyebrow.on-dark {
-  color: rgba(252, 249, 248, 0.62);
-}
-h2.display {
-  margin: 0;
-  font: 400 var(--step-3)/1.12 var(--serif);
-  letter-spacing: -0.02em;
-  max-width: 20ch;
-}
-.closing h2.display {
-  max-width: 24ch;
+  align-items: center;
+  gap: 12px 22px;
+  margin-top: 28px;
 }
 
+/* Hero — the one section with its own top padding -------------------------- */
+body.site .hero {
+  padding-block: 7rem var(--m-rhythm);
+}
+body.site .hero h1 {
+  margin-top: 18px;
+}
+body.site .hero .lead {
+  margin-top: 20px;
+}
+
+/* Feature — a narrow caption beside a large artefact, about 31/69 ----------- */
+.feature-grid {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.feature-text {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  max-width: 400px;
+}
+.feature-text p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+@media (min-width: 980px) {
+  .feature-grid {
+    grid-template-columns: minmax(0, 0.31fr) minmax(0, 0.69fr);
+    gap: 56px;
+  }
+  .feature.flip .feature-grid {
+    grid-template-columns: minmax(0, 0.69fr) minmax(0, 0.31fr);
+  }
+  .feature.flip .feature-text {
+    order: 2;
+  }
+  .feature.flip .feature-art {
+    order: 1;
+  }
+}
+
+/* Artefact 1 — the one number over 40px on this page. */
+.figure {
+  background: var(--pine);
+  color: var(--surface);
+  border-radius: 4px;
+  padding: clamp(28px, 4vw, 48px);
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.figure-label {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: rgba(252, 249, 248, 0.62);
+}
+.figure-value {
+  font: 400 var(--t-figure) / 1.06 var(--serif);
+  letter-spacing: -0.03em;
+}
+.figure-caption {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: rgba(252, 249, 248, 0.78);
+  max-width: 54ch;
+}
+
+/* Artefact 2 — unedited output. No window chrome, no label, no dots.
+   `pre-wrap` rather than `pre`: three lines of the capture are prose over 130
+   characters, and a terminal at any width wraps them. The bytes are the
+   committed file's; only the column count is this page's. */
+body.site .terminal {
+  background: var(--off-black);
+  color: #ececec;
+  border-radius: 4px;
+  padding: clamp(20px, 3vw, 32px);
+  font: 400 var(--t-label) / 1.65 var(--mono);
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* Artefact 3 — a finished fact. The inverted cell is emphasis, not an error. */
+.ended {
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 4px;
+  padding: clamp(28px, 4vw, 48px);
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.ended-label {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: rgba(252, 249, 248, 0.62);
+}
+.ended-word {
+  font: 400 var(--t-head) / 1.1 var(--serif);
+  letter-spacing: -0.0125em;
+}
+.ended-facts {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.ended-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+.ended-facts dt {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: rgba(252, 249, 248, 0.62);
+  min-width: 72px;
+}
+.ended-facts dd {
+  margin: 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+}
+
+/* The four kinds — a continuous hairline row, square where borders meet ----- */
+body.site .plain h2 {
+  margin-top: 18px;
+}
+body.site .plain .lead {
+  margin-top: 16px;
+}
 .kinds {
+  margin-top: 32px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   border: 1px solid var(--rule);
-  border-radius: 8px;
   overflow: hidden;
-  background: var(--paper);
 }
 @media (min-width: 640px) {
   .kinds {
@@ -652,11 +922,26 @@ h2.display {
   display: grid;
   gap: 10px;
   align-content: start;
-  padding: 20px;
+  padding: 22px;
   border-top: 1px solid var(--rule);
+}
+.kind:first-child {
+  border-top: 0;
 }
 @media (min-width: 640px) {
   .kind {
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+  .kind:nth-child(odd) {
+    border-left: 0;
+  }
+  .kind:nth-child(n + 3) {
+    border-top: 1px solid var(--rule);
+  }
+}
+@media (min-width: 1000px) {
+  .kind:nth-child(n) {
     border-top: 0;
     border-left: 1px solid var(--rule);
   }
@@ -665,16 +950,13 @@ h2.display {
   }
 }
 .kind-name {
-  margin: 0;
-  font: 400 15px/1.2 var(--mono);
+  font: 400 var(--t-lead) / 1.2 var(--mono);
+  letter-spacing: 0.005em;
 }
 .kind-holds {
-  margin: 0;
-  font-size: 13.5px;
+  font-size: var(--t-body) !important;
+  letter-spacing: 0.01em;
   color: var(--ink-2);
-}
-.kind-fate {
-  margin: 0;
 }
 .kind.inverted {
   background: var(--ink);
@@ -684,57 +966,136 @@ h2.display {
   color: rgba(252, 249, 248, 0.78);
 }
 
-.thesis {
+/* How it works — three columns and nothing around them --------------------- */
+.how {
+  margin-top: 32px;
   display: grid;
-  gap: 28px;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-@media (min-width: 900px) {
-  .thesis {
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 48px;
-  }
-}
-.stat-cell {
-  border: 1px solid rgba(252, 249, 248, 0.24);
-  border-radius: 8px;
-  padding: 22px;
-  display: grid;
-  gap: 8px;
-}
-.stat-label {
-  margin: 0;
-  font: 600 11.5px/1.3 var(--sans);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: rgba(252, 249, 248, 0.66);
-}
-.stat-figure {
-  margin: 0;
-  font: 400 var(--step-5)/1 var(--serif);
-  letter-spacing: -0.03em;
-  color: var(--surface);
-}
-.stat-caption {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: rgba(252, 249, 248, 0.78) !important;
-}
-.cards-3 {
-  display: grid;
-  gap: 14px;
+  gap: 32px;
   grid-template-columns: minmax(0, 1fr);
 }
 @media (min-width: 860px) {
-  .cards-3 {
+  .how {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
   }
 }
-.cards-3 h3 {
-  margin: 0;
-  font: 600 15px/1.3 var(--sans);
+.how > div {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.how-name {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.how p:not(.how-name) {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+
+/* Closing — the only section with its own bottom padding ------------------- */
+body.site .closing {
+  padding-bottom: 8.4rem;
+}
+
+/* Reference pages on the marketing surface --------------------------------- */
+body.site .page-intro-wrap {
+  padding-block: 0;
+}
+.page-intro {
+  display: grid;
+  gap: 16px;
+  padding-block: 7rem 0;
+}
+body.site .prose {
+  padding-top: var(--m-rhythm);
+  padding-bottom: 0;
+}
+body.site .prose:last-of-type {
+  padding-bottom: var(--m-rhythm);
+}
+body.site .prose h2 {
+  margin-bottom: 16px;
+}
+body.site .prose p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+body.site .prose .mono {
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+}
+/* A table is a table: hairlines, no card around it, no radius. The dashboard's
+   `.table-wrap` is a bordered, rounded, paper-filled box — correct inside a
+   dense instrument, and exactly the uniform rounded container the rework was
+   asked to remove from these three pages. */
+body.site .table-wrap {
+  overflow-x: auto;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+body.site table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-body);
+}
+body.site thead th {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 0 16px 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+body.site tbody td {
+  padding: 11px 16px 11px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  letter-spacing: 0.01em;
+}
+body.site tbody td.num {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.people {
+  margin-top: 32px;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 860px) {
+  .people {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
+  }
+}
+.people > div {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+/* Footer — a plain link list. No logo lockup, no newsletter, no social row. - */
+.site-foot {
+  border-top: 1px solid var(--rule);
+  padding-block: 40px 56px;
+}
+.site-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin-bottom: 26px;
+}
+.site-foot-note {
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.site-foot-note + .site-foot-note {
+  margin-top: 6px;
 }
 
 /* App shell — sidebar, status bar, stat strip, decay chart ------------------- */

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
 import { shell } from './src/chrome.mjs';
+import { siteShell } from './src/site.mjs';
 // Node 24 strips the types. The manifest is the dashboard package's own entry.
 import { ROUTES, pageFor } from '../dashboard/src/index.ts';
 
@@ -138,6 +139,8 @@ function readCli() {
   return { help, exits };
 }
 
+const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
+
 const snapshot = readJson('data/snapshot.json');
 const grades = readJson('data/snapshot-grades.json');
 if (grades.capturedAt !== snapshot.capturedAt) {
@@ -168,6 +171,16 @@ const evidence = {
 if (evidence.count === 0)
   throw new Error('no evidence bundles found; the /evidence count would be a lie');
 
+/**
+ * The unretouched scan. Read here rather than pasted into a page so the file
+ * under `docs/evidence/` stays the only copy — nobody edits that directory,
+ * and a second copy in markup is a copy that can be tidied.
+ */
+const capture = {
+  text: readFileSync(join(repo, CAPTURE), 'utf8').trimEnd(),
+  provenance: `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
+};
+
 const ctx = {
   snapshot,
   snapshotLedger: Math.max(
@@ -181,9 +194,11 @@ const ctx = {
   cli,
   evidence,
   knownEnds,
+  capture,
 };
 
 const PAGES = [
+  { module: 'src/pages/landing.mjs', to: 'index.html' },
   {
     module: 'src/pages/overview.mjs',
     entry: 'src/pages/overview.ts',
@@ -216,12 +231,6 @@ const PAGES = [
   { module: 'src/pages/evidence.mjs', to: 'evidence/index.html' },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
 ];
-
-const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
-
-function escapeHtml(text) {
-  return text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
-}
 
 function guardBundle(metafile, label) {
   const included = Object.entries(metafile.outputs)
@@ -261,7 +270,8 @@ async function buildPage(page) {
     const included = await bundle(page.entry, page.js);
     coreModules = included.length;
   }
-  const html = shell({
+  const render_shell = meta.layout === 'site' ? siteShell : shell;
+  const html = render_shell({
     title: meta.title,
     description: meta.description,
     active: meta.active,
@@ -339,22 +349,6 @@ mkdirSync(out, { recursive: true });
 
 for (const page of PAGES) {
   await buildPage(page);
-}
-
-// The landing keeps its own layout: no sidebar, no script, works without JavaScript.
-{
-  let landing = readFileSync(join(here, 'src/pages/landing.html'), 'utf8');
-  if (landing.includes('<!--TERMINAL_CAPTURE-->')) {
-    const capture = readFileSync(join(repo, CAPTURE), 'utf8').trimEnd();
-    landing = landing
-      .replace('<!--TERMINAL_CAPTURE-->', escapeHtml(capture))
-      .replace(
-        '<!--TERMINAL_PROVENANCE-->',
-        `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
-      );
-  }
-  writeFileSync(join(out, 'index.html'), landing);
-  console.log('  index.html                         static, no script');
 }
 
 // The shell's live-ledger script. No core, no SDK — one getHealth read.
