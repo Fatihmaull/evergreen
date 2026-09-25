@@ -341,7 +341,7 @@ details[open] summary {
   font: 400 var(--step-1)/1.35 var(--serif);
   letter-spacing: -0.01em;
   color: var(--ink-2);
-  max-width: 62ch;
+  max-width: 52ch;
 }
 .verdict .meta {
   display: flex;
@@ -608,9 +608,14 @@ body.site section {
   margin: 0 auto;
   padding-inline: var(--m-gutter);
 }
+/* `ch` is the advance of `0`, which in Inter is far wider than the average
+   glyph — so 68ch renders as roughly 95 actual characters, not 68. These
+   values are set from measured characters per line, not from the unit's
+   apparent promise. Space Mono is fixed-pitch, so `ch` is literal there and
+   the mono widths below need no such correction. */
 body.site p {
   margin: 0;
-  max-width: 68ch;
+  max-width: 54ch;
 }
 body.site p + p {
   margin-top: 12px;
@@ -637,7 +642,7 @@ body.site .lead {
   line-height: 1.5;
   letter-spacing: 0.005em;
   color: var(--ink-2);
-  max-width: 62ch;
+  max-width: 52ch;
 }
 body.site .eyebrow,
 body.site .note,
@@ -921,7 +926,7 @@ body.site .hero .lead {
   font-size: var(--t-body);
   letter-spacing: 0.01em;
   color: rgba(252, 249, 248, 0.78);
-  max-width: 54ch;
+  max-width: 44ch;
 }
 
 /* Artefact 2 — unedited output. No window chrome, no label, no dots.
@@ -1128,6 +1133,9 @@ body.site table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--t-body);
+  /* A two-column table stretched across a 1236px container puts 91 characters
+     on a line. The table is narrow content; it does not need the container. */
+  max-width: 620px;
 }
 body.site thead th {
   font: 400 var(--t-label) / 1.4 var(--mono);
