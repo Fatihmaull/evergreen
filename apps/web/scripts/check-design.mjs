@@ -54,13 +54,11 @@ const BUDGET = [
   // two colour fields: the hero fading out of green, and the closing fading
   // back into it. The second was added on 2026-09-25 at Fatih's direction, so
   // the budget moved from one to two rather than the check being switched off.
-  // Six sizes, not five: the closing heading is 36px and used once, at
-  // Fatih's request for a clearer hierarchy at the page's last beat. It sits
-  // UNDER 40px on purpose, so the rule that matters most — one element above
-  // that line, and it is the 98% — is untouched.
-  // One bold element, also the closing heading, also by request. Everywhere
-  // else hierarchy is size and colour alone.
-  { route: '/', fontSizes: 6, cards: 0, icons: 0, gradients: 2, over40: 1, bold: 1 },
+  // Six sizes, not five: the closing heading is 36px and used once, for a
+  // clearer hierarchy at the page's last beat. It sits UNDER 40px on purpose,
+  // so the rule that matters most — one element above that line, and it is
+  // the 98% — is untouched. Nothing on any of the three pages is bold.
+  { route: '/', fontSizes: 6, cards: 0, icons: 0, gradients: 2, over40: 1, bold: 0 },
   { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
   { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
 ];

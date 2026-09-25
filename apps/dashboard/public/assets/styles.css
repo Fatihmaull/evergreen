@@ -1249,15 +1249,14 @@ body.site .closing::before {
   gap: 20px;
   text-align: center;
 }
-/* The only bold thing on this surface, and the only sixth type size.
-   Everything else carries hierarchy by size and colour alone, which is the
-   rule this rework was built on — Fatih asked for the closing heading to
-   carry more weight, so it is the stated exception rather than a drift.
+/* The only sixth type size on the surface, and it is size alone that does the
+   work: nothing here is bold. A 600 was tried on 2026-09-25 and looked heavy
+   in Newsreader at this size, so the rule the rest of the rework follows —
+   hierarchy by size and colour, never by weight — holds without exception.
    36px keeps it UNDER 40px on purpose: the page is still allowed exactly one
    element above that line, and that is the 98%. */
 body.site .closing h2 {
   font-size: 36px;
-  font-weight: 600;
   line-height: 1.16;
   letter-spacing: -0.018em;
   max-width: 20ch;
