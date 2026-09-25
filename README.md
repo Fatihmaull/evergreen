@@ -31,10 +31,13 @@ The engine's signing key is a hot key on **your** server, paying from **your** f
 
 ## Quickstart
 
-**Works today, from a clone.** Publication lands at `W4-D27`; until then this is
-the real front door and it is the one tested on a fresh machine.
+**Works today from npm.** Needs Node 24.
 
-Needs Node 24 (`.nvmrc`) and pnpm 11.
+```bash
+npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+```
+
+To work from source, use Node 24 (`.nvmrc`) and pnpm 11:
 
 ```bash
 git clone https://github.com/Fatihmaull/evergreen.git
@@ -111,10 +114,10 @@ scan came back incomplete. **A clean exit means "everything I was asked to check
 is healthy", never "this contract is fully healthy"** — scanning cannot enumerate
 a contract's storage, so coverage is printed with every scan.
 
-### Once published (`W4-D27`)
+### Run the published CLI
 
 ```bash
-npx @evergreen-stellar/cli scan <contract-id>
+npx @evergreen-stellar/cli@0.1.0 scan <contract-id>
 ```
 
 ## Use it in CI

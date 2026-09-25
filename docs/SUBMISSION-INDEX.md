@@ -30,20 +30,18 @@ records themselves.
 
 ## Deliverable 1 — Core CLI
 
-> **Our reading: Partial.** Three of four items are complete. The npm package is
-> the fourth and it is the last thing outstanding.
+> **Our reading: Present.** All four evidence items are complete.
 
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 1 | Public repository | **[github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen)** — MIT, CI green | — |
-| 2 | Published npm package | ⬜ **not yet published** — see below | [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) |
+| 2 | Published npm package | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Registry integrity `sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==` · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) |
 | 3 | CLI screenshots showing TTL, archive prediction and cost | **[Four entry types](evidence/2026-09-14-d1-capture/capture-1-four-entry-types/1.png)** · **[JSON output](evidence/2026-09-14-d1-capture/capture-2-json/1.png)** · **[Storage advice](evidence/2026-09-14-d1-capture/capture-3-storage-advice/1.png)** · **[Blast radius](evidence/2026-09-14-d1-capture/capture-4-blast-radius/1.png)** · **[Error handling](evidence/2026-09-14-d1-capture/capture-5-error-handling/1.png)** | [what each shows](evidence/2026-09-14-d1-capture/README.md) |
 | 4 | Test coverage report | **[coverage report](evidence/2026-09-10-coverage/coverage-report.txt)** — 93.24% statements, 85.29% branches, 97.64% functions, 94.57% lines | [how it was produced](evidence/2026-09-10-coverage/README.md) |
 
-**On item 2, plainly:** the package is built, packed and rehearsed — installed
-into a clean directory from its tarball and run there, twice, most recently at
-the release candidate. What has not happened is the publish command itself. When
-it lands, this row carries a registry link and D1 is complete.
+**On item 2, plainly:** the package was published manually from merged main on
+2026-09-24, read back from the public registry and installed into a clean directory.
+The registry-installed binary reproduced the expected Testnet exit 0/1 behavior.
 
 ---
 
@@ -87,8 +85,8 @@ what not to touch is the one worth putting near production.
 
 ## Deliverable 3 — Dashboard, CI check, docs and demo
 
-> **Our reading: Partial. Three of five are complete.** The demo video is not
-> recorded, and the npm links fill the moment Deliverable 1's publish lands.
+> **Our reading: Partial. Four of five are complete.** Only the demo video is not
+> recorded.
 
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
@@ -96,11 +94,10 @@ what not to touch is the one worth putting near production.
 | 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) — see the note below |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
-| 13 | Links to the published npm packages | ⬜ **fills with item 2** | — |
+| 13 | Links to the published npm packages | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Same verified registry artifact as item 2 |
 
-**On items 11 and 13, plainly:** the demo script is written and timed; its one
-remaining dependency is the install line, which resolves when the package
-publishes. Item 13 is the same publish.
+**On item 11, plainly:** the demo script is written and timed, and its install
+line now resolves against the published package. Recording/upload remains.
 
 **On item 10, one thing we would rather say than have noticed.** The Action is
 complete and usable, and the linked demo workflow — which runs it against a real
