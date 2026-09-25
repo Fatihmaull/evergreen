@@ -35,8 +35,8 @@
             <a class="site-more" href="https://github.com/Fatihmaull/evergreen">The code on GitHub <span aria-hidden="true">→</span></a>
           </p>
           <div class="hero-art"><video class="hero-media" autoplay muted loop playsinline preload="metadata"
-            poster="/assets/hero-poster.jpg" aria-label="Evergreen&#39;s dashboard, shown as a slow slideshow: the blast-radius page scanning three contracts together to resolve what one scan cannot, and guinea-pig B&#39;s archived contract entry beside it."
-          ><source src="/assets/hero.mp4" type="video/mp4" /></video></div>
+            poster="/assets/hero-poster.jpg" aria-label="Evergreen&#39;s dashboard, shown as a slow slideshow: the blast-radius page scanning three contracts together to resolve what one scan cannot, the overview with guinea-pig B archived, and the entry table naming which code entry binds them."
+          ><source src="/assets/hero-sm.mp4" type="video/mp4" media="(max-width: 700px)" /><source src="/assets/hero.mp4" type="video/mp4" /></video></div>
         </div>
       </section>
 <section class="feature">
@@ -216,6 +216,17 @@ Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
       (function () {
         var v = document.querySelector('.hero-media');
         if (!v || !window.matchMedia) return;
+        // The media attribute on a source inside a video is in the spec, but
+        // browsers do not agree on it, so it is a hint rather than the
+        // mechanism. This is the mechanism: pick the narrow file before
+        // playback when the browser settled on the wrong one. Without
+        // JavaScript a phone downloads the full file, which works and is only
+        // heavier.
+        var small = v.querySelector('source[media]');
+        if (small && window.matchMedia('(max-width: 700px)').matches && v.currentSrc.indexOf(small.src) === -1) {
+          v.src = small.src;
+          v.load();
+        }
         var m = window.matchMedia('(prefers-reduced-motion: reduce)');
         var apply = function () { if (m.matches) { v.pause(); v.removeAttribute('loop'); } else { v.play().catch(function () {}); } };
         apply();

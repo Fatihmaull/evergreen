@@ -229,6 +229,9 @@ function readHeroImage() {
   }
   const video = found[0].toLowerCase().endsWith('.mp4');
   const poster = video && existsSync(join(dir, 'hero-poster.jpg')) ? 'hero-poster.jpg' : null;
+  // Optional, and genuinely optional: without it a phone simply downloads the
+  // full file, which works and is only heavier.
+  const small = video && existsSync(join(dir, 'hero-sm.mp4')) ? 'hero-sm.mp4' : null;
   if (video && !poster) {
     throw new Error(
       'hero.mp4 has no hero-poster.jpg beside it; the slot would be empty until the video decodes',
@@ -252,6 +255,9 @@ function readHeroImage() {
     video,
     poster: poster ? `/assets/${poster}` : null,
     posterFile: poster,
+    small: small ? `/assets/${small}` : null,
+    smallFile: small,
+    smallBytes: small ? statSync(join(dir, small)).size : 0,
     bytes,
   };
 }
@@ -438,16 +444,13 @@ cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {
-  cpSync(join(here, 'src/assets', heroImage.file), join(out, 'assets', heroImage.file));
-  if (heroImage.posterFile) {
-    cpSync(
-      join(here, 'src/assets', heroImage.posterFile),
-      join(out, 'assets', heroImage.posterFile),
-    );
+  for (const file of [heroImage.file, heroImage.posterFile, heroImage.smallFile].filter(Boolean)) {
+    cpSync(join(here, 'src/assets', file), join(out, 'assets', file));
   }
   console.log(
     `  hero ${heroImage.video ? 'video' : 'image'}: ${heroImage.file} ` +
-      `(${(heroImage.bytes / 1048576).toFixed(2)} MB)${heroImage.posterFile ? ` + ${heroImage.posterFile}` : ''}`,
+      `(${(heroImage.bytes / 1048576).toFixed(2)} MB)${heroImage.posterFile ? ` + ${heroImage.posterFile}` : ''}` +
+      `${heroImage.smallFile ? ` + ${heroImage.smallFile} (${(heroImage.smallBytes / 1048576).toFixed(2)} MB)` : ''}`,
   );
 }
 /**
@@ -478,6 +481,43 @@ function guardRenderedPages() {
 }
 
 guardRenderedPages();
+
+/**
+ * Every asset a rendered page points at must exist in the output.
+ *
+ * `hero-sm.mp4` was announced by this build's own log and never copied: the
+ * line that copied it and the line that reported it were edited separately,
+ * and only one of them landed. The page then asked a phone for a file that
+ * was not there, the video failed with a format error, and NOTHING caught it
+ * — not the route manifest, not the residue guard, not the overflow check,
+ * because a 404 on a video is invisible to all three. The build log is not
+ * evidence that a file was written; this is.
+ */
+function guardReferencedAssets() {
+  const missing = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.html')) {
+        const html = readFileSync(path, 'utf8');
+        for (const [, url] of html.matchAll(/(?:src|href|poster)="(\/assets\/[^"]+)"/g)) {
+          if (!existsSync(join(out, url.slice(1)))) {
+            missing.push(`${path.slice(out.length + 1)} references ${url}, which was not written`);
+          }
+        }
+      }
+    }
+  };
+  walk(out);
+  if (missing.length > 0) {
+    throw new Error(
+      `rendered pages reference assets that do not exist:\n  ${missing.join('\n  ')}`,
+    );
+  }
+}
+
+guardReferencedAssets();
 
 /**
  * The published routes and the route manifest must agree, in both directions.

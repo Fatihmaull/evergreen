@@ -75,7 +75,11 @@ export function render(ctx) {
          */
         `<video class="hero-media" autoplay muted loop playsinline preload="metadata"
             poster="${esc(art.poster)}" aria-label="${esc(art.alt)}"
-          ><source src="${esc(art.src)}" type="video/mp4" /></video>`
+          >${
+            art.small
+              ? `<source src="${esc(art.small)}" type="video/mp4" media="(max-width: 700px)" />`
+              : ''
+          }<source src="${esc(art.src)}" type="video/mp4" /></video>`
       : `<img class="hero-media" src="${esc(art.src)}" alt="${esc(art.alt)}" />`;
 
   /**
@@ -89,6 +93,17 @@ export function render(ctx) {
       (function () {
         var v = document.querySelector('.hero-media');
         if (!v || !window.matchMedia) return;
+        // The media attribute on a source inside a video is in the spec, but
+        // browsers do not agree on it, so it is a hint rather than the
+        // mechanism. This is the mechanism: pick the narrow file before
+        // playback when the browser settled on the wrong one. Without
+        // JavaScript a phone downloads the full file, which works and is only
+        // heavier.
+        var small = v.querySelector('source[media]');
+        if (small && window.matchMedia('(max-width: 700px)').matches && v.currentSrc.indexOf(small.src) === -1) {
+          v.src = small.src;
+          v.load();
+        }
         var m = window.matchMedia('(prefers-reduced-motion: reduce)');
         var apply = function () { if (m.matches) { v.pause(); v.removeAttribute('loop'); } else { v.play().catch(function () {}); } };
         apply();
