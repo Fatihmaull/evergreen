@@ -58,11 +58,27 @@ function nav(active, tone) {
         item.href === active ? ' aria-current="page"' : ''
       }>${item.label}</a>`,
   ).join('');
+  /**
+   * On a phone the three zones are 92 + 89 + 160 = 341px of content in a bar
+   * 390px wide, and holding them there took 29px clawed back from padding and
+   * gaps. That was a fit, not a layout. Below 760px they collapse behind a
+   * button instead.
+   *
+   * `display: contents` on the wrapper keeps the desktop bar exactly as it
+   * was — the links and the button stay direct grid items of the three-zone
+   * grid — so one set of links serves both, and a screen reader is never
+   * offered the same destination twice.
+   */
   return `<header class="site-nav${tone === 'dark' ? ' on-dark' : ''}">
       <nav class="site-nav-inner" aria-label="Site">
         <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
-        <div class="site-centre">${centre}</div>
-        <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre">${centre}</div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
       </nav>
     </header>`;
 }
@@ -146,6 +162,42 @@ export function siteShell({ title, description, active, eyebrow, heading, lead, 
 ${body}
     </main>
     ${footer()}
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
 `;

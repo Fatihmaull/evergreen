@@ -15,8 +15,13 @@
     <header class="site-nav">
       <nav class="site-nav-inner" aria-label="Site">
         <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
-        <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
-        <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
       </nav>
     </header>
     <main id="main">
@@ -156,5 +161,41 @@ word always prints, so piped output and screenshots lose nothing.</div>
         <p class="site-foot-note">Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
       </div>
     </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
