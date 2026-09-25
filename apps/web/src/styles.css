@@ -1091,30 +1091,53 @@ body.site .closing {
   padding-bottom: 8.4rem;
 }
 
-/* Reference pages on the marketing surface --------------------------------- */
+/* Reference pages — a label rail, and the substance beside it ------------- */
 body.site .page-intro-wrap {
   padding-block: 0;
 }
 .page-intro {
-  display: grid;
-  gap: 16px;
+  border-top: 0;
   padding-block: 7rem 0;
 }
-body.site .prose {
-  padding-top: var(--m-rhythm);
-  padding-bottom: 0;
+/* A hairline per section, and the rhythm split evenly across it.
+   A label rail groups HORIZONTALLY — heading left, its substance right — so a
+   heading has nothing directly beneath it, and vertical spacing alone leaves
+   it as near to the block above as to the one it introduces. The rule says
+   where each section starts without enclosing anything, which is what a
+   hairline is for and what a card would get wrong. */
+body.site .ref {
+  padding-block: 0;
 }
-body.site .prose:last-of-type {
-  padding-bottom: var(--m-rhythm);
+.ref-grid {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--m-rhythm);
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
 }
-body.site .prose h2 {
-  margin-bottom: 16px;
+@media (min-width: 980px) {
+  .ref-grid {
+    grid-template-columns: minmax(0, 0.31fr) minmax(0, 0.69fr);
+    gap: 56px;
+  }
 }
-body.site .prose p {
+.ref-label {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  max-width: 340px;
+}
+.ref-body {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.ref-body p {
   font-size: var(--t-body);
   color: var(--ink-2);
 }
-body.site .prose .mono {
+.ref-body .mono {
   font-size: var(--t-label);
   letter-spacing: 0.02em;
 }
@@ -1124,7 +1147,6 @@ body.site .prose .mono {
    asked to remove from these three pages. */
 body.site .table-wrap {
   overflow-x: auto;
-  margin-top: 16px;
   border: 0;
   border-radius: 0;
   background: none;
@@ -1133,8 +1155,8 @@ body.site table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--t-body);
-  /* A two-column table stretched across a 1236px container puts 91 characters
-     on a line. The table is narrow content; it does not need the container. */
+  /* A two-column table stretched across the content column puts 91 characters
+     on a line. The table is narrow content; it does not need the column. */
   max-width: 620px;
 }
 body.site thead th {
@@ -1156,7 +1178,6 @@ body.site tbody td.num {
   white-space: nowrap;
 }
 .people {
-  margin-top: 32px;
   display: grid;
   gap: 32px;
   grid-template-columns: minmax(0, 1fr);

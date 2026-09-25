@@ -81,6 +81,32 @@ function footer() {
 }
 
 /**
+ * A reference section: a label column on the left, the substance on the right.
+ *
+ * `/docs` and `/about` are reference pages, and their sections are genuinely
+ * parallel — usage, exit codes, JSON shape, how to run it. A consistent shape
+ * for parallel content is structure; the template tell is the same shape
+ * imposed on content that is not parallel, which is why the landing varies its
+ * composition and these two do not.
+ *
+ * It also uses the width. Left-aligned prose at a 52ch measure inside a
+ * 1300px container is a narrow column clinging to one edge of a wide empty
+ * field, which reads as under-filled rather than as restraint. The label rail
+ * gives the measure something to sit against.
+ */
+export function refSection({ label, heading, body, id }) {
+  return `<section class="ref"${id ? ` id="${id}"` : ''}>
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            ${label ? `<p class="eyebrow">${label}</p>` : ''}
+            ${heading ? `<h2>${heading}</h2>` : ''}
+          </div>
+          <div class="ref-body">${body}</div>
+        </div>
+      </section>`;
+}
+
+/**
  * `head` is shared with the dashboard shell on purpose — one place that knows
  * which weights are fetched. Only 400 is loaded for Newsreader here; a weight
  * that is not downloaded cannot be reached for by accident.
@@ -92,10 +118,12 @@ export function siteShell({ title, description, active, eyebrow, heading, lead, 
    * the same three elements a feature column is allowed.
    */
   const intro = heading
-    ? `<section class="page-intro-wrap"><div class="site-wrap page-intro">
-        <p class="eyebrow">${eyebrow}</p>
-        <h1>${heading}</h1>
-        ${lead ? `<p class="lead">${lead}</p>` : ''}
+    ? `<section class="page-intro-wrap"><div class="site-wrap ref-grid page-intro">
+        <div class="ref-label">
+          <p class="eyebrow">${eyebrow}</p>
+          <h1>${heading}</h1>
+        </div>
+        <div class="ref-body">${lead ? `<p class="lead">${lead}</p>` : ''}</div>
       </div></section>`
     : '';
   return `<!doctype html>

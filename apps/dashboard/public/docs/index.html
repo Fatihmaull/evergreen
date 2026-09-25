@@ -20,20 +20,21 @@
       </nav>
     </header>
     <main id="main">
-    <section class="page-intro-wrap"><div class="site-wrap page-intro">
-        <p class="eyebrow">Reference · generated from the tool at build time</p>
-        <h1>The CLI does one thing on the page</h1>
-        <p class="lead">Scan. Everything below is the tool describing itself — usage and flags from its own help text, exit codes from its exported constants. Until the package is published, run it from a clone: the install line appears here the day npx resolves from a clean machine.</p>
+    <section class="page-intro-wrap"><div class="site-wrap ref-grid page-intro">
+        <div class="ref-label">
+          <p class="eyebrow">Reference · generated from the tool at build time</p>
+          <h1>The CLI does one thing on the page</h1>
+        </div>
+        <div class="ref-body"><p class="lead">Scan. Everything below is the tool describing itself — usage and flags from its own help text, exit codes from its exported constants. Until the package is published, run it from a clone: the install line appears here the day npx resolves from a clean machine.</p></div>
       </div></section>
-<section class="feature flip">
-    <div class="site-wrap feature-grid">
-      <div class="feature-text">
-        <p class="eyebrow">Usage and flags</p>
-        <h2>The tool describing itself</h2>
-        <p>Printed by <span class="mono">evergreen scan --help</span>, not transcribed from it.</p>
-        <p class="provenance">Source: <span class="mono">packages/cli/src/command.ts</span> — this page fails to build when that help text moves.</p>
-      </div>
-      <div class="feature-art"><div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Usage and flags</p>
+            <h2>The tool describing itself</h2>
+          </div>
+          <div class="ref-body"><p>Printed by <span class="mono">evergreen scan --help</span>, not transcribed from it.</p>
+        <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
 Keys file: { &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }
@@ -100,43 +101,53 @@ Health states, printed per entry and as a worst-of summary:
   UNKNOWN   TTL could not be read. Not healthy; unread.
 
 Colour is added only for an interactive terminal and honours NO_COLOR. The state
-word always prints, so piped output and screenshots lose nothing.</div></div>
-    </div>
-  </section>
-  <section class="prose">
-    <div class="site-wrap">
-      <h2>Exit codes</h2>
-      <div class="table-wrap"><table>
-        <thead><tr><th scope="col">Exit</th><th scope="col">Meaning</th></tr></thead>
-        <tbody><tr><td class="num">0</td><td>everything scanned is healthy</td></tr><tr><td class="num">1</td><td>observed low TTL</td></tr><tr><td class="num">2</td><td>error — invalid input, RPC failure, or the network refused</td></tr><tr><td class="num">3</td><td>incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed</td></tr></tbody>
-      </table></div>
-      <p class="note">Precedence 2 &gt; 3 &gt; 1 &gt; 0, from <span class="mono">packages/cli/src/scan.ts</span>. A degraded read still exits 3; blast radius changes severity, not the exit category. Exit status never authorizes a transaction.</p>
-    </div>
-  </section>
-  <section class="prose">
-    <div class="site-wrap">
-      <h2>JSON shape</h2>
-      <p>
-        <span class="mono">--json</span> prints the <span class="mono">ScanResult</span> — entries keyed by ledger
-        key, each carrying the contracts it serves — plus <span class="mono">health</span>,
-        <span class="mono">cost</span> and <span class="mono">optimization</span> blocks. The shape is declared in
-        <span class="mono">packages/shared-types/src/index.ts</span>; that declaration is authoritative and is not
-        copied here, because a copy drifts. Every page with a JSON panel on this site prints the same shape the CLI
-        prints.
-      </p>
-    </div>
-  </section>
-  <section class="prose">
-    <div class="site-wrap">
-      <h2>Run it before it is published</h2>
-      <p>
-        Clone the repository, install, build, and scan the public test contract — no key and no account. Needs
-        Node 24 and pnpm (<span class="mono">.nvmrc</span> pins the major). The exact
-        commands are the README quickstart, which was executed before it was written. No install line is shown here
-        until publishing is verified from a clean machine.
-      </p>
-    </div>
-  </section>
+word always prints, so piped output and screenshots lose nothing.</div>
+        <p class="provenance">Source: <span class="mono">packages/cli/src/command.ts</span> — this page fails to build when that help text moves.</p></div>
+        </div>
+      </section>
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Exit codes</p>
+            <h2>Four outcomes, in precedence order</h2>
+          </div>
+          <div class="ref-body"><div class="table-wrap"><table>
+          <thead><tr><th scope="col">Exit</th><th scope="col">Meaning</th></tr></thead>
+          <tbody><tr><td class="num">0</td><td>everything scanned is healthy</td></tr><tr><td class="num">1</td><td>observed low TTL</td></tr><tr><td class="num">2</td><td>error — invalid input, RPC failure, or the network refused</td></tr><tr><td class="num">3</td><td>incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed</td></tr></tbody>
+        </table></div>
+        <p class="note">Precedence 2 &gt; 3 &gt; 1 &gt; 0, from <span class="mono">packages/cli/src/scan.ts</span>. A degraded read still exits 3; blast radius changes severity, not the exit category. Exit status never authorizes a transaction.</p></div>
+        </div>
+      </section>
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Machine output</p>
+            <h2>JSON shape</h2>
+          </div>
+          <div class="ref-body"><p>
+          <span class="mono">--json</span> prints the <span class="mono">ScanResult</span> — entries keyed by ledger
+          key, each carrying the contracts it serves — plus <span class="mono">health</span>,
+          <span class="mono">cost</span> and <span class="mono">optimization</span> blocks. The shape is declared in
+          <span class="mono">packages/shared-types/src/index.ts</span>; that declaration is authoritative and is not
+          copied here, because a copy drifts. Every page with a JSON panel on this site prints the same shape the CLI
+          prints.
+        </p></div>
+        </div>
+      </section>
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Getting it</p>
+            <h2>Run it before it is published</h2>
+          </div>
+          <div class="ref-body"><p>
+          Clone the repository, install, build, and scan the public test contract — no key and no account. Needs
+          Node 24 and pnpm (<span class="mono">.nvmrc</span> pins the major). The exact
+          commands are the README quickstart, which was executed before it was written. No install line is shown here
+          until publishing is verified from a clean machine.
+        </p></div>
+        </div>
+      </section>
     </main>
     <footer class="site-foot">
       <div class="site-wrap">
