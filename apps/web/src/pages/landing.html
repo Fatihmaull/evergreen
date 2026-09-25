@@ -27,9 +27,9 @@
           ><span class="sans">You just don't know when.</span>
         </h1>
         <p class="hero-lead">
-          Soroban state has a time to live measured in ledgers, about five seconds each. Every
-          closed ledger takes one off. When it reaches zero, most entries are archived and temporary
-          ones are deleted — and nothing tells you it is coming.
+          One ledger entry can hold the compiled code for many contracts at once — and when it
+          expires, all of them stop working together. Soroban state runs on a timer measured in
+          ledgers, about five seconds each, and nothing tells you it is running out.
         </p>
         <p class="hero-actions">
           <a class="pill solid" href="/dashboard/">Open the dashboard →</a>
@@ -41,10 +41,50 @@
     </section>
 
     <main id="main">
+      <section class="band dark">
+        <div class="wrap thesis">
+          <div class="stack">
+            <p class="eyebrow on-dark">The thesis</p>
+            <h2 class="display">
+              One entry. Every contract built from that Wasm. They fail together.
+            </h2>
+            <p class="on-dark">
+              Soroban keeps a contract's compiled code in a ledger entry of its own, and every
+              contract deployed from that same code points at that one entry. So a contract's own
+              state can be healthy until December while the code it runs expires in October — and
+              without its code a contract cannot execute at all.
+            </p>
+            <p class="on-dark">
+              The real expiry is therefore the earliest entry, which is rarely the obvious one, and
+              it is shared by every contract built from the same Wasm. That is the failure this
+              exists to catch: a fleet of contracts reported healthy right up until they stop
+              together.
+            </p>
+            <p class="hero-actions">
+              <a class="pill solid" href="/dashboard/blast-radius/"
+                >See it on our three contracts →</a
+              >
+            </p>
+          </div>
+          <div class="stat-cell">
+            <p class="stat-label">of the rent</p>
+            <p class="stat-figure">98%</p>
+            <p class="stat-caption">
+              is that one shared code entry — 8,116,648 of 8,264,289 stroops, across all four of
+              guinea-pig A's entries. Scanning only its instance and code, the same entry is 99%:
+              identical rent, different denominator. The scope travels with the number.
+            </p>
+          </div>
+        </div>
+      </section>
       <section class="band">
         <div class="wrap stack">
           <p class="eyebrow">The four kinds of entry</p>
           <h2 class="section">Three are recoverable. One is not.</h2>
+          <p class="muted">
+            The shared code entry above is one of four kinds, and they do not end the same way.
+            Which kind an entry is decides whether running out is a bill or a burial.
+          </p>
           <div class="kinds">
             <div class="kind">
               <p class="kind-name">instance</p>
@@ -81,36 +121,6 @@
             Read from the network's own configuration: a temporary entry's minimum is 720 ledgers,
             about an hour. Our own temporary entry had 688 left when it was first sampled.
           </p>
-        </div>
-      </section>
-
-      <section class="band dark">
-        <div class="wrap thesis">
-          <div class="stack">
-            <p class="eyebrow on-dark">The thesis</p>
-            <h2 class="display">
-              One entry. Every contract built from that Wasm. They fail together.
-            </h2>
-            <p class="on-dark">
-              A contract's instance can be healthy until December while the code it runs expires in
-              October. Without the code it cannot execute, so the real expiry is the earliest entry
-              — and that entry is shared by every contract deployed from the same Wasm.
-            </p>
-            <p class="hero-actions">
-              <a class="pill solid" href="/dashboard/blast-radius/"
-                >See it on our three contracts →</a
-              >
-            </p>
-          </div>
-          <div class="stat-cell">
-            <p class="stat-label">of the rent</p>
-            <p class="stat-figure">98%</p>
-            <p class="stat-caption">
-              is that one shared code entry — 8,116,648 of 8,264,289 stroops, across all four of
-              guinea-pig A's entries. Scanning only its instance and code, the same entry is 99%:
-              identical rent, different denominator. The scope travels with the number.
-            </p>
-          </div>
         </div>
       </section>
 
