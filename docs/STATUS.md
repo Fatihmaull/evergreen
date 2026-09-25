@@ -2,25 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-23 · CLI 0.1.0 rebased and awaiting final review/merge; dashboard live
+**Last updated:** 2026-09-24 · CLI 0.1.0 published and verified from the public registry
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **nine days out, three SOW evidence types do not exist** — npm package, demo video and npm links · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
-## Current — W4-D27-02 CLI release preparation
+## Current — W4-D27-02 CLI 0.1.0 published
 
-Rakha's npm authentication is live: `npm whoami` returns `rakhargo` and the
-`evergreen-stellar` org reports role `developer`. Fatih confirmed the first version
-as `0.1.0` in [#226](https://github.com/Fatihmaull/evergreen/issues/226) and independently
-proved the packed/clean-installed CLI exits 0/1/2/3 as the Action expects. The public
-package still returns `E404`; no version has been published or overwritten. The
-candidate is binary-only and the command remains `pnpm publish`, never
-`npm publish`. PR #227 is rebased onto current main after #191 and #231–#234;
-the full gate and packed clean-install proof have been repeated; Fatih's final
-review/merge remains before any registry write. Notion sync remains pending until
-the release outcome merges.
+[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)
+was published manually from merged `main@3d2ffa5` using `pnpm publish` after npm
+web/2FA authorization. Registry readback confirms public access, version `0.1.0`
+and integrity `sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==`.
+A fresh registry install contains only the CLI under the Evergreen scope; the
+installed binary exposes `--threshold`, scans Testnet A with exit 0 at the default
+and exit 1 at `2000000`. No Stellar transaction, secret read or evidence rewrite
+occurred. D1's npm row and D3's npm-link row are present; the demo video is the
+only missing SOW evidence type. Notion mirror sync is pending.
 
 ## Current — Stage 2 no-go recorded; truthful guide merged
 

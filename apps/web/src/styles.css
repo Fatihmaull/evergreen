@@ -1204,3 +1204,11 @@ main.main,
     display: none;
   }
 }
+
+/* The landing's bands carry their own vertical rhythm, so `main`'s top padding
+   is spacing the page twice. It was invisible while the first section after
+   the hero was light; now that the blast-radius band leads and is dark, it
+   showed as a 32px cream stripe between two dark blocks. */
+.landing main {
+  padding-block-start: 0;
+}

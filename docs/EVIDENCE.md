@@ -100,8 +100,19 @@ This costs about a minute per transaction if done at capture time and is unrecov
 >
 > 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
 
-**Measured 2026-09-22, ten days out. 7 of 13 evidence types exist; 6 are absent.**
-All three deliverables still grade Partial because each has at least one absent type.
+**Measured 2026-09-24 after the npm publish: 12 of 13 evidence types exist; only
+the demo video is absent.** Deliverable 1 is Present on all four evidence items;
+Deliverable 2 is Present on all four evidence items with the separately named §4.1
+capability gap; Deliverable 3 has four of five items.
+
+| Deliverable | Current evidence state |
+|---|---|
+| **1 — Core CLI** | ✅ **4 of 4.** Public repo, [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0), CLI screenshots and coverage report |
+| **2 — Auto-Bump Engine** | ✅ **4 of 4 evidence items.** The capped policy-signer capability named in §4.1 remains honestly Partial |
+| **3 — Dashboard + CI + Docs** | 🟡 **4 of 5.** Dashboard, Action, docs and npm link are present; demo video remains |
+
+**Historical snapshot measured 2026-09-22, ten days out: 7 of 13 evidence types
+existed and 6 were absent.** The table below is retained as the dated gap record.
 
 | Deliverable | Evidence required (SOW §6.1) | State |
 |---|---|---|
