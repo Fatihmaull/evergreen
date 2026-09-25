@@ -49,12 +49,25 @@ So the check moves earlier and repeats. **This adds no scope**; it re-sequences 
 
 Assessed against the backlog as written, with every risk put to two independent refuters. **32 of 34 candidate risks were refuted** — mostly because the backlog already mitigated them somewhere the assessor had not read, which is a good sign about the plan. The two that survived are both real and both now fixed or re-sequenced.
 
-| # | Outcome | Verdict | The binding constraint |
+> **Re-measured 2026-09-25 by `pnpm ready:fresh` — 2 pass, 0 fail, 2 awaiting a
+> human call.** The verdicts below were the Week 3 assessment and are kept for the
+> reasoning; the `Now` column is the measurement. Dated record:
+> [`2026-09-25-ready-fresh-machine`](evidence/2026-09-25-ready-fresh-machine/results.json).
+
+| # | Outcome | Sep 18 verdict | Now (2026-09-25) |
 |---|---|---|---|
-| 1 | CLI install and scan | 🟡 **at-risk** | No runnable path for a stranger until `W4-D27-02` on **Sep 29, day 27** — and the artifact could not install at all until Sep 9 (below) |
-| 2 | Dashboard TTL check | 🟡 **at-risk** | Zero dashboard code exists; first line is written Sep 24, public URL unproven until Sep 26. Cheapest of the four to build, latest to start |
-| 3 | Action in a stranger's CI | 🟡 **at-risk** | Was scheduled to be proven **two days before the package it wraps existed**; now re-sequenced |
-| 4 | Self-hosted engine | 🔴 **will not make it as stated** | One backlog line (`W4-D26-02`, Sep 28) carries the entire claim, and **no task anywhere verifies it** |
+| 1 | CLI install and scan | 🟡 **at-risk** — no runnable path for a stranger until `W4-D27-02` on **Sep 29, day 27** | ✅ **PASS.** `@evergreen-stellar/cli@0.1.0` published Sep 24; installed from the real registry into a clean directory and scanned. It landed five days early, not late |
+| 2 | Dashboard TTL check | 🟡 **at-risk** — zero dashboard code exists; public URL unproven until Sep 26 | ✅ **PASS.** `/dashboard/scanner/` accepts a contract and returns a verdict, and the entry page routes to it. Both legs are checked |
+| 3 | Action in a stranger's CI | 🟡 **at-risk** — was scheduled to be proven **two days before the package it wraps existed** | 🟡 **HALF.** *Pass AND fail is demonstrated* — [one run, both colours](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235), red at exit 1. The other half is a **stranger's own repository**, and our repository is not that. Still a human call, deliberately |
+| 4 | Self-hosted engine | 🔴 **will not make it as stated** — one backlog line carries the claim and **no task verifies it** | 🟡 **Human call, unchanged.** Automating it would measure the harness rather than the documentation |
+
+> 🔴 **Outcome 3's first run found a defect rather than confirming one.** Both jobs
+> failed, including `green · must pass`, because the Action required the *caller's*
+> package manager to exist. It would have broken in any pnpm repository. Fixed and
+> guarded by a mutation-proved test — and this is the argument for outcome 3
+> existing at all: the configuration looked right for days.
+
+The Week 3 assessment follows, unchanged.
 
 ### The one that was already broken
 

@@ -254,6 +254,34 @@ function inputDefault(name) {
   return m[1];
 }
 
+/**
+ * The action must not depend on the CALLER's package manager.
+ *
+ * `package-manager-cache` defaults to TRUE in setup-node@v5, which makes it
+ * detect the caller's lockfile and shell out to that package manager. In a
+ * repository with a `pnpm-lock.yaml` and no pnpm on the runner — the default for
+ * every pnpm user — the job dies with "Unable to locate executable file: pnpm"
+ * before this action runs a line of its own.
+ *
+ * Not hypothetical: measured 2026-09-25 in run 36095134361, where both demo jobs
+ * failed here and the scan step was skipped. This action installs with
+ * `npx --yes` and reads no lockfile, so there is nothing to cache.
+ *
+ * The harness executes the `run:` body and never sees the `uses:` steps, so no
+ * other test in this file can catch a regression here.
+ */
+test('setup-node does not touch the caller’s package manager', () => {
+  const yml = readFileSync('action.yml', 'utf8');
+  const step = yml.slice(yml.indexOf('actions/setup-node@'));
+  const block = step.slice(0, step.indexOf('\n    - ') + 1 || undefined);
+  assert.match(
+    block,
+    /package-manager-cache:\s*false/,
+    'action.yml must set package-manager-cache: false — it defaults to true and ' +
+      'then requires the caller’s package manager to exist on the runner',
+  );
+});
+
 // The harness passes each input explicitly, mirroring the defaults — so it
 // cannot see a default change in action.yml itself. These read the file.
 // Found by mutation: flipping require-declared-scope's default to 'false'

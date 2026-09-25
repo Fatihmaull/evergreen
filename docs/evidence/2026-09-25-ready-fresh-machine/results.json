@@ -1,0 +1,52 @@
+{
+  "today": "2026-09-25",
+  "results": [
+    {
+      "n": 1,
+      "outcome": "Install the CLI and scan a real contract",
+      "verdict": "PASS",
+      "detail": "installed @evergreen-stellar/cli@0.1.0 into a clean directory and scanned; exit 0 (1 = below threshold, a successful read)",
+      "evidence": {
+        "registryVersion": "0.1.0",
+        "dir": "/var/folders/51/dnlqrwfx3j3_s10t7b9fvn480000gn/T/evergreen-fresh-h7YkGV",
+        "scanExit": 0
+      }
+    },
+    {
+      "n": 2,
+      "outcome": "Open the dashboard and check any contract's TTL",
+      "verdict": "PASS",
+      "detail": "https://evergreen-stellar.pages.dev/dashboard/ accepts a contract (5839 bytes) and https://evergreen-stellar.pages.dev links to it",
+      "evidence": {
+        "scanner": {
+          "url": "https://evergreen-stellar.pages.dev/dashboard/",
+          "status": "200",
+          "bytes": 5839,
+          "scans": true
+        },
+        "entry": {
+          "url": "https://evergreen-stellar.pages.dev",
+          "status": "200",
+          "bytes": 9647,
+          "routes": true
+        }
+      }
+    },
+    {
+      "n": 3,
+      "outcome": "Add `evergreen-check` to their own repo's CI, and see it pass AND fail",
+      "verdict": "HUMAN",
+      "detail": "action.yml exists — the remaining half is human: add it to a scratch repo and confirm BOTH a green run and a red one. Guinea-pig D is the intended failure fixture (W4-D25-01b).",
+      "evidence": {
+        "action": "action.yml"
+      }
+    },
+    {
+      "n": 4,
+      "outcome": "Self-host the engine against their own contract",
+      "verdict": "HUMAN",
+      "detail": "not automated on purpose — see the block printed below. Automating it would measure this script rather than the documentation.",
+      "evidence": {}
+    }
+  ]
+}

@@ -138,6 +138,37 @@ function renderFull() {
     '**Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.',
   );
 
+  // Per-slot notes, for slots that are SETTLED.
+  //
+  // These used to render only inside the "requested" section below, which meant
+  // ACCEPTING a slot silently deleted its operating notes. Measured 2026-09-25:
+  // accepting all four of C's slots removed the line saying an expiry assessment
+  // needs a ledger above the PERSISTENT entry's 4,880,099 rather than the
+  // instance's 4,880,097 — guidance for the one capture in the sprint that cannot
+  // be retaken, deleted by the act of agreeing to take it.
+  //
+  // A note is written for whoever is standing there on the day. Whether the slot
+  // is spoken for has nothing to do with whether they still need it.
+  const settled = watch.checkpoints.filter((cp) => cp.status !== 'requested' && cp.note);
+  if (settled.length > 0) {
+    out.push(
+      '',
+      `### On the day — per slot`,
+      '',
+      `**Both operators own all ${watch.checkpoints.length} slots.** On each one, exactly one **runs** it and the other **confirms** at :${String(schedule.backupTriggerMinutePastHour).padStart(2, '0')} past. Who runs alternates, so neither ends up carrying the whole window. Being the confirmer is not standby — it is a scheduled look at a clock.`,
+      '',
+      'Below is only what is specific to each window rather than to the procedure.',
+      '',
+    );
+    for (const cp of settled) {
+      const owners = cp.owners?.length ? ` · owners: ${cp.owners.join(' + ')}` : '';
+      out.push(
+        `- **${utcLabel(cp.utc)} / ${wib(cp.utc)} WIB** — runs: **${cp.primary}**, confirms: ${cp.backup} at ${trigger(cp.utc)}${owners}`,
+        `  ${cp.note}`,
+      );
+    }
+  }
+
   const pending = watch.checkpoints.filter((cp) => cp.status === 'requested');
   if (pending.length > 0) {
     out.push(

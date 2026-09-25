@@ -55,11 +55,19 @@ pnpm cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 
 ```
 HEALTHY  instance  AAAABgAAAA…
-  remaining:  1,367,103 ledgers — live
-  ends at:    ledger 6,026,591
-  expires ~:  2026-12-01T20:22:23.016Z (estimate — ledgers are the truth)
+  remaining:  1,512,868 ledgers — live
+  ends at:    ledger 6,370,261
+  expires ~:  2026-12-21T17:41:36.907Z (estimate — ledgers are the truth)
+  observed:   ledger 4,857,393
   health:     HEALTHY — Above threshold.
 ```
+
+**Your `remaining` will be lower than this** — it falls about one ledger every five
+seconds, which is why `observed` is printed. `ends at` is the stable number.
+
+> Re-captured from the published `0.1.0` on 2026-09-25. It previously read
+> `ends at: ledger 6,026,591`, which was A's expiry **before the engine extended
+> it on 2026-09-14** — so nobody following this page could have reproduced it.
 
 That contract is deliberately long-lived, so it reads the same for you as it did
 for us. Swap in any Testnet contract ID.

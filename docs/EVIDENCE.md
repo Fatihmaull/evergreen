@@ -147,6 +147,15 @@ All three packages are still `"private": true` at `0.0.0`. Publication is `W4-D2
 
 The install path itself is proven: `W2-D14-02b`'s pack-and-install rehearsal found that `npx @evergreen-stellar/cli` would have returned a hard 404 for every user, because `cli` and `core` both declare `@evergreen-stellar/shared-types` as a runtime dependency while only two packages were going to be published. Fixed and re-verified on 2026-09-09. **`W4-D27-02` publishes three packages, in order.**
 
+> 🔴 **Correction, 2026-09-25 — one package shipped, not three.** The sentence above
+> was the plan on 2026-09-16 and is **not what happened.** The release became
+> **binary-only**: `core` and `shared-types` are bundled into `dist/evergreen.mjs`
+> and are **intentionally absent from the registry** — both return E404 by design,
+> confirmed against npm on 2026-09-25. `scripts/check-publish-safety.mjs` now
+> *enforces* that shape: it refuses a `main`, `types` or `exports` entry and pins
+> `files` to exactly the binary and its source map. The prediction is left in place
+> because this section is the Sep 16 gate record; this note is the departure.
+
 ### 3 — Screenshots showing TTL, archive prediction and cost ✅
 
 **Captured 2026-09-14 — [`evidence/2026-09-14-d1-capture/`](evidence/2026-09-14-d1-capture/README.md).**
@@ -403,9 +412,10 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | Artifact | URL | Published |
 |---|---|---|
 | GitHub repo | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ Public |
-| npm — `core` | | ⬜ |
-| npm — `cli` | | ⬜ |
-| GitHub Action | | ⬜ |
+| npm — `cli` | [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli) | ✅ 2026-09-24 |
+| npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
+| npm — `shared-types` | — | ⛔ Same — bundled, never published |
+| GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
 | Dashboard hosting | [evergreen-stellar.pages.dev](https://evergreen-stellar.pages.dev) | ✅ W1 placeholder; functional dashboard remains W4 |
 | Demo video (3–5 min) | | ⬜ |
 | Docs site / README | | ⬜ |

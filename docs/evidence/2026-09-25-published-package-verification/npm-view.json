@@ -1,0 +1,78 @@
+{
+  "_id": "@evergreen-stellar/cli@0.1.0",
+  "name": "@evergreen-stellar/cli",
+  "dist-tags": {
+    "latest": "0.1.0"
+  },
+  "versions": [
+    "0.1.0"
+  ],
+  "time": {
+    "created": "2026-09-24T12:13:44.115Z",
+    "0.1.0": "2026-09-24T12:13:44.492Z",
+    "modified": "2026-09-24T12:13:44.757Z"
+  },
+  "maintainers": [
+    "fatihmaull <fatihmaulanamail@gmail.com>",
+    "rakhargo <rakhargo@gmail.com>"
+  ],
+  "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
+  "homepage": "https://github.com/Fatihmaull/evergreen#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fatihmaull/evergreen.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Fatihmaull/evergreen/issues"
+  },
+  "license": "MIT",
+  "readmeFilename": "",
+  "_rev": "1-8246af00c92dbce84f4aac138eb79ed3",
+  "_contentLength": 17252,
+  "version": "0.1.0",
+  "private": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "type": "module",
+  "bin": {
+    "evergreen": "./dist/evergreen.mjs"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@evergreen-stellar/core": "0.0.0",
+    "@evergreen-stellar/shared-types": "0.0.0",
+    "esbuild": "0.25.0"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "bundle": "esbuild src/bin.ts --bundle --platform=node --format=esm --external:@stellar/stellar-sdk --sourcemap --outfile=dist/evergreen.mjs"
+  },
+  "_nodeVersion": "24.13.0",
+  "dist": {
+    "integrity": "sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==",
+    "shasum": "b4d56463b311eb772e48b4ae6d3e4beb97e48075",
+    "tarball": "https://registry.npmjs.org/@evergreen-stellar/cli/-/cli-0.1.0.tgz",
+    "fileCount": 5,
+    "unpackedSize": 352991,
+    "signatures": [
+      {
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+        "sig": "MEUCIQDGIpZ0+xRvHoruPyfIaX/oIuJOiAeIc28p6P5v7Xp66AIgTrzLDmJjjUsHyOJ8GuDhrEaGJbg/jaVePTvNepsfnII="
+      }
+    ]
+  },
+  "_npmUser": "rakhargo <rakhargo@gmail.com>",
+  "directories": {},
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages-npm-production",
+    "tmp": "tmp/cli_0.1.0_1790252024347_0.9935274155635558"
+  },
+  "_hasShrinkwrap": false
+}

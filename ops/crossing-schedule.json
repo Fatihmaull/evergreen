@@ -106,27 +106,21 @@
           "what": "the alert threshold",
           "primary": "Rakha",
           "backup": "Fatih",
-          "status": "requested",
-          "requestedIn": "#104, 2026-09-22",
-          "note": "Same shape as B's slot 1. Nobody has accepted it yet.",
-          "ifDeclined": {
-            "primary": "Fatih",
-            "backup": "Rakha"
-          }
+          "status": "accepted",
+          "note": "🔴 **THIS DIRECTORY MUST SURVIVE UNTIL AFTER SLOT 4.** Saturday's expiry capture passes `--baseline` pointing at it, so deleting or moving it breaks the one capture that cannot be retaken.",
+          "owners": ["Fatih", "Rakha"],
+          "acceptedIn": "Fatih, 2026-09-25 — both named owners on all four"
         },
         {
           "utc": "2026-09-26T00:00Z",
           "hoursAfterCrossing": 12,
           "what": "first decay reading",
-          "primary": "Rakha",
-          "backup": "Fatih",
-          "status": "requested",
-          "requestedIn": "#104, 2026-09-22",
+          "primary": "Fatih",
+          "backup": "Rakha",
+          "status": "accepted",
           "note": "07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.",
-          "ifDeclined": {
-            "primary": "Fatih",
-            "backup": "Rakha"
-          }
+          "owners": ["Fatih", "Rakha"],
+          "acceptedIn": "Fatih, 2026-09-25 — both named owners on all four"
         },
         {
           "utc": "2026-09-26T06:00Z",
@@ -134,27 +128,21 @@
           "what": "second decay reading",
           "primary": "Rakha",
           "backup": "Fatih",
-          "status": "requested",
-          "requestedIn": "#104, 2026-09-22",
+          "status": "accepted",
           "note": "Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.",
-          "ifDeclined": {
-            "primary": "Fatih",
-            "backup": "Rakha"
-          }
+          "owners": ["Fatih", "Rakha"],
+          "acceptedIn": "Fatih, 2026-09-25 — both named owners on all four"
         },
         {
           "utc": "2026-09-26T12:00Z",
           "hoursAfterCrossing": 24,
           "what": "EXPIRY — Saturday, happens once, nothing comes after it",
-          "primary": "Rakha",
-          "backup": "Fatih",
-          "status": "requested",
-          "requestedIn": "#104, 2026-09-22",
-          "note": "A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097.",
-          "ifDeclined": {
-            "primary": "Fatih",
-            "backup": "Rakha"
-          }
+          "primary": "Fatih",
+          "backup": "Rakha",
+          "status": "accepted",
+          "note": "A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097. Takes `--baseline` from the 2026-09-25T12:00Z directory.",
+          "owners": ["Fatih", "Rakha"],
+          "acceptedIn": "Fatih, 2026-09-25 — both named owners on all four"
         }
       ]
     }

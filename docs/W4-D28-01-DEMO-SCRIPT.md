@@ -1,9 +1,13 @@
 # `W4-D28-01` — demo video script (3–5 min)
 
-**Status: structure written 2026-09-15, figures pending.** Every `⟦SLOT⟧` is a number
-the Sep 20–21 crossing produces. Written now, before the crossings, because the
-*reasoning* is fresh and the numbers are mechanical — doing it the other way round
-means writing the whole thing after Sep 21 under a submission deadline.
+**Status 2026-09-25: RECORDABLE.** Structure written 2026-09-15 before the
+crossings, because the *reasoning* was fresh and the numbers were mechanical.
+Every slot that blocked recording is now filled and **verified against the live
+artifact rather than assumed** — the install line against the real npm registry,
+the Action against a real workflow run. Timed at 4m20s.
+
+One value is still a measurement rather than a slot: the cron delivery share in
+beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
 
 **Fill the slots; do not rewrite the beats.** The beats encode decisions that were
 expensive to reach, and several of them are about what we must *not* claim.
@@ -58,17 +62,23 @@ dependencies — so the risk is invisible from inside any single contract.
 npx @evergreen-stellar/cli scan <A> <B> <C>
 ```
 
-> 🔴 **VERIFIED FAILING 2026-09-17 — this exact line exits 1 with `E404`**, because
-> `@evergreen-stellar/cli` is not published yet (`W4-D27-02`, Rakha, planned Sep 29;
-> he has been asked in #104 to bring it to Sep 22–23).
+> ✅ **VERIFIED WORKING 2026-09-25 — this exact line now runs.**
+> `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and
+> the three-contract `npx` line was run from a clean directory against the real
+> registry. It emits the shared-entry line below and reads
+> `Scan is PARTIAL — 3 issue(s). Absence is not health.`, exiting 1.
+> [The record](evidence/2026-09-25-published-package-verification/README.md).
 >
-> **Do not record this beat until the package is published.** Everything else in
-> this section works today and was re-run to confirm: the three-contract scan emits
-> the shared-entry line, the single-contract scan emits `sharing-undetermined`, and
-> the result reads `PARTIAL — 3 issue(s)`. Only the install line is blocked.
+> **The earlier warning on this beat is void.** It said the line exits `E404` and
+> not to record against it; that was true from 2026-09-17 until the publish, and
+> the fallback it described — `pnpm cli scan` from a clone, narrated as such — is
+> no longer needed.
 >
-> If the publish slips past the recording, the honest fallback is `pnpm cli scan …`
-> from a clone **narrated as such** — not an `npx` line edited to look like it ran.
+> **One thing changed in the output since the script was written.**
+> `Worst entry health` now reads **CRITICAL**, because guinea-pig B is archived and
+> guinea-pig C is in its own crossing window. That is not a new defect and not a
+> claim about A. If you narrate the health line at all, say which contract it is
+> about.
 
 Show the real terminal. The point of passing three contracts together is the line
 that appears only then:
@@ -147,21 +157,29 @@ would have destroyed the only evidence in the sprint that cannot be recreated.
 ### 5 · Dashboard and CI — 45 seconds
 
 **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)**
-— paste a contract ID, no wallet and no signup — and the `evergreen-check` Action
-⟦SLOT: workflow run link — `W4-D29`⟧.
+— paste a contract ID, no wallet and no signup — and the `evergreen-check` Action,
+**one run, both colours**:
 
-> 🔴 **DO NOT dispatch the `evergreen-check demo` workflow to fill that slot
-> until `0.1.0` is on the registry.**
+| job | result | why |
+|---|---|---|
+| [`green · must pass`](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235/job/107946545887) | ✅ passes | A is above the 17,280-ledger default |
+| [`red · must fail`](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235/job/107946545676) | ❌ fails, **exit 1** | every entry at or below a configured 2,000,000 |
+
+> **Say that only the threshold differs.** Both jobs scan the same contract. The
+> claim is *"the job fails when an entry is at or below the threshold you
+> configured"* — **not** that A is decaying. A runs to December.
 >
-> `action.yml:129` installs the CLI with `npx --yes "@evergreen-stellar/cli@…"`,
-> so **both jobs fail on E404** before the publish — including the one named
-> *"red · must fail"*. A red job that failed for the wrong reason is
-> indistinguishable from a working demonstration to anyone who does not open the
-> log, and this artifact exists for a reviewer who will not open the log. That is
-> a false green placed in the evidence by us.
+> ✅ **The earlier warning on this beat is void.** It said not to dispatch the
+> workflow before the publish, because both jobs would fail on `npx` E404 and a red
+> job failing for the wrong reason reads as a working demonstration. The publish
+> removed that hazard, the workflow ran, and **the red job's exit code is 1** —
+> which is the check working rather than erroring.
 >
-> The workflow has **zero runs to date** for this reason, not because it is
-> broken. After the publish, one dispatch produces both colours.
+> 📌 **Dispatching it found a real defect, which is worth one sentence if the
+> Action comes up:** its first ever run failed *both* jobs with
+> `Unable to locate executable file: pnpm`, because `setup-node@v5` defaults to
+> using the caller's package manager. It would have broken `evergreen-check` in any
+> pnpm repository. Fixed, with a commissioned regression test.
 
 > **Open `/dashboard/`, not the root.** The root is a landing page; the scanner
 > is one level down. Verified live 2026-09-24.
@@ -208,18 +226,17 @@ They are now filled in beat 4 rather than left as slots.
 | C, if B is missed | ⛔ **VOID — B was not missed.** C is captured Sep 25–26 as the documented spare; the demo does not need it and should not wait for it |
 | Cron delivery share | 🔄 **moves** — run `pnpm measure:cadence` on the recording day and read it off. Do not quote a figure from here; `check:cadence` refuses one, and it has already been wrong twice. The 2026-09-23 reading is recorded in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md) |
 | Dashboard URL | ✅ **filled 2026-09-24** — [`/dashboard/`](https://evergreen-stellar.pages.dev/dashboard/) is live and scans. **The root is a landing page; the scanner is one level down.** Shipped by the web track in #234/#236/#237 |
-| Action run link | ⏳ unblocks the moment `0.1.0` publishes — the demo workflow produces red and green in one dispatch |
+| Action run link | ✅ **filled 2026-09-25** — [run 36095411235](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235), green and red in one dispatch, red at exit 1 |
+| Install line, beat 2 | ✅ **filled 2026-09-25** — `0.1.0` is on the registry and the `npx` line was run against it |
 
-> 🔴 **TWO slots wait on something outside the recording, and they are the same
-> thing.** An earlier version of this line said one, which under-counted the
-> publish: `action.yml:129` installs the CLI with
-> `npx --yes "@evergreen-stellar/cli@…"`, so **the Action cannot run either**
-> until `0.1.0` is on the registry. The publish gates beat 2's install line *and*
-> beat 5's run link.
+> ✅ **NOTHING IN THIS SCRIPT NOW WAITS ON ANYTHING.** The two slots that did —
+> beat 2's install line and beat 5's run link — were the same publish, and it
+> landed on 2026-09-24. Both were verified against the real registry on 2026-09-25
+> rather than assumed.
 >
-> **The warning about dispatching that workflow early lives in beat 5**, where
-> the operator is standing when the temptation arrives — not here. Nothing in
-> this script waits on C.
+> The only moving value left is the cron delivery share in beat 3, which is a
+> measurement to take on the day and not a blocker. **Nothing in this script waits
+> on C.**
 
 ## Figures already final — do not re-derive
 
