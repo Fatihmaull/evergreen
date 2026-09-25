@@ -58,7 +58,61 @@ function jsonFiles(dir) {
   return out;
 }
 
-const today = process.env.EVERGREEN_TODAY ?? new Date().toISOString().slice(0, 10);
+/**
+ * This gate arms at the CROSSING INSTANT, not at midnight on the crossing date.
+ *
+ * MEASURED 2026-09-25T01:07Z. Guinea-pig C's `alertThresholdOn` is 2026-09-25
+ * and its crossing is 12:00Z. A date-only comparison armed this check at 00:00Z,
+ * so for TWELVE HOURS it demanded a capture that could not legitimately exist:
+ * its own message says to run the probe *on or after* the crossing, and the
+ * filter below rejects any directory dated before the threshold. Meanwhile
+ * `check:crossing` sits inside `pnpm check`, which CI runs as the one required
+ * status check — so every merge in the repository was blocked for half a day, on
+ * the morning the release PR had to land ahead of a recording.
+ *
+ * This repository already names that failure, in `check-sow-completeness.mjs`:
+ * *a guardrail that must be worked around to make progress gets worked around
+ * once and then stays off.* Arming on the real event keeps every hour of genuine
+ * enforcement and removes only the dead zone.
+ *
+ * Dates stay in `write-guard.ts` and times stay in `ops/crossing-schedule.json`,
+ * which already owns `crossesAtUtc` as its single source of truth. Neither file
+ * is written here — only read.
+ *
+ * FAIL CLOSED: a subject with no readable time falls back to midnight on its
+ * threshold date, which is the stricter of the two behaviours, never the laxer.
+ */
+function crossingInstants() {
+  const byContract = new Map();
+  try {
+    const schedule = JSON.parse(readFileSync('ops/crossing-schedule.json', 'utf8'));
+    for (const watch of schedule.watches ?? []) {
+      const id = watch.subject?.contractId;
+      const at = Date.parse(watch.subject?.crossesAtUtc ?? '');
+      if (id && !Number.isNaN(at)) byContract.set(id, at);
+    }
+  } catch {
+    /* unreadable schedule → every subject falls back to midnight arming */
+  }
+  return byContract;
+}
+const CROSSINGS = crossingInstants();
+
+/**
+ * `EVERGREEN_TODAY` stays supported and keeps its meaning — "pretend it is this
+ * day". A bare date is taken as the END of that day, so a subject whose
+ * threshold is that date is armed, exactly as it was before this change. Pass a
+ * full ISO timestamp to pin a moment inside the day instead.
+ */
+const override = process.env.EVERGREEN_TODAY;
+const nowMs = override
+  ? Date.parse(override.includes('T') ? override : `${override}T23:59:59Z`)
+  : Date.now();
+if (Number.isNaN(nowMs)) {
+  console.error(`✖ EVERGREEN_TODAY is not a date or timestamp: ${override}`);
+  process.exit(1);
+}
+const armedAt = (s) => CROSSINGS.get(s.contractId) ?? Date.parse(`${s.alertThresholdOn}T00:00:00Z`);
 const subjects = protectedSubjects();
 if (subjects.length === 0) {
   console.error('✖ could not read protected subjects from write-guard.ts — the pattern moved.');
@@ -86,7 +140,7 @@ const verified = new Map();
 const files = jsonFiles(ROOT);
 const failures = [];
 for (const s of subjects) {
-  if (today < s.alertThresholdOn) continue;
+  if (nowMs < armedAt(s)) continue;
   const evidence = [];
   for (const f of files) {
     // The evidence must come FROM the crossing, not from a rehearsal of it.

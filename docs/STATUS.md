@@ -2,54 +2,50 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-23 · Stage 2 no-go recorded; truthful signer guide ready
+**Last updated:** 2026-09-23 · CLI 0.1.0 rebased and awaiting final review/merge; dashboard live
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **nine days out, four SOW evidence types do not exist** — npm package, live dashboard, demo video and npm links · ✅ **policy-signer guide truthfully supplies the D2 artifact while the named capability remains Partial** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Health:** 🟡 **nine days out, three SOW evidence types do not exist** — npm package, demo video and npm links · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
-## Current — Stage 2 no-go recorded; truthful guide ready
+## Current — W4-D27-02 CLI release preparation
+
+Rakha's npm authentication is live: `npm whoami` returns `rakhargo` and the
+`evergreen-stellar` org reports role `developer`. Fatih confirmed the first version
+as `0.1.0` in [#226](https://github.com/Fatihmaull/evergreen/issues/226) and independently
+proved the packed/clean-installed CLI exits 0/1/2/3 as the Action expects. The public
+package still returns `E404`; no version has been published or overwritten. The
+candidate is binary-only and the command remains `pnpm publish`, never
+`npm publish`. PR #227 is rebased onto current main after #191 and #231–#234;
+the full gate and packed clean-install proof have been repeated; Fatih's final
+review/merge remains before any registry write. Notion sync remains pending until
+the release outcome merges.
+
+## Current — Stage 2 no-go recorded; truthful guide merged
 
 Fatih accepted Option 3 in #183: no-go for the direct passkey-kit adapter, no
 automatic OpenZeppelin pivot without separate enforcement evidence, retain the
 verified Stage 1 route, and ship policy scoping honestly as partial with full
-scoping deferred to SOW 2. ADR-002 records that outcome on main through #230.
+scoping deferred to SOW 2. ADR-002 records that outcome through #230; #191 merged
+the corresponding public guide and task reconciliation. No provider was deployed,
+no policy-signer transaction occurred and no historical evidence was rewritten.
+The remaining funder/lead scope conversation is a human action.
 
-PR #191 now carries the corresponding public guide and task reconciliation:
-D19-01/02/03 are dropped rather than left blocked, D20-01 is complete, the
-conditional D20-02 is dropped, and D20-03 supplies the required SOW §6.1 guide
-without claiming the absent capped-signer capability from §4.1. No provider was
-deployed, no policy-signer transaction occurred and no historical evidence was
-rewritten. The remaining funder/lead scope conversation is a human action. Notion
-sync remains pending until the repo change merges.
-
-## Current — web surface registered; the dashboard printed a wrong number for B and no longer does
+## Current — real dashboard live; web and CLI/engine ownership remain split
 
 **Two agents work this repository, split by path.** The standing statement of
 who owns what is in `BACKLOG.md` beside the web rows; neither track edits the
 other's paths, and nobody edits `docs/evidence/`.
 
-- **Registered:** the web surface and the five changes it needs from the
-  CLI/engine side, `W4-D22-03` to `W4-D22-19`, each (R) row tracked in an issue
-  (#194–#198). The web block carries its own cut order.
-- 🔴 **`D3.dashboard` starts blocking `pnpm check` on 2026-09-29.**
-  `check-sow-completeness.mjs` passes that row only when
-  `apps/dashboard/src/index.ts` is real; it is a 1,432-byte placeholder today,
-  and production still serves the 2,362-byte placeholder page. Landing the
-  dashboard is therefore on every track's critical path, not just the web one.
-- **A twelve-page preview exists** on `feat/W4-D22-02a-full-prototype` and is
-  not merged.
-- **What B's expiry revealed.** An archived entry is still returned with
-  `liveUntilLedgerSeq: 0`, so core reports `ttl.status: 'known'`,
-  `endsAtLedger: 0` and a large negative remaining, with `isExpired` alongside.
-  Twelve places in the web read those raw figures instead of the assessment and
-  printed `-4,810,562 ledgers` and `~Dec 18, 2025` — the failure this product
-  exists to name, in its own interface. Raw TTL is now confined to one module,
-  with a test that fails if that stops being true. **The CLI prints the same
-  fabricated figures, labelled `EXPIRED (archived)`; core returning a
-  fabricated zero as `status: 'known'` is unresolved and belongs to the
-  CLI/engine track.**
+- **The real dashboard merged in #234**, replacing the production placeholder
+  with twelve routes and making the SOW `D3.dashboard` evidence type present.
+- Browser scan/runtime guards cover route completeness, read-only bundling,
+  rendering and fabricated figures. Rent is available through the read-only path.
+- **Still on the CLI/engine track:** an archived entry may be returned with
+  `liveUntilLedgerSeq: 0`; core exposes raw zero/negative figures and the CLI can
+  print them while correctly labelling the entry expired. The dashboard confines
+  raw TTL reads and refuses to render those fabricated values.
 
 ## Current — original engine alert screenshots captured
 
@@ -59,11 +55,12 @@ confirmed instance extension and the critical shared-code write-guard refusal.
 Their visible subjects and bodies match the original intents, Resend IDs and
 transaction/entry data. They were captured on Sep22 from the original messages;
 no email was resent and no Stellar interaction occurred. The original Sep14 record
-stays unchanged. SOW Deliverable2 now has three of four evidence types; the truthful
-policy-signer guide remains the missing type. W3-D17-03 stays In progress pending
-Fatih's status reconciliation. Notion mirror sync is pending.
+stays unchanged. SOW Deliverable2 now has all four evidence types; the policy-signer
+guide merged in #191 while the named capped-signer capability remains Partial.
+W3-D17-03 stays In progress pending Fatih's status reconciliation. Notion mirror
+sync is pending.
 
-## Current — September21 final B observed; v1 verdict retained, separate assessment ready
+## Reference — September21 final B observed; v1 verdict retained, assessment merged
 
 > 🔴 **This is a tooling gap, not an evidence gap, and the difference matters to
 > anyone opening this in October.**
@@ -82,16 +79,15 @@ Fatih's status reconciliation. Notion mirror sync is pending.
 > different situations. This is the second. `W3-D18-03a` addresses it by assessing the
 > sealed record offline, without modifying the frozen verifier or any existing bundle.
 
-W3-D18-03a / #214 is published in #216 as a separate offline assessment. It first
+W3-D18-03a / #214 was merged in #216 as a separate offline assessment. It first
 authenticates and replays the sealed original verdict with the existing verifier,
 then evaluates the documented non-live response using the verified same-subject
 live baseline and unchanged shared-code control. All three original final reads
 produce separate `expiry-observed` reports; their original `unverified` verdicts
 remain unchanged. Regression tests reject still-live/boundary data, absent or
 invalid baselines, control changes, malformed zero representations and tampered
-captures. Internal review and Fatih's comment-level technical verification are
-complete; formal PR review/merge and Shared acceptance remain open. Notion sync
-remains pending while the source is unavailable. See the
+captures. Internal review and Fatih's technical verification completed before
+merge; Shared acceptance of the broader D18-03 row remains separate. See the
 [compatibility assessment](W3-D18-03a-EXPIRY-REASSESSMENT.md).
 
 The19:00 checkpoint was collected with raw bundles and native screenshot, but three
@@ -100,10 +96,9 @@ B instance/persistent data with `liveUntilLedgerSeq: 0` after the baseline end l
 the current verifier only accepts their absence. [Evidence and interpretation](evidence/2026-09-21-b-crossing-1200/README.md).
 No capture runtime changes, transaction or altered manifest. All31 fingerprints
 match; the live Sunday baseline remains verified. Three prior checkpoints passed,
-not four. D18-03 is Blocked on [#214](https://github.com/Fatihmaull/evergreen/issues/214);
-W3-D18-03a is In progress with #216 awaiting formal review/merge. C and final
-acceptance remain open. Notion sync/presence validation pending for D18-03 and
-D18-03a because the canonical data source was unavailable at the last lookup.
+not four. [#214](https://github.com/Fatihmaull/evergreen/issues/214) is resolved and
+W3-D18-03a is Done through #216. D18-03 remains In progress for C and final Shared
+acceptance; no earlier blocker or pending merge is implied.
 
 ## Reference — September21 midday B checkpoint
 

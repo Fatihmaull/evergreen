@@ -43,6 +43,27 @@
       "steps": []
     },
     {
+      "id": "c-instance",
+      "contract": "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL",
+      "label": "guinea-pig C · instance",
+      "role": "The backup proof, staggered five days behind B. Deployed 5 September and left alone on the same terms; nothing has extended it. It crosses its alert threshold on 25 September and expires on the 26th.",
+      "expiryLedger": 4880097,
+      "expiryApprox": "2026-09-26",
+      "observations": [
+        {
+          "ledger": 4586511,
+          "endsAt": 4880097,
+          "source": "docs/evidence/2026-09-09-scan-dedup/scan.json"
+        },
+        {
+          "ledger": 4821848,
+          "endsAt": 4880097,
+          "source": "apps/web/data/snapshot.json"
+        }
+      ],
+      "steps": []
+    },
+    {
       "id": "a-instance",
       "contract": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
       "label": "guinea-pig A · instance",
