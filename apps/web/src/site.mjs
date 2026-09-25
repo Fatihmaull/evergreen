@@ -151,7 +151,7 @@ export function siteShell({ title, description, active, eyebrow, heading, lead, 
     <meta name="description" content="${description}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400;600&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body class="site">

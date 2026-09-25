@@ -590,6 +590,7 @@ body.site {
   /* The height of the hero's fade into the surface below it. Not part of the
      section rhythm — it is a transition, and it is the only one on the site. */
   --hero-fade: clamp(120px, 12vw, 180px);
+  --closing-fade: clamp(180px, 18vw, 300px);
 
   background: var(--surface);
   font: 400 var(--t-body) / 1.5 var(--sans);
@@ -877,12 +878,14 @@ body.site .provenance {
 /* Filled foreground with background-coloured text, both ways round: a dark
    pill on the warm surface, a light pill on the hero's green. */
 .site-nav.on-dark .site-cta,
-body.site .hero .site-cta {
+body.site .hero .site-cta,
+body.site .closing .site-cta {
   background: var(--surface);
   color: var(--pine-deep);
 }
 .site-nav.on-dark .site-cta:hover,
-body.site .hero .site-cta:hover {
+body.site .hero .site-cta:hover,
+body.site .closing .site-cta:hover {
   background: #ffffff;
 }
 body.site .hero .site-more {
@@ -928,6 +931,18 @@ body.site .hero::after {
   pointer-events: none;
   background: linear-gradient(to bottom, #022419 0%, #fcf9f8 100%);
   background: linear-gradient(to bottom in oklab, #022419 0%, #fcf9f8 100%);
+  background: linear-gradient(
+    to bottom,
+    #022419 0%,
+    color-mix(in oklab, #fcf9f8 4.3%, #022419) 12.5%,
+    color-mix(in oklab, #fcf9f8 15.6%, #022419) 25%,
+    color-mix(in oklab, #fcf9f8 31.6%, #022419) 37.5%,
+    color-mix(in oklab, #fcf9f8 50%, #022419) 50%,
+    color-mix(in oklab, #fcf9f8 68.4%, #022419) 62.5%,
+    color-mix(in oklab, #fcf9f8 84.4%, #022419) 75%,
+    color-mix(in oklab, #fcf9f8 95.7%, #022419) 87.5%,
+    #fcf9f8 100%
+  );
 }
 body.site .hero .site-wrap {
   position: relative;
@@ -1199,16 +1214,28 @@ body.site .closing {
   position: relative;
   background: var(--pine-deep);
   color: var(--surface);
-  padding-block: calc(var(--m-rhythm) + var(--hero-fade)) 8.4rem;
+  padding-block: calc(var(--m-rhythm) + var(--closing-fade)) 8.4rem;
 }
 body.site .closing::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
-  height: var(--hero-fade);
+  height: var(--closing-fade);
   pointer-events: none;
   background: linear-gradient(to bottom, #fcf9f8 0%, #022419 100%);
   background: linear-gradient(to bottom in oklab, #fcf9f8 0%, #022419 100%);
+  background: linear-gradient(
+    to bottom,
+    #fcf9f8 0%,
+    color-mix(in oklab, #022419 4.3%, #fcf9f8) 12.5%,
+    color-mix(in oklab, #022419 15.6%, #fcf9f8) 25%,
+    color-mix(in oklab, #022419 31.6%, #fcf9f8) 37.5%,
+    color-mix(in oklab, #022419 50%, #fcf9f8) 50%,
+    color-mix(in oklab, #022419 68.4%, #fcf9f8) 62.5%,
+    color-mix(in oklab, #022419 84.4%, #fcf9f8) 75%,
+    color-mix(in oklab, #022419 95.7%, #fcf9f8) 87.5%,
+    #022419 100%
+  );
 }
 .closing-inner {
   position: relative;
@@ -1222,8 +1249,18 @@ body.site .closing::before {
   gap: 20px;
   text-align: center;
 }
+/* The only bold thing on this surface, and the only sixth type size.
+   Everything else carries hierarchy by size and colour alone, which is the
+   rule this rework was built on — Fatih asked for the closing heading to
+   carry more weight, so it is the stated exception rather than a drift.
+   36px keeps it UNDER 40px on purpose: the page is still allowed exactly one
+   element above that line, and that is the 98%. */
 body.site .closing h2 {
-  max-width: 22ch;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -0.018em;
+  max-width: 20ch;
 }
 body.site .closing .lead {
   color: rgba(252, 249, 248, 0.78);
@@ -1241,16 +1278,15 @@ body.site .closing .hero-actions {
   display: flex;
   align-items: center;
   gap: 16px;
-  width: 100%;
+  width: fit-content;
   min-width: 0;
-  /* The command is 95 characters, which is 711px of Space Mono at 12px. With
-     the prompt, the gaps, the button and the padding it asks for 853px, so
-     this leaves it room rather than making it scroll at full width. */
-  max-width: 940px;
+  max-width: 100%;
   margin-top: 8px;
-  padding: 10px 10px 10px 18px;
+  padding: 9px 9px 9px 16px;
   border: 1px solid rgba(252, 249, 248, 0.2);
-  border-radius: 100vw;
+  /* A command is a surface, not a control: 6px, not a lozenge. A full pill
+     around a line of monospace is the shape that reads as generated. */
+  border-radius: 6px;
   background: rgba(252, 249, 248, 0.05);
 }
 .command code {
@@ -1271,9 +1307,9 @@ body.site .closing .hero-actions {
 }
 .command-copy {
   flex: none;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border: 0;
-  border-radius: 100vw;
+  border-radius: 4px;
   background: rgba(252, 249, 248, 0.1);
   color: rgba(252, 249, 248, 0.72);
   font: 400 var(--t-label) / 1 var(--mono);

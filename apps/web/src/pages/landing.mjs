@@ -278,7 +278,7 @@ export function render(ctx) {
    * No protocol version and no invented domain. The reference this was
    * modelled on offered `curl … | sh` from a host we do not own.
    */
-  const command = `npx ${ctx.cli.packageName}@${ctx.cli.version} scan ${CONTRACT_A}`;
+  const command = `npx ${ctx.cli.packageName}@${ctx.cli.version} scan <contract-id>`;
 
   const closing = `<section class="closing">
         <div class="site-wrap closing-inner">

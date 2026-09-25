@@ -54,9 +54,15 @@ const BUDGET = [
   // two colour fields: the hero fading out of green, and the closing fading
   // back into it. The second was added on 2026-09-25 at Fatih's direction, so
   // the budget moved from one to two rather than the check being switched off.
-  { route: '/', fontSizes: 5, cards: 0, icons: 0, gradients: 2, over40: 1 },
-  { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
-  { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
+  // Six sizes, not five: the closing heading is 36px and used once, at
+  // Fatih's request for a clearer hierarchy at the page's last beat. It sits
+  // UNDER 40px on purpose, so the rule that matters most — one element above
+  // that line, and it is the 98% — is untouched.
+  // One bold element, also the closing heading, also by request. Everywhere
+  // else hierarchy is size and colour alone.
+  { route: '/', fontSizes: 6, cards: 0, icons: 0, gradients: 2, over40: 1, bold: 1 },
+  { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
 ];
 
 const CHROME = [
@@ -79,6 +85,7 @@ const CHROME = [
  */
 const PROBE = `(() => {
   const sizes = new Map();
+  const bold = [];
   const over40 = [];
   const cards = [];
   const icons = [];
@@ -99,6 +106,12 @@ const PROBE = `(() => {
       const px = Math.round(parseFloat(cs.fontSize) * 10) / 10;
       sizes.set(px, (sizes.get(px) ?? 0) + 1);
       if (px > 40) over40.push({ px, name, text: el.textContent.trim().slice(0, 40) });
+      // Hierarchy is carried by size and colour, never by weight. That was a
+      // comment until now, which meant a 600 could reappear anywhere without
+      // anything noticing.
+      if ((parseInt(cs.fontWeight, 10) || 400) > 400) {
+        bold.push(name + ' @' + px + 'px ' + JSON.stringify(el.textContent.trim().slice(0, 24)));
+      }
     }
 
     const border = parseFloat(cs.borderTopWidth) || 0;
@@ -134,7 +147,7 @@ const PROBE = `(() => {
   return JSON.stringify({
     fontSizes: [...sizes.entries()].sort((a, b) => b[0] - a[0]),
     over40: over40.sort((a, b) => b.px - a.px),
-    cards, icons, gradients,
+    cards, icons, gradients, bold,
     // A border that is a grey hex rather than an alpha of the foreground is
     // the flat dead grey that reads as template. Both references agree here.
     opaqueBorders: [...borders].filter((c) => !/rgba/.test(c) && c !== 'rgb(0, 0, 0)'),
@@ -233,7 +246,7 @@ async function main() {
             const el = document.createElement('div');
             el.style.cssText = 'border:1px solid #c1c8c3;border-radius:8px;height:80px;' +
               'background-image:linear-gradient(#fff,#eee);font-size:96px';
-            el.innerHTML = '<span style="font-size:41px">planted</span>' +
+            el.innerHTML = '<span style="font-size:41px;font-weight:700">planted</span>' +
               '<svg width="10" height="10"></svg>';
             document.body.append(el);
           })()`,
@@ -251,6 +264,7 @@ async function main() {
           `cards ${seen.cards.length}/${budget.cards}   ` +
           `icons ${seen.icons.length}/${budget.icons}   ` +
           `gradients ${seen.gradients.length}/${budget.gradients}   ` +
+          `bold ${seen.bold.length}/${budget.bold}   ` +
           `over 40px ${seen.over40.length}/${budget.over40}`,
       );
       console.log(`  ${seen.fontSizes.map(([px, n]) => `${px}px×${n}`).join('  ')}`);
@@ -268,6 +282,7 @@ async function main() {
       check('cards', seen.cards.length, budget.cards, seen.cards.join(', '));
       check('decorative icons', seen.icons.length, budget.icons, seen.icons.join(', '));
       check('gradients', seen.gradients.length, budget.gradients, seen.gradients.join(', '));
+      check('elements heavier than 400', seen.bold.length, budget.bold, seen.bold.join(', '));
       check(
         'elements over 40px',
         seen.over40.length,
