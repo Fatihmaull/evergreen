@@ -37,9 +37,9 @@ routing is what this page is for, and C's equivalent is the box above.
 | Time (UTC) | WIB | C remaining | What it is | Primary | Backup — runs it if nothing is committed by |
 |---|---|---|---|---|---|
 | **Fri 2026-09-25 12:00** | Fri 19:00 | 17,280 | the alert threshold | **Rakha** | Fatih, 12:20 UTC |
-| **Sat 2026-09-26 00:00** | Sat 07:00 | 8,640 | first decay reading | **Fatih** | Rakha, 00:20 UTC |
+| **Sat 2026-09-26 00:00** | Sat 07:00 | 8,640 | first decay reading | **Rakha** | Fatih, 00:20 UTC |
 | **Sat 2026-09-26 06:00** | Sat 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
-| **Sat 2026-09-26 12:00** | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Fatih** | Rakha, 12:20 UTC |
+| **Sat 2026-09-26 12:00** | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Rakha** | Fatih, 12:20 UTC |
 
 ### The backup trigger is a wall clock, not a judgement
 
@@ -49,17 +49,19 @@ routing is what this page is for, and C's equivalent is the box above.
 
 ### On the day — per slot
 
-**Both operators own all 4 slots.** On each one, exactly one **runs** it and the other **confirms** at :20 past. Who runs alternates, so neither ends up carrying the whole window. Being the confirmer is not standby — it is a scheduled look at a clock.
+**Both operators own all 4 slots.** On each one, exactly one **runs** it and the other **confirms** at :20 past. **Rakha runs every one**, with Fatih confirming each time. Being the confirmer is not standby — it is a scheduled look at a clock.
+
+*Fatih, 2026-09-25 — both owners on all four; Rakha runs every slot because he has an agent standing by, while Fatih is heads-down on the UI. Fatih is a real backup and intends to run them too; this sets who acts FIRST, not who is responsible.*
 
 Below is only what is specific to each window rather than to the procedure.
 
 - **Fri 2026-09-25 12:00 / Fri 19:00 WIB** — runs: **Rakha**, confirms: Fatih at 12:20 UTC · owners: Fatih + Rakha
   🔴 **THIS DIRECTORY MUST SURVIVE UNTIL AFTER SLOT 4.** Saturday's expiry capture passes `--baseline` pointing at it, so deleting or moving it breaks the one capture that cannot be retaken.
-- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — runs: **Fatih**, confirms: Rakha at 00:20 UTC · owners: Fatih + Rakha
+- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — runs: **Rakha**, confirms: Fatih at 00:20 UTC · owners: Fatih + Rakha
   07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.
 - **Sat 2026-09-26 06:00 / Sat 13:00 WIB** — runs: **Rakha**, confirms: Fatih at 06:20 UTC · owners: Fatih + Rakha
   Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.
-- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — runs: **Fatih**, confirms: Rakha at 12:20 UTC · owners: Fatih + Rakha
+- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — runs: **Rakha**, confirms: Fatih at 12:20 UTC · owners: Fatih + Rakha
   A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097. Takes `--baseline` from the 2026-09-25T12:00Z directory.
 
 <!-- END GENERATED: crossing-schedule -->

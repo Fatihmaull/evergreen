@@ -2,10 +2,36 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-24 · CLI 0.1.0 published and verified from the public registry
+**Last updated:** 2026-09-25 · cold start cut to `B-D31-03`; C's four slots assigned with Rakha running each
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## ✂️ Current — `W3-D21-01e` cold start CUT 2026-09-25, carried to `B-D31-03`
+
+**Recorded here per the `[-]` rule, because a task cut deliberately is a decision
+and a task that quietly never happens is an oversight.**
+
+The cold-start read was scheduled Thu Sep 24. By Sep 25 guinea-pig C's crossing is
+that evening and three captures follow on Saturday, and the task's own window closed
+Saturday. It is cut, not slipped, and carried forward as `B-D31-03` with a date after
+submission.
+
+**Why it costs less than it looks.** Under §6.2 it moves no row — documentation is
+already an evidence type that exists, and D3's single absent type is the demo video.
+Its purpose, rehearsing a cold reader's experience, has largely been served by
+[`SUBMISSION-WALKTHROUGH.md`](SUBMISSION-WALKTHROUGH.md), which is the surface Kenny
+actually reads and had every link verified end to end. What remains is
+post-submission documentation quality: real, and not graded.
+
+🔴 **What is genuinely lost, stated rather than glossed.** Fatih's unaided
+comprehension could only be measured once, and it was never measured. The
+instruction not to explain the engine to him was kept — nobody walked him through
+it — so the resource was preserved right up to the point it expired unused. That is
+the cost being accepted, and `B-D31-03` carries it as a debt rather than closing the
+question.
 
 ---
 

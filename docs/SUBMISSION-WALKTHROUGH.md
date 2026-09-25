@@ -4,15 +4,23 @@
 **nothing here needs a terminal.** Every step says what to open, what you should
 see, and — the part that matters for §6.2 — **what seeing it proves.**
 
-> **This is not the evidence index.** [`SUBMISSION-INDEX.md`](SUBMISSION-INDEX.md)
-> maps each SOW §6.1 requirement to its artifact, in §6.1's order, for checking
-> coverage. **This page is a route through it**, ordered by what settles the
-> question fastest rather than by the SOW's numbering.
+> 📍 **Start here. This page is the entry point, and everything else sits behind
+> it.** If you were sent one link, this is the one.
 >
-> **One thing is incomplete, and it is named at the step where you meet it** —
-> step 10 — rather than collected at the end. You should not have to find it.
-> *(Updated 2026-09-25: this said three. The npm package published on 2026-09-24
-> and took two of them with it.)*
+> [`SUBMISSION-INDEX.md`](SUBMISSION-INDEX.md) is the companion, not the
+> alternative: it maps every SOW §6.1 requirement to its artifact **in §6.1's own
+> order**, which is what you want when checking *coverage* — that nothing is
+> missing. **This page is the route**, ordered by what settles the question
+> fastest. Read this to form a view; open the index to audit the list.
+>
+> **One thing is incomplete: the demo video.** It is **step 11**, named at the
+> step rather than buried in a list, and step 11 is worth knowing about before you
+> begin — once it exists it is an alternative to steps 1–10 rather than an
+> addition to them.
+>
+> *(Updated 2026-09-25. This page previously said three items were incomplete and
+> read Deliverable 1 as partial. The npm package published on 2026-09-24 and took
+> two of the three with it.)*
 
 ## Before you start — two things that will otherwise look like errors
 
@@ -178,8 +186,16 @@ inside any one of them. That is the risk no existing Stellar tooling reports, an
 it is why this project was funded.
 
 You should also see **B reading `archived`** — the same contract from step 7,
-after expiry. By the time you read this **C will read archived too**; its expiry
-was 26 September, the documented second run of the same proof.
+after expiry.
+
+**C is the second run of that same proof, and it is happening as this page is
+written.** C crossed its alert threshold on **25 September** and its instance entry
+is due to expire on **26 September**. Whatever the page shows for C is the live
+state: `warning` before expiry, `archived` after. **We are not predicting which one
+you will see** — an earlier draft of this paragraph said C *will* read archived,
+which was a forecast written as fact about an event that had not happened. If C
+reads anything other than archived after 26 September, the dated capture bundles
+for that window are the record and they say what actually occurred.
 
 ### Step 9 · You check a contract yourself, with no account
 
@@ -234,12 +250,7 @@ decaying. Then a short YAML block a developer drops into their own workflow.
 someone else. The last clause is the honest part — an incomplete scan is not
 evidence of health, so it fails rather than passing quietly.
 
-> ⬜ **One item is incomplete, in the whole submission: the 3–5 minute demo video
-> has not been recorded.** The [script](W4-D28-01-DEMO-SCRIPT.md) is written, timed
-> at 4m20s, and every slot that blocked recording is now filled and verified
-> against the live artifact. What is missing is the recording.
->
-> **And something we would rather tell you than have you find.** The run linked
+> **Something we would rather tell you than have you find.** The run linked
 > above is the second attempt. The first time that workflow ever ran, **both jobs
 > failed** — including the one named *green · must pass* — with
 > `Unable to locate executable file: pnpm`. That was a genuine defect in the
@@ -250,6 +261,28 @@ evidence of health, so it fails rather than passing quietly.
 > We are telling you because of what it says about the evidence. **The file existed
 > and looked correct for days; running it is what found the defect.** That is why
 > the run is in the evidence and not just the configuration.
+
+### Step 11 · Or — the whole thing in four minutes
+
+**Open:** ⬜ **not yet recorded.** This is the one incomplete item in the
+submission.
+
+**What it will be:** the 3–5 minute demo video SOW §6.1 asks for, covering all
+three deliverables in one sitting — the scan and the shared-entry finding, the
+engine's unattended save, the refusal that protected the proof, the dashboard and
+the CI check.
+
+**Why it is its own step rather than a line in a list.** It is the artifact that
+makes every other step above reviewable without clicking any of them. **It is not
+an eleventh ten minutes — it is an alternative to the first ten.** When it exists,
+watching it first and then spot-checking two or three steps is a faster and better
+assessment than working straight down the page.
+
+**Where it stands:** the [script](W4-D28-01-DEMO-SCRIPT.md) is written and timed at
+**4m20s**, and every slot that blocked recording is now filled and verified against
+the live artifact — the install line against the real npm registry, the CI check
+against a real workflow run. **What is missing is the recording itself**, not
+anything it depends on.
 
 ---
 

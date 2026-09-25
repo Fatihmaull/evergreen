@@ -85,6 +85,29 @@ function wib(utcIso) {
   return `${DAYS[shifted.getUTCDay()]} ${hh}:${String(shifted.getUTCMinutes()).padStart(2, '0')}`;
 }
 
+/**
+ * Describe who runs the slots from the DATA, so the prose cannot outlive the
+ * assignment it describes. The REASON lives in `acceptedIn` and is rendered with it —
+ * an assignment without its reason gets quietly re-optimised by whoever reads it next.
+ */
+function runPattern(watch) {
+  const runners = [...new Set(watch.checkpoints.map((cp) => cp.primary))];
+  if (runners.length === 1)
+    return `**${runners[0]} runs every one**, with ${watch.checkpoints[0].backup} confirming each time.`;
+  return 'Who runs alternates, so neither carries the whole window.';
+}
+
+/**
+ * The acceptance reason, rendered once when every slot shares it. It was sitting
+ * in the JSON and reaching no operator: measured 2026-09-25, the document said
+ * who runs each slot and never why, which is how an assignment gets re-optimised
+ * by the next person to read it.
+ */
+function acceptedNote(watch) {
+  const reasons = [...new Set(watch.checkpoints.map((cp) => cp.acceptedIn).filter(Boolean))];
+  return reasons.length === 1 ? [`*${reasons[0]}*`, ''] : [];
+}
+
 function utcLabel(utcIso) {
   const at = new Date(utcIso.replace(/Z$/, ':00Z'));
   const hh = String(at.getUTCHours()).padStart(2, '0');
@@ -155,8 +178,13 @@ function renderFull() {
       '',
       `### On the day — per slot`,
       '',
-      `**Both operators own all ${watch.checkpoints.length} slots.** On each one, exactly one **runs** it and the other **confirms** at :${String(schedule.backupTriggerMinutePastHour).padStart(2, '0')} past. Who runs alternates, so neither ends up carrying the whole window. Being the confirmer is not standby — it is a scheduled look at a clock.`,
+      // DERIVED, never asserted. An earlier version of this line claimed "who runs
+      // alternates" as fixed prose. The assignment then changed to one operator on
+      // every slot and the sentence kept claiming alternation — a generated block
+      // describing a pattern the data no longer had.
+      `**Both operators own all ${watch.checkpoints.length} slots.** On each one, exactly one **runs** it and the other **confirms** at :${String(schedule.backupTriggerMinutePastHour).padStart(2, '0')} past. ${runPattern(watch)} Being the confirmer is not standby — it is a scheduled look at a clock.`,
       '',
+      ...acceptedNote(watch),
       'Below is only what is specific to each window rather than to the procedure.',
       '',
     );
