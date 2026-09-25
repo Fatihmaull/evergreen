@@ -838,7 +838,7 @@ body.site .hero .eyebrow {
   color: rgba(252, 249, 248, 0.62);
 }
 body.site .hero h1 {
-  margin-top: 18px;
+  margin-top: 0;
 }
 body.site .hero .lead {
   margin-top: 20px;
