@@ -93,7 +93,7 @@ what not to touch is the one worth putting near production.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 9 | Live testnet dashboard | **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any contract ID, no wallet, no signup, no account | [landing page](https://evergreen-stellar.pages.dev/) · source in `apps/` |
-| 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) |
+| 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) — see the note below |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
 | 13 | Links to the published npm packages | ⬜ **fills with item 2** | — |
@@ -101,6 +101,13 @@ what not to touch is the one worth putting near production.
 **On items 11 and 13, plainly:** the demo script is written and timed; its one
 remaining dependency is the install line, which resolves when the package
 publishes. Item 13 is the same publish.
+
+**On item 10, one thing we would rather say than have noticed.** The Action is
+complete and usable, and the linked demo workflow — which runs it against a real
+contract twice, once where it must pass and once where it must fail — **has not
+been run yet.** It installs the CLI from the registry, so it cannot run until the
+package in Deliverable 1 is published. Nothing about the Action is waiting; the
+recorded green-and-red pair is.
 
 ---
 

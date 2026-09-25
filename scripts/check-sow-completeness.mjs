@@ -226,7 +226,7 @@ const REQUIREMENTS = [
         );
       return m ? m[0].slice(0, 48) : null;
     },
-    fix: 'W4-D28-02 — record, edit, upload, then put the link in docs/EVIDENCE.md. The script exists; it has never been walked.',
+    fix: 'W4-D28-02 — record, edit, upload, then put the link in docs/EVIDENCE.md. The script exists and was walked and timed at 4m20s on 2026-09-23; what is missing is the recording.',
   },
   {
     id: 'D3.docs',
