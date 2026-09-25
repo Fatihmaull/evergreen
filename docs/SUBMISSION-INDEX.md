@@ -93,7 +93,7 @@ what not to touch is the one worth putting near production.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 9 | Live testnet dashboard | **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any contract ID, no wallet, no signup, no account | [landing page](https://evergreen-stellar.pages.dev/) · source in `apps/` |
-| 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) — see the note below |
+| 10 | Published `evergreen-check` GitHub Action | **[A green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235)** — same contract, only the threshold differs · **[`action.yml`](../action.yml)** | [how to use it](../README.md#use-it-in-ci) · [what the run proves, and the defect it found](evidence/2026-09-25-published-package-verification/README.md) |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
 | 13 | Links to the published npm packages | ⬜ **fills with item 2** | — |
@@ -102,12 +102,19 @@ what not to touch is the one worth putting near production.
 remaining dependency is the install line, which resolves when the package
 publishes. Item 13 is the same publish.
 
-**On item 10, one thing we would rather say than have noticed.** The Action is
-complete and usable, and the linked demo workflow — which runs it against a real
-contract twice, once where it must pass and once where it must fail — **has not
-been run yet.** It installs the CLI from the registry, so it cannot run until the
-package in Deliverable 1 is published. Nothing about the Action is waiting; the
-recorded green-and-red pair is.
+**On item 10, something we would rather tell you than have you find.** The Action
+now has a real pair: `green · must pass` succeeded and `red · must fail` failed at
+**exit 1** — below-threshold, which is the check working rather than erroring. Both
+jobs scan the same contract and only the threshold differs, so the claim is *"the
+job fails at the threshold you configure"*, not that the contract is decaying.
+
+**The first time that workflow ever ran, both jobs failed** — including the green
+one — with `Unable to locate executable file: pnpm`. That was a genuine defect in
+the Action: it required the *caller's* package manager to be installed, so
+`evergreen-check` would have broken on first use in any repository using pnpm. It
+is fixed and guarded by a test proved by mutation. **The configuration had looked
+correct for days; running it is what found the defect** — which is why the run is
+in the evidence and not just the file.
 
 ---
 

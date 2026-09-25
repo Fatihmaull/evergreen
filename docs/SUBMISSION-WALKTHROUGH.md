@@ -9,9 +9,10 @@ see, and — the part that matters for §6.2 — **what seeing it proves.**
 > coverage. **This page is a route through it**, ordered by what settles the
 > question fastest rather than by the SOW's numbering.
 >
-> **Three things are incomplete, and they are named at the step where you meet
-> them** — steps 3, 10 and 10 again — rather than collected at the end. You should
-> not have to find them.
+> **One thing is incomplete, and it is named at the step where you meet it** —
+> step 10 — rather than collected at the end. You should not have to find it.
+> *(Updated 2026-09-25: this said three. The npm package published on 2026-09-24
+> and took two of them with it.)*
 
 ## Before you start — two things that will otherwise look like errors
 
@@ -62,7 +63,7 @@ third image is the one worth pausing on: it shows the tool reporting that a code
 entry is **shared with other contracts**, which is the finding the tool exists for
 (step 8 shows why).
 
-### Step 3 · Test coverage — and the one gap in Deliverable 1
+### Step 3 · Test coverage — and the package you can run yourself
 
 **Open:** [coverage report](evidence/2026-09-10-coverage/coverage-report.txt)
 
@@ -71,12 +72,17 @@ functions, 94.57% of lines.
 
 **What it proves:** the correctness claims are measured, not asserted.
 
-> ⬜ **Incomplete, and this is the one gap in Deliverable 1: the npm package is
-> not published.** It is built, packed, and installed into a clean directory from
-> its own tarball and run there — twice — but the publish command itself has not
-> been run. There is a [dry-run record](evidence/2026-09-15-publish-dry-run/README.md).
-> **This is the only missing item in D1**, and two items in D3 are waiting on the
-> same act.
+> ✅ **Deliverable 1 is complete.** The fourth item —
+> **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli)** —
+> published on 2026-09-24. You can run it yourself with no install and no account:
+>
+> ```
+> npx @evergreen-stellar/cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+> ```
+>
+> We then checked it against what the registry actually serves rather than against
+> our own build — clean directory, no workspace above it, isolated cache. One
+> declared dependency. [The record](evidence/2026-09-25-published-package-verification/README.md).
 
 ---
 
@@ -215,31 +221,35 @@ refuses to blur the two.
 
 ### Step 10 · The CI check — and the two remaining gaps
 
-**Open:** [the CI section of the README](../README.md#use-it-in-ci)
+**Open:** [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235),
+then [the CI section of the README](../README.md#use-it-in-ci)
 
-**You should see:** a short YAML block a developer drops into their own workflow,
-with a `threshold` in ledgers, and a stated rule: the job fails when an entry is
-at or below that threshold, **and also** when the scan errors or comes back
-incomplete.
+**You should see:** one workflow, two jobs. `green · must pass` **succeeded**;
+`red · must fail` **failed with exit code 1**. Both scanned the same contract and
+**only the threshold differs** — so the thing demonstrated is *"the job fails when
+an entry is at or below the threshold you configured"*, not that the contract is
+decaying. Then a short YAML block a developer drops into their own workflow.
 
 **What it proves:** §6.1's `evergreen-check` GitHub Action exists and is usable by
 someone else. The last clause is the honest part — an incomplete scan is not
 evidence of health, so it fails rather than passing quietly.
 
-> ⬜ **Incomplete, two items, both waiting on step 3's publish:**
+> ⬜ **One item is incomplete, in the whole submission: the 3–5 minute demo video
+> has not been recorded.** The [script](W4-D28-01-DEMO-SCRIPT.md) is written, timed
+> at 4m20s, and every slot that blocked recording is now filled and verified
+> against the live artifact. What is missing is the recording.
 >
-> - **The 3–5 minute demo video is not recorded.** The
->   [script](W4-D28-01-DEMO-SCRIPT.md) is written and timed at 4m20s; one of its
->   beats is the install line that does not resolve until the package is
->   published.
-> - **The npm package links are empty**, which is step 3's gap seen from here.
+> **And something we would rather tell you than have you find.** The run linked
+> above is the second attempt. The first time that workflow ever ran, **both jobs
+> failed** — including the one named *green · must pass* — with
+> `Unable to locate executable file: pnpm`. That was a genuine defect in the
+> Action: it was configured in a way that required the *caller's* package manager
+> to be installed, so `evergreen-check` would have failed on first use in any
+> repository that uses pnpm. It is fixed, and a test now guards it.
 >
-> And one thing we would rather say than have you notice: the Action is complete
-> and usable, but the [demonstration workflow](../.github/workflows/evergreen-check-demo.yml)
-> that runs it twice — once where it must pass, once where it must fail — **has
-> not been run yet.** It installs the CLI from the npm registry, so it cannot run
-> until the package is published either. Nothing about the Action is waiting; the
-> recorded green-and-red pair is.
+> We are telling you because of what it says about the evidence. **The file existed
+> and looked correct for days; running it is what found the defect.** That is why
+> the run is in the evidence and not just the configuration.
 
 ---
 
@@ -247,13 +257,14 @@ evidence of health, so it fails rather than passing quietly.
 
 | | Our reading | What is missing |
 |---|---|---|
-| **Deliverable 1** | Partial — 3 of 4 | the npm publish |
+| **Deliverable 1** | **Present — 4 of 4** | nothing |
 | **Deliverable 2** | **Present — 4 of 4** | nothing in §6.1; §4.1's policy-signer is addressed in step 7 |
-| **Deliverable 3** | Partial — 3 of 5 | the demo video, the npm links |
+| **Deliverable 3** | Partial — 4 of 5 | **the demo video, and nothing else** |
 
-**Two of the three remaining items are the same act.** Publishing the package
-fills D1's fourth item, fills D3's npm links, unblocks the demo's install line,
-and makes the Action's green-and-red pair recordable.
+**One evidence item is absent across all three deliverables.** The publish on
+2026-09-24 filled D1's fourth item and D3's npm links, made the demo's install
+line true, and made the Action's green-and-red pair recordable — all four at
+once.
 
 **You do not have to take our word for that reading.** The repository runs a check
 of its own, `check:sow`, that looks for each of the thirteen §6.1 artifacts and

@@ -1,0 +1,7 @@
+exit 0  scan <A>                                    (no scope asserted)
+exit 0  scan <A> --no-data-keys                     (scope asserted, healthy)
+exit 1  scan <A> --no-data-keys --threshold 2000000  (every entry at/below)
+exit 0  scan <A> --no-data-keys --threshold 1        (nothing at/below)
+exit 2  scan <A> --threshold 0                      (rejected: not a positive int)
+exit 2  scan NOTACONTRACT                          (malformed id)
+exit 3  scan <A> --require-declared-scope           (the Action's default)

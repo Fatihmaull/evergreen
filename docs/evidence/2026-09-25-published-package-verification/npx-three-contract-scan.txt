@@ -1,0 +1,54 @@
+Scanned 3 contract(s): CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L, CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ, CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ: 0 explicit data key(s)
+  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL: 0 explicit data key(s)
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,512,790 ledgers — live
+  ends at:    ledger 6,370,261
+  expires ~:  2026-12-21T17:41:35.438Z (estimate — ledgers are the truth)
+  observed:   ledger 4,857,471
+  health:     HEALTHY — Above threshold.
+
+CRITICAL  instance  AAAABgAAAA…
+  contracts:  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+  remaining:  -4,857,471 ledgers — EXPIRED (archived)
+  ends at:    ledger 0
+  expires ~:  2025-12-18T02:06:30.438Z (estimate — ledgers are the truth)
+  observed:   ledger 4,857,471
+  health:     CRITICAL — Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.
+
+WARNING  instance  AAAABgAAAA…
+  contracts:  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  remaining:  22,626 ledgers — live
+  ends at:    ledger 4,880,097
+  expires ~:  2026-09-26T12:01:15.438Z (estimate — ledgers are the truth)
+  observed:   ledger 4,857,471
+  health:     WARNING — Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L, CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ, CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+  ⚠ shared:   this code entry is shared with 2 other contracts — they fail together
+  remaining:  433,358 ledgers — live
+  ends at:    ledger 5,290,829
+  expires ~:  2026-10-20T06:28:55.438Z (estimate — ledgers are the truth)
+  observed:   ledger 4,857,471
+  health:     HEALTHY — Above threshold.
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+
+Worst entry health: CRITICAL (warn below 120,960 · act below 17,280 ledgers) · 1 shared entry
+Scan is PARTIAL — 3 issue(s). Absence is not health.
+npx three-contract rc=1

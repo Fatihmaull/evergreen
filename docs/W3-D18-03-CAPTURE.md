@@ -41,10 +41,10 @@ collection; it does not complete the crossing, expiry or unattended-operation ga
 
 | Time (UTC) | WIB | C remaining | What it is | Primary | Backup — runs it if nothing is committed by |
 |---|---|---|---|---|---|
-| **Fri 2026-09-25 12:00** ❓ | Fri 19:00 | 17,280 | the alert threshold | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
-| **Sat 2026-09-26 00:00** ❓ | Sat 07:00 | 8,640 | first decay reading | **Rakha** — *unconfirmed* | Fatih, 00:20 UTC |
-| **Sat 2026-09-26 06:00** ❓ | Sat 13:00 | 4,320 | second decay reading | **Rakha** — *unconfirmed* | Fatih, 06:20 UTC |
-| **Sat 2026-09-26 12:00** ❓ | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Rakha** — *unconfirmed* | Fatih, 12:20 UTC |
+| **Fri 2026-09-25 12:00** | Fri 19:00 | 17,280 | the alert threshold | **Rakha** | Fatih, 12:20 UTC |
+| **Sat 2026-09-26 00:00** | Sat 07:00 | 8,640 | first decay reading | **Fatih** | Rakha, 00:20 UTC |
+| **Sat 2026-09-26 06:00** | Sat 13:00 | 4,320 | second decay reading | **Rakha** | Fatih, 06:20 UTC |
+| **Sat 2026-09-26 12:00** | Sat 19:00 | 0 | EXPIRY — Saturday, happens once, nothing comes after it | **Fatih** | Rakha, 12:20 UTC |
 
 ### The backup trigger is a wall clock, not a judgement
 
@@ -52,18 +52,20 @@ collection; it does not complete the crossing, expiry or unattended-operation ga
 
 **Being backup still means being present.** The backup has to look at that time to know whether to act. It reduces the precision required, not the attendance — two people on one task is how a task gets done zero times, and redundancy only works when the roles differ and the handover has a clock on it.
 
-### ❓ 4 slot(s) are REQUESTED, not assigned — this table does not yet claim coverage
+### On the day — per slot
 
-Assigning someone work they have already declined, through an issue comment, is how it does not get done — and finding that out on the day is finding it out too late. So these were asked as a request, with a yes or a no wanted on **each one separately**:
+**Both operators own all 4 slots.** On each one, exactly one **runs** it and the other **confirms** at :20 past. Who runs alternates, so neither ends up carrying the whole window. Being the confirmer is not standby — it is a scheduled look at a clock.
 
-- **Fri 2026-09-25 12:00 / Fri 19:00 WIB** — asked of Rakha in #104, 2026-09-22. Same shape as B's slot 1. Nobody has accepted it yet.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
-- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — asked of Rakha in #104, 2026-09-22. 07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 00:20 UTC. Stated up front so a "no" needs no second round trip.
-- **Sat 2026-09-26 06:00 / Sat 13:00 WIB** — asked of Rakha in #104, 2026-09-22. Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 06:20 UTC. Stated up front so a "no" needs no second round trip.
-- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — asked of Rakha in #104, 2026-09-22. A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097.
-  **If declined:** primary reverts to **Fatih**, with Rakha as backup at 12:20 UTC. Stated up front so a "no" needs no second round trip.
+Below is only what is specific to each window rather than to the procedure.
+
+- **Fri 2026-09-25 12:00 / Fri 19:00 WIB** — runs: **Rakha**, confirms: Fatih at 12:20 UTC · owners: Fatih + Rakha
+  🔴 **THIS DIRECTORY MUST SURVIVE UNTIL AFTER SLOT 4.** Saturday's expiry capture passes `--baseline` pointing at it, so deleting or moving it breaks the one capture that cannot be retaken.
+- **Sat 2026-09-26 00:00 / Sat 07:00 WIB** — runs: **Fatih**, confirms: Rakha at 00:20 UTC · owners: Fatih + Rakha
+  07:00 WIB. B's equivalent slot was accepted as a standalone morning slot.
+- **Sat 2026-09-26 06:00 / Sat 13:00 WIB** — runs: **Rakha**, confirms: Fatih at 06:20 UTC · owners: Fatih + Rakha
+  Fills the twelve-hour gap running into expiry, which is the interval a reader asks about.
+- **Sat 2026-09-26 12:00 / Sat 19:00 WIB** — runs: **Fatih**, confirms: Rakha at 12:20 UTC · owners: Fatih + Rakha
+  A WEEKEND SLOT, against the weekends-are-not-working-days assumption. B's expiry produced only one bundle because the secondary machine slept; this is the last chance at two. Assessment needs a ledger above the PERSISTENT entry's 4,880,099, not the instance's 4,880,097. Takes `--baseline` from the 2026-09-25T12:00Z directory.
 
 <!-- END GENERATED: crossing-schedule -->
 
@@ -115,7 +117,19 @@ pnpm capture:crossing --subject B --baseline .evergreen/crossing/B-crossing --ou
 pnpm verify:crossing .evergreen/crossing/B-expiry
 ```
 
-Repeat with C for its own window. A baseline can be `before-action` or
+**For C, the commands are written out in
+[SEP-20-PREFLIGHT § Then C](SEP-20-PREFLIGHT.md#then-c-sep-2526)** rather than
+retyped here, so there is one copy to keep right. Two things from there that this
+page must not let you miss:
+
+- Friday's crossing capture goes to **`.evergreen/crossing/C-20260925-1200`**, and
+  🔴 **that directory must still exist on Saturday evening** — the expiry capture
+  passes `--baseline` at it. Deleting or moving it breaks the one capture in this
+  sprint that cannot be retaken.
+- An expiry assessment needs a ledger above C's **persistent** entry at
+  **4,880,099**, not the instance's 4,880,097.
+
+A baseline can be `before-action` or
 `crossing-refused`, for the same subject, and must not itself contain a baseline.
 The current verifier requires matching runtime fingerprints for both captures;
 keep the reviewed capture checkout stable across the window. If code must change,
