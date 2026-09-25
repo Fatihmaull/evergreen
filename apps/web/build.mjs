@@ -68,6 +68,7 @@ function readKnownEnds() {
       // Date only. The closing record says the wall-clock crossing time is
       // "derived, and not observed", so no time of day is published here.
       ...(typeof s.expiresAtUtc === 'string' ? { endsOn: s.expiresAtUtc.slice(0, 10) } : {}),
+      ...(typeof s.crossesAtUtc === 'string' ? { crossesOn: s.crossesAtUtc.slice(0, 10) } : {}),
       status: watch.status,
     };
   }

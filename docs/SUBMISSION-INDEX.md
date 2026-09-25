@@ -20,6 +20,12 @@ records themselves.
 > Our own reading is stated at the head of each section — including where it is
 > partial, and why. We would rather name a gap than have it found.
 
+> 🧭 **Would you rather be walked through it than read a table?**
+> [`SUBMISSION-WALKTHROUGH.md`](SUBMISSION-WALKTHROUGH.md) is the same evidence as
+> a route — ten steps, about ten minutes, ordered by what settles the question
+> fastest, and saying at each step what seeing it *proves*. **This page is for
+> checking coverage; that one is for forming a view.**
+
 ---
 
 ## Deliverable 1 — Core CLI
@@ -85,13 +91,20 @@ what not to touch is the one worth putting near production.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 9 | Live testnet dashboard | **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any contract ID, no wallet, no signup, no account | [landing page](https://evergreen-stellar.pages.dev/) · source in `apps/` |
-| 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) |
+| 10 | Published `evergreen-check` GitHub Action | **[`action.yml`](../action.yml)** — add it to a workflow and the job fails when an entry is at or below your threshold | [how to use it](../README.md#use-it-in-ci) · [demo workflow](../.github/workflows/evergreen-check-demo.yml) — see the note below |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
 | 13 | Links to the published npm packages | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Same verified registry artifact as item 2 |
 
 **On item 11, plainly:** the demo script is written and timed, and its install
 line now resolves against the published package. Recording/upload remains.
+
+**On item 10, one thing we would rather say than have noticed.** The Action is
+complete and usable, and the linked demo workflow — which runs it against a real
+contract twice, once where it must pass and once where it must fail — **has not
+been run yet.** It installs the CLI from the registry, so it cannot run until the
+package in Deliverable 1 is published. Nothing about the Action is waiting; the
+recorded green-and-red pair is.
 
 ---
 

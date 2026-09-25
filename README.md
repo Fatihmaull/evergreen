@@ -14,6 +14,8 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 | **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its hot payer account; the normal engine path restricts operations and fees, but the raw v1 key is not cryptographically scoped. Email alerts on every bump. |
 | **Dashboard + `evergreen-check`** | A public read-only view — scan any contract's TTL health, no wallet or signup — plus a GitHub Action that fails CI when a contract's TTL gets dangerously low. |
 
+**Try it without installing anything: [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any testnet contract ID. No wallet, no signup, no account.
+
 ## Why this is non-custodial
 
 Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. Stellar's state-archival documentation states it directly — *"There is no access control for TTL extension operations."*
@@ -152,8 +154,11 @@ npx @evergreen-stellar/cli scan <contract-id> --threshold 120960
 ## Documentation
 
 **Assessing this for the Stellar Instawards grant?** Start at
-[`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md) — one row per SOW §6.1
-evidence item, browser-openable artifact first, nothing that needs a terminal.
+[`docs/SUBMISSION-WALKTHROUGH.md`](docs/SUBMISSION-WALKTHROUGH.md) — ten steps,
+about ten minutes, no terminal, with what each step proves and every incomplete
+item named at the step where you meet it. For coverage rather than a route,
+[`docs/SUBMISSION-INDEX.md`](docs/SUBMISSION-INDEX.md) has one row per SOW §6.1
+evidence item, browser-openable artifact first.
 
 | Doc | Read it for |
 |---|---|
