@@ -145,7 +145,16 @@ function readCli() {
       'packages/cli/src/scan.ts moved under the web build: exit constants are not 0/1/2/3',
     );
   }
-  return { help, exits };
+  /**
+   * The package name and version the landing prints, read from the manifest
+   * that was published rather than typed. A quickstart that names a version
+   * nobody shipped is worse than no quickstart.
+   */
+  const manifest = JSON.parse(readFileSync(join(repo, 'packages/cli/package.json'), 'utf8'));
+  if (!manifest.name || !manifest.version) {
+    throw new Error('packages/cli/package.json has no name or version; the landing prints both');
+  }
+  return { help, exits, packageName: manifest.name, version: manifest.version };
 }
 
 const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';

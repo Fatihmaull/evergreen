@@ -83,11 +83,11 @@ function nav(active, tone) {
     </header>`;
 }
 
-function footer() {
+function footer(tone) {
   const links = FOOTER_LINKS.map(
     (item) => `<a class="site-link" href="${item.href}">${item.label}</a>`,
   ).join('');
-  return `<footer class="site-foot">
+  return `<footer class="site-foot${tone === 'dark' ? ' on-dark' : ''}">
       <div class="site-wrap">
         <div class="site-foot-links">${links}</div>
         <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
@@ -161,7 +161,7 @@ export function siteShell({ title, description, active, eyebrow, heading, lead, 
     ${intro}
 ${body}
     </main>
-    ${footer()}
+    ${footer(navTone)}
     <script>
       (function () {
         var nav = document.querySelector('.site-nav');
@@ -189,6 +189,46 @@ ${body}
             button.focus();
           }
         });
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
         // A menu left open behind a widened window would be a panel floating
         // over a bar that has room for its own links.
         if (window.matchMedia) {

@@ -1185,9 +1185,133 @@ body.site .plain .lead {
   color: var(--ink-2);
 }
 
-/* Closing — the only section with its own bottom padding ------------------- */
+/* Closing — the page's last beat, and the second of its two gradients ------
+   The hero fades green into the surface; this fades the surface back into
+   green, so the page opens and closes on the same field. That is a SECOND
+   gradient on a page briefed to carry one, added at Fatih's direction on
+   2026-09-25 — the budget in `check-design.mjs` moved from one to two so a
+   THIRD still fails.
+
+   Centred, and only here. The rest of the site is left-aligned against a rail
+   or a measure; the closing is the one place where centring is the point,
+   because there is nothing after it to align to. */
 body.site .closing {
-  padding-bottom: 8.4rem;
+  position: relative;
+  background: var(--pine-deep);
+  color: var(--surface);
+  padding-block: calc(var(--m-rhythm) + var(--hero-fade)) 8.4rem;
+}
+body.site .closing::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--hero-fade);
+  pointer-events: none;
+  background: linear-gradient(to bottom, #fcf9f8 0%, #022419 100%);
+  background: linear-gradient(to bottom in oklab, #fcf9f8 0%, #022419 100%);
+}
+.closing-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* A grid item will not shrink below its content either, so the track has to
+     say so explicitly. Without this the command pill widened the section by
+     221px on a phone even after the code could scroll. */
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 20px;
+  text-align: center;
+}
+body.site .closing h2 {
+  max-width: 22ch;
+}
+body.site .closing .lead {
+  color: rgba(252, 249, 248, 0.78);
+  max-width: 54ch;
+}
+body.site .closing .hero-actions {
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* The command. A control surface, not a card: it holds a button, its text is
+   selectable, and it is the one thing on the page a visitor is meant to take
+   away with them. The command itself is the README's quickstart verbatim. */
+.command {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  /* The command is 95 characters, which is 711px of Space Mono at 12px. With
+     the prompt, the gaps, the button and the padding it asks for 853px, so
+     this leaves it room rather than making it scroll at full width. */
+  max-width: 940px;
+  margin-top: 8px;
+  padding: 10px 10px 10px 18px;
+  border: 1px solid rgba(252, 249, 248, 0.2);
+  border-radius: 100vw;
+  background: rgba(252, 249, 248, 0.05);
+}
+.command code {
+  /* A flex item will not shrink below its content without this, so the
+     command's 95 characters pushed the row 463px past a 390px phone. The code
+     scrolls inside the pill instead. */
+  min-width: 0;
+  overflow-x: auto;
+  font: 400 var(--t-label) / 1.6 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--surface);
+  white-space: pre;
+}
+.command-prompt {
+  flex: none;
+  font: 400 var(--t-label) / 1.6 var(--mono);
+  color: var(--sage);
+}
+.command-copy {
+  flex: none;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 100vw;
+  background: rgba(252, 249, 248, 0.1);
+  color: rgba(252, 249, 248, 0.72);
+  font: 400 var(--t-label) / 1 var(--mono);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color var(--m-ease),
+    color var(--m-ease);
+}
+.command-copy:hover,
+.command-copy.done {
+  background: rgba(252, 249, 248, 0.18);
+  color: var(--surface);
+}
+.command-copy[hidden] {
+  display: none;
+}
+
+/* The second action. Transparent, a hairline in the foreground's alpha — the
+   filled pill stays the only solid button on the surface. */
+.site-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  padding: 7px 14px;
+  border: 1px solid rgba(252, 249, 248, 0.28);
+  border-radius: 100vw;
+  color: var(--surface);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color var(--m-ease),
+    background-color var(--m-ease);
+}
+.site-ghost:hover {
+  border-color: rgba(252, 249, 248, 0.6);
+  background: rgba(252, 249, 248, 0.06);
 }
 
 /* Reference pages — a label rail, and the substance beside it ------------- */
@@ -1297,6 +1421,22 @@ body.site tbody td.num {
 .site-foot {
   border-top: 1px solid var(--rule);
   padding-block: 40px 56px;
+}
+/* On the landing the closing section is green to the page's end, so the footer
+   stays in that field rather than cutting it off with a cream band. The page
+   then opens and closes on the same colour. */
+.site-foot.on-dark {
+  background: var(--pine-deep);
+  border-top-color: rgba(252, 249, 248, 0.16);
+}
+.site-foot.on-dark .site-link {
+  color: rgba(252, 249, 248, 0.62);
+}
+.site-foot.on-dark .site-link:hover {
+  color: var(--surface);
+}
+.site-foot.on-dark .site-foot-note {
+  color: rgba(252, 249, 248, 0.54);
 }
 .site-foot-links {
   display: flex;

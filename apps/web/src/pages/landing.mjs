@@ -19,6 +19,8 @@
 import { dateLong, esc, fmt } from './_shared.mjs';
 
 const B = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ';
+/** The contract the README's quickstart scans, so the command here is the one that was run. */
+const CONTRACT_A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 
 export const meta = {
   title: 'Evergreen — Soroban contract rent, configured once',
@@ -263,11 +265,36 @@ export function render(ctx) {
         </div>
       </section>`;
 
+  /**
+   * The closing call to action.
+   *
+   * The command is the README's quickstart, verbatim, and it is runnable: it
+   * scans guinea-pig A on testnet and needs no key, no account and no install.
+   * It can be shown at all only because `@evergreen-stellar/cli@0.1.0` was
+   * verified from a clean machine on 2026-09-25 — see
+   * `docs/evidence/2026-09-25-published-package-verification/`. Before that
+   * evidence existed, W4-D22-04 forbade an install line on this page.
+   *
+   * No protocol version and no invented domain. The reference this was
+   * modelled on offered `curl … | sh` from a host we do not own.
+   */
+  const command = `npx ${ctx.cli.packageName}@${ctx.cli.version} scan ${CONTRACT_A}`;
+
   const closing = `<section class="closing">
-        <div class="site-wrap">
-          <h2>Make TTL something you configure once instead of remember.</h2>
+        <div class="site-wrap closing-inner">
+          <h2>Ready to safeguard your Soroban contracts?</h2>
+          <p class="lead">
+            Open the dashboard, run the CLI against any contract, or read the evidence we recorded
+            doing it. Stellar testnet, read-only, no key and no account.
+          </p>
+          <div class="command">
+            <span class="command-prompt" aria-hidden="true">$</span>
+            <code>${esc(command)}</code>
+            <button class="command-copy" type="button" data-copy="${esc(command)}" hidden>Copy</button>
+          </div>
           <p class="hero-actions">
             <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+            <a class="site-ghost" href="https://github.com/Fatihmaull/evergreen">View on GitHub</a>
           </p>
         </div>
       </section>`;

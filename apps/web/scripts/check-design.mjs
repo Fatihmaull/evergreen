@@ -50,7 +50,11 @@ const BUDGET = [
   // One gradient, and it is deliberate: the hero's fade into the surface
   // below it, at the single most important transition on the page. Budgeted
   // rather than forbidden, so a second one fails.
-  { route: '/', fontSizes: 5, cards: 0, icons: 0, gradients: 1, over40: 1 },
+  // Two gradients, both deliberate and both transitions between the page's
+  // two colour fields: the hero fading out of green, and the closing fading
+  // back into it. The second was added on 2026-09-25 at Fatih's direction, so
+  // the budget moved from one to two rather than the check being switched off.
+  { route: '/', fontSizes: 5, cards: 0, icons: 0, gradients: 2, over40: 1 },
   { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
   { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0 },
 ];
@@ -100,7 +104,16 @@ const PROBE = `(() => {
     const border = parseFloat(cs.borderTopWidth) || 0;
     const radius = parseFloat(cs.borderTopLeftRadius) || 0;
     const edged = (border > 0 && cs.borderTopStyle !== 'none') || cs.boxShadow !== 'none';
-    if (edged && radius >= 4 && el.clientHeight > 40 && el.children.length > 0) cards.push(name);
+    // A box that holds a control is a control surface, not a card. The
+    // complaint this counts was content forced into card shape — text in a
+    // rounded box because boxes were what the page had. A search field, or a
+    // command with a copy button in it, is a different object and always had
+    // an edge and a radius.
+    const isControl = el.tagName.toLowerCase() === 'button' ||
+      el.querySelector('button, input, textarea, select') !== null;
+    if (edged && radius >= 4 && el.clientHeight > 40 && el.children.length > 0 && !isControl) {
+      cards.push(name);
+    }
     if (border > 0 && cs.borderTopStyle !== 'none') borders.add(cs.borderTopColor);
     if (/gradient/.test(cs.backgroundImage)) gradients.push(name);
     // ::before and ::after too. The first version of this walked only real

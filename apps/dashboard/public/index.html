@@ -208,10 +208,20 @@ Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
         </div>
       </section>
 <section class="closing">
-        <div class="site-wrap">
-          <h2>Make TTL something you configure once instead of remember.</h2>
+        <div class="site-wrap closing-inner">
+          <h2>Ready to safeguard your Soroban contracts?</h2>
+          <p class="lead">
+            Open the dashboard, run the CLI against any contract, or read the evidence we recorded
+            doing it. Stellar testnet, read-only, no key and no account.
+          </p>
+          <div class="command">
+            <span class="command-prompt" aria-hidden="true">$</span>
+            <code>npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</code>
+            <button class="command-copy" type="button" data-copy="npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L" hidden>Copy</button>
+          </div>
           <p class="hero-actions">
             <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+            <a class="site-ghost" href="https://github.com/Fatihmaull/evergreen">View on GitHub</a>
           </p>
         </div>
       </section>
@@ -237,7 +247,7 @@ Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
       })();
     </script>
     </main>
-    <footer class="site-foot">
+    <footer class="site-foot on-dark">
       <div class="site-wrap">
         <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
         <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
@@ -271,6 +281,46 @@ Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
             button.focus();
           }
         });
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
         // A menu left open behind a widened window would be a panel floating
         // over a bar that has room for its own links.
         if (window.matchMedia) {
