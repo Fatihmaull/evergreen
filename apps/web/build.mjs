@@ -31,6 +31,8 @@ import process from 'node:process';
 import console from 'node:console';
 import { shell } from './src/chrome.mjs';
 import { siteShell } from './src/site.mjs';
+import { DOC_PAGES } from './src/docs/nav.mjs';
+import { docsLayout } from './src/docs/shell.mjs';
 // Node 24 strips the types. The manifest is the dashboard package's own entry.
 import { ROUTES, pageFor } from '../dashboard/src/index.ts';
 
@@ -154,7 +156,35 @@ function readCli() {
   if (!manifest.name || !manifest.version) {
     throw new Error('packages/cli/package.json has no name or version; the landing prints both');
   }
-  return { help, exits, packageName: manifest.name, version: manifest.version };
+  /**
+   * The extend command's own help, read from the source for the same reason
+   * as scan's: a page that retypes a guard can lose one, and the guards are
+   * the reason this command is safe to document at all.
+   */
+  const extendSrc = readFileSync(join(repo, 'packages/cli/src/extend.ts'), 'utf8');
+  const extendStart = extendSrc.indexOf('export const EXTEND_HELP = `');
+  const extendEnd = extendSrc.indexOf('`;', extendStart);
+  if (extendStart < 0 || extendEnd < 0) {
+    throw new Error('packages/cli/src/extend.ts moved under the web build: EXTEND_HELP not found');
+  }
+  const extendHelp = extendSrc.slice(extendStart + 'export const EXTEND_HELP = `'.length, extendEnd);
+  for (const guard of ['--submit', '--secret-env', '--max-fee-stroops', 'Testnet only']) {
+    if (!extendHelp.includes(guard)) {
+      throw new Error(`extend help no longer documents ${guard}; the /docs page would understate the guards`);
+    }
+  }
+  return { help, extendHelp, exits, packageName: manifest.name, version: manifest.version };
+}
+
+/**
+ * `/docs/…` page modules, named from their own route so the two cannot drift:
+ * `/docs/cli/scan/` is `src/pages/docs/cli-scan.mjs`, and `/docs/` is
+ * `overview`. `/docs/archival/` is declared above instead, because it is the
+ * one documentation page that reads the chain in the browser.
+ */
+function docModule(route) {
+  const slug = route.replace(/^\/docs\/?/, '').replace(/\/$/, '').replace(/\//g, '-');
+  return `src/pages/docs/${slug || 'overview'}.mjs`;
 }
 
 const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
@@ -319,11 +349,21 @@ const PAGES = [
     entry: 'src/pages/archival.ts',
     js: 'assets/archival.js',
     to: 'docs/archival/index.html',
+    doc: '/docs/archival/',
   },
-  { module: 'src/pages/docs.mjs', to: 'docs/index.html' },
   { module: 'src/pages/evidence.mjs', to: 'evidence/index.html' },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
 ];
+
+for (const page of DOC_PAGES) {
+  if (PAGES.some((existing) => existing.doc === page.route)) continue;
+  PAGES.push({
+    module: docModule(page.route),
+    to: `${page.route.replace(/^\/|\/$/g, '')}/index.html`,
+    doc: page.route,
+  });
+}
+
 
 function guardBundle(metafile, label) {
   const included = Object.entries(metafile.outputs)
@@ -363,16 +403,39 @@ async function buildPage(page) {
     const included = await bundle(page.entry, page.js);
     coreModules = included.length;
   }
-  const render_shell = meta.layout === 'site' ? siteShell : shell;
+  const isDoc = typeof page.doc === 'string';
+  const render_shell = isDoc || meta.layout === 'site' ? siteShell : shell;
+  /**
+   * A documentation page's heading lives in its own meta and its title lives
+   * in the sitemap; if they disagree the sidebar promises one page and the
+   * reader arrives at another.
+   */
+  if (isDoc) {
+    const entry = DOC_PAGES.find((candidate) => candidate.route === page.doc);
+    if (!entry) throw new Error(`${page.to} is built as a doc but ${page.doc} is not in the sitemap`);
+    if (meta.heading !== entry.title) {
+      throw new Error(
+        `${page.doc}: the sitemap calls this "${entry.title}" and the page calls itself "${meta.heading}"`,
+      );
+    }
+  }
+  const body = isDoc
+    ? docsLayout({
+        route: page.doc,
+        heading: meta.heading,
+        lead: meta.lead,
+        body: render(ctx),
+      })
+    : render(ctx);
   const html = render_shell({
     title: meta.title,
     description: meta.description,
-    active: meta.active,
+    active: isDoc ? '/docs/' : meta.active,
     navTone: meta.navTone,
-    eyebrow: meta.eyebrow,
-    heading: meta.heading,
-    lead: meta.lead,
-    body: render(ctx),
+    eyebrow: isDoc ? undefined : meta.eyebrow,
+    heading: isDoc ? undefined : meta.heading,
+    lead: isDoc ? undefined : meta.lead,
+    body,
     script: page.entry ? `/${page.js}` : (meta.script ?? null),
     cadence: CADENCE,
   });

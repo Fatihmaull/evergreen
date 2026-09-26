@@ -59,7 +59,30 @@ const BUDGET = [
   // so the rule that matters most — one element above that line, and it is
   // the 98% — is untouched. Nothing on any of the three pages is bold.
   { route: '/', fontSizes: 6, cards: 0, icons: 0, gradients: 2, over40: 1, bold: 0 },
-  { route: '/docs/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  // Documentation pages carry one size the marketing pages do not: a 20px
+  // sub-heading. Twenty pages of reference need a step between the 28px title
+  // and 14px body, and 16px against 14px is a wobble rather than a step.
+  // Still nothing bold — emphasis on this surface is colour.
+  { route: '/docs/', fontSizes: 6, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  { route: '/docs/cli/scan/', fontSizes: 6, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  {
+    route: '/docs/cli/extend/',
+    fontSizes: 6,
+    cards: 0,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/docs/mental-model/',
+    fontSizes: 6,
+    cards: 0,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
   { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
 ];
 

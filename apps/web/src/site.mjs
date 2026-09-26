@@ -189,6 +189,22 @@ ${body}
             button.focus();
           }
         });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
         // The copy button only appears where the clipboard exists. Without it
         // the command is still there and still selectable, which is how it
         // shipped before the button.

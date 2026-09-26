@@ -1452,6 +1452,243 @@ body.site tbody td.num {
   align-content: start;
 }
 
+/* Documentation — sidebar, page, contents ---------------------------------
+   Three columns at 1300px, proportioned from the reference Fatih named:
+   260px of navigation, a 704px text column, 240px of contents. The text
+   column is the number that matters; its paragraphs still cap at the site's
+   own 54ch, so nothing runs past 80 characters a line.
+
+   One new type size lives here and nowhere else: a 20px sub-heading. Twenty
+   pages of reference need a step between the 28px page title and 14px body,
+   and 16px against 14px is not a step, it is a wobble. Nothing here is bold —
+   the reference this layout came from sets seventeen size-and-weight
+   combinations and uses 700 freely; copying that would split the site into
+   two languages a visitor crosses at the navbar. */
+body.site {
+  --t-sub: 20px;
+  --docs-rail: 260px;
+  --docs-toc: 240px;
+}
+.docs-shell {
+  padding-block: 3rem var(--m-rhythm);
+}
+.docs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .docs-grid {
+    grid-template-columns: var(--docs-rail) minmax(0, 1fr);
+    gap: 48px;
+  }
+}
+@media (min-width: 1200px) {
+  .docs-grid {
+    grid-template-columns: var(--docs-rail) minmax(0, 1fr) var(--docs-toc);
+  }
+}
+
+/* The rail. No fill and no border: it is a column of links, not a panel. */
+.docs-aside {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.docs-nav {
+  display: grid;
+  gap: 26px;
+}
+.docs-group {
+  display: grid;
+  gap: 2px;
+}
+.docs-group .eyebrow {
+  margin-bottom: 8px;
+}
+.docs-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+}
+.docs-link:hover {
+  color: var(--ink);
+}
+.docs-link.current {
+  color: var(--pine);
+}
+.docs-tag {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+/* The page. */
+.docs-main {
+  max-width: 704px;
+  min-width: 0;
+}
+.docs-head {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+body.site .docs-main h2 {
+  font-size: var(--t-sub);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  max-width: 34ch;
+  margin-top: 44px;
+  margin-bottom: 14px;
+}
+body.site .docs-main h3 {
+  margin-top: 26px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+body.site .docs-main p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+/* Emphasis by colour, not by weight. `strong` keeps its meaning for a screen
+   reader — it still announces emphasis — while rendering as full-strength ink
+   against the body's 72%. Reference prose needs to be able to stress a
+   sentence; this site carries hierarchy by size and colour, and that rule does
+   not get an exception just because there is a lot of text. */
+body.site .docs-main strong,
+body.site .docs-main b {
+  font-weight: inherit;
+  color: var(--ink);
+}
+body.site .docs-main ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: var(--t-body);
+  color: var(--ink-2);
+  max-width: 54ch;
+}
+/* `pre`, not `pre-wrap`, and it scrolls.
+   A help text aligns its flag descriptions in columns, and wrapping it at the
+   text measure breaks that alignment and splits sentences mid-clause. The
+   landing wraps its capture because that capture is prose; this one is a
+   layout, and the line breaks in it are the tool's rather than this page's. */
+body.site .docs-main .terminal {
+  margin-top: 4px;
+  white-space: pre;
+  overflow-x: auto;
+}
+body.site .docs-main .note,
+body.site .docs-main .provenance {
+  margin-top: 16px;
+}
+
+/* The contents. Hidden below 1200px, where the rail is already the map. */
+.docs-toc {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .docs-toc {
+    display: grid;
+    gap: 2px;
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+}
+.docs-toc .eyebrow {
+  margin-bottom: 8px;
+}
+.docs-toc-link {
+  padding: 5px 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+}
+.docs-toc-link:hover {
+  color: var(--ink);
+}
+
+/* Next page. A hairline above it, and nothing around it. */
+.docs-next {
+  display: grid;
+  gap: 6px;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+.docs-next-title {
+  font: 400 var(--t-lead) / 1.4 var(--serif);
+  letter-spacing: -0.005em;
+  color: var(--pine);
+}
+.docs-next-blurb {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  max-width: 54ch;
+}
+
+/* On a phone the rail collapses, for the same reason the navbar does. */
+.docs-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  color: var(--ink-2);
+  font: 400 var(--t-body) / 1 var(--sans);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+.docs-menu-button[hidden] {
+  display: none;
+}
+.docs-menu-mark {
+  /* Rotated 45 degrees, so its bounding box is the diagonal — about 12.7px for
+     a 9px square. That overhang was the 2px the overflow check caught. */
+  margin-right: 3px;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--m-ease);
+}
+.docs-shell[data-docs='open'] .docs-menu-mark {
+  transform: translateY(2px) rotate(-135deg);
+}
+@media (min-width: 980px) {
+  .docs-menu-button {
+    display: none;
+  }
+}
+@media (max-width: 979px) {
+  .docs-shell[data-docs='closed'] .docs-aside {
+    display: none;
+  }
+}
+
 /* Footer — a plain link list. No logo lockup, no newsletter, no social row. - */
 .site-foot {
   border-top: 1px solid var(--rule);

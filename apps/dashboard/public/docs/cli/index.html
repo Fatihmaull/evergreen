@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>About — Evergreen</title>
-    <meta name="description" content="Who builds Evergreen, under which grant, and how the work is evidenced." />
+    <title>Install and conventions</title>
+    <meta name="description" content="Install the Evergreen CLI, and the conventions its two commands share: ledgers over dates, declared scope, and no secret in an argument." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -19,61 +19,92 @@
           <span class="site-bars" aria-hidden="true"></span>
         </button>
         <div class="site-links" id="site-menu">
-          <div class="site-centre"><a class="site-link current" href="/about/" aria-current="page">About</a><a class="site-link" href="/docs/">Docs</a></div>
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
           <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
         </div>
       </nav>
     </header>
     <main id="main">
-    <section class="page-intro-wrap"><div class="site-wrap ref-grid page-intro">
-        <div class="ref-label">
-          <p class="eyebrow">About · the team and the terms</p>
-          <h1>Built by Apex, evidenced like it matters</h1>
+    
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link current" href="/docs/cli/" aria-current="page">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Command line</p>
+              <h1>Install and conventions</h1>
+              <p class="lead">Two commands. One reads, one writes, and the one that writes does nothing until you say so twice.</p>
+            </header>
+            
+    <h2 id="install">Install</h2>
+    <p>
+      There is nothing to install for a one-off scan — <span class="mono">npx</span> fetches and
+      runs it:
+    </p>
+    <div class="terminal">npx @evergreen-stellar/cli@0.1.0 scan &lt;contract-id&gt;</div>
+    <p>For repeated use, or in a script where you want the version pinned in one place:</p>
+    <div class="terminal">npm install -D @evergreen-stellar/cli@0.1.0</div>
+    <p class="note">
+      Node 24 is required and declared in the package. The binary is named
+      <span class="mono">evergreen</span>.
+    </p>
+
+    <h2 id="two-commands">Two commands</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="num">scan</td>
+          <td>Reads a contract’s entries and reports what expires first, what it would cost, and what it could not determine. Never writes. <a class="site-more" href="/docs/cli/scan/">Reference</a></td>
+        </tr>
+        <tr>
+          <td class="num">extend</td>
+          <td>Builds and simulates a TTL extension. Submits only with an explicit flag, a named secret variable and a fee cap. <a class="site-more" href="/docs/cli/extend/">Reference</a></td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="conventions">Conventions both commands keep</h2>
+    <h3>Ledgers are the truth</h3>
+    <p>
+      Every remaining lifetime is reported in ledgers. Dates appear beside them as estimates at
+      five seconds per ledger and always carry a <span class="mono">~</span>.
+    </p>
+    <h3>Scope is declared, never guessed</h3>
+    <p>
+      Scanning reads the keys it is given; it cannot enumerate a contract’s storage. So a clean
+      exit means “everything I was asked to check is healthy”, never “this contract is fully
+      healthy”. Coverage is printed with every scan, and
+      <span class="mono">--require-declared-scope</span> turns an undeclared scope into a failure
+      rather than a footnote.
+    </p>
+    <h3>A secret is never an argument</h3>
+    <p>
+      <span class="mono">extend --submit</span> takes the <em>name</em> of an exported environment
+      variable, not its value. There is no <span class="mono">.env</span> auto-loading, and
+      diagnostics never echo file contents or credentials.
+    </p>
+    <h3>Testnet only</h3>
+    <p>
+      The network passphrase is compared rather than a label trusted. There is no mainnet path in
+      this tool, and adding one is not a configuration change.
+    </p>
+  
+            <a class="docs-next" href="/docs/cli/scan/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">evergreen scan</span>
+              <span class="docs-next-blurb">Read a contract’s entries: every flag, and what each one changes.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#install">Install</a><a class="docs-toc-link" href="#two-commands">Two commands</a><a class="docs-toc-link" href="#conventions">Conventions both commands keep</a>
+        </nav>
         </div>
-        <div class="ref-body"><p class="lead">Evergreen is built by Apex — Fatih Maulana and Rakha — in the Stellar Ambassador Chapter Indonesia, under a funded Stellar Instawards grant: $4,800, thirty days, 3 September to 2 October 2026. The chapter is where the team sits; it does not govern the code.</p></div>
-      </div></section>
-<section class="ref">
-        <div class="site-wrap ref-grid">
-          <div class="ref-label">
-            <p class="eyebrow">Who</p>
-            <h2>Two people and a grant</h2>
-          </div>
-          <div class="ref-body"><div class="people">
-          <div>
-            <p class="how-name">Fatih Maulana</p>
-            <p>Product, coordination, evidence — and the SOW's primary contact. CLI, dashboard, docs, demo video, Ambassador liaison.</p>
-          </div>
-          <div>
-            <p class="how-name">Rakha</p>
-            <p>Engine, contracts, infrastructure. The auto-bump worker, threshold rules, the notification channel — and the signatures on the transactions.</p>
-          </div>
-          <div>
-            <p class="how-name">The grant</p>
-            <p>Stellar Instawards. A follow-on SCF Build Award application is the stated next step — it appears here as a possible follow-on, not as the program this is.</p>
-          </div>
-        </div></div>
-        </div>
-      </section>
-<section class="ref">
-        <div class="site-wrap ref-grid">
-          <div class="ref-label">
-            <p class="eyebrow">Method</p>
-            <h2>Measured rather than assumed</h2>
-          </div>
-          <div class="ref-body"><p>
-          The TTL floor per entry type was measured on a fresh deploy, not read from documentation. The permissionless
-          property was confirmed by extending someone else's contract on testnet, not by quoting the docs. The rent
-          model was validated against a real fee recorded a day earlier — and the first implementation failed that
-          comparison, so it was replaced. Corrections stay in the record: the repository keeps its architecture
-          decision records amended, never rewritten, because the reasoning at the time is the valuable part.
-        </p>
-        <p>
-          The work is public at <a class="site-more" href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
-          under MIT. Nothing on this page — no title, no ID, no privilege — exists outside that repository, the PRD
-          or the statement of work.
-        </p></div>
-        </div>
-      </section>
+      </div>
     </main>
     <footer class="site-foot">
       <div class="site-wrap">

@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>State archival — Evergreen</title>
-    <meta name="description" content="How Soroban state archival works on testnet: the live network configuration plus our own measurements." />
+    <title>Quickstart</title>
+    <meta name="description" content="Scan a real Soroban contract on testnet with one command. No key, no account, no install." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -31,61 +31,95 @@
           <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
             All pages<span class="docs-menu-mark" aria-hidden="true"></span>
           </button>
-          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link current" href="/docs/archival/" aria-current="page">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div></nav></div>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link current" href="/docs/quickstart/" aria-current="page">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div></nav></div>
           <main class="docs-main" id="main">
             <header class="docs-head">
               <p class="eyebrow">Getting started</p>
-              <h1>What the network says about archival</h1>
-              <p class="lead">The configuration below is read live from testnet when the page loads. Rent is not a flat per-byte rate — the CLI prices it by simulating against the network precisely because that formula does not hold, so no such rate appears here.</p>
+              <h1>Quickstart</h1>
+              <p class="lead">One command against a real contract on testnet. It needs Node 24, and nothing else — no key, no account, and no install step.</p>
             </header>
-            <section>
-    <div id="live-config"><div class="table-wrap"><table>
-      <thead><tr><th scope="col">Parameter</th><th scope="col">Ledgers</th><th scope="col">About</th></tr></thead>
+            
+    <h2 id="run-it">Run it</h2>
+    <p>
+      The contract id below is guinea-pig A, one of three contracts this project runs against on
+      testnet. It is a real deployment, so the numbers you get back will differ from the ones here —
+      they move every five seconds.
+    </p>
+    <div class="terminal">npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</div>
+    <p class="note">
+      <span class="mono">npx</span> fetches the package and runs it; there is no global install to
+      undo afterwards. Node 24 is required — the package declares it, and npm will refuse on older
+      runtimes rather than fail strangely later.
+    </p>
+
+    <h2 id="what-you-get">What comes back</h2>
+    <p>
+      A scan of the same contract, captured on 2026-09-12 and committed under
+      <span class="mono">docs/evidence/</span>. Read the last two lines first: they are the ones
+      that say what the scan could <em>not</em> establish.
+    </p>
+    <div class="terminal">Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
+  No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  1,400,453 ledgers — live
+  ends at:    ledger 6,025,589
+  approx:     2026-12-01T18:58:52.518Z (estimate — ledgers are the truth)
+  observed:   ledger 4,625,136
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Whether others depend on this entry cannot be
+              determined from a single-contract scan — pass them together.
+  remaining:  665,693 ledgers — live
+  ends at:    ledger 5,290,829
+  approx:     2026-10-20T06:28:52.518Z (estimate — ledgers are the truth)
+  observed:   ledger 4,625,136
+  health:     HEALTHY — Above threshold.
+
+! sharing-undetermined: Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+! coverage-limited: No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+Worst entry health: HEALTHY (threshold 17,280 ledgers)
+Scan is PARTIAL — 2 issue(s). Absence is not health.</div>
+    <p class="provenance">Captured on 2026-09-12 and committed at <span class="mono">docs/evidence/2026-09-12-w2-review/scan-a-human.txt</span>. Its ledger numbers are from that day; the dashboard reads the chain now.</p>
+
+    <h2 id="reading-it">Reading it</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Line</th><th scope="col">What it is telling you</th></tr></thead>
       <tbody>
-        <tr><td class="num">max_entry_ttl</td><td class="num">3,110,400</td>
-          <td>No entry lives past this. Any figure above it is a live impossibility.</td></tr>
-        <tr><td class="num">min_persistent_ttl</td><td class="num">120,960</td>
-          <td>Fresh instance, code and persistent entries start here — about seven days.</td></tr>
-        <tr><td class="num">min_temporary_ttl</td><td class="num">720</td>
-          <td>Fresh temporary entries start here — about an hour. Two orders of magnitude below the rest.</td></tr>
-      </tbody></table></div></div>
-    <p class="small muted" id="live-note">Committed with this build, read at ledger 4,821,849. Refreshing live…</p>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">What happens at zero</h2>
-    <p class="muted">
-      An entry is still live at its final ledger — remaining zero means one ledger left, not expired. Past it,
-      instance, code and persistent entries are <strong>archived</strong>: unusable until someone pays to restore
-      them, slower and more expensive than a normal read. Temporary entries are <strong>deleted outright</strong>
-      and cannot be restored at any price. Reporting those two fates the same way is a serious interface bug,
-      so they are never the same chip anywhere on this site.
+        <tr><td class="num">Coverage</td><td>Which entries were read, and that storage was not enumerated. A clean result covers only what was asked for.</td></tr>
+        <tr><td class="num">remaining</td><td>Ledgers left on that entry. Ledgers are the truth; the date beside them is an estimate at five seconds each.</td></tr>
+        <tr><td class="num">⚠ sharing</td><td>The code entry is shared by every contract built from the same Wasm. One scan saw one consumer and says so, rather than concluding it is unshared.</td></tr>
+        <tr><td class="num">Scan is PARTIAL</td><td>The scan finished and is telling you its own limits. <strong>Absence is not health.</strong></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="next">Then what</h2>
+    <p>
+      Pass several contracts to one scan and the sharing question resolves as far as it can —
+      <span class="mono">scan A B C</span> reports the code entry’s consumers as a lower bound.
+      To see what keeping an entry alive would cost, add <span class="mono">--cost</span>. To
+      change anything, <span class="mono">extend</span> is a separate command with its own guards.
     </p>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">Measured, not read from documentation</h2>
-    <p class="muted">
-      Ledger close <strong>5.000000 s, ± 0.000050</strong> — sampled from 11 testnet closes 2,000 ledgers apart
-      and run through the same measurement the CLI uses. The precision is the finding: across a full maximum
-      TTL the uncertainty band is over an hour wide, so wall-clock dates are estimates and ledgers are the truth.
-    </p>
-    <p class="muted">
-      Temporary floor: the configured minimum is 720 ledgers, about an hour; our own temporary entry had 688
-      left when first sampled — the ~57 minutes. Those are two different things and they are stated together
-      so they are not conflated.
-    </p>
-    <p class="muted">
-      Durability, not size: persistent rent measured about <strong>1.95×</strong> temporary at byte-identical
-      size. The price follows what the entry is, not only how big it is — which is itself the argument for
-      simulating rather than computing.
-    </p>
-  </section>
-            <a class="docs-next" href="/docs/cli/">
+  
+            <a class="docs-next" href="/docs/mental-model/">
               <span class="eyebrow">Next</span>
-              <span class="docs-next-title">Install and conventions</span>
-              <span class="docs-next-blurb">Two commands, the arguments they share, and what the tool will never do.</span>
+              <span class="docs-next-title">How state archival works</span>
+              <span class="docs-next-blurb">Four kinds of ledger entry, two ways of ending, and the one that cannot be undone.</span>
             </a>
           </main>
-          
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#run-it">Run it</a><a class="docs-toc-link" href="#what-you-get">What comes back</a><a class="docs-toc-link" href="#reading-it">Reading it</a><a class="docs-toc-link" href="#next">Then what</a>
+        </nav>
         </div>
       </div>
     </main>

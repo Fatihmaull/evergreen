@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>About — Evergreen</title>
-    <meta name="description" content="Who builds Evergreen, under which grant, and how the work is evidenced." />
+    <title>Output</title>
+    <meta name="description" content="The human scan report is a summary; --json is the complete record. How colour, piping and screenshots are handled." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -19,61 +19,76 @@
           <span class="site-bars" aria-hidden="true"></span>
         </button>
         <div class="site-links" id="site-menu">
-          <div class="site-centre"><a class="site-link current" href="/about/" aria-current="page">About</a><a class="site-link" href="/docs/">Docs</a></div>
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
           <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
         </div>
       </nav>
     </header>
     <main id="main">
-    <section class="page-intro-wrap"><div class="site-wrap ref-grid page-intro">
-        <div class="ref-label">
-          <p class="eyebrow">About · the team and the terms</p>
-          <h1>Built by Apex, evidenced like it matters</h1>
+    
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link current" href="/docs/cli/output/" aria-current="page">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Command line</p>
+              <h1>Output</h1>
+              <p class="lead">The human report is a summary. The JSON is the complete record, including every issue the summary compresses.</p>
+            </header>
+            
+    <h2 id="human">The human report</h2>
+    <p>
+      One block per entry, then a worst-of summary. Each block names the entry kind, its ledger
+      key, the contracts it serves, what remains, where it ends and how it was graded.
+    </p>
+    <p>
+      Colour is added only for an interactive terminal and honours
+      <span class="mono">NO_COLOR</span>. <strong>The state word always prints</strong>, so piped
+      output and screenshots lose nothing — a red <span class="mono">CRITICAL</span> and a plain
+      <span class="mono">CRITICAL</span> carry the same information.
+    </p>
+
+    <h2 id="json">--json</h2>
+    <p>
+      Prints the <span class="mono">ScanResult</span>: entries keyed by ledger key, each carrying
+      the contracts it serves, plus <span class="mono">health</span>,
+      <span class="mono">cost</span> and <span class="mono">optimization</span> blocks.
+    </p>
+    <p>
+      The shape is declared in <span class="mono">packages/shared-types/src/index.ts</span>. That
+      declaration is authoritative and is <strong>not copied</strong> into this documentation,
+      because a copy drifts. Every JSON panel on this site prints the same shape the CLI prints.
+    </p>
+    <p class="note">
+      The human view compresses issues into a count — <span class="mono">Scan is PARTIAL — 2
+      issue(s)</span>. The JSON carries every one of them with its code and the contracts it
+      applies to. If you are building on the output, build on the JSON.
+    </p>
+
+    <h2 id="issues">Issues are part of the result</h2>
+    <p>
+      An issue is not an error. <span class="mono">sharing-undetermined</span> and
+      <span class="mono">coverage-limited</span> both appear on a scan that completed normally;
+      they record what the scan could not establish. A consumer that ignores them is reading a
+      partial answer as a complete one.
+      <a class="site-more" href="/docs/reference/states/">Undetermined, unread, not found</a>
+    </p>
+  
+            <a class="docs-next" href="/docs/cli/exit-codes/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Exit codes</span>
+              <span class="docs-next-blurb">0, 1, 2, 3 — and why precedence is 2 > 3 > 1 > 0.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#human">The human report</a><a class="docs-toc-link" href="#json">--json</a><a class="docs-toc-link" href="#issues">Issues are part of the result</a>
+        </nav>
         </div>
-        <div class="ref-body"><p class="lead">Evergreen is built by Apex — Fatih Maulana and Rakha — in the Stellar Ambassador Chapter Indonesia, under a funded Stellar Instawards grant: $4,800, thirty days, 3 September to 2 October 2026. The chapter is where the team sits; it does not govern the code.</p></div>
-      </div></section>
-<section class="ref">
-        <div class="site-wrap ref-grid">
-          <div class="ref-label">
-            <p class="eyebrow">Who</p>
-            <h2>Two people and a grant</h2>
-          </div>
-          <div class="ref-body"><div class="people">
-          <div>
-            <p class="how-name">Fatih Maulana</p>
-            <p>Product, coordination, evidence — and the SOW's primary contact. CLI, dashboard, docs, demo video, Ambassador liaison.</p>
-          </div>
-          <div>
-            <p class="how-name">Rakha</p>
-            <p>Engine, contracts, infrastructure. The auto-bump worker, threshold rules, the notification channel — and the signatures on the transactions.</p>
-          </div>
-          <div>
-            <p class="how-name">The grant</p>
-            <p>Stellar Instawards. A follow-on SCF Build Award application is the stated next step — it appears here as a possible follow-on, not as the program this is.</p>
-          </div>
-        </div></div>
-        </div>
-      </section>
-<section class="ref">
-        <div class="site-wrap ref-grid">
-          <div class="ref-label">
-            <p class="eyebrow">Method</p>
-            <h2>Measured rather than assumed</h2>
-          </div>
-          <div class="ref-body"><p>
-          The TTL floor per entry type was measured on a fresh deploy, not read from documentation. The permissionless
-          property was confirmed by extending someone else's contract on testnet, not by quoting the docs. The rent
-          model was validated against a real fee recorded a day earlier — and the first implementation failed that
-          comparison, so it was replaced. Corrections stay in the record: the repository keeps its architecture
-          decision records amended, never rewritten, because the reasoning at the time is the valuable part.
-        </p>
-        <p>
-          The work is public at <a class="site-more" href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
-          under MIT. Nothing on this page — no title, no ID, no privilege — exists outside that repository, the PRD
-          or the statement of work.
-        </p></div>
-        </div>
-      </section>
+      </div>
     </main>
     <footer class="site-foot">
       <div class="site-wrap">

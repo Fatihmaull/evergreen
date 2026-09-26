@@ -71,7 +71,42 @@ export const ROUTES: readonly DashboardRoute[] = [
   },
   {
     route: '/docs/',
-    does: "The CLI surface, generated from the tool's own help text.",
+    does: 'What Evergreen is, what it refuses to do, and where to start.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/quickstart/',
+    does: 'Scan a real testnet contract in one command, with no key and no account.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/mental-model/',
+    does: 'The four kinds of ledger entry, and which endings can be undone.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/',
+    does: 'Install, the two commands, and the conventions they share.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/scan/',
+    does: "Every flag of `evergreen scan`, generated from the tool's own help text.",
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/extend/',
+    does: 'The write path and every guard between the reader and a submission.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/output/',
+    does: 'The human report, and --json for machines.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/exit-codes/',
+    does: 'Exit codes 0/1/2/3 and why precedence is 2 > 3 > 1 > 0.',
     reads: 'committed',
   },
   {
