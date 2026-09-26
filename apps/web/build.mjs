@@ -102,12 +102,27 @@ function readGuard() {
       'write-guard.ts moved under the web build: expected two alert dates, two expiries, one shared key',
     );
   }
+  /**
+   * The protected subjects, read whole rather than as four loose dates, so the
+   * guards page cannot list a subject the guard does not actually hold.
+   */
+  const subjects = [
+    ...src.matchAll(
+      /contractId:\s*'(C[A-Z2-7]{55})',\s*label:\s*'([^']+)',[\s\S]*?alertThresholdOn:\s*'(\d{4}-\d{2}-\d{2})',\s*expiresOn:\s*'(\d{4}-\d{2}-\d{2})'/g,
+    ),
+  ].map((m) => ({ id: m[1], label: m[2], alert: m[3], expires: m[4] }));
+  if (subjects.length !== 2) {
+    throw new Error(
+      `write-guard.ts holds ${subjects.length} protected subjects; the docs page expects two`,
+    );
+  }
   return {
     bAlert: alerts[0],
     bExpires: expiries[0],
     cAlert: alerts[1],
     cExpires: expiries[1],
     sharedKey: key,
+    subjects,
   };
 }
 
@@ -167,10 +182,15 @@ function readCli() {
   if (extendStart < 0 || extendEnd < 0) {
     throw new Error('packages/cli/src/extend.ts moved under the web build: EXTEND_HELP not found');
   }
-  const extendHelp = extendSrc.slice(extendStart + 'export const EXTEND_HELP = `'.length, extendEnd);
+  const extendHelp = extendSrc.slice(
+    extendStart + 'export const EXTEND_HELP = `'.length,
+    extendEnd,
+  );
   for (const guard of ['--submit', '--secret-env', '--max-fee-stroops', 'Testnet only']) {
     if (!extendHelp.includes(guard)) {
-      throw new Error(`extend help no longer documents ${guard}; the /docs page would understate the guards`);
+      throw new Error(
+        `extend help no longer documents ${guard}; the /docs page would understate the guards`,
+      );
     }
   }
   return { help, extendHelp, exits, packageName: manifest.name, version: manifest.version };
@@ -183,7 +203,10 @@ function readCli() {
  * one documentation page that reads the chain in the browser.
  */
 function docModule(route) {
-  const slug = route.replace(/^\/docs\/?/, '').replace(/\/$/, '').replace(/\//g, '-');
+  const slug = route
+    .replace(/^\/docs\/?/, '')
+    .replace(/\/$/, '')
+    .replace(/\//g, '-');
   return `src/pages/docs/${slug || 'overview'}.mjs`;
 }
 
@@ -301,6 +324,126 @@ function readHeroImage() {
   };
 }
 
+/**
+ * The shipped example config, with its underscore-prefixed documentation
+ * fields removed. Printed rather than retyped: a configuration reference that
+ * describes a field the loader does not accept is worse than none.
+ */
+function readEngineConfig() {
+  const raw = JSON.parse(readFileSync(join(repo, 'evergreen.config.example.json'), 'utf8'));
+  const strip = (value) =>
+    Array.isArray(value)
+      ? value.map(strip)
+      : value && typeof value === 'object'
+        ? Object.fromEntries(
+            Object.entries(value)
+              .filter(([key]) => !key.startsWith('_'))
+              .map(([key, inner]) => [key, strip(inner)]),
+          )
+        : value;
+  const cleaned = strip(raw);
+  for (const required of ['network', 'defaults', 'contracts', 'payers', 'mode']) {
+    if (!(required in cleaned)) {
+      throw new Error(
+        `evergreen.config.example.json lost its ${required} block; the docs page documents it`,
+      );
+    }
+  }
+  return JSON.stringify(cleaned, null, 2);
+}
+
+/**
+ * Both tiers, read from the constants the CLI and core actually use. A page
+ * that hard-codes 17,280 is a fifth copy site for a number `check:policy`
+ * already asserts agreement on across four.
+ */
+function readThresholds() {
+  const health = readFileSync(join(repo, 'packages/core/src/health.ts'), 'utf8');
+  const scan = readFileSync(join(repo, 'packages/cli/src/scan.ts'), 'utf8');
+  const warn = health.match(/DEFAULT_WARN_LEDGERS = ([\d_]+)/)?.[1];
+  const act = scan.match(/DEFAULT_THRESHOLD_LEDGERS = ([\d_]+)/)?.[1];
+  if (!warn || !act) {
+    throw new Error('threshold constants moved; the docs page prints both tiers');
+  }
+  return { warn: Number(warn.replaceAll('_', '')), act: Number(act.replaceAll('_', '')) };
+}
+
+/**
+ * The Action's inputs, parsed from `action.yml`. A hand-written table drifts
+ * from the manifest the moment someone adds an input, and the drift is
+ * invisible until a user passes something the Action ignores.
+ *
+ * Deliberately a narrow parser rather than a YAML dependency: it understands
+ * exactly the three keys this manifest uses, and it throws when the shape
+ * changes instead of quietly returning less.
+ */
+function readAction() {
+  const src = readFileSync(join(repo, 'action.yml'), 'utf8');
+  const block = src.slice(src.indexOf('\ninputs:'), src.indexOf('\noutputs:'));
+  const inputs = [];
+  let current = null;
+  let folding = false;
+  for (const line of block.split('\n')) {
+    const name = /^  ([a-z][a-z0-9-]*):\s*$/.exec(line);
+    if (name) {
+      current = { name: name[1], description: '', required: false, default: '' };
+      inputs.push(current);
+      folding = false;
+      continue;
+    }
+    if (!current) continue;
+    const description = /^    description:\s*(.*)$/.exec(line);
+    if (description) {
+      folding = description[1].trim() === '>-' || description[1].trim() === '>';
+      if (!folding) current.description = description[1].trim();
+      continue;
+    }
+    const required = /^    required:\s*(true|false)\s*$/.exec(line);
+    if (required) {
+      current.required = required[1] === 'true';
+      folding = false;
+      continue;
+    }
+    const fallback = /^    default:\s*'?([^']*)'?\s*$/.exec(line);
+    if (fallback) {
+      current.default = fallback[1].trim();
+      folding = false;
+      continue;
+    }
+    if (folding && line.startsWith('      ')) {
+      current.description = `${current.description} ${line.trim()}`.trim();
+    }
+  }
+  const output = /exit-code:\s*\n\s*description:\s*'([^']+)'/.exec(src)?.[1];
+  if (inputs.length < 5 || !output) {
+    throw new Error(
+      `action.yml parsed to ${inputs.length} inputs and ${output ? 'an' : 'no'} output; the docs page documents both`,
+    );
+  }
+  for (const required of ['contracts', 'threshold', 'keys-file', 'no-data-keys']) {
+    if (!inputs.some((input) => input.name === required)) {
+      throw new Error(
+        `action.yml no longer declares ${required}; the CI reference would understate it`,
+      );
+    }
+  }
+  return { inputs, output };
+}
+
+/**
+ * The ScanResult declaration, printed rather than paraphrased. A paraphrase of
+ * a type is a second type that nothing checks.
+ */
+function readScanResultType() {
+  const src = readFileSync(join(repo, 'packages/shared-types/src/index.ts'), 'utf8');
+  const start = src.indexOf('export interface ScanResult');
+  if (start < 0)
+    throw new Error('shared-types no longer exports ScanResult; /docs/reference/json documents it');
+  const end = src.indexOf('\n}', start);
+  if (end < 0) throw new Error('ScanResult declaration is not closed where the docs build expects');
+  return src.slice(start, end + 2);
+}
+
 const heroImage = readHeroImage();
 
 const ctx = {
@@ -318,6 +461,10 @@ const ctx = {
   knownEnds,
   capture,
   heroImage,
+  engineConfig: readEngineConfig(),
+  action: readAction(),
+  scanResultType: readScanResultType(),
+  thresholds: readThresholds(),
 };
 
 const PAGES = [
@@ -363,7 +510,6 @@ for (const page of DOC_PAGES) {
     doc: page.route,
   });
 }
-
 
 function guardBundle(metafile, label) {
   const included = Object.entries(metafile.outputs)
@@ -412,7 +558,8 @@ async function buildPage(page) {
    */
   if (isDoc) {
     const entry = DOC_PAGES.find((candidate) => candidate.route === page.doc);
-    if (!entry) throw new Error(`${page.to} is built as a doc but ${page.doc} is not in the sitemap`);
+    if (!entry)
+      throw new Error(`${page.to} is built as a doc but ${page.doc} is not in the sitemap`);
     if (meta.heading !== entry.title) {
       throw new Error(
         `${page.doc}: the sitemap calls this "${entry.title}" and the page calls itself "${meta.heading}"`,

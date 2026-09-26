@@ -75,7 +75,8 @@ export const DOC_NAV = [
       {
         route: '/docs/cli/extend/',
         title: 'evergreen extend',
-        blurb: 'The write path — simulate by default, and every guard between you and a submission.',
+        blurb:
+          'The write path — simulate by default, and every guard between you and a submission.',
       },
       {
         route: '/docs/cli/output/',
@@ -86,6 +87,81 @@ export const DOC_NAV = [
         route: '/docs/cli/exit-codes/',
         title: 'Exit codes',
         blurb: '0, 1, 2, 3 — and why precedence is 2 > 3 > 1 > 0.',
+      },
+    ],
+  },
+  {
+    label: 'Engine',
+    pages: [
+      {
+        route: '/docs/engine/',
+        title: 'What the engine is',
+        blurb: 'A scheduled job that decides. Not a daemon, and the difference is deliberate.',
+      },
+      {
+        route: '/docs/engine/config/',
+        title: 'Configuration',
+        blurb: 'evergreen.config.json, field by field, shared by the CLI and the engine.',
+      },
+      {
+        route: '/docs/engine/thresholds/',
+        title: 'Thresholds and cadence',
+        blurb: 'Two tiers in ledgers, an inclusive boundary, and why the schedule sets the floor.',
+      },
+      {
+        route: '/docs/engine/guards/',
+        title: 'Guards',
+        blurb: 'Dry-run by default, the write guard, protected subjects and fee caps.',
+      },
+      {
+        route: '/docs/engine/notifications/',
+        title: 'Notifications',
+        blurb: 'Three events, one channel, and the channels that do not exist.',
+      },
+    ],
+  },
+  {
+    label: 'Continuous integration',
+    pages: [
+      {
+        route: '/docs/ci/',
+        title: 'The GitHub Action',
+        blurb: 'Fail a pull request when a contract is closer to expiry than you allow.',
+      },
+      {
+        route: '/docs/ci/reference/',
+        title: 'Action reference',
+        blurb: 'Every input, the one output, and what the runner installs.',
+      },
+    ],
+  },
+  {
+    label: 'Reference',
+    pages: [
+      {
+        route: '/docs/reference/json/',
+        title: 'JSON shape',
+        blurb: 'ScanResult, shown from the declaration that defines it.',
+      },
+      {
+        route: '/docs/reference/states/',
+        title: 'Undetermined, unread, not found',
+        blurb: 'Three ways a scan declines to conclude. Absence is not health.',
+      },
+      {
+        route: '/docs/reference/rent/',
+        title: 'Rent and cost',
+        blurb: 'How rent is priced, what we measured paying, and why batching is cheaper.',
+      },
+      {
+        route: '/docs/reference/errors/',
+        title: 'Errors and troubleshooting',
+        blurb: 'What each failure means and what to do about it.',
+      },
+      {
+        route: '/docs/reference/security/',
+        title: 'Security and keys',
+        blurb: 'Where a secret may live, what is enforced, and what is honestly not built.',
       },
     ],
   },

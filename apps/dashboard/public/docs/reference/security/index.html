@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>How state archival works</title>
-    <meta name="description" content="Four kinds of Soroban ledger entry, how each one ends, and which endings can be undone." />
+    <title>Security and keys</title>
+    <meta name="description" content="Where a secret may live, what the engine enforces before signing, and what is deliberately not implemented." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -31,93 +31,89 @@
           <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
             All pages<span class="docs-menu-mark" aria-hidden="true"></span>
           </button>
-          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link current" href="/docs/mental-model/" aria-current="page">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link current" href="/docs/reference/security/" aria-current="page">Security and keys</a></div></nav></div>
           <main class="docs-main" id="main">
             <header class="docs-head">
-              <p class="eyebrow">Getting started</p>
-              <h1>How state archival works</h1>
-              <p class="lead">Soroban state is rented, not owned. Every entry carries a ledger count, every closed ledger takes one off, and what happens at zero depends on which kind of entry it is.</p>
+              <p class="eyebrow">Reference</p>
+              <h1>Security and keys</h1>
+              <p class="lead">Evergreen signs transactions, so it holds a key. This page says where that key may live, what constrains it, and what protection is not implemented.</p>
             </header>
             
-    <h2 id="ledgers">Ledgers, not dates</h2>
+    <h2 id="custody">It holds a key</h2>
     <p>
-      A time to live is a ledger number, not a timestamp. An entry is live until a given ledger
-      closes, and the network closes ledgers at roughly five seconds each — measured at
-      <span class="mono">5.000000 s ± 0.000050</span> on 2026-09-10, not assumed.
+      The engine’s implemented execution path uses a <strong>plain funded Ed25519 account</strong>
+      that you supply. It is a testnet payer, and it pays the fee for the TTL extension. There is
+      no arrangement in which the tool extends a TTL without a key that can sign.
     </p>
-    <p>
-      Every date in this documentation and on this site is derived from that rate and travels with
-      a <span class="mono">~</span>. The ledger beside it is the exact value. When the two
-      disagree, the ledger is right.
+    <p class="note">
+      This is worth stating plainly because the opposite is easy to imply. A design export for
+      this project once carried a “Zero-Privilege Node · No Keys” panel; it was removed because it
+      was not true.
     </p>
 
-    <h2 id="four-kinds">The four kinds</h2>
+    <h2 id="where">Where a secret may live</h2>
     <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Kind</th><th scope="col">Holds</th><th scope="col">At zero</th></tr></thead>
+      <thead><tr><th scope="col">Rule</th><th scope="col">Why</th></tr></thead>
       <tbody>
-        <tr><td class="num">instance</td><td>The contract’s own state pointer.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">code</td><td>The compiled Wasm, shared by every contract deployed from it.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">persistent</td><td>Durable stored values.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">temporary</td><td>Disposable stored values.</td><td><strong>Deleted — gone permanently</strong></td></tr>
+        <tr><td class="num">Environment variable, named in config</td><td>The config stores the variable’s NAME. A config carrying a key would be committed by someone, eventually, so the loader rejects anything that looks like one.</td></tr>
+        <tr><td class="num">Never an argument</td><td>Arguments appear in shell history and in process lists. <span class="mono">--secret-env</span> takes a name.</td></tr>
+        <tr><td class="num">No .env auto-loading</td><td>A tool that silently reads a file from the working directory will one day read the wrong one.</td></tr>
+        <tr><td class="num">Diagnostics never echo it</td><td>Error messages report shapes and outcomes, never file contents or credentials — so output is safe to paste into an issue.</td></tr>
       </tbody>
     </table></div>
-    <p class="note">
-      A temporary entry’s minimum lifetime is 720 ledgers, about an hour, read from the
-      network’s own configuration. Our own temporary entry had 688 left when it was first sampled.
+
+    <h2 id="enforced">What constrains the key</h2>
+    <p>
+      These controls apply on the normal execution path and are what stands between a
+      misconfiguration and an unintended submission.
+    </p>
+    <ul>
+      <li>Explicit-submit gating — nothing is sent without <span class="mono">--submit</span> or an explicit live <span class="mono">mode</span>.</li>
+      <li>Selected-key and target checks — only the entries named are touched.</li>
+      <li>Network validation by passphrase comparison, not by label.</li>
+      <li>Configured fee caps, applied per bump.</li>
+      <li>Protected-subject guards, which refuse regardless of configuration.</li>
+      <li>Signed-envelope validation before submission.</li>
+      <li>Post-state checks, so a result is verified rather than assumed.</li>
+    </ul>
+
+    <h2 id="not-built">What is not built</h2>
+    <p>
+      <strong>There is no policy signer.</strong> A policy signer is represented in the config and
+      type seam for future adapters, and the current engine <em>rejects</em> that payer kind. It is
+      not an activation switch for an implemented provider.
+    </p>
+    <p>
+      The planned direct adapter was investigated and found not to deliver the protection it
+      promised: Evergreen signs a native <span class="mono">ExtendFootprintTTL</span> transaction
+      whose fee payer is a Stellar G-address, while passkey-style wallet policies authorize
+      contract invocations through a wallet’s <span class="mono">__check_auth</span>. Those are
+      different authorization paths, so installing that wallet does not constrain the separate
+      transaction key that pays the native fee.
+    </p>
+    <p>
+      The recorded disposition is no-go for the direct adapter, no automatic pivot to another
+      framework, and full scoping deferred to the next scope of work. No alternative signing
+      architecture becomes approved merely because the original path failed.
     </p>
 
-    <h2 id="archived-vs-deleted">Archived is not deleted</h2>
+    <h2 id="blast">What this means for you</h2>
     <p>
-      An archived entry still exists. Its data is moved out of the live state and the contract
-      stops working until someone restores it with <span class="mono">RestoreFootprintOp</span> and
-      pays for the restoration. It is an outage and a bill, not a loss.
-    </p>
-    <p>
-      A deleted temporary entry is a loss. There is no restore operation for it, and no amount of
-      XLM brings it back. This is the single asymmetry worth carrying away from this page: three of
-      the four kinds are a bill, and one is a burial.
-    </p>
-
-    <h2 id="shared-code">The entry that is shared</h2>
-    <p>
-      A contract’s instance can be healthy until December while the code it runs expires in
-      October, and without its code the contract cannot execute at all. So the real expiry is the
-      earliest entry — which is rarely the obvious one, and is shared by every contract deployed
-      from the same Wasm.
-    </p>
-    <p>
-      On guinea-pig A that one shared code entry is <strong>8,116,648 of 8,264,289 stroops</strong>
-      — 98% of the rent across all four entries. Scanning only its instance and code, the same
-      entry is 99%: identical rent, different denominator. The scope travels with the number.
-    </p>
-
-    <h2 id="lower-bound">Why one scan cannot settle it</h2>
-    <p>
-      The chain does not index reverse dependencies. Given one contract, a scan can see which code
-      entry it points at; it cannot ask which <em>other</em> contracts point at the same entry. So
-      a single-contract scan reports sharing as <span class="mono">undetermined</span> rather than
-      concluding the entry is unshared.
-    </p>
-    <p>
-      Naming several contracts in one scan resolves it as far as the chain allows — and the answer
-      is still a <strong>lower bound</strong>. Contracts you did not list may also depend on that
-      entry, which is why the count reads “at least”.
+      Fund the payer with what you are willing to spend on rent and nothing more. The fee caps
+      bound a single bump; the account balance is what bounds the total. Everything above
+      constrains <em>correct</em> operation — none of it is a substitute for a payer that cannot
+      afford a mistake.
     </p>
     <p class="provenance">
-      Archival parameters on this page come from <a class="site-more" href="/docs/archival/">the
-      live network read</a>; the rent figures were measured against
-      <span class="mono">CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</span>.
+      The full record, including the feasibility report and the decision that closed it, is in
+      <span class="mono">docs/POLICY-SIGNER.md</span> and ADR-002.
     </p>
   
-            <a class="docs-next" href="/docs/archival/">
-              <span class="eyebrow">Next</span>
-              <span class="docs-next-title">What the network says about archival</span>
-              <span class="docs-next-blurb">The archival settings this network is running, read live when the page loads.</span>
-            </a>
+            
           </main>
           <nav class="docs-toc" aria-label="On this page">
           <p class="eyebrow">On this page</p>
-          <a class="docs-toc-link" href="#ledgers">Ledgers, not dates</a><a class="docs-toc-link" href="#four-kinds">The four kinds</a><a class="docs-toc-link" href="#archived-vs-deleted">Archived is not deleted</a><a class="docs-toc-link" href="#shared-code">The entry that is shared</a><a class="docs-toc-link" href="#lower-bound">Why one scan cannot settle it</a>
+          <a class="docs-toc-link" href="#custody">It holds a key</a><a class="docs-toc-link" href="#where">Where a secret may live</a><a class="docs-toc-link" href="#enforced">What constrains the key</a><a class="docs-toc-link" href="#not-built">What is not built</a><a class="docs-toc-link" href="#blast">What this means for you</a>
         </nav>
         </div>
       </div>

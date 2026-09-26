@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Errors and troubleshooting</title>
+    <meta name="description" content="What each Evergreen failure means and what to do about it, including archived entries, missing scope and unconfirmed submissions." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+    
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link current" href="/docs/reference/errors/" aria-current="page">Errors and troubleshooting</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Reference</p>
+              <h1>Errors and troubleshooting</h1>
+              <p class="lead">Grouped by what you should do, not by where the message came from. If a situation is not listed here, it is because we have not observed it.</p>
+            </header>
+            
+    <h2 id="scan">While scanning</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Symptom</th><th scope="col">What it means</th><th scope="col">Do</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Exit 3, entry not found</td>
+          <td>No entry came back. It may never have existed, or it may already be archived.</td>
+          <td>Check whether it was archived. Restore before extending — an archived entry cannot be extended in place.</td>
+        </tr>
+        <tr>
+          <td>Exit 3, TTL unavailable</td>
+          <td>The entry exists but no TTL metadata came back.</td>
+          <td>Retry. Treat it as unknown, not as healthy, until a reading succeeds.</td>
+        </tr>
+        <tr>
+          <td>Exit 3 with --require-declared-scope</td>
+          <td>Neither <span class="mono">--keys-file</span> nor <span class="mono">--no-data-keys</span> was given, so storage was not covered.</td>
+          <td>Declare the scope. On a contract you own, this is a gap rather than a caveat.</td>
+        </tr>
+        <tr>
+          <td>Exit 2, RPC failure</td>
+          <td>The network refused or was unreachable. The check did not run.</td>
+          <td>Retry, and check the <span class="mono">rpcUrl</span>. This is not a health result.</td>
+        </tr>
+        <tr>
+          <td>Sharing reads UNDETERMINED</td>
+          <td>Not an error. One contract cannot reveal the others that share its code entry.</td>
+          <td>Pass the contracts together. The answer is still a lower bound.</td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="extend">While extending</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Symptom</th><th scope="col">What it means</th><th scope="col">Do</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Simulation succeeded but nothing changed</td>
+          <td>Expected. Simulation is the default and does not submit.</td>
+          <td>Add <span class="mono">--submit</span> with a secret variable name and a fee cap when you mean it.</td>
+        </tr>
+        <tr>
+          <td>“there is no fallback payer”</td>
+          <td>No payer was supplied.</td>
+          <td>Pass <span class="mono">--source-account</span> or set <span class="mono">EVERGREEN_SOURCE_ACCOUNT</span>. The tool will not pick one.</td>
+        </tr>
+        <tr>
+          <td>“the secret does not match the expected source account”</td>
+          <td>The key in the named variable does not control the payer you named.</td>
+          <td>Reconfigure. This is distinguished from a malformed secret on purpose — they are different operator actions.</td>
+        </tr>
+        <tr>
+          <td>Target was capped</td>
+          <td>Your requested target exceeded <span class="mono">max_entry_ttl - 1</span>.</td>
+          <td>Nothing. The cap is reported when it applies; the protocol will not accept a longer horizon in one operation.</td>
+        </tr>
+        <tr>
+          <td>Exit 2, partial or unconfirmed</td>
+          <td>The submission’s outcome is not established.</td>
+          <td><strong>Do not resend.</strong> There is no replacement send after an uncertain result — check the chain for the transaction before doing anything else.</td>
+        </tr>
+        <tr>
+          <td>REFUSED BY WRITE GUARD</td>
+          <td>The subject is protected. This is the guard working.</td>
+          <td>Nothing. The refusal is recorded and the run continues. <a class="site-more" href="/docs/engine/guards/">Guards</a></td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="ci">In CI</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Symptom</th><th scope="col">What it means</th><th scope="col">Do</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="mono">Unable to locate executable file: pnpm</span></td>
+          <td>Not this Action. <span class="mono">setup-node</span>’s package-manager cache detected your lockfile and shelled out to a package manager the runner does not have.</td>
+          <td>It is disabled inside this Action. If you see it, the failing step is a different one in your workflow.</td>
+        </tr>
+        <tr>
+          <td>The job passes but the contract is unhealthy</td>
+          <td>The workflow is probably only failing on exit 1 and treating exit 3 as a pass.</td>
+          <td>Fail on any non-zero code. An incomplete scan is not a healthy one. <a class="site-more" href="/docs/cli/exit-codes/">Exit codes</a></td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="not-listed">If it is not here</h2>
+    <p>
+      This table lists conditions we have actually produced. Rather than guess, open an issue with
+      the command, the exit code and the output — and note that diagnostics never echo file
+      contents or credentials, so the output is safe to paste.
+    </p>
+  
+            <a class="docs-next" href="/docs/reference/security/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Security and keys</span>
+              <span class="docs-next-blurb">Where a secret may live, what is enforced, and what is honestly not built.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#scan">While scanning</a><a class="docs-toc-link" href="#extend">While extending</a><a class="docs-toc-link" href="#ci">In CI</a><a class="docs-toc-link" href="#not-listed">If it is not here</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

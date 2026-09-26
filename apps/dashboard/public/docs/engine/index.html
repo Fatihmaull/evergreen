@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>How state archival works</title>
-    <meta name="description" content="Four kinds of Soroban ledger entry, how each one ends, and which endings can be undone." />
+    <title>What the engine is</title>
+    <meta name="description" content="The Evergreen engine is a scheduled job that decides, not a daemon. Why that was chosen, and what it costs you." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -31,93 +31,73 @@
           <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
             All pages<span class="docs-menu-mark" aria-hidden="true"></span>
           </button>
-          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link current" href="/docs/mental-model/" aria-current="page">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link current" href="/docs/engine/" aria-current="page">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
           <main class="docs-main" id="main">
             <header class="docs-head">
-              <p class="eyebrow">Getting started</p>
-              <h1>How state archival works</h1>
-              <p class="lead">Soroban state is rented, not owned. Every entry carries a ledger count, every closed ledger takes one off, and what happens at zero depends on which kind of entry it is.</p>
+              <p class="eyebrow">Engine</p>
+              <h1>What the engine is</h1>
+              <p class="lead">A scheduled job that re-reads the entries you configure and decides whether any of them need acting on. It is not a daemon, and that was a decision rather than a shortcut.</p>
             </header>
             
-    <h2 id="ledgers">Ledgers, not dates</h2>
+    <h2 id="shape">A job, not a service</h2>
     <p>
-      A time to live is a ledger number, not a timestamp. An entry is live until a given ledger
-      closes, and the network closes ledgers at roughly five seconds each — measured at
-      <span class="mono">5.000000 s ± 0.000050</span> on 2026-09-10, not assumed.
+      The engine runs on a schedule, reads the contracts in its config, grades every entry and
+      records a decision for each one. Then it exits. There is no process to keep alive, no uptime
+      to monitor, and no in-memory state between runs.
     </p>
     <p>
-      Every date in this documentation and on this site is derived from that rate and travels with
-      a <span class="mono">~</span>. The ledger beside it is the exact value. When the two
-      disagree, the ledger is right.
+      <strong>This was chosen over a long-running service on purpose.</strong> ADR-001 weighed
+      both. A daemon buys sub-minute reaction time, which is irrelevant when the headroom being
+      defended is measured in days, and costs patching, uptime monitoring and restart handling. It
+      is also harder to verify: “trust me, the daemon is running” against a log of discrete runs
+      you can read.
     </p>
 
-    <h2 id="four-kinds">The four kinds</h2>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Kind</th><th scope="col">Holds</th><th scope="col">At zero</th></tr></thead>
-      <tbody>
-        <tr><td class="num">instance</td><td>The contract’s own state pointer.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">code</td><td>The compiled Wasm, shared by every contract deployed from it.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">persistent</td><td>Durable stored values.</td><td>Archived — recoverable</td></tr>
-        <tr><td class="num">temporary</td><td>Disposable stored values.</td><td><strong>Deleted — gone permanently</strong></td></tr>
-      </tbody>
-    </table></div>
-    <p class="note">
-      A temporary entry’s minimum lifetime is 720 ledgers, about an hour, read from the
-      network’s own configuration. Our own temporary entry had 688 left when it was first sampled.
+    <h2 id="decide-only">It decides; it does not act by default</h2>
+    <p>
+      A run produces one decision per entry — <span class="mono">SKIP</span> with a reason, or a
+      planned extension. In <span class="mono">dry-run</span>, which is what an omitted
+      <span class="mono">mode</span> means, the plan is recorded and nothing is signed or
+      submitted. Live is an explicit opt-in, never a default and never inferred.
+    </p>
+    <p>
+      A refusal is a first-class outcome, not an error. When the write guard declines a subject the
+      run records <span class="mono">REFUSED BY WRITE GUARD</span> and carries on to the next
+      contract — one protected subject must not abort a run, or a guard on one contract would
+      silence the engine for every other.
+      <a class="site-more" href="/docs/engine/guards/">Guards</a>
     </p>
 
-    <h2 id="archived-vs-deleted">Archived is not deleted</h2>
+    <h2 id="cost">What the schedule costs you</h2>
     <p>
-      An archived entry still exists. Its data is moved out of the live state and the contract
-      stops working until someone restores it with <span class="mono">RestoreFootprintOp</span> and
-      pays for the restoration. It is an outage and a bill, not a loss.
+      The trade is reaction time. Worst case, an entry crosses a threshold immediately after a run
+      and waits a full interval before anything notices. So the interval is part of your threshold:
+      set the act-now boundary with the schedule in mind, not against it.
     </p>
     <p>
-      A deleted temporary entry is a loss. There is no restore operation for it, and no amount of
-      XLM brings it back. This is the single asymmetry worth carrying away from this page: three of
-      the four kinds are a bill, and one is a burial.
-    </p>
-
-    <h2 id="shared-code">The entry that is shared</h2>
-    <p>
-      A contract’s instance can be healthy until December while the code it runs expires in
-      October, and without its code the contract cannot execute at all. So the real expiry is the
-      earliest entry — which is rarely the obvious one, and is shared by every contract deployed
-      from the same Wasm.
-    </p>
-    <p>
-      On guinea-pig A that one shared code entry is <strong>8,116,648 of 8,264,289 stroops</strong>
-      — 98% of the rent across all four entries. Scanning only its instance and code, the same
-      entry is 99%: identical rent, different denominator. The scope travels with the number.
+      And a scheduler is not a metronome. Ours has been measured, and the delivered cadence is not
+      the configured one — the figures, the delivery rate and the worst observed gap are published
+      on <a class="site-more" href="/dashboard/engine/">the engine page</a> rather than repeated
+      here, because a second copy of a measurement drifts from the first.
     </p>
 
-    <h2 id="lower-bound">Why one scan cannot settle it</h2>
+    <h2 id="missed">A missed run has to be visible</h2>
     <p>
-      The chain does not index reverse dependencies. Given one contract, a scan can see which code
-      entry it points at; it cannot ask which <em>other</em> contracts point at the same entry. So
-      a single-contract scan reports sharing as <span class="mono">undetermined</span> rather than
-      concluding the entry is unshared.
-    </p>
-    <p>
-      Naming several contracts in one scan resolves it as far as the chain allows — and the answer
-      is still a <strong>lower bound</strong>. Contracts you did not list may also depend on that
-      entry, which is why the count reads “at least”.
-    </p>
-    <p class="provenance">
-      Archival parameters on this page come from <a class="site-more" href="/docs/archival/">the
-      live network read</a>; the rent figures were measured against
-      <span class="mono">CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</span>.
+      If the schedule does not fire, nothing happens — and nothing happening looks exactly like
+      nothing needing to happen. That is the failure mode this shape introduces, so it is treated
+      as one: cold starts and scheduler reliability are alerted on, and a missed run is meant to be
+      noticed rather than silently absorbed.
     </p>
   
-            <a class="docs-next" href="/docs/archival/">
+            <a class="docs-next" href="/docs/engine/config/">
               <span class="eyebrow">Next</span>
-              <span class="docs-next-title">What the network says about archival</span>
-              <span class="docs-next-blurb">The archival settings this network is running, read live when the page loads.</span>
+              <span class="docs-next-title">Configuration</span>
+              <span class="docs-next-blurb">evergreen.config.json, field by field, shared by the CLI and the engine.</span>
             </a>
           </main>
           <nav class="docs-toc" aria-label="On this page">
           <p class="eyebrow">On this page</p>
-          <a class="docs-toc-link" href="#ledgers">Ledgers, not dates</a><a class="docs-toc-link" href="#four-kinds">The four kinds</a><a class="docs-toc-link" href="#archived-vs-deleted">Archived is not deleted</a><a class="docs-toc-link" href="#shared-code">The entry that is shared</a><a class="docs-toc-link" href="#lower-bound">Why one scan cannot settle it</a>
+          <a class="docs-toc-link" href="#shape">A job, not a service</a><a class="docs-toc-link" href="#decide-only">It decides; it does not act by default</a><a class="docs-toc-link" href="#cost">What the schedule costs you</a><a class="docs-toc-link" href="#missed">A missed run has to be visible</a>
         </nav>
         </div>
       </div>

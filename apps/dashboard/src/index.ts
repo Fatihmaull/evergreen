@@ -110,6 +110,66 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'committed',
   },
   {
+    route: '/docs/engine/',
+    does: 'What the engine is: a scheduled job that decides, not a daemon.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/config/',
+    does: 'evergreen.config.json field by field, printed from the shipped example.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/thresholds/',
+    does: 'The warning and act-now tiers, and why the schedule sets the floor.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/guards/',
+    does: 'Dry-run by default, the write guard, protected subjects and fee caps.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/notifications/',
+    does: 'The three events the engine notifies on, and the channels that do not exist.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/ci/',
+    does: 'The GitHub Action: fail a pull request when a contract is close to expiry.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/ci/reference/',
+    does: "Every Action input and its output, generated from the Action's own manifest.",
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/json/',
+    does: 'The ScanResult shape, printed from its TypeScript declaration.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/states/',
+    does: 'Undetermined, unread and not found — the three ways a scan declines to conclude.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/rent/',
+    does: 'How Soroban rent is priced, and the fees this project actually paid.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/errors/',
+    does: 'What each failure means and what to do about it.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/security/',
+    does: 'Key handling, what the engine enforces, and what is not implemented.',
+    reads: 'committed',
+  },
+  {
     route: '/evidence/',
     does: 'Every committed evidence bundle, counted at build time.',
     reads: 'committed',

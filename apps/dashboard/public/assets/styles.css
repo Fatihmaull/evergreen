@@ -1590,9 +1590,26 @@ body.site .docs-main .terminal {
   white-space: pre;
   overflow-x: auto;
 }
-body.site .docs-main .note,
 body.site .docs-main .provenance {
   margin-top: 16px;
+}
+/* A callout, in this site's own language: a hairline and a shift of ink, not a
+   box and not an emoji.
+
+   `.note` is Space Mono elsewhere, which suits the one-line provenance it was
+   built for and is hard work for a paragraph of prose. On a reference page a
+   note carries an argument — why a default is what it is, what a reader will
+   otherwise assume — so here it reads as prose and is set apart by position. */
+body.site .docs-main .note {
+  margin-top: 20px;
+  padding-left: 18px;
+  border-left: 2px solid var(--rule);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 52ch;
 }
 
 /* The contents. Hidden below 1200px, where the rail is already the map. */

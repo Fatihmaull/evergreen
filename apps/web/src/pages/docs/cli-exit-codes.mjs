@@ -16,10 +16,26 @@ export const meta = {
 
 export function render(ctx) {
   const rows = [
-    [ctx.cli.exits.ok, 'everything scanned is healthy', 'Everything the scan was asked to check is above the threshold. It says nothing about entries it was not given keys for.'],
-    [ctx.cli.exits.below, 'observed low TTL', 'An entry the scan read is at or below the act-now threshold. The boundary is inclusive.'],
-    [ctx.cli.exits.error, 'error', 'Invalid input, an RPC failure, or the network refused. The check did not run.'],
-    [ctx.cli.exits.incomplete, 'incomplete', 'Entry missing, TTL unavailable, executable not followable, or nothing observed. The check ran and could not conclude.'],
+    [
+      ctx.cli.exits.ok,
+      'everything scanned is healthy',
+      'Everything the scan was asked to check is above the threshold. It says nothing about entries it was not given keys for.',
+    ],
+    [
+      ctx.cli.exits.below,
+      'observed low TTL',
+      'An entry the scan read is at or below the act-now threshold. The boundary is inclusive.',
+    ],
+    [
+      ctx.cli.exits.error,
+      'error',
+      'Invalid input, an RPC failure, or the network refused. The check did not run.',
+    ],
+    [
+      ctx.cli.exits.incomplete,
+      'incomplete',
+      'Entry missing, TTL unavailable, executable not followable, or nothing observed. The check ran and could not conclude.',
+    ],
   ]
     .map(
       ([code, label, meaning]) =>
