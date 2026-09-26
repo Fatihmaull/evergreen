@@ -5,6 +5,19 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03 — C first decay checkpoint (2026-09-26 00:01 UTC)
+
+[Sealed raw JSON/RPC, TXT, checksum, strict verification and native terminal replay screenshot](evidence/2026-09-26-c-crossing-0001/README.md):
+observed 00:01:34.722 UTC / 07:01:34.722 WIB at ledger 4,871,461.
+C's instance was live with 8,636 ledgers remaining; its persistent entry
+still ended at ledger 4,880,099. The write guard refused C at the normal
+17,280-ledger threshold. Strict replay returned crossing-refused,
+qualifiesCrossing true, exit 0. This is a late-by-one-minute Saturday
+checkpoint and a verified same-subject live baseline for the expiry assessment
+if Fatih's original Friday baseline is unavailable. Rakha's Friday checkpoint
+was missed; this capture does not fill or relabel it. No transaction or email.
+The 06:00 and 12:00 UTC C checkpoints and Shared acceptance remain open.
+
 ## W3-D18-03a — offline expiry reassessment (local, pending review)
 
 [Separate assessments](evidence/2026-09-21-b-expiry-assessment/README.md) reproduce

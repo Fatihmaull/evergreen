@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-25 · cold start cut to `B-D31-03`; C's four slots assigned with Rakha running each
+**Last updated:** 2026-09-26 · C 00:01 UTC decay checkpoint captured and strictly verified; Friday Rakha slot remains missed
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
@@ -34,6 +34,22 @@ the cost being accepted, and `B-D31-03` carries it as a debt rather than closing
 question.
 
 ---
+
+## Current — C 00:01 UTC decay checkpoint retained
+
+At 2026-09-26 00:01:34.722 UTC / 07:01:34.722 WIB, the read-only collector
+observed C at ledger 4,871,461 with 8,636 instance ledgers remaining. The
+write guard refused C; strict offline verification returned
+crossing-refused, qualifiesCrossing true, exit 0. The complete sealed
+five-RPC bundle and original Konsole/Spectacle replay screenshot are indexed
+in [the dated evidence](evidence/2026-09-26-c-crossing-0001/README.md).
+This is a valid live C baseline for later expiry assessment if the original
+Friday bundle is unavailable. The first invocation at 00:00:07 UTC wrote no
+bundle because the output parent did not exist; the successful observation
+retains its actual 00:01 timestamp. Rakha's Friday slot remains missed, and
+Fatih's raw fallback artifact has not been received. No transaction was sent.
+The 06:00 and 12:00 UTC C observations and Shared acceptance remain pending.
+Notion mirror sync is pending.
 
 ## Current — W4-D27-02 CLI 0.1.0 published
 
