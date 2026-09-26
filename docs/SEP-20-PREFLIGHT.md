@@ -640,6 +640,30 @@ pnpm verify:expiry    .evergreen/crossing/C-20260926-1200
 **Accept on `phase: expiry-observed` from `verify:expiry`** — not on an exit code
 from `verify:crossing`.
 
+> 🔴 **DO NOT fire at 12:00:00Z. The scheduled slot is ~90 seconds too early.**
+>
+> Measured 2026-09-26T02:19:56Z: observed ledger **4,873,121**, C's instance ending
+> at **4,880,097** and its persistent entry at **4,880,099**. That is **6,978
+> ledgers** away — about **9h 41m** at ~5 s/ledger, i.e. roughly **12:01:26Z**. The
+> CLI's own estimate agrees: `expires ~ 2026-09-26T12:01:16Z` for the instance.
+>
+> A capture at 12:00:00Z sharp observes about ledger **4,879,880** — some 220
+> ledgers short, **with both entries still live.** It is not an expiry observation,
+> and `verify:expiry` will not return `expiry-observed` for it.
+>
+> **So poll the ledger, do not trust the clock.** Ledger cadence is not exactly 5 s
+> and this projection runs nine hours, so it can drift by minutes either way.
+> Capture when the observed ledger is **above 4,880,099**, not when the wall clock
+> says 12:00.
+>
+> ```bash
+> # cheap, read-only: watch the ledger approach, then capture
+> npx @evergreen-stellar/cli scan CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+> ```
+>
+> Being a few minutes late costs nothing — the entries stay archived. Being early
+> costs the observation, and this is the window that cannot be retaken.
+
 Three things measured on 2026-09-23 that the old text did not say:
 
 - **`--baseline` is mandatory.** `verify:expiry` reads it from inside the bundle.
