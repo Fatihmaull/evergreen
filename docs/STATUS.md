@@ -2,10 +2,28 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · C expiry observed at 12:02 UTC with separate assessor; Shared acceptance remains
+**Last updated:** 2026-09-26 · external Action green/red CI verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## Current — W4-D25-02 external Action path verified technically
+
+The independent [fixture repository](https://github.com/rakhargo/evergreen-check-smoke)
+ran `Fatihmaull/evergreen` pinned to main `2a4ab0a` with published CLI
+`0.1.0` against Testnet A. [Run 36254970083](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083)
+shows the green job succeeding with four healthy entries at 17,280 ledgers
+and the red job failing with Action exit 1 at 2,000,000. Both used the
+same declared keys; setup and npm resolution succeeded. The
+[dated record](evidence/2026-09-26-external-action-smoke/README.md)
+binds the fixture commit, workflow, keys and job links. This proves the
+separate-repository consumer path, while an unrelated human has not yet
+run it. `W4-D25-02` remains In progress until that stronger acceptance
+question is decided; `W4-D25-03` still needs tag `v1` and screenshots.
+No transaction or protected-contract write. Notion sync for
+`W4-D25-02` is pending.
 
 ---
 
