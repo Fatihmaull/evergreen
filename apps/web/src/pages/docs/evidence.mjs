@@ -1,17 +1,20 @@
 /**
- * /evidence/ — evidence bundles. The real bundles in docs/evidence with their
+ * /docs/evidence/ — evidence bundles.
+ *
+ * Moved out of the dashboard on 2026-09-26. The dashboard is an instrument for
+ * reading the chain; the record of what this project proved is reference
+ * material, and it was the fourth item in a sidebar "Reference" group that
+ * duplicated the documentation wholesale. The real bundles in docs/evidence with their
  * real count, the one verification claim that can be made true, and milestones
  * stated as they stand. Nothing here is delivered that is not done.
  */
-import { fmt } from './_shared.mjs';
+import { fmt } from '../_shared.mjs';
 
 export const meta = {
   title: 'Evidence — Evergreen',
   description:
     'The committed evidence behind this project: testnet transactions, scans, scheduler runs, and how to verify them.',
-  active: '/evidence/',
-  eyebrow: 'Evidence · Stellar Instawards',
-  heading: 'The record, not the brochure',
+  heading: 'The record',
   lead: 'Every claim on this site ends here: committed bundles of unedited RPC responses, explorer screenshots and verification scripts. Testnet is periodically reset — a hash pointing at a chain that no longer exists proves nothing, so the JSON and the screenshots travel with it.',
   script: null,
 };

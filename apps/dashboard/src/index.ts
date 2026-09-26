@@ -71,14 +71,110 @@ export const ROUTES: readonly DashboardRoute[] = [
   },
   {
     route: '/docs/',
-    does: "The CLI surface, generated from the tool's own help text.",
+    does: 'What Evergreen is, what it refuses to do, and where to start.',
     reads: 'committed',
   },
   {
-    route: '/evidence/',
+    route: '/docs/quickstart/',
+    does: 'Scan a real testnet contract in one command, with no key and no account.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/mental-model/',
+    does: 'The four kinds of ledger entry, and which endings can be undone.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/',
+    does: 'Install, the two commands, and the conventions they share.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/scan/',
+    does: "Every flag of `evergreen scan`, generated from the tool's own help text.",
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/extend/',
+    does: 'The write path and every guard between the reader and a submission.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/output/',
+    does: 'The human report, and --json for machines.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/cli/exit-codes/',
+    does: 'Exit codes 0/1/2/3 and why precedence is 2 > 3 > 1 > 0.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/',
+    does: 'What the engine is: a scheduled job that decides, not a daemon.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/config/',
+    does: 'evergreen.config.json field by field, printed from the shipped example.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/thresholds/',
+    does: 'The warning and act-now tiers, and why the schedule sets the floor.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/guards/',
+    does: 'Dry-run by default, the write guard, protected subjects and fee caps.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/engine/notifications/',
+    does: 'The three events the engine notifies on, and the channels that do not exist.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/ci/',
+    does: 'The GitHub Action: fail a pull request when a contract is close to expiry.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/ci/reference/',
+    does: "Every Action input and its output, generated from the Action's own manifest.",
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/json/',
+    does: 'The ScanResult shape, printed from its TypeScript declaration.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/states/',
+    does: 'Undetermined, unread and not found — the three ways a scan declines to conclude.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/rent/',
+    does: 'How Soroban rent is priced, and the fees this project actually paid.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/reference/errors/',
+    does: 'What each failure means and what to do about it.',
+    reads: 'committed',
+  },
+  {
+    route: '/docs/evidence/',
     does: 'Every committed evidence bundle, counted at build time.',
     reads: 'committed',
   },
+  {
+    route: '/docs/reference/security/',
+    does: 'Key handling, what the engine enforces, and what is not implemented.',
+    reads: 'committed',
+  },
+
   {
     route: '/about/',
     does: 'Who builds this, under which grant, and the method.',

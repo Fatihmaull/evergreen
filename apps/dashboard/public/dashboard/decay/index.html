@@ -26,7 +26,7 @@
         <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
       </div><div class="nav-group">
         <p class="nav-section">Reference</p>
-        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
+        <a class="nav-item" href="/docs/">Documentation</a>
       </div></nav>
         <div class="sidebar-foot">
           <p class="mono">testnet only</p>
@@ -47,7 +47,7 @@
             <p class="lead">The thing left alone declines; the thing watched over steps back up. Every dot is a committed observation — irregularly spaced, because that is when the readings happened. B’s expiry marker stays after the event: the timeline is evidence, not a status display.</p>
           </header>
           <section class="stack"><article class="card card-pad stack">
-    <h3>guinea-pig B · instance</h3>
+    <h2>guinea-pig B · instance</h2>
     <p class="muted">The control. Deployed 5 September, calibrated once that day with a disclosed extend, then left alone — and it expired on 21 September, as intended. Six measured readings run into the expiry; nothing extended it at any point.</p>
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig B · instance. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="136.1019423099201" x2="916" y2="136.1019423099201" /><text class="decay-band-label" x="916" y="131.1019423099201" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="238.8717060442743" x2="916" y2="238.8717060442743" /><text class="decay-band-label" x="916" y="233.8717060442743" text-anchor="end">act 17,280</text>
@@ -55,7 +55,7 @@
     <line class="decay-dash" x1="899.0527474224814" y1="251.77640853325536" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="847.2763254431015" cy="238.8726972649893" r="4.5" /><circle class="decay-dot" cx="847.5865544271537" cy="238.9500124807617" r="4.5" /><circle class="decay-dot" cx="881.8589025755879" cy="247.49136138217887" r="4.5" /><circle class="decay-dot" cx="898.8220643317759" cy="251.7189177317836" r="4.5" /><circle class="decay-dot" cx="899.0527474224814" cy="251.77640853325536" r="4.5" /><text class="decay-expiry observed" x="916" y="288" text-anchor="end">expired 2026-09-21 · ledger 4,793,687</text>
     <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
   </svg></div>
-    
+
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
       <summary>Every point behind this panel, with its source</summary>
@@ -65,7 +65,7 @@
       </table></div>
     </details>
   </article><article class="card card-pad stack">
-    <h3>guinea-pig C · instance</h3>
+    <h2>guinea-pig C · instance</h2>
     <p class="muted">The backup proof, staggered five days behind B. Deployed 5 September and left alone on the same terms; nothing has extended it. It crosses its alert threshold on 25 September and expires on the 26th.</p>
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig C · instance. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="171.39106088164968" x2="916" y2="171.39106088164968" /><text class="decay-band-label" x="916" y="166.39106088164968" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="243.91300869737853" x2="916" y2="243.91300869737853" /><text class="decay-band-label" x="916" y="238.91300869737853" text-anchor="end">act 17,280</text>
@@ -83,7 +83,7 @@
       </table></div>
     </details>
   </article><article class="card card-pad stack">
-    <h3>guinea-pig A · instance</h3>
+    <h2>guinea-pig A · instance</h2>
     <p class="muted">The watched one. Its decay was arranged by raising the alert threshold above its remaining TTL; the response was not. Each upward step names its actor and transaction.</p>
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for guinea-pig A · instance. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="241.38823529411764" x2="916" y2="241.38823529411764" /><text class="decay-band-label" x="916" y="236.38823529411764" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="253.91260504201682" x2="916" y2="253.91260504201682" /><text class="decay-band-label" x="916" y="248.91260504201682" text-anchor="end">act 17,280</text>
@@ -101,7 +101,7 @@
       </table></div>
     </details>
   </article><article class="card card-pad stack">
-    <h3>shared code entry</h3>
+    <h2>shared code entry</h2>
     <p class="muted">One entry all three contracts depend on — A, B and C were built from one Wasm. Due to be extended at W3-D18-02d; touching it touches both decay proofs, which is why the write guard refuses it by key.</p>
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for shared code entry. Dots are recorded observations; steps are real extensions.">
     <line class="decay-band" x1="92" y1="220.7318398791455" x2="916" y2="220.7318398791455" /><text class="decay-band-label" x="916" y="215.7318398791455" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="250.9616914113065" x2="916" y2="250.9616914113065" /><text class="decay-band-label" x="916" y="245.9616914113065" text-anchor="end">act 17,280</text>
@@ -132,13 +132,13 @@
         </main>
         <footer class="site">
           <div class="foot-row">
-            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p>Built for Stellar, backed by Instawards.</p>
             <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
           </div>
         </footer>
       </div>
     </div>
     <script src="/assets/chrome.js"></script>
-    
+
   </body>
 </html>

@@ -29,14 +29,18 @@ export const NAV = [
       { href: '/dashboard/history/', label: 'Extension history' },
     ],
   },
+  /**
+   * One link out, not four.
+   *
+   * This group used to list State archival, CLI reference, Evidence and About
+   * — every one of them a page that now lives in the documentation, reached
+   * from a sidebar that already has its own tree. A reader met the same
+   * material twice under two different navigations, and the dashboard's job is
+   * reading the chain rather than being a second table of contents.
+   */
   {
     section: 'Reference',
-    items: [
-      { href: '/docs/archival/', label: 'State archival' },
-      { href: '/docs/', label: 'CLI reference' },
-      { href: '/evidence/', label: 'Evidence' },
-      { href: '/about/', label: 'About' },
-    ],
+    items: [{ href: '/docs/', label: 'Documentation' }],
   },
 ];
 
@@ -119,7 +123,7 @@ export function shell({
         </main>
         <footer class="site">
           <div class="foot-row">
-            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+            <p>Built for Stellar, backed by Instawards.</p>
             <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
           </div>
         </footer>

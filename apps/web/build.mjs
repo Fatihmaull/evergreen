@@ -15,12 +15,24 @@
  */
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  statSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
 import { shell } from './src/chrome.mjs';
+import { siteShell } from './src/site.mjs';
+import { DOC_PAGES } from './src/docs/nav.mjs';
+import { docsLayout } from './src/docs/shell.mjs';
 // Node 24 strips the types. The manifest is the dashboard package's own entry.
 import { ROUTES, pageFor } from '../dashboard/src/index.ts';
 
@@ -90,12 +102,27 @@ function readGuard() {
       'write-guard.ts moved under the web build: expected two alert dates, two expiries, one shared key',
     );
   }
+  /**
+   * The protected subjects, read whole rather than as four loose dates, so the
+   * guards page cannot list a subject the guard does not actually hold.
+   */
+  const subjects = [
+    ...src.matchAll(
+      /contractId:\s*'(C[A-Z2-7]{55})',\s*label:\s*'([^']+)',[\s\S]*?alertThresholdOn:\s*'(\d{4}-\d{2}-\d{2})',\s*expiresOn:\s*'(\d{4}-\d{2}-\d{2})'/g,
+    ),
+  ].map((m) => ({ id: m[1], label: m[2], alert: m[3], expires: m[4] }));
+  if (subjects.length !== 2) {
+    throw new Error(
+      `write-guard.ts holds ${subjects.length} protected subjects; the docs page expects two`,
+    );
+  }
   return {
     bAlert: alerts[0],
     bExpires: expiries[0],
     cAlert: alerts[1],
     cExpires: expiries[1],
     sharedKey: key,
+    subjects,
   };
 }
 
@@ -135,8 +162,55 @@ function readCli() {
       'packages/cli/src/scan.ts moved under the web build: exit constants are not 0/1/2/3',
     );
   }
-  return { help, exits };
+  /**
+   * The package name and version the landing prints, read from the manifest
+   * that was published rather than typed. A quickstart that names a version
+   * nobody shipped is worse than no quickstart.
+   */
+  const manifest = JSON.parse(readFileSync(join(repo, 'packages/cli/package.json'), 'utf8'));
+  if (!manifest.name || !manifest.version) {
+    throw new Error('packages/cli/package.json has no name or version; the landing prints both');
+  }
+  /**
+   * The extend command's own help, read from the source for the same reason
+   * as scan's: a page that retypes a guard can lose one, and the guards are
+   * the reason this command is safe to document at all.
+   */
+  const extendSrc = readFileSync(join(repo, 'packages/cli/src/extend.ts'), 'utf8');
+  const extendStart = extendSrc.indexOf('export const EXTEND_HELP = `');
+  const extendEnd = extendSrc.indexOf('`;', extendStart);
+  if (extendStart < 0 || extendEnd < 0) {
+    throw new Error('packages/cli/src/extend.ts moved under the web build: EXTEND_HELP not found');
+  }
+  const extendHelp = extendSrc.slice(
+    extendStart + 'export const EXTEND_HELP = `'.length,
+    extendEnd,
+  );
+  for (const guard of ['--submit', '--secret-env', '--max-fee-stroops', 'Testnet only']) {
+    if (!extendHelp.includes(guard)) {
+      throw new Error(
+        `extend help no longer documents ${guard}; the /docs page would understate the guards`,
+      );
+    }
+  }
+  return { help, extendHelp, exits, packageName: manifest.name, version: manifest.version };
 }
+
+/**
+ * `/docs/…` page modules, named from their own route so the two cannot drift:
+ * `/docs/cli/scan/` is `src/pages/docs/cli-scan.mjs`, and `/docs/` is
+ * `overview`. `/docs/archival/` is declared above instead, because it is the
+ * one documentation page that reads the chain in the browser.
+ */
+function docModule(route) {
+  const slug = route
+    .replace(/^\/docs\/?/, '')
+    .replace(/\/$/, '')
+    .replace(/\//g, '-');
+  return `src/pages/docs/${slug || 'overview'}.mjs`;
+}
+
+const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
 
 const snapshot = readJson('data/snapshot.json');
 const grades = readJson('data/snapshot-grades.json');
@@ -168,6 +242,210 @@ const evidence = {
 if (evidence.count === 0)
   throw new Error('no evidence bundles found; the /evidence count would be a lie');
 
+/**
+ * The unretouched scan. Read here rather than pasted into a page so the file
+ * under `docs/evidence/` stays the only copy — nobody edits that directory,
+ * and a second copy in markup is a copy that can be tidied.
+ */
+const capture = {
+  text: readFileSync(join(repo, CAPTURE), 'utf8').trimEnd(),
+  provenance: `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
+};
+
+/**
+ * The hero artefact, if one has been dropped in.
+ *
+ * `apps/web/src/assets/hero.<ext>` plus `hero.txt` beside it — an image or an
+ * mp4. Absent, the page renders the reserved slot and nothing else.
+ *
+ * The description is required rather than defaulted: a generic one on a file
+ * nobody here has seen is a caption that is probably wrong, and a wrong one is
+ * worse for a screen reader than the honest refusal to guess.
+ *
+ * A video also wants `hero-poster.jpg`. Without it the slot is the hero's own
+ * green until the first frame decodes, and a visitor on a slow connection
+ * opens the site on an empty rectangle.
+ */
+const HERO = /^hero\.(png|jpg|jpeg|webp|avif|svg|mp4)$/i;
+
+function readHeroImage() {
+  const dir = join(here, 'src/assets');
+  if (!existsSync(dir)) return null;
+  const found = readdirSync(dir).filter((name) => HERO.test(name));
+  if (found.length === 0) return null;
+  if (found.length > 1) {
+    throw new Error(
+      `apps/web/src/assets holds ${found.length} hero files: ${found.join(', ')} — keep one`,
+    );
+  }
+  const altPath = join(dir, 'hero.txt');
+  if (!existsSync(altPath)) {
+    throw new Error(
+      `${found[0]} has no description. Write one sentence describing it to ` +
+        'apps/web/src/assets/hero.txt — the hero is the first thing on the site and it is not shipping undescribed.',
+    );
+  }
+  const alt = readFileSync(altPath, 'utf8').trim();
+  if (alt.length < 10) {
+    throw new Error('apps/web/src/assets/hero.txt is empty or too short to describe the artefact');
+  }
+  const video = found[0].toLowerCase().endsWith('.mp4');
+  const poster = video && existsSync(join(dir, 'hero-poster.jpg')) ? 'hero-poster.jpg' : null;
+  // Optional, and genuinely optional: without it a phone simply downloads the
+  // full file, which works and is only heavier.
+  const small = video && existsSync(join(dir, 'hero-sm.mp4')) ? 'hero-sm.mp4' : null;
+  if (video && !poster) {
+    throw new Error(
+      'hero.mp4 has no hero-poster.jpg beside it; the slot would be empty until the video decodes',
+    );
+  }
+  /**
+   * Cloudflare Pages refuses any single file over 25 MiB, and the whole site is
+   * served from the committed build — so a file that is too large does not fail
+   * loudly at deploy time, it fails as a hero that never loads.
+   */
+  const bytes = statSync(join(dir, found[0])).size;
+  if (bytes > 20 * 1024 * 1024) {
+    throw new Error(
+      `${found[0]} is ${(bytes / 1048576).toFixed(1)} MB; Cloudflare Pages refuses files over 25 MiB. Re-encode it smaller.`,
+    );
+  }
+  return {
+    file: found[0],
+    src: `/assets/${found[0]}`,
+    alt,
+    video,
+    poster: poster ? `/assets/${poster}` : null,
+    posterFile: poster,
+    small: small ? `/assets/${small}` : null,
+    smallFile: small,
+    smallBytes: small ? statSync(join(dir, small)).size : 0,
+    bytes,
+  };
+}
+
+/**
+ * The shipped example config, with its underscore-prefixed documentation
+ * fields removed. Printed rather than retyped: a configuration reference that
+ * describes a field the loader does not accept is worse than none.
+ */
+function readEngineConfig() {
+  const raw = JSON.parse(readFileSync(join(repo, 'evergreen.config.example.json'), 'utf8'));
+  const strip = (value) =>
+    Array.isArray(value)
+      ? value.map(strip)
+      : value && typeof value === 'object'
+        ? Object.fromEntries(
+            Object.entries(value)
+              .filter(([key]) => !key.startsWith('_'))
+              .map(([key, inner]) => [key, strip(inner)]),
+          )
+        : value;
+  const cleaned = strip(raw);
+  for (const required of ['network', 'defaults', 'contracts', 'payers', 'mode']) {
+    if (!(required in cleaned)) {
+      throw new Error(
+        `evergreen.config.example.json lost its ${required} block; the docs page documents it`,
+      );
+    }
+  }
+  return JSON.stringify(cleaned, null, 2);
+}
+
+/**
+ * Both tiers, read from the constants the CLI and core actually use. A page
+ * that hard-codes 17,280 is a fifth copy site for a number `check:policy`
+ * already asserts agreement on across four.
+ */
+function readThresholds() {
+  const health = readFileSync(join(repo, 'packages/core/src/health.ts'), 'utf8');
+  const scan = readFileSync(join(repo, 'packages/cli/src/scan.ts'), 'utf8');
+  const warn = health.match(/DEFAULT_WARN_LEDGERS = ([\d_]+)/)?.[1];
+  const act = scan.match(/DEFAULT_THRESHOLD_LEDGERS = ([\d_]+)/)?.[1];
+  if (!warn || !act) {
+    throw new Error('threshold constants moved; the docs page prints both tiers');
+  }
+  return { warn: Number(warn.replaceAll('_', '')), act: Number(act.replaceAll('_', '')) };
+}
+
+/**
+ * The Action's inputs, parsed from `action.yml`. A hand-written table drifts
+ * from the manifest the moment someone adds an input, and the drift is
+ * invisible until a user passes something the Action ignores.
+ *
+ * Deliberately a narrow parser rather than a YAML dependency: it understands
+ * exactly the three keys this manifest uses, and it throws when the shape
+ * changes instead of quietly returning less.
+ */
+function readAction() {
+  const src = readFileSync(join(repo, 'action.yml'), 'utf8');
+  const block = src.slice(src.indexOf('\ninputs:'), src.indexOf('\noutputs:'));
+  const inputs = [];
+  let current = null;
+  let folding = false;
+  for (const line of block.split('\n')) {
+    const name = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
+    if (name) {
+      current = { name: name[1], description: '', required: false, default: '' };
+      inputs.push(current);
+      folding = false;
+      continue;
+    }
+    if (!current) continue;
+    const description = /^ {4}description:\s*(.*)$/.exec(line);
+    if (description) {
+      folding = description[1].trim() === '>-' || description[1].trim() === '>';
+      if (!folding) current.description = description[1].trim();
+      continue;
+    }
+    const required = /^ {4}required:\s*(true|false)\s*$/.exec(line);
+    if (required) {
+      current.required = required[1] === 'true';
+      folding = false;
+      continue;
+    }
+    const fallback = /^ {4}default:\s*'?([^']*)'?\s*$/.exec(line);
+    if (fallback) {
+      current.default = fallback[1].trim();
+      folding = false;
+      continue;
+    }
+    if (folding && line.startsWith('      ')) {
+      current.description = `${current.description} ${line.trim()}`.trim();
+    }
+  }
+  const output = /exit-code:\s*\n\s*description:\s*'([^']+)'/.exec(src)?.[1];
+  if (inputs.length < 5 || !output) {
+    throw new Error(
+      `action.yml parsed to ${inputs.length} inputs and ${output ? 'an' : 'no'} output; the docs page documents both`,
+    );
+  }
+  for (const required of ['contracts', 'threshold', 'keys-file', 'no-data-keys']) {
+    if (!inputs.some((input) => input.name === required)) {
+      throw new Error(
+        `action.yml no longer declares ${required}; the CI reference would understate it`,
+      );
+    }
+  }
+  return { inputs, output };
+}
+
+/**
+ * The ScanResult declaration, printed rather than paraphrased. A paraphrase of
+ * a type is a second type that nothing checks.
+ */
+function readScanResultType() {
+  const src = readFileSync(join(repo, 'packages/shared-types/src/index.ts'), 'utf8');
+  const start = src.indexOf('export interface ScanResult');
+  if (start < 0)
+    throw new Error('shared-types no longer exports ScanResult; /docs/reference/json documents it');
+  const end = src.indexOf('\n}', start);
+  if (end < 0) throw new Error('ScanResult declaration is not closed where the docs build expects');
+  return src.slice(start, end + 2);
+}
+
+const heroImage = readHeroImage();
+
 const ctx = {
   snapshot,
   snapshotLedger: Math.max(
@@ -181,9 +459,16 @@ const ctx = {
   cli,
   evidence,
   knownEnds,
+  capture,
+  heroImage,
+  engineConfig: readEngineConfig(),
+  action: readAction(),
+  scanResultType: readScanResultType(),
+  thresholds: readThresholds(),
 };
 
 const PAGES = [
+  { module: 'src/pages/landing.mjs', to: 'index.html' },
   {
     module: 'src/pages/overview.mjs',
     entry: 'src/pages/overview.ts',
@@ -211,16 +496,18 @@ const PAGES = [
     entry: 'src/pages/archival.ts',
     js: 'assets/archival.js',
     to: 'docs/archival/index.html',
+    doc: '/docs/archival/',
   },
-  { module: 'src/pages/docs.mjs', to: 'docs/index.html' },
-  { module: 'src/pages/evidence.mjs', to: 'evidence/index.html' },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
 ];
 
-const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
-
-function escapeHtml(text) {
-  return text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+for (const page of DOC_PAGES) {
+  if (PAGES.some((existing) => existing.doc === page.route)) continue;
+  PAGES.push({
+    module: docModule(page.route),
+    to: `${page.route.replace(/^\/|\/$/g, '')}/index.html`,
+    doc: page.route,
+  });
 }
 
 function guardBundle(metafile, label) {
@@ -261,20 +548,55 @@ async function buildPage(page) {
     const included = await bundle(page.entry, page.js);
     coreModules = included.length;
   }
-  const html = shell({
+  const isDoc = typeof page.doc === 'string';
+  const render_shell = isDoc || meta.layout === 'site' ? siteShell : shell;
+  /**
+   * A documentation page's heading lives in its own meta and its title lives
+   * in the sitemap; if they disagree the sidebar promises one page and the
+   * reader arrives at another.
+   */
+  if (isDoc) {
+    const entry = DOC_PAGES.find((candidate) => candidate.route === page.doc);
+    if (!entry)
+      throw new Error(`${page.to} is built as a doc but ${page.doc} is not in the sitemap`);
+    if (meta.heading !== entry.title) {
+      throw new Error(
+        `${page.doc}: the sitemap calls this "${entry.title}" and the page calls itself "${meta.heading}"`,
+      );
+    }
+  }
+  const body = isDoc
+    ? docsLayout({
+        route: page.doc,
+        heading: meta.heading,
+        lead: meta.lead,
+        body: render(ctx),
+      })
+    : render(ctx);
+  const html = render_shell({
     title: meta.title,
     description: meta.description,
-    active: meta.active,
-    eyebrow: meta.eyebrow,
-    heading: meta.heading,
-    lead: meta.lead,
-    body: render(ctx),
+    active: isDoc ? '/docs/' : meta.active,
+    navTone: meta.navTone,
+    eyebrow: isDoc ? undefined : meta.eyebrow,
+    heading: isDoc ? undefined : meta.heading,
+    lead: isDoc ? undefined : meta.lead,
+    body,
     script: page.entry ? `/${page.js}` : (meta.script ?? null),
     cadence: CADENCE,
   });
   const target = join(out, page.to);
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, html);
+  /**
+   * Strip trailing whitespace from every line before writing.
+   *
+   * A template literal that interpolates a conditional leaves the indentation
+   * behind when the condition is false, so an empty `${…}` becomes a line of
+   * spaces. `git diff --check` reports each one, and chasing them template by
+   * template fixes today's and not tomorrow's — this is the whole class, at
+   * the one place every page is written.
+   */
+  writeFileSync(target, html.replace(/[ \t]+$/gm, ''));
   console.log(
     `  ${page.to.padEnd(32)} ${page.entry ? `script, core modules: ${coreModules}` : 'static, no script'}`,
   );
@@ -341,22 +663,6 @@ for (const page of PAGES) {
   await buildPage(page);
 }
 
-// The landing keeps its own layout: no sidebar, no script, works without JavaScript.
-{
-  let landing = readFileSync(join(here, 'src/pages/landing.html'), 'utf8');
-  if (landing.includes('<!--TERMINAL_CAPTURE-->')) {
-    const capture = readFileSync(join(repo, CAPTURE), 'utf8').trimEnd();
-    landing = landing
-      .replace('<!--TERMINAL_CAPTURE-->', escapeHtml(capture))
-      .replace(
-        '<!--TERMINAL_PROVENANCE-->',
-        `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
-      );
-  }
-  writeFileSync(join(out, 'index.html'), landing);
-  console.log('  index.html                         static, no script');
-}
-
 // The shell's live-ledger script. No core, no SDK — one getHealth read.
 await bundle('src/chrome-client.ts', 'assets/chrome.js');
 
@@ -364,6 +670,16 @@ mkdirSync(join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
+if (heroImage) {
+  for (const file of [heroImage.file, heroImage.posterFile, heroImage.smallFile].filter(Boolean)) {
+    cpSync(join(here, 'src/assets', file), join(out, 'assets', file));
+  }
+  console.log(
+    `  hero ${heroImage.video ? 'video' : 'image'}: ${heroImage.file} ` +
+      `(${(heroImage.bytes / 1048576).toFixed(2)} MB)${heroImage.posterFile ? ` + ${heroImage.posterFile}` : ''}` +
+      `${heroImage.smallFile ? ` + ${heroImage.smallFile} (${(heroImage.smallBytes / 1048576).toFixed(2)} MB)` : ''}`,
+  );
+}
 /**
  * No rendered page may contain the residue of a lookup that did not resolve.
  *
@@ -391,7 +707,66 @@ function guardRenderedPages() {
   }
 }
 
+/**
+ * Moved pages keep answering at their old address.
+ *
+ * `/evidence/` became `/docs/evidence/` on 2026-09-26, and the old path kept
+ * returning 200 from the host after the file had left the build — an orphan
+ * that serves, cannot be regenerated, and drifts from the page that replaced
+ * it. A redirect is the version that stays correct: the link a reader saved
+ * still works, and it lands on the page that is maintained.
+ */
+const REDIRECTS = [['/evidence/*', '/docs/evidence/', 301]];
+
+writeFileSync(
+  join(out, '_redirects'),
+  `${REDIRECTS.map(([from, to, code]) => `${from}  ${to}  ${code}`).join('\n')}\n`,
+);
+for (const [, to] of REDIRECTS) {
+  if (!ROUTES.some((route) => route.route === to)) {
+    throw new Error(`_redirects sends ${to}, which is not a route this site publishes`);
+  }
+}
+console.log(`  _redirects: ${REDIRECTS.length} rule(s)`);
+
 guardRenderedPages();
+
+/**
+ * Every asset a rendered page points at must exist in the output.
+ *
+ * `hero-sm.mp4` was announced by this build's own log and never copied: the
+ * line that copied it and the line that reported it were edited separately,
+ * and only one of them landed. The page then asked a phone for a file that
+ * was not there, the video failed with a format error, and NOTHING caught it
+ * — not the route manifest, not the residue guard, not the overflow check,
+ * because a 404 on a video is invisible to all three. The build log is not
+ * evidence that a file was written; this is.
+ */
+function guardReferencedAssets() {
+  const missing = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.html')) {
+        const html = readFileSync(path, 'utf8');
+        for (const [, url] of html.matchAll(/(?:src|href|poster)="(\/assets\/[^"]+)"/g)) {
+          if (!existsSync(join(out, url.slice(1)))) {
+            missing.push(`${path.slice(out.length + 1)} references ${url}, which was not written`);
+          }
+        }
+      }
+    }
+  };
+  walk(out);
+  if (missing.length > 0) {
+    throw new Error(
+      `rendered pages reference assets that do not exist:\n  ${missing.join('\n  ')}`,
+    );
+  }
+}
+
+guardReferencedAssets();
 
 /**
  * The published routes and the route manifest must agree, in both directions.

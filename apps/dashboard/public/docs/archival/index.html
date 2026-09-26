@@ -7,46 +7,38 @@
     <meta name="description" content="How Soroban state archival works on testnet: the live network configuration plus our own measurements." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
-  <body class="app">
+  <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-    <div class="shell">
-      <aside class="sidebar">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
-        </a>
-        <nav aria-label="Sections"><div class="nav-group">
-        <p class="nav-section">Live reads</p>
-        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Our own record</p>
-        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Reference</p>
-        <a class="nav-item active" href="/docs/archival/" aria-current="page">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
-      </div></nav>
-        <div class="sidebar-foot">
-          <p class="mono">testnet only</p>
-          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
         </div>
-      </aside>
-      <div class="content">
-        <div class="statusbar">
-      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
-      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
-      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
-      <span class="status-item right dim">read-only · these pages never sign or submit</span>
-    </div>
-        <main id="main" class="main">
-          <header class="page-head">
-            <p class="eyebrow">Reference · read from the network, not from documentation</p>
-            <h1>What the network says about archival</h1>
-            <p class="lead">The configuration below is read live from testnet when the page loads. Rent is not a flat per-byte rate — the CLI prices it by simulating against the network precisely because that formula does not hold, so no such rate appears here.</p>
-          </header>
-          <section>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link current" href="/docs/archival/" aria-current="page">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Getting started</p>
+              <h1>What the network says about archival</h1>
+              <p class="lead">The configuration below is read live from testnet when the page loads. Rent is not a flat per-byte rate — the CLI prices it by simulating against the network precisely because that formula does not hold, so no such rate appears here.</p>
+            </header>
+            <section>
     <div id="live-config"><div class="table-wrap"><table>
       <thead><tr><th scope="col">Parameter</th><th scope="col">Ledgers</th><th scope="col">About</th></tr></thead>
       <tbody>
@@ -87,16 +79,114 @@
       simulating rather than computing.
     </p>
   </section>
-        </main>
-        <footer class="site">
-          <div class="foot-row">
-            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
-            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
-          </div>
-        </footer>
+            <a class="docs-next" href="/docs/cli/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Install and conventions</span>
+              <span class="docs-next-blurb">Two commands, the arguments they share, and what the tool will never do.</span>
+            </a>
+          </main>
+
+        </div>
       </div>
-    </div>
-    <script src="/assets/chrome.js"></script>
-    <script src="/assets/archival.js"></script>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

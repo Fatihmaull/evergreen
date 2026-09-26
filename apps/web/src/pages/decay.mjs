@@ -200,7 +200,7 @@ function panel(s, state, crossesOn) {
   ].join('');
 
   return `<article class="card card-pad stack">
-    <h3>${esc(s.label)}</h3>
+    <h2>${esc(s.label)}</h2>
     <p class="muted">${esc(s.role)}</p>
     ${svg}
     ${

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install and conventions</title>
+    <meta name="description" content="Install the Evergreen CLI, and the conventions its two commands share: ledgers over dates, declared scope, and no secret in an argument." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link current" href="/docs/cli/" aria-current="page">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Command line</p>
+              <h1>Install and conventions</h1>
+              <p class="lead">Two commands. One reads, one writes, and the one that writes does nothing until you say so twice.</p>
+            </header>
+
+    <h2 id="install">Install</h2>
+    <p>
+      There is nothing to install for a one-off scan — <span class="mono">npx</span> fetches and
+      runs it:
+    </p>
+    <div class="terminal">npx @evergreen-stellar/cli@0.1.0 scan &lt;contract-id&gt;</div>
+    <p>For repeated use, or in a script where you want the version pinned in one place:</p>
+    <div class="terminal">npm install -D @evergreen-stellar/cli@0.1.0</div>
+    <p class="note">
+      Node 24 is required and declared in the package. The binary is named
+      <span class="mono">evergreen</span>.
+    </p>
+
+    <h2 id="two-commands">Two commands</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="num">scan</td>
+          <td>Reads a contract’s entries and reports what expires first, what it would cost, and what it could not determine. Never writes. <a class="site-more" href="/docs/cli/scan/">Reference</a></td>
+        </tr>
+        <tr>
+          <td class="num">extend</td>
+          <td>Builds and simulates a TTL extension. Submits only with an explicit flag, a named secret variable and a fee cap. <a class="site-more" href="/docs/cli/extend/">Reference</a></td>
+        </tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="conventions">Conventions both commands keep</h2>
+    <h3>Ledgers are the truth</h3>
+    <p>
+      Every remaining lifetime is reported in ledgers. Dates appear beside them as estimates at
+      five seconds per ledger and always carry a <span class="mono">~</span>.
+    </p>
+    <h3>Scope is declared, never guessed</h3>
+    <p>
+      Scanning reads the keys it is given; it cannot enumerate a contract’s storage. So a clean
+      exit means “everything I was asked to check is healthy”, never “this contract is fully
+      healthy”. Coverage is printed with every scan, and
+      <span class="mono">--require-declared-scope</span> turns an undeclared scope into a failure
+      rather than a footnote.
+    </p>
+    <h3>A secret is never an argument</h3>
+    <p>
+      <span class="mono">extend --submit</span> takes the <em>name</em> of an exported environment
+      variable, not its value. There is no <span class="mono">.env</span> auto-loading, and
+      diagnostics never echo file contents or credentials.
+    </p>
+    <h3>Testnet only</h3>
+    <p>
+      The network passphrase is compared rather than a label trusted. There is no mainnet path in
+      this tool, and adding one is not a configuration change.
+    </p>
+
+            <a class="docs-next" href="/docs/cli/scan/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">evergreen scan</span>
+              <span class="docs-next-blurb">Read a contract’s entries: every flag, and what each one changes.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#install">Install</a><a class="docs-toc-link" href="#two-commands">Two commands</a><a class="docs-toc-link" href="#conventions">Conventions both commands keep</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

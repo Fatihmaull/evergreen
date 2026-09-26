@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>evergreen extend</title>
+    <meta name="description" content="The Evergreen write path: simulate by default, explicit submit, secrets by environment variable name, and a mandatory fee cap." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link current" href="/docs/cli/extend/" aria-current="page">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Command line</p>
+              <h1>evergreen extend</h1>
+              <p class="lead">Builds a TTL extension and simulates it. Submitting is a separate, explicit decision that needs a flag, a named secret variable and a fee cap — and it is testnet only.</p>
+            </header>
+
+    <h2 id="default">It simulates unless you insist</h2>
+    <p>
+      Running <span class="mono">extend</span> with no submission flags builds the operation,
+      simulates it against the network and tells you what would happen. Nothing is signed and
+      nothing is sent. <span class="mono">--dry-run</span> exists so a script can state that
+      intention rather than rely on the absence of a flag, and it is mutually exclusive with
+      <span class="mono">--submit</span>.
+    </p>
+    <p class="note">
+      <strong>Simulation success does not mean the TTL changed.</strong> It means the network
+      accepted the shape of the operation. Until you submit, nothing on chain has moved.
+    </p>
+
+    <h2 id="guards">The guards</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Guard</th><th scope="col">What it prevents</th></tr></thead>
+      <tbody>
+        <tr><td class="num">simulate by default</td><td>A command that submits because a flag was forgotten.</td></tr>
+        <tr><td class="num">--submit required</td><td>Submission as a side effect of any other option.</td></tr>
+        <tr><td class="num">--secret-env NAME</td><td>A secret in shell history, in a process list, or in a committed script. The value is never an argument, and there is no <span class="mono">.env</span> auto-loading.</td></tr>
+        <tr><td class="num">--max-fee-stroops N</td><td>An unbounded fee. The cap is an aggregate in integer stroops and it is mandatory with <span class="mono">--submit</span>.</td></tr>
+        <tr><td class="num">explicit payer</td><td>Silent use of some default account. Supply <span class="mono">--source-account</span> or <span class="mono">EVERGREEN_SOURCE_ACCOUNT</span>; there is no fallback payer.</td></tr>
+        <tr><td class="num">testnet passphrase check</td><td>A mainnet submission from a mislabelled config. The passphrase is compared, not a label trusted.</td></tr>
+        <tr><td class="num">--include-code opt-in</td><td>Extending Wasm shared with contracts you cannot see, without meaning to.</td></tr>
+        <tr><td class="num">no auto restore or funding</td><td>The tool quietly spending more than the operation you asked for.</td></tr>
+        <tr><td class="num">no replacement send</td><td>A double submission after an uncertain result. An unconfirmed result is reported, not retried.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="usage">Usage</h2>
+    <div class="terminal">usage: evergreen extend &lt;contract-id&gt; --ledgers N
+  [--source-account G...] [--keys-file path] [--include-code] [--json]
+  [--submit --secret-env NAME --max-fee-stroops N]
+--dry-run              simulate only and say so. This is already the default; the flag
+                       exists so a script can state its own safety rather than rely on
+                       an absence. Mutually exclusive with --submit.
+
+Testnet only. Default: simulate, never sign or submit. Supply a public payer
+with --source-account or EVERGREEN_SOURCE_ACCOUNT; there is no fallback payer.
+--ledgers N adds N ledgers to each selected entry&#39;s current remaining TTL.
+The operation target is capped at max_entry_ttl - 1; capping is reported.
+Selects instance by default. A keys file adds explicit data keys:
+{ &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }. Storage is not enumerated.
+--include-code explicitly includes Wasm shared with potentially unseen consumers.
+--submit requires an exported secret variable NAME and an aggregate fee cap in
+integer stroops. Never put the secret itself in arguments. No .env auto-loading.
+No automatic restore or funding. No replacement send after uncertain results.
+Exit 0: complete simulation, no-op, or verified live result; 2: error or partial/
+unconfirmed result. Simulation success does not mean TTL changed.</div>
+    <p class="provenance">
+      Printed by <span class="mono">evergreen extend --help</span>, read from
+      <span class="mono">packages/cli/src/extend.ts</span> at build time.
+    </p>
+
+    <h2 id="selection">What gets extended</h2>
+    <p>
+      The instance entry by default. A keys file adds explicit data keys, in the same shape the
+      scanner takes — <span class="mono">{ "dataKeys": ["base64 XDR LedgerKey", ...] }</span>.
+      Storage is never enumerated, so what you do not name is not touched.
+    </p>
+    <p>
+      <span class="mono">--ledgers N</span> adds N to each selected entry’s <em>current</em>
+      remaining TTL. The protocol wants an absolute target, so the CLI computes it for you and caps
+      it at <span class="mono">max_entry_ttl - 1</span>, saying so when it does.
+    </p>
+
+    <h2 id="exits">What the exit code means here</h2>
+    <p>
+      <span class="mono">0</span> is a complete simulation, a no-op, or a verified live result.
+      <span class="mono">2</span> is an error, or a partial or unconfirmed result. There is no exit
+      code that means “probably worked”.
+      <a class="site-more" href="/docs/cli/exit-codes/">Exit codes</a>
+    </p>
+
+            <a class="docs-next" href="/docs/cli/output/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Output</span>
+              <span class="docs-next-blurb">The human report, and --json for machines.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#default">It simulates unless you insist</a><a class="docs-toc-link" href="#guards">The guards</a><a class="docs-toc-link" href="#usage">Usage</a><a class="docs-toc-link" href="#selection">What gets extended</a><a class="docs-toc-link" href="#exits">What the exit code means here</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

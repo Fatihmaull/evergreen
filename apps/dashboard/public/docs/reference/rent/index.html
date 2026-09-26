@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rent and cost</title>
+    <meta name="description" content="How Soroban rent is priced, the fees Evergreen actually paid on testnet, and why batching an extension is cheaper than extending often." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link current" href="/docs/reference/rent/" aria-current="page">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Reference</p>
+              <h1>Rent and cost</h1>
+              <p class="lead">Soroban state is rented by size and by time. What follows is what we measured paying, not a formula quoted from elsewhere.</p>
+            </header>
+
+    <h2 id="model">What you are paying for</h2>
+    <p>
+      Rent is a function of how large an entry is and how far into the future you are extending it.
+      Extending the same entry twice as far costs roughly twice as much; extending an entry twice
+      the size costs roughly twice as much. The fee is charged once, at submission.
+    </p>
+    <p>
+      There is no subscription and no ongoing charge. An entry with a large remaining TTL is not
+      costing you anything per day — you have already paid for that time.
+    </p>
+
+    <h2 id="measured">What we paid</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Extension</th><th scope="col">Fee charged</th><th scope="col">Note</th></tr></thead>
+      <tbody>
+        <tr><td class="num">+1,000 ledgers</td><td class="num">5,064 stroops</td><td>Expiry moved +1,002 including inclusion delay — the target is absolute, so ledgers that close while the transaction is in flight count.</td></tr>
+        <tr><td class="num">engine extension</td><td class="num">44,725 stroops</td><td>An unattended run acting on a threshold it was configured with.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">
+      Both are testnet, recorded with their transaction hashes on
+      <a class="site-more" href="/dashboard/history/">the extension history</a>. They are receipts,
+      not a price list: what an extension costs you depends on your entries.
+    </p>
+
+    <h2 id="batching">Why batching is cheaper</h2>
+    <p>
+      Every submission pays a base fee regardless of how far it extends. Extending by thirty days
+      once therefore costs less than extending by one day thirty times, and the difference is
+      thirty base fees rather than anything about the rent itself.
+    </p>
+    <p>
+      This is why the default extension target is 518,400 ledgers, about thirty days, and why the
+      act-now threshold is about one day: the gap between them is the window in which a single
+      extension can be planned, simulated and submitted without hurry.
+    </p>
+
+    <h2 id="estimate">The estimate is an estimate</h2>
+    <p>
+      <span class="mono">scan --cost</span> prices an extension by <strong>simulating it against
+      the network</strong>, so it reflects current pricing rather than a formula in this tool.
+      Nothing is submitted.
+    </p>
+    <p>
+      Rent pricing varies with network state. We have measured it differ by about 18% between
+      days, so treat a cost figure as a reading with a timestamp. If a budget depends on it, take
+      the reading close to when you will submit.
+    </p>
+
+    <h2 id="share">Where the money actually goes</h2>
+    <p>
+      On guinea-pig A, one shared code entry is 8,116,648 of 8,264,289 stroops — 98% of the rent
+      across all four of its entries. Scanning only the instance and code entries, that same entry
+      is 99%: identical rent, different denominator.
+    </p>
+    <p>
+      The practical consequence is that optimising anything other than the code entry is usually
+      rounding error, and that the entry worth watching is shared with every other contract built
+      from the same Wasm.
+      <a class="site-more" href="/docs/mental-model/">How state archival works</a>
+    </p>
+
+            <a class="docs-next" href="/docs/reference/errors/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Errors and troubleshooting</span>
+              <span class="docs-next-blurb">What each failure means and what to do about it.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#model">What you are paying for</a><a class="docs-toc-link" href="#measured">What we paid</a><a class="docs-toc-link" href="#batching">Why batching is cheaper</a><a class="docs-toc-link" href="#estimate">The estimate is an estimate</a><a class="docs-toc-link" href="#share">Where the money actually goes</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

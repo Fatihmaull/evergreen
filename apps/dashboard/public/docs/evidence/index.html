@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Evidence — Evergreen</title>
+    <meta name="description" content="The committed evidence behind this project: testnet transactions, scans, scheduler runs, and how to verify them." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link current" href="/docs/evidence/" aria-current="page">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Reference</p>
+              <h1>The record</h1>
+              <p class="lead">Every claim on this site ends here: committed bundles of unedited RPC responses, explorer screenshots and verification scripts. Testnet is periodically reset — a hash pointing at a chain that no longer exists proves nothing, so the JSON and the screenshots travel with it.</p>
+            </header>
+            <section class="stat-strip">
+    <div class="stat">
+      <p class="stat-label">committed bundles</p>
+      <p class="stat-figure">64</p>
+      <p class="stat-caption">in docs/evidence/, counted at build time — not a remembered number</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">extensions with hashes</p>
+      <p class="stat-figure">5</p>
+      <p class="stat-caption">9 Sep rescue ×3, 12 Sep manual save, 14 Sep engine save — each with its hash on the history page, plus the disclosed 5 Sep calibration round in the W1 inventory</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">invented figures</p>
+      <p class="stat-figure">0</p>
+      <p class="stat-caption">a panel with no real number shows no number; an empty cell labelled “not measured” is fine</p>
+    </div>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Verify a bundle yourself</h2>
+    <p class="muted">
+      The manual-save proof ships an offline verifier. It checks semantic consistency anchored to the signed
+      envelope — fee, sequence, payer, key and target bound to the transaction, signature and receipt verified,
+      the receipt's own TTL state checked — with integrity via <span class="mono">SHA256SUMS</span> first.
+      That is honestly what it checks: consistency with the envelope, not an independent re-observation of history.
+    </p>
+    <div class="terminal">node docs/evidence/2026-09-12-manual-extend-proof/verify-proof.mjs</div>
+    <p class="small muted">Read-only and offline. Corrupt copies fail it; the original passes — six corruptions are rehearsed in the bundle's own review record.</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Two manifests do not currently verify</h2>
+    <p class="muted">
+      Of the 16 bundles carrying a <span class="mono">SHA256SUMS</span> manifest, 14 pass and 2 fail. This is
+      committed state, found while building this page and checked with the repository's own
+      <span class="mono">verify-evidence-integrity</span> helper:
+    </p>
+    <ul class="muted">
+      <li><span class="mono">2026-09-14-scheduled-a-save</span> — an acceptance banner was added to its README
+        without regenerating the manifest, so the manifest no longer matches the file it covers. The
+        transaction it records is unaffected and independently confirmed against the chain; it is the
+        <em>manifest</em> that is stale, not the evidence.</li>
+      <li><span class="mono">2026-09-15-publish-dry-run</span> — its single manifest line names a file that is
+        not in the bundle, so it can never verify as written.</li>
+    </ul>
+    <p class="small muted">
+      Nothing runs these verifiers in CI, which is how a README edit disarmed a bundle's integrity gate without
+      anyone noticing. It is on this page rather than quietly omitted, because a verification claim nobody has
+      run is the kind of claim this project exists to object to.
+    </p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Where the deliverables stand</h2>
+    <p class="muted"><strong>CLI.</strong> Scanning, rent estimates, manual extension proven on testnet with hashes. Evidence present.</p>
+    <p class="muted"><strong>Auto-bump engine.</strong> Decide-only runs, one engine-triggered save from a local timer, alert templates delivered. The production cron running unattended against a crossing is the September gate — open until B crosses.</p>
+    <p class="muted"><strong>Dashboard, Action, docs.</strong> This preview is the dashboard taking shape; the Action and the published package are Week 4 work. Not done, not claimed.</p>
+  </section>
+            <a class="docs-next" href="/docs/reference/security/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Security and keys</span>
+              <span class="docs-next-blurb">Where a secret may live, what is enforced, and what is honestly not built.</span>
+            </a>
+          </main>
+
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

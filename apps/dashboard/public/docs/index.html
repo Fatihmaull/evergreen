@@ -3,159 +3,224 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CLI reference — Evergreen</title>
-    <meta name="description" content="The evergreen scan command: flags, exit codes and JSON shape, generated from the tool itself." />
+    <title>Evergreen documentation</title>
+    <meta name="description" content="Soroban contract state expires on a schedule. Evergreen reads what expires first, what it costs, and what fails with it — and documents exactly what it will not do." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
-  <body class="app">
+  <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-    <div class="shell">
-      <aside class="sidebar">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
-        </a>
-        <nav aria-label="Sections"><div class="nav-group">
-        <p class="nav-section">Live reads</p>
-        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Our own record</p>
-        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Reference</p>
-        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item active" href="/docs/" aria-current="page">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item" href="/about/">About</a>
-      </div></nav>
-        <div class="sidebar-foot">
-          <p class="mono">testnet only</p>
-          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
         </div>
-      </aside>
-      <div class="content">
-        <div class="statusbar">
-      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
-      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
-      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
-      <span class="status-item right dim">read-only · these pages never sign or submit</span>
-    </div>
-        <main id="main" class="main">
-          <header class="page-head">
-            <p class="eyebrow">Reference · generated from the tool at build time</p>
-            <h1>The CLI does one thing on the page</h1>
-            <p class="lead">Scan. Everything below is the tool describing itself — usage and flags from its own help text, exit codes from its exported constants. Until the package is published, run it from a clone: the install line appears here the day npx resolves from a clean machine.</p>
-          </header>
-          <section class="card card-pad stack">
-    <h2 class="section">Usage and flags</h2>
-    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
+      </nav>
+    </header>
+    <main id="main">
 
-Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
-Keys file: { &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link current" href="/docs/" aria-current="page">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Getting started</p>
+              <h1>Overview</h1>
+              <p class="lead">Evergreen reads the time-to-live on a Soroban contract’s ledger entries, tells you which one ends first, and can extend it. Everything on this page and under it describes behaviour that exists in the published package today.</p>
+            </header>
 
-PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts
-built from the same Wasm share ONE ContractCode ledger entry, and a scan of one
-contract cannot tell whether others depend on it — the chain does not index
-reverse dependencies from a single query, so that entry reports &quot;sharing
-undetermined&quot;. Naming them together resolves it:
+    <h2 id="what-it-does">What it does</h2>
+    <p>
+      Soroban keeps a contract’s state in ledger entries, and each one carries a time to live
+      measured in ledgers. When it runs out the entry is archived — or, for temporary entries,
+      deleted. A contract whose code entry has been archived cannot execute at all.
+    </p>
+    <p>
+      Evergreen is three things over that fact. A <a class="site-more" href="/docs/cli/">command
+      line tool</a> that reads a contract’s entries and reports what expires first. An engine that
+      re-reads the entries you configure on a schedule and decides whether any of them need acting
+      on. And a <span class="mono">GitHub Action</span> that fails a pull request when a contract
+      is closer to expiry than you allow.
+    </p>
 
-  evergreen scan &lt;A&gt;              code entry: 1 consumer, sharing UNDETERMINED
-  evergreen scan &lt;A&gt; &lt;B&gt; &lt;C&gt;      code entry: 3 consumers, SHARED, they fail together
-
-Every scan prints which contracts it actually scanned, so a mistyped or dropped
-argument is visible rather than inferred. --keys-file takes exactly one contract,
-because data keys belong to a specific contract and the file does not say which.
-
-Exit: 0 everything scanned is healthy; 1 observed low TTL; 2 error;
-      3 the scan came back incomplete (entry missing, TTL unavailable,
-        executable not followable, or nothing observed).
-Precedence: 2 &gt; 3 &gt; 1 &gt; 0. Exit status never authorizes a transaction.
-
-Scanning reads the keys it is given; it cannot enumerate a contract&#39;s storage,
-so a clean exit means &quot;everything I was asked to check is healthy&quot; and never
-&quot;this contract is fully healthy&quot;. Coverage is printed with every scan.
-
---threshold N         act-now threshold in LEDGERS, default 17,280 (~1 day).
-                      What evergreen-check sets in CI: a repository that wants
-                      a week of warning fails its build at 120,960, not at ours.
-                      Both health tiers move with it — WARNING widens as the
-                      action threshold rises, so raising it never silently
-                      narrows the earlier warning. Exit 1 means an entry is at
-                      or below this value; the boundary is inclusive, because
-                      remaining exactly N is already the margin you set out to
-                      keep. Changes what is REPORTED and never what is written.
-
---no-data-keys        assert this contract has no data keys beyond its instance.
-                      Only its author can know that; it is a caller declaration
-                      and is never independently verified.
---require-declared-scope
-                      also exit 3 when scope was not declared. Intended for CI on
-                      a contract you own; evergreen-check sets it by default.
---json                machine-readable output. The human view is a summary; JSON
-                      is the complete record, including every issue.
---optimize            append conditional storage advice with evidence and scope
-                      limits. Reads network minimum lifetimes; no payer needed.
-                      Add --cost for current rent quotes. No storage is changed.
---cost [--ledgers N]  estimate what extending every entry by N more ledgers
-                      would cost, priced by simulating against the network.
-                      Default N is 518,400 (~30 days). Nothing is submitted.
-
-                      &quot;--ledgers N&quot; means &quot;give me N MORE ledgers&quot;. The protocol
-                      wants an absolute target, so the CLI computes it for you
-                      and caps it at max_entry_ttl - 1, saying so when it does.
-                      Costs are estimates: rent pricing varies with network
-                      state and has differed ~18% between days.
-
-Health states, printed per entry and as a worst-of summary:
-  HEALTHY   above threshold.
-  WARNING   low, recoverable, and affects only this contract.
-  CRITICAL  expired, OR temporary (deleted at expiry, unrecoverable), OR low and
-            SHARED — a code entry shared by N contracts at 3 days is N contracts
-            at 3 days, not one.
-  UNKNOWN   TTL could not be read. Not healthy; unread.
-
-Colour is added only for an interactive terminal and honours NO_COLOR. The state
-word always prints, so piped output and screenshots lose nothing.</div>
-    <p class="small muted">Source: <span class="mono">packages/cli/src/command.ts</span> — this page fails to build when that help text moves.</p>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">Exit codes</h2>
+    <h2 id="refusals">What it will not do</h2>
+    <p>
+      Four of these are enforced in code rather than promised in prose, and each one is documented
+      where it is enforced.
+    </p>
     <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Exit</th><th scope="col">Meaning</th></tr></thead>
-      <tbody><tr><td class="num">0</td><td>everything scanned is healthy</td></tr><tr><td class="num">1</td><td>observed low TTL</td></tr><tr><td class="num">2</td><td>error — invalid input, RPC failure, or the network refused</td></tr><tr><td class="num">3</td><td>incomplete — entry missing, TTL unavailable, executable not followable, or nothing observed</td></tr></tbody>
+      <thead><tr><th scope="col">It will not</th><th scope="col">Where that is enforced</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Touch mainnet</td>
+          <td>The config loader compares the network passphrase rather than trusting a label. <a class="site-more" href="/docs/reference/security/">Security</a></td>
+        </tr>
+        <tr>
+          <td>Submit anything you did not ask it to</td>
+          <td><span class="mono">extend</span> simulates by default; submitting needs <span class="mono">--submit</span>, a named secret variable and a fee cap. <a class="site-more" href="/docs/cli/extend/">extend</a></td>
+        </tr>
+        <tr>
+          <td>Read a secret from a file or an argument</td>
+          <td>Secrets are passed by environment variable name only. There is no <span class="mono">.env</span> auto-loading.</td>
+        </tr>
+        <tr>
+          <td>Claim a contract is healthy when it did not look</td>
+          <td>A scan reports what it read and names what it could not. <a class="site-more" href="/docs/reference/states/">Undetermined, unread, not found</a></td>
+        </tr>
+      </tbody>
     </table></div>
-    <p class="small muted">Precedence 2 &gt; 3 &gt; 1 &gt; 0, from <span class="mono">packages/cli/src/scan.ts</span>. A degraded read still exits 3; blast radius changes severity, not the exit category. Exit status never authorizes a transaction.</p>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">JSON shape</h2>
-    <p class="muted">
-      <span class="mono">--json</span> prints the <span class="mono">ScanResult</span> — entries keyed by ledger
-      key, each carrying the contracts it serves — plus <span class="mono">health</span>,
-      <span class="mono">cost</span> and <span class="mono">optimization</span> blocks. The shape is declared in
-      <span class="mono">packages/shared-types/src/index.ts</span>; that declaration is authoritative and is not
-      copied here, because a copy drifts. Every page with a JSON panel on this site prints the same shape the CLI
-      prints.
+    <p class="note">
+      It also has no wallet connection and no web control that signs anything. This site is
+      read-only: every page here renders committed data or reads the chain, and none of them can
+      submit a transaction.
     </p>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">Run it before it is published</h2>
-    <p class="muted">
-      Clone the repository, install, build, and scan the public test contract — no key and no account. Needs
-      Node 24 and pnpm (<span class="mono">.nvmrc</span> pins the major). The exact
-      commands are the README quickstart, which was executed before it was written. No install line is shown here
-      until publishing is verified from a clean machine.
+
+    <h2 id="four-kinds">Four kinds of entry, and one that matters most</h2>
+    <p>
+      Most descriptions of Soroban storage name three kinds — instance, persistent and temporary.
+      There is a fourth, and on a real bill it is usually the largest: the <strong>code</strong>
+      entry, which holds the compiled Wasm and is shared by every contract deployed from it.
     </p>
-  </section>
-        </main>
-        <footer class="site">
-          <div class="foot-row">
-            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
-            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
-          </div>
-        </footer>
+    <p>
+      On guinea-pig A, one shared code entry is <strong>8,116,648 of 8,264,289 stroops</strong> —
+      98% of the rent across all four of its entries. It is also the entry a single-contract scan
+      cannot fully resolve, because the chain does not index reverse dependencies.
+      <a class="site-more" href="/docs/mental-model/">How state archival works</a>
+    </p>
+
+    <h2 id="start">Where to start</h2>
+    <p>
+      If you want to see it work, the quickstart is one command and needs no key and no account.
+      If you want to know whether you can trust it, read the refusals above and then the exit
+      codes — what a tool does when it cannot answer is more informative than what it prints when
+      it can.
+    </p>
+    <p class="provenance">
+      Package <span class="mono">@evergreen-stellar/cli@0.1.0</span>, published to npm and
+      verified from a clean machine on 2026-09-25. Testnet only.
+    </p>
+
+            <a class="docs-next" href="/docs/quickstart/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Quickstart</span>
+              <span class="docs-next-blurb">Scan a real contract on testnet in one command, with no key and no account.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#what-it-does">What it does</a><a class="docs-toc-link" href="#refusals">What it will not do</a><a class="docs-toc-link" href="#four-kinds">Four kinds of entry, and one that matters most</a><a class="docs-toc-link" href="#start">Where to start</a>
+        </nav>
+        </div>
       </div>
-    </div>
-    <script src="/assets/chrome.js"></script>
-    
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

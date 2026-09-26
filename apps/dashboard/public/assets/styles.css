@@ -8,10 +8,16 @@
   --paper: #ffffff;
   --ink: #0f0f0f;
   --ink-2: rgba(15, 15, 15, 0.72);
-  --ink-3: rgba(15, 15, 15, 0.56);
+  /* 0.56 measured 4.32:1 on `--surface`, just under WCAG AA's 4.5:1, and it
+     is the colour behind most of this site's muted text. 0.62 clears it. */
+  --ink-3: rgba(15, 15, 15, 0.62);
   --rule: rgba(15, 15, 15, 0.1);
   --rule-strong: rgba(15, 15, 15, 0.44);
   --pine: #1a3a2e;
+  /* The export's `primary`. Deeper than `--pine` on purpose: the hero is a
+     full-width field of it, and if it matched the 98% slab exactly the slab
+     would stop reading as the page's one dominant element. */
+  --pine-deep: #022419;
   --pine-soft: rgba(26, 58, 46, 0.07);
   --sage: #7fa893;
   --off-black: #262626;
@@ -194,9 +200,11 @@ p + p {
 
 /* Scan field -------------------------------------------------------------- */
 .field-label {
-  font: 600 11.5px/1.3 var(--sans);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 400 12px/1.3 var(--sans);
+  /* 0.06em was set for uppercase, where wide tracking separates capitals that
+     have no ascenders to tell them apart. Without the uppercase it is just
+     loose, which the audit flagged the moment the caps came off. */
+  letter-spacing: 0.02em;
   color: var(--ink-3);
 }
 input[type='text'],
@@ -337,7 +345,7 @@ details[open] summary {
   font: 400 var(--step-1)/1.35 var(--serif);
   letter-spacing: -0.01em;
   color: var(--ink-2);
-  max-width: 62ch;
+  max-width: 52ch;
 }
 .verdict .meta {
   display: flex;
@@ -547,96 +555,568 @@ footer.site .wrap {
   z-index: 5;
 }
 
-/* Landing ------------------------------------------------------------------ */
-.landing .hero {
-  background: #0f1512;
-  color: var(--surface);
-  padding-block: clamp(56px, 12vw, 132px);
+/* Marketing surface — `/`, `/docs/`, `/about/` -------------------------------
+   Everything here is scoped under `body.site`. The dashboard's twelve routes
+   use `body.app` and share only the tokens at the top of this file, so a
+   decision made for the landing cannot reach a live read.
+
+   Three rules govern the whole surface, and each one is a measurement rather
+   than a taste:
+
+   1. FIVE type sizes, and nothing is bold. Hierarchy is carried by size and
+      colour alone. The reference this was taken from sets every element in its
+      own typeface at weight 400 — the 600s in its DOM belong to simulated app
+      UI inside screenshots. Eleven sizes used eleven times is a scale with no
+      hierarchy, which is the same defect as having no point of view.
+
+   2. Tracking flips at 16px. Below it, positive (+0.01em); above it, negative
+      and scaling with size (−0.0125em at 28px, −0.03em at 72px). Standard
+      typographic practice, free, and legible as craft.
+
+   3. ONE element over 40px on any page. A page that shouts on every screen has
+      no dominant element anywhere. `scripts/check-design.mjs` asserts this.
+
+   What is deliberately absent: gradients, decorative icons, drop shadows, a
+   nav that moves when you scroll, and any border that is a grey hex rather
+   than an alpha of the foreground. */
+body.site {
+  --m-max: 1300px;
+  --m-gutter: clamp(20px, 5vw, 32px);
+  --m-rhythm: 4.2rem;
+  --m-ease: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --t-figure: 72px;
+  --t-head: 28px;
+  --t-lead: 16px;
+  --t-body: 14px;
+  --t-label: 12px;
+
+  /* The height of the hero's fade into the surface below it. Not part of the
+     section rhythm — it is a transition, and it is the only one on the site. */
+  --hero-fade: clamp(120px, 12vw, 180px);
+  --closing-fade: clamp(180px, 18vw, 300px);
+
+  background: var(--surface);
+  font: 400 var(--t-body) / 1.5 var(--sans);
+  letter-spacing: 0.01em;
 }
-.landing .hero .wrap {
-  display: grid;
-  gap: 22px;
+body.site main {
+  display: block;
+  padding: 0;
 }
-.hero-eyebrow {
+body.site section {
+  display: block;
+  padding-block: var(--m-rhythm);
+}
+.site-wrap {
+  max-width: var(--m-max);
+  margin: 0 auto;
+  padding-inline: var(--m-gutter);
+}
+/* `ch` is the advance of `0`, which in Inter is far wider than the average
+   glyph — so 68ch renders as roughly 95 actual characters, not 68. These
+   values are set from measured characters per line, not from the unit's
+   apparent promise. Space Mono is fixed-pitch, so `ch` is literal there and
+   the mono widths below need no such correction. */
+body.site p {
   margin: 0;
-  font: 400 12.5px/1.3 var(--mono);
+  max-width: 54ch;
+}
+body.site p + p {
+  margin-top: 12px;
+}
+
+/* Type — the whole scale, in one place ------------------------------------- */
+body.site h1,
+body.site h2 {
+  margin: 0;
+  font: 400 var(--t-head) / 1.22 var(--serif);
+  letter-spacing: -0.0125em;
+  max-width: 26ch;
+}
+body.site h1 {
+  max-width: 22ch;
+}
+body.site h3 {
+  margin: 0;
+  font: 400 var(--t-lead) / 1.5 var(--sans);
+  letter-spacing: 0.005em;
+}
+body.site .lead {
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--ink-2);
+  max-width: 52ch;
+}
+body.site .eyebrow,
+body.site .note,
+body.site .provenance {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  max-width: 70ch;
+}
+body.site .note,
+body.site .provenance {
+  margin-top: 20px;
+}
+
+/* Nav — static, 52px, three zones. It scrolls away; see site.mjs for why. --- */
+.site-nav {
+  position: relative;
+  height: 52px;
+  background: var(--surface);
+}
+/* On the landing the bar is part of the hero's green field, so it takes the
+   hero's background rather than sitting on top of it. This is the page's own
+   colour, decided at build time — nothing here reacts to scrolling. */
+.site-nav.on-dark {
+  background: var(--pine-deep);
+}
+.site-nav.on-dark .site-brand {
+  color: var(--surface);
+}
+.site-nav.on-dark .site-mark {
+  background: rgba(252, 249, 248, 0.82);
+}
+.site-nav.on-dark .site-link {
   color: rgba(252, 249, 248, 0.62);
 }
-.landing h1 {
-  margin: 0;
-  display: grid;
-  gap: 2px;
-  letter-spacing: -0.03em;
+.site-nav.on-dark .site-link:hover,
+.site-nav.on-dark .site-link.current {
+  color: var(--surface);
 }
-.landing h1 .serif {
-  font: 400 var(--step-5)/1.02 var(--serif);
+.site-nav-inner {
+  max-width: var(--m-max);
+  margin: 0 auto;
+  padding-inline: var(--m-gutter);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
-.landing h1 .sans {
-  font: 600 var(--step-5)/1.02 var(--sans);
-  letter-spacing: -0.045em;
+.site-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
-.hero-lead {
-  max-width: 58ch;
-  color: rgba(252, 249, 248, 0.82);
-  font-size: var(--step-1);
-  line-height: 1.5;
+
+/* The button that collapses the bar on a phone.
+   Three bars drawn in CSS rather than an icon file: it is a control's label,
+   it inherits the bar's colour on both the light pages and the green one, and
+   it adds nothing to download. */
+.site-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: -10px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  cursor: pointer;
+}
+.site-burger[hidden] {
+  display: none;
+}
+.site-nav.on-dark .site-burger {
+  color: var(--surface);
+}
+.site-bars {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: currentcolor;
+}
+.site-bars::before,
+.site-bars::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: currentcolor;
+  transition: transform var(--m-ease);
+}
+.site-bars::before {
+  top: -6px;
+}
+.site-bars::after {
+  top: 6px;
+}
+.site-nav[data-menu='open'] .site-bars {
+  background: transparent;
+}
+.site-nav[data-menu='open'] .site-bars::before {
+  transform: translateY(6px) rotate(45deg);
+}
+.site-nav[data-menu='open'] .site-bars::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* At 390px the three zones are 92 + 89 + 160 = 341px of content in a 390px
+   bar, and holding them there took 29px clawed back from padding and gaps.
+   That was a fit, not a layout. Below 760px they go behind the button.
+
+   `[data-menu]` is set by the script, so the collapse only happens once the
+   button works. Without JavaScript the links stay in the bar — tight, but
+   reachable, which is exactly what shipped before the button existed. */
+@media (max-width: 759px) {
+  .site-nav-inner {
+    padding-inline: 16px;
+    gap: 10px;
+  }
+  .site-brand {
+    gap: 8px;
+  }
+  .site-centre {
+    gap: 12px;
+  }
+  .site-cta {
+    padding-inline: 11px;
+  }
+  .site-nav[data-menu] .site-links {
+    position: absolute;
+    inset: 52px 0 auto;
+    z-index: 9;
+    display: grid;
+    justify-items: start;
+    gap: 20px;
+    padding: 22px 16px 26px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+  }
+  .site-nav.on-dark[data-menu] .site-links {
+    background: var(--pine-deep);
+    border-bottom-color: rgba(252, 249, 248, 0.16);
+  }
+  .site-nav[data-menu] .site-centre {
+    display: grid;
+    justify-items: start;
+    gap: 20px;
+  }
+  .site-nav[data-menu='closed'] .site-links {
+    display: none;
+  }
+}
+@media (min-width: 760px) {
+  .site-nav-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  /* The wrapper exists only so the phone has something to collapse. Here it
+     gets out of the way and its children are the three-zone grid's own
+     items, so the desktop bar is unchanged. */
+  .site-links {
+    display: contents;
+  }
+  .site-centre {
+    justify-self: center;
+  }
+  .site-nav-inner .site-cta {
+    justify-self: end;
+  }
+  .site-burger {
+    display: none;
+  }
+}
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 400 var(--t-lead) / 1 var(--serif);
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-mark {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 4px;
+  background: var(--pine);
+}
+.site-centre {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 3vw, 26px);
+}
+.site-link {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+  white-space: nowrap;
+}
+.site-link:hover,
+.site-link.current {
+  color: var(--ink);
+}
+
+/* The only button on the surface: filled foreground, background-coloured text. */
+.site-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  padding: 7px 14px;
+  border-radius: 100vw;
+  background: var(--pine);
+  color: var(--surface);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--m-ease);
+}
+.site-cta:hover {
+  background: #0f2b20;
+}
+/* Filled foreground with background-coloured text, both ways round: a dark
+   pill on the warm surface, a light pill on the hero's green. */
+.site-nav.on-dark .site-cta,
+body.site .hero .site-cta,
+body.site .closing .site-cta {
+  background: var(--surface);
+  color: var(--pine-deep);
+}
+.site-nav.on-dark .site-cta:hover,
+body.site .hero .site-cta:hover,
+body.site .closing .site-cta:hover {
+  background: #ffffff;
+}
+body.site .hero .site-more {
+  color: var(--surface);
+}
+/* Accent, and only here: an inline text link that continues the sentence. */
+.site-more {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--pine);
+  text-decoration: none;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.site-more:hover {
+  opacity: 0.66;
 }
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 6px 0 0;
-}
-.pill.solid {
-  background: var(--surface);
-  color: #0f1512;
-  border-color: var(--surface);
-  text-decoration: none;
-  font-weight: 600;
-}
-.pill.ghost {
-  background: transparent;
-  color: var(--surface);
-  border-color: rgba(252, 249, 248, 0.32);
-  text-decoration: none;
-}
-.pill.ghost:hover {
-  background: rgba(252, 249, 248, 0.08);
-}
-.band {
-  padding-block: clamp(44px, 7vw, 80px);
-}
-.band .stack {
-  gap: 16px;
-}
-.band.dark {
-  background: var(--pine);
-  color: var(--surface);
-}
-.band.dark p,
-.band.dark .on-dark {
-  color: rgba(252, 249, 248, 0.84);
-}
-.eyebrow.on-dark {
-  color: rgba(252, 249, 248, 0.62);
-}
-h2.display {
-  margin: 0;
-  font: 400 var(--step-3)/1.12 var(--serif);
-  letter-spacing: -0.02em;
-  max-width: 20ch;
-}
-.closing h2.display {
-  max-width: 24ch;
+  align-items: center;
+  gap: 12px 22px;
+  margin-top: 28px;
 }
 
+/* Hero — green, and the only gradient on the site -------------------------- */
+body.site .hero {
+  position: relative;
+  background: var(--pine-deep);
+  color: var(--surface);
+  /* The rhythm value is still the rhythm value; the fade is added to it so the
+     content clears the transition rather than sitting inside it. */
+  padding-block: 7rem calc(var(--m-rhythm) + var(--hero-fade));
+}
+/* One transition, at the single most important one on the page, and nowhere
+   else. `in oklab` because sRGB interpolation between a dark green and a warm
+   off-white runs through a grey mud in the middle; the sRGB declaration above
+   it is the fallback for anything that cannot parse the second. */
+body.site .hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--hero-fade);
+  pointer-events: none;
+  background: linear-gradient(to bottom, #022419 0%, #fcf9f8 100%);
+  background: linear-gradient(to bottom in oklab, #022419 0%, #fcf9f8 100%);
+  background: linear-gradient(
+    to bottom,
+    #022419 0%,
+    color-mix(in oklab, #fcf9f8 4.3%, #022419) 12.5%,
+    color-mix(in oklab, #fcf9f8 15.6%, #022419) 25%,
+    color-mix(in oklab, #fcf9f8 31.6%, #022419) 37.5%,
+    color-mix(in oklab, #fcf9f8 50%, #022419) 50%,
+    color-mix(in oklab, #fcf9f8 68.4%, #022419) 62.5%,
+    color-mix(in oklab, #fcf9f8 84.4%, #022419) 75%,
+    color-mix(in oklab, #fcf9f8 95.7%, #022419) 87.5%,
+    #fcf9f8 100%
+  );
+}
+body.site .hero .site-wrap {
+  position: relative;
+  z-index: 1;
+}
+body.site .hero .eyebrow {
+  color: rgba(252, 249, 248, 0.62);
+}
+body.site .hero h1 {
+  margin-top: 0;
+}
+body.site .hero .lead {
+  margin-top: 20px;
+  color: rgba(252, 249, 248, 0.82);
+}
+
+/* The hero's artefact slot.
+   16:9, matching the artefact at 1920x1080, and it takes the whole container
+   at every width — 1236 x 695 at 1300px and up, and the same shape the whole
+   way down to 350 x 197 on a phone. No max-width and no breakpoint: one
+   ratio, and the width is whatever the container has.
+
+   The ratio lives on the container, so the space exists before the file does
+   and swapping one in reflows nothing. Empty, it is a hairline in an alpha of
+   the hero's foreground and nothing else: no placeholder text, no icon, no
+   dashed edge, no shimmer. */
+.hero-art {
+  margin-top: 44px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(252, 249, 248, 0.18);
+  overflow: hidden;
+}
+.hero-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+/* Feature — a narrow caption beside a large artefact, about 31/69 ----------- */
+.feature-grid {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.feature-text {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  max-width: 400px;
+}
+.feature-text p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+@media (min-width: 980px) {
+  .feature-grid {
+    grid-template-columns: minmax(0, 0.31fr) minmax(0, 0.69fr);
+    gap: 56px;
+  }
+  .feature.flip .feature-grid {
+    grid-template-columns: minmax(0, 0.69fr) minmax(0, 0.31fr);
+  }
+  .feature.flip .feature-text {
+    order: 2;
+  }
+  .feature.flip .feature-art {
+    order: 1;
+  }
+}
+
+/* Artefact 1 — the one number over 40px on this page. */
+.figure {
+  background: var(--pine);
+  color: var(--surface);
+  border-radius: 4px;
+  padding: clamp(28px, 4vw, 48px);
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.figure-label {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: rgba(252, 249, 248, 0.62);
+}
+.figure-value {
+  font: 400 var(--t-figure) / 1.06 var(--serif);
+  letter-spacing: -0.03em;
+}
+.figure-caption {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: rgba(252, 249, 248, 0.78);
+  max-width: 44ch;
+}
+
+/* Artefact 2 — unedited output. No window chrome, no label, no dots.
+   `pre-wrap` rather than `pre`: three lines of the capture are prose over 130
+   characters, and a terminal at any width wraps them. The bytes are the
+   committed file's; only the column count is this page's. */
+body.site .terminal {
+  background: var(--off-black);
+  color: #ececec;
+  border-radius: 4px;
+  padding: clamp(20px, 3vw, 32px);
+  font: 400 var(--t-label) / 1.65 var(--mono);
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* Artefact 3 — a finished fact. The inverted cell is emphasis, not an error. */
+.ended {
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 4px;
+  padding: clamp(28px, 4vw, 48px);
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.ended-label {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: rgba(252, 249, 248, 0.62);
+}
+.ended-word {
+  font: 400 var(--t-head) / 1.1 var(--serif);
+  letter-spacing: -0.0125em;
+}
+.ended-facts {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.ended-facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+.ended-facts dt {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: rgba(252, 249, 248, 0.62);
+  min-width: 72px;
+}
+.ended-facts dd {
+  margin: 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+}
+
+/* The four kinds — a continuous hairline row, square where borders meet ----- */
+body.site .plain h2 {
+  margin-top: 18px;
+}
+body.site .plain .lead {
+  margin-top: 16px;
+}
 .kinds {
+  margin-top: 32px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   border: 1px solid var(--rule);
-  border-radius: 8px;
   overflow: hidden;
-  background: var(--paper);
 }
 @media (min-width: 640px) {
   .kinds {
@@ -652,11 +1132,26 @@ h2.display {
   display: grid;
   gap: 10px;
   align-content: start;
-  padding: 20px;
+  padding: 22px;
   border-top: 1px solid var(--rule);
+}
+.kind:first-child {
+  border-top: 0;
 }
 @media (min-width: 640px) {
   .kind {
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+  .kind:nth-child(odd) {
+    border-left: 0;
+  }
+  .kind:nth-child(n + 3) {
+    border-top: 1px solid var(--rule);
+  }
+}
+@media (min-width: 1000px) {
+  .kind:nth-child(n) {
     border-top: 0;
     border-left: 1px solid var(--rule);
   }
@@ -665,16 +1160,13 @@ h2.display {
   }
 }
 .kind-name {
-  margin: 0;
-  font: 400 15px/1.2 var(--mono);
+  font: 400 var(--t-lead) / 1.2 var(--mono);
+  letter-spacing: 0.005em;
 }
 .kind-holds {
-  margin: 0;
-  font-size: 13.5px;
+  font-size: var(--t-body) !important;
+  letter-spacing: 0.01em;
   color: var(--ink-2);
-}
-.kind-fate {
-  margin: 0;
 }
 .kind.inverted {
   background: var(--ink);
@@ -684,57 +1176,598 @@ h2.display {
   color: rgba(252, 249, 248, 0.78);
 }
 
-.thesis {
+/* How it works — three columns and nothing around them --------------------- */
+.how {
+  margin-top: 32px;
   display: grid;
-  gap: 28px;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-@media (min-width: 900px) {
-  .thesis {
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 48px;
-  }
-}
-.stat-cell {
-  border: 1px solid rgba(252, 249, 248, 0.24);
-  border-radius: 8px;
-  padding: 22px;
-  display: grid;
-  gap: 8px;
-}
-.stat-label {
-  margin: 0;
-  font: 600 11.5px/1.3 var(--sans);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: rgba(252, 249, 248, 0.66);
-}
-.stat-figure {
-  margin: 0;
-  font: 400 var(--step-5)/1 var(--serif);
-  letter-spacing: -0.03em;
-  color: var(--surface);
-}
-.stat-caption {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: rgba(252, 249, 248, 0.78) !important;
-}
-.cards-3 {
-  display: grid;
-  gap: 14px;
+  gap: 32px;
   grid-template-columns: minmax(0, 1fr);
 }
 @media (min-width: 860px) {
-  .cards-3 {
+  .how {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
   }
 }
-.cards-3 h3 {
+.how > div {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.how-name {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.how p:not(.how-name) {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+
+/* Closing — the page's last beat, and the second of its two gradients ------
+   The hero fades green into the surface; this fades the surface back into
+   green, so the page opens and closes on the same field. That is a SECOND
+   gradient on a page briefed to carry one, added at Fatih's direction on
+   2026-09-25 — the budget in `check-design.mjs` moved from one to two so a
+   THIRD still fails.
+
+   Centred, and only here. The rest of the site is left-aligned against a rail
+   or a measure; the closing is the one place where centring is the point,
+   because there is nothing after it to align to. */
+body.site .closing {
+  position: relative;
+  background: var(--pine-deep);
+  color: var(--surface);
+  padding-block: calc(var(--m-rhythm) + var(--closing-fade)) 8.4rem;
+}
+body.site .closing::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--closing-fade);
+  pointer-events: none;
+  background: linear-gradient(to bottom, #fcf9f8 0%, #022419 100%);
+  background: linear-gradient(to bottom in oklab, #fcf9f8 0%, #022419 100%);
+  background: linear-gradient(
+    to bottom,
+    #fcf9f8 0%,
+    color-mix(in oklab, #022419 4.3%, #fcf9f8) 12.5%,
+    color-mix(in oklab, #022419 15.6%, #fcf9f8) 25%,
+    color-mix(in oklab, #022419 31.6%, #fcf9f8) 37.5%,
+    color-mix(in oklab, #022419 50%, #fcf9f8) 50%,
+    color-mix(in oklab, #022419 68.4%, #fcf9f8) 62.5%,
+    color-mix(in oklab, #022419 84.4%, #fcf9f8) 75%,
+    color-mix(in oklab, #022419 95.7%, #fcf9f8) 87.5%,
+    #022419 100%
+  );
+}
+.closing-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* A grid item will not shrink below its content either, so the track has to
+     say so explicitly. Without this the command pill widened the section by
+     221px on a phone even after the code could scroll. */
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 20px;
+  text-align: center;
+}
+/* The only sixth type size on the surface, and it is size alone that does the
+   work: nothing here is bold. A 600 was tried on 2026-09-25 and looked heavy
+   in Newsreader at this size, so the rule the rest of the rework follows —
+   hierarchy by size and colour, never by weight — holds without exception.
+   36px keeps it UNDER 40px on purpose: the page is still allowed exactly one
+   element above that line, and that is the 98%. */
+body.site .closing h2 {
+  font-size: 36px;
+  line-height: 1.16;
+  letter-spacing: -0.018em;
+  max-width: 20ch;
+}
+body.site .closing .lead {
+  color: rgba(252, 249, 248, 0.78);
+  max-width: 54ch;
+}
+body.site .closing .hero-actions {
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* The command. A control surface, not a card: it holds a button, its text is
+   selectable, and it is the one thing on the page a visitor is meant to take
+   away with them. The command itself is the README's quickstart verbatim. */
+.command {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 9px 9px 9px 16px;
+  border: 1px solid rgba(252, 249, 248, 0.2);
+  /* A command is a surface, not a control: 6px, not a lozenge. A full pill
+     around a line of monospace is the shape that reads as generated. */
+  border-radius: 6px;
+  background: rgba(252, 249, 248, 0.05);
+}
+.command code {
+  /* A flex item will not shrink below its content without this, so the
+     command's 95 characters pushed the row 463px past a 390px phone. The code
+     scrolls inside the pill instead. */
+  min-width: 0;
+  overflow-x: auto;
+  font: 400 var(--t-label) / 1.6 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--surface);
+  white-space: pre;
+}
+.command-prompt {
+  flex: none;
+  font: 400 var(--t-label) / 1.6 var(--mono);
+  color: var(--sage);
+}
+.command-copy {
+  flex: none;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(252, 249, 248, 0.1);
+  color: rgba(252, 249, 248, 0.72);
+  font: 400 var(--t-label) / 1 var(--mono);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color var(--m-ease),
+    color var(--m-ease);
+}
+.command-copy:hover,
+.command-copy.done {
+  background: rgba(252, 249, 248, 0.18);
+  color: var(--surface);
+}
+.command-copy[hidden] {
+  display: none;
+}
+
+/* The second action. Transparent, a hairline in the foreground's alpha — the
+   filled pill stays the only solid button on the surface. */
+.site-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  padding: 7px 14px;
+  border: 1px solid rgba(252, 249, 248, 0.28);
+  border-radius: 100vw;
+  color: var(--surface);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color var(--m-ease),
+    background-color var(--m-ease);
+}
+.site-ghost:hover {
+  border-color: rgba(252, 249, 248, 0.6);
+  background: rgba(252, 249, 248, 0.06);
+}
+
+/* Reference pages — a label rail, and the substance beside it ------------- */
+body.site .page-intro-wrap {
+  padding-block: 0;
+}
+.page-intro {
+  border-top: 0;
+  padding-block: 7rem 0;
+}
+/* A hairline per section, and the rhythm split evenly across it.
+   A label rail groups HORIZONTALLY — heading left, its substance right — so a
+   heading has nothing directly beneath it, and vertical spacing alone leaves
+   it as near to the block above as to the one it introduces. The rule says
+   where each section starts without enclosing anything, which is what a
+   hairline is for and what a card would get wrong. */
+body.site .ref {
+  padding-block: 0;
+}
+.ref-grid {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--m-rhythm);
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .ref-grid {
+    grid-template-columns: minmax(0, 0.31fr) minmax(0, 0.69fr);
+    gap: 56px;
+  }
+}
+.ref-label {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  max-width: 340px;
+}
+.ref-body {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.ref-body p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+.ref-body .mono {
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+}
+/* A table is a table: hairlines, no card around it, no radius. The dashboard's
+   `.table-wrap` is a bordered, rounded, paper-filled box — correct inside a
+   dense instrument, and exactly the uniform rounded container the rework was
+   asked to remove from these three pages. */
+body.site .table-wrap {
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+body.site table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-body);
+  /* A two-column table stretched across the content column puts 91 characters
+     on a line. The table is narrow content; it does not need the column. */
+  max-width: 620px;
+}
+body.site thead th {
+  font: 400 var(--t-label) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  text-align: left;
+  padding: 0 16px 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+body.site tbody td {
+  padding: 11px 16px 11px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  letter-spacing: 0.01em;
+}
+body.site tbody td.num {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.people {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 860px) {
+  .people {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
+  }
+}
+.people > div {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+/* Documentation — sidebar, page, contents ---------------------------------
+   Three columns at 1300px, proportioned from the reference Fatih named:
+   260px of navigation, a 704px text column, 240px of contents. The text
+   column is the number that matters; its paragraphs still cap at the site's
+   own 54ch, so nothing runs past 80 characters a line.
+
+   One new type size lives here and nowhere else: a 20px sub-heading. Twenty
+   pages of reference need a step between the 28px page title and 14px body,
+   and 16px against 14px is not a step, it is a wobble. Nothing here is bold —
+   the reference this layout came from sets seventeen size-and-weight
+   combinations and uses 700 freely; copying that would split the site into
+   two languages a visitor crosses at the navbar. */
+body.site {
+  --t-sub: 20px;
+  --docs-rail: 260px;
+  --docs-toc: 240px;
+}
+.docs-shell {
+  padding-block: 3rem var(--m-rhythm);
+}
+.docs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .docs-grid {
+    grid-template-columns: var(--docs-rail) minmax(0, 1fr);
+    gap: 48px;
+  }
+}
+@media (min-width: 1200px) {
+  .docs-grid {
+    grid-template-columns: var(--docs-rail) minmax(0, 1fr) var(--docs-toc);
+  }
+}
+
+/* The rail. No fill and no border: it is a column of links, not a panel. */
+.docs-aside {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.docs-nav {
+  display: grid;
+  gap: 26px;
+}
+.docs-group {
+  display: grid;
+  gap: 2px;
+}
+.docs-group .eyebrow {
+  margin-bottom: 8px;
+}
+.docs-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+}
+.docs-link:hover {
+  color: var(--ink);
+}
+.docs-link.current {
+  color: var(--pine);
+}
+.docs-tag {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+/* The page. */
+.docs-main {
+  max-width: 704px;
+  min-width: 0;
+}
+.docs-head {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+body.site .docs-main h2 {
+  font-size: var(--t-sub);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  max-width: 34ch;
+  margin-top: 44px;
+  margin-bottom: 14px;
+}
+body.site .docs-main h3 {
+  margin-top: 26px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+body.site .docs-main p {
+  font-size: var(--t-body);
+  color: var(--ink-2);
+}
+/* Emphasis by colour, not by weight. `strong` keeps its meaning for a screen
+   reader — it still announces emphasis — while rendering as full-strength ink
+   against the body's 72%. Reference prose needs to be able to stress a
+   sentence; this site carries hierarchy by size and colour, and that rule does
+   not get an exception just because there is a lot of text. */
+body.site .docs-main strong,
+body.site .docs-main b {
+  font-weight: inherit;
+  color: var(--ink);
+}
+body.site .docs-main ul {
   margin: 0;
-  font: 600 15px/1.3 var(--sans);
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: var(--t-body);
+  color: var(--ink-2);
+  max-width: 54ch;
+}
+/* `pre`, not `pre-wrap`, and it scrolls.
+   A help text aligns its flag descriptions in columns, and wrapping it at the
+   text measure breaks that alignment and splits sentences mid-clause. The
+   landing wraps its capture because that capture is prose; this one is a
+   layout, and the line breaks in it are the tool's rather than this page's. */
+body.site .docs-main .terminal {
+  margin-top: 4px;
+  white-space: pre;
+  overflow-x: auto;
+}
+body.site .docs-main .provenance {
+  margin-top: 16px;
+}
+/* A callout, in this site's own language: a hairline and a shift of ink, not a
+   box and not an emoji.
+
+   `.note` is Space Mono elsewhere, which suits the one-line provenance it was
+   built for and is hard work for a paragraph of prose. On a reference page a
+   note carries an argument — why a default is what it is, what a reader will
+   otherwise assume — so here it reads as prose and is set apart by position. */
+body.site .docs-main .note {
+  margin-top: 20px;
+  padding-left: 18px;
+  border-left: 2px solid var(--rule);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 52ch;
+}
+
+/* The contents. Hidden below 1200px, where the rail is already the map. */
+.docs-toc {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .docs-toc {
+    display: grid;
+    gap: 2px;
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+}
+.docs-toc .eyebrow {
+  margin-bottom: 8px;
+}
+.docs-toc-link {
+  padding: 5px 0;
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color var(--m-ease);
+}
+.docs-toc-link:hover {
+  color: var(--ink);
+}
+
+/* Next page. A hairline above it, and nothing around it. */
+.docs-next {
+  display: grid;
+  gap: 6px;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+.docs-next-title {
+  font: 400 var(--t-lead) / 1.4 var(--serif);
+  letter-spacing: -0.005em;
+  color: var(--pine);
+}
+.docs-next-blurb {
+  font-size: var(--t-body);
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+  max-width: 54ch;
+}
+
+/* On a phone the rail collapses, for the same reason the navbar does. */
+.docs-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  color: var(--ink-2);
+  font: 400 var(--t-body) / 1 var(--sans);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+.docs-menu-button[hidden] {
+  display: none;
+}
+.docs-menu-mark {
+  /* Rotated 45 degrees, so its bounding box is the diagonal — about 12.7px for
+     a 9px square. That overhang was the 2px the overflow check caught. */
+  margin-right: 3px;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--m-ease);
+}
+.docs-shell[data-docs='open'] .docs-menu-mark {
+  transform: translateY(2px) rotate(-135deg);
+}
+@media (min-width: 980px) {
+  .docs-menu-button {
+    display: none;
+  }
+}
+@media (max-width: 979px) {
+  .docs-shell[data-docs='closed'] .docs-aside {
+    display: none;
+  }
+}
+
+/* Shared instrument classes on the documentation surface ------------------
+   `/docs/evidence/` moved out of the dashboard and brought its stat strip
+   with it. Those classes are declared once for both surfaces, so the rules
+   that normalised them under `body.app` — 12px labels at weight 400, a figure
+   on the scale — have to be stated here too, or the page silently reverts to
+   the 600-weight labels the audit removed. */
+body.site .stat-label,
+body.site .stat-caption {
+  font-size: var(--t-label);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+body.site .stat-figure {
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+body.site .stat-caption {
+  color: var(--ink-2);
+}
+
+/* Footer — a plain link list. No logo lockup, no newsletter, no social row. - */
+.site-foot {
+  border-top: 1px solid var(--rule);
+  padding-block: 40px 56px;
+}
+/* On the landing the closing section is green to the page's end, so the footer
+   stays in that field rather than cutting it off with a cream band. The page
+   then opens and closes on the same colour. */
+.site-foot.on-dark {
+  background: var(--pine-deep);
+  border-top-color: rgba(252, 249, 248, 0.16);
+}
+.site-foot.on-dark .site-link {
+  color: rgba(252, 249, 248, 0.62);
+}
+.site-foot.on-dark .site-link:hover {
+  color: var(--surface);
+}
+.site-foot.on-dark .site-foot-note {
+  color: rgba(252, 249, 248, 0.54);
+}
+.site-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin-bottom: 26px;
+}
+.site-foot-note {
+  font-size: var(--t-label);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.site-foot-note + .site-foot-note {
+  margin-top: 6px;
 }
 
 /* App shell — sidebar, status bar, stat strip, decay chart ------------------- */
@@ -887,6 +1920,23 @@ p.lead {
   flex-wrap: wrap;
   gap: 6px 24px;
   justify-content: space-between;
+  /* Baseline, so the two texts sit on one line rather than their boxes being
+     aligned to each other. */
+  align-items: baseline;
+  /* The same gutter and measure `main.main` uses. The footer is a sibling of
+     the main element rather than a child, so it inherited neither, and at
+     1440px the row ran edge to edge with the GitHub link clipped against it. */
+  padding-inline: clamp(16px, 4vw, 40px);
+  max-width: 1180px;
+  width: 100%;
+}
+/* The global `p + p` rule adds 10px above any paragraph following another.
+   Down a column that is the paragraph rhythm; across a flex ROW it pushed the
+   GitHub link 10px below the line it shares, which is why one sat high and
+   the other low. Measured: left box 29px tall against the link's 19px, both
+   ending on the same bottom edge. */
+.foot-row > p + p {
+  margin-top: 0;
 }
 
 /* Stat strip */
@@ -1190,7 +2240,10 @@ main.main,
   .nav-section {
     margin: 0 4px 0 0;
     white-space: nowrap;
-    opacity: 0.55;
+    /* NO `opacity` here. The colour already carries 0.55 alpha, and an opacity
+       on top of it multiplied to 0.30 — 2.48:1 against the pine, against 4.76:1
+       for the same label on a desktop. Measured, and the reason a phone user
+       could barely see the section headings at all. */
   }
   .nav-item {
     white-space: nowrap;
@@ -1212,3 +2265,131 @@ main.main,
 .landing main {
   padding-block-start: 0;
 }
+
+/* Dashboard type, consolidated ---------------------------------------------
+   The dashboard never had the rework the marketing pages got, and the audit
+   on 2026-09-26 said so in numbers: FOURTEEN distinct type sizes across
+   twenty-three size-and-weight combinations, and ten to twenty bold elements
+   per page, against five sizes and zero bold on the marketing surface.
+
+   Six sizes, all weight 400. Hierarchy is size and colour — the same rule the
+   rest of the site is held to by `check-design.mjs`, now extended here.
+
+   Two things this also fixes, both of which the audit found independently:
+   nothing functional renders below 12px any more (the floor for legibility is
+   11px, and 10.5px labels were failing it), and `.stat-figure` no longer means
+   two different sizes depending on which page it lands on. */
+body.app {
+  --d-figure: 40px;
+  --d-h1: 28px;
+  --d-h2: 20px;
+  --d-lead: 16px;
+  --d-body: 14px;
+  --d-label: 12px;
+}
+
+body.app h1,
+body.app h1.page {
+  font-size: var(--d-h1);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: -0.0125em;
+}
+body.app h2,
+body.app h2.section {
+  font-size: var(--d-h2);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+body.app h3 {
+  font-size: var(--d-h2);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+body.app .stat-figure {
+  font-size: var(--d-figure);
+  font-weight: 400;
+}
+/* A word, not a figure: `archived` at the numeric size overflows its cell. */
+body.app .stat-expired .stat-figure,
+body.app .expired-headline {
+  font-size: var(--d-h2);
+}
+body.app p,
+body.app li,
+body.app .muted {
+  font-size: var(--d-lead);
+  /* 72ch of Inter renders as roughly 97 characters, which the audit measured
+     on seven of eight pages. `ch` is the advance of `0`, not the average
+     glyph, so the unit promises more than it delivers. */
+  max-width: 54ch;
+}
+body.app p.lead {
+  font-size: var(--d-lead);
+  max-width: 54ch;
+}
+body.app .small,
+body.app .small.muted,
+body.app .stat-caption,
+body.app dt,
+body.app dd,
+body.app td,
+body.app .nav-item,
+body.app button,
+body.app summary,
+body.app .name {
+  font-size: var(--d-body);
+  font-weight: 400;
+}
+body.app footer.site p,
+body.app footer.site a,
+body.app .terminal,
+body.app .sidebar-foot,
+body.app .status-item,
+body.app .chip,
+body.app .stat-label,
+body.app .field-label,
+body.app th,
+body.app .id,
+body.app .brand-sub,
+body.app .nav-section {
+  font-size: var(--d-label);
+  font-weight: 400;
+}
+body.app .brand-name {
+  font-size: var(--d-lead);
+  font-weight: 400;
+}
+
+/* Emphasis by colour, never by weight — the same rule the documentation
+   surface follows. `strong` keeps its meaning for a screen reader. */
+body.app strong,
+body.app b {
+  font-weight: inherit;
+  color: var(--ink);
+}
+/* The active nav item was 600 against 400. It already carries a cream fill
+   and pine text, so only the weight had to go — overriding the colour as
+   well made it cream on cream, which the contrast probe caught at 1:1. */
+body.app .nav-item.active {
+  font-weight: 400;
+}
+
+/* Chart annotations, on the same 12px step as every other label. They were
+   11px, which sits on the legibility floor rather than clear of it, and the
+   audit read them as body text below 12px. Checked against the decay chart:
+   at 12px the band labels, step labels and axis still clear their marks. */
+body.app svg text {
+  font-size: var(--d-label);
+}
+
+/* A bordered box whose contents touch the border reads as a rendering fault.
+   The audit found this on every table on the site. */
+body.app .table-wrap {
+  padding: 4px;
+}
+
+/* On a phone the footer text ran flush to both edges — measured at left 0,
+   right 0 at 390px. Content does not touch the screen. */

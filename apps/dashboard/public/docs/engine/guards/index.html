@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guards</title>
+    <meta name="description" content="Dry-run by default, the write guard and its protected subjects, fee caps, and why a refusal is recorded rather than thrown." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link current" href="/docs/engine/guards/" aria-current="page">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Engine</p>
+              <h1>Guards</h1>
+              <p class="lead">The engine is allowed to sign. Everything on this page exists so that it only does so when you meant it to, and so that a refusal leaves a record.</p>
+            </header>
+
+    <h2 id="layers">Two independent layers</h2>
+    <p>
+      A contract can be kept out of the engine’s reach two ways: by not being in the watched list,
+      and by the write guard refusing it. These are deliberately separate, so that
+      <strong>a misconfiguration and a code path have to fail together</strong> for a protected
+      contract to be touched.
+    </p>
+    <p class="note">
+      The list is documentation; the guard is a mechanism. That distinction was learned the hard
+      way — a pre-flight document once claimed that leaving a subject out of the watched list was
+      enough, because “the engine still scans and decides, the guard still refuses”. It does not:
+      the engine iterates the watched contracts, so an unwatched subject is never selected and the
+      guard is never consulted. Measured against the real config, that produced two decisions and
+      no refusal anywhere.
+    </p>
+
+    <h2 id="protected">Protected subjects</h2>
+    <p>
+      The guard refuses to write to these regardless of configuration, because they are
+      natural-decay subjects whose ageing cannot be recovered once an extension resets it.
+    </p>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Subject</th><th scope="col">Contract</th><th scope="col">Schedule</th></tr></thead>
+      <tbody><tr><td class="num">guinea-pig B</td><td class="num">CCYGO7KQ6F…</td><td>Crosses 2026-09-20, expires 2026-09-21</td></tr><tr><td class="num">guinea-pig C</td><td class="num">CCLW55OIED…</td><td>Crosses 2026-09-25, expires 2026-09-26</td></tr></tbody>
+    </table></div>
+
+    <h2 id="refusal">A refusal is recorded, not thrown</h2>
+    <p>
+      When the guard declines, the run records <span class="mono">REFUSED BY WRITE GUARD</span>
+      with the subject named, and continues to the next contract. Two reasons, and both matter:
+    </p>
+    <ul>
+      <li>One protected subject must not abort a run, or a guard on one contract would silence the engine for every other contract in the same pass.</li>
+      <li><strong>The refusal is the evidence.</strong> A refusal leaves no transaction, no hash and no explorer trace, so the only proof it happened is the line in the run record.</li>
+    </ul>
+
+    <h2 id="before-signing">Before anything is signed</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Check</th><th scope="col">What it stops</th></tr></thead>
+      <tbody>
+        <tr><td class="num">mode</td><td>Omitted means dry-run. Live is explicit, never inferred.</td></tr>
+        <tr><td class="num">network passphrase</td><td>Compared, not trusted. This is the mainnet guard.</td></tr>
+        <tr><td class="num">payer resolution</td><td>Checked when the config is read. No fallback payer exists.</td></tr>
+        <tr><td class="num">selected key / target</td><td>Only the entries named are touched; storage is never enumerated.</td></tr>
+        <tr><td class="num">fee cap</td><td>A configured ceiling in stroops, applied per bump.</td></tr>
+        <tr><td class="num">signed-envelope validation</td><td>The envelope is checked against what was planned before it goes out.</td></tr>
+        <tr><td class="num">post-state check</td><td>The result is verified rather than assumed from a successful submission.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="provenance">
+      These are the Stage 1 controls described in <span class="mono">docs/POLICY-SIGNER.md</span>.
+      What is <em>not</em> implemented is described there too, and on
+      <a class="site-more" href="/docs/reference/security/">Security and keys</a>.
+    </p>
+
+    <h2 id="idempotency">Overlapping runs</h2>
+    <p>
+      A scheduled job can overlap itself if a run is slow, so the engine has to survive seeing the
+      same work twice. Recovery for a process that died mid-flight is reconciliation against the
+      recorded transaction hash — not a lease timer, which would reintroduce exactly the double
+      send the current design prevents.
+    </p>
+
+            <a class="docs-next" href="/docs/engine/notifications/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Notifications</span>
+              <span class="docs-next-blurb">Three events, one channel, and the channels that do not exist.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#layers">Two independent layers</a><a class="docs-toc-link" href="#protected">Protected subjects</a><a class="docs-toc-link" href="#refusal">A refusal is recorded, not thrown</a><a class="docs-toc-link" href="#before-signing">Before anything is signed</a><a class="docs-toc-link" href="#idempotency">Overlapping runs</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

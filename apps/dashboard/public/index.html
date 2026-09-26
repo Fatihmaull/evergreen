@@ -4,136 +4,87 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Evergreen — Soroban contract rent, configured once</title>
-    <meta
-      name="description"
-      content="Soroban contract state expires on a schedule nobody is watching. Evergreen reports what expires first, what it costs, and what fails with it."
-    />
+    <meta name="description" content="Soroban contract state expires on a schedule nobody is watching. Evergreen reports what expires first, what it costs, and what fails with it." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
-  <body class="landing">
+  <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-
-    <section class="hero">
-      <div class="wrap">
-        <p class="hero-eyebrow">Stellar testnet · built by Apex</p>
-        <h1>
-          <span class="serif">Your contract expires.</span
-          ><span class="sans">You just don't know when.</span>
-        </h1>
-        <p class="hero-lead">
-          One ledger entry can hold the compiled code for many contracts at once — and when it
-          expires, all of them stop working together. Soroban state runs on a timer measured in
-          ledgers, about five seconds each, and nothing tells you it is running out.
-        </p>
-        <p class="hero-actions">
-          <a class="pill solid" href="/dashboard/">Open the dashboard →</a>
-          <a class="pill ghost" href="https://github.com/Fatihmaull/evergreen"
-            >The code on GitHub</a
-          >
-        </p>
-      </div>
-    </section>
-
+    <header class="site-nav on-dark">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link" href="/docs/">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
     <main id="main">
-      <section class="band dark">
-        <div class="wrap thesis">
-          <div class="stack">
-            <p class="eyebrow on-dark">The thesis</p>
-            <h2 class="display">
-              One entry. Every contract built from that Wasm. They fail together.
-            </h2>
-            <p class="on-dark">
+
+<section class="hero">
+        <div class="site-wrap">
+          <h1>Your contract expires. You just don't know when.</h1>
+          <p class="lead">
+            Soroban state runs on a timer measured in ledgers, about five seconds each, and nothing
+            tells you it is running out.
+          </p>
+          <p class="hero-actions">
+            <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+            <a class="site-more" href="https://github.com/Fatihmaull/evergreen">The code on GitHub <span aria-hidden="true">→</span></a>
+          </p>
+          <div class="hero-art"><video class="hero-media" autoplay muted loop playsinline preload="metadata"
+            poster="/assets/hero-poster.jpg" aria-label="Evergreen&#39;s dashboard, shown as a slow slideshow: the blast-radius page scanning three contracts together to resolve what one scan cannot, the overview with guinea-pig B archived, and the entry table naming which code entry binds them."
+          ><source src="/assets/hero-sm.mp4" type="video/mp4" media="(max-width: 700px)" /><source src="/assets/hero.mp4" type="video/mp4" /></video></div>
+        </div>
+      </section>
+<section class="feature">
+        <div class="site-wrap feature-grid">
+          <div class="feature-text">
+            <p class="eyebrow">The thesis</p>
+            <h2>One entry. Every contract built from that Wasm. They fail together.</h2>
+            <p>
               Soroban keeps a contract's compiled code in a ledger entry of its own, and every
               contract deployed from that same code points at that one entry. So a contract's own
               state can be healthy until December while the code it runs expires in October — and
               without its code a contract cannot execute at all.
             </p>
-            <p class="on-dark">
+            <p>
               The real expiry is therefore the earliest entry, which is rarely the obvious one, and
               it is shared by every contract built from the same Wasm. That is the failure this
               exists to catch: a fleet of contracts reported healthy right up until they stop
               together.
             </p>
-            <p class="hero-actions">
-              <a class="pill solid" href="/dashboard/blast-radius/"
-                >See it on our three contracts →</a
-              >
-            </p>
+            <p><a class="site-more" href="/dashboard/blast-radius/">See it on our three contracts <span aria-hidden="true">→</span></a></p>
           </div>
-          <div class="stat-cell">
-            <p class="stat-label">of the rent</p>
-            <p class="stat-figure">98%</p>
-            <p class="stat-caption">
+          <div class="feature-art"><div class="figure">
+            <p class="figure-label">of the rent</p>
+            <p class="figure-value">98%</p>
+            <p class="figure-caption">
               is that one shared code entry — 8,116,648 of 8,264,289 stroops, across all four of
               guinea-pig A's entries. Scanning only its instance and code, the same entry is 99%:
               identical rent, different denominator. The scope travels with the number.
             </p>
-          </div>
+          </div></div>
         </div>
       </section>
-      <section class="band">
-        <div class="wrap stack">
-          <p class="eyebrow">The four kinds of entry</p>
-          <h2 class="section">Three are recoverable. One is not.</h2>
-          <p class="muted">
-            The shared code entry above is one of four kinds, and they do not end the same way.
-            Which kind an entry is decides whether running out is a bill or a burial.
-          </p>
-          <div class="kinds">
-            <div class="kind">
-              <p class="kind-name">instance</p>
-              <p class="kind-holds">The contract's own state pointer.</p>
-              <p class="kind-fate">
-                <span class="chip warning"><span class="shape"></span>archived</span>
-              </p>
-            </div>
-            <div class="kind">
-              <p class="kind-name">code</p>
-              <p class="kind-holds">
-                The compiled Wasm. Every contract built from it shares this one entry.
-              </p>
-              <p class="kind-fate">
-                <span class="chip warning"><span class="shape"></span>archived</span>
-              </p>
-            </div>
-            <div class="kind">
-              <p class="kind-name">persistent</p>
-              <p class="kind-holds">Durable stored values.</p>
-              <p class="kind-fate">
-                <span class="chip warning"><span class="shape"></span>archived</span>
-              </p>
-            </div>
-            <div class="kind inverted">
-              <p class="kind-name">temporary</p>
-              <p class="kind-holds">Disposable stored values. Gone permanently, with no restore.</p>
-              <p class="kind-fate">
-                <span class="chip expired"><span class="shape"></span>deleted</span>
-              </p>
-            </div>
+<section class="feature flip">
+        <div class="site-wrap feature-grid">
+          <div class="feature-text">
+            <p class="eyebrow">What the tool actually prints</p>
+            <h2>The honest parts are the persuasive parts</h2>
+            <p>
+              A real scan of guinea-pig A. It reports what it read, says that a single-contract scan
+              cannot settle whether the code entry is shared, and says that storage it was not given
+              keys for is unread.
+            </p>
+            <p class="provenance">Captured on 2026-09-12 and committed at <span class="mono">docs/evidence/2026-09-12-w2-review/scan-a-human.txt</span>. Its ledger numbers are from that day; the dashboard reads the chain now.</p>
           </div>
-          <p class="small muted">
-            Read from the network's own configuration: a temporary entry's minimum is 720 ledgers,
-            about an hour. Our own temporary entry had 688 left when it was first sampled.
-          </p>
-        </div>
-      </section>
-
-      <section class="band">
-        <div class="wrap stack">
-          <p class="eyebrow">What the tool actually prints</p>
-          <h2 class="section">The honest parts are the persuasive parts</h2>
-          <p class="muted">
-            A real scan of guinea-pig A. It reports what it read, says that a single-contract scan
-            cannot settle whether the code entry is shared, and says that storage it was not given
-            keys for is unread.
-          </p>
-          <div class="terminal">Coverage: known keys only — contract storage has NOT been fully enumerated.
+          <div class="feature-art"><div class="terminal">Coverage: known keys only — contract storage has NOT been fully enumerated.
   CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 0 explicit data key(s)
   No data keys were supplied, so any further entries are unread. A clean result covers only what was asked for, never the whole contract.
 
@@ -163,62 +114,237 @@ HEALTHY  code  AAAAB8flXw…
   contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 
 Worst entry health: HEALTHY (threshold 17,280 ledgers)
-Scan is PARTIAL — 2 issue(s). Absence is not health.</div>
-          <p class="small muted">Captured on 2026-09-12 and committed at <span class="mono">docs/evidence/2026-09-12-w2-review/scan-a-human.txt</span>. Its ledger numbers are from that day; the dashboard reads the chain now.</p>
+Scan is PARTIAL — 2 issue(s). Absence is not health.</div></div>
         </div>
       </section>
-
-      <section class="band">
-        <div class="wrap stack">
+<section class="feature">
+        <div class="site-wrap feature-grid">
+          <div class="feature-text">
+            <p class="eyebrow">What it is for</p>
+            <h2>One of ours expired, and we watched it happen.</h2>
+            <p>
+              Guinea-pig B was calibrated once on 5 September and then left alone — no extension, no
+              watch, nothing keeping it alive. It declined on schedule and its instance entry is
+              archived. Its timeline stays up after the event, because a record of what happened is
+              evidence and not a status display.
+            </p>
+            <p><a class="site-more" href="/dashboard/decay/">The recorded decay, dot by dot <span aria-hidden="true">→</span></a></p>
+          </div>
+          <div class="feature-art"><div class="ended">
+            <p class="ended-label">guinea-pig B · instance</p>
+            <p class="ended-word">expired</p>
+            <dl class="ended-facts">
+              <div><dt>on</dt><dd class="mono">21 September 2026</dd></div>
+              <div><dt>at ledger</dt><dd class="mono">4,793,687</dd></div>
+            </dl>
+          </div></div>
+        </div>
+      </section>
+<section class="plain">
+        <div class="site-wrap">
+          <p class="eyebrow">The four kinds of entry</p>
+          <h2>Three are recoverable. One is not.</h2>
+          <p class="lead">
+            The shared code entry above is one of four kinds, and they do not end the same way.
+            Which kind an entry is decides whether running out is a bill or a burial.
+          </p>
+          <div class="kinds">
+            <div class="kind">
+              <p class="kind-name">instance</p>
+              <p class="kind-holds">The contract's own state pointer.</p>
+              <p><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind">
+              <p class="kind-name">code</p>
+              <p class="kind-holds">The compiled Wasm. Every contract built from it shares this one entry.</p>
+              <p><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind">
+              <p class="kind-name">persistent</p>
+              <p class="kind-holds">Durable stored values.</p>
+              <p><span class="chip warning"><span class="shape"></span>archived</span></p>
+            </div>
+            <div class="kind inverted">
+              <p class="kind-name">temporary</p>
+              <p class="kind-holds">Disposable stored values. Gone permanently, with no restore.</p>
+              <p><span class="chip expired"><span class="shape"></span>deleted</span></p>
+            </div>
+          </div>
+          <p class="note">
+            Read from the network's own configuration: a temporary entry's minimum is 720 ledgers,
+            about an hour. Our own temporary entry had 688 left when it was first sampled.
+          </p>
+        </div>
+      </section>
+<section class="plain">
+        <div class="site-wrap">
           <p class="eyebrow">How it works</p>
-          <h2 class="section">Scan, watch, extend</h2>
-          <div class="cards-3">
-            <article class="card card-pad stack">
-              <h3>Scan</h3>
-              <p class="small">
+          <h2>Scan, watch, extend</h2>
+          <div class="how">
+            <div>
+              <p class="how-name">Scan</p>
+              <p>
                 Read a contract's entries through Soroban RPC: what remains, what expires first,
                 what it costs to keep alive, and whether the code entry is shared — or whether that
                 cannot be determined.
               </p>
-            </article>
-            <article class="card card-pad stack">
-              <h3>Watch</h3>
-              <p class="small">
+            </div>
+            <div>
+              <p class="how-name">Watch</p>
+              <p>
                 A scheduled job re-reads the entries you configure and alerts before they cross the
                 thresholds: seven days for a warning, one day to act.
               </p>
-            </article>
-            <article class="card card-pad stack">
-              <h3>Extend</h3>
-              <p class="small">
+            </div>
+            <div>
+              <p class="how-name">Extend</p>
+              <p>
                 Evergreen has no authority over your contract. Extending a TTL needs no permission
                 from anyone — it is a property of the chain, not a promise from us. It can pay rent,
                 and nothing else.
               </p>
-            </article>
+            </div>
           </div>
         </div>
       </section>
-
-      <section class="band dark closing">
-        <div class="wrap stack">
-          <h2 class="display">Make TTL something you configure once instead of remember.</h2>
+<section class="closing">
+        <div class="site-wrap closing-inner">
+          <h2>Ready to safeguard your Soroban contracts?</h2>
+          <p class="lead">
+            Open the dashboard, run the CLI against any contract, or read the evidence we recorded
+            doing it. Stellar testnet, read-only, no key and no account.
+          </p>
+          <div class="command">
+            <span class="command-prompt" aria-hidden="true">$</span>
+            <code>npx @evergreen-stellar/cli@0.1.0 scan &lt;contract-id&gt;</code>
+            <button class="command-copy" type="button" data-copy="npx @evergreen-stellar/cli@0.1.0 scan &lt;contract-id&gt;" hidden>Copy</button>
+          </div>
           <p class="hero-actions">
-            <a class="pill solid" href="/dashboard/">Open the dashboard →</a>
+            <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+            <a class="site-ghost" href="https://github.com/Fatihmaull/evergreen">View on GitHub</a>
           </p>
         </div>
       </section>
+<script>
+      (function () {
+        var v = document.querySelector('.hero-media');
+        if (!v || !window.matchMedia) return;
+        // The media attribute on a source inside a video is in the spec, but
+        // browsers do not agree on it, so it is a hint rather than the
+        // mechanism. This is the mechanism: pick the narrow file before
+        // playback when the browser settled on the wrong one. Without
+        // JavaScript a phone downloads the full file, which works and is only
+        // heavier.
+        var small = v.querySelector('source[media]');
+        if (small && window.matchMedia('(max-width: 700px)').matches && v.currentSrc.indexOf(small.src) === -1) {
+          v.src = small.src;
+          v.load();
+        }
+        var m = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var apply = function () { if (m.matches) { v.pause(); v.removeAttribute('loop'); } else { v.play().catch(function () {}); } };
+        apply();
+        m.addEventListener('change', apply);
+      })();
+    </script>
     </main>
-
-    <footer class="site">
-      <div class="wrap">
-        <p>Testnet only. Read-only: these pages never sign or submit anything.</p>
-        <p>
-          Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards
-          grant. MIT.
-          <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
-        </p>
+    <footer class="site-foot on-dark">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
       </div>
     </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
