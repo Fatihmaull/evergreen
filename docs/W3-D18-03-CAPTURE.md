@@ -124,18 +124,38 @@ pnpm verify:crossing .evergreen/crossing/B-expiry
 retyped here, so there is one copy to keep right. Two things from there that this
 page must not let you miss:
 
-- Friday's crossing capture goes to **`.evergreen/crossing/C-20260925-1200`**, and
-  🔴 **that directory must still exist on Saturday evening** — the expiry capture
-  passes `--baseline` at it. Deleting or moving it breaks the one capture in this
-  sprint that cannot be retaken.
+- 🔴 **Friday's 12:00Z capture was NOT taken, so
+  `.evergreen/crossing/C-20260925-1200` does not exist.** An earlier version of this
+  bullet told you that directory must survive until Saturday evening; it was never
+  created. **The baseline is the Saturday 00:01Z checkpoint instead** —
+  `.evergreen/crossing/C-20260926-0001` locally, or
+  [`docs/evidence/2026-09-26-c-crossing-0001/capture`](evidence/2026-09-26-c-crossing-0001/capture)
+  on `main` if the local worktree is not to hand. It is a verified same-subject
+  capture with phase `crossing-refused`, which `verify:expiry` accepts.
+  **Do not clear `.evergreen/crossing/`** — that is where the baseline lives.
 - An expiry assessment needs a ledger above C's **persistent** entry at
   **4,880,099**, not the instance's 4,880,097.
+- **`mkdir -p .evergreen/crossing` before you run the collector.** Measured
+  2026-09-26: a fresh worktree without that parent made the collector exit without
+  producing a bundle, and the 00:00Z checkpoint landed a minute late. The expiry has
+  no minute to spare.
 
 A baseline can be `before-action` or
 `crossing-refused`, for the same subject, and must not itself contain a baseline.
-The current verifier requires matching runtime fingerprints for both captures;
-keep the reviewed capture checkout stable across the window. If code must change,
-retain the original checkout and captures rather than editing their manifests.
+**Which verifier you run decides whether runtime fingerprints must match, and the
+two differ.** Measured 2026-09-26 by reading both call sites:
+
+- `pnpm verify:crossing` — the CLI **defaults `checkRuntime: true`**, so a capture
+  taken against a different `packages/core` build fails it.
+- `pnpm verify:expiry` — `reassess-expiry-capture.mjs:53` passes
+  **`checkRuntime: false`** deliberately, so **a baseline from an older build is
+  still valid for the expiry assessment.** `check:crossing` passes `false` too.
+
+So keeping the reviewed checkout stable across the window is still the right
+practice, and if code must change, retain the original checkout and captures rather
+than editing their manifests — but **do not reject an otherwise-valid baseline
+because core was rebuilt.** The expiry path does not look at the fingerprint. The
+00:01Z baseline verifies under both settings, so this does not arise today.
 
 ## Non-live RPC compatibility
 
