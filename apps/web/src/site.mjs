@@ -22,9 +22,11 @@ const CENTRE = [
 /**
  * Plain link list. No logo lockup, no newsletter box, no social row.
  *
- * The two sentences under it are not decoration: the read-only statement and
- * the grant attribution are the two claims this site is obliged to make on
- * every page, and they move with the footer rather than living in it by habit.
+ * Two lines under it. The read-only statement is the claim this site is
+ * obliged to make on every page and it stays in full. The attribution was
+ * shortened on 2026-09-26: the team, the chapter, the grant's size and dates
+ * and the licence all live on `/about/`, which is the page whose job that is,
+ * so repeating them in a footer on every page was length without information.
  */
 const FOOTER_LINKS = [
   { href: '/dashboard/', label: 'Dashboard' },
@@ -91,7 +93,7 @@ function footer(tone) {
       <div class="site-wrap">
         <div class="site-foot-links">${links}</div>
         <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
-        <p class="site-foot-note">Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
       </div>
     </footer>`;
 }
