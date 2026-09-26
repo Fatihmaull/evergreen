@@ -498,7 +498,6 @@ const PAGES = [
     to: 'docs/archival/index.html',
     doc: '/docs/archival/',
   },
-  { module: 'src/pages/evidence.mjs', to: 'evidence/index.html' },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
 ];
 

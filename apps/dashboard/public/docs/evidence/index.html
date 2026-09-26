@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Thresholds and cadence</title>
-    <meta name="description" content="The warning and act-now tiers, why the boundary is inclusive, and why your schedule sets the floor for both." />
+    <title>Evidence — Evergreen</title>
+    <meta name="description" content="The committed evidence behind this project: testnet transactions, scans, scheduler runs, and how to verify them." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -31,79 +31,75 @@
           <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
             All pages<span class="docs-menu-mark" aria-hidden="true"></span>
           </button>
-          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link current" href="/docs/engine/thresholds/" aria-current="page">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link current" href="/docs/evidence/" aria-current="page">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
           <main class="docs-main" id="main">
             <header class="docs-head">
-              <p class="eyebrow">Engine</p>
-              <h1>Thresholds and cadence</h1>
-              <p class="lead">Two tiers, measured in ledgers. Both move together when you move one, and both are only as sharp as the schedule that checks them.</p>
+              <p class="eyebrow">Reference</p>
+              <h1>The record</h1>
+              <p class="lead">Every claim on this site ends here: committed bundles of unedited RPC responses, explorer screenshots and verification scripts. Testnet is periodically reset — a hash pointing at a chain that no longer exists proves nothing, so the JSON and the screenshots travel with it.</p>
             </header>
-            
-    <h2 id="tiers">Two tiers</h2>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Tier</th><th scope="col">Default</th><th scope="col">Means</th></tr></thead>
-      <tbody>
-        <tr><td class="num">warning</td><td class="num">120,960</td><td>About seven days. Low, recoverable, and affecting only this contract.</td></tr>
-        <tr><td class="num">act now</td><td class="num">17,280</td><td>About one day. Or temporary and low, or shared and low.</td></tr>
-      </tbody>
-    </table></div>
-    <p class="note">
-      These two figures appear in TypeScript, JSON and Python across this project, and a check
-      asserts they agree in every copy. A threshold that means one thing in the CLI and another in
-      CI is a defect that reads like a difference of opinion.
+            <section class="stat-strip">
+    <div class="stat">
+      <p class="stat-label">committed bundles</p>
+      <p class="stat-figure">61</p>
+      <p class="stat-caption">in docs/evidence/, counted at build time — not a remembered number</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">extensions with hashes</p>
+      <p class="stat-figure">5</p>
+      <p class="stat-caption">9 Sep rescue ×3, 12 Sep manual save, 14 Sep engine save — each with its hash on the history page, plus the disclosed 5 Sep calibration round in the W1 inventory</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">invented figures</p>
+      <p class="stat-figure">0</p>
+      <p class="stat-caption">a panel with no real number shows no number; an empty cell labelled “not measured” is fine</p>
+    </div>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Verify a bundle yourself</h2>
+    <p class="muted">
+      The manual-save proof ships an offline verifier. It checks semantic consistency anchored to the signed
+      envelope — fee, sequence, payer, key and target bound to the transaction, signature and receipt verified,
+      the receipt's own TTL state checked — with integrity via <span class="mono">SHA256SUMS</span> first.
+      That is honestly what it checks: consistency with the envelope, not an independent re-observation of history.
     </p>
-
-    <h2 id="inclusive">The boundary is inclusive</h2>
-    <p>
-      An entry at <em>exactly</em> the act-now threshold fails. Remaining exactly N is already the
-      margin you set out to keep, so consuming it is the event you were watching for, not the
-      moment before it.
+    <div class="terminal">node docs/evidence/2026-09-12-manual-extend-proof/verify-proof.mjs</div>
+    <p class="small muted">Read-only and offline. Corrupt copies fail it; the original passes — six corruptions are rehearsed in the bundle's own review record.</p>
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Two manifests do not currently verify</h2>
+    <p class="muted">
+      Of the 16 bundles carrying a <span class="mono">SHA256SUMS</span> manifest, 14 pass and 2 fail. This is
+      committed state, found while building this page and checked with the repository's own
+      <span class="mono">verify-evidence-integrity</span> helper:
     </p>
-
-    <h2 id="both-move">Raising one raises both</h2>
-    <p>
-      <span class="mono">--threshold</span> moves the act-now tier, and the warning tier widens
-      with it. Raising the act-now boundary can therefore never silently narrow the earlier
-      warning — which is what would happen if the warning stayed fixed while the action line moved
-      past it.
+    <ul class="muted">
+      <li><span class="mono">2026-09-14-scheduled-a-save</span> — an acceptance banner was added to its README
+        without regenerating the manifest, so the manifest no longer matches the file it covers. The
+        transaction it records is unaffected and independently confirmed against the chain; it is the
+        <em>manifest</em> that is stale, not the evidence.</li>
+      <li><span class="mono">2026-09-15-publish-dry-run</span> — its single manifest line names a file that is
+        not in the bundle, so it can never verify as written.</li>
+    </ul>
+    <p class="small muted">
+      Nothing runs these verifiers in CI, which is how a README edit disarmed a bundle's integrity gate without
+      anyone noticing. It is on this page rather than quietly omitted, because a verification claim nobody has
+      run is the kind of claim this project exists to object to.
     </p>
-    <p>
-      What changes is what is <strong>reported</strong>, never what is written. A threshold is a
-      reading instrument, and moving it does not cause an extension.
-    </p>
-
-    <h2 id="cadence">Your schedule is the real floor</h2>
-    <p>
-      A threshold is only checked when something checks it. If the engine runs every fifteen
-      minutes, an entry can cross its boundary and sit there for up to fifteen minutes before any
-      decision is recorded — and that is the best case, because a scheduler does not deliver every
-      run it promises.
-    </p>
-    <p>
-      Ours has been measured rather than assumed, and the delivered rate is well below the
-      configured one. The figures, and the worst gap actually observed, are on
-      <a class="site-more" href="/dashboard/engine/">the engine page</a>. Set your act-now tier
-      with room for the worst gap, not the nominal interval.
-    </p>
-
-    <h2 id="ci">The same numbers in CI</h2>
-    <p>
-      The GitHub Action takes the same <span class="mono">threshold</span> in the same units, with
-      the same inclusive boundary, and a repository wanting a week of warning sets it to
-      120,960 rather than to the default.
-      <a class="site-more" href="/docs/ci/reference/">Action reference</a>
-    </p>
-  
-            <a class="docs-next" href="/docs/engine/guards/">
+  </section>
+  <section class="card card-pad stack">
+    <h2 class="section">Where the deliverables stand</h2>
+    <p class="muted"><strong>CLI.</strong> Scanning, rent estimates, manual extension proven on testnet with hashes. Evidence present.</p>
+    <p class="muted"><strong>Auto-bump engine.</strong> Decide-only runs, one engine-triggered save from a local timer, alert templates delivered. The production cron running unattended against a crossing is the September gate — open until B crosses.</p>
+    <p class="muted"><strong>Dashboard, Action, docs.</strong> This preview is the dashboard taking shape; the Action and the published package are Week 4 work. Not done, not claimed.</p>
+  </section>
+            <a class="docs-next" href="/docs/reference/security/">
               <span class="eyebrow">Next</span>
-              <span class="docs-next-title">Guards</span>
-              <span class="docs-next-blurb">Dry-run by default, the write guard, protected subjects and fee caps.</span>
+              <span class="docs-next-title">Security and keys</span>
+              <span class="docs-next-blurb">Where a secret may live, what is enforced, and what is honestly not built.</span>
             </a>
           </main>
-          <nav class="docs-toc" aria-label="On this page">
-          <p class="eyebrow">On this page</p>
-          <a class="docs-toc-link" href="#tiers">Two tiers</a><a class="docs-toc-link" href="#inclusive">The boundary is inclusive</a><a class="docs-toc-link" href="#both-move">Raising one raises both</a><a class="docs-toc-link" href="#cadence">Your schedule is the real floor</a><a class="docs-toc-link" href="#ci">The same numbers in CI</a>
-        </nav>
+          
         </div>
       </div>
     </main>

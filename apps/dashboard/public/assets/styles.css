@@ -1710,6 +1710,30 @@ body.site .docs-main .note {
   }
 }
 
+/* Shared instrument classes on the documentation surface ------------------
+   `/docs/evidence/` moved out of the dashboard and brought its stat strip
+   with it. Those classes are declared once for both surfaces, so the rules
+   that normalised them under `body.app` — 12px labels at weight 400, a figure
+   on the scale — have to be stated here too, or the page silently reverts to
+   the 600-weight labels the audit removed. */
+body.site .stat-label,
+body.site .stat-caption {
+  font-size: var(--t-label);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+body.site .stat-figure {
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+body.site .stat-caption {
+  color: var(--ink-2);
+}
+
 /* Footer — a plain link list. No logo lockup, no newsletter, no social row. - */
 .site-foot {
   border-top: 1px solid var(--rule);
@@ -1896,6 +1920,12 @@ p.lead {
   flex-wrap: wrap;
   gap: 6px 24px;
   justify-content: space-between;
+  /* The same gutter and measure `main.main` uses. The footer is a sibling of
+     the main element rather than a child, so it inherited neither, and at
+     1440px the row ran edge to edge with the GitHub link clipped against it. */
+  padding-inline: clamp(16px, 4vw, 40px);
+  max-width: 1180px;
+  width: 100%;
 }
 
 /* Stat strip */
@@ -2302,6 +2332,8 @@ body.app .name {
   font-size: var(--d-body);
   font-weight: 400;
 }
+body.app footer.site p,
+body.app footer.site a,
 body.app .terminal,
 body.app .sidebar-foot,
 body.app .status-item,
@@ -2350,9 +2382,3 @@ body.app .table-wrap {
 
 /* On a phone the footer text ran flush to both edges — measured at left 0,
    right 0 at 390px. Content does not touch the screen. */
-@media (max-width: 959px) {
-  body.app footer.site .foot-row,
-  body.app .content footer.site {
-    padding-inline: 16px;
-  }
-}

@@ -159,6 +159,11 @@ export const DOC_NAV = [
         blurb: 'What each failure means and what to do about it.',
       },
       {
+        route: '/docs/evidence/',
+        title: 'The record',
+        blurb: 'Every committed evidence bundle, counted at build time.',
+      },
+      {
         route: '/docs/reference/security/',
         title: 'Security and keys',
         blurb: 'Where a secret may live, what is enforced, and what is honestly not built.',

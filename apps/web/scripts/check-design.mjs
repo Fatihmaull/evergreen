@@ -196,7 +196,7 @@ const BUDGET = [
     over40: 0,
     bold: 0,
   },
-  { route: '/evidence/', fontSizes: 6, cards: 6, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  { route: '/docs/evidence/', fontSizes: 6, cards: 6, icons: 0, gradients: 0, over40: 0, bold: 0 },
 ];
 
 const CHROME = [

@@ -165,15 +165,16 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'committed',
   },
   {
+    route: '/docs/evidence/',
+    does: 'Every committed evidence bundle, counted at build time.',
+    reads: 'committed',
+  },
+  {
     route: '/docs/reference/security/',
     does: 'Key handling, what the engine enforces, and what is not implemented.',
     reads: 'committed',
   },
-  {
-    route: '/evidence/',
-    does: 'Every committed evidence bundle, counted at build time.',
-    reads: 'committed',
-  },
+
   {
     route: '/about/',
     does: 'Who builds this, under which grant, and the method.',

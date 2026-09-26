@@ -32,7 +32,7 @@ const FOOTER_LINKS = [
   { href: '/dashboard/decay/', label: 'TTL decay' },
   { href: '/docs/', label: 'CLI reference' },
   { href: '/docs/archival/', label: 'State archival' },
-  { href: '/evidence/', label: 'Evidence' },
+  { href: '/docs/evidence/', label: 'Evidence' },
   { href: '/about/', label: 'About' },
   { href: 'https://github.com/Fatihmaull/evergreen', label: 'GitHub' },
 ];
