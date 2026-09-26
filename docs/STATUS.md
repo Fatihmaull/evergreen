@@ -2,12 +2,24 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · external Action green/red CI verified; C Shared acceptance remains
+**Last updated:** 2026-09-26 · Action v1 tag and external screenshots verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
+
+## Current — W4-D25-03 public Action tag verified
+
+The remote annotated tag `v1` peels to the same Action commit `2a4ab0a`
+that passed the SHA-pinned external test. The separate
+[fixture run 36255608415](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415)
+used `Fatihmaull/evergreen@v1`: green succeeded at exit 0, red failed
+at threshold exit 1, both on Testnet A with declared keys and CLI 0.1.0.
+[Original Brave/Spectacle screenshots and tag readback](evidence/2026-09-26-action-v1-tag/README.md)
+are recorded. `W4-D25-03` remains In progress pending Fatih's review
+and merge of this evidence. The separate-repo test's unrelated-human
+caveat stays with `W4-D25-02`. Notion sync for `W4-D25-03` is pending.
 
 ## Current — W4-D25-02 external Action path verified technically
 

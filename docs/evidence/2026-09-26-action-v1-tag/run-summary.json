@@ -1,0 +1,36 @@
+{
+  "format": "evergreen-action-v1-proof-v1",
+  "actionReference": "Fatihmaull/evergreen@v1",
+  "tagObjectSha": "ded0700270f31609e48667bfb39c50468d01e772",
+  "tagPeeledCommit": "2a4ab0a5a916ee156149c1f7e5a2ca8802c2fdc6",
+  "testedShaBeforeTag": "2a4ab0a5a916ee156149c1f7e5a2ca8802c2fdc6",
+  "fixtureRepository": "rakhargo/evergreen-check-smoke",
+  "fixtureCommit": "9893617d8eac33b1a88cd93c1c89a87894217ad6",
+  "fixtureWorkflowSha256": "c80cd5aee2aac9f885261841713ec44af6b666546d2a260a656dd04ec952e006",
+  "cliVersion": "@evergreen-stellar/cli@0.1.0",
+  "contractId": "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L",
+  "network": "Testnet",
+  "runId": 36255608415,
+  "runNumber": 2,
+  "runUrl": "https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415",
+  "createdAt": "2026-09-26T16:29:03Z",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "id": 108441705926,
+      "name": "green · must pass",
+      "thresholdLedgers": 17280,
+      "actionExitCode": 0,
+      "conclusion": "success",
+      "url": "https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415/job/108441705926"
+    },
+    {
+      "id": 108441706040,
+      "name": "red · must fail at threshold",
+      "thresholdLedgers": 2000000,
+      "actionExitCode": 1,
+      "conclusion": "failure",
+      "url": "https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415/job/108441706040"
+    }
+  ]
+}

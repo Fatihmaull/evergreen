@@ -91,7 +91,7 @@ what not to touch is the one worth putting near production.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 9 | Live testnet dashboard | **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any contract ID, no wallet, no signup, no account | [landing page](https://evergreen-stellar.pages.dev/) · source in `apps/` |
-| 10 | Published `evergreen-check` GitHub Action | **[A green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235)** — same contract, only the threshold differs · **[`action.yml`](../action.yml)** | [how to use it](../README.md#use-it-in-ci) · [what the run proves, and the defect it found](evidence/2026-09-25-published-package-verification/README.md) |
+| 10 | Published `evergreen-check` GitHub Action | **[`Fatihmaull/evergreen@v1`](https://github.com/Fatihmaull/evergreen/tree/v1)** · [external green/red run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415) · [screenshots](evidence/2026-09-26-action-v1-tag/README.md) | [`action.yml`](../action.yml) · [how to use it](../README.md#use-it-in-ci) · [first internal run and the defect it found](evidence/2026-09-25-published-package-verification/README.md) |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
 | 13 | Links to the published npm packages | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Same verified registry artifact as item 2 |
