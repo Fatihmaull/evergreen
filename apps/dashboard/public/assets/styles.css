@@ -8,7 +8,9 @@
   --paper: #ffffff;
   --ink: #0f0f0f;
   --ink-2: rgba(15, 15, 15, 0.72);
-  --ink-3: rgba(15, 15, 15, 0.56);
+  /* 0.56 measured 4.32:1 on `--surface`, just under WCAG AA's 4.5:1, and it
+     is the colour behind most of this site's muted text. 0.62 clears it. */
+  --ink-3: rgba(15, 15, 15, 0.62);
   --rule: rgba(15, 15, 15, 0.1);
   --rule-strong: rgba(15, 15, 15, 0.44);
   --pine: #1a3a2e;
@@ -198,9 +200,11 @@ p + p {
 
 /* Scan field -------------------------------------------------------------- */
 .field-label {
-  font: 600 11.5px/1.3 var(--sans);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 400 12px/1.3 var(--sans);
+  /* 0.06em was set for uppercase, where wide tracking separates capitals that
+     have no ascenders to tell them apart. Without the uppercase it is just
+     loose, which the audit flagged the moment the caps came off. */
+  letter-spacing: 0.02em;
   color: var(--ink-3);
 }
 input[type='text'],
@@ -2195,7 +2199,10 @@ main.main,
   .nav-section {
     margin: 0 4px 0 0;
     white-space: nowrap;
-    opacity: 0.55;
+    /* NO `opacity` here. The colour already carries 0.55 alpha, and an opacity
+       on top of it multiplied to 0.30 — 2.48:1 against the pine, against 4.76:1
+       for the same label on a desktop. Measured, and the reason a phone user
+       could barely see the section headings at all. */
   }
   .nav-item {
     white-space: nowrap;
@@ -2216,4 +2223,136 @@ main.main,
    showed as a 32px cream stripe between two dark blocks. */
 .landing main {
   padding-block-start: 0;
+}
+
+/* Dashboard type, consolidated ---------------------------------------------
+   The dashboard never had the rework the marketing pages got, and the audit
+   on 2026-09-26 said so in numbers: FOURTEEN distinct type sizes across
+   twenty-three size-and-weight combinations, and ten to twenty bold elements
+   per page, against five sizes and zero bold on the marketing surface.
+
+   Six sizes, all weight 400. Hierarchy is size and colour — the same rule the
+   rest of the site is held to by `check-design.mjs`, now extended here.
+
+   Two things this also fixes, both of which the audit found independently:
+   nothing functional renders below 12px any more (the floor for legibility is
+   11px, and 10.5px labels were failing it), and `.stat-figure` no longer means
+   two different sizes depending on which page it lands on. */
+body.app {
+  --d-figure: 40px;
+  --d-h1: 28px;
+  --d-h2: 20px;
+  --d-lead: 16px;
+  --d-body: 14px;
+  --d-label: 12px;
+}
+
+body.app h1,
+body.app h1.page {
+  font-size: var(--d-h1);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: -0.0125em;
+}
+body.app h2,
+body.app h2.section {
+  font-size: var(--d-h2);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+body.app h3 {
+  font-size: var(--d-h2);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+body.app .stat-figure {
+  font-size: var(--d-figure);
+  font-weight: 400;
+}
+/* A word, not a figure: `archived` at the numeric size overflows its cell. */
+body.app .stat-expired .stat-figure,
+body.app .expired-headline {
+  font-size: var(--d-h2);
+}
+body.app p,
+body.app li,
+body.app .muted {
+  font-size: var(--d-lead);
+  /* 72ch of Inter renders as roughly 97 characters, which the audit measured
+     on seven of eight pages. `ch` is the advance of `0`, not the average
+     glyph, so the unit promises more than it delivers. */
+  max-width: 54ch;
+}
+body.app p.lead {
+  font-size: var(--d-lead);
+  max-width: 54ch;
+}
+body.app .small,
+body.app .small.muted,
+body.app .stat-caption,
+body.app dt,
+body.app dd,
+body.app td,
+body.app .nav-item,
+body.app button,
+body.app summary,
+body.app .name {
+  font-size: var(--d-body);
+  font-weight: 400;
+}
+body.app .terminal,
+body.app .sidebar-foot,
+body.app .status-item,
+body.app .chip,
+body.app .stat-label,
+body.app .field-label,
+body.app th,
+body.app .id,
+body.app .brand-sub,
+body.app .nav-section {
+  font-size: var(--d-label);
+  font-weight: 400;
+}
+body.app .brand-name {
+  font-size: var(--d-lead);
+  font-weight: 400;
+}
+
+/* Emphasis by colour, never by weight — the same rule the documentation
+   surface follows. `strong` keeps its meaning for a screen reader. */
+body.app strong,
+body.app b {
+  font-weight: inherit;
+  color: var(--ink);
+}
+/* The active nav item was 600 against 400. It already carries a cream fill
+   and pine text, so only the weight had to go — overriding the colour as
+   well made it cream on cream, which the contrast probe caught at 1:1. */
+body.app .nav-item.active {
+  font-weight: 400;
+}
+
+/* Chart annotations, on the same 12px step as every other label. They were
+   11px, which sits on the legibility floor rather than clear of it, and the
+   audit read them as body text below 12px. Checked against the decay chart:
+   at 12px the band labels, step labels and axis still clear their marks. */
+body.app svg text {
+  font-size: var(--d-label);
+}
+
+/* A bordered box whose contents touch the border reads as a rendering fault.
+   The audit found this on every table on the site. */
+body.app .table-wrap {
+  padding: 4px;
+}
+
+/* On a phone the footer text ran flush to both edges — measured at left 0,
+   right 0 at 390px. Content does not touch the screen. */
+@media (max-width: 959px) {
+  body.app footer.site .foot-row,
+  body.app .content footer.site {
+    padding-inline: 16px;
+  }
 }

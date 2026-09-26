@@ -129,6 +129,74 @@ const BUDGET = [
     bold: 0,
   },
   { route: '/about/', fontSizes: 5, cards: 0, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  /**
+   * The dashboard, audited 2026-09-26 and consolidated the same day: fourteen
+   * type sizes became six, twenty-three size-and-weight combinations became
+   * six, and ten to twenty bold elements per page became zero.
+   *
+   * `cards` is NOT zero here, and that is the one place this surface differs
+   * from the marketing pages. The complaint those budgets answer was content
+   * forced into card shape because boxes were what the page had; a dashboard
+   * panel holding a chart and its source table is a card doing its job. The
+   * ceiling is what each page measured at, so a NEW one is a decision that
+   * shows up rather than drift.
+   */
+  { route: '/dashboard/', fontSizes: 6, cards: 6, icons: 0, gradients: 0, over40: 0, bold: 0 },
+  {
+    route: '/dashboard/scanner/',
+    fontSizes: 5,
+    cards: 0,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/dashboard/blast-radius/',
+    fontSizes: 4,
+    cards: 0,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/dashboard/decay/',
+    fontSizes: 5,
+    cards: 12,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/dashboard/contracts/',
+    fontSizes: 5,
+    cards: 4,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/dashboard/engine/',
+    fontSizes: 5,
+    cards: 5,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  {
+    route: '/dashboard/history/',
+    fontSizes: 5,
+    cards: 2,
+    icons: 0,
+    gradients: 0,
+    over40: 0,
+    bold: 0,
+  },
+  { route: '/evidence/', fontSizes: 6, cards: 6, icons: 0, gradients: 0, over40: 0, bold: 0 },
 ];
 
 const CHROME = [
@@ -193,7 +261,17 @@ const PROBE = `(() => {
     if (edged && radius >= 4 && el.clientHeight > 40 && el.children.length > 0 && !isControl) {
       cards.push(name);
     }
-    if (border > 0 && cs.borderTopStyle !== 'none') borders.add(cs.borderTopColor);
+    // A border only counts as a hairline when it differs from the element's
+    // own fill. A solid button whose border matches its background is one
+    // object, not a rule drawn beside it — and the defect this looks for is
+    // the flat dead grey standing in for a hairline, not a filled control.
+    if (
+      border > 0 &&
+      cs.borderTopStyle !== 'none' &&
+      cs.borderTopColor !== cs.backgroundColor
+    ) {
+      borders.add(cs.borderTopColor);
+    }
     if (/gradient/.test(cs.backgroundImage)) gradients.push(name);
     // ::before and ::after too. The first version of this walked only real
     // elements and reported ZERO gradients on a page that had one — the
