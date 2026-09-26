@@ -1,0 +1,11 @@
+#!/bin/bash
+set -u
+cd /home/rakhargo/projects/evergreen/.evergreen/capture-W3-D18-03-C-20260926
+printf '%s\n' 'EVERGREEN | C | 26 Sep 2026 13:00 WIB | RECORDED OBSERVATION REPLAY'
+printf '%s\n' 'Read-only capture. Original RPC/JSON and checksums remain in the sealed bundle.'
+printf '%s\n' '$ cat .evergreen/crossing/C-20260926-0600/stdout.txt'
+cat .evergreen/crossing/C-20260926-0600/stdout.txt
+printf '\n%s\n' '$ pnpm verify:crossing .evergreen/crossing/C-20260926-0600 --require-crossing'
+pnpm verify:crossing .evergreen/crossing/C-20260926-0600 --require-crossing
+printf 'Replay displayed at UTC: '
+date -u --iso-8601=seconds

@@ -5,6 +5,17 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W3-D18-03 — C second decay checkpoint (2026-09-26 06:00 UTC)
+
+[Sealed raw JSON/RPC, TXT, checksum, strict verification and native terminal replay screenshot](evidence/2026-09-26-c-crossing-0600/README.md):
+observed 06:00:29.362 UTC / 13:00:29.362 WIB at ledger 4,875,768.
+C's instance was live with 4,329 ledgers remaining; its persistent entry
+still ended at ledger 4,880,099. The write guard refused C at the normal
+17,280-ledger threshold. Strict replay returned crossing-refused,
+qualifiesCrossing true, exit 0. Friday's Rakha capture remains missed.
+The 00:01 UTC C baseline stays intact for the expiry assessment; the final
+12:00 UTC expiry observation and Shared acceptance remain open. No transaction.
+
 ## W3-D18-03 — C first decay checkpoint (2026-09-26 00:01 UTC)
 
 [Sealed raw JSON/RPC, TXT, checksum, strict verification and native terminal replay screenshot](evidence/2026-09-26-c-crossing-0001/README.md):
