@@ -2,10 +2,25 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · C expiry observed at 12:02 UTC with separate assessor; Shared acceptance remains
+**Last updated:** 2026-09-27 · W4-D26-05 Neon project preflight blocked; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## Current — W4-D26-05 Neon measurement awaits project access/ordering decision
+
+Rakha confirmed no Neon account or Evergreen project exists yet and will
+arrange one later. Read-only preflight found no project access in the operator
+environment; the console requires login. ADR-003 explicitly records no
+provisioned or measured project. Public provider limits cannot
+substitute for the actual Evergreen compute min/max CU, scale-to-zero, active
+time, average use, quota and reset readback. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260)
+records the measurement-before-provisioning ambiguity and asks Fatih to
+reconcile it without starting migrations. No account, project, compute,
+database schema or Testnet transaction was created. W4-D26-05
+is Blocked; Notion mirror sync is pending.
 
 ---
 
