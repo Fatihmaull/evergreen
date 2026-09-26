@@ -2,10 +2,22 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · C expiry observed at 12:02 UTC with separate assessor; Shared acceptance remains
+**Last updated:** 2026-09-26 · CLI 0.1.0 release notes drafted; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## Current — W4-D27-03 CLI release notes under review
+
+The npm CLI `0.1.0` is already public. A separate CLI-specific Git tag and
+GitHub Release have not yet been published; the Action's `v1` tag identifies
+a different surface. Rakha is preparing [release notes](releases/cli-v0.1.0.md)
+for review, pinned to the npm publication source `main@3d2ffa5` and naming
+the open archived-TTL display defect [#235](https://github.com/Fatihmaull/evergreen/issues/235).
+Do not create a release from a later `main` and imply it matches the immutable
+npm tarball. Notion sync for `W4-D27-03` is pending.
 
 ---
 
