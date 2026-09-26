@@ -241,6 +241,21 @@ Notion D18-03 mirror validation/sync pending: canonical data-source lookup retur
 
 Earlier sections below are dated publication/history snapshots, not current status.
 
+## Reference — D21 evidence/slack preparation, Sep17
+
+Working on D21-01/D21-02 from mainbd7f245. [Verified preparation](W3-D21-PREPARATION.md)
+records seven W3 integrity checks and comparable task-ID snapshots. A-save README
+checksum drift was traced to #166 acceptance prose; original README bytes restored
+against the unchanged manifest, acceptance preserved separately. No raw chain data,
+transaction or older manifest changed. A manifest-inventory gate/regression now
+protects these checks. Publish-dry-run's digest-only record is named accordingly.
+
+Snapshot counts:115 early Sep5,123 late Sep5,144 checkbox+one standing Sep10,
+148 checkbox+one standing now. Zero slack days are recorded as charged, but actual
+effort/slack consumption cannot be inferred from these counts. D21-01/02 In progress;
+all future-event, independent-test and Shared gate outcomes remain open. No watcher
+startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192); Notion D21-01/02 is In progress with the verified outcome. Full150-row presence check found no missing or phantom IDs. Fatih review/merge and final W3 gate remain pending.
+
 ## Earlier — Acceptance publication snapshot, Sep16
 
 Auditing D17-03 and D18-01 against main8b78efd. Success/failure email evidence was
