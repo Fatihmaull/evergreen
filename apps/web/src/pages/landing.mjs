@@ -19,8 +19,6 @@
 import { dateLong, esc, fmt } from './_shared.mjs';
 
 const B = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ';
-/** The contract the README's quickstart scans, so the command here is the one that was run. */
-const CONTRACT_A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 
 export const meta = {
   title: 'Evergreen — Soroban contract rent, configured once',

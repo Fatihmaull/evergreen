@@ -384,7 +384,7 @@ function readAction() {
   let current = null;
   let folding = false;
   for (const line of block.split('\n')) {
-    const name = /^  ([a-z][a-z0-9-]*):\s*$/.exec(line);
+    const name = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
     if (name) {
       current = { name: name[1], description: '', required: false, default: '' };
       inputs.push(current);
@@ -392,19 +392,19 @@ function readAction() {
       continue;
     }
     if (!current) continue;
-    const description = /^    description:\s*(.*)$/.exec(line);
+    const description = /^ {4}description:\s*(.*)$/.exec(line);
     if (description) {
       folding = description[1].trim() === '>-' || description[1].trim() === '>';
       if (!folding) current.description = description[1].trim();
       continue;
     }
-    const required = /^    required:\s*(true|false)\s*$/.exec(line);
+    const required = /^ {4}required:\s*(true|false)\s*$/.exec(line);
     if (required) {
       current.required = required[1] === 'true';
       folding = false;
       continue;
     }
-    const fallback = /^    default:\s*'?([^']*)'?\s*$/.exec(line);
+    const fallback = /^ {4}default:\s*'?([^']*)'?\s*$/.exec(line);
     if (fallback) {
       current.default = fallback[1].trim();
       folding = false;
