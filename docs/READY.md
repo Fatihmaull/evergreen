@@ -71,6 +71,13 @@ Assessed against the backlog as written, with every risk put to two independent 
 > possible explanations. The repository is still operated by Rakha; an
 > unrelated human has not followed the docs, so the human-call caveat remains.
 
+> **2026-09-26 guide update for outcome 4:**
+> [self-host setup](ENGINE-SETUP.md) now separates the shipped decide-only
+> cron from explicit local submission, while the [Action guide](ACTION-GUIDE.md)
+> uses the verified `@v1` consumer path. This does **not** turn outcome 4 green:
+> nobody independent has followed the engine guide against their own contract,
+> and no unattended live-submission workflow with cross-run reconciliation ships.
+
 > 🔴 **Outcome 3's first run found a defect rather than confirming one.** Both jobs
 > failed, including `green · must pass`, because the Action required the *caller's*
 > package manager to exist. It would have broken in any pnpm repository. Fixed and
