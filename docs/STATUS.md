@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · C 00:01 UTC decay checkpoint captured and strictly verified; Friday Rakha slot remains missed
+**Last updated:** 2026-09-26 · C expiry observed at 12:02 UTC with separate assessor; Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
@@ -35,6 +35,37 @@ question.
 
 ---
 
+## Current — C expiry observed at 12:02 UTC
+
+The read-only collector observed C at 2026-09-26 12:02:42.713 UTC /
+19:02:42.713 WIB, ledger 4,880,115. Both C end ledgers had passed:
+instance 4,880,097 and persistent 4,880,099. The frozen v1 verdict
+remains unverified / INVALID_SUBJECT_TTL, exit 2; a separate offline
+assessment verifies the sealed source, embedded 00:01 UTC live C baseline
+and unchanged controls, returning expiry-observed, exit 0. Raw JSON/RPC,
+TXT, checksums, separate assessment and inspected native terminal
+replay screenshot are in
+[dated evidence](evidence/2026-09-26-c-expiry-1202/README.md). No
+transaction, extension, restoration or email. Friday's Rakha slot remains
+missed; Fatih's raw Friday fallback has not been received. Shared
+acceptance of W3-D18-03 remains open; no checkbox is flipped to Done.
+Notion mirror sync is pending.
+
+## Current — C 06:00 UTC second decay checkpoint retained
+
+At 2026-09-26 06:00:29.362 UTC / 13:00:29.362 WIB, the read-only collector
+observed C at ledger 4,875,768 with 4,329 instance ledgers remaining.
+The write guard refused C; strict offline replay returned crossing-refused,
+qualifiesCrossing true, exit 0. The complete sealed five-RPC bundle and
+inspected native Konsole/Spectacle replay screenshot are in
+[the dated evidence](evidence/2026-09-26-c-crossing-0600/README.md).
+The original 00:01 UTC baseline remains intact. Friday's Rakha slot remains
+missed; Fatih's raw Friday fallback has not been received. No transaction
+was sent. The later expiry observation is recorded above; it waited until
+an observed ledger above 4,880,099, per merged #253. Shared acceptance
+is still pending.
+Notion mirror sync is pending.
+
 ## Current — C 00:01 UTC decay checkpoint retained
 
 At 2026-09-26 00:01:34.722 UTC / 07:01:34.722 WIB, the read-only collector
@@ -48,7 +79,8 @@ Friday bundle is unavailable. The first invocation at 00:00:07 UTC wrote no
 bundle because the output parent did not exist; the successful observation
 retains its actual 00:01 timestamp. Rakha's Friday slot remains missed, and
 Fatih's raw fallback artifact has not been received. No transaction was sent.
-The 06:00 and 12:00 UTC C observations and Shared acceptance remain pending.
+The 06:00 UTC and later expiry observations are recorded above; Shared
+acceptance remains pending.
 Notion mirror sync is pending.
 
 ## Current — W4-D27-02 CLI 0.1.0 published
