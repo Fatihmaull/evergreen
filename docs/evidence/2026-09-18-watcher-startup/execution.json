@@ -1,0 +1,9 @@
+{
+  "assessment": {
+    "severity": "critical",
+    "incidentId": "observer-error:1789689600000",
+    "lastStartedAt": null,
+    "overdueMinutes": 0,
+    "status": "observer-error"
+  }
+}
