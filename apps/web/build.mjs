@@ -587,7 +587,16 @@ async function buildPage(page) {
   });
   const target = join(out, page.to);
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, html);
+  /**
+   * Strip trailing whitespace from every line before writing.
+   *
+   * A template literal that interpolates a conditional leaves the indentation
+   * behind when the condition is false, so an empty `${…}` becomes a line of
+   * spaces. `git diff --check` reports each one, and chasing them template by
+   * template fixes today's and not tomorrow's — this is the whole class, at
+   * the one place every page is written.
+   */
+  writeFileSync(target, html.replace(/[ \t]+$/gm, ''));
   console.log(
     `  ${page.to.padEnd(32)} ${page.entry ? `script, core modules: ${coreModules}` : 'static, no script'}`,
   );
