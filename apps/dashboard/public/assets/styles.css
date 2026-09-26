@@ -1920,12 +1920,23 @@ p.lead {
   flex-wrap: wrap;
   gap: 6px 24px;
   justify-content: space-between;
+  /* Baseline, so the two texts sit on one line rather than their boxes being
+     aligned to each other. */
+  align-items: baseline;
   /* The same gutter and measure `main.main` uses. The footer is a sibling of
      the main element rather than a child, so it inherited neither, and at
      1440px the row ran edge to edge with the GitHub link clipped against it. */
   padding-inline: clamp(16px, 4vw, 40px);
   max-width: 1180px;
   width: 100%;
+}
+/* The global `p + p` rule adds 10px above any paragraph following another.
+   Down a column that is the paragraph rhythm; across a flex ROW it pushed the
+   GitHub link 10px below the line it shares, which is why one sat high and
+   the other low. Measured: left box 29px tall against the link's 19px, both
+   ending on the same bottom edge. */
+.foot-row > p + p {
+  margin-top: 0;
 }
 
 /* Stat strip */
