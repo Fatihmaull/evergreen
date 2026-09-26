@@ -62,13 +62,14 @@ Assessed against the backlog as written, with every risk put to two independent 
 | 4 | Self-hosted engine | 🔴 **will not make it as stated** — one backlog line carries the claim and **no task verifies it** | 🟡 **Human call, unchanged.** Automating it would measure the harness rather than the documentation |
 
 > **2026-09-26 follow-up for outcome 3:** [an external repository](https://github.com/rakhargo/evergreen-check-smoke)
-> ran the Action from a pinned Evergreen commit with the published CLI.
-> [One run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083)
-> has a green job that succeeded and a red job that failed at the intended
-> threshold with exit 1. This removes monorepo resolution as a possible
-> explanation for the pair. The repository is still operated by Rakha;
-> an unrelated human has not followed the docs, and the public `v1` tag
-> has not been created. Outcome 3 therefore keeps its human-call caveat.
+> first ran the Action from a pinned Evergreen commit with the published CLI:
+> [green succeeded and red failed at exit 1](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083).
+> The public `Fatihmaull/evergreen@v1` tag now points to that tested commit,
+> and a [second external run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415)
+> repeated the green/red pair through the tag; [screenshots](evidence/2026-09-26-action-v1-tag/README.md)
+> are retained. This removes monorepo resolution and an unpublished ref as
+> possible explanations. The repository is still operated by Rakha; an
+> unrelated human has not followed the docs, so the human-call caveat remains.
 
 > 🔴 **Outcome 3's first run found a defect rather than confirming one.** Both jobs
 > failed, including `green · must pass`, because the Action required the *caller's*

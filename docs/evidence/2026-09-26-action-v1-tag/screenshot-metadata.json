@@ -1,0 +1,16 @@
+{
+  "sourceRun": "https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415",
+  "method": "Original public GitHub pages displayed in Brave and captured with Spectacle",
+  "screenshots": [
+    {
+      "file": "run-green-red.png",
+      "displayedAt": "2026-09-26T16:31:04.618Z",
+      "sha256": "b33a63f1d9229b8047fda98ef2726d0de800235d26904145f6799cdd31ebefa2"
+    },
+    {
+      "file": "red-job.png",
+      "displayedAt": "2026-09-26T16:32:07.234Z",
+      "sha256": "4319466eece57d418e6e6b447818c208bedb2191788b24bf719c51d5f4c236af"
+    }
+  ]
+}
