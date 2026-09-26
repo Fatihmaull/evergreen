@@ -84,7 +84,7 @@ Documented here, values only in your local `.env` / platform secret store.
 | `EMAIL_FROM` | One plain sender address; defaults to `onboarding@resend.dev` | local `.env` |
 | `EMAIL_TO` | Historical W1 recipient; ignored by W3 EmailChannel | local `.env` only |
 | `EVERGREEN_ALERT_TO` | Private EmailChannel destination selected through notifications.toEnvVar | `.env` / hosting env store |
-| `EVERGREEN_CONFIG_PATH` | Path to your engine config. **No `evergreen.config.json` is tracked** — the repo ships `evergreen.config.dogfood.json` (real IDs, decide-only, what the cron uses), `.example.json` and `.save-proof.json`. Point this at one of those or at your own copy. | `.env` |
+| `EVERGREEN_CONFIG` | Config path read by the decide-only `engine:run` **after you explicitly load the environment**. The local `engine:execute` instead takes `--config PATH`; neither command auto-loads `.env`. No `evergreen.config.json` is tracked — the repo ships `evergreen.config.dogfood.json` (real IDs, what the cron uses), `.example.json` and `.save-proof.json`. | `.env` |
 
 Use `https://soroban-testnet.stellar.org/` and the exact passphrase `Test SDF Network ; September 2015`. The quotes in `.env.example` preserve the spaces and semicolon. Load it with Node's `--env-file=.env` or an env-file parser; do not print the file or pass a secret as a command-line argument. The email smoke below is separate from the later hosted engine.
 

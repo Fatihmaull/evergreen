@@ -480,7 +480,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### Day 26 · Docs
 *Planned: Mon Sep 28 — may slip; the D-number does not.*
 - [ ] **W4-D26-01** (F) Root `README.md`: what Evergreen is, install, 60-second quickstart, screenshots. Quickstart teaches the **plain funded account**; the policy signer is the documented hardened path, not the default (ADR-002 amendment).
-- [ ] **W4-D26-02** (R) Engine setup guide + CI Action usage guide — his components, his docs.
+- [~] **W4-D26-02** (R) Engine setup guide + CI Action usage guide — his components, his docs. Started 2026-09-26 on a separate branch after the external Action proof. The guide must distinguish the shipped read-only cron from the explicit local execution path; writing instructions alone does not prove READY outcome 4 against a stranger's own contract.
 - [ ] **W4-D26-03** (S) Troubleshooting page from every real failure we hit during the sprint *(cut order #4 for depth, not existence)*.
 - [ ] **W4-D26-04** (S) `CONTRIBUTING.md` + roadmap naming SOW 2 candidates. **The dashboard write path — wallet-connect + user-signed "extend now" — is the HEADLINE item, not one of the deferred ones.** It was cut on 2026-09-10 as cut order #3 with that outcome explicitly planned for; writing it as "deferred" in the retro would misread a designed decision as a shortfall. Others: hosted engine per ADR-004, mainnet, Telegram channel, always-on mode, `--fail-on=<severity>` per ADR-006.
 
