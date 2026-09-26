@@ -1,0 +1,16 @@
+{
+  "captureObservedAt": "2026-09-26T00:01:34.722Z",
+  "displayedAt": "2026-09-26T00:03:13Z",
+  "method": "Native Konsole replay captured with Spectacle; no live collector rerun for the screenshot",
+  "screenshot": "terminal-C-0701.png",
+  "screenshotSha256": "17eede4bac60ab7853d1d1f6ba241a9ead31bcdce08a88d91bfef426d09f1396",
+  "sourceManifestSha256": "27d35c05831d46922d6d0694d2a7e2a6a6709096cc9345326c9416493ca1fcaa",
+  "sourceSha256sumsSha256": "d3919f62928964a35bb21b670c525d6d08eaca21969c3652568b6fc373f12ee7",
+  "sourceCommit": "f6eed7f85469b00a95d546cbe216fd62f0f25c2b",
+  "verification": {
+    "command": "pnpm verify:crossing docs/evidence/2026-09-26-c-crossing-0001/capture --require-crossing",
+    "phase": "crossing-refused",
+    "qualifiesCrossing": true,
+    "exitCode": 0
+  }
+}

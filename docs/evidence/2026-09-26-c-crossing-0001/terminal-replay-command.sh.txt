@@ -1,0 +1,11 @@
+#!/bin/bash
+set -u
+cd /home/rakhargo/.codex/worktrees/c-capture-20260926/evergreen
+printf '%s\n' 'EVERGREEN | C | 26 Sep 2026 07:01 WIB | RECORDED OBSERVATION REPLAY'
+printf '%s\n' 'Read-only capture. Original RPC/JSON and checksums are in the sealed bundle.'
+printf '%s\n' '$ cat .evergreen/crossing/C-20260926-0001/stdout.txt'
+cat .evergreen/crossing/C-20260926-0001/stdout.txt
+printf '\n%s\n' '$ pnpm verify:crossing .evergreen/crossing/C-20260926-0001 --require-crossing'
+COREPACK_HOME=/tmp/evergreen-c-preflight-corepack XDG_CACHE_HOME=/tmp/evergreen-c-preflight-cache pnpm verify:crossing .evergreen/crossing/C-20260926-0001 --require-crossing
+printf 'Replay displayed at UTC: '
+date -u --iso-8601=seconds
