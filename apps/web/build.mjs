@@ -698,6 +698,28 @@ function guardRenderedPages() {
   }
 }
 
+/**
+ * Moved pages keep answering at their old address.
+ *
+ * `/evidence/` became `/docs/evidence/` on 2026-09-26, and the old path kept
+ * returning 200 from the host after the file had left the build — an orphan
+ * that serves, cannot be regenerated, and drifts from the page that replaced
+ * it. A redirect is the version that stays correct: the link a reader saved
+ * still works, and it lands on the page that is maintained.
+ */
+const REDIRECTS = [['/evidence/*', '/docs/evidence/', 301]];
+
+writeFileSync(
+  join(out, '_redirects'),
+  `${REDIRECTS.map(([from, to, code]) => `${from}  ${to}  ${code}`).join('\n')}\n`,
+);
+for (const [, to] of REDIRECTS) {
+  if (!ROUTES.some((route) => route.route === to)) {
+    throw new Error(`_redirects sends ${to}, which is not a route this site publishes`);
+  }
+}
+console.log(`  _redirects: ${REDIRECTS.length} rule(s)`);
+
 guardRenderedPages();
 
 /**
