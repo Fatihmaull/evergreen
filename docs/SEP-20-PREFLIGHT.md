@@ -588,25 +588,54 @@ before Sunday, not a patch during it.
 4,880,099.** Both must be past, so **the expiry assessment needs a ledger above
 4,880,099** — not above the instance. Measured 2026-09-21.
 
-### Friday — the threshold capture
+### Friday — the threshold capture · ⛔ **NOT TAKEN**
+
+> 🔴 **The Friday 12:00Z slot was missed. `.evergreen/crossing/C-20260925-1200`
+> DOES NOT EXIST, and the command below was never run.** Recorded here rather than
+> quietly rewritten, because the Saturday command used to pass that path as its
+> `--baseline` — copy-pasted on the day it would have failed on a missing
+> directory, in the one window that cannot be retaken.
+>
+> **What stands in for it:** the Saturday **00:01Z** decay checkpoint, which is a
+> verified same-subject live capture with phase `crossing-refused` — one of the two
+> phases `verify:expiry` accepts as a baseline. Independently re-verified
+> 2026-09-26 with `checkRuntime` both `false` and `true`: `qualifiesCrossing: true`.
+>
+> **If Fatih's Friday capture does arrive, prefer it** — it is closer to the
+> crossing and gives the 17,280-equivalent reading that is otherwise missing.
 
 ```bash
+# NOT RUN — kept for the record only
 pnpm capture:crossing --subject C --output .evergreen/crossing/C-20260925-1200
 pnpm verify:crossing  .evergreen/crossing/C-20260925-1200 --require-crossing
 ```
 
-Accept on **exit 0** with phase `crossing-refused`. Commit under §4's layout in a
-directory dated **2026-09-25**.
-
-🔴 **Do not delete that directory.** It is Saturday's `--baseline`.
+Acceptance was **exit 0** with phase `crossing-refused`, committed under §4's
+layout in a directory dated **2026-09-25**.
 
 ### Saturday — the expiry capture
 
+🔴 **Use a baseline that exists.** In order of preference:
+
+1. Fatih's Friday capture, **if it arrives** — closest to the crossing.
+2. `.evergreen/crossing/C-20260926-0001` — Rakha's local original of the 00:01Z
+   checkpoint.
+3. `docs/evidence/2026-09-26-c-crossing-0001/capture` — the committed copy of the
+   same bundle, on `main`. **Machine-independent**, so use this if the local
+   worktree is not to hand.
+
 ```bash
 pnpm capture:crossing --subject C --output .evergreen/crossing/C-20260926-1200 \
-    --baseline .evergreen/crossing/C-20260925-1200
+    --baseline .evergreen/crossing/C-20260926-0001
 pnpm verify:expiry    .evergreen/crossing/C-20260926-1200
 ```
+
+> **Create `.evergreen/crossing/` before running the collector.** Measured
+> 2026-09-26: the first invocation at ~00:00:07Z exited without producing a bundle
+> because a fresh worktree lacked that parent directory, and the checkpoint was
+> captured a minute late as a result. On the expiry there is no minute to spare.
+>
+> 🔴 **Never clear `.evergreen/crossing/`** — it holds the baseline.
 
 **Accept on `phase: expiry-observed` from `verify:expiry`** — not on an exit code
 from `verify:crossing`.
