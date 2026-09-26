@@ -1,0 +1,19 @@
+{
+  "captureObservedAt": "2026-09-26T12:02:42.713Z",
+  "displayedAt": "2026-09-26T12:03:50Z",
+  "method": "Native Konsole replay captured with Spectacle; no live collector rerun for the screenshot",
+  "screenshot": "terminal-C-expiry.png",
+  "screenshotSha256": "040ee328c8705ebdb36c7c3b2af4e3d5a23bf44f1b3ab4052aa3484782a97b28",
+  "assessment": "assessment.json",
+  "assessmentSha256": "13427c7f403790aa5136e183954803552de7bdd02125631b1666fd39d4b88854",
+  "sourceManifestSha256": "09c1450fc43bf49721bc23cb47f3f34e5421672ec6446792d1ab7ab0ab6b5a84",
+  "sourceSha256sumsSha256": "2c1daf2967ec90647cae63e1c755f48b9c60708340e77baf5435f8e466408df4",
+  "sourceCommit": "c38e77f990702809dfcae8ca88321876543abab5",
+  "verification": {
+    "command": "pnpm verify:expiry docs/evidence/2026-09-26-c-expiry-1202/capture",
+    "phase": "expiry-observed",
+    "ledger": 4880115,
+    "exitCode": 0,
+    "recordedV1Verdict": "unverified / INVALID_SUBJECT_TTL / exit 2"
+  }
+}

@@ -1,0 +1,11 @@
+#!/bin/bash
+set -uo pipefail
+cd /home/rakhargo/projects/evergreen/.evergreen/capture-W3-D18-03-C-20260926
+printf '%s\n' 'EVERGREEN | C EXPIRY | 26 Sep 2026 | RECORDED OBSERVATION REPLAY'
+printf '%s\n' 'Original read-only capture, sealed RPC/JSON and checksum remain unchanged.'
+printf '%s\n' '$ jq "{phase, reason, exitCode}" .evergreen/crossing/C-20260926-1202/result.json'
+jq '{phase, reason, exitCode}' .evergreen/crossing/C-20260926-1202/result.json
+printf '\n%s\n' '$ node scripts/reassess-expiry-capture.mjs .evergreen/crossing/C-20260926-1202 | jq ...'
+node scripts/reassess-expiry-capture.mjs .evergreen/crossing/C-20260926-1202 | jq '{subject, phase, observedAt, ledger, baselineObservedAt, recordedVerdict, entries: [.entries[] | {kind, baselineEndsAtLedger, representation}]}'
+printf 'Replay displayed at UTC: '
+date -u --iso-8601=seconds
