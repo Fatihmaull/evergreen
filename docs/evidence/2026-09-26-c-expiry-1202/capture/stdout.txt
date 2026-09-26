@@ -1,0 +1,18 @@
+# guinea-pig C crossing probe
+observed:   2026-09-26T12:02:42.713Z
+subject:    CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
+expires:    2026-09-26 (alert threshold 2026-09-25)
+threshold:  17,280 ledgers
+mode:       dry-run   decisions: 3
+
+SKIP   AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB
+       HEALTHY — Above threshold. 1,490,147 ledgers remaining.
+SKIP   AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB
+       REFUSED BY WRITE GUARD — Refusing to write: this would touch guinea-pig C (CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL).
+SKIP   AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7
+       HEALTHY — Above threshold. 410,714 ledgers remaining.
+
+✓ guinea-pig C was REFUSED BY WRITE GUARD, and the refusal is in this record.
+  Commit this output under docs/evidence/ — an artifact is a log, a commit is evidence.
+
+Nothing was signed and nothing was submitted.
