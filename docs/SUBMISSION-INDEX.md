@@ -35,7 +35,7 @@ records themselves.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 1 | Public repository | **[github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen)** — MIT, CI green | — |
-| 2 | Published npm package | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Registry integrity `sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==` · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) |
+| 2 | Published npm package | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Registry integrity `sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==` · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) · [source-matched GitHub Release](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) (known #235 limitation disclosed) |
 | 3 | CLI screenshots showing TTL, archive prediction and cost | **[Four entry types](evidence/2026-09-14-d1-capture/capture-1-four-entry-types/1.png)** · **[JSON output](evidence/2026-09-14-d1-capture/capture-2-json/1.png)** · **[Storage advice](evidence/2026-09-14-d1-capture/capture-3-storage-advice/1.png)** · **[Blast radius](evidence/2026-09-14-d1-capture/capture-4-blast-radius/1.png)** · **[Error handling](evidence/2026-09-14-d1-capture/capture-5-error-handling/1.png)** | [what each shows](evidence/2026-09-14-d1-capture/README.md) |
 | 4 | Test coverage report | **[coverage report](evidence/2026-09-10-coverage/coverage-report.txt)** — 93.24% statements, 85.29% branches, 97.64% functions, 94.57% lines | [how it was produced](evidence/2026-09-10-coverage/README.md) |
 
