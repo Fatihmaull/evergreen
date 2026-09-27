@@ -62,7 +62,33 @@ dependencies — so the risk is invisible from inside any single contract.
 npx @evergreen-stellar/cli scan <A> <B> <C>
 ```
 
-> ✅ **VERIFIED WORKING 2026-09-25 — this exact line now runs.**
+> 🔴 **DO NOT RECORD THIS BEAT UNTIL `0.1.1` IS PUBLISHED. Measured 2026-09-27.**
+>
+> `npx` with no version pin resolves `latest`, which is **`0.1.0`** — the build that
+> prints a projected expiry date for an archived entry (#235). **B and C are both
+> archived now**, so this exact line puts **two `expires ~ 2025-12-18` dates on
+> screen**, nine months before the project began, in the demo's opening technical
+> beat.
+>
+> Worse in a three-contract scan than in a single one, and the script did not
+> predict this: **B and C print the IDENTICAL remaining count and the IDENTICAL
+> expiry date despite dying five days apart**, because `remainingLedgers` is
+> `0 − observedLedger` and `endsAtLedger` is 0 for both. A reviewer who cannot check
+> *why* it is wrong can still see that it cannot be right.
+>
+> The fix is merged and the `0.1.1` candidate is on `main` (#262, #265). **Same
+> command on the fixed build prints the fabricated date zero times** — measured,
+> both outputs committed:
+> [`2026-09-27-beat2-archived-check`](evidence/2026-09-27-beat2-archived-check/README.md).
+>
+> **The publish is Rakha's** (`W4-D27-04`, #264) and his preflight has
+> `npm whoami` → `E401`, so a login and 2FA come first. Recording waits on it.
+>
+> Two cosmetic things that WILL be on screen either way: the coverage sentence
+> prints once per contract (three identical lines), and `npx` may emit an npm
+> upgrade notice after the output.
+
+> ✅ **The install line itself works — verified 2026-09-25.**
 > `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and
 > the three-contract `npx` line was run from a clean directory against the real
 > registry. It emits the shared-entry line below and reads
