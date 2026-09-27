@@ -29,7 +29,7 @@ Notion mirror sync remain pending.
 
 ---
 
-## Current — W4-D27-03 CLI GitHub Release published
+## Closed — W4-D27-03 CLI GitHub Release published
 
 The [GitHub Release `cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0)
 was published 2026-09-27 08:53:54 UTC after #259 merged. The remote annotated
@@ -38,10 +38,10 @@ the source used for npm `0.1.0`; it is distinct from the Action's `v1` tag.
 The public body follows the [reviewed notes](releases/cli-v0.1.0.md), with
 release-medium link/heading adjustments, and discloses the archived-TTL
 display defect [#235](https://github.com/Fatihmaull/evergreen/issues/235).
-The source-only presentation fix in #262 is **not** in npm `0.1.0`; no new npm
-version was published. The release is public, not a draft or prerelease, and
-readback was verified. W4-D27-03 stays In progress until this tracking PR is
-reviewed/merged; Notion sync remains pending.
+The presentation fix in #262 is **not** in the immutable npm `0.1.0`; it was
+later published separately as npm `0.1.1` under W4-D27-04. This historical
+release is public, not a draft or prerelease. Readback was verified and
+tracking PR #263 merged. Notion sync remains pending.
 
 ## Current — W4-D26-02 engine/Action guides drafted
 
