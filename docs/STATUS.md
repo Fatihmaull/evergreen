@@ -2,6 +2,34 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
+> ### 🧭 Which board is authoritative for what — recorded 2026-09-27, after they diverged
+>
+> Two status boards now exist. The web track's listed *"dispatch the demo workflow —
+> it has zero runs"* as open work on 2026-09-27. **It has runs.** It was dispatched
+> on 2026-09-25, its first run found a real defect in the Action, and the second
+> produced a genuine pair —
+> [green success and red failure at exit 1](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235),
+> whose links have been in the demo script's beat 5 since that day.
+>
+> **The boundary, so this is not re-litigated in the last week:**
+>
+> | surface | authoritative board |
+> |---|---|
+> | `apps/`, `web-reference/` — dashboard, landing, web build | **the web track's** |
+> | `packages/`, `scripts/`, `.github/workflows/`, `action.yml`, the CLI, the engine, the Action and its runs | **`BACKLOG.md` + this file** |
+> | the plan itself — task rows, IDs, status | **`BACKLOG.md`, canonical.** Notion is derived and is never hand-edited |
+>
+> `.github/workflows/` was never the web track's path — `W4-D22-DASHBOARD-MINIMUM.md`
+> said so when it was written: *"the CI job is mine to add."* A board tracking work
+> outside its own ownership is how one of the two goes stale without anyone noticing,
+> which is exactly the failure mode both boards exist to prevent.
+>
+> **Each track ticks its own rows.** Neither ticks the other's.
+>
+> Worth recording alongside it: **both tracks found #235 independently and reached
+> the same conclusion** — publish `0.1.1`, then record. That sequence is corroborated
+> from two directions and does not need re-arguing.
+
 **Last updated:** 2026-09-27 · npm CLI 0.1.1 published and registry-verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
