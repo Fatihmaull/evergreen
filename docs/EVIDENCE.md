@@ -481,6 +481,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 |---|---|---|
 | GitHub repo | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ Public |
 | npm — `cli` | [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli) | ✅ 2026-09-24 |
+| GitHub CLI release | [`cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) | ✅ 2026-09-27; annotated tag peels to published npm source `3d2ffa5`, known #235 limitation disclosed; no npm republish |
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |

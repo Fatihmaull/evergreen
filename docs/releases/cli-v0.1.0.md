@@ -1,4 +1,4 @@
-# CLI 0.1.0 — GitHub Release notes (review draft)
+# CLI 0.1.0 — GitHub Release notes
 
 The first public Testnet release of `@evergreen-stellar/cli` was published to
 npm on **2026-09-24**. This GitHub Release is a source/provenance marker for that
@@ -27,13 +27,13 @@ simulation path.
 ## Verified publication
 
 - npm: [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)
-- Published source commit to tag: `3d2ffa57fd081a973deac625f49aa1457f0dd74e`
+- Published source commit: `3d2ffa57fd081a973deac625f49aa1457f0dd74e`
 - [Registry/clean-install verification](../evidence/2026-09-25-published-package-verification/README.md): the public package installs outside the monorepo, bundles private core/shared-types code, and runs real read-only Testnet scans with exit codes 0, 1, 2 and 3.
 
-The planned tag is `cli-v0.1.0`, deliberately separate from the GitHub
-Action's `v1` tag. The Action has its own
+The public `cli-v0.1.0` tag is deliberately separate from the GitHub Action's
+`v1` tag. The Action has its own
 [external `@v1` CI proof](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415)
-and may point to a later repository commit than this npm package. Do not use
+and points to a later repository commit than this npm package. Do not use
 the Action tag as the source marker for the CLI tarball.
 
 ## Known limitation
