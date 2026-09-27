@@ -1,0 +1,9 @@
+{
+  "confirmedOn": "2026-09-18",
+  "subject": "[CRITICAL] Evergreen scheduler observer-error",
+  "incidentTimeWIB": "2026-09-18 07:30",
+  "providerEmailId": "01a0b1eb-bde2-70a8-b497-27fb32f3f2e9",
+  "location": "inbox",
+  "source": "Rakha supplied the received message with Inbox label in this conversation",
+  "interpretation": "Confirms receipt of the observer-error alert, not a transaction failure or completion of the observation window."
+}

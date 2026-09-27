@@ -77,7 +77,6 @@ Assessed against the backlog as written, with every risk put to two independent 
 > uses the verified `@v1` consumer path. This does **not** turn outcome 4 green:
 > nobody independent has followed the engine guide against their own contract,
 > and no unattended live-submission workflow with cross-run reconciliation ships.
-
 > 🔴 **Outcome 3's first run found a defect rather than confirming one.** Both jobs
 > failed, including `green · must pass`, because the Action required the *caller's*
 > package manager to exist. It would have broken in any pnpm repository. Fixed and

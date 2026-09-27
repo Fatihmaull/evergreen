@@ -126,6 +126,19 @@ confirmation.
 sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
 five-second cadence, and no drift figure is claimed. Both READMEs say so.
 
+## W3-D18-01 — Sep18 actual observer startup
+
+[Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
+automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
+Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
+## Sep17 integrity reconciliation — accepted A-save proof
+
+The Sep14 scheduled-save bundle again verifies against its original manifest.
+The later #166 acceptance annotation is preserved [separately](evidence/2026-09-17-save-acceptance-reconciliation/README.md)
+so the sealed README retains its original bytes. Acceptance in #130 remains valid;
+no transaction or raw artifact was replaced. See the W3 closeout inventory report.
+
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.

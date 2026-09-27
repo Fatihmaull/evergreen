@@ -1,0 +1,11 @@
+{
+  "generation": 1,
+  "active": null,
+  "lastAssessment": {
+    "status": "healthy",
+    "severity": "info",
+    "lastStartedAt": 1789694201000,
+    "overdueMinutes": 48.3391,
+    "incidentId": null
+  }
+}
