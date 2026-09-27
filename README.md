@@ -177,6 +177,8 @@ evidence item, browser-openable artifact first.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Modules, data flow, boundaries |
 | [`docs/SOROBAN-PRIMER.md`](docs/SOROBAN-PRIMER.md) | TTL, rent, archival, and the RPC shapes we rely on |
 | [`docs/SETUP.md`](docs/SETUP.md) | Getting a machine productive |
+| [`docs/ENGINE-SETUP.md`](docs/ENGINE-SETUP.md) | Current Testnet engine self-host path and its live-scheduler limits |
+| [`docs/ACTION-GUIDE.md`](docs/ACTION-GUIDE.md) | Copyable read-only CI check with declared storage scope |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | Code style, commits, testing, secret handling |
 | [`docs/adr/`](docs/adr/) | Why things are the way they are |
 | [`docs/ONBOARDING.md`](docs/ONBOARDING.md) | **Start here if you're an agent** — orientation, the five things that will bite you |

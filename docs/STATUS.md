@@ -2,7 +2,7 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · CLI 0.1.0 release notes drafted; C Shared acceptance remains
+**Last updated:** 2026-09-26 · CLI 0.1.0 release notes, engine and Action guides merged; Action v1 tag verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
@@ -18,6 +18,46 @@ for review, pinned to the npm publication source `main@3d2ffa5` and naming
 the open archived-TTL display defect [#235](https://github.com/Fatihmaull/evergreen/issues/235).
 Do not create a release from a later `main` and imply it matches the immutable
 npm tarball. Notion sync for `W4-D27-03` is pending.
+
+## Current — W4-D26-02 engine/Action guides drafted
+
+Rakha drafted the [engine](ENGINE-SETUP.md) and [Action](ACTION-GUIDE.md)
+guides against the shipped entry points and the external `@v1` Action run.
+The repository cron is decide-only: it does not receive a
+signer secret or call `engine:execute`. The latter is a bounded local operator
+path with an attempt journal, not a turnkey unattended live scheduler. A guide
+can explain those boundaries but cannot certify READY outcome 4 without a
+separate operator trying a non-guinea-pig contract. Local full `pnpm check`
+passed; review/merge remains. Notion sync for `W4-D26-02` is pending.
+
+---
+## Current — W4-D25-03 public Action tag verified
+
+The remote annotated tag `v1` peels to the same Action commit `2a4ab0a`
+that passed the SHA-pinned external test. The separate
+[fixture run 36255608415](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415)
+used `Fatihmaull/evergreen@v1`: green succeeded at exit 0, red failed
+at threshold exit 1, both on Testnet A with declared keys and CLI 0.1.0.
+[Original Brave/Spectacle screenshots and tag readback](evidence/2026-09-26-action-v1-tag/README.md)
+are recorded. `W4-D25-03` remains In progress pending Fatih's review
+and merge of this evidence. The separate-repo test's unrelated-human
+caveat stays with `W4-D25-02`. Notion sync for `W4-D25-03` is pending.
+
+## Current — W4-D25-02 external Action path verified technically
+
+The independent [fixture repository](https://github.com/rakhargo/evergreen-check-smoke)
+ran `Fatihmaull/evergreen` pinned to main `2a4ab0a` with published CLI
+`0.1.0` against Testnet A. [Run 36254970083](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083)
+shows the green job succeeding with four healthy entries at 17,280 ledgers
+and the red job failing with Action exit 1 at 2,000,000. Both used the
+same declared keys; setup and npm resolution succeeded. The
+[dated record](evidence/2026-09-26-external-action-smoke/README.md)
+binds the fixture commit, workflow, keys and job links. This proves the
+separate-repository consumer path, while an unrelated human has not yet
+run it. `W4-D25-02` remains In progress until that stronger acceptance
+question is decided; `W4-D25-03` still needs tag `v1` and screenshots.
+No transaction or protected-contract write. Notion sync for
+`W4-D25-02` is pending.
 
 ---
 
@@ -221,9 +261,21 @@ In progress: three Monday B checkpoints, C capture and final acceptance remain.
 Notion D18-03 mirror validation/sync pending: canonical data-source lookup returned
 `data_source_not_found` at preflight. Earlier acceptance decisions are unchanged.
 
-## Reference — reconciled September17 state
+## Reference — Sep18 observer startup and recovered incident verified
 
-## Current — reconciled September17 state
+The installed systemd observer started automatically at07:00 WIB. Snapshot09:08
+covers26 five-minute starts through09:05:25 healthy assessments and one observer-error
+at07:30. Its critical email was provider-accepted and separately confirmed in the
+recipient inbox; the observer recovered at07:35 and had no active incident at the
+snapshot. Exact transport/root cause is not established by these logs. [Evidence](evidence/2026-09-18-watcher-startup/README.md).
+
+This verifies actual startup, not just an armed timer, and a real observer-failure
+notification/recovery. No runtime/policy change, extra mail or transaction was made.
+D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
+The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
+inferred from this bounded snapshot. Published in [PR #201](https://github.com/Fatihmaull/evergreen/pull/201), with summary in #104. Notion D18-01/03 notes synced, statuses remain In progress; full150-row presence check found no missing or phantom IDs. Fatih review/merge pending.
+
+## Reference — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
@@ -252,6 +304,21 @@ Notion D18-03 mirror validation/sync pending: canonical data-source lookup retur
   3 Blocked; no completion was inferred from an issue closure with narrower scope.
 
 Earlier sections below are dated publication/history snapshots, not current status.
+
+## Reference — D21 evidence/slack preparation, Sep17
+
+Working on D21-01/D21-02 from mainbd7f245. [Verified preparation](W3-D21-PREPARATION.md)
+records seven W3 integrity checks and comparable task-ID snapshots. A-save README
+checksum drift was traced to #166 acceptance prose; original README bytes restored
+against the unchanged manifest, acceptance preserved separately. No raw chain data,
+transaction or older manifest changed. A manifest-inventory gate/regression now
+protects these checks. Publish-dry-run's digest-only record is named accordingly.
+
+Snapshot counts:115 early Sep5,123 late Sep5,144 checkbox+one standing Sep10,
+148 checkbox+one standing now. Zero slack days are recorded as charged, but actual
+effort/slack consumption cannot be inferred from these counts. D21-01/02 In progress;
+all future-event, independent-test and Shared gate outcomes remain open. No watcher
+startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192); Notion D21-01/02 is In progress with the verified outcome. Full150-row presence check found no missing or phantom IDs. Fatih review/merge and final W3 gate remain pending.
 
 ## Earlier — Acceptance publication snapshot, Sep16
 

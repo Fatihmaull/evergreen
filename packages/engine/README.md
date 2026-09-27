@@ -2,7 +2,15 @@
 
 The scheduled auto-bump worker. **Built in Week 3.**
 
-A scheduled job, not a daemon ([ADR-001](../../docs/adr/ADR-001-scheduled-serverless-engine.md)). One run = load config → scan → decide → submit → record → notify.
+For the shipped Testnet entry points and a safe first dry run against your own
+contract, follow the [self-host guide](../../docs/ENGINE-SETUP.md). The
+repository's scheduled workflow is **decide-only**; it does not submit.
+
+Designed as a scheduled job, not a daemon
+([ADR-001](../../docs/adr/ADR-001-scheduled-serverless-engine.md)). The
+load → scan → decide path runs on the repository cron. Submission and alerts
+are separate explicit local operator paths today; the cron does not invoke
+them.
 
 ## You self-host it, and you fund it
 
@@ -18,5 +26,7 @@ It never holds a key of yours beyond that, and never needs one — `extendTTL` i
 ## Non-obvious requirements
 
 - **Dry-run is the default.** Live submission is explicit.
-- **Runs can overlap.** Bumps are idempotent; an in-flight transaction must survive a second scheduled run starting. This needs a real lock, not a flat file — see [ADR-003](../../docs/adr/ADR-003-toolchain-hosting-persistence.md).
-- **A missed scheduler run alerts.** It must never fail silently.
+- **Live runs need reconciliation.** The local attempt journal prevents casual reuse but is not cross-run scheduler recovery. An uncertain in-flight transaction must be reconciled before another live attempt — see [ADR-003](../../docs/adr/ADR-003-toolchain-hosting-persistence.md).
+- **A missed scheduler run must be watched.** The independent watcher in the
+  [Stage 1 runbook](../../docs/W3-D17-05-RUNBOOK.md) is a separate deployment,
+  not an automatic property of the repository cron.

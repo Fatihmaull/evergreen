@@ -1,0 +1,9 @@
+{
+  "id": "watch-2895db5c212c0d1aa24c0270d4bd819c442ded07f8e1fb0f9cafe8fdfc814408",
+  "kind": "missed-run",
+  "notification": {
+    "severity": "critical",
+    "subject": "[CRITICAL] Evergreen scheduler observer-error",
+    "body": "Watch: w3-sep18-readiness\nStatus: observer-error\nLast actual job start: not observed\nMinutes since anchor: 0\nThis is scheduler observation, not a transaction failure record. Check the runner and retained state; no replacement transaction was submitted."
+  }
+}
