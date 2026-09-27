@@ -2,10 +2,28 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · C expiry observed at 12:02 UTC with separate assessor; Shared acceptance remains
+**Last updated:** 2026-09-26 · external Action green/red CI verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## Current — W4-D25-02 external Action path verified technically
+
+The independent [fixture repository](https://github.com/rakhargo/evergreen-check-smoke)
+ran `Fatihmaull/evergreen` pinned to main `2a4ab0a` with published CLI
+`0.1.0` against Testnet A. [Run 36254970083](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083)
+shows the green job succeeding with four healthy entries at 17,280 ledgers
+and the red job failing with Action exit 1 at 2,000,000. Both used the
+same declared keys; setup and npm resolution succeeded. The
+[dated record](evidence/2026-09-26-external-action-smoke/README.md)
+binds the fixture commit, workflow, keys and job links. This proves the
+separate-repository consumer path, while an unrelated human has not yet
+run it. `W4-D25-02` remains In progress until that stronger acceptance
+question is decided; `W4-D25-03` still needs tag `v1` and screenshots.
+No transaction or protected-contract write. Notion sync for
+`W4-D25-02` is pending.
 
 ---
 
@@ -252,6 +270,21 @@ inferred from this bounded snapshot. Published in [PR #201](https://github.com/F
   3 Blocked; no completion was inferred from an issue closure with narrower scope.
 
 Earlier sections below are dated publication/history snapshots, not current status.
+
+## Reference — D21 evidence/slack preparation, Sep17
+
+Working on D21-01/D21-02 from mainbd7f245. [Verified preparation](W3-D21-PREPARATION.md)
+records seven W3 integrity checks and comparable task-ID snapshots. A-save README
+checksum drift was traced to #166 acceptance prose; original README bytes restored
+against the unchanged manifest, acceptance preserved separately. No raw chain data,
+transaction or older manifest changed. A manifest-inventory gate/regression now
+protects these checks. Publish-dry-run's digest-only record is named accordingly.
+
+Snapshot counts:115 early Sep5,123 late Sep5,144 checkbox+one standing Sep10,
+148 checkbox+one standing now. Zero slack days are recorded as charged, but actual
+effort/slack consumption cannot be inferred from these counts. D21-01/02 In progress;
+all future-event, independent-test and Shared gate outcomes remain open. No watcher
+startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192); Notion D21-01/02 is In progress with the verified outcome. Full150-row presence check found no missing or phantom IDs. Fatih review/merge and final W3 gate remain pending.
 
 ## Earlier — Acceptance publication snapshot, Sep16
 

@@ -5,6 +5,16 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W4-D25-02 — Action tested from a separate repository
+
+[External workflow run and exact job outcomes](evidence/2026-09-26-external-action-smoke/README.md):
+the green job scanned four Testnet A entry types above the 17,280-ledger
+threshold and succeeded; the red job scanned the same declared scope at
+2,000,000 ledgers and failed at Action exit 1. The caller repository has
+no Evergreen workspace packages or secrets. This is an external repository
+operated by Rakha, not an unrelated human's account. Action tag `v1`
+and screenshot evidence remain `W4-D25-03`; no transaction was sent.
+
 ## W3-D18-03 — C expiry observed (2026-09-26 12:02 UTC)
 
 [Sealed raw C expiry observation, embedded live baseline, separate assessment and native terminal replay screenshot](evidence/2026-09-26-c-expiry-1202/README.md):
@@ -112,6 +122,13 @@ five-second cadence, and no drift figure is claimed. Both READMEs say so.
 [Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
 automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
 Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
+## Sep17 integrity reconciliation — accepted A-save proof
+
+The Sep14 scheduled-save bundle again verifies against its original manifest.
+The later #166 acceptance annotation is preserved [separately](evidence/2026-09-17-save-acceptance-reconciliation/README.md)
+so the sealed README retains its original bytes. Acceptance in #130 remains valid;
+no transaction or raw artifact was replaced. See the W3 closeout inventory report.
 
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 

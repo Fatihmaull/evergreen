@@ -1,0 +1,82 @@
+[
+  {
+    "ref": "b7056e6abb5e2ec63e02887832459958e2f03809",
+    "count": 123,
+    "commit": "2026-09-05T16:29:46+07:00 docs: flag W1-D4-13 as background-first, not queued [W1-D4-13] (#16)"
+  },
+  {
+    "ref": "55d841e61c9861ecffffb5f85b3555ef00ce9516",
+    "count": 123,
+    "commit": "2026-09-05T16:17:34+07:00 docs: record the inclusive TTL boundary and its off-by-one trap [W1-D4-13] (#15)"
+  },
+  {
+    "ref": "ce52c936b40247a0989c67b64cd3e2f14d552ee5",
+    "count": 120,
+    "commit": "2026-09-05T16:02:27+07:00 docs: tool-agnostic agent onboarding; AGENTS.md canonical [W1-D4-12] (#14)"
+  },
+  {
+    "ref": "71868d3c699779dc0e11d06fa547da84ab00b612",
+    "count": 119,
+    "commit": "2026-09-05T15:45:24+07:00 docs: register the dual-channel sync work in the backlog and slack ledger [W1-D4-11] (#13)"
+  },
+  {
+    "ref": "8ee962e344a7d05f4cb5fbac79ffcce00018f398",
+    "count": 118,
+    "commit": "2026-09-05T15:34:10+07:00 feat(docs): install the dual-channel sync workflow — repo canonical, Notion mirrored (#11)"
+  },
+  {
+    "ref": "eeae97b534318b69e11449aa3c278798e365ffbd",
+    "count": 117,
+    "commit": "2026-09-05T14:04:18+07:00 fix(docs): correct all 30 weekday labels; move the engine-live gate to Fri Sep 18 (#10)"
+  },
+  {
+    "ref": "a39bae8d7bdaecd91a04709254c57b082ffca745",
+    "count": 116,
+    "commit": "2026-09-05T13:57:10+07:00 docs: split the scope ledger by category, float F-01, measure Rakha's ramp [W1-D7] (#9)"
+  },
+  {
+    "ref": "3f8ea1401aebdd1e9681d340545535672001619e",
+    "count": 115,
+    "commit": "2026-09-05T13:50:11+07:00 docs: name W1-D6's scope growth and open the slack accounting [W1-D6] (#8)"
+  },
+  {
+    "ref": "625b7a5349eab38c669492100f9465ade9b05422",
+    "count": 114,
+    "commit": "2026-09-05T13:43:51+07:00 feat(repo): treat the shared code entry as a product requirement [W1-D4-10] (#7)"
+  },
+  {
+    "ref": "315fe251d4901f37fd461711808587301dc9284e",
+    "count": 111,
+    "commit": "2026-09-05T13:33:27+07:00 feat(repo): three mitigations for the Sep 20 decay-proof collision [W1-D4-07/08/09] (#6)"
+  },
+  {
+    "ref": "fb83d00e6463f64255754cd7d0713f0726efbd7e",
+    "count": 107,
+    "commit": "2026-09-05T13:09:09+07:00 feat(repo): deploy and calibrate guinea-pig B; arm the decay proof [W1-D4-04c] (#5)"
+  },
+  {
+    "ref": "7001e6117443d86a40ab742142427976e2b91dc5",
+    "count": 106,
+    "commit": "2026-09-05T12:47:38+07:00 docs(primer): confirm extendTTL is permissionless on testnet [W1-D4-06] (#4)"
+  },
+  {
+    "ref": "edc07473ed616f170523c0258bda82556b1b7c06",
+    "count": 106,
+    "commit": "2026-09-05T12:24:40+07:00 feat(repo): guinea-pig contract + deploy script [W1-D4-00] (#2)"
+  },
+  {
+    "ref": "ec9458e5b4fe30ccf41d0dde1636b489931306ff",
+    "count": 105,
+    "commit": "2026-09-05T06:00:03+07:00 chore(repo): close W1-D3 — stub forward refs, bump CI actions, disable AI attribution [W1-D3]"
+  },
+  {
+    "ref": "e2a3ae6d53eb03b79c95c2c702c2e6d55a704d8d",
+    "count": 105,
+    "commit": "2026-09-04T23:17:57+07:00 docs(status): record W1-D3 completion and the GitHub auth blocker [W1-D3]"
+  },
+  {
+    "ref": "f367bd23bba427360dfd88bdcf11030874111afb",
+    "count": 105,
+    "commit": "2026-09-04T23:08:39+07:00 docs: reconcile all context docs with permissionless extendTTL [W1-D2]"
+  }
+]
