@@ -104,21 +104,55 @@ Neither is a defect; both will be on screen.
   after the scan output. It is stripped from the committed copy above but appeared
   in the live run.
 
-## Consequence
+## Closed out — `0.1.1` published the same day, and beat 2 re-run against it
 
-**Publishing `0.1.1` is a prerequisite for recording beat 2, not a tidying task.**
-The alternative is recording a known-fabricated date into the artifact built to
+`0.1.1` reached the registry on **2026-09-27**; `dist-tags.latest` returns `0.1.1`
+and `versions` is `['0.1.0', '0.1.1']`. The exact beat 2 command was then re-run
+against the **published** build, unpinned `npx`, clean directory, isolated cache:
+[`beat2-published-0.1.1.txt`](beat2-published-0.1.1.txt).
+
+```
+  remaining:  none — EXPIRED (archived)            ← guinea-pig B
+  ends at:    not reported — RPC returns 0 for an archived entry, not the ledger it ended on
+  remaining:  none — EXPIRED (archived)            ← guinea-pig C
+  ends at:    not reported — RPC returns 0 for an archived entry, not the ledger it ended on
+  ⚠ shared:   this code entry is shared with 2 other contracts — they fail together
+Worst entry health: CRITICAL (warn below 120,960 · act below 17,280 ledgers) · 1 shared entry
+Scan is PARTIAL — 3 issue(s). Absence is not health.
+exit=1
+```
+
+| | fabricated dates in beat 2 |
+|---|---|
+| published `0.1.0` | **2** |
+| source `0.1.1` | **0** |
+| **published `0.1.1`** | **0** |
+
+**Beat 2 is recordable.** The shared-entry line is intact — the beat's whole
+purpose — `PARTIAL — 3 issue(s)` and exit 1 are as the script predicts, and A still
+carries a real future date (`~2026-12-21`), so the fix did not widen to live
+entries.
+
+## Consequence — resolved the same day
+
+**Publishing `0.1.1` was a prerequisite for recording beat 2, not a tidying task.**
+The alternative was recording a known-fabricated date into the artifact built to
 make everything else reviewable, on the one defect that contradicts the product's
 own argument.
 
-The publish is Rakha's act — `W4-D27-04`,
-[#264](https://github.com/Fatihmaull/evergreen/issues/264) — and his preflight
-records `npm whoami` returning `E401`, so a login and a 2FA prompt come first.
+It was published by Rakha on 2026-09-27 (`W4-D27-04`,
+[#264](https://github.com/Fatihmaull/evergreen/issues/264)) and verified above
+against the registry rather than against the repository's own `package.json` — the
+repo had said `0.1.1` since #265 while the registry still served `0.1.0`.
 
-🔴 **Coupled to the disclosure text.** `docs/SUBMISSION-WALKTHROUGH.md` step 3
-currently tells the assessor that the published `0.1.0` prints this date and that B
-and C are archived and reproducible. **That is true today and false the moment
-`0.1.1` publishes.** The published version and the disclosure must be checked
-together on the Oct 1 pass: a disclosure of a defect that has since been fixed
-reads worse than none, because it invites the reader to test something that now
-works and wonder what else is stale.
+**The coupled disclosure moved in the same commit** (`B-D29-04`, #269):
+`SUBMISSION-WALKTHROUGH.md` step 3 now reads *found, fixed and shipped* instead of
+*the published build prints this and you can reproduce it*, and beat 2's
+do-not-record marker became **cleared to record**. Landing the version without the
+prose, or the prose without the version, was the failure that row existed to
+prevent — a disclosure of a defect since fixed reads worse than none, because it
+invites the reader to test something that now works and wonder what else is stale.
+
+[#235](https://github.com/Fatihmaull/evergreen/issues/235) **stays open**: the
+renderer is fixed, core still emits `status: 'known'` for an archived entry, and
+anything reading `--json` still receives it.
