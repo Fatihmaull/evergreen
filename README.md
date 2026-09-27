@@ -125,10 +125,18 @@ everything depends on is also the entry that costs.
 ### Other things worth knowing
 
 ```bash
-pnpm cli scan <id> --json        # complete record, including every caveat
+pnpm cli scan <id> --json        # complete machine-readable record
 pnpm cli scan <id> --optimize    # storage advice, with its evidence and limits
 pnpm cli extend --help           # manual extendTTL — simulates unless you pass --submit
 ```
+
+> **One known limit on `--json`.** For an entry that is already **archived**, the
+> JSON still reports `"status": "known"` with `endsAtLedger: 0` and a negative
+> `remainingLedgers`, and `issues` does not flag it. Soroban's RPC keeps returning an
+> archived entry with `liveUntilLedgerSeq: 0` and core passes that through. The
+> human-readable output was fixed in `0.1.1`; the JSON is tracked in
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235). Read `endBehavior` and
+> the health verdict for an archived entry, not the TTL numbers.
 
 Exit codes are meaningful: `0` healthy, `1` low TTL observed, `2` error, `3` the
 scan came back incomplete. **A clean exit means "everything I was asked to check

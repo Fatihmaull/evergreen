@@ -9,6 +9,18 @@ the Action against a real workflow run. Timed at 4m20s.
 One value is still a measurement rather than a slot: the cron delivery share in
 beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
 
+> 🔴 **After recording: the repository's gate clears on the LINK, not on the file.**
+> `check:sow` reads `docs/EVIDENCE.md` and nothing else, so record → edit → upload →
+> **link** is four steps and only the fourth one counts. From Tue 2026-09-29 a missing
+> link blocks every merge in the repo.
+>
+> **The URL must be on one of five hosts** or the gate stays red with a good link in
+> place — `youtu.be`, `youtube.com`, `vimeo.com`, `drive.google.com`, `loom.com`
+> (`check-sow-completeness.mjs:250`). **And it must open with no account**, because
+> the assessor arrives from outside. A Drive link defaults to restricted: it passes
+> the gate and fails Kenny. **Unlisted YouTube satisfies both.** Open it in a private
+> window before calling it done.
+
 **Fill the slots; do not rewrite the beats.** The beats encode decisions that were
 expensive to reach, and several of them are about what we must *not* claim.
 
@@ -71,8 +83,13 @@ npx @evergreen-stellar/cli scan <A> <B> <C>
 > B and C now read `remaining: none` and `ends at: not reported`. **Narrate
 > `Worst entry health: CRITICAL` as coming from B and C being archived, not from A.**
 >
-> Two cosmetic things that will be on screen: the coverage sentence prints once per
-> contract (three identical lines), and `npx` may emit an npm upgrade notice.
+> **Two cosmetic things that will be on screen — neither is a fault, do not stop the
+> take.** The coverage notice appears **six times in one scan**: three identical
+> *"No data keys were supplied…"* lines in the header, and three `! coverage-limited`
+> lines at the bottom — one per contract, both times. Counted in the committed output.
+> **Narrate it rather than talking over it:** *"it says that once per contract,
+> because coverage is per contract"* turns the noise into the point of the beat.
+> `npx` may also emit an npm upgrade notice after the output.
 
 > ✅ **The install line itself works — verified 2026-09-25.**
 > `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and
