@@ -23,8 +23,9 @@ The normal publish dry-run correctly refused the non-main branch; no live
 publish will bypass that guard. Fatih must review/merge the source PR, and the
 final main artifact needs the normal full gate and clean-install verification
 again. Final manual `pnpm publish` follows only
-from the verified merged main. The current npm publisher session returns E401,
-so user login/2FA is still needed at publish time. No registry write, Testnet
+from the verified merged main. After the user refreshed login on 2026-09-27,
+`npm whoami` returned `rakhargo`; write authorization and any publish-time 2FA
+challenge remain untested. No registry write, Testnet
 transaction or protected-contract write is claimed. Notion sync pending.
 
 ---
