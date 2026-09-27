@@ -233,3 +233,49 @@ describe('W2-D10-03 — an absent entry names both causes', () => {
     expect(out).not.toContain('RestoreFootprintOp');
   });
 });
+
+/**
+ * #235 — an archived entry must not be given numbers nobody measured.
+ *
+ * RPC does not stop returning an entry once it is archived: it returns it with
+ * `liveUntilLedgerSeq: 0`. Core passes that through, so `endsAtLedger` is 0 and
+ * `remainingLedgers` is `0 - observedLedger`. The renderer used to print all
+ * three, including a wall-clock date projected from ledger 0 — which lands in the
+ * PAST. Measured on guinea-pig C on 2026-09-26 with the published 0.1.0:
+ * `expires ~: 2025-12-18T02:06:28.760Z`, nine months before this project began.
+ *
+ * There was no archived fixture anywhere in the suite before this, which is why
+ * it shipped. Every other display test uses a live entry.
+ */
+describe('display — an archived entry gets no fabricated numbers (#235)', () => {
+  const archived = () =>
+    scan({
+      K: entry({
+        endBehavior: 'archived',
+        observedAtLedger: 4_884_961,
+        ttl: { status: 'known', endsAtLedger: 0, remainingLedgers: -4_884_961 },
+      }),
+    });
+
+  it('does NOT print a projected expiry date', () => {
+    expect(fmt(archived())).not.toContain('expires ~');
+  });
+
+  it('does not print a negative remaining count', () => {
+    const out = fmt(archived());
+    expect(out).not.toContain('-4,884,961');
+    expect(out).toContain('remaining:  none');
+  });
+
+  it('does not present ledger 0 as the ledger it ended on', () => {
+    expect(fmt(archived())).not.toContain('ends at:    ledger 0');
+  });
+
+  it('still says plainly that it is expired and archived', () => {
+    expect(fmt(archived())).toContain('EXPIRED (archived)');
+  });
+
+  it('still projects a date for a LIVE entry — the fix is narrow', () => {
+    expect(fmt(scan({ K: entry({ remaining: 500_000 }) }))).toContain('expires ~');
+  });
+});

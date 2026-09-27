@@ -91,6 +91,28 @@ functions, 94.57% of lines.
 > We then checked it against what the registry actually serves rather than against
 > our own build — clean directory, no workspace above it, isolated cache. One
 > declared dependency. [The record](evidence/2026-09-25-published-package-verification/README.md).
+>
+> ⚠️ **One known defect in the published `0.1.0`, and you can reach it from here.**
+> If you scan a contract that is **already archived** — guinea-pig B or C, both of
+> which appear in step 8 — `0.1.0` prints placeholder numbers as though they were
+> measurements: a negative remaining count, `ends at: ledger 0`, and a projected
+> expiry date **in the past**. The verdict beside them is correct
+> (*"Already archived. Restore it with RestoreFootprintOp"*), which is what makes
+> the numbers worse rather than better.
+>
+> The cause is that Soroban's RPC keeps returning an archived entry with
+> `liveUntilLedgerSeq: 0`, and the renderer dressed that placeholder as a reading.
+> **It is fixed in the repository** — an archived entry now prints
+> `remaining: none` and says the end ledger was not reported — and the fix is
+> covered by tests that fail if it is reverted. **That fix is not in `0.1.0`**; it
+> ships in the next patch release. Tracked as
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235).
+>
+> We are telling you at the step where you would hit it, because it contradicts the
+> thing this project argues for everywhere else: the tool reports
+> `sharing undetermined` rather than guessing, and shows rent as *unavailable*
+> rather than `0`. A fabricated date is that same failure, and we would rather name
+> it than have you find it.
 
 ---
 
@@ -153,6 +175,30 @@ Guinea-pig B was watched from health into expiry across four checkpoints:
 nobody touched. At the first three the engine detected it below threshold and
 **refused to extend**, because B was the proof and extending it would have
 destroyed the only evidence in the project that cannot be recreated.
+
+### A second contract ran the same course — and we missed one of its readings
+
+**Guinea-pig C** crossed its threshold on 25 September and expired on the 26th.
+**We missed the first of its four scheduled captures**, the one at the crossing
+itself. C therefore has **three readings and a gap**, not four:
+
+| | guinea-pig B | guinea-pig C |
+|---|---|---|
+| at the crossing | 17,279 | ⬜ **missed** |
+| +12 hours | 8,641 | **8,636** |
+| +18 hours | 4,319 | **4,329** |
+| expiry | ledger 4,793,687 | ledger 4,880,115 |
+
+**Read across the rows rather than down the gap, because that is where the
+strength is.** Two contracts nobody touched, observed independently, came out
+**five ledgers apart at twelve hours and ten apart at eighteen.** A fourth point
+on one curve would have been one more dot on a line we had already drawn; the same
+decay reproduced on a second subject is a different and better kind of evidence,
+and reproducing it is what C existed for.
+
+We are naming the missed capture because it is ours to name — the scheduled
+operator was not at the machine at 12:00 UTC on the Friday. It is recorded in the
+capture bundles rather than smoothed over.
 
 > **One qualification on Deliverable 2, in our words.** §4.1 describes a *capped
 > policy-signer*. **That capability is not delivered and we are not claiming it.**

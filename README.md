@@ -37,6 +37,19 @@ The engine's signing key is a hot key on **your** server, paying from **your** f
 npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 ```
 
+> **Keep the leading `@`.** Drop it and npm reads `evergreen-stellar/cli` as a
+> GitHub `owner/repo` shorthand instead of a scoped package, and npm 12 refuses
+> the Git transport with an error that does not explain itself:
+>
+> ```
+> npm error code EALLOWGIT
+> npm error Fetching packages of type "git" have been disabled
+> npm error Refusing to fetch "github:evergreen-stellar/cli"
+> ```
+>
+> **`--allow-git` is not the fix** — it would go and fetch the wrong thing. The
+> `@` is the fix. Reported by an outside tester on Windows ([#242](https://github.com/Fatihmaull/evergreen/issues/242)).
+
 To work from source, use Node 24 (`.nvmrc`) and pnpm 11:
 
 ```bash
