@@ -2,22 +2,26 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · CLI 0.1.0 release notes, engine and Action guides merged; Action v1 tag verified; C Shared acceptance remains
+**Last updated:** 2026-09-27 · CLI 0.1.0 GitHub Release published; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
-**Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
-**Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+**Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
+**Health:** 🟡 **five calendar days to the 2026-10-02 deadline; the 3–5 minute demo video is still the missing SOW evidence type.** ✅ npm CLI `0.1.0` and its GitHub Release are public · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 Stage 2 policy scoping documented as Partial; shared code entry expires after submission on 2026-10-20.
 
 ---
 
-## Current — W4-D27-03 CLI release notes under review
+## Current — W4-D27-03 CLI GitHub Release published
 
-The npm CLI `0.1.0` is already public. A separate CLI-specific Git tag and
-GitHub Release have not yet been published; the Action's `v1` tag identifies
-a different surface. Rakha is preparing [release notes](releases/cli-v0.1.0.md)
-for review, pinned to the npm publication source `main@3d2ffa5` and naming
-the open archived-TTL display defect [#235](https://github.com/Fatihmaull/evergreen/issues/235).
-Do not create a release from a later `main` and imply it matches the immutable
-npm tarball. Notion sync for `W4-D27-03` is pending.
+The [GitHub Release `cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0)
+was published 2026-09-27 08:53:54 UTC after #259 merged. The remote annotated
+tag `c6180613` peels to `3d2ffa57fd081a973deac625f49aa1457f0dd74e`,
+the source used for npm `0.1.0`; it is distinct from the Action's `v1` tag.
+The public body follows the [reviewed notes](releases/cli-v0.1.0.md), with
+release-medium link/heading adjustments, and discloses the archived-TTL
+display defect [#235](https://github.com/Fatihmaull/evergreen/issues/235).
+The source-only presentation fix in #262 is **not** in npm `0.1.0`; no new npm
+version was published. The release is public, not a draft or prerelease, and
+readback was verified. W4-D27-03 stays In progress until this tracking PR is
+reviewed/merged; Notion sync remains pending.
 
 ## Current — W4-D26-02 engine/Action guides drafted
 
