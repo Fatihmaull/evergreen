@@ -107,9 +107,27 @@ functions, 94.57% of lines.
 > argues for everywhere else — the tool reports `sharing undetermined` rather than
 > guessing, and rent as *unavailable* rather than `0` — so it was worth finding
 > before you did. It was found by running the demo's own scan against the archived
-> contracts rather than by reading the code. Tracked at
-> [#235](https://github.com/Fatihmaull/evergreen/issues/235), which stays open for the
-> deeper model-level fix.
+> contracts rather than by reading the code.
+>
+> **What the fix covers, precisely, because the boundary matters more than the
+> headline.** The human-readable output no longer prints a derived date, a negative
+> remaining count, or `ledger 0` for an archived entry. **The `--json` output still
+> does.** Adding `--json` to the command above, against B or C, returns:
+>
+> ```json
+> "ttl": { "status": "known", "endsAtLedger": 0, "remainingLedgers": -4896785 }
+> ```
+>
+> `status: "known"` still asserts a TTL the tool does not know, and the `issues` array
+> does not mention it. That is the same limit one layer down, it is
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235), and it stays open.
+>
+> **We fixed the renderer and not the model on purpose.** Core's compiled output is
+> inside the runtime fingerprint that every sealed capture bundle pins, and changing it
+> days after the guinea-pig observations — which cannot be retaken — would buy a
+> tidier JSON field at the cost of the evidence those bundles carry. The right fix is a
+> distinct TTL status for an archived entry, and it belongs after submission rather
+> than in the last week of it.
 
 ---
 

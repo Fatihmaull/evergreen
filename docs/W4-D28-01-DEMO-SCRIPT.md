@@ -83,8 +83,13 @@ npx @evergreen-stellar/cli scan <A> <B> <C>
 > B and C now read `remaining: none` and `ends at: not reported`. **Narrate
 > `Worst entry health: CRITICAL` as coming from B and C being archived, not from A.**
 >
-> Two cosmetic things that will be on screen: the coverage sentence prints once per
-> contract (three identical lines), and `npx` may emit an npm upgrade notice.
+> **Two cosmetic things that will be on screen — neither is a fault, do not stop the
+> take.** The coverage notice appears **six times in one scan**: three identical
+> *"No data keys were supplied…"* lines in the header, and three `! coverage-limited`
+> lines at the bottom — one per contract, both times. Counted in the committed output.
+> **Narrate it rather than talking over it:** *"it says that once per contract,
+> because coverage is per contract"* turns the noise into the point of the beat.
+> `npx` may also emit an npm upgrade notice after the output.
 
 > ✅ **The install line itself works — verified 2026-09-25.**
 > `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and

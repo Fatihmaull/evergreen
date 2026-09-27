@@ -486,8 +486,35 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
 | Dashboard hosting | [evergreen-stellar.pages.dev](https://evergreen-stellar.pages.dev) | ✅ W1 placeholder; functional dashboard remains W4 |
-| Demo video (3–5 min) | | ⬜ |
+| Demo video (3–5 min) | | ⬜ **The link goes HERE, and the link is what clears `check:sow`** — see the constraints directly below this table |
 | Docs site / README | | ⬜ |
+
+> ### 🔴 Two constraints on the demo video URL that live in a gate script and nowhere else
+>
+> Read from `scripts/check-sow-completeness.mjs:250`. **The only way to learn them
+> otherwise is to fail the gate**, which is a poor way to find out on Oct 1.
+>
+> **1. The URL must be on one of five hosts, or the gate stays red with a perfectly
+> good link in place:** `youtu.be`, `youtube.com`, `vimeo.com`, `drive.google.com`,
+> `loom.com`. A working Dropbox, WeTransfer or self-hosted link does not match the
+> pattern and does not count.
+>
+> **2. It must open with no account.** The assessor arrives from outside the project
+> with nothing signed in. **`drive.google.com` is the trap: it is on the allow-list
+> and defaults to restricted**, so it is the one host that passes the machine check
+> and fails the human one.
+>
+> **Recommendation: unlisted YouTube.** It is the only option that satisfies both
+> sides with no sharing setting to get wrong — on the allow-list, and public without
+> sign-in by default rather than by configuration.
+>
+> **Verify before committing the link: open it in a private window.** Not the same
+> browser you uploaded from.
+>
+> And the timing, because it is the part that surprises people: `check:sow` reads
+> *this file* and nothing else. **Record → edit → upload → link is four steps and
+> only the fourth one moves the gate.** A video finished Monday evening and linked
+> Tuesday morning still meets a blocked repository.
 
 ## Weekly evidence snapshots
 
