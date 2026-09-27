@@ -15,9 +15,14 @@ Fatih merged the narrow archived-entry display fix in #262 on main, leaving
 core and the sealed B/C runtime unchanged. npm `0.1.0` remains immutable and
 still contains the fabricated archived ledger/date output. Rakha authorized a
 separately verified npm `0.1.1` patch and registered [#264](https://github.com/Fatihmaull/evergreen/issues/264).
-The candidate only bumps the publishable CLI manifest; it must pass full gate,
-pack inspection, clean install and read-only archived/live Testnet scans before
-Fatih reviews/merges its source PR. Final manual `pnpm publish` follows only
+The candidate only bumps the publishable CLI manifest. On its isolated branch,
+full `pnpm check` passed (62 Vitest files, 816 tests), as did the branch-only
+`pnpm publish --dry-run --no-git-checks`, tarball inspection, clean external
+install and read-only archived/live Testnet scans ([candidate evidence](evidence/2026-09-27-cli-0.1.1-candidate/README.md)).
+The normal publish dry-run correctly refused the non-main branch; no live
+publish will bypass that guard. Fatih must review/merge the source PR, and the
+final main artifact needs the normal full gate and clean-install verification
+again. Final manual `pnpm publish` follows only
 from the verified merged main. The current npm publisher session returns E401,
 so user login/2FA is still needed at publish time. No registry write, Testnet
 transaction or protected-contract write is claimed. Notion sync pending.
