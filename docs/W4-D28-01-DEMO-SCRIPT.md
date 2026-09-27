@@ -9,6 +9,18 @@ the Action against a real workflow run. Timed at 4m20s.
 One value is still a measurement rather than a slot: the cron delivery share in
 beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
 
+> 🔴 **After recording: the repository's gate clears on the LINK, not on the file.**
+> `check:sow` reads `docs/EVIDENCE.md` and nothing else, so record → edit → upload →
+> **link** is four steps and only the fourth one counts. From Tue 2026-09-29 a missing
+> link blocks every merge in the repo.
+>
+> **The URL must be on one of five hosts** or the gate stays red with a good link in
+> place — `youtu.be`, `youtube.com`, `vimeo.com`, `drive.google.com`, `loom.com`
+> (`check-sow-completeness.mjs:250`). **And it must open with no account**, because
+> the assessor arrives from outside. A Drive link defaults to restricted: it passes
+> the gate and fails Kenny. **Unlisted YouTube satisfies both.** Open it in a private
+> window before calling it done.
+
 **Fill the slots; do not rewrite the beats.** The beats encode decisions that were
 expensive to reach, and several of them are about what we must *not* claim.
 
