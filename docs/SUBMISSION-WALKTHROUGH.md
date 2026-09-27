@@ -92,27 +92,24 @@ functions, 94.57% of lines.
 > our own build — clean directory, no workspace above it, isolated cache. One
 > declared dependency. [The record](evidence/2026-09-25-published-package-verification/README.md).
 >
-> ⚠️ **One known defect in the published `0.1.0`, and you can reach it from here.**
-> If you scan a contract that is **already archived** — guinea-pig B or C, both of
-> which appear in step 8 — `0.1.0` prints placeholder numbers as though they were
-> measurements: a negative remaining count, `ends at: ledger 0`, and a projected
-> expiry date **in the past**. The verdict beside them is correct
-> (*"Already archived. Restore it with RestoreFootprintOp"*), which is what makes
-> the numbers worse rather than better.
+> ✅ **One defect we found, fixed and shipped — worth a moment because of how it was
+> found.** Until 2026-09-27 the published CLI printed a *projected expiry date* for an
+> entry that was already archived — a date in the past, stated confidently, right
+> beneath a correct verdict. Both guinea-pig B and C are archived, so it was
+> reachable from the very scan in this step.
 >
 > The cause is that Soroban's RPC keeps returning an archived entry with
 > `liveUntilLedgerSeq: 0`, and the renderer dressed that placeholder as a reading.
-> **It is fixed in the repository** — an archived entry now prints
-> `remaining: none` and says the end ledger was not reported — and the fix is
-> covered by tests that fail if it is reverted. **That fix is not in `0.1.0`**; it
-> ships in the next patch release. Tracked as
-> [#235](https://github.com/Fatihmaull/evergreen/issues/235).
+> **`0.1.1` prints `remaining: none` and says the end ledger was not reported**, and
+> the fix is covered by tests that fail if it is reverted.
 >
-> We are telling you at the step where you would hit it, because it contradicts the
-> thing this project argues for everywhere else: the tool reports
-> `sharing undetermined` rather than guessing, and shows rent as *unavailable*
-> rather than `0`. A fabricated date is that same failure, and we would rather name
-> it than have you find it.
+> We are mentioning a fixed defect on purpose. It contradicted the thing this project
+> argues for everywhere else — the tool reports `sharing undetermined` rather than
+> guessing, and rent as *unavailable* rather than `0` — so it was worth finding
+> before you did. It was found by running the demo's own scan against the archived
+> contracts rather than by reading the code. Tracked at
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235), which stays open for the
+> deeper model-level fix.
 
 ---
 
