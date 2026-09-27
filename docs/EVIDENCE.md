@@ -117,6 +117,12 @@ confirmation.
 sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
 five-second cadence, and no drift figure is claimed. Both READMEs say so.
 
+## W3-D18-01 — Sep18 actual observer startup
+
+[Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
+automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
+Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
 ## Sep17 integrity reconciliation — accepted A-save proof
 
 The Sep14 scheduled-save bundle again verifies against its original manifest.
