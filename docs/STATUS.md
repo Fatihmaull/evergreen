@@ -2,10 +2,25 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · CLI 0.1.0 release notes, engine and Action guides merged; Action v1 tag verified; C Shared acceptance remains
+**Last updated:** 2026-09-27 · CLI 0.1.1 patch candidate started; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
+
+---
+
+## Current — W4-D27-04 npm CLI 0.1.1 patch candidate in progress
+
+Fatih merged the narrow archived-entry display fix in #262 on main, leaving
+core and the sealed B/C runtime unchanged. npm `0.1.0` remains immutable and
+still contains the fabricated archived ledger/date output. Rakha authorized a
+separately verified npm `0.1.1` patch and registered [#264](https://github.com/Fatihmaull/evergreen/issues/264).
+The candidate only bumps the publishable CLI manifest; it must pass full gate,
+pack inspection, clean install and read-only archived/live Testnet scans before
+Fatih reviews/merges its source PR. Final manual `pnpm publish` follows only
+from the verified merged main. The current npm publisher session returns E401,
+so user login/2FA is still needed at publish time. No registry write, Testnet
+transaction or protected-contract write is claimed. Notion sync pending.
 
 ---
 
