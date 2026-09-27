@@ -1,0 +1,13 @@
+{
+  "originalReadmeCommit": "fd31dbf",
+  "laterAnnotationCommit": "b8afd44 (#166)",
+  "originalReadmeSha256": "4df26cfc4259280bfe9038b5f7ce6a4a033af3317afb5f25ead8bf083caf84ad",
+  "annotatedReadmeSha256": "2256fb629e4d9c978c29b78c4a0bbc5a0a497d756a861acb30f8cd9911da29e3",
+  "restoredReadmeSha256": "4df26cfc4259280bfe9038b5f7ce6a4a033af3317afb5f25ead8bf083caf84ad",
+  "unchangedManifest": true,
+  "otherManifestFilesMatchedBeforeFix": 57,
+  "changedPathsSinceOriginalBundle": [
+    "docs/evidence/2026-09-14-scheduled-a-save/README.md"
+  ],
+  "acceptancePreservedAt": "docs/evidence/2026-09-17-save-acceptance-reconciliation/README.md"
+}
