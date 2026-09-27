@@ -35,7 +35,7 @@ records themselves.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 1 | Public repository | **[github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen)** — MIT, CI green | — |
-| 2 | Published npm package | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Registry integrity `sha512-nh2/vlgolMDyEcM7tSrQkPAysIA4UsXeX0Vxx9hDqjA/KHaMhTsaViBsAC12+0HQVYNgcvJ1IRuvf0Pt4qFzJg==` · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) · [source-matched GitHub Release](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) (known #235 limitation disclosed) |
+| 2 | Published npm package | **[`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1)** | Registry integrity `sha512-ZprmdYGOkChI8q00ejlNIIZXkdnR2dRFsKgOH1V2QTdRDNckv8oCDZMig4KrAvHaTWzFeyLrXYqIPuHFJqc1WA==` · [publication readback and clean install](evidence/2026-09-27-cli-0.1.1-published/README.md) · the [GitHub Release `cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) is an earlier, separately source-matched version |
 | 3 | CLI screenshots showing TTL, archive prediction and cost | **[Four entry types](evidence/2026-09-14-d1-capture/capture-1-four-entry-types/1.png)** · **[JSON output](evidence/2026-09-14-d1-capture/capture-2-json/1.png)** · **[Storage advice](evidence/2026-09-14-d1-capture/capture-3-storage-advice/1.png)** · **[Blast radius](evidence/2026-09-14-d1-capture/capture-4-blast-radius/1.png)** · **[Error handling](evidence/2026-09-14-d1-capture/capture-5-error-handling/1.png)** | [what each shows](evidence/2026-09-14-d1-capture/README.md) |
 | 4 | Test coverage report | **[coverage report](evidence/2026-09-10-coverage/coverage-report.txt)** — 93.24% statements, 85.29% branches, 97.64% functions, 94.57% lines | [how it was produced](evidence/2026-09-10-coverage/README.md) |
 
@@ -94,7 +94,7 @@ what not to touch is the one worth putting near production.
 | 10 | Published `evergreen-check` GitHub Action | **[`Fatihmaull/evergreen@v1`](https://github.com/Fatihmaull/evergreen/tree/v1)** · [external green/red run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415) · [screenshots](evidence/2026-09-26-action-v1-tag/README.md) | [`action.yml`](../action.yml) · [how to use it](../README.md#use-it-in-ci) · [first internal run and the defect it found](evidence/2026-09-25-published-package-verification/README.md) |
 | 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
-| 13 | Links to the published npm packages | **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0)** | Same verified registry artifact as item 2 |
+| 13 | Links to the published npm packages | **[`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1)** | Same verified registry artifact as item 2 |
 
 **On item 11, plainly:** the demo script is written and timed, and its install
 line now resolves against the published package. Recording/upload remains.

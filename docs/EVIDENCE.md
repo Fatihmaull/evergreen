@@ -5,6 +5,16 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W4-D27-04 — npm CLI 0.1.1 published
+
+[`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1)
+was published manually from merged `main@9a67696` on 2026-09-27. The
+[publication readback](evidence/2026-09-27-cli-0.1.1-published/README.md)
+records the registry integrity, byte-identical source and registry tarballs,
+fresh registry install, and read-only Testnet archived/live control scans.
+This fixes the human CLI presentation defect in npm `0.1.0`; structured core
+issue #235 remains open. No chain transaction or protected-contract write.
+
 ## W4-D25-03 — Action tag v1 and green/red screenshots
 
 [Public tag readback, external @v1 run and original browser screenshots](evidence/2026-09-26-action-v1-tag/README.md):
@@ -480,7 +490,8 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | Artifact | URL | Published |
 |---|---|---|
 | GitHub repo | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ Public |
-| npm — `cli` | [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli) | ✅ 2026-09-24 |
+| npm — `cli` current | [`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1) | ✅ 2026-09-27; [publication readback](evidence/2026-09-27-cli-0.1.1-published/README.md) |
+| npm — `cli` original | [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0) | ✅ 2026-09-24; immutable historical version |
 | GitHub CLI release | [`cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) | ✅ 2026-09-27; annotated tag peels to published npm source `3d2ffa5`, known #235 limitation disclosed; no npm republish |
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |

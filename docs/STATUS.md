@@ -2,30 +2,30 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-27 · CLI 0.1.0 GitHub Release published; 0.1.1 patch candidate open; C Shared acceptance remains
+**Last updated:** 2026-09-27 · npm CLI 0.1.1 published and registry-verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
-**Health:** 🟡 **five calendar days to the 2026-10-02 deadline; the 3–5 minute demo video is still the missing SOW evidence type.** ✅ npm CLI `0.1.0` and its GitHub Release are public · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 Stage 2 policy scoping documented as Partial; shared code entry expires after submission on 2026-10-20.
+**Health:** 🟡 **five calendar days to the 2026-10-02 deadline; the 3–5 minute demo video is still the missing SOW evidence type.** ✅ npm CLI `0.1.1` public; historical GitHub Release `cli-v0.1.0` remains distinct · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 Stage 2 policy scoping documented as Partial; shared code entry expires after submission on 2026-10-20.
 
 ---
 
-## Current — W4-D27-04 npm CLI 0.1.1 patch candidate in progress
+## Current — W4-D27-04 npm CLI 0.1.1 published; closeout review pending
 
-Fatih merged the narrow archived-entry display fix in #262 on main, leaving
-core and the sealed B/C runtime unchanged. npm `0.1.0` remains immutable and
-still contains the fabricated archived ledger/date output. Rakha authorized a
-separately verified npm `0.1.1` patch and registered [#264](https://github.com/Fatihmaull/evergreen/issues/264).
-The candidate only bumps the publishable CLI manifest. On its isolated branch,
-full `pnpm check` passed (62 Vitest files, 816 tests), as did the branch-only
-`pnpm publish --dry-run --no-git-checks`, tarball inspection, clean external
-install and read-only archived/live Testnet scans ([candidate evidence](evidence/2026-09-27-cli-0.1.1-candidate/README.md)).
-The normal publish dry-run correctly refused the non-main branch; no live
-publish will bypass that guard. Fatih must review/merge the source PR, and the
-final main artifact needs the normal full gate and clean-install verification
-again. Final manual `pnpm publish` follows only
-from the verified merged main. The current npm publisher session returns E401,
-so user login/2FA is still needed at publish time. No registry write, Testnet
-transaction or protected-contract write is claimed. Notion sync pending.
+Fatih merged the narrow archived-entry display fix in #262 and the version
+candidate in #265. Rakha published only `@evergreen-stellar/cli@0.1.1`
+manually from clean `main@9a67696` on 2026-09-27 after full `pnpm check`,
+normal dry-run, pack and external-install checks. Two earlier web-auth
+attempts timed out with no registry write; the third completed after browser
+authorization. Public registry readback gives `latest=0.1.1`, and its tarball
+SHA-256 matches the final-main pack byte-for-byte. A fresh install from the
+registry reproduced C's archived human output without a fabricated end
+ledger/date (exit 1) and A's live projection (exit 0), using read-only Testnet
+scans ([publication evidence](evidence/2026-09-27-cli-0.1.1-published/README.md)).
+The immutable npm `0.1.0` and its source-matched GitHub Release remain
+historical artifacts; no `0.1.1` GitHub Release is claimed. Core/shared types
+were not separately published, no Testnet transaction or B/C/shared write ran,
+and structured core issue #235 remains open. Closeout repo review/merge and
+Notion mirror sync remain pending.
 
 ---
 
