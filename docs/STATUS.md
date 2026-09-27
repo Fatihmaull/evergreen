@@ -2,13 +2,25 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-26 · Action v1 tag and external screenshots verified; C Shared acceptance remains
+**Last updated:** 2026-09-26 · engine and Action guides merged; Action v1 tag verified; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
+## Current — W4-D26-02 engine/Action guides drafted
+
+Rakha drafted the [engine](ENGINE-SETUP.md) and [Action](ACTION-GUIDE.md)
+guides against the shipped entry points and the external `@v1` Action run.
+The repository cron is decide-only: it does not receive a
+signer secret or call `engine:execute`. The latter is a bounded local operator
+path with an attempt journal, not a turnkey unattended live scheduler. A guide
+can explain those boundaries but cannot certify READY outcome 4 without a
+separate operator trying a non-guinea-pig contract. Local full `pnpm check`
+passed; review/merge remains. Notion sync for `W4-D26-02` is pending.
+
+---
 ## Current — W4-D25-03 public Action tag verified
 
 The remote annotated tag `v1` peels to the same Action commit `2a4ab0a`
@@ -20,6 +32,7 @@ at threshold exit 1, both on Testnet A with declared keys and CLI 0.1.0.
 are recorded. `W4-D25-03` remains In progress pending Fatih's review
 and merge of this evidence. The separate-repo test's unrelated-human
 caveat stays with `W4-D25-02`. Notion sync for `W4-D25-03` is pending.
+
 ## Current — W4-D25-02 external Action path verified technically
 
 The independent [fixture repository](https://github.com/rakhargo/evergreen-check-smoke)

@@ -13,6 +13,7 @@ The separate fixture repo's tagged run shows green success at 17,280
 ledgers and red failure at exit 1 at 2,000,000 against the same Testnet A
 scope. Both screenshots are actual Brave/Spectacle captures. This is an
 Action tag, separate from the npm CLI GitHub Release. No transaction.
+
 ## W4-D25-02 — Action tested from a separate repository
 
 [External workflow run and exact job outcomes](evidence/2026-09-26-external-action-smoke/README.md):
