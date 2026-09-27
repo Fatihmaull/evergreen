@@ -2,25 +2,29 @@
 
 **This is the first file to read and the last file to write, every session.** BACKLOG.md is the plan; this is reality.
 
-**Last updated:** 2026-09-27 · W4-D26-05 Neon project preflight blocked; C Shared acceptance remains
+**Last updated:** 2026-09-27 · W4-D26-05 Neon defaults measured, usage pending; C Shared acceptance remains
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W3 — Stage 1 notifications**; W2 closed with explicit carry-over. W1 has 50 completed checkbox tasks and one standing obligation.
 **Health:** 🟡 **eight days out, one SOW evidence type does not exist** — demo video · ✅ **npm package and npm links live** · ✅ **policy-signer guide present while the named capability remains Partial** · ✅ **live dashboard merged (#234)** · ✅ **GitHub Action present** · ✅ **original success/critical alert screenshots captured** · ✅ **B captured and expired; assessor merged (#216)** · 🔴 **C: alert threshold Fri 2026-09-25, EXPIRY Sat 2026-09-26 — the last unrepeatable event** · 🟡 shared code entry expires 2026-10-20 (`W3-D18-02d`), i.e. after submission
 
 ---
 
-## Current — W4-D26-05 Neon measurement awaits project access/ordering decision
+## Current — W4-D26-05 Neon defaults measured; usage/decision pending
 
-Rakha confirmed no Neon account or Evergreen project exists yet and will
-arrange one later. Read-only preflight found no project access in the operator
-environment; the console requires login. ADR-003 explicitly records no
-provisioned or measured project. Public provider limits cannot
-substitute for the actual Evergreen compute min/max CU, scale-to-zero, active
-time, average use, quota and reset readback. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260)
-records the measurement-before-provisioning ambiguity and asks Fatih to
-reconcile it without starting migrations. No account, project, compute,
-database schema or Testnet transaction was created. W4-D26-05
-is Blocked; Notion mirror sync is pending.
+Rakha created a personal Free-plan `Evergreen Preflight` project in the AWS
+Singapore region with one `production` branch. Read-only Neon Console readback
+shows the primary compute autoscaling from **0.25 to 2 CU**, with scale-to-zero
+after **5 idle minutes**; it was later observed suspended. Billing displays
+**100 compute hours per project**. The project currently reports **0 CU-hours
+since Sep 27**, but the console warns usage metrics may lag by an hour and are
+not updated for inactive projects. This is a measured configuration ceiling,
+not an observed average under the intended workload or a verified quota reset
+date. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260) remains
+open for those measurements and Fatih's personal-preflight versus shared-hosted
+ownership decision before D26-06 migrations. This operator did not open a
+connection string or secret, change compute settings, run a schema migration,
+or submit a Testnet transaction. W4-D26-05 is In progress; Notion mirror sync
+is pending.
 
 ---
 
