@@ -153,3 +153,5 @@ The asymmetry is the finding. **B and C had a drift check running twice a week; 
 *Two entries on day one, both from the same small task, both real. That is roughly the rate the earlier observations predicted.*
 
 - 2026-09-15 · W3-D19 feasibility: ADR-002/POLICY-SIGNER assume smart-account auth can constrain the fee-paying native TTL envelope, but do not identify a policy hook on that path. Pinned protocol/provider tracing found the missing link; see W3-POLICY-SIGNER-FEASIBILITY.md. No deploy performed.
+
+- 2026-09-17 · W3-D21-01 inventory: #166 inserted acceptance prose into a sealed A-save README without changing the original manifest. The other57 files still match. Preserve the annotation separately and restore the original sealed README, rather than silently blessing altered evidence.

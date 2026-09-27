@@ -20,7 +20,6 @@ at threshold exit 1, both on Testnet A with declared keys and CLI 0.1.0.
 are recorded. `W4-D25-03` remains In progress pending Fatih's review
 and merge of this evidence. The separate-repo test's unrelated-human
 caveat stays with `W4-D25-02`. Notion sync for `W4-D25-03` is pending.
-
 ## Current — W4-D25-02 external Action path verified technically
 
 The independent [fixture repository](https://github.com/rakhargo/evergreen-check-smoke)
@@ -239,9 +238,21 @@ In progress: three Monday B checkpoints, C capture and final acceptance remain.
 Notion D18-03 mirror validation/sync pending: canonical data-source lookup returned
 `data_source_not_found` at preflight. Earlier acceptance decisions are unchanged.
 
-## Reference — reconciled September17 state
+## Reference — Sep18 observer startup and recovered incident verified
 
-## Current — reconciled September17 state
+The installed systemd observer started automatically at07:00 WIB. Snapshot09:08
+covers26 five-minute starts through09:05:25 healthy assessments and one observer-error
+at07:30. Its critical email was provider-accepted and separately confirmed in the
+recipient inbox; the observer recovered at07:35 and had no active incident at the
+snapshot. Exact transport/root cause is not established by these logs. [Evidence](evidence/2026-09-18-watcher-startup/README.md).
+
+This verifies actual startup, not just an armed timer, and a real observer-failure
+notification/recovery. No runtime/policy change, extra mail or transaction was made.
+D18-01 monitoring remains In progress; D18-03 and the B/C captures are not complete.
+The rest of the Sep18 checklist, including fresh cadence evaluation, must not be
+inferred from this bounded snapshot. Published in [PR #201](https://github.com/Fatihmaull/evergreen/pull/201), with summary in #104. Notion D18-01/03 notes synced, statuses remain In progress; full150-row presence check found no missing or phantom IDs. Fatih review/merge pending.
+
+## Reference — reconciled September17 state
 
 - **Accepted/closed:** #140 (alert/failure acceptance, all three template deliveries),
   #141 (independent GitHub observer with effective warn420/critical540), #128 (fixed
@@ -270,6 +281,21 @@ Notion D18-03 mirror validation/sync pending: canonical data-source lookup retur
   3 Blocked; no completion was inferred from an issue closure with narrower scope.
 
 Earlier sections below are dated publication/history snapshots, not current status.
+
+## Reference — D21 evidence/slack preparation, Sep17
+
+Working on D21-01/D21-02 from mainbd7f245. [Verified preparation](W3-D21-PREPARATION.md)
+records seven W3 integrity checks and comparable task-ID snapshots. A-save README
+checksum drift was traced to #166 acceptance prose; original README bytes restored
+against the unchanged manifest, acceptance preserved separately. No raw chain data,
+transaction or older manifest changed. A manifest-inventory gate/regression now
+protects these checks. Publish-dry-run's digest-only record is named accordingly.
+
+Snapshot counts:115 early Sep5,123 late Sep5,144 checkbox+one standing Sep10,
+148 checkbox+one standing now. Zero slack days are recorded as charged, but actual
+effort/slack consumption cannot be inferred from these counts. D21-01/02 In progress;
+all future-event, independent-test and Shared gate outcomes remain open. No watcher
+startup is claimed before Sep18. Full gate886 tests passed; integrated integrity gate checks22 manifests/622 entries. No remaining actionable finding in this preparation scope. Published in [PR #192](https://github.com/Fatihmaull/evergreen/pull/192); Notion D21-01/02 is In progress with the verified outcome. Full150-row presence check found no missing or phantom IDs. Fatih review/merge and final W3 gate remain pending.
 
 ## Earlier — Acceptance publication snapshot, Sep16
 

@@ -13,7 +13,6 @@ The separate fixture repo's tagged run shows green success at 17,280
 ledgers and red failure at exit 1 at 2,000,000 against the same Testnet A
 scope. Both screenshots are actual Brave/Spectacle captures. This is an
 Action tag, separate from the npm CLI GitHub Release. No transaction.
-
 ## W4-D25-02 — Action tested from a separate repository
 
 [External workflow run and exact job outcomes](evidence/2026-09-26-external-action-smoke/README.md):
@@ -125,6 +124,19 @@ confirmation.
 **4,776,407** by arithmetic (`endsAt − 17,280`; `needsAction` uses `<=`), and that is
 sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
 five-second cadence, and no drift figure is claimed. Both READMEs say so.
+
+## W3-D18-01 — Sep18 actual observer startup
+
+[Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
+automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
+Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
+## Sep17 integrity reconciliation — accepted A-save proof
+
+The Sep14 scheduled-save bundle again verifies against its original manifest.
+The later #166 acceptance annotation is preserved [separately](evidence/2026-09-17-save-acceptance-reconciliation/README.md)
+so the sealed README retains its original bytes. Acceptance in #130 remains valid;
+no transaction or raw artifact was replaced. See the W3 closeout inventory report.
 
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
