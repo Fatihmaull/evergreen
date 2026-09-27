@@ -5,6 +5,16 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W4-D25-02 — Action tested from a separate repository
+
+[External workflow run and exact job outcomes](evidence/2026-09-26-external-action-smoke/README.md):
+the green job scanned four Testnet A entry types above the 17,280-ledger
+threshold and succeeded; the red job scanned the same declared scope at
+2,000,000 ledgers and failed at Action exit 1. The caller repository has
+no Evergreen workspace packages or secrets. This is an external repository
+operated by Rakha, not an unrelated human's account. Action tag `v1`
+and screenshot evidence remain `W4-D25-03`; no transaction was sent.
+
 ## W3-D18-03 — C expiry observed (2026-09-26 12:02 UTC)
 
 [Sealed raw C expiry observation, embedded live baseline, separate assessment and native terminal replay screenshot](evidence/2026-09-26-c-expiry-1202/README.md):
