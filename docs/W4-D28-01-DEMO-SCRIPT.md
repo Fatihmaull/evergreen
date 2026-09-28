@@ -4,7 +4,7 @@
 crossings, because the *reasoning* was fresh and the numbers were mechanical.
 Every slot that blocked recording is now filled and **verified against the live
 artifact rather than assumed** — the install line against the real npm registry,
-the Action against a real workflow run. Timed at 4m20s.
+the Action against a real workflow run. **Timed at 4:20 — that is all six beats** (40 + 50 + 60 + 45 + 45 + 20 seconds). **Without beat 5 it is 3:35.** Both sit inside §6.1's *"3–5 minute demo"*, so **runtime does not decide whether the dashboard stays in.**
 
 One value is still a measurement rather than a slot: the cron delivery share in
 beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
@@ -295,7 +295,7 @@ They are now filled in beat 4 rather than left as slots.
 | Cron delivery share | 🔄 **moves** — run `pnpm measure:cadence` on the recording day and read it off. Do not quote a figure from here; `check:cadence` refuses one, and it has already been wrong twice. The 2026-09-23 reading is recorded in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md) |
 | Dashboard URL | ✅ **filled 2026-09-24** — [`/dashboard/`](https://evergreen-stellar.pages.dev/dashboard/) is live and scans. **The root is a landing page; the scanner is one level down.** Shipped by the web track in #234/#236/#237 |
 | Action run link | ✅ **filled 2026-09-25** — [run 36095411235](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235), green and red in one dispatch, red at exit 1 |
-| Install line, beat 2 | ✅ **filled 2026-09-25** — `0.1.0` is on the registry and the `npx` line was run against it |
+| Install line, beat 2 | ✅ **filled** — `0.1.1` is what the registry serves and what unpinned `npx` resolves; re-run against the published build 2026-09-27 with zero fabricated dates. `0.1.0` was current when this row was first filled on 2026-09-25 |
 
 > ✅ **NOTHING IN THIS SCRIPT NOW WAITS ON ANYTHING.** The two slots that did —
 > beat 2's install line and beat 5's run link — were the same publish, and it

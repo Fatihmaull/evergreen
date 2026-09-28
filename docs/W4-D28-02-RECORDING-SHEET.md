@@ -16,9 +16,30 @@ than inventing some.
 > | **Frame** | **1080p** — geometry measured below, and beat 2 does not fit without wrapping |
 > | **Runtime** | Record long, decide cuts after a first take. All beats stay in |
 >
+> 🔴 **A runtime figure I got backwards, corrected.** I told you the beats sum to 4:20
+> *without* the dashboard. **4:20 is the total WITH it** — 40 + 50 + 60 + 45 + 45 + 20.
+> **Without beat 5 it is 3:35.** Checked against the six headings.
+>
+> That error pushed against the decision you had already made: it made keeping the
+> dashboard sound like it crowded the 5-minute ceiling. It does not. **4:20 leaves 40
+> seconds of headroom inside §6.1's "3–5 minute demo"**, which is roughly what live
+> narration adds over a silent read — and 3:35 is equally compliant. **Runtime does not
+> decide this either way.** The figure is right in every committed file, which all mean
+> the full script; the wrong claim was only in the question I put to you.
+>
 > Two consequences of keeping the dashboard: **it is a second live-ledger beat**, so it
-> and beat 2 must be recorded adjacently and re-recorded as a pair; and **you cannot
-> start until #248 merges**, which needs Rakha.
+> and beat 2 must be recorded adjacently and re-recorded as a pair; and it needed #248.
+>
+> ✅ **#248 is MERGED** — Rakha approved at 09:00Z on 2026-09-28 and it landed at
+> 09:07Z. The reworked UI is deployed and smoke-tested: all eleven public routes answer,
+> the scanner still returns `healthy` / `PARTIAL` / `undetermined`, and `/docs/ci/` now
+> serves the corrected `evergreen@v1` workflow.
+>
+> **So there is no cutoff row here, and deliberately so.** A cutoff was the right
+> instrument while the take sat behind someone else's review; writing one now would add
+> a countdown against a condition that has already cleared — which is the stale-gate
+> shape this project has spent two weeks removing. **Nothing external blocks the
+> recording.**
 
 > ## The one thing that must not be got wrong — script L29–46
 >
@@ -83,8 +104,33 @@ PS1='$ '
       them harmlessly (the long ones are lists of contract IDs), and keeps everything
       readable. 53 lines still exceeds 32 rows, so **plan the scroll** — or let the
       scan finish and scroll back slowly for the camera
-- [ ] Cadence figure for beat 3: `pnpm measure:cadence` — run it today, quote what it
-      prints (script L144–152 makes this a slot on purpose)
+- [ ] 🔴 **LAST BEFORE THE FIRST TAKE — measure the cron cadence. This is the one
+      prerequisite that cannot be done afterwards.**
+
+      ```bash
+      pnpm measure:cadence
+      ```
+
+      **Read the value off the `delivered:` line**, e.g. `delivered: 6.8% of a 15-min
+      declared cron`. That percentage is beat 3's slot.
+
+      **Why it is a slot and not a figure:** the script says so outright (L106–113,
+      L190) — *"a value written today is wrong by the recording."* It moves, and our own
+      measurements prove it: the median gap has gone **132 → 136 → 179 → 197 → 225
+      minutes**. It is the only number in the whole script that is not final.
+
+      **Say it as a measurement, not a property.** The script's own phrasing, which
+      marks it correctly:
+
+      > *"GitHub delivers ⟦figure⟧ of its declared cadence, so a local timer keeps what
+      > the engine does separate from whether the platform fires."*
+
+      Add *"measured today"* if you want it unambiguous. **What not to say:** "GitHub
+      delivers about 7%" as though it were a fixed property of the platform.
+
+      🔴 **With live voice-over, skipping this leaves a hole in the middle of a spoken
+      sentence** — or a stale number in it. Either one is discovered in the edit, and by
+      then it costs the beat rather than thirty seconds.
 
 **Beat dependencies on prior state:** none between beats. Beat 5's CI half needs
 workflow run `36095411235`, which already exists. Beat 4 reads committed bundles that
@@ -222,10 +268,26 @@ Also possible: `npx` may print an **npm upgrade notice** after the output. Cosme
 
 ## ③ Beat 3 — the save · 60s · **INERT** · script L125–152
 
-**Say the trigger out loud first** (L129–130), verbatim:
+### 🔴 READ THIS SENTENCE EXACTLY — do not paraphrase it
+
+Script L129–130, verbatim. **This is the highest-risk line in the recording:**
 
 > *"A is not close to expiry. We raised the alert threshold above its remaining TTL so
 > the engine would fire — that is the trigger, not decay."*
+
+**Why live voice-over makes this sharper than captions did.** The false version —
+*"a contract decayed naturally and was saved unattended"* — **is the more impressive
+one.** It is shorter, it is a cleaner story, and it is the sentence a narrator's mouth
+reaches for under the pressure of a live take. That is not carelessness, so being
+careful is not the countermeasure: **reading the line rather than delivering it is.**
+
+It happened on **no contract.** A was saved because we raised its threshold; B decayed
+naturally and was deliberately *not* saved. Two contracts, and the combined sentence is
+a false claim to a funder.
+
+📌 **Take beat 3 twice even if the first felt fine.** It is the one beat where the
+first take feeling good is not evidence that it was — a fluent delivery of the wrong
+sentence feels better than a careful delivery of the right one.
 
 **Then the claim** (L134–139) — every figure verified against
 `docs/evidence/2026-09-14-scheduled-a-save/README.md`:
