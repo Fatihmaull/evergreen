@@ -35,13 +35,16 @@ records themselves.
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 1 | Public repository | **[github.com/Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen)** — MIT, CI green | — |
-| 2 | Published npm package | **[`@evergreen-stellar/cli`](https://www.npmjs.com/package/@evergreen-stellar/cli)** — **`0.1.1` is current**; run it with no install: `npx @evergreen-stellar/cli scan <contract-id>` | `0.1.0` published 2026-09-24, `0.1.1` on 2026-09-27 (shasum `08043876`) · [what `0.1.1` fixed](evidence/2026-09-27-beat2-archived-check/README.md) · [registry verification](evidence/2026-09-25-published-package-verification/README.md) · [GitHub Release for `0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) |
+| 2 | Published npm package | **[`@evergreen-stellar/cli`](https://www.npmjs.com/package/@evergreen-stellar/cli)** — **`0.1.1` is current**; run it with no install: `npx @evergreen-stellar/cli scan <contract-id>` | `0.1.0` published 2026-09-24, `0.1.1` on 2026-09-27 (shasum `08043876`) · [what `0.1.1` fixed](evidence/2026-09-27-beat2-archived-check/README.md) · [0.1.1 publication readback](evidence/2026-09-27-cli-0.1.1-published/README.md) · [original 0.1.0 registry verification](evidence/2026-09-25-published-package-verification/README.md) · [GitHub Release for `0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) · [dry-run record](evidence/2026-09-15-publish-dry-run/README.md) |
 | 3 | CLI screenshots showing TTL, archive prediction and cost | **[Four entry types](evidence/2026-09-14-d1-capture/capture-1-four-entry-types/1.png)** · **[JSON output](evidence/2026-09-14-d1-capture/capture-2-json/1.png)** · **[Storage advice](evidence/2026-09-14-d1-capture/capture-3-storage-advice/1.png)** · **[Blast radius](evidence/2026-09-14-d1-capture/capture-4-blast-radius/1.png)** · **[Error handling](evidence/2026-09-14-d1-capture/capture-5-error-handling/1.png)** | [what each shows](evidence/2026-09-14-d1-capture/README.md) |
 | 4 | Test coverage report | **[coverage report, 2026-09-27](evidence/2026-09-27-coverage/coverage-report.txt)** — 94.35% statements, 90.43% branches, 94.42% functions, 96.45% lines | [what changed since 2026-09-10, including the one figure that fell](evidence/2026-09-27-coverage/README.md) · [the original Sep 10 report](evidence/2026-09-10-coverage/README.md) |
 
-**On item 2, plainly:** the package was published manually from merged main on
-2026-09-24, read back from the public registry and installed into a clean directory.
-The registry-installed binary reproduced the expected Testnet exit 0/1 behavior.
+**On item 2, plainly:** the original `0.1.0` was published from merged main on
+2026-09-24. The current `0.1.1` patch was published from merged main on
+2026-09-27, read back from the public registry with matching tarball bytes,
+and installed into a clean directory. Its read-only Testnet scans reproduced
+the archived and live human-output controls. Structured `--json` remains a
+separate limitation in #235.
 
 ---
 
