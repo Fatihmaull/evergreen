@@ -9,6 +9,18 @@ the Action against a real workflow run. Timed at 4m20s.
 One value is still a measurement rather than a slot: the cron delivery share in
 beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
 
+> 🔴 **After recording: the repository's gate clears on the LINK, not on the file.**
+> `check:sow` reads `docs/EVIDENCE.md` and nothing else, so record → edit → upload →
+> **link** is four steps and only the fourth one counts. From Tue 2026-09-29 a missing
+> link blocks every merge in the repo.
+>
+> **The URL must be on one of five hosts** or the gate stays red with a good link in
+> place — `youtu.be`, `youtube.com`, `vimeo.com`, `drive.google.com`, `loom.com`
+> (`check-sow-completeness.mjs:250`). **And it must open with no account**, because
+> the assessor arrives from outside. A Drive link defaults to restricted: it passes
+> the gate and fails Kenny. **Unlisted YouTube satisfies both.** Open it in a private
+> window before calling it done.
+
 **Fill the slots; do not rewrite the beats.** The beats encode decisions that were
 expensive to reach, and several of them are about what we must *not* claim.
 
@@ -35,6 +47,12 @@ outcome, not a failure to demo around.
 
 ---
 
+> 🎬 **Recording today? Use [`W4-D28-02-RECORDING-SHEET.md`](W4-D28-02-RECORDING-SHEET.md)
+> instead of this file.** Same beats, transcribed with line references back here, plus
+> the copy-pasteable commands with real contract IDs, the prerequisites, what must not
+> be in frame, and the four things on screen that look like faults and are not. This
+> file is the source; that one is the thing to have open beside the terminal.
+
 ## The arc
 
 ### 1 · The problem — 40 seconds
@@ -59,26 +77,43 @@ dependencies — so the risk is invisible from inside any single contract.
 ### 2 · Scan — 50 seconds
 
 ```bash
-npx @evergreen-stellar/cli scan <A> <B> <C>
+npx @evergreen-stellar/cli scan \
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L \
+  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ \
+  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
 ```
 
-> ✅ **VERIFIED WORKING 2026-09-25 — this exact line now runs.**
-> `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and
-> the three-contract `npx` line was run from a clean directory against the real
-> registry. It emits the shared-entry line below and reads
-> `Scan is PARTIAL — 3 issue(s). Absence is not health.`, exiting 1.
-> [The record](evidence/2026-09-25-published-package-verification/README.md).
+> **The IDs are written out on purpose.** `<A>` in a shell is a redirection, not a
+> placeholder — pasting the angle-bracket form into zsh fails with a parse error,
+> which has already cost one evening. A is the live working contract, B and C are the
+> archived decay subjects.
+
+> ✅ **CLEARED TO RECORD.** `0.1.1` is published, and it is what unpinned `npx`
+> resolves. Beat 2 was blocked until 2026-09-27 because `0.1.0` printed a fabricated
+> expiry date for an archived entry, and B and C are both archived — two of them on
+> screen in this beat. Measured before and after:
+> [`2026-09-27-beat2-archived-check`](evidence/2026-09-27-beat2-archived-check/README.md).
 >
-> **The earlier warning on this beat is void.** It said the line exits `E404` and
-> not to record against it; that was true from 2026-09-17 until the publish, and
-> the fallback it described — `pnpm cli scan` from a clone, narrated as such — is
-> no longer needed.
+> B and C now read `remaining: none` and `ends at: not reported`. **Narrate
+> `Worst entry health: CRITICAL` as coming from B and C being archived, not from A.**
 >
-> **One thing changed in the output since the script was written.**
-> `Worst entry health` now reads **CRITICAL**, because guinea-pig B is archived and
-> guinea-pig C is in its own crossing window. That is not a new defect and not a
-> claim about A. If you narrate the health line at all, say which contract it is
-> about.
+> **Two cosmetic things that will be on screen — neither is a fault, do not stop the
+> take.** The coverage notice appears **six times in one scan**: three identical
+> *"No data keys were supplied…"* lines in the header, and three `! coverage-limited`
+> lines at the bottom — one per contract, both times. Counted in the committed output.
+> **Narrate it rather than talking over it:** *"it says that once per contract,
+> because coverage is per contract"* turns the noise into the point of the beat.
+> `npx` may also emit an npm upgrade notice after the output.
+
+> **History of this beat, kept short.** It was blocked from 2026-09-17 to 2026-09-24
+> because `npx` returned `E404` before anything was published, then from 2026-09-24 to
+> 2026-09-27 because the published `0.1.0` printed a fabricated expiry date for an
+> archived entry. Both warnings are void. **`0.1.1` is what the registry serves now**
+> and it is what an unpinned `npx` resolves.
+>
+> `Worst entry health: CRITICAL` comes from **B and C both being archived** — B since
+> 2026-09-21, C since 2026-09-26. Not from A, which runs to December. An earlier
+> version of this note said C was "in its own crossing window"; that window closed.
 
 Show the real terminal. The point of passing three contracts together is the line
 that appears only then:
@@ -122,7 +157,7 @@ to, and nothing else.
 > are.** The delivered cadence moves; a value written today is wrong by the
 > recording. Quote what the command prints on the day, and say it is a measurement.
 
-### 4 · The refusal — 45 seconds ⟦SLOT⟧
+### 4 · The refusal — 45 seconds
 
 **The beat most demos would cut, and the one that earns trust.**
 

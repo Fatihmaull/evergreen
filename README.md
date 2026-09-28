@@ -37,6 +37,19 @@ The engine's signing key is a hot key on **your** server, paying from **your** f
 npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 ```
 
+> **Keep the leading `@`.** Drop it and npm reads `evergreen-stellar/cli` as a
+> GitHub `owner/repo` shorthand instead of a scoped package, and npm 12 refuses
+> the Git transport with an error that does not explain itself:
+>
+> ```
+> npm error code EALLOWGIT
+> npm error Fetching packages of type "git" have been disabled
+> npm error Refusing to fetch "github:evergreen-stellar/cli"
+> ```
+>
+> **`--allow-git` is not the fix** — it would go and fetch the wrong thing. The
+> `@` is the fix. Reported by an outside tester on Windows ([#242](https://github.com/Fatihmaull/evergreen/issues/242)).
+
 To work from source, use Node 24 (`.nvmrc`) and pnpm 11:
 
 ```bash
@@ -112,10 +125,18 @@ everything depends on is also the entry that costs.
 ### Other things worth knowing
 
 ```bash
-pnpm cli scan <id> --json        # complete record, including every caveat
+pnpm cli scan <id> --json        # complete machine-readable record
 pnpm cli scan <id> --optimize    # storage advice, with its evidence and limits
 pnpm cli extend --help           # manual extendTTL — simulates unless you pass --submit
 ```
+
+> **One known limit on `--json`.** For an entry that is already **archived**, the
+> JSON still reports `"status": "known"` with `endsAtLedger: 0` and a negative
+> `remainingLedgers`, and `issues` does not flag it. Soroban's RPC keeps returning an
+> archived entry with `liveUntilLedgerSeq: 0` and core passes that through. The
+> human-readable output was fixed in `0.1.1`; the JSON is tracked in
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235). Read `endBehavior` and
+> the health verdict for an archived entry, not the TTL numbers.
 
 Exit codes are meaningful: `0` healthy, `1` low TTL observed, `2` error, `3` the
 scan came back incomplete. **A clean exit means "everything I was asked to check
@@ -177,6 +198,8 @@ evidence item, browser-openable artifact first.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Modules, data flow, boundaries |
 | [`docs/SOROBAN-PRIMER.md`](docs/SOROBAN-PRIMER.md) | TTL, rent, archival, and the RPC shapes we rely on |
 | [`docs/SETUP.md`](docs/SETUP.md) | Getting a machine productive |
+| [`docs/ENGINE-SETUP.md`](docs/ENGINE-SETUP.md) | Current Testnet engine self-host path and its live-scheduler limits |
+| [`docs/ACTION-GUIDE.md`](docs/ACTION-GUIDE.md) | Copyable read-only CI check with declared storage scope |
 | [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) | Code style, commits, testing, secret handling |
 | [`docs/adr/`](docs/adr/) | Why things are the way they are |
 | [`docs/ONBOARDING.md`](docs/ONBOARDING.md) | **Start here if you're an agent** — orientation, the five things that will bite you |
