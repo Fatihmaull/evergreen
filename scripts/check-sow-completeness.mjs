@@ -57,9 +57,35 @@ import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
 
-/** The day this stops warning and starts blocking. Three clear days before
- *  submission on 2026-10-02 — long enough to fix what it names, short enough
- *  that nothing ships with a silent gap. */
+/**
+ * The day this stops warning and starts blocking.
+ *
+ * Three clear days before submission on 2026-10-02 — long enough to fix what it
+ * names, short enough that nothing ships with a silent gap.
+ *
+ * ⚠️ **PRE-DECIDED CONTINGENCY, recorded 2026-09-26 before it was needed.**
+ *
+ * This date was chosen against a plan where the demo video landed on Sep 29 and
+ * nothing merged after it. **That plan has changed**: the current plan has merges
+ * through Oct 1. So from Sep 29 this gate would block every merge in the
+ * repository — including the PRs that finish the submission it exists to protect.
+ * A forcing function that blocks the work it is forcing.
+ *
+ * The distinction that matters, and it is not a nicety: **the date is wrong
+ * relative to its own plan**, not inconvenient relative to reality. Correcting it
+ * is not the same act as weakening a gate because it got in the way, and this
+ * repository has spent a month refusing to do the second thing.
+ *
+ * **Trigger:** if the demo video is not recorded by the morning of 2026-09-29,
+ * move `HARD_FAIL_FROM` to `'2026-10-01'` — after the last planned merge, before
+ * submission — and leave this note in place.
+ *
+ * **What does NOT change either way:** the check's reading. It prints the same red
+ * status for a missing evidence type on every single day, before and after the
+ * hard-fail date. The contingency moves when red becomes *blocking*, never
+ * whether the gap is reported. A gate whose deadline is revised in advance with a
+ * stated reason is still a gate; one revised at the moment it bites is not.
+ */
 const HARD_FAIL_FROM = '2026-09-29';
 
 const today = process.env.EVERGREEN_TODAY ?? new Date().toISOString().slice(0, 10);

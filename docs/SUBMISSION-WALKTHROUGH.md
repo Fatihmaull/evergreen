@@ -91,6 +91,43 @@ functions, 94.57% of lines.
 > We then checked it against what the registry actually serves rather than against
 > our own build — clean directory, no workspace above it, isolated cache. One
 > declared dependency. [The record](evidence/2026-09-25-published-package-verification/README.md).
+>
+> ✅ **One defect we found, fixed and shipped — worth a moment because of how it was
+> found.** Until 2026-09-27 the published CLI printed a *projected expiry date* for an
+> entry that was already archived — a date in the past, stated confidently, right
+> beneath a correct verdict. Both guinea-pig B and C are archived, so it was
+> reachable from the very scan in this step.
+>
+> The cause is that Soroban's RPC keeps returning an archived entry with
+> `liveUntilLedgerSeq: 0`, and the renderer dressed that placeholder as a reading.
+> **`0.1.1` prints `remaining: none` and says the end ledger was not reported**, and
+> the fix is covered by tests that fail if it is reverted.
+>
+> We are mentioning a fixed defect on purpose. It contradicted the thing this project
+> argues for everywhere else — the tool reports `sharing undetermined` rather than
+> guessing, and rent as *unavailable* rather than `0` — so it was worth finding
+> before you did. It was found by running the demo's own scan against the archived
+> contracts rather than by reading the code.
+>
+> **What the fix covers, precisely, because the boundary matters more than the
+> headline.** The human-readable output no longer prints a derived date, a negative
+> remaining count, or `ledger 0` for an archived entry. **The `--json` output still
+> does.** Adding `--json` to the command above, against B or C, returns:
+>
+> ```json
+> "ttl": { "status": "known", "endsAtLedger": 0, "remainingLedgers": -4896785 }
+> ```
+>
+> `status: "known"` still asserts a TTL the tool does not know, and the `issues` array
+> does not mention it. That is the same limit one layer down, it is
+> [#235](https://github.com/Fatihmaull/evergreen/issues/235), and it stays open.
+>
+> **We fixed the renderer and not the model on purpose.** Core's compiled output is
+> inside the runtime fingerprint that every sealed capture bundle pins, and changing it
+> days after the guinea-pig observations — which cannot be retaken — would buy a
+> tidier JSON field at the cost of the evidence those bundles carry. The right fix is a
+> distinct TTL status for an archived entry, and it belongs after submission rather
+> than in the last week of it.
 
 ---
 
@@ -153,6 +190,30 @@ Guinea-pig B was watched from health into expiry across four checkpoints:
 nobody touched. At the first three the engine detected it below threshold and
 **refused to extend**, because B was the proof and extending it would have
 destroyed the only evidence in the project that cannot be recreated.
+
+### A second contract ran the same course — and we missed one of its readings
+
+**Guinea-pig C** crossed its threshold on 25 September and expired on the 26th.
+**We missed the first of its four scheduled captures**, the one at the crossing
+itself. C therefore has **three readings and a gap**, not four:
+
+| | guinea-pig B | guinea-pig C |
+|---|---|---|
+| at the crossing | 17,279 | ⬜ **missed** |
+| +12 hours | 8,641 | **8,636** |
+| +18 hours | 4,319 | **4,329** |
+| expiry | ledger 4,793,687 | ledger 4,880,115 |
+
+**Read across the rows rather than down the gap, because that is where the
+strength is.** Two contracts nobody touched, observed independently, came out
+**five ledgers apart at twelve hours and ten apart at eighteen.** A fourth point
+on one curve would have been one more dot on a line we had already drawn; the same
+decay reproduced on a second subject is a different and better kind of evidence,
+and reproducing it is what C existed for.
+
+We are naming the missed capture because it is ours to name — the scheduled
+operator was not at the machine at 12:00 UTC on the Friday. It is recorded in the
+capture bundles rather than smoothed over.
 
 > **One qualification on Deliverable 2, in our words.** §4.1 describes a *capped
 > policy-signer*. **That capability is not delivered and we are not claiming it.**
@@ -309,5 +370,5 @@ merely warning.
 If you want the machinery underneath any step: **59 dated evidence directories**
 under [`docs/evidence/`](evidence/), each a sealed bundle of unedited RPC
 responses with a `SHA256SUMS` over its own contents, none edited after the fact.
-[The evidence page](https://evergreen-stellar.pages.dev/evidence/) is the
+[The evidence page](https://evergreen-stellar.pages.dev/docs/evidence/) is the
 browsable version. **None of it is required to assess the three rows above.**

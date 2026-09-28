@@ -61,6 +61,22 @@ Assessed against the backlog as written, with every risk put to two independent 
 | 3 | Action in a stranger's CI | 🟡 **at-risk** — was scheduled to be proven **two days before the package it wraps existed** | 🟡 **HALF.** *Pass AND fail is demonstrated* — [one run, both colours](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235), red at exit 1. The other half is a **stranger's own repository**, and our repository is not that. Still a human call, deliberately |
 | 4 | Self-hosted engine | 🔴 **will not make it as stated** — one backlog line carries the claim and **no task verifies it** | 🟡 **Human call, unchanged.** Automating it would measure the harness rather than the documentation |
 
+> **2026-09-26 follow-up for outcome 3:** [an external repository](https://github.com/rakhargo/evergreen-check-smoke)
+> first ran the Action from a pinned Evergreen commit with the published CLI:
+> [green succeeded and red failed at exit 1](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36254970083).
+> The public `Fatihmaull/evergreen@v1` tag now points to that tested commit,
+> and a [second external run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415)
+> repeated the green/red pair through the tag; [screenshots](evidence/2026-09-26-action-v1-tag/README.md)
+> are retained. This removes monorepo resolution and an unpublished ref as
+> possible explanations. The repository is still operated by Rakha; an
+> unrelated human has not followed the docs, so the human-call caveat remains.
+
+> **2026-09-26 guide update for outcome 4:**
+> [self-host setup](ENGINE-SETUP.md) now separates the shipped decide-only
+> cron from explicit local submission, while the [Action guide](ACTION-GUIDE.md)
+> uses the verified `@v1` consumer path. This does **not** turn outcome 4 green:
+> nobody independent has followed the engine guide against their own contract,
+> and no unattended live-submission workflow with cross-run reconciliation ships.
 > 🔴 **Outcome 3's first run found a defect rather than confirming one.** Both jobs
 > failed, including `green · must pass`, because the Action required the *caller's*
 > package manager to exist. It would have broken in any pnpm repository. Fixed and

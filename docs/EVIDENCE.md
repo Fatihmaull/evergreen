@@ -5,6 +5,25 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## W4-D25-03 — Action tag v1 and green/red screenshots
+
+[Public tag readback, external @v1 run and original browser screenshots](evidence/2026-09-26-action-v1-tag/README.md):
+`Fatihmaull/evergreen@v1` resolves to tested Action commit `2a4ab0a`.
+The separate fixture repo's tagged run shows green success at 17,280
+ledgers and red failure at exit 1 at 2,000,000 against the same Testnet A
+scope. Both screenshots are actual Brave/Spectacle captures. This is an
+Action tag, separate from the npm CLI GitHub Release. No transaction.
+
+## W4-D25-02 — Action tested from a separate repository
+
+[External workflow run and exact job outcomes](evidence/2026-09-26-external-action-smoke/README.md):
+the green job scanned four Testnet A entry types above the 17,280-ledger
+threshold and succeeded; the red job scanned the same declared scope at
+2,000,000 ledgers and failed at Action exit 1. The caller repository has
+no Evergreen workspace packages or secrets. This is an external repository
+operated by Rakha, not an unrelated human's account. Action tag `v1`
+and screenshot evidence remain `W4-D25-03`; no transaction was sent.
+
 ## W3-D18-03 — C expiry observed (2026-09-26 12:02 UTC)
 
 [Sealed raw C expiry observation, embedded live baseline, separate assessment and native terminal replay screenshot](evidence/2026-09-26-c-expiry-1202/README.md):
@@ -106,6 +125,19 @@ confirmation.
 **4,776,407** by arithmetic (`endsAt − 17,280`; `needsAction` uses `<=`), and that is
 sound. Any wall-clock time for that ledger is an **estimate** assuming a constant
 five-second cadence, and no drift figure is claimed. Both READMEs say so.
+
+## W3-D18-01 — Sep18 actual observer startup
+
+[Startup and recovered observer-error](evidence/2026-09-18-watcher-startup/README.md):
+automatic07:00 WIB start, one inbox-confirmed critical alert at07:30, recovery07:35.
+Snapshot ends09:05; no transaction, B/C crossing or full-window completion claim.
+
+## Sep17 integrity reconciliation — accepted A-save proof
+
+The Sep14 scheduled-save bundle again verifies against its original manifest.
+The later #166 acceptance annotation is preserved [separately](evidence/2026-09-17-save-acceptance-reconciliation/README.md)
+so the sealed README retains its original bytes. Acceptance in #130 remains valid;
+no transaction or raw artifact was replaced. See the W3 closeout inventory report.
 
 ## W3-D18-03 — read-only capture preparation (2026-09-14)
 
@@ -449,12 +481,40 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 |---|---|---|
 | GitHub repo | [Fatihmaull/evergreen](https://github.com/Fatihmaull/evergreen) | ✅ Public |
 | npm — `cli` | [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli) | ✅ 2026-09-24 |
+| GitHub CLI release | [`cli-v0.1.0`](https://github.com/Fatihmaull/evergreen/releases/tag/cli-v0.1.0) | ✅ 2026-09-27; annotated tag peels to published npm source `3d2ffa5`, known #235 limitation disclosed; no npm republish |
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
 | Dashboard hosting | [evergreen-stellar.pages.dev](https://evergreen-stellar.pages.dev) | ✅ W1 placeholder; functional dashboard remains W4 |
-| Demo video (3–5 min) | | ⬜ |
+| Demo video (3–5 min) | | ⬜ **The link goes HERE, and the link is what clears `check:sow`** — see the constraints directly below this table |
 | Docs site / README | | ⬜ |
+
+> ### 🔴 Two constraints on the demo video URL that live in a gate script and nowhere else
+>
+> Read from `scripts/check-sow-completeness.mjs:250`. **The only way to learn them
+> otherwise is to fail the gate**, which is a poor way to find out on Oct 1.
+>
+> **1. The URL must be on one of five hosts, or the gate stays red with a perfectly
+> good link in place:** `youtu.be`, `youtube.com`, `vimeo.com`, `drive.google.com`,
+> `loom.com`. A working Dropbox, WeTransfer or self-hosted link does not match the
+> pattern and does not count.
+>
+> **2. It must open with no account.** The assessor arrives from outside the project
+> with nothing signed in. **`drive.google.com` is the trap: it is on the allow-list
+> and defaults to restricted**, so it is the one host that passes the machine check
+> and fails the human one.
+>
+> **Recommendation: unlisted YouTube.** It is the only option that satisfies both
+> sides with no sharing setting to get wrong — on the allow-list, and public without
+> sign-in by default rather than by configuration.
+>
+> **Verify before committing the link: open it in a private window.** Not the same
+> browser you uploaded from.
+>
+> And the timing, because it is the part that surprises people: `check:sow` reads
+> *this file* and nothing else. **Record → edit → upload → link is four steps and
+> only the fourth one moves the gate.** A video finished Monday evening and linked
+> Tuesday morning still meets a blocked repository.
 
 ## Weekly evidence snapshots
 
