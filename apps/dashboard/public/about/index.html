@@ -7,84 +7,172 @@
     <meta name="description" content="Who builds Evergreen, under which grant, and how the work is evidenced." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
-  <body class="app">
+  <body class="site">
     <a class="skip" href="#main">Skip to content</a>
-    <div class="shell">
-      <aside class="sidebar">
-        <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
-        </a>
-        <nav aria-label="Sections"><div class="nav-group">
-        <p class="nav-section">Live reads</p>
-        <a class="nav-item" href="/dashboard/">Overview</a><a class="nav-item" href="/dashboard/scanner/">Contract scanner</a><a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a><a class="nav-item" href="/dashboard/decay/">TTL decay</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Our own record</p>
-        <a class="nav-item" href="/dashboard/contracts/">Our contracts</a><a class="nav-item" href="/dashboard/engine/">Engine runs</a><a class="nav-item" href="/dashboard/history/">Extension history</a>
-      </div><div class="nav-group">
-        <p class="nav-section">Reference</p>
-        <a class="nav-item" href="/docs/archival/">State archival</a><a class="nav-item" href="/docs/">CLI reference</a><a class="nav-item" href="/evidence/">Evidence</a><a class="nav-item active" href="/about/" aria-current="page">About</a>
-      </div></nav>
-        <div class="sidebar-foot">
-          <p class="mono">testnet only</p>
-          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link current" href="/about/" aria-current="page">About</a><a class="site-link" href="/docs/">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
         </div>
-      </aside>
-      <div class="content">
-        <div class="statusbar">
-      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
-      <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
-      <span class="status-item dim">ledger close 5.000000 s ± 0.000050 <span class="dim">· measured, not assumed</span></span>
-      <span class="status-item right dim">read-only · these pages never sign or submit</span>
-    </div>
-        <main id="main" class="main">
-          <header class="page-head">
-            <p class="eyebrow">About · the team and the terms</p>
-            <h1>Built by Apex, evidenced like it matters</h1>
-            <p class="lead">Evergreen is built by Apex — Fatih Maulana and Rakha — in the Stellar Ambassador Chapter Indonesia, under a funded Stellar Instawards grant: $4,800, thirty days, 3 September to 2 October 2026. The chapter is where the team sits; it does not govern the code.</p>
-          </header>
-          <section class="cards-3">
-    <article class="card card-pad stack">
-      <h3>Fatih Maulana</h3>
-      <p class="small muted">Product, coordination, evidence — and the SOW's primary contact. CLI, dashboard, docs, demo video, Ambassador liaison.</p>
-    </article>
-    <article class="card card-pad stack">
-      <h3>Rakha</h3>
-      <p class="small muted">Engine, contracts, infrastructure. The auto-bump worker, threshold rules, the notification channel — and the signatures on the transactions.</p>
-    </article>
-    <article class="card card-pad stack">
-      <h3>The grant</h3>
-      <p class="small muted">Stellar Instawards. A follow-on SCF Build Award application is the stated next step — it appears here as a possible follow-on, not as the program this is.</p>
-    </article>
-  </section>
-  <section class="card card-pad stack">
-    <h2 class="section">Method: measured rather than assumed</h2>
-    <p class="muted">
-      The TTL floor per entry type was measured on a fresh deploy, not read from documentation. The permissionless
-      property was confirmed by extending someone else's contract on testnet, not by quoting the docs. The rent
-      model was validated against a real fee recorded a day earlier — and the first implementation failed that
-      comparison, so it was replaced. Corrections stay in the record: the repository keeps its architecture
-      decision records amended, never rewritten, because the reasoning at the time is the valuable part.
-    </p>
-    <p class="muted">
-      The work is public at <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
-      under MIT. Nothing on this page — no title, no ID, no privilege — exists outside that repository, the PRD
-      or the statement of work.
-    </p>
-  </section>
-        </main>
-        <footer class="site">
-          <div class="foot-row">
-            <p>Built by Apex in the Stellar Ambassador Chapter Indonesia, under a Stellar Instawards grant. MIT.</p>
-            <p><a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a></p>
+      </nav>
+    </header>
+    <main id="main">
+    <section class="page-intro-wrap"><div class="site-wrap ref-grid page-intro">
+        <div class="ref-label">
+          <p class="eyebrow">About · the team and the terms</p>
+          <h1>Built by Apex, evidenced like it matters</h1>
+        </div>
+        <div class="ref-body"><p class="lead">Evergreen is built by Apex — Fatih Maulana and Rakha — in the Stellar Ambassador Chapter Indonesia, under a funded Stellar Instawards grant: $4,800, thirty days, 3 September to 2 October 2026. The chapter is where the team sits; it does not govern the code.</p></div>
+      </div></section>
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Who</p>
+            <h2>Two people and a grant</h2>
           </div>
-        </footer>
+          <div class="ref-body"><div class="people">
+          <div>
+            <p class="how-name">Fatih Maulana</p>
+            <p>Product, coordination, evidence — and the SOW's primary contact. CLI, dashboard, docs, demo video, Ambassador liaison.</p>
+          </div>
+          <div>
+            <p class="how-name">Rakha</p>
+            <p>Engine, contracts, infrastructure. The auto-bump worker, threshold rules, the notification channel — and the signatures on the transactions.</p>
+          </div>
+          <div>
+            <p class="how-name">The grant</p>
+            <p>Stellar Instawards. A follow-on SCF Build Award application is the stated next step — it appears here as a possible follow-on, not as the program this is.</p>
+          </div>
+        </div></div>
+        </div>
+      </section>
+<section class="ref">
+        <div class="site-wrap ref-grid">
+          <div class="ref-label">
+            <p class="eyebrow">Method</p>
+            <h2>Measured rather than assumed</h2>
+          </div>
+          <div class="ref-body"><p>
+          The TTL floor per entry type was measured on a fresh deploy, not read from documentation. The permissionless
+          property was confirmed by extending someone else's contract on testnet, not by quoting the docs. The rent
+          model was validated against a real fee recorded a day earlier — and the first implementation failed that
+          comparison, so it was replaced. Corrections stay in the record: the repository keeps its architecture
+          decision records amended, never rewritten, because the reasoning at the time is the valuable part.
+        </p>
+        <p>
+          The work is public at <a class="site-more" href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
+          under MIT. Nothing on this page — no title, no ID, no privilege — exists outside that repository, the PRD
+          or the statement of work.
+        </p></div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
       </div>
-    </div>
-    <script src="/assets/chrome.js"></script>
-    
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

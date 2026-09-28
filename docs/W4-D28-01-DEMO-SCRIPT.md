@@ -4,7 +4,7 @@
 crossings, because the *reasoning* was fresh and the numbers were mechanical.
 Every slot that blocked recording is now filled and **verified against the live
 artifact rather than assumed** — the install line against the real npm registry,
-the Action against a real workflow run. Timed at 4m20s.
+the Action against a real workflow run. **Timed at 4:20 — that is all six beats** (40 + 50 + 60 + 45 + 45 + 20 seconds). **Without beat 5 it is 3:35.** Both sit inside §6.1's *"3–5 minute demo"*, so **runtime does not decide whether the dashboard stays in.**
 
 One value is still a measurement rather than a slot: the cron delivery share in
 beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
@@ -47,6 +47,12 @@ outcome, not a failure to demo around.
 
 ---
 
+> 🎬 **Recording today? Use [`W4-D28-02-RECORDING-SHEET.md`](W4-D28-02-RECORDING-SHEET.md)
+> instead of this file.** Same beats, transcribed with line references back here, plus
+> the copy-pasteable commands with real contract IDs, the prerequisites, what must not
+> be in frame, and the four things on screen that look like faults and are not. This
+> file is the source; that one is the thing to have open beside the terminal.
+
 ## The arc
 
 ### 1 · The problem — 40 seconds
@@ -71,8 +77,16 @@ dependencies — so the risk is invisible from inside any single contract.
 ### 2 · Scan — 50 seconds
 
 ```bash
-npx @evergreen-stellar/cli scan <A> <B> <C>
+npx @evergreen-stellar/cli scan \
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L \
+  CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ \
+  CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL
 ```
+
+> **The IDs are written out on purpose.** `<A>` in a shell is a redirection, not a
+> placeholder — pasting the angle-bracket form into zsh fails with a parse error,
+> which has already cost one evening. A is the live working contract, B and C are the
+> archived decay subjects.
 
 > ✅ **CLEARED TO RECORD.** `0.1.1` is published, and it is what unpinned `npx`
 > resolves. Beat 2 was blocked until 2026-09-27 because `0.1.0` printed a fabricated
@@ -91,23 +105,15 @@ npx @evergreen-stellar/cli scan <A> <B> <C>
 > because coverage is per contract"* turns the noise into the point of the beat.
 > `npx` may also emit an npm upgrade notice after the output.
 
-> ✅ **The install line itself works — verified 2026-09-25.**
-> `@evergreen-stellar/cli@0.1.0` is on the registry (published 2026-09-24), and
-> the three-contract `npx` line was run from a clean directory against the real
-> registry. It emits the shared-entry line below and reads
-> `Scan is PARTIAL — 3 issue(s). Absence is not health.`, exiting 1.
-> [The record](evidence/2026-09-25-published-package-verification/README.md).
+> **History of this beat, kept short.** It was blocked from 2026-09-17 to 2026-09-24
+> because `npx` returned `E404` before anything was published, then from 2026-09-24 to
+> 2026-09-27 because the published `0.1.0` printed a fabricated expiry date for an
+> archived entry. Both warnings are void. **`0.1.1` is what the registry serves now**
+> and it is what an unpinned `npx` resolves.
 >
-> **The earlier warning on this beat is void.** It said the line exits `E404` and
-> not to record against it; that was true from 2026-09-17 until the publish, and
-> the fallback it described — `pnpm cli scan` from a clone, narrated as such — is
-> no longer needed.
->
-> **One thing changed in the output since the script was written.**
-> `Worst entry health` now reads **CRITICAL**, because guinea-pig B is archived and
-> guinea-pig C is in its own crossing window. That is not a new defect and not a
-> claim about A. If you narrate the health line at all, say which contract it is
-> about.
+> `Worst entry health: CRITICAL` comes from **B and C both being archived** — B since
+> 2026-09-21, C since 2026-09-26. Not from A, which runs to December. An earlier
+> version of this note said C was "in its own crossing window"; that window closed.
 
 Show the real terminal. The point of passing three contracts together is the line
 that appears only then:
@@ -151,7 +157,7 @@ to, and nothing else.
 > are.** The delivered cadence moves; a value written today is wrong by the
 > recording. Quote what the command prints on the day, and say it is a measurement.
 
-### 4 · The refusal — 45 seconds ⟦SLOT⟧
+### 4 · The refusal — 45 seconds
 
 **The beat most demos would cut, and the one that earns trust.**
 
@@ -213,10 +219,38 @@ would have destroyed the only evidence in the sprint that cannot be recreated.
 > **Open `/dashboard/`, not the root.** The root is a landing page; the scanner
 > is one level down. Verified live 2026-09-24.
 >
-> **The dashboard shows no rent figure, and that is deliberate** — `estimateRent`'s
-> quoter is not browser-safe, so the page renders rent as unavailable rather than
-> as `0`. Do not narrate a cost number over this beat; the cost claim belongs to
-> beat 2, on the CLI.
+> 🔴 **CORRECTED 2026-09-28 — the dashboard DOES show rent, on request.** An earlier
+> version of this note said it shows none, *"deliberately"*, because `estimateRent`'s
+> quoter was not browser-safe. **That is no longer true**, and the note would have told
+> you a figure could not appear moments before one did. Caught by Rakha in his #248
+> approval; verified by running it.
+>
+> After a scan, a **`Estimate rent to extend`** button appears. Pressing it produces, on
+> the live page today:
+>
+> ```
+> Rent to extend by 518,400 more ledgers
+> about 3.2 XLM (31,509,408 stroops)
+>   AAAAB8flXw…y86Yv7   about 3.1 XLM    99%     ← the shared code entry
+>   AAAABgAAAA…QAAAAB   about 0.027 XLM  <1%
+> ```
+>
+> **Two things follow, and the second is the one that could embarrass the take.**
+>
+> **1. Do not narrate a fixed quote.** It is priced by simulating against live network
+> config, so the number moves between runs. If you say a figure, say it is what the
+> screen shows right now.
+>
+> **2. 🔴 The screen will say `99%` and beat 6's close says `98%`.** That is **not** a
+> contradiction — it is the same entry with a different denominator, and it lines up
+> exactly with the script's own two cases: the dashboard scanned A with **no data
+> keys**, so it priced **instance and code only**, which is the `99%` scope. Beat 6's
+> `98%` is the four-entry scope from the D1 capture.
+>
+> **So if you press that button, say the scope in the same breath** — *"ninety-nine per
+> cent of the two entries this scan priced"* — or skip the button entirely and leave the
+> rent claim to beat 2 on the CLI. **Either is fine; 99% on screen and "98%" in the
+> narration with nothing joining them is not.**
 
 Keep this short. It is the least differentiated part of the product and the part a
 reviewer can most easily imagine.
@@ -233,6 +267,11 @@ evidence:
 
 Same entry, same absolute rent, different denominator. The D1 capture shows 98%, so
 the demo saying 99% without its scope reads as a discrepancy.
+> 🔴 **If you pressed the rent button in beat 5, the screen said `99%`.** Say the scope
+> joining them, or the two numbers read as a discrepancy: the dashboard priced
+> **instance and code only** (no data keys), which is the `99%` case above; the `98%` is
+> the four-entry scope from the D1 capture. **Same entry, same absolute rent, different
+> denominator** — which is what this beat already says. Just say it out loud.
 
 Then the thesis, which is one sentence carrying both halves:
 
@@ -256,7 +295,7 @@ They are now filled in beat 4 rather than left as slots.
 | Cron delivery share | 🔄 **moves** — run `pnpm measure:cadence` on the recording day and read it off. Do not quote a figure from here; `check:cadence` refuses one, and it has already been wrong twice. The 2026-09-23 reading is recorded in [`docs/evidence/2026-09-23-scheduler-cadence/`](evidence/2026-09-23-scheduler-cadence/README.md) |
 | Dashboard URL | ✅ **filled 2026-09-24** — [`/dashboard/`](https://evergreen-stellar.pages.dev/dashboard/) is live and scans. **The root is a landing page; the scanner is one level down.** Shipped by the web track in #234/#236/#237 |
 | Action run link | ✅ **filled 2026-09-25** — [run 36095411235](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235), green and red in one dispatch, red at exit 1 |
-| Install line, beat 2 | ✅ **filled 2026-09-25** — `0.1.0` is on the registry and the `npx` line was run against it |
+| Install line, beat 2 | ✅ **filled** — `0.1.1` is what the registry serves and what unpinned `npx` resolves; re-run against the published build 2026-09-27 with zero fabricated dates. `0.1.0` was current when this row was first filled on 2026-09-25 |
 
 > ✅ **NOTHING IN THIS SCRIPT NOW WAITS ON ANYTHING.** The two slots that did —
 > beat 2's install line and beat 5's run link — were the same publish, and it

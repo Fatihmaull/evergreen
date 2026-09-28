@@ -1,11 +1,11 @@
 /**
- * Both outcomes of guinea-pig C's crossing, built before it happens.
+ * Both outcomes of guinea-pig C's crossing, plus its assessed observation.
  *
  * C crosses its alert threshold on 2026-09-25 and expires on the 26th. Its four
  * capture slots were still "requested, not assigned" on the 24th, so the page
- * has to be correct whether or not anyone is there. The three states are
- * derived from `ops/crossing-schedule.json` and the date — nothing is flipped
- * by hand on Monday, and nothing is written under a deadline.
+ * has to be correct whether or not anyone is there. The counterfactual
+ * fixtures remove the now-committed assessment so all three branches remain
+ * exercised independently of current data.
  *
  *   observed   — the watch completed and the event was captured.
  *   upcoming   — the date has not arrived.
@@ -25,7 +25,10 @@ const read = (path: string): unknown =>
   JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'));
 
 const decay = read('../data/decay.json') as { series: { id: string; contract: string }[] };
-const knownEnds = read('../data/known-ends.json') as Record<string, { status?: string }>;
+const knownEnds = read('../data/known-ends.json') as Record<
+  string,
+  { status?: string; expiryObserved?: { ledger: number; observedAt: string; source: string } }
+>;
 
 const C = 'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL';
 
@@ -41,14 +44,19 @@ function renderAt(now: Date, ends: typeof knownEnds): string {
   return render({ decay, knownEnds: ends }, now) as string;
 }
 
+/** No capture, independent of the assessment now present in current data. */
+const uncapturedC = { ...knownEnds[C] };
+delete uncapturedC.expiryObserved;
+const uncaptured = { ...knownEnds, [C]: uncapturedC };
+
 /** The schedule with C's watch marked complete, as it would be after a capture. */
 const captured = {
-  ...knownEnds,
-  [C]: { ...knownEnds[C], status: 'complete' },
+  ...uncaptured,
+  [C]: { ...uncapturedC, status: 'complete' },
 };
 
 describe('guinea-pig C, before its crossing', () => {
-  const html = renderAt(new Date('2026-09-24T12:00:00Z'), knownEnds);
+  const html = renderAt(new Date('2026-09-24T12:00:00Z'), uncaptured);
   const panel = panelFor(html, 'guinea-pig C');
 
   test('says the expiry has not happened yet', () => {
@@ -72,8 +80,21 @@ describe('guinea-pig C, if the capture happens', () => {
   });
 });
 
+describe('guinea-pig C, with the separately assessed expiry record', () => {
+  const html = renderAt(new Date('2026-09-28T12:00:00Z'), knownEnds);
+  const panel = panelFor(html, 'guinea-pig C');
+
+  test('reports the observed ledger without upgrading the frozen v1 verdict', () => {
+    expect(panel).toContain('expired 2026-09-26');
+    expect(panel).toContain('4,880,115');
+    expect(panel).toContain('v1 verdict remains unverified');
+    expect(panel).toContain('projection from the last plotted pre-expiry reading');
+    expect(panel).not.toContain('The expiry was not observed');
+  });
+});
+
 describe('guinea-pig C, if the capture does not happen', () => {
-  const html = renderAt(new Date('2026-09-27T12:00:00Z'), knownEnds);
+  const html = renderAt(new Date('2026-09-27T12:00:00Z'), uncaptured);
   const panel = panelFor(html, 'guinea-pig C');
 
   test('says the expiry was not observed, without apologising for it', () => {
@@ -97,7 +118,7 @@ describe('guinea-pig C, if the capture does not happen', () => {
 
 describe('guinea-pig B is unaffected by any of this', () => {
   test('stays observed, because its watch completed', () => {
-    const html = renderAt(new Date('2026-09-27T12:00:00Z'), knownEnds);
+    const html = renderAt(new Date('2026-09-27T12:00:00Z'), uncaptured);
     const panel = panelFor(html, 'guinea-pig B');
     expect(panel).toContain('expired 2026-09-21');
     expect(panel).not.toContain('not observed');
