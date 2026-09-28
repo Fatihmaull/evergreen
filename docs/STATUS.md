@@ -113,6 +113,25 @@ No transaction or protected-contract write. Notion sync for
 
 ---
 
+## Current — W4-D26-05 Neon defaults measured; usage/decision pending
+
+Rakha created a personal Free-plan `Evergreen Preflight` project in the AWS
+Singapore region with one `production` branch. Read-only Neon Console readback
+shows the primary compute autoscaling from **0.25 to 2 CU**, with scale-to-zero
+after **5 idle minutes**; it was later observed suspended. Billing displays
+**100 compute hours per project**. The project currently reports **0 CU-hours
+since Sep 27**, but the console warns usage metrics may lag by an hour and are
+not updated for inactive projects. This is a measured configuration ceiling,
+not an observed average under the intended workload or a verified quota reset
+date. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260) remains
+open for those measurements and Fatih's personal-preflight versus shared-hosted
+ownership decision before D26-06 migrations. This operator did not open a
+connection string or secret, change compute settings, run a schema migration,
+or submit a Testnet transaction. W4-D26-05 is In progress; Notion mirror sync
+is pending.
+
+---
+
 ## ✂️ Current — `W3-D21-01e` cold start CUT 2026-09-25, carried to `B-D31-03`
 
 **Recorded here per the `[-]` rule, because a task cut deliberately is a decision
