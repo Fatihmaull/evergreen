@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Security and keys</title>
+    <meta name="description" content="Where a secret may live, what the engine enforces before signing, and what is deliberately not implemented." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link" href="/docs/cli/output/">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link current" href="/docs/reference/security/" aria-current="page">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Reference</p>
+              <h1>Security and keys</h1>
+              <p class="lead">Evergreen signs transactions, so it holds a key. This page says where that key may live, what constrains it, and what protection is not implemented.</p>
+            </header>
+
+    <h2 id="custody">It holds a key</h2>
+    <p>
+      The engine’s implemented execution path uses a <strong>plain funded Ed25519 account</strong>
+      that you supply. It is a testnet payer, and it pays the fee for the TTL extension. There is
+      no arrangement in which the tool extends a TTL without a key that can sign.
+    </p>
+    <p class="note">
+      This is worth stating plainly because the opposite is easy to imply. A design export for
+      this project once carried a “Zero-Privilege Node · No Keys” panel; it was removed because it
+      was not true.
+    </p>
+
+    <h2 id="where">Where a secret may live</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Rule</th><th scope="col">Why</th></tr></thead>
+      <tbody>
+        <tr><td class="num">Environment variable, named in config</td><td>The config stores the variable’s NAME. A config carrying a key would be committed by someone, eventually, so the loader rejects anything that looks like one.</td></tr>
+        <tr><td class="num">Never an argument</td><td>Arguments appear in shell history and in process lists. <span class="mono">--secret-env</span> takes a name.</td></tr>
+        <tr><td class="num">No .env auto-loading</td><td>A tool that silently reads a file from the working directory will one day read the wrong one.</td></tr>
+        <tr><td class="num">Diagnostics never echo it</td><td>Error messages report shapes and outcomes, never file contents or credentials — so output is safe to paste into an issue.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="enforced">What constrains the key</h2>
+    <p>
+      These controls apply on the normal execution path and are what stands between a
+      misconfiguration and an unintended submission.
+    </p>
+    <ul>
+      <li>Explicit-submit gating — nothing is sent without <span class="mono">--submit</span> or an explicit live <span class="mono">mode</span>.</li>
+      <li>Selected-key and target checks — only the entries named are touched.</li>
+      <li>Network validation by passphrase comparison, not by label.</li>
+      <li>Configured fee caps, applied per bump.</li>
+      <li>Protected-subject guards, which refuse regardless of configuration.</li>
+      <li>Signed-envelope validation before submission.</li>
+      <li>Post-state checks, so a result is verified rather than assumed.</li>
+    </ul>
+
+    <h2 id="not-built">What is not built</h2>
+    <p>
+      <strong>There is no policy signer.</strong> A policy signer is represented in the config and
+      type seam for future adapters, and the current engine <em>rejects</em> that payer kind. It is
+      not an activation switch for an implemented provider.
+    </p>
+    <p>
+      The planned direct adapter was investigated and found not to deliver the protection it
+      promised: Evergreen signs a native <span class="mono">ExtendFootprintTTL</span> transaction
+      whose fee payer is a Stellar G-address, while passkey-style wallet policies authorize
+      contract invocations through a wallet’s <span class="mono">__check_auth</span>. Those are
+      different authorization paths, so installing that wallet does not constrain the separate
+      transaction key that pays the native fee.
+    </p>
+    <p>
+      The recorded disposition is no-go for the direct adapter, no automatic pivot to another
+      framework, and full scoping deferred to the next scope of work. No alternative signing
+      architecture becomes approved merely because the original path failed.
+    </p>
+
+    <h2 id="blast">What this means for you</h2>
+    <p>
+      Fund the payer with what you are willing to spend on rent and nothing more. The fee caps
+      bound a single bump; the account balance is what bounds the total. Everything above
+      constrains <em>correct</em> operation — none of it is a substitute for a payer that cannot
+      afford a mistake.
+    </p>
+    <p class="provenance">
+      The full record, including the feasibility report and the decision that closed it, is in
+      <span class="mono">docs/POLICY-SIGNER.md</span> and ADR-002.
+    </p>
+
+
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#custody">It holds a key</a><a class="docs-toc-link" href="#where">Where a secret may live</a><a class="docs-toc-link" href="#enforced">What constrains the key</a><a class="docs-toc-link" href="#not-built">What is not built</a><a class="docs-toc-link" href="#blast">What this means for you</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Output</title>
+    <meta name="description" content="The human scan report is a summary; --json is the complete record. How colour, piping and screenshots are handled." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body class="site">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-nav">
+      <nav class="site-nav-inner" aria-label="Site">
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
+        <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
+          <span class="site-bars" aria-hidden="true"></span>
+        </button>
+        <div class="site-links" id="site-menu">
+          <div class="site-centre"><a class="site-link" href="/about/">About</a><a class="site-link current" href="/docs/" aria-current="page">Docs</a></div>
+          <a class="site-cta" href="/dashboard/">Open dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main">
+
+<div class="docs-shell">
+        <div class="site-wrap docs-grid">
+          <button class="docs-menu-button" type="button" aria-expanded="false" aria-controls="docs-menu" hidden>
+            All pages<span class="docs-menu-mark" aria-hidden="true"></span>
+          </button>
+          <div class="docs-aside" id="docs-menu"><nav class="docs-nav" aria-label="Documentation"><div class="docs-group"><p class="eyebrow">Getting started</p><a class="docs-link" href="/docs/">Overview</a><a class="docs-link" href="/docs/quickstart/">Quickstart</a><a class="docs-link" href="/docs/mental-model/">How state archival works</a><a class="docs-link" href="/docs/archival/">What the network says about archival<span class="docs-tag">live</span></a></div><div class="docs-group"><p class="eyebrow">Command line</p><a class="docs-link" href="/docs/cli/">Install and conventions</a><a class="docs-link" href="/docs/cli/scan/">evergreen scan</a><a class="docs-link" href="/docs/cli/extend/">evergreen extend</a><a class="docs-link current" href="/docs/cli/output/" aria-current="page">Output</a><a class="docs-link" href="/docs/cli/exit-codes/">Exit codes</a></div><div class="docs-group"><p class="eyebrow">Engine</p><a class="docs-link" href="/docs/engine/">What the engine is</a><a class="docs-link" href="/docs/engine/config/">Configuration</a><a class="docs-link" href="/docs/engine/thresholds/">Thresholds and cadence</a><a class="docs-link" href="/docs/engine/guards/">Guards</a><a class="docs-link" href="/docs/engine/notifications/">Notifications</a></div><div class="docs-group"><p class="eyebrow">Continuous integration</p><a class="docs-link" href="/docs/ci/">The GitHub Action</a><a class="docs-link" href="/docs/ci/reference/">Action reference</a></div><div class="docs-group"><p class="eyebrow">Reference</p><a class="docs-link" href="/docs/reference/json/">JSON shape</a><a class="docs-link" href="/docs/reference/states/">Undetermined, unread, not found</a><a class="docs-link" href="/docs/reference/rent/">Rent and cost</a><a class="docs-link" href="/docs/reference/errors/">Errors and troubleshooting</a><a class="docs-link" href="/docs/evidence/">The record</a><a class="docs-link" href="/docs/reference/security/">Security and keys</a></div></nav></div>
+          <main class="docs-main" id="main">
+            <header class="docs-head">
+              <p class="eyebrow">Command line</p>
+              <h1>Output</h1>
+              <p class="lead">The human report is a summary. The JSON is the complete record, including every issue the summary compresses.</p>
+            </header>
+
+    <h2 id="human">The human report</h2>
+    <p>
+      One block per entry, then a worst-of summary. Each block names the entry kind, its ledger
+      key, the contracts it serves, what remains, where it ends and how it was graded.
+    </p>
+    <p>
+      Colour is added only for an interactive terminal and honours
+      <span class="mono">NO_COLOR</span>. <strong>The state word always prints</strong>, so piped
+      output and screenshots lose nothing — a red <span class="mono">CRITICAL</span> and a plain
+      <span class="mono">CRITICAL</span> carry the same information.
+    </p>
+
+    <h2 id="json">--json</h2>
+    <p>
+      Prints the <span class="mono">ScanResult</span>: entries keyed by ledger key, each carrying
+      the contracts it serves, plus <span class="mono">health</span>,
+      <span class="mono">cost</span> and <span class="mono">optimization</span> blocks.
+    </p>
+    <p>
+      The shape is declared in <span class="mono">packages/shared-types/src/index.ts</span>. That
+      declaration is authoritative and is <strong>not copied</strong> into this documentation,
+      because a copy drifts. Every JSON panel on this site prints the same shape the CLI prints.
+    </p>
+    <p class="note">
+      The human view compresses issues into a count — <span class="mono">Scan is PARTIAL — 2
+      issue(s)</span>. The JSON carries every one of them with its code and the contracts it
+      applies to. If you are building on the output, build on the JSON.
+    </p>
+
+    <h2 id="issues">Issues are part of the result</h2>
+    <p>
+      An issue is not an error. <span class="mono">sharing-undetermined</span> and
+      <span class="mono">coverage-limited</span> both appear on a scan that completed normally;
+      they record what the scan could not establish. A consumer that ignores them is reading a
+      partial answer as a complete one.
+      <a class="site-more" href="/docs/reference/states/">Undetermined, unread, not found</a>
+    </p>
+
+            <a class="docs-next" href="/docs/cli/exit-codes/">
+              <span class="eyebrow">Next</span>
+              <span class="docs-next-title">Exit codes</span>
+              <span class="docs-next-blurb">0, 1, 2, 3 — and why precedence is 2 > 3 > 1 > 0.</span>
+            </a>
+          </main>
+          <nav class="docs-toc" aria-label="On this page">
+          <p class="eyebrow">On this page</p>
+          <a class="docs-toc-link" href="#human">The human report</a><a class="docs-toc-link" href="#json">--json</a><a class="docs-toc-link" href="#issues">Issues are part of the result</a>
+        </nav>
+        </div>
+      </div>
+    </main>
+    <footer class="site-foot">
+      <div class="site-wrap">
+        <div class="site-foot-links"><a class="site-link" href="/dashboard/">Dashboard</a><a class="site-link" href="/dashboard/blast-radius/">Blast radius</a><a class="site-link" href="/dashboard/decay/">TTL decay</a><a class="site-link" href="/docs/">CLI reference</a><a class="site-link" href="/docs/archival/">State archival</a><a class="site-link" href="/docs/evidence/">Evidence</a><a class="site-link" href="/about/">About</a><a class="site-link" href="https://github.com/Fatihmaull/evergreen">GitHub</a></div>
+        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var nav = document.querySelector('.site-nav');
+        var button = nav && nav.querySelector('.site-burger');
+        var panel = nav && nav.querySelector('.site-links');
+        if (!button || !panel) return;
+        // Only now does the CSS get permission to collapse the links: without
+        // this script they stay in the bar, reachable, which is what shipped
+        // before the button existed.
+        button.hidden = false;
+        nav.setAttribute('data-menu', 'closed');
+        var set = function (open) {
+          nav.setAttribute('data-menu', open ? 'open' : 'closed');
+          button.setAttribute('aria-expanded', String(open));
+        };
+        button.addEventListener('click', function () {
+          set(nav.getAttribute('data-menu') !== 'open');
+        });
+        panel.addEventListener('click', function (event) {
+          if (event.target.closest('a')) set(false);
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && nav.getAttribute('data-menu') === 'open') {
+            set(false);
+            button.focus();
+          }
+        });
+        // The documentation rail collapses on a phone for the same reason the
+        // navbar does, and by the same mechanism: the CSS only hides it once
+        // this script has said the button works. Without JavaScript the whole
+        // tree is simply there, above the page.
+        var docs = document.querySelector('.docs-shell');
+        var docsButton = docs && docs.querySelector('.docs-menu-button');
+        if (docs && docsButton) {
+          docsButton.hidden = false;
+          docs.setAttribute('data-docs', 'closed');
+          docsButton.addEventListener('click', function () {
+            var open = docs.getAttribute('data-docs') !== 'open';
+            docs.setAttribute('data-docs', open ? 'open' : 'closed');
+            docsButton.setAttribute('aria-expanded', String(open));
+          });
+        }
+
+        // The copy button only appears where the clipboard exists. Without it
+        // the command is still there and still selectable, which is how it
+        // shipped before the button.
+        var copy = document.querySelector('[data-copy]');
+        if (copy && navigator.clipboard) {
+          copy.hidden = false;
+          copy.addEventListener('click', function () {
+            var reset = function () {
+              setTimeout(function () {
+                copy.textContent = 'Copy';
+                copy.classList.remove('done');
+              }, 1800);
+            };
+            navigator.clipboard.writeText(copy.getAttribute('data-copy')).then(
+              function () {
+                copy.textContent = 'Copied';
+                copy.classList.add('done');
+                reset();
+              },
+              function () {
+                // writeText rejects when the document is not focused, and in
+                // a few browsers it is simply refused. A button that does
+                // nothing when clicked is worse than no button, so select the
+                // command instead and say so: the keyboard shortcut still
+                // works, and the visitor can see why.
+                var code = document.querySelector('.command code');
+                if (code && window.getSelection) {
+                  var range = document.createRange();
+                  range.selectNodeContents(code);
+                  var selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                }
+                copy.textContent = 'Selected';
+                copy.classList.add('done');
+                reset();
+              },
+            );
+          });
+        }
+        // A menu left open behind a widened window would be a panel floating
+        // over a bar that has room for its own links.
+        if (window.matchMedia) {
+          window.matchMedia('(min-width: 760px)').addEventListener('change', function (event) {
+            if (event.matches) set(false);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
