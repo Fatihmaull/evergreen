@@ -8,7 +8,7 @@ export const meta = {
   description:
     'Dry-run by default, the write guard and its protected subjects, fee caps, and why a refusal is recorded rather than thrown.',
   heading: 'Guards',
-  lead: 'The engine is allowed to sign. Everything on this page exists so that it only does so when you meant it to, and so that a refusal leaves a record.',
+  lead: 'The repository cron only scans and decides. A separate local operator path may sign and submit with explicit live opt-in; these guards constrain that path and record refusals.',
 };
 
 export function render(ctx) {
@@ -76,10 +76,12 @@ export function render(ctx) {
 
     <h2 id="idempotency">Overlapping runs</h2>
     <p>
-      A scheduled job can overlap itself if a run is slow, so the engine has to survive seeing the
-      same work twice. Recovery for a process that died mid-flight is reconciliation against the
-      recorded transaction hash — not a lease timer, which would reintroduce exactly the double
-      send the current design prevents.
+      The local live path keeps an attempt journal and fails closed when a prior attempt is uncertain.
+      An operator must retain that journal and reconcile its transaction hash against the chain
+      before another attempt. Automatic cross-run reconciliation and an unattended live-submission
+      scheduler are not shipped; the repository cron is decide-only. Do not use a lease timeout or a
+      new journal path to bypass an uncertain attempt. See the
+      <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/docs/ENGINE-SETUP.md">engine setup guide</a>.
     </p>
   `;
 }
