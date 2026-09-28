@@ -28,15 +28,23 @@ jobs:
   ttl:
     runs-on: ubuntu-latest
     steps:
-      - uses: Fatihmaull/evergreen@v${ctx.cli.version}
+      - uses: actions/checkout@v4
+      - uses: Fatihmaull/evergreen@v1
         with:
           contracts: \${{ vars.SOROBAN_CONTRACT_ID }}
-          threshold: '${ctx.thresholds.warn}'`)}</div>
+          threshold: '${ctx.thresholds.warn}'
+          version: '${ctx.cli.version}'
+          keys-file: '.evergreen/keys.json'`)}</div>
     <p class="note">
       The Action lives at the repository root, so it is referenced as
       <span class="mono">Fatihmaull/evergreen@&lt;ref&gt;</span> — there is no
-      <span class="mono">/actions/…</span> path. It needs no checkout step of its own and reads
-      nothing from your repository.
+      <span class="mono">/actions/…</span> path. The public Action tag is <span class="mono">v1</span>;
+      <span class="mono">version</span> separately pins the published CLI. This example checks out
+      your repository because the Action reads <span class="mono">.evergreen/keys.json</span> from it.
+      Create that file for this one contract with <span class="mono">{ "dataKeys": [...] }</span>
+      containing its declared persistent and temporary keys. If you know the contract has no data
+      keys, use <span class="mono">no-data-keys: 'true'</span> instead of
+      <span class="mono">keys-file</span>; do not claim that merely because you have not listed keys.
     </p>
 
     <h2 id="secrets">A contract id is not a secret</h2>
