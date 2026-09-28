@@ -49,30 +49,20 @@ export function render(ctx) {
     <p class="small muted">Read-only and offline. Corrupt copies fail it; the original passes — six corruptions are rehearsed in the bundle's own review record.</p>
   </section>
   <section class="card card-pad stack">
-    <h2 class="section">Two manifests do not currently verify</h2>
+    <h2 class="section">Verify the current manifests</h2>
     <p class="muted">
-      Of the 16 bundles carrying a <span class="mono">SHA256SUMS</span> manifest, 14 pass and 2 fail. This is
-      committed state, found while building this page and checked with the repository's own
-      <span class="mono">verify-evidence-integrity</span> helper:
-    </p>
-    <ul class="muted">
-      <li><span class="mono">2026-09-14-scheduled-a-save</span> — an acceptance banner was added to its README
-        without regenerating the manifest, so the manifest no longer matches the file it covers. The
-        transaction it records is unaffected and independently confirmed against the chain; it is the
-        <em>manifest</em> that is stale, not the evidence.</li>
-      <li><span class="mono">2026-09-15-publish-dry-run</span> — its single manifest line names a file that is
-        not in the bundle, so it can never verify as written.</li>
-    </ul>
-    <p class="small muted">
-      Nothing runs these verifiers in CI, which is how a README edit disarmed a bundle's integrity gate without
-      anyone noticing. It is on this page rather than quietly omitted, because a verification claim nobody has
-      run is the kind of claim this project exists to object to.
+      Run <span class="mono">pnpm check:evidence-integrity</span> from the repository root. It checks
+      every committed <span class="mono">SHA256SUMS</span> entry and is part of the full CI gate;
+      the command reports the current bundle and file counts. A past count is not a current
+      integrity verdict. The dated review records retain the two manifest defects found earlier,
+      without rewriting or resealing their original evidence.
     </p>
   </section>
   <section class="card card-pad stack">
     <h2 class="section">Where the deliverables stand</h2>
-    <p class="muted"><strong>CLI.</strong> Scanning, rent estimates, manual extension proven on testnet with hashes. Evidence present.</p>
-    <p class="muted"><strong>Auto-bump engine.</strong> Decide-only runs, one engine-triggered save from a local timer, alert templates delivered. The production cron running unattended against a crossing is the September gate — open until B crosses.</p>
-    <p class="muted"><strong>Dashboard, Action, docs.</strong> This preview is the dashboard taking shape; the Action and the published package are Week 4 work. Not done, not claimed.</p>
+    <p class="small muted">Snapshot: 28 September 2026. The repository's STATUS and evidence index carry later changes.</p>
+    <p class="muted"><strong>CLI.</strong> Version 0.1.1 is public on npm; scanning, rent estimates and manual Testnet extension have recorded evidence.</p>
+    <p class="muted"><strong>Auto-bump engine.</strong> A local OS timer triggered one unattended Testnet save. The repository cron is decide-only, not a live submission service; policy-signer Stage 2 remains Partial.</p>
+    <p class="muted"><strong>Dashboard and Action.</strong> The dashboard is public and the Action is tagged v1 with an external green/red run. The 3–5 minute grant demo video is still pending in this snapshot.</p>
   </section>`;
 }

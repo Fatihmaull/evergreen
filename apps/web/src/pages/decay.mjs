@@ -64,11 +64,10 @@ export function validate(series) {
  *   upcoming   — the date has not arrived yet.
  *   unobserved — the date passed and nothing captured it.
  *
- * Derived, never flagged by hand: `ops/crossing-schedule.json` records whether
- * each watch is complete, and the date says whether it is still ahead. So the
- * panel tells the truth on Saturday, on Sunday and on Monday without anyone
- * remembering to change it — and if guinea-pig C's capture does not happen,
- * the page says so by itself rather than simply stopping.
+ * Derived, never flagged by hand: the schedule records operational watch
+ * status; a separately assessed sealed capture can establish expiry even
+ * while Shared acceptance remains open. Otherwise the date says whether the
+ * scheduled expiry is ahead or an observation is still missing.
  *
  * A series that stops with no explanation reads as a chart that ran out of
  * data. SOW §6.2 is graded by one person with minimal technical expertise, and
@@ -76,12 +75,13 @@ export function validate(series) {
  */
 function expiryState(series, knownEnds, now) {
   const known = knownEnds?.[series.contract];
+  if (known?.expiryObserved) return 'observed';
   if (known?.status === 'complete') return 'observed';
   const endsOn = known?.endsOn ?? series.expiryApprox;
   return Date.parse(`${endsOn}T23:59:59Z`) < now.getTime() ? 'unobserved' : 'upcoming';
 }
 
-function panel(s, state, crossesOn) {
+function panel(s, state, crossesOn, expiryObserved) {
   const W = 940;
   const H = 300;
   const PAD = { l: 92, r: 24, t: 26, b: 44 };
@@ -208,7 +208,9 @@ function panel(s, state, crossesOn) {
         ? `<p class="small caution"><strong>The expiry was not observed.</strong> ${esc(s.label.split(' · ')[0])} crossed its alert threshold${crossesOn ? ` on ${esc(crossesOn)}` : ''} and expired ~${esc(s.expiryApprox)} at ledger ${fmt(s.expiryLedger)}. Nothing captured the moment, so this series ends at its last recorded reading and the dashed segment is a projection rather than a measurement.</p>`
         : state === 'upcoming'
           ? `<p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>`
-          : ''
+          : expiryObserved
+            ? `<p class="small muted">Expiry was observed separately at ledger ${fmt(expiryObserved.ledger)} on ${esc(expiryObserved.observedAt)}. The sealed capture's v1 verdict remains unverified; its separate offline assessment reports expiry-observed. The dashed line is a projection from the last plotted pre-expiry reading, not a measured path. <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/${esc(expiryObserved.source)}">Read the assessment</a>.</p>`
+            : ''
     }
     <p class="small muted">Each panel has its own vertical scale; the horizontal axis is always ledger numbers. Dates beside ledgers are estimates at five seconds per ledger.</p>
     <details>
@@ -225,7 +227,12 @@ export function render(ctx, now = new Date()) {
   validate(ctx.decay.series);
   const panels = ctx.decay.series
     .map((s) =>
-      panel(s, expiryState(s, ctx.knownEnds, now), ctx.knownEnds?.[s.contract]?.crossesOn),
+      panel(
+        s,
+        expiryState(s, ctx.knownEnds, now),
+        ctx.knownEnds?.[s.contract]?.crossesOn,
+        ctx.knownEnds?.[s.contract]?.expiryObserved,
+      ),
     )
     .join('');
   return `<section class="stack">${panels}</section>

@@ -41,9 +41,13 @@
 
     <h2 id="file">The file</h2>
     <p>
-      Copy <span class="mono">evergreen.config.example.json</span> to
-      <span class="mono">evergreen.config.json</span> and edit it. Fields beginning with an
-      underscore are documentation and are ignored.
+      Copy <span class="mono">evergreen.config.example.json</span> to a private Testnet config
+      as a starting shape for a dry run. Replace its placeholder contract and payer; the displayed
+      example alone is not a ready-to-run selected-payer simulation. Add the payer's public
+      <span class="mono">sourceAccount</span> and a decimal-string
+      <span class="mono">maxFeeStroops</span> cap as shown in the
+      <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/docs/ENGINE-SETUP.md">engine setup guide</a>.
+      Keep secrets out of the file. Fields beginning with an underscore are documentation and are ignored.
     </p>
     <div class="terminal">{
   &quot;network&quot;: {
@@ -111,8 +115,13 @@
     <h2 id="adding">Adding a contract safely</h2>
     <p>
       Adding an entry to <span class="mono">contracts</span> does not extend anything by itself —
-      the engine correctly does nothing until a threshold is crossed. The danger is a
-      <em>mismatched threshold</em>, not the entry. Add, dry-run, confirm no action, then go live.
+      the engine correctly does nothing until a threshold is crossed. A mismatched threshold can
+      still cause an unexpected decision. Use only a contract and Testnet fee account you control;
+      run <span class="mono">pnpm engine:execute --config PATH --dry-run</span> and inspect its
+      decisions, preview, liveness and fee diagnostics. Neither a quiet dry run nor an exit code
+      authorizes a write. Live execution is a separate, bounded local operator procedure in the
+      <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/docs/ENGINE-SETUP.md">setup guide</a>;
+      no unattended live-submission workflow is shipped.
     </p>
 
             <a class="docs-next" href="/docs/engine/thresholds/">
