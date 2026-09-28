@@ -89,6 +89,32 @@ function readKnownEnds() {
       'ops/crossing-schedule.json yielded no subjects; expired entries would lose their end ledger',
     );
   }
+
+  // The operational C watch remains open for Shared acceptance. That does not
+  // erase the separately assessed expiry observation already committed on main.
+  // Read its sealed record for the public chart without changing the schedule
+  // or upgrading the collector's frozen v1 verdict.
+  const cAssessmentSource = 'docs/evidence/2026-09-26-c-expiry-1202/assessment.json';
+  const cAssessmentPath = join(repo, cAssessmentSource);
+  if (existsSync(cAssessmentPath)) {
+    const c = schedule.watches.find((watch) => watch.subject?.label === 'guinea-pig C');
+    const assessment = JSON.parse(readFileSync(cAssessmentPath, 'utf8'));
+    if (
+      !c ||
+      assessment.subject !== 'C' ||
+      assessment.phase !== 'expiry-observed' ||
+      assessment.recordedVerdict?.phase !== 'unverified' ||
+      !Number.isInteger(assessment.ledger) ||
+      assessment.ledger <= c.subject.persistentExpiresAtLedger
+    ) {
+      throw new Error('C expiry assessment does not match the protected subject and end ledgers');
+    }
+    ends[c.subject.contractId].expiryObserved = {
+      ledger: assessment.ledger,
+      observedAt: assessment.observedAt,
+      source: cAssessmentSource,
+    };
+  }
   return ends;
 }
 
