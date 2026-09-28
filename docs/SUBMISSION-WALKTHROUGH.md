@@ -370,5 +370,5 @@ merely warning.
 If you want the machinery underneath any step: **59 dated evidence directories**
 under [`docs/evidence/`](evidence/), each a sealed bundle of unedited RPC
 responses with a `SHA256SUMS` over its own contents, none edited after the fact.
-[The evidence page](https://evergreen-stellar.pages.dev/evidence/) is the
+[The evidence page](https://evergreen-stellar.pages.dev/docs/evidence/) is the
 browsable version. **None of it is required to assess the three rows above.**
