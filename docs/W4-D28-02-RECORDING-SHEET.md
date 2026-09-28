@@ -296,10 +296,38 @@ All four bundle paths verified present on `main`.
 
 **What it demonstrates:** paste a contract ID, **no wallet and no signup** (L188–189).
 
-🔴 **Do not narrate a cost number over this beat** (L216–219). The dashboard shows no
-rent figure **by design** — `estimateRent`'s quoter is not browser-safe, so the page
-renders rent as *unavailable* rather than as `0`. The cost claim belongs to beat 2, on
-the CLI.
+> 🔴 **CORRECTED 2026-09-28 — the dashboard DOES show rent, on request.** An earlier
+> version of this note said it shows none, *"deliberately"*, because `estimateRent`'s
+> quoter was not browser-safe. **That is no longer true**, and the note would have told
+> you a figure could not appear moments before one did. Caught by Rakha in his #248
+> approval; verified by running it.
+>
+> After a scan, a **`Estimate rent to extend`** button appears. Pressing it produces, on
+> the live page today:
+>
+> ```
+> Rent to extend by 518,400 more ledgers
+> about 3.2 XLM (31,509,408 stroops)
+>   AAAAB8flXw…y86Yv7   about 3.1 XLM    99%     ← the shared code entry
+>   AAAABgAAAA…QAAAAB   about 0.027 XLM  <1%
+> ```
+>
+> **Two things follow, and the second is the one that could embarrass the take.**
+>
+> **1. Do not narrate a fixed quote.** It is priced by simulating against live network
+> config, so the number moves between runs. If you say a figure, say it is what the
+> screen shows right now.
+>
+> **2. 🔴 The screen will say `99%` and beat 6's close says `98%`.** That is **not** a
+> contradiction — it is the same entry with a different denominator, and it lines up
+> exactly with the script's own two cases: the dashboard scanned A with **no data
+> keys**, so it priced **instance and code only**, which is the `99%` scope. Beat 6's
+> `98%` is the four-entry scope from the D1 capture.
+>
+> **So if you press that button, say the scope in the same breath** — *"ninety-nine per
+> cent of the two entries this scan priced"* — or skip the button entirely and leave the
+> rent claim to beat 2 on the CLI. **Either is fine; 99% on screen and "98%" in the
+> narration with nothing joining them is not.**
 
 **The page reads the chain live and prints its own ledger**, which is why this beat and
 beat 2 must be in the same session.
@@ -337,6 +365,11 @@ committed evidence:
 
 Both figures are in the D1 capture. Same entry, same absolute rent, different
 denominator.
+> 🔴 **If you pressed the rent button in beat 5, the screen said `99%`.** Say the scope
+> joining them, or the two numbers read as a discrepancy: the dashboard priced
+> **instance and code only** (no data keys), which is the `99%` case above; the `98%` is
+> the four-entry scope from the D1 capture. **Same entry, same absolute rent, different
+> denominator** — which is what this beat already says. Just say it out loud.
 
 **Then the thesis** (L239–240), verbatim:
 
