@@ -9,3 +9,10 @@
 !/evergreen_protocol/
 /evergreen_protocol/*
 !/evergreen_protocol/DESIGN.md
+
+# The design language, extracted 2026-09-29 for work made beside this product.
+# Committed deliberately: it is written for people and agents who do NOT have
+# this checkout, and `apps/web/scripts/check-design-language.mjs` verifies it
+# against the stylesheet on every run, so it cannot quietly stop being true.
+!/design-language/
+!/design-language/*.md
