@@ -179,14 +179,13 @@ This costs about a minute per transaction if done at capture time and is unrecov
 > 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
 
 **Measured 2026-09-24 after the npm publish: 12 of 13 evidence types exist; only
-the demo video is absent.** Deliverable 1 is Present on all four evidence items;
-Deliverable 2 is Present on all four evidence items with the separately named §4.1
-capability gap; Deliverable 3 has four of five items.
+the demo video is absent.** Deliverable 1 is Present on all four evidence items.
+Deliverable 3 has four of five items.
 
 | Deliverable | Current evidence state |
 |---|---|
-| **1 — Core CLI** | ✅ **4 of 4.** Public repo, [`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.0), CLI screenshots and coverage report |
-| **2 — Auto-Bump Engine** | ✅ **4 of 4 evidence items.** The capped policy-signer capability named in §4.1 remains honestly Partial |
+| **1 — Core CLI** | ✅ **4 of 4.** Public repo, [`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1), CLI screenshots and coverage report |
+| **2 — Auto-Bump Engine** | **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.** |
 | **3 — Dashboard + CI + Docs** | 🟡 **4 of 5.** Dashboard, Action, docs and npm link are present; demo video remains |
 
 **Historical snapshot measured 2026-09-22, ten days out: 7 of 13 evidence types
@@ -496,9 +495,9 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
-| Dashboard hosting | [evergreen-stellar.pages.dev](https://evergreen-stellar.pages.dev) | ✅ W1 placeholder; functional dashboard remains W4 |
+| Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path |
 | Demo video (3–5 min) | | ⬜ **The link goes HERE, and the link is what clears `check:sow`** — see the constraints directly below this table |
-| Docs site / README | | ⬜ |
+| Docs site / README | [Documentation](https://evergreen-stellar.pages.dev/docs/) · [README](../README.md) | ✅ Live docs site and repository README |
 
 > ### 🔴 Two constraints on the demo video URL that live in a gate script and nowhere else
 >

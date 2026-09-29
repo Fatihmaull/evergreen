@@ -25,7 +25,7 @@ So Evergreen never asks for authority over your contract, because no such author
 Two consequences worth stating plainly:
 
 - **You always pay your own rent.** Evergreen supplies the automation, not the money. Apex never funds another party's extend fees — see [`docs/adr/ADR-004`](docs/adr/ADR-004-payment-model.md).
-- **Connecting a wallet authorizes a payment, never access.** The dashboard's optional "extend now" asks your wallet to pay a fee. It never asks for control of anything.
+- **The dashboard does not ask for a wallet.** It is a public read-only view: paste a contract ID and read TTL health. There is no "extend now". That path was cut on 2026-09-10 (`W4-D24-04`). Where a signature does appear — `evergreen extend` — it authorizes a payment, never access, and the command simulates unless you pass `--submit`.
 
 The engine's signing key is a hot key on **your** server, paying from **your** funded account. Stage 1 checks operations and fees in its normal execution path, but a leaked raw key can bypass those software checks. A hardened policy signer is **not currently available**; the accepted v1 disposition is to ship policy scoping as partial and defer full scoping to SOW 2. [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) explains the implemented path and its limits.
 
@@ -34,7 +34,7 @@ The engine's signing key is a hot key on **your** server, paying from **your** f
 **Works today from npm.** Needs Node 24.
 
 ```bash
-npx @evergreen-stellar/cli@0.1.0 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+npx @evergreen-stellar/cli@0.1.1 scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 ```
 
 > **Keep the leading `@`.** Drop it and npm reads `evergreen-stellar/cli` as a
@@ -146,7 +146,7 @@ a contract's storage, so coverage is printed with every scan.
 ### Run the published CLI
 
 ```bash
-npx @evergreen-stellar/cli@0.1.0 scan <contract-id>
+npx @evergreen-stellar/cli@0.1.1 scan <contract-id>
 ```
 
 ## Use it in CI

@@ -101,10 +101,12 @@ and supports webhook or email alerts. The workflow is fully validated on Stellar
 storage costs. The deliverable also includes the `evergreen-check` GitHub Action, complete
 documentation, a 3–5 minute demo video, and published npm packages."
 
-> 🔴 **The capped policy-signer is named in D2's own description, not only in its evidence
-> list.** `docs/adr/ADR-002-policy-signer-provider.md:62` read this correctly. ADR-002's
-> pre-authorised exit — ship the core proof and document policy scoping as partial, deferring
-> full scoping to SOW 2 — remains available, but it is a *Partial* on D2, not a free pass.
+> **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.**
+>
+> §4.1 names that capability in D2's description, not only in the evidence list.
+> ADR-002 records the accepted exit: ship the core proof, document the limit in
+> the guide, and defer full scoping to SOW 2. The guide is one of the four
+> evidence items. It describes the limit. It does not supply the capability.
 
 ---
 

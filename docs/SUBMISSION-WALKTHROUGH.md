@@ -122,12 +122,16 @@ functions, 94.57% of lines.
 > does not mention it. That is the same limit one layer down, it is
 > [#235](https://github.com/Fatihmaull/evergreen/issues/235), and it stays open.
 >
-> **We fixed the renderer and not the model on purpose.** Core's compiled output is
-> inside the runtime fingerprint that every sealed capture bundle pins, and changing it
-> days after the guinea-pig observations — which cannot be retaken — would buy a
-> tidier JSON field at the cost of the evidence those bundles carry. The right fix is a
-> distinct TTL status for an archived entry, and it belongs after submission rather
-> than in the last week of it.
+> **Why `--json` stays unfixed.** A CLI-only change would not move the evidence
+> fingerprint. `runtimeHashes` in `scripts/crossing-capture-common.mjs` hashes
+> `packages/core/dist` and the capture scripts, not `packages/cli`. The reason not
+> to fix it now is publication: reaching users means publishing
+> `@evergreen-stellar/cli@0.1.2` days before the 2026-10-02 deadline, and reopening
+> the version pins in the README, in `docs/EVIDENCE.md`, and the Action `version`
+> input. That input's default is `latest` (`action.yml`), so a new publish changes
+> what CI installs. [#235](https://github.com/Fatihmaull/evergreen/issues/235) stays
+> open. The right model change is a distinct TTL status for an archived entry, and
+> it belongs after submission.
 
 ---
 
@@ -142,6 +146,11 @@ both the engine *refusing* to act.**
 
 **You should see:** a successful `extendTTL` transaction on Stellar **testnet**,
 included at ledger **4,670,261** on 2026-09-14.
+
+**How A was made to fire.** Guinea-pig A was not close to expiry. Its alert
+threshold was deliberately raised above its remaining TTL so the engine would
+fire — that is the trigger, not decay. A did not decay naturally. Guinea-pig B
+is the separate natural-decay and write-guard story.
 
 **What it proves:** the engine's output is a real state change on a public
 blockchain that anyone can check independently of us. Not a log line, not a
@@ -179,10 +188,14 @@ to."* A tool that only reports its successes cannot be trusted near production.
 
 **You should see:** one chart with two shapes — a line declining to zero and
 stopping (**guinea-pig B**, left alone), and a line that steps back up
-(**guinea-pig A**, extended). Dots are unevenly spaced.
+(**guinea-pig A**, extended). Dots are unevenly spaced. **A's step up is not
+natural decay.** A was not close to expiry. Its alert threshold was deliberately
+raised above its remaining TTL so the engine would fire — that is the trigger,
+not decay. A did not decay naturally. B is the separate natural-decay and
+write-guard story.
 
-**What it proves:** that decay is real and that intervention works, on the same
-axes. The uneven spacing is the tell that these are **recorded observations rather
+**What it proves:** B's natural decay is real, and A's deliberate extension works,
+on the same axes. The uneven spacing is the tell that these are **recorded observations rather
 than a simulation** — the readings happened when people took them.
 
 Guinea-pig B was watched from health into expiry across four checkpoints:
@@ -202,7 +215,12 @@ itself. C therefore has **three readings and a gap**, not four:
 | at the crossing | 17,279 | ⬜ **missed** |
 | +12 hours | 8,641 | **8,636** |
 | +18 hours | 4,319 | **4,329** |
-| expiry | ledger 4,793,687 | ledger 4,880,115 |
+| expiry | end ledger 4,793,687 | end ledgers 4,880,097 (instance) and 4,880,099 (persistent); observation ledger 4,880,115 |
+
+C's **4,880,115** is the ledger where expiry was observed, above both end
+ledgers. The instance ended at **4,880,097** and the persistent entry at
+**4,880,099**. B's cell is the end ledger, **4,793,687**, so C's column states
+its end ledgers the same way.
 
 **Read across the rows rather than down the gap, because that is where the
 strength is.** Two contracts nobody touched, observed independently, came out
@@ -215,15 +233,13 @@ We are naming the missed capture because it is ours to name — the scheduled
 operator was not at the machine at 12:00 UTC on the Friday. It is recorded in the
 capture bundles rather than smoothed over.
 
-> **One qualification on Deliverable 2, in our words.** §4.1 describes a *capped
-> policy-signer*. **That capability is not delivered and we are not claiming it.**
+> **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.**
 > The reason is a property of Soroban, not a shortcut: contract-level
 > authorization does not constrain the signature on the ordinary transaction that
 > *pays* for a TTL extension, so a policy signer of that shape does not cap the
 > key it was meant to cap. What ships is the path verified end to end — a funded
 > account the self-hoster owns — documented with its limits in
-> [`POLICY-SIGNER.md`](POLICY-SIGNER.md). **All four of §6.1's evidence items for
-> Deliverable 2 are present**; this concerns §4.1's description of the mechanism.
+> [`POLICY-SIGNER.md`](POLICY-SIGNER.md).
 
 ---
 
@@ -349,10 +365,12 @@ anything it depends on.
 
 ## Where that leaves the three rows
 
+Deliverable 2's reading is the sentence in step 7.
+
 | | Our reading | What is missing |
 |---|---|---|
 | **Deliverable 1** | **Present — 4 of 4** | nothing |
-| **Deliverable 2** | **Present — 4 of 4** | nothing in §6.1; §4.1's policy-signer is addressed in step 7 |
+| **Deliverable 2** | **4 of 4 §6.1 items — Stage 2 not available** | the capped policy-signer capability (Stage 2); see [POLICY-SIGNER.md](POLICY-SIGNER.md) |
 | **Deliverable 3** | Partial — 4 of 5 | **the demo video, and nothing else** |
 
 **One evidence item is absent across all three deliverables.** The publish on
@@ -364,10 +382,10 @@ once.
 of its own, `check:sow`, that looks for each of the thirteen §6.1 artifacts and
 reports Present/Partial independently of this page and of the index. If we
 quietly marked something complete here, that check would still say otherwise —
-and from 29 September it blocks every merge until the gap is closed rather than
+and from 1 October (UTC) it blocks every merge until the gap is closed rather than
 merely warning.
 
-If you want the machinery underneath any step: **59 dated evidence directories**
+If you want the machinery underneath any step: one dated directory per observation
 under [`docs/evidence/`](evidence/), each a sealed bundle of unedited RPC
 responses with a `SHA256SUMS` over its own contents, none edited after the fact.
 [The evidence page](https://evergreen-stellar.pages.dev/docs/evidence/) is the

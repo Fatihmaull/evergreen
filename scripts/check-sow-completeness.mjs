@@ -4,11 +4,12 @@
  *
  * Why this exists
  * ---------------
- * On 2026-09-22, ten days from submission, all seventeen gates in `pnpm check`
+ * On 2026-09-22, ten days from submission, all seventeen gates then in `pnpm check`
  * passed and 884 tests passed while **seven of the thirteen requirements in SOW
  * §6.1 had no artifact at all** — no npm package, no npm links, no alert
  * screenshots, no policy-signer guide, no GitHub Action, no demo video, and a
- * dashboard URL serving a 2,356-byte placeholder.
+ * dashboard URL serving a 2,356-byte placeholder. `pnpm check` now chains
+ * nineteen commands; `check:sow` is the fifteenth.
  *
  * (An audit the same morning put the figure at four absent and three partial.
  * This check is stricter and the stricter number is the honest one: a script
