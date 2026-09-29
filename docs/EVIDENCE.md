@@ -180,7 +180,6 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 **Measured 2026-09-24 after the npm publish: 12 of 13 evidence types exist; only
 the demo video is absent.** Deliverable 1 is Present on all four evidence items.
-**All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.**
 Deliverable 3 has four of five items.
 
 | Deliverable | Current evidence state |

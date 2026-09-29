@@ -11,7 +11,7 @@ beat 3. Run `pnpm measure:cadence` on the day and quote what it prints.
 
 > 🔴 **After recording: the repository's gate clears on the LINK, not on the file.**
 > `check:sow` reads `docs/EVIDENCE.md` and nothing else, so record → edit → upload →
-> **link** is four steps and only the fourth one counts. From Tue 2026-09-29 a missing
+> **link** is four steps and only the fourth one counts. From 1 October 2026 (UTC) a missing
 > link blocks every merge in the repo.
 >
 > **The URL must be on one of five hosts** or the gate stays red with a good link in

@@ -365,10 +365,12 @@ anything it depends on.
 
 ## Where that leaves the three rows
 
+Deliverable 2's reading is the sentence in step 7.
+
 | | Our reading | What is missing |
 |---|---|---|
 | **Deliverable 1** | **Present — 4 of 4** | nothing |
-| **Deliverable 2** | **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.** | — |
+| **Deliverable 2** | **4 of 4 §6.1 items — Stage 2 not available** | the capped policy-signer capability (Stage 2); see [POLICY-SIGNER.md](POLICY-SIGNER.md) |
 | **Deliverable 3** | Partial — 4 of 5 | **the demo video, and nothing else** |
 
 **One evidence item is absent across all three deliverables.** The publish on
@@ -380,7 +382,7 @@ once.
 of its own, `check:sow`, that looks for each of the thirteen §6.1 artifacts and
 reports Present/Partial independently of this page and of the index. If we
 quietly marked something complete here, that check would still say otherwise —
-and from 29 September it blocks every merge until the gap is closed rather than
+and from 1 October (UTC) it blocks every merge until the gap is closed rather than
 merely warning.
 
 If you want the machinery underneath any step: one dated directory per observation
