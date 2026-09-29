@@ -81,13 +81,16 @@ import console from 'node:console';
  * move `HARD_FAIL_FROM` to `'2026-10-01'` — after the last planned merge, before
  * submission — and leave this note in place.
  *
+ * **Applied 2026-09-29:** the demo video was not yet recorded, so this
+ * contingency is in effect. The date string is compared in UTC.
+ *
  * **What does NOT change either way:** the check's reading. It prints the same red
  * status for a missing evidence type on every single day, before and after the
  * hard-fail date. The contingency moves when red becomes *blocking*, never
  * whether the gap is reported. A gate whose deadline is revised in advance with a
  * stated reason is still a gate; one revised at the moment it bites is not.
  */
-const HARD_FAIL_FROM = '2026-09-29';
+const HARD_FAIL_FROM = '2026-10-01';
 
 const today = process.env.EVERGREEN_TODAY ?? new Date().toISOString().slice(0, 10);
 
