@@ -2,6 +2,29 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
+// The same presentation policy must reach TypeScript and the browser's .mjs
+// source. A hand-written `remaining < threshold` is a COPY of the rule: one
+// such copy already made evergreen-check pass at the exact ledger the engine
+// alarmed. Type-aware rules below remain limited to tsconfig.eslint.json files.
+const POLICY_RESTRICTIONS = [
+  {
+    selector: 'ExportDefaultDeclaration',
+    message: 'No default exports (docs/CONVENTIONS.md). Use a named export.',
+  },
+  {
+    selector:
+      'BinaryExpression[operator=/^[<>]=?$/] > :matches(Identifier, MemberExpression)[name=/remaining|threshold/i]',
+    message:
+      'Call needsAction()/hasExpired() from @evergreen-stellar/core — never hand-write a TTL threshold or expiry comparison (docs/CONVENTIONS.md § One home for a policy).',
+  },
+  {
+    selector:
+      'BinaryExpression[operator=/^[<>]=?$/] > MemberExpression[property.name=/remaining|[Tt]hreshold|Below$/]',
+    message:
+      'Call needsAction()/hasExpired() from @evergreen-stellar/core — never hand-write a TTL threshold or expiry comparison (docs/CONVENTIONS.md § One home for a policy).',
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -32,36 +55,19 @@ export default tseslint.config(
     },
     rules: {
       // The rules docs/CONVENTIONS.md § TypeScript actually promises.
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'ExportDefaultDeclaration',
-          message: 'No default exports (docs/CONVENTIONS.md). Use a named export.',
-        },
-        // One home for a policy (docs/CONVENTIONS.md). A hand-written
-        // `remaining < threshold` is a COPY of the rule, and copies do not move
-        // when the rule does. This has already shipped a wrong answer once:
-        // `exitCodeFor` kept `<` after the threshold became a floor, so
-        // `evergreen-check` passed CI at the exact ledger the engine alarmed.
-        // Grep found that one. This makes the next one unwritable instead.
-        {
-          selector:
-            'BinaryExpression[operator=/^[<>]=?$/] > :matches(Identifier, MemberExpression)[name=/remaining|threshold/i]',
-          message:
-            'Call needsAction()/hasExpired() from @evergreen-stellar/core — never hand-write a TTL threshold or expiry comparison (docs/CONVENTIONS.md § One home for a policy).',
-        },
-        {
-          selector:
-            'BinaryExpression[operator=/^[<>]=?$/] > MemberExpression[property.name=/remaining|[Tt]hreshold|Below$/]',
-          message:
-            'Call needsAction()/hasExpired() from @evergreen-stellar/core — never hand-write a TTL threshold or expiry comparison (docs/CONVENTIONS.md § One home for a policy).',
-        },
-      ],
+      'no-restricted-syntax': ['error', ...POLICY_RESTRICTIONS],
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
     },
+  },
+
+  {
+    // The dashboard's rendered pages are .mjs. They need the same policy rule,
+    // but not TypeScript's project-aware rules (these files are not in its TS program).
+    files: ['apps/*/**/*.mjs', 'apps/*/**/*.js'],
+    rules: { 'no-restricted-syntax': ['error', ...POLICY_RESTRICTIONS] },
   },
 
   {

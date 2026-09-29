@@ -29,8 +29,15 @@ import { join } from 'node:path';
 import process from 'node:process';
 import console from 'node:console';
 
-const ROOTS = ['packages', 'scripts'];
-const SKIP = ['node_modules', 'dist', '.evergreen'];
+const ROOTS = ['packages', 'scripts', 'apps'];
+const SKIP = [
+  'node_modules',
+  'dist',
+  '.evergreen',
+  'apps/dashboard/public', // Generated bundles; lint the apps/web source instead.
+  'apps/web/test', // Fixtures deliberately contain examples of the forbidden form.
+  'apps/dashboard/test',
+];
 const SELF = 'check-locale-pinning.mjs';
 /** The one file allowed to name the unpinned form, because it explains it. */
 const HOME = join('core', 'src', 'format.ts');
