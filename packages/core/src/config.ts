@@ -220,7 +220,7 @@ export const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 369;
  * derived from the measurement — deriving it is precisely what makes it move.
  *
  * **Review trigger, not automatic tracking:** if a measured gap ever exceeds 80%
- * of this floor (394 min), the headroom has been consumed and the floor needs a
+ * of this floor (384 min), the headroom has been consumed and the floor needs a
  * deliberate decision. Do not raise it by reflex when a measurement lands.
  */
 export const SCHEDULER_GAP_FLOOR_MINUTES = 480;

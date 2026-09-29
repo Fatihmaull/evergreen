@@ -50,8 +50,7 @@ separate limitation in #235.
 
 ## Deliverable 2 — Auto-Bump Engine (non-custodial, testnet)
 
-> **Our reading: Present on all four §6.1 items — with one honest qualification
-> below, which belongs to §4.1's description rather than to the evidence list.**
+> **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.**
 
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
@@ -150,9 +149,11 @@ part that needs a terminal, and **none of it is required to assess the evidence.
 - **Every capture is a sealed bundle**: raw RPC responses, a manifest, and
   `SHA256SUMS` over its own contents. `shasum -a 256 -c SHA256SUMS` in any
   evidence directory re-checks it.
-- **The repository gates its own evidence.** `pnpm check` runs eighteen checks,
-  one of which — `check:sow` — verifies that each §6.1 item above actually
-  exists, and reports this page's Present/Partial reading independently of this
-  page.
-- **59 dated evidence directories** under [`docs/evidence/`](evidence/), one per
-  observation, none edited after the fact.
+- **The repository gates its own evidence.** `pnpm check` runs nineteen commands,
+  one of which — `check:sow`, the fifteenth — verifies that each §6.1 item above
+  actually exists, and reports this page's Present/Partial reading independently
+  of this page.
+- **One dated directory per observation** under [`docs/evidence/`](evidence/).
+  Each is sealed when written and is not edited after the fact. This page does
+  not restate how many there are, because that number changes when a capture is
+  added.
