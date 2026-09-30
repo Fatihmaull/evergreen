@@ -123,6 +123,21 @@ No transaction or protected-contract write. Notion sync for
 
 ---
 
+## Current — W4-D22-13 app-aware gates in review
+
+On a branch separate from the Action-guide update, Rakha reproduced [#196](https://github.com/Fatihmaull/evergreen/issues/196)
+with two failing regression tests: `check:locale` ignored unpinned formatting
+under `apps/web/src`, and ESLint did not apply the TTL-comparison rule to
+browser `.mjs`. The repository locale gate now walks app source while excluding
+generated public bundles and test fixtures; ESLint shares the same policy
+restriction between TypeScript and browser JavaScript. Both tests turned green,
+as did the focused locale and lint gates. The full gate is required before
+publication, and Fatih review remains;
+the separate browser-CI task #197 is not claimed here. Notion sync for
+`W4-D22-13` is pending.
+
+---
+
 ## Current — W4-D26-05 Neon defaults measured; usage/decision pending
 
 Rakha created a personal Free-plan `Evergreen Preflight` project in the AWS
