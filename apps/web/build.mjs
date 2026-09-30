@@ -694,6 +694,7 @@ await bundle('src/chrome-client.ts', 'assets/chrome.js');
 
 mkdirSync(join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
+cpSync(join(here, 'src/assets/evergreen-logo.jpeg'), join(out, 'assets/evergreen-logo.jpeg'));
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {

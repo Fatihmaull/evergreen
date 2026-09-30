@@ -37,6 +37,23 @@
 
 ---
 
+## Current — W4-D22-08 supplied website mark requested
+
+Fatih asked Rakha on 2026-09-30 to place the supplied Evergreen JPEG mark in
+the existing brand slot beside “Evergreen,” as shown in the reference screenshot.
+Work is isolated on `feat/W4-D22-08-site-logo`: the marketing header and
+dashboard sidebar now share one small static asset, without changing the hero,
+navigation structure, type or motion. The source and built JPEG match the
+supplied file byte-for-byte. Two logo tests failed against the placeholders
+and pass with the mark. The 31-route build, design check, and desktop/mobile
+layout check passed using Brave; generated pages also refresh the evidence-page
+bundle count from 72 to the current 74. This reopens only that part of the
+previously descoped logo task; the figurative-mark search in BACKLOG remains
+unverified and is not implied by the website change. No Testnet operation or
+evidence rewrite is involved. Notion sync for W4-D22-08 is pending.
+
+---
+
 ## Current — W4-D28-03 Week 4 review and snapshot #4, 2026-09-29
 
 The shared [review](W4-REVIEW.md) and
