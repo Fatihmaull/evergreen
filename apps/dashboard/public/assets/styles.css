@@ -678,7 +678,7 @@ body.site .provenance {
   color: var(--surface);
 }
 .site-nav.on-dark .site-mark {
-  background: rgba(252, 249, 248, 0.82);
+  background: var(--surface);
 }
 .site-nav.on-dark .site-link {
   color: rgba(252, 249, 248, 0.62);
@@ -837,10 +837,9 @@ body.site .provenance {
   white-space: nowrap;
 }
 .site-mark {
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
   flex: none;
-  border-radius: 4px;
   background: var(--pine);
 }
 .site-centre {
@@ -1805,11 +1804,17 @@ body.app {
   text-decoration: none;
 }
 .brand-mark {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   flex: none;
-  background: var(--sage);
-  border-radius: 5px;
+  background: var(--surface);
+}
+.site-mark,
+.brand-mark {
+  display: block;
+  -webkit-mask: url('/assets/evergreen-logo-mask.svg') center / contain no-repeat;
+  mask: url('/assets/evergreen-logo-mask.svg') center / contain no-repeat;
+  mask-mode: alpha;
 }
 .brand-name {
   display: block;
