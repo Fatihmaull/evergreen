@@ -73,7 +73,7 @@ function nav(active, tone) {
    */
   return `<header class="site-nav${tone === 'dark' ? ' on-dark' : ''}">
       <nav class="site-nav-inner" aria-label="Site">
-        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"><img src="/assets/evergreen-logo.jpeg" alt="" width="24" height="24" /></span>Evergreen</a>
+        <a class="site-brand" href="/"><span class="site-mark" aria-hidden="true"></span>Evergreen</a>
         <button class="site-burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" hidden>
           <span class="site-bars" aria-hidden="true"></span>
         </button>

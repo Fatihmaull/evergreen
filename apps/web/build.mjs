@@ -694,7 +694,19 @@ await bundle('src/chrome-client.ts', 'assets/chrome.js');
 
 mkdirSync(join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'src/styles.css'), join(out, 'assets/styles.css'));
-cpSync(join(here, 'src/assets/evergreen-logo.jpeg'), join(out, 'assets/evergreen-logo.jpeg'));
+// Preserve the supplied JPEG as the source. Its green pixels become an alpha
+// mask, while its near-white background becomes transparent. CSS supplies the
+// foreground colour so the same mark works on both light and pine surfaces.
+const logoSource = readFileSync(join(here, 'src/assets/evergreen-logo.jpeg')).toString('base64');
+writeFileSync(
+  join(out, 'assets/evergreen-logo-mask.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="300 320 1050 880">
+  <defs><filter id="cutout" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536">
+    <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -2 0 0 0 1.9" />
+  </filter></defs>
+  <image width="1536" height="1536" href="data:image/jpeg;base64,${logoSource}" filter="url(#cutout)" />
+</svg>\n`,
+);
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {
