@@ -341,10 +341,10 @@ evidence of health, so it fails rather than passing quietly.
 
 ### Step 11 · Or — the whole thing in four minutes
 
-**Open:** ⬜ **not yet recorded.** This is the one incomplete item in the
-submission.
+**Open:** **[the demo video — 4 min 31 s](https://youtu.be/MIv26uSiOAQ)**. Public,
+no account, no sign-in.
 
-**What it will be:** the 3–5 minute demo video SOW §6.1 asks for, covering all
+**What it is:** the 3–5 minute demo video SOW §6.1 asks for, covering all
 three deliverables in one sitting — the scan and the shared-entry finding, the
 engine's unattended save, the refusal that protected the proof, the dashboard and
 the CI check.
@@ -355,11 +355,16 @@ an eleventh ten minutes — it is an alternative to the first ten.** When it exi
 watching it first and then spot-checking two or three steps is a faster and better
 assessment than working straight down the page.
 
-**Where it stands:** the [script](W4-D28-01-DEMO-SCRIPT.md) is written and timed at
-**4m20s**, and every slot that blocked recording is now filled and verified against
-the live artifact — the install line against the real npm registry, the CI check
-against a real workflow run. **What is missing is the recording itself**, not
-anything it depends on.
+**Where it stands:** published 2026-09-30 at **4m31s**, following the
+[script](W4-D28-01-DEMO-SCRIPT.md) that was written and timed at 4m20s. Every slot
+in it was verified against the live artifact before recording — the install line
+against the real npm registry, the CI check against a real workflow run.
+
+**One thing in it is already out of date, and we would rather say so.** The
+dashboard segment was captured at 13:49 UTC on 2026-09-30; the site's brand mark
+landed at 16:17 UTC the same day. So the video shows an empty square where the live
+page now shows the Evergreen logo. **Nothing else differs** — the readings on that
+page are live testnet data in both.
 
 ---
 

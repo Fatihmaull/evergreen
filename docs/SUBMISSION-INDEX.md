@@ -87,19 +87,24 @@ what not to touch is the one worth putting near production.
 
 ## Deliverable 3 — Dashboard, CI check, docs and demo
 
-> **Our reading: Partial. Four of five are complete.** Only the demo video is not
-> recorded.
+> **Our reading: Present. All five evidence items are complete**, as of 2026-09-30,
+> when the demo video was published.
 
 | # | §6.1 asks for | Open this | Behind it |
 |---|---|---|---|
 | 9 | Live testnet dashboard | **[evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any contract ID, no wallet, no signup, no account | [landing page](https://evergreen-stellar.pages.dev/) · source in `apps/` |
 | 10 | Published `evergreen-check` GitHub Action | **[`Fatihmaull/evergreen@v1`](https://github.com/Fatihmaull/evergreen/tree/v1)** · [external green/red run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36255608415) · [screenshots](evidence/2026-09-26-action-v1-tag/README.md) | [`action.yml`](../action.yml) · [how to use it](../README.md#use-it-in-ci) · [first internal run and the defect it found](evidence/2026-09-25-published-package-verification/README.md) |
-| 11 | 3–5 minute demo video | ⬜ **not yet recorded** — see below | [script](W4-D28-01-DEMO-SCRIPT.md), timed at 4m20s |
+| 11 | 3–5 minute demo video | **[Watch it — 4 min 31 s](https://youtu.be/MIv26uSiOAQ)** — public, no account, no sign-in | [script it follows](W4-D28-01-DEMO-SCRIPT.md) · [in-repo copy at `demo-v1`](https://github.com/Fatihmaull/evergreen/releases/tag/demo-v1) |
 | 12 | Documentation | **[README](../README.md)** — what it is, install, quickstart · **[self-host the engine](ENGINE-SETUP.md)** · **[use the Action](ACTION-GUIDE.md)** · **[dashboard](https://evergreen-stellar.pages.dev/)** | [setup](SETUP.md) · [CLI reference](https://evergreen-stellar.pages.dev/docs/) · [conventions](CONVENTIONS.md) · [ADRs](adr/) |
 | 13 | Links to the published npm packages | **[npmjs.com/package/@evergreen-stellar/cli](https://www.npmjs.com/package/@evergreen-stellar/cli)** — **one package ships**, currently `0.1.1` | `core` and `shared-types` are bundled into the binary and deliberately absent from the registry; `check:publish` enforces that shape — [why](evidence/2026-09-25-published-package-verification/README.md) |
 
-**On item 11, plainly:** the demo script is written and timed, and its install
-line now resolves against the published package. Recording/upload remains.
+**On item 11, plainly:** published 2026-09-30, 4 min 31 s, inside §6.1's 3–5 minute
+window. It follows the written script and covers all three deliverables in one
+sitting. Two things in it are deliberate rather than accidental: the scan is run
+from the **published `0.1.1`**, not a local build, so what you see is what `npx`
+gives you; and **the dashboard was captured before the site mark landed on
+2026-09-30 16:17 UTC**, so the brand slot in the video is a placeholder square
+where the live site now shows the logo. The data on that page is unaffected.
 
 **On item 10, something we would rather tell you than have you find.** The Action
 now has a real pair: `green · must pass` succeeded and `red · must fail` failed at

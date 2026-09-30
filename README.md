@@ -16,6 +16,8 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 
 **Try it without installing anything: [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any testnet contract ID. No wallet, no signup, no account.
 
+**Or watch it work: [the 4-minute demo](https://youtu.be/MIv26uSiOAQ)** — scan, shared-entry blast radius, an unattended save, the refusal that protected a proof, dashboard and CI check.
+
 ## Why this is non-custodial
 
 Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. Stellar's state-archival documentation states it directly — *"There is no access control for TTL extension operations."*
@@ -182,7 +184,9 @@ npx @evergreen-stellar/cli scan <contract-id> --threshold 120960
 
 ## Documentation
 
-**Assessing this for the Stellar Instawards grant?** Start at
+**Assessing this for the Stellar Instawards grant?** The fastest route is
+[the 4-minute demo video](https://youtu.be/MIv26uSiOAQ), then spot-check two or
+three items below. For the full route, start at
 [`docs/SUBMISSION-WALKTHROUGH.md`](docs/SUBMISSION-WALKTHROUGH.md) — ten steps,
 about ten minutes, no terminal, with what each step proves and every incomplete
 item named at the step where you meet it. For coverage rather than a route,
