@@ -496,10 +496,13 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
 | Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path |
-| Demo video (3–5 min) | | ⬜ **The link goes HERE, and the link is what clears `check:sow`** — see the constraints directly below this table |
+| Demo video (3–5 min) | [**Watch it — 4 min 31 s**](https://youtu.be/MIv26uSiOAQ) | ✅ 2026-09-30; public on YouTube, opens with **no account** — verified with an unauthenticated request, not from a signed-in browser. A byte-identical copy is kept in-repo at [`demo-v1`](https://github.com/Fatihmaull/evergreen/releases/tag/demo-v1), SHA-256 `9f0f751f…2903a` |
 | Docs site / README | [Documentation](https://evergreen-stellar.pages.dev/docs/) · [README](../README.md) | ✅ Live docs site and repository README |
 
-> ### 🔴 Two constraints on the demo video URL that live in a gate script and nowhere else
+> ### ✅ Settled 2026-09-30 — the two constraints the link above had to satisfy
+>
+> **Both are met**, and the reasoning is kept rather than deleted: it is why the link
+> is on YouTube and not on the five other hosts this project publishes to.
 >
 > Read from `scripts/check-sow-completeness.mjs:250`. **The only way to learn them
 > otherwise is to fail the gate**, which is a poor way to find out on Oct 1.
@@ -525,6 +528,11 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 > *this file* and nothing else. **Record → edit → upload → link is four steps and
 > only the fourth one moves the gate.** A video finished Monday evening and linked
 > Tuesday morning still meets a blocked repository.
+>
+> **How it actually went:** the cut was finished 2026-09-30 13:49 UTC and the link
+> landed the same day, ~7 hours before `HARD_FAIL_FROM` (2026-10-01T00:00Z). The
+> hard-fail date was never reached with a gap open, so it blocked nothing — which is
+> what a forcing function looks like when it works.
 
 ## Weekly evidence snapshots
 

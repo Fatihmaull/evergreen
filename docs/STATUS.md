@@ -30,10 +30,11 @@
 > the same conclusion** — publish `0.1.1`, then record. That sequence is corroborated
 > from two directions and does not need re-arguing.
 
-**Last updated:** 2026-09-29 · W4-D28-03 [review](W4-REVIEW.md) and [snapshot #4](evidence/2026-09-29-w4-review/README.md) prepared on main 7434887; #282 assessor corrections remain on main. Published npm CLI 0.1.1 is current. Notion mirror sync is pending.
+**Last updated:** 2026-09-30 · **W4-D28-02 demo video published** at [youtu.be/MIv26uSiOAQ](https://youtu.be/MIv26uSiOAQ) and linked in `docs/EVIDENCE.md` — the last absent SOW §6.1 evidence type. Published npm CLI 0.1.1 is current. Notion mirror sync is pending.
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
+**Freeze:** **2026-10-01, 23:00 WIB = 16:00 UTC** — decided by Fatih on 2026-09-30. Final changes land on the evening of Oct 1, not the morning. Note this is **16 hours after** `check:sow`'s `HARD_FAIL_FROM` of 2026-10-01T00:00Z; that gate is harmless only because all thirteen evidence items now exist, so it has nothing left to block on.
 **Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
-**Health:** 🟡 **three calendar days to the 2026-10-02 deadline; the 3–5 minute demo video is still the missing SOW evidence type.** ✅ npm CLI `0.1.1` public; historical GitHub Release `cli-v0.1.0` remains distinct · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available; shared code entry expires after submission on 2026-10-20.
+**Health:** 🟢 **all thirteen SOW §6.1 evidence items now exist** — the demo video published 2026-09-30 at 4m31s was the last absent type, so D1, D2 and D3 all read Present. Two calendar days to the 2026-10-02 deadline. ✅ npm CLI `0.1.1` public; historical GitHub Release `cli-v0.1.0` remains distinct · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available; shared code entry expires after submission on 2026-10-20.
 
 ---
 
