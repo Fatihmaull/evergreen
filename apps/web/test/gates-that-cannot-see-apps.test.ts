@@ -1,20 +1,21 @@
 /**
- * Two repository gates structurally cannot see `apps/`, so the web enforces
- * their rules on itself here until they can.
+ * The web added local safeguards while repository gates could not see `apps/`.
+ * W4-D22-13 extends check:locale to browser source; this local check remains
+ * independent. The cadence-quote gate still cannot see browser source.
  *
  * Proven by planting failures on 2026-09-23, not by reading the scripts:
  *
- *   - `scripts/check-locale-pinning.mjs` walks `ROOTS = ['packages','scripts']`.
+ *   - Before W4-D22-13, `scripts/check-locale-pinning.mjs` walked only
+ *     `packages` and `scripts`.
  *     An unpinned `toLocaleString()` added under `apps/web/` left it printing
  *     "✓ every rendered number is pinned to an explicit locale".
  *   - `scripts/check-cadence-quotes.mjs` walks `docs/` plus four named files.
  *     A frozen delivery percentage and worst-gap added under `apps/web/` left
  *     it printing "✓ no hard-coded scheduler-cadence figures in prose".
  *
- * Both live in `scripts/`, which belongs to the CLI/engine track (#196). A gate
- * that cannot reach its subject is indistinguishable from one that passes, and
- * this project has paid for that more than once — so these run on the web's own
- * files rather than waiting.
+ * A gate that cannot reach its subject is indistinguishable from one that
+ * passes. The web-local checks remain useful even after the locale gate fix;
+ * only the cadence gap is still waiting on the repository-level gate.
  */
 import { describe, expect, test } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -44,7 +45,7 @@ function code(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
 }
 
-describe('locale pinning, which check:locale cannot see here', () => {
+describe('locale pinning in browser source', () => {
   test('every toLocaleString names its locale', () => {
     const unpinned: string[] = [];
     for (const file of FILES) {

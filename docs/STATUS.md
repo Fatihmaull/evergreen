@@ -30,10 +30,27 @@
 > the same conclusion** — publish `0.1.1`, then record. That sequence is corroborated
 > from two directions and does not need re-arguing.
 
-**Last updated:** 2026-09-29 · [#282](https://github.com/Fatihmaull/evergreen/pull/282) corrected the assessor-facing docs: the README quickstart points at CLI `0.1.1`, the dashboard is read-only, and Deliverable 2 states that all four evidence items exist while the capped policy-signer capability is not available. npm CLI `0.1.1` remains the published latest. Notion sync for this note is pending — this session has no Notion access.
+**Last updated:** 2026-09-29 · W4-D28-03 [review](W4-REVIEW.md) and [snapshot #4](evidence/2026-09-29-w4-review/README.md) prepared on main 7434887; #282 assessor corrections remain on main. Published npm CLI 0.1.1 is current. Notion mirror sync is pending.
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
 **Health:** 🟡 **three calendar days to the 2026-10-02 deadline; the 3–5 minute demo video is still the missing SOW evidence type.** ✅ npm CLI `0.1.1` public; historical GitHub Release `cli-v0.1.0` remains distinct · ✅ Action `v1` tagged and externally exercised · ✅ live dashboard merged (#234) · ✅ original alert screenshots retained · ✅ B/C expiry evidence merged, while Shared acceptance remains separate · 🟡 capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available; shared code entry expires after submission on 2026-10-20.
+
+---
+
+## Current — W4-D28-03 Week 4 review and snapshot #4, 2026-09-29
+
+The shared [review](W4-REVIEW.md) and
+[dated snapshot](evidence/2026-09-29-w4-review/README.md) were prepared from
+main 7434887 in an isolated worktree. The baseline full pnpm check passed:
+818 Vitest tests and the remaining Node suites; evidence integrity covered
+39 bundles and 919 manifest entries. The SOW checker reads Deliverables 1
+and 2 as Present on all evidence items but reports Deliverable 3 Partial,
+with the 3–5 minute demo-video URL the sole absent evidence type. Stage 2
+policy-signer capability is not available, and READY remains 2 PASS plus
+2 HUMAN calls. The missing Week 3 snapshot was not backdated or replaced.
+This review task is complete; the Week 4 milestone itself is not. No
+Testnet write, evidence rewrite, video edit, or hosted migration occurred.
+Notion mirror sync is pending, and Fatih reviews/merges the branch separately.
 
 ---
 
@@ -127,6 +144,21 @@ run it. `W4-D25-02` remains In progress until that stronger acceptance
 question is decided; `W4-D25-03` still needs tag `v1` and screenshots.
 No transaction or protected-contract write. Notion sync for
 `W4-D25-02` is pending.
+
+---
+
+## Current — W4-D22-13 app-aware gates in review
+
+On a branch separate from the Action-guide update, Rakha reproduced [#196](https://github.com/Fatihmaull/evergreen/issues/196)
+with two failing regression tests: `check:locale` ignored unpinned formatting
+under `apps/web/src`, and ESLint did not apply the TTL-comparison rule to
+browser `.mjs`. The repository locale gate now walks app source while excluding
+generated public bundles and test fixtures; ESLint shares the same policy
+restriction between TypeScript and browser JavaScript. Both tests turned green,
+as did the focused locale and lint gates. The full gate is required before
+publication, and Fatih review remains;
+the separate browser-CI task #197 is not claimed here. Notion sync for
+`W4-D22-13` is pending.
 
 ---
 
