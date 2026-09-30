@@ -530,16 +530,16 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 
 A short review at each week's gate — what exists, what's missing, what's at risk.
 
-- **W1 (prepared Sep 8; gate planned Sep 9):** [Review and handoff](W1-REVIEW.md), [scan snapshot and recovered evidence](evidence/2026-09-08-w1-review/README.md). Shared review remains tracked in #44.
-- **W2 (Sep 16):** *(pending)*
-- **W3 (Sep 23):** *(pending)*
-- **W4 (Sep 30):** *(pending)*
+- **W1 (prepared Sep 8; gate planned Sep 9):** [Review and handoff](W1-REVIEW.md), [scan snapshot and recovered evidence](evidence/2026-09-08-w1-review/README.md). The shared review issue [#44](https://github.com/Fatihmaull/evergreen/issues/44) closed on Sep 9; the former "remains tracked" wording was stale.
+- **W2 (captured Sep 12; gate planned Sep 16):** [Review](W2-REVIEW.md), [snapshot #2](evidence/2026-09-12-w2-review/README.md). The old pending label was an index error, not missing evidence.
+- **W3 (gate planned Sep 23):** snapshot #3 was not produced; W3-D21-01 remains in progress. The [W3 inventory](evidence/2026-09-17-w3-inventory/README.md) and later B/C captures are separate evidence, not a backdated review.
+- **W4 (pre-gate read Sep 29; gate planned Sep 30):** [Review](W4-REVIEW.md), [snapshot #4](evidence/2026-09-29-w4-review/README.md). Deliverable 3 remains Partial until the public demo-video link is added.
 
 ## Reviewer walkthrough
 
 Written at B-D29-02. One page, non-technical, letting Kenny verify all three deliverables in under 10 minutes: click here, see this; run this one command, see that; watch minute 2:30 of the video.
 
-- [ ] Draft written
+- [x] Draft written — [submission walkthrough](SUBMISSION-WALKTHROUGH.md)
 - [ ] Tested on someone who hasn't seen the project
 
 ### W1 scan exit-code migration — 2026-09-09

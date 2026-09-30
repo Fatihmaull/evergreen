@@ -18,8 +18,9 @@
  *
  * What it can and cannot decide
  * -----------------------------
- * Outcomes 1–3 are mechanical: pack, install, scan, fetch, look for a file. It
- * runs those and reports a verdict with the evidence attached.
+ * Outcomes 1–2 are mechanical: install, scan, fetch and check the entry route.
+ * Outcome 3 can confirm that the Action file exists, but an unrelated human
+ * must run it in their own CI before the full READY claim is verified.
  *
  * **Outcome 4 is deliberately NOT automated.** It asks whether a competent
  * stranger can stand up the engine *by following the documentation*. A script
@@ -178,7 +179,7 @@ record(
   "Add `evergreen-check` to their own repo's CI, and see it pass AND fail",
   action ? 'HUMAN' : 'FAIL',
   action
-    ? `${action} exists — the remaining half is human: add it to a scratch repo and confirm BOTH a green run and a red one. Guinea-pig D is the intended failure fixture (W4-D25-01b).`
+    ? `${action} exists — the repo-owned external fixture proved green and red with A at different thresholds; an unrelated human still needs to follow the guide in their own repo. No guinea-pig D is required.`
     : 'no `action.yml` exists anywhere in the repository, so there is nothing a stranger could add. W4-D25-01/02/03.',
   { action: action ?? null },
 );
@@ -194,7 +195,7 @@ record(
 
 console.log('\n  ' + '─'.repeat(72));
 console.log(`
-  OUTCOME 4 — your part, and it is the only one that needs a person
+  OUTCOME 4 — a separate human check of the self-host guide
 
   READY.md is explicit that the engine is self-hosted BY DESIGN (ADR-004: the
   user pays their own extend fees), so the bar is NOT one click. It is:
