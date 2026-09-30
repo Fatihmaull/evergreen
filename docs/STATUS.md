@@ -98,16 +98,23 @@ later published separately as npm `0.1.1` under W4-D27-04. This historical
 release is public, not a draft or prerelease. Readback was verified and
 tracking PR #263 merged. Notion sync remains pending.
 
-## Current — W4-D26-02 engine/Action guides drafted
+## Current — W4-D26-02 guides merged; current Action example in review
 
 Rakha drafted the [engine](ENGINE-SETUP.md) and [Action](ACTION-GUIDE.md)
-guides against the shipped entry points and the external `@v1` Action run.
+guides against the shipped entry points and the external `@v1` Action run;
+Fatih merged them in [#258](https://github.com/Fatihmaull/evergreen/pull/258)
+on 2026-09-27.
 The repository cron is decide-only: it does not receive a
 signer secret or call `engine:execute`. The latter is a bounded local operator
 path with an attempt journal, not a turnkey unattended live scheduler. A guide
 can explain those boundaries but cannot certify READY outcome 4 without a
-separate operator trying a non-guinea-pig contract. Local full `pnpm check`
-passed; review/merge remains. Notion sync for `W4-D26-02` is pending.
+separate operator trying a non-guinea-pig contract. On 2026-09-29, a
+[separate fixture run](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36581018892)
+at commit `8197119` verified `Fatihmaull/evergreen@v1` with CLI `0.1.1`:
+green succeeded; red failed at threshold exit 1 as intended. The original
+`0.1.0` run remains historical. The Action guide's user example now pins
+`0.1.1` on a separate review branch; this does not clear the unrelated-human
+READY outcome 3. Notion sync for `W4-D26-02` is pending.
 
 ---
 ## Current — W4-D25-03 public Action tag verified

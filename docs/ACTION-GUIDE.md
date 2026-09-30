@@ -8,6 +8,13 @@ The public `Fatihmaull/evergreen@v1` tag was tested from a
 with `@evergreen-stellar/cli@0.1.0`: one green job exited 0 and one deliberate
 low-TTL job exited 1. [Original run evidence](evidence/2026-09-26-action-v1-tag/README.md).
 
+The current `0.1.1` example was also exercised from the
+[separate fixture repository](https://github.com/rakhargo/evergreen-check-smoke/actions/runs/36581018892)
+on 2026-09-29: the green job succeeded and the deliberately below-threshold
+job failed at exit 1. Both jobs used `Fatihmaull/evergreen@v1` and explicitly
+pinned CLI `0.1.1`. The overall workflow is red by design. This is a
+team-operated fixture, not the unrelated-human READY outcome 3.
+
 ## Minimal workflow for a contract you own
 
 Add `.github/workflows/evergreen-check.yml` to **your** repository:
@@ -33,7 +40,7 @@ jobs:
           contracts: YOUR_TESTNET_CONTRACT_ID
           keys-file: evergreen.keys.json
           threshold: '120960'
-          version: '0.1.0'
+          version: '0.1.1'
 ```
 
 Replace the contract ID and commit your own `evergreen.keys.json` (below). The
@@ -69,7 +76,7 @@ below the threshold, 2 means input or execution error, and 3 means a degraded
 or incomplete scan. All nonzero results fail the job; exit status never
 authorizes a transaction. Review the job log and step summary to distinguish
 an actual low-TTL finding from an RPC/input failure. You can reproduce the
-same read locally with `npx @evergreen-stellar/cli@0.1.0 scan` and the
+same read locally with `npx @evergreen-stellar/cli@0.1.1 scan` and the
 corresponding `--keys-file`, `--threshold` and
 `--require-declared-scope` flags.
 
