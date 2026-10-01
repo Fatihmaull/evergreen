@@ -1,6 +1,6 @@
 $ node scripts/verify-bundle-links.mjs
 
-  B-D30-01 link verification — 2026-10-01T04:01:52.234Z
+  B-D30-01 link verification — 2026-10-01T14:53:07.072Z
   57 links from docs/B-D30-01-HANDOVER.md + docs/SUBMISSION-INDEX.md + docs/SUBMISSION-WALKTHROUGH.md
 
   ✓ every link resolves
