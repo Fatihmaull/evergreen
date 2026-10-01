@@ -70,14 +70,18 @@ if Fatih's original Friday baseline is unavailable. Rakha's Friday checkpoint
 was missed; this capture does not fill or relabel it. No transaction or email.
 The 06:00 and 12:00 UTC C checkpoints and Shared acceptance remain open.
 
-## W3-D18-03a — offline expiry reassessment (local, pending review)
+## W3-D18-03a — offline expiry reassessment (resolved 2026-09-22)
 
 [Separate assessments](evidence/2026-09-21-b-expiry-assessment/README.md) reproduce
 expiry-observed for the three retained final reads using the documented explicit
 non-live zero representation, verified live baseline and unchanged controls. The
 original sealed verdicts remain unverified and byte-identical. No new chain action.
-Compatibility code and reports await review/publication; Shared acceptance remains
-open in [#214](https://github.com/Fatihmaull/evergreen/issues/214).
+**Resolved by [#216](https://github.com/Fatihmaull/evergreen/pull/216), merged
+2026-09-22 as `5f1551b`; [#214](https://github.com/Fatihmaull/evergreen/issues/214)
+closed as completed.** The assessor reproduces `expiry-observed` on all three
+retained attempts, at ledgers 4,793,689 / 4,793,711 / 4,793,736, and the sealed
+`recordedVerdict` is preserved unchanged. The sentence above is kept as the dated
+record of what was true before that merge.
 
 ## W3-D18-03 — final B checkpoint attempts (2026-09-21 12:00 UTC)
 
