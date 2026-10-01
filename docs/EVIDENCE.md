@@ -2,7 +2,7 @@
 
 The grant is judged on this file. Record evidence **the day it is produced**, not in Week 4. A lost tx hash is worse than lost code.
 
-**Deadline:** 2026-10-02 · **Reviewer:** Kenny Rivaldi, Ambassador Chapter Lead (Indonesia)
+**Deadline:** 2026-10-02 · **Reviewer:** the Ambassador Chapter Lead (Indonesia chapter)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
 ## W4-D27-04 — npm CLI 0.1.1 published
@@ -552,7 +552,7 @@ A short review at each week's gate — what exists, what's missing, what's at ri
 
 ## Reviewer walkthrough
 
-Written at B-D29-02. One page, non-technical, letting Kenny verify all three deliverables in under 10 minutes: click here, see this; run this one command, see that; watch minute 2:30 of the video.
+Written at B-D29-02. One page, non-technical, letting the reviewer verify all three deliverables in under 10 minutes: click here, see this; run this one command, see that; watch minute 2:30 of the video.
 
 - [x] Draft written — [submission walkthrough](SUBMISSION-WALKTHROUGH.md)
 - [ ] Tested on someone who hasn't seen the project

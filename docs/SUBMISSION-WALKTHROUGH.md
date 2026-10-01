@@ -1,6 +1,6 @@
 # Ten-minute verification walkthrough
 
-**For Kenny Rivaldi, Ambassador Chapter Lead.** Ten steps, about ten minutes,
+**For the reviewer — the Ambassador Chapter Lead.** Ten steps, about ten minutes,
 **nothing here needs a terminal.** Every step says what to open, what you should
 see, and — the part that matters for §6.2 — **what seeing it proves.**
 
