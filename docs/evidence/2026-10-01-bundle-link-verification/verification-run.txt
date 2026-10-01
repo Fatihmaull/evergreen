@@ -1,0 +1,23 @@
+$ node scripts/verify-bundle-links.mjs
+
+  B-D30-01 link verification — 2026-10-01T04:01:52.234Z
+  57 links from docs/B-D30-01-HANDOVER.md + docs/SUBMISSION-INDEX.md + docs/SUBMISSION-WALKTHROUGH.md
+
+  ✓ every link resolves
+
+  external URLs : 18/18 return 200
+  repo files    : 39/39 exist
+
+
+  3 link(s) verified against a DIFFERENT host than the document names.
+  Each original answers IDENTICALLY for a real and a fabricated target, so a
+  200 from it measures nothing. Rerouted to hosts that discriminate:
+    npmjs.com       403 real AND bogus  ->  registry.npmjs.org   200 / 404
+    stellar.expert  200 real AND bogus  ->  horizon-testnet      200 / 404
+
+    200  https://stellar.expert/explorer/testnet/tx/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128
+        → https://horizon-testnet.stellar.org/transactions/dae63da8bd42dde7ca8a72ac9ff99f7d7179cc505819db337253843e60369128
+    200  https://stellar.expert/explorer/testnet/tx/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a
+        → https://horizon-testnet.stellar.org/transactions/e18e0822d7131b6dc4ffb0953d880baf91135bc0e7a1e3ee40b4ea5071a4115a
+    200  https://www.npmjs.com/package/@evergreen-stellar/cli
+        → https://registry.npmjs.org/@evergreen-stellar/cli
