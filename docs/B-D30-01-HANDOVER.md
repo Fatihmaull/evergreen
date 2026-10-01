@@ -1,6 +1,6 @@
 # Evergreen — evidence handover
 
-**For Kenny Rivaldi, Ambassador Chapter Lead.** Everything needed to complete the
+**For Reviewer** Everything needed to complete the
 Instawards assessment form. **Nothing here needs a terminal, an account or a wallet.**
 
 | | |
