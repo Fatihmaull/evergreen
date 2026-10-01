@@ -178,15 +178,18 @@ This costs about a minute per transaction if done at capture time and is unrecov
 >
 > 🔴 **§6.2 grades per DELIVERABLE, not per artifact** — three rows, each *Evidence Present / Partial / Missing*, assessed by the Ambassador Chapter Lead "with minimal technical expertise". **One missing evidence type pulls a whole deliverable to Partial.** Breadth beats depth in what remains.
 
-**Measured 2026-09-24 after the npm publish: 12 of 13 evidence types exist; only
-the demo video is absent.** Deliverable 1 is Present on all four evidence items.
-Deliverable 3 has four of five items.
+**Measured 2026-09-30 after the demo video was published: all 13 of 13 evidence
+types exist.** All three deliverables are Present on every §6.1 evidence item.
+`pnpm check:sow` reports the same reading independently of this page.
+
+*Previously, measured 2026-09-24 after the npm publish: 12 of 13, with the demo
+video the only absent type and Deliverable 3 at four of five.*
 
 | Deliverable | Current evidence state |
 |---|---|
 | **1 — Core CLI** | ✅ **4 of 4.** Public repo, [`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1), CLI screenshots and coverage report |
 | **2 — Auto-Bump Engine** | **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.** |
-| **3 — Dashboard + CI + Docs** | 🟡 **4 of 5.** Dashboard, Action, docs and npm link are present; demo video remains |
+| **3 — Dashboard + CI + Docs** | ✅ **5 of 5.** Dashboard, Action, docs, npm link and the [demo video](https://youtu.be/MIv26uSiOAQ) — published 2026-09-30, 4m31s |
 
 **Historical snapshot measured 2026-09-22, ten days out: 7 of 13 evidence types
 existed and 6 were absent.** The table below is retained as the dated gap record.
@@ -541,7 +544,7 @@ A short review at each week's gate — what exists, what's missing, what's at ri
 - **W1 (prepared Sep 8; gate planned Sep 9):** [Review and handoff](W1-REVIEW.md), [scan snapshot and recovered evidence](evidence/2026-09-08-w1-review/README.md). The shared review issue [#44](https://github.com/Fatihmaull/evergreen/issues/44) closed on Sep 9; the former "remains tracked" wording was stale.
 - **W2 (captured Sep 12; gate planned Sep 16):** [Review](W2-REVIEW.md), [snapshot #2](evidence/2026-09-12-w2-review/README.md). The old pending label was an index error, not missing evidence.
 - **W3 (gate planned Sep 23):** snapshot #3 was not produced; W3-D21-01 remains in progress. The [W3 inventory](evidence/2026-09-17-w3-inventory/README.md) and later B/C captures are separate evidence, not a backdated review.
-- **W4 (pre-gate read Sep 29; gate planned Sep 30):** [Review](W4-REVIEW.md), [snapshot #4](evidence/2026-09-29-w4-review/README.md). Deliverable 3 remains Partial until the public demo-video link is added.
+- **W4 (pre-gate read Sep 29; gate planned Sep 30):** [Review](W4-REVIEW.md), [snapshot #4](evidence/2026-09-29-w4-review/README.md). That read recorded Deliverable 3 as Partial; the condition it named — a public demo-video link — was met on 2026-09-30, and Deliverable 3 is now Present.
 
 ## Reviewer walkthrough
 

@@ -7,6 +7,16 @@ npm tarball.
 
 ## Install and try
 
+> ⚠️ **`0.1.0` is no longer the current version — [`0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli) has been current since 2026-09-27**, and it fixes how an
+> already-archived entry is reported. These notes describe `0.1.0` and are kept as a
+> dated release record. **If you just want to run the tool, drop the version:**
+>
+> ```bash
+> npx @evergreen-stellar/cli scan YOUR_TESTNET_CONTRACT_ID
+> ```
+
+The `0.1.0` line these notes were written for:
+
 ```bash
 npx @evergreen-stellar/cli@0.1.0 scan YOUR_TESTNET_CONTRACT_ID
 ```
