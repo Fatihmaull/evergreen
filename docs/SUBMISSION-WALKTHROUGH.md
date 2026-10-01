@@ -81,8 +81,11 @@ functions, 94.57% of lines.
 **What it proves:** the correctness claims are measured, not asserted.
 
 > ✅ **Deliverable 1 is complete.** The fourth item —
-> **[`@evergreen-stellar/cli@0.1.0`](https://www.npmjs.com/package/@evergreen-stellar/cli)** —
-> published on 2026-09-24. You can run it yourself with no install and no account:
+> **[`@evergreen-stellar/cli`](https://www.npmjs.com/package/@evergreen-stellar/cli)** —
+> first published as `0.1.0` on 2026-09-24, with **`0.1.1` current since 2026-09-27**.
+> The command below is unpinned on purpose: it gives you whatever the registry
+> serves today, which is what we want you to see. Run it with no install and no
+> account:
 >
 > ```
 > npx @evergreen-stellar/cli scan CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
@@ -376,19 +379,25 @@ Deliverable 2's reading is the sentence in step 7.
 |---|---|---|
 | **Deliverable 1** | **Present — 4 of 4** | nothing |
 | **Deliverable 2** | **4 of 4 §6.1 items — Stage 2 not available** | the capped policy-signer capability (Stage 2); see [POLICY-SIGNER.md](POLICY-SIGNER.md) |
-| **Deliverable 3** | Partial — 4 of 5 | **the demo video, and nothing else** |
+| **Deliverable 3** | **Present — 5 of 5** | nothing |
 
-**One evidence item is absent across all three deliverables.** The publish on
-2026-09-24 filled D1's fourth item and D3's npm links, made the demo's install
-line true, and made the Action's green-and-red pair recordable — all four at
-once.
+**No §6.1 evidence item is absent across any of the three deliverables**, since
+the demo video was published on 2026-09-30. The last one to land was that video;
+before it, the npm publish on 2026-09-24 filled D1's fourth item and D3's npm
+links, made the demo's install line true, and made the Action's green-and-red
+pair recordable — all four at once.
+
+**What is still absent is a capability, not an evidence item:** the capped
+policy-signer (Stage 2), named in the Deliverable 2 row above and in step 7. We
+are not claiming it.
 
 **You do not have to take our word for that reading.** The repository runs a check
 of its own, `check:sow`, that looks for each of the thirteen §6.1 artifacts and
 reports Present/Partial independently of this page and of the index. If we
 quietly marked something complete here, that check would still say otherwise —
 and from 1 October (UTC) it blocks every merge until the gap is closed rather than
-merely warning.
+merely warning. **It reached that date with nothing to block on:** the last absent
+item was closed on 2026-09-30, and `check:sow` now reports all thirteen present.
 
 If you want the machinery underneath any step: one dated directory per observation
 under [`docs/evidence/`](evidence/), each a sealed bundle of unedited RPC
