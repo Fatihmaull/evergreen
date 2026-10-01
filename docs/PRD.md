@@ -185,7 +185,7 @@ Apex is Fatih Maulana and Rakha. Budget/compensation split is settled between th
 - **Rakha** — Auto-Bump Engine (§6.2), including the passkey-kit spike in Week 3, threshold rules, and the notification-channel abstraction.
 - **Shared, all weeks:** testnet evidence collection (tx hashes, screenshots) as work lands — not batched at the end — and the `evergreen-check` GitHub Action, since it depends on both the CLI (Fatih) and the engine's data model (Rakha).
 
-Ambassador Chapter Lead (Kenny Rivaldi, Indonesia chapter) is the evidence reviewer, not a builder on the team.
+The Ambassador Chapter Lead (Indonesia chapter) is the evidence reviewer, not a builder on the team.
 
 ## 11. Risks
 
@@ -200,7 +200,7 @@ Ambassador Chapter Lead (Kenny Rivaldi, Indonesia chapter) is the evidence revie
 - ~~**(Engineering)** Is there stable testnet tooling for the policy signer, or do we build our own?~~ → Use `passkey-kit`/smart-account-kit (Option A, §6.2.1); validate with a Week 3 Day 1–2 spike before committing further.
 - ~~**(Product)** Public dashboard or wallet-scoped?~~ → **Revised 2026-09-04:** public read-only at P0 (scan any contract, no wallet — scanning is a permissionless read), wallet-connect + user-signed extend at P1 (§6.3, §7). The original wallet-scoped answer assumed contract "control" was derivable from chain data; it is not — it would only ever have been an app-level registry.
 - ~~**(Product)** Email vs. webhook alerting for v1?~~ → Email for v1, built behind a `NotificationChannel` interface so Telegram/webhook can be added in SOW 2 without rework (§7 P0/P1).
-- ~~**(Ambassador)** What's the official sprint start date?~~ → 2026-09-03, superseding the SOW's suggested 2026-08-17; the 30-day clock therefore runs Sep 3 (day 1) → **2026-10-02** (day 30). *Still worth a quick confirmation message to Kenny Rivaldi so the Ambassador side's records match, even though this doc treats it as settled.*
+- ~~**(Ambassador)** What's the official sprint start date?~~ → 2026-09-03, superseding the SOW's suggested 2026-08-17; the 30-day clock therefore runs Sep 3 (day 1) → **2026-10-02** (day 30). *Confirmed with the Ambassador Chapter Lead on 2026-09-07 (`W1-D1-03`), so both sides' records match.*
 
 ### Remaining open item
 - **(Engineering, non-blocking until Week 3)** Confirm during the passkey-kit spike whether an Ed25519 policy signer can be driven fully headlessly (no browser/WebAuthn ceremony) end-to-end — the kit's docs and demos lean toward browser passkey flows, so this needs hands-on verification rather than doc-reading alone.

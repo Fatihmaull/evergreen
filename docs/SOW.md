@@ -21,8 +21,9 @@ agreement with the source.
 
 > ⚠️ **The Oct 2 deadline is derived, not quoted.** The SOW names only a *suggested* start of
 > 2026-08-17 and a 30-day window. The actual start was agreed at 2026-09-03. `docs/PRD.md:203`
-> already flagged that this wants a confirmation message to Kenny Rivaldi so the Ambassador
-> side's records match. **That confirmation has still not been sent.**
+> already flagged that this wants a confirmation message to the Ambassador Chapter Lead so
+> that side's records match. **It was sent on 2026-09-07** (`W1-D1-03`): sprint 2026-09-03 →
+> 2026-10-02, confirmed both ways.
 
 ---
 

@@ -1,6 +1,6 @@
 # Evergreen — evidence handover
 
-**For Reviewer** Everything needed to complete the
+**For the reviewer.** Everything needed to complete the
 Instawards assessment form. **Nothing here needs a terminal, an account or a wallet.**
 
 | | |
