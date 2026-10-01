@@ -192,9 +192,12 @@ after **5 idle minutes**; it was later observed suspended. Billing displays
 since Sep 27**, but the console warns usage metrics may lag by an hour and are
 not updated for inactive projects. This is a measured configuration ceiling,
 not an observed average under the intended workload or a verified quota reset
-date. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260) remains
-open for those measurements and Fatih's personal-preflight versus shared-hosted
-ownership decision before D26-06 migrations. This operator did not open a
+date. [Issue #260](https://github.com/Fatihmaull/evergreen/issues/260) was **closed on
+2026-10-01 with the decision deferred past 2026-10-02**: Neon is not adopted for
+this submission. The SOW names no database, so hosted adoption moves no §6.2 row;
+usage measured at 0 CU-hours means nothing forces the call now; and `W4-D26-07`
+and `W4-D26-08` are still open, so adopting first would mean migrating twice. The
+work stays tracked at `W4-D26-06/07/08`. This operator did not open a
 connection string or secret, change compute settings, run a schema migration,
 or submit a Testnet transaction. W4-D26-05 is In progress; Notion mirror sync
 is pending.
