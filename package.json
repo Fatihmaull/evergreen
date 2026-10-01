@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Soroban state-archival autopilot — monitor TTL, predict archival, extend automatically.",
+  "description": "Soroban state-archival autopilot \u2014 monitor TTL, predict archival, extend automatically.",
   "license": "MIT",
   "engines": {
     "node": ">=24",
@@ -71,7 +71,8 @@
     "ready:fresh": "node scripts/ready-fresh-machine.mjs",
     "test:action": "node --test --test-isolation=none scripts/action.test.mjs",
     "check:evidence-integrity": "node scripts/check-evidence-integrity.mjs",
-    "test:evidence-inventory": "node --test --test-isolation=none scripts/check-evidence-integrity.test.mjs"
+    "test:evidence-inventory": "node --test --test-isolation=none scripts/check-evidence-integrity.test.mjs",
+    "verify:bundle-links": "node scripts/verify-bundle-links.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
