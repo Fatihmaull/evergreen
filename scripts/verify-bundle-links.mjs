@@ -50,14 +50,37 @@ async function head(url) {
     /^https:\/\/stellar\.expert\/explorer\/testnet\/tx\/([0-9a-f]{64}).*$/,
     (_, h) => `https://horizon-testnet.stellar.org/transactions/${h}`,
   );
-  try {
-    // `globalThis.fetch`, matching scripts/sync-notion.mjs — the bare global is
-    // not declared for .mjs in eslint.config.js and trips no-undef.
-    const r = await globalThis.fetch(probe, { redirect: 'follow', headers: { 'User-Agent': UA } });
-    return { code: r.status, probe: probe === url ? null : probe };
-  } catch (e) {
-    return { code: `ERR ${e.cause?.code ?? e.message}`.slice(0, 28), probe: null };
+  // RETRY ON TRANSPORT ERRORS ONLY, never on an HTTP response.
+  //
+  // Measured 2026-10-01: two links that were reachable minutes earlier, and
+  // reachable by curl seconds later, came back UND_ERR_CONNECT_TIMEOUT in the
+  // same run. A transient timeout and a dead link printed identically — and this
+  // script's whole job is to be run immediately before handing the bundle over,
+  // where crying wolf is its worst failure.
+  //
+  // A 404 is an ANSWER and is never retried: retrying one would turn a real
+  // broken link into a slow green, which is the opposite of the point.
+  const attempts = [];
+  for (let i = 0; i < 3; i++) {
+    try {
+      // `globalThis.fetch`, matching scripts/sync-notion.mjs — the bare global is
+      // not declared for .mjs in eslint.config.js and trips no-undef.
+      const r = await globalThis.fetch(probe, {
+        redirect: 'follow',
+        headers: { 'User-Agent': UA },
+      });
+      return { code: r.status, probe: probe === url ? null : probe, attempts: i + 1 };
+    } catch (e) {
+      attempts.push(e.cause?.code ?? e.message);
+      // `globalThis.setTimeout`, matching the retry backoff in scripts/sync-notion.mjs:188.
+      if (i < 2) await new Promise((r) => globalThis.setTimeout(r, 1500 * (i + 1)));
+    }
   }
+  return {
+    code: `ERR ${attempts[attempts.length - 1]}`.slice(0, 28),
+    probe: null,
+    attempts: 3,
+  };
 }
 
 const rows = [];

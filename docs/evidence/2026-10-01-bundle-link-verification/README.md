@@ -58,6 +58,36 @@ were caught, while a live control stayed green:
 Exit code went to `1`. The fabricated transaction hash was **not** caught before
 the Horizon reroute was added, and is caught after — which is what justified it.
 
+## A transient timeout and a dead link printed identically — fixed
+
+**Measured 2026-10-01, on the final pre-freeze run.** Two links that had returned
+200 twenty-five minutes earlier, and that `curl` fetched successfully seconds
+later, came back `UND_ERR_CONNECT_TIMEOUT` in the same run — the npm package page
+and the demo video. **The run reported 16 of 18 and exited 1.**
+
+Nothing was wrong with the evidence. The checker had no retry, so a flaky socket
+and a deleted video produced the same red line.
+
+**That is this script's worst possible failure.** It exists to be run in the
+minutes before the bundle is handed over, and a false alarm there says *your
+evidence is broken* at the moment there is least time to check.
+
+Now: **three attempts on transport errors, with backoff — and never on an HTTP
+response.** A 404 is an answer, not a failure to ask. Retrying one would turn a
+genuinely broken link into a slow green, which is the exact inversion of the
+point.
+
+Re-commissioned after the change, five injected faults and one live control:
+
+| injected | caught as |
+|---|---|
+| a GitHub release tag that does not exist | `404` |
+| `@evergreen-stellar/cli@0.1.2` — never published | `404` |
+| a fabricated 64-hex transaction hash | `404` via Horizon |
+| a repository path that does not exist | `MISSING` |
+| an unroutable host — **proves the retry gives up** | `ERR ENOTFOUND` |
+| **control:** the real demo video | stayed `200` |
+
 ## Re-running it
 
 ```bash
