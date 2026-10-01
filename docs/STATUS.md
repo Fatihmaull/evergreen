@@ -30,7 +30,7 @@
 > the same conclusion** — publish `0.1.1`, then record. That sequence is corroborated
 > from two directions and does not need re-arguing.
 
-**Last updated:** 2026-09-30 · **W4-D28-02 demo video published** at [youtu.be/MIv26uSiOAQ](https://youtu.be/MIv26uSiOAQ) and linked in `docs/EVIDENCE.md` — the last absent SOW §6.1 evidence type. Published npm CLI 0.1.1 is current. Notion mirror sync is pending.
+**Last updated:** 2026-10-01 · **🏁 EVIDENCE BUNDLE SENT to the Ambassador Chapter Lead at 22:22 WIB / 15:22 UTC (`B-D30-01`)** — [`docs/B-D30-01-HANDOVER.md`](B-D30-01-HANDOVER.md), with every link verified **two minutes before it went**: `pnpm verify:bundle-links` at 15:20 UTC on `main@d337153`, clean tree, **57 of 57 resolving**. He files the Instawards form from here, per §9. Earlier the same day: **W4-D28-02 demo video published** at [youtu.be/MIv26uSiOAQ](https://youtu.be/MIv26uSiOAQ) and linked in `docs/EVIDENCE.md` — the last absent SOW §6.1 evidence type. Published npm CLI 0.1.1 is current. Notion mirror sync is pending.
 **Deadline:** 2026-10-02 · remaining capacity/slack accounting is W3-D21-02; older day-count snapshots below are historical.
 **Freeze:** **2026-10-01, 23:00 WIB = 16:00 UTC** — decided by Fatih on 2026-09-30. Final changes land on the evening of Oct 1, not the morning. Note this is **16 hours after** `check:sow`'s `HARD_FAIL_FROM` of 2026-10-01T00:00Z; that gate is harmless only because all thirteen evidence items now exist, so it has nothing left to block on.
 **Current week:** **W4 — publication and readiness**; W3 Shared acceptance and evidence closeout remain open.
