@@ -1,0 +1,323 @@
+# Evergreen Phase 2 — decisions, design and task plan (v4)
+
+**Status: CONFIRMED by Fatih, 2026-10-14.** v4. Written from the grilling session (Q1–Q20), the §4 answers, and Rakha's merged-PR history. Nothing here is registered in `BACKLOG.md` yet.
+
+**Card labels (`E1-03`, `BL-02` and so on) are provisional. They are not task IDs.**
+- The checker accepts only `W\d-D\d+-\d+`, `F-\d+` and `B-D\d+-\d+` (`scripts/task-id.mjs:26`).
+- The registering agent picks the real ID scheme.
+- Do not cite a label as an ID anywhere public.
+- **Naming departure, deliberate:** `docs/CONVENTIONS.md` keeps local grouping labels out of public docs. This folder is public because Fatih asked for it (Rakha pulls it). E0-07 replaces every label here with its registered ID, which ends the departure.
+
+---
+
+## 1 · Phase 2 in one paragraph
+
+Evergreen becomes a product people use. Success is real adoption (Q4), starting with an **initial release to 10–20 users for feedback**.
+
+- The CLI covers what developers need.
+- The dashboard works for anyone's contracts: email + wallet login, a personal watchlist, scan, and extend.
+- A hosted autopilot is funded by a **capped, expiring XLM allowance** the user signs once (Q8).
+- The fee rule: **whenever XLM moves, Evergreen takes a percentage fee per transaction; actions that move no XLM are free.**
+- Testnet public beta first, mainnet second.
+
+---
+
+## 2 · Decision record
+
+| # | Decision | Cost / consequence |
+|---|---|---|
+| Q1 | Shared code entry extended via `stellar` CLI — **done** (#296, live until 8,297,162). Evergreen's CLI must be able to do it in future (`B-D31-04`). | — |
+| Q2 | Retire the evidence-integrity freeze: tag `sow1-final`, verify against the tag, unfreeze `core`. | One infra PR first |
+| Q3 | Mainnet hosted autopilot is a paid service. | Supersedes ADR-004's "hosted not built" |
+| Q4 | Goal: real adoption. Usable dashboard and complete CLI. | Needs a backend |
+| Q5 | Mainnet starts read-only. | No mainnet autopilot until extend is hardened |
+| Q6 | Lighter process. Keep mutation proof on write paths and `origin/main` verification. | Gate inventory needs sign-off |
+| Q7 | Docs hygiene now. | — |
+| Q8 | **Allowance, not custody** (spike #297: viable with four limits). | Re-sign about every 180 days; per-contract caps are off-chain |
+| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. | — |
+| Q10 | Open-core: CLI and self-hosted engine are MIT; hosted is paid. | — |
+| Q11 | One revenue destination, no profit split; all of it funds development. | — |
+| Q12 | Cloudflare: Free, then Workers Paid if E2-01 measures the engine over the free limits. Render was evaluated and rejected (§3.2). | At most about $5/month, on one platform |
+| Q13 | Neon Postgres. | Sprint prerequisites still open |
+| Q14 | Manual watchlist now; auto-discovery in backlog. | — |
+| Q15 | Foundation → dashboard → hosted; MCP as a side track. | — |
+| Q16 | Fix `#235` in `core`; CLI to `0.2.0`. | Breaking `--json` |
+| Q17 | Treasury key separate from engine key. | A sweep step |
+| Q18 | Testnet beta before mainnet money. | Revenue later |
+| Q19 | Two agent tracks per person — see §4 for roles. | API spec is the contract |
+| Q20 | Email + wallet login. | First account system in the project |
+| §4.2 | Fee applies to dashboard manual extends too. | ⚠️ A Soroban transaction holds exactly one operation, so the fee cannot share the extend's transaction — see §3.3 |
+| §4.3 | If a pull succeeds and the extend fails, refund from the **engine pool**, never from treasury. | The engine float must hold refund headroom |
+| §4.4 | npm publish rights: both Fatih and Rakha; **Rakha is primary owner of publishing**. | — |
+| §4.5 | Fee collection is legal and safe, **per Fatih**. | Recorded as his assertion |
+| Q21 | **Fees only when Evergreen's own infrastructure executes** (hosted autopilot, dashboard extends). The CLI and self-hosted engine stay fee-free and open source. Add an **opt-in "Support Evergreen"** tip in the CLI and on the website. | Revenue from CLI users is voluntary only |
+| Fee, users without an allowance | Research a router contract first (E4-07): fewest signatures. **If it cannot work, dashboard extend requires an allowance.** | See §3.3 |
+
+**ADR changes (card E0-05):**
+- ADR-004 is superseded by a new ADR covering allowance funding and the fee. The invariant *Apex never subsidises rent* survives.
+- ADR-002 is amended: the capped property is achieved at the token layer (#297); the no-go stands.
+- ADR-003 is amended: Cloudflare + Neon.
+- New ADR for authentication (§3.1).
+
+---
+
+## 3 · Design notes — best practice per decision
+
+These are recommendations for the ADRs to record. Facts marked **[verified]** were checked against a primary source today; facts marked **[to verify]** are a card's job.
+
+### 3.1 Q20 — email + wallet login
+
+**Two identities, two powers.**
+- **Email** is the account: identity, recovery, notifications.
+- **Wallet** is authority over money. Nothing that moves XLM is ever authorised by an email session. On chain it cannot be anyway, because the allowance is the user's signature.
+
+**Email: passwordless.**
+- A one-time code or magic link: 10–15 minute expiry, single use, stored hashed.
+- Send rate is limited per address and per IP.
+- Delivery reuses the Resend channel the engine already has (`packages/engine/src/email-channel.ts`).
+- No passwords are stored, so none can leak.
+
+**Wallet: a signed challenge, the SEP-10 (Stellar Web Authentication) pattern.**
+- The server issues a challenge, the wallet signs it, the server verifies it.
+- Linking a wallet to an account always requires that signature.
+- One account can link several wallets.
+- **[to verify]** whether the SDK version we pin ships the SEP-10 helpers, or the server builds and verifies challenges itself.
+
+**Sessions.**
+- Server-side session rows in Neon, referenced by an `httpOnly; Secure; SameSite=Lax` cookie.
+- Short-lived and rotated. CSRF protection on state-changing routes. Logout invalidates server-side.
+
+**Recovery.** Email recovers the account, never funds. Funds were never ours to recover, which is the point of Q8.
+
+### 3.2 Q12 — Cloudflare first, honestly priced
+
+**The free plan's limits [verified, developers.cloudflare.com/workers/platform/limits, 2026-10-14]:**
+- **10 ms CPU** per HTTP request and per Cron Trigger invocation;
+- 100,000 requests per day;
+- 5 Cron Triggers per account;
+- 50 subrequests per invocation.
+
+The paid plan is 30 s CPU per cron run and 10,000 subrequests.
+
+**What this means:**
+- **The API and dashboard probably fit free.** Mostly I/O, light CPU.
+- **The engine probably does not.** Each action parses XDR, simulates, signs and reconciles; 10 ms of CPU across that is very tight, and 50 subrequests caps one run at roughly 15–25 contracts.
+- **This is a measurement, not a guess.** E2-01 measures CPU per scan and per extend inside `workerd`.
+
+**Render, evaluated at Fatih's request and rejected for the engine [verified, render.com/docs/free, 2026-10-14]:**
+- Free covers web services only; **background workers and cron jobs are not available free**.
+- A free web service **spins down after 15 minutes without inbound traffic** and takes about a minute to wake.
+- Render **may suspend a free service with unusually high outbound traffic, such as frequent external API calls**. An engine calling Soroban RPC on a schedule is exactly that.
+- Render **may restart free services at any time**.
+
+An autopilot users pay for cannot run on a host that sleeps, and keeping it awake with pings is the same platform-gaming the sprint rejected for GitHub cron. For the API alone, the one-minute cold start would be the dashboard's first impression.
+
+**Decision ladder:** Workers Free → **Workers Paid (about $5/month)**. Billing stays on one platform, per Fatih's fallback instruction. Railway is no longer on the ladder.
+
+**The known trap.** `core` bundled for the browser *built fine and silently mis-scanned* because of the global `Buffer`. Workers is another non-Node runtime. E2-01 passes only if a scan run inside Workers **matches the CLI's output for the same contract at the same ledger**. A successful build proves nothing.
+
+**Neon from Workers:** its serverless driver over HTTP/WebSocket, or Cloudflare Hyperdrive. **[to verify]** which works on the plan we choose.
+
+**Engine fan-out:** a cron run that only enqueues work, with one action per message, keeps every invocation small. **[to verify]** whether Cloudflare Queues is available on the free plan.
+
+### 3.3 Q8 — allowance-funded autopilot
+
+**Facts from spike #297 [verified, testnet tx hashes in the PR]:**
+- `approve` and `transfer_from` work for native XLM held by G-accounts.
+- The cap is enforced: over-cap, expired, revoked and self-extended allowances are all refused.
+- `live_until_ledger` is at most current + 3,110,399.
+- The allowance lives in temporary storage.
+- There is one allowance per user–spender pair; a new `approve` *overwrites* it rather than adding.
+
+**One constraint discovered today [verified, developers.stellar.org]:**
+- A transaction containing `InvokeHostFunction`, `ExtendFootprintTTL` or `RestoreFootprint` **may contain only that one operation**.
+- So the fee can never ride inside the extend's transaction.
+- Every fee is either a separate `transfer_from` (allowance users) or a separate payment (everyone else).
+
+**The recommended flow for one hosted action:**
+1. **Pre-flight, nothing submitted:**
+   - simulate the extend to get the exact rent;
+   - read `allowance()` and the user's balance;
+   - check the per-contract budget in the DB;
+   - abort cleanly if any check fails, and alert the user.
+2. **Pull** `rent + fee` with one `transfer_from`. The job carries an idempotency key; a job is never pulled twice.
+3. **Extend** from the engine account, retrying transient failures a bounded number of times.
+4. **Reconcile.** Compare the rent actually charged with the rent pulled, and record the difference in the fee ledger.
+5. **On final failure, refund from the engine pool** (§4.3) with the same idempotency key.
+6. **Sweep.** Fees accumulate in the engine account and are swept to treasury on a schedule (Q17). The treasury key never touches a server.
+
+**Sizing the user's cap:**
+- Shown to the user as: estimated rent for the watched contracts × chosen horizon × (1 + fee) × a safety margin.
+- The margin exists because the CLI already measured rent varying about 18% between days.
+- The UI must say plainly that a new approve **replaces** the cap rather than adding to it.
+
+**Renewal:**
+- Expiry is at most about 180 days.
+- Reminders at 30, 7 and 1 days before.
+- A revoke button that sets `approve(0)`.
+- An expired allowance stops the autopilot and alerts the user. It never silently stops protecting a contract.
+
+**Manual extend with a fee (§4.2):**
+- **Allowance users: one click, zero wallet prompts.** "Extend now" is just an on-demand engine job, running the same flow as above.
+- **Users without an allowance:** card E4-07 researches an Evergreen **router contract** that takes the fee and extends in **one invocation, one signature**.
+  - **[to verify]**: whether a contract can extend another contract's instance and code (believed yes), and whether it can extend another contract's *persistent data* (believed no).
+  - If it can cover only instance and code, say so and measure how much of a typical contract's rent that is. In #296, the code entry was 99% of the bill.
+  - **If the router cannot work, dashboard extend requires an allowance first** (Fatih's fallback). Two-transaction extends are not offered.
+
+**What a fee can never do.** Extension is permissionless, so anyone can extend any entry with the `stellar` CLI or our MIT CLI and pay no fee. The fee is the price of the convenience Evergreen runs, not a toll on the chain. That is correct and should be said plainly in the custody/pricing copy, not hidden.
+
+**"Support Evergreen" (Q21c):**
+- Opt-in only. Never on by default, never bundled into another action.
+- A separate payment of an amount the user chooses, to the **treasury address**. A receive-only public address is safe to publish.
+- **CLI cadence (Fatih, 2026-10-14):** shown **at most once per calendar month**, after a successful command; the user can **dismiss it for that month**.
+- **Never print it where it would break something:** only in an interactive TTY, only on **stderr**, never with `--json`, never in CI (`CI` env set), never when stdout is not a terminal. `--json` output feeds scripts, the Action and the MCP server, and a tip inside it is a parsing bug.
+- **Also offer a permanent opt-out** (an env var plus a config flag) for CI images and agent hosts that cannot answer a monthly prompt. Recommended as standard CLI etiquette; Fatih may drop it.
+- The last-shown month is stored in the user's config directory. This is the CLI's first piece of persistent local state, so the path and format are documented.
+- The website gets a support page with the same address.
+
+**The engine float must cover:**
+- in-flight extends;
+- refund headroom (§4.3);
+- an upper limit, beyond which it sweeps or alerts.
+
+The float is the only thing an attacker with the engine key gets beyond outstanding allowances (#297 §6).
+
+---
+
+## 4 · Roles
+
+| Code | Who | Scope |
+|---|---|---|
+| **F** | Fatih in person | decisions, approvals, treasury key, beta recruitment, legal |
+| **CEF** | Fatih's CLI/engine agent | `packages/`, backend, CI, docs, ADRs |
+| **WEBF** | Fatih's web agent | `apps/` |
+| **R** | Rakha in person | npm/GitHub releases (primary), mainnet readiness, engine-key custody with F |
+| **CER** | Rakha's CLI/engine agent | engine execution, hosted autopilot, persistence, Action |
+| **WEBR** | Rakha's web agent | money-moving dashboard flows |
+
+### Why the split looks like this — from Rakha's merged PRs (61 PRs, 59 commits on `main`)
+
+His history concentrates in five areas:
+- **The write path:** `extend` CLI (#86), guarded execution (#122), live TTL extension proof (#105).
+- **The engine:** thresholds (#121), alerts (#142–#146), email channel (#137), temporary-retention consent (#160).
+- **Persistence:** persistence spike (#52), Neon preflight (#261).
+- **Releases:** npm 0.1.0 (#227, #241) and 0.1.1 (#265, #270), GitHub Release (#259, #263).
+- **The Action's external CI:** #256, #257.
+
+So the money-moving engine is his. Fatih's history (176 commits) concentrates in core/scan, gates and evidence, docs, and the dashboard UI rework (#248), so the product surface, data model and auth are his.
+
+### ⚠️ The owner code in `BACKLOG.md` cannot be `(CEF)`
+
+The parser reads only the **first character** of the owner field (`scripts/task-id.mjs:42`), and the Notion sync maps only `F/R/S` (`scripts/sync-notion.mjs:48`). `(CEF)` would parse as owner `C` and sync as **no owner**.
+
+Register as **`(F · CEF)`**, **`(R · CER)`** and so on. The person stays first; the track follows.
+
+---
+
+## 5 · Task cards
+
+Weight: **S** = 1, **M** = 2, **L** = 3. Ordered by dependency within each epic.
+
+### E0 — Close-out and unblock
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E0-01 | Merge #296 and #297 | F | S | — |
+| E0-02 | Retire the evidence freeze (Q2) | CEF | M | E0-01 |
+| E0-03 | Docs hygiene, see the list below | CEF | S | — |
+| E0-04 | Gate inventory: keep / retire / modify, one reason each. **F approves before removal** | CEF → F | S | E0-02 |
+| E0-05 | ADR changes (§2) plus the new auth ADR (§3.1) | CEF | M | E0-01 |
+| E0-06 | Retire the sprint write guard for A/B/C; close `B-D31-04` | CER | S | E0-02 |
+| E0-07 | Register all cards in `BACKLOG.md` with real IDs and `(F · CEF)`-style owners | CEF | S | plan confirmed |
+
+E0-03 contents:
+- the D2 Present/Partial note;
+- the protocol quote replaced with the W1 measurement;
+- `USAGE` lists `extend`;
+- Protocol 23 in the primer.
+
+### E1 — Foundation
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E1-01 | Fix `#235` (Q16) | CEF | M | E0-02 |
+| E1-02 | Tests and mutation proof for `cli/extend.ts` (37.5% functions) | CER | M | E0-02 |
+| E1-03 | Network plumbing: explicit network across CLI, engine, signer and dashboard. Today the passphrase is hardcoded at `cli/src/bin.ts:52` | CEF | M | E0-02 |
+| E1-04 | Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit | CER | M | E1-03 |
+| E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | E0-02 |
+| E1-06 | Publish CLI `0.2.0` | R (F backup) | S | E1-01, E1-04 |
+| E1-07 | MCP server, in-repo, importing `core` | CEF | M | E1-01 |
+| E1-08 | CLI "Support Evergreen" tip (§3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI | CEF | S | E4-03 (treasury address) |
+
+### E2 — Backend
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E2-01 | **Workers spike, go/no-go (§3.2).** Measure CPU and subrequests per scan and per extend; match against CLI output; check Neon connectivity | CER | M | E0-02 |
+| E2-02 | API spec, the CE↔WEB contract. Written before either side builds | CEF + WEBF | M | E2-01 |
+| E2-03 | Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger | CER | M | E2-02 |
+| E2-04 | Auth (§3.1): passwordless email plus SEP-10-style wallet linking, sessions | CEF | L | E2-03 |
+| E2-05 | Watchlist API (Q14) | CER | M | E2-04 |
+| E2-06 | Per-user alerts via Resend | CER | M | E2-05 |
+
+### E3 — Dashboard usable by anyone
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E3-01 | Login UI: email + wallet linking | WEBF | M | E2-04 |
+| E3-02 | Watchlist UI: binding expiry first, honest three-state health | WEBF | M | E2-05 |
+| E3-03 | Scan any contract, with "add to watchlist" | WEBF | S | E2-05 |
+| E3-04 | Manual extend with fee (§3.3: one click for allowance users, E4-07's route for others) | WEBR | M | E4-02, E4-07 |
+| E3-05 | Allowance flow: cap sizing, approve, renewal reminders, revoke | WEBR | M | E4-01 |
+| E3-06 | Wallet prompt test (#297 left the Freighter prompt count `undetermined`) | WEBR | S | E3-05 |
+| E3-07 | Website "Support Evergreen" page: wallet payment to the treasury address | WEBR | S | E4-03 |
+
+### E4 — Hosted autopilot
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | E2-03 |
+| E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool | CER | L | E4-01 |
+| E4-03 | Key separation: float limit, refund headroom, sweep to treasury; treasury key held by F offline | CER + F | M | E4-02 |
+| E4-04 | Scheduler: Workers cron with enqueue fan-out, or per E2-01's verdict | CER | M | E2-01, E4-02 |
+| E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | E4-04 |
+| E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | E4-02 |
+| E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, E3-04 requires an allowance | CEF | M | E0-02 |
+
+### E5 — Initial release and launch
+
+| Card | What | Owner | Wt | Depends on |
+|---|---|---|---|---|
+| E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
+| E5-02 | Mainnet readiness checklist | F + R | S | E5-01 |
+| E5-03 | Set the fee percentage from measured mainnet costs | F | S | E1-04 data |
+| E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | E5-02, E5-03 |
+
+### BL — Backlog (unscheduled, same scheme)
+
+| Card | What | Owner | Wt |
+|---|---|---|---|
+| BL-01 | Contract auto-discovery via indexer (Q14b) | CER | L |
+| BL-02 | Telegram and webhook channels (stubs exist in `channel-stubs.ts`) | CER | M |
+| BL-03 | Dashboard bundle size: `core` embedded in 3 bundles of 732–768 KB each | WEBR | S |
+| BL-04 | `B-D31-01` scheduler gap floor, still relevant for self-hosters on GitHub cron | CER | S |
+| BL-05 | Landing and marketing copy for the paid hosted tier | WEBF | S |
+| BL-06 | `B-D31-02` parked checker work — mostly superseded by E0-04; retire what E0-04 retires | CEF | S |
+| BL-07 | `B-D31-03` cold read of the docs by someone who has not seen them, before the beta | F | S |
+
+### The balance
+
+| Person | Scheduled (E0–E5) | Backlog | Total |
+|---|---|---|---|
+| **Fatih** (F 6.5 + CEF 22 + WEBF 6) | 34.5 | 3 | 37.5 |
+| **Rakha** (R 2.5 + CER 24 + WEBR 6) | 32.5 | 7 | 39.5 |
+
+Shared cards are split half each. **Equal by weight, not by hours** — Rakha's available hours are his to confirm.
+
+**The concentration risk to know about:** the entire hosted autopilot (E4-01 to E4-05) is Rakha's critical path. If he slips, revenue slips. That fits his history, but you should see it before confirming.
+
+---
+
+## 6 · Open conflicts
+
+None. The CLI-fee conflict was resolved by Q21 (a + c).
