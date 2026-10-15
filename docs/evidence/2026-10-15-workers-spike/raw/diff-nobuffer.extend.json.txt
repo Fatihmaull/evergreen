@@ -1,0 +1,43 @@
+26c26
+<     "ok": true,
+---
+>     "ok": false,
+41a42
+>         "outcome": "failed",
+43c44,47
+<         "outcome": "simulated"
+---
+>         "error": {
+>           "code": "SIMULATION_FAILED",
+>           "message": "Extension preparation or fee validation failed. Nothing was submitted."
+>         }
+49c53
+<     "estimatedFeeStroops": "8458"
+---
+>     "estimatedFeeStroops": "0"
+51,73c55
+<   "previews": [
+<     {
+<       "entry": {
+<         "entryKey": "AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB",
+<         "kind": "instance",
+<         "contracts": [
+<           "CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L"
+<         ],
+<         "before": {
+<           "observedAtLedger": 5208421,
+<           "endsAtLedger": 8300246
+<         },
+<         "extendToLedgers": 3092825,
+<         "wasCapped": false,
+<         "skip": false
+<       },
+<       "sourceAccount": "GCEUQTTH53VMOY6JNXS6ZWGHUCBP64JOWZZIIJSC6LQLBMQGGVIVO6UB",
+<       "transactionXdr": "AAAAAgAAAACJSE5n7urHY8lt5ezYx6CC/3EutnKEJkLy4LCyBjVRVwAAIQoARPWvAAAACwAAAAEAAAAAAAAAAAAAAABq0MDdAAAAAAAAAAEAAAAAAAAAGQAAAAAALzFZAAAAAQAAAAAAAAABAAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCmAAAAAA==",
+<       "transactionHash": "4faafc59709aec285c97be0ac1294dcae1ae8cbd88fa408c1605685b1455162c",
+<       "feeStroops": "8458",
+<       "simulatedAtLedger": 5208422
+<     }
+<   ]
+---
+>   "previews": []

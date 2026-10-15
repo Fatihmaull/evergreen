@@ -1,0 +1,40 @@
+[
+ {
+  "dimensions": {
+   "scriptName": "__unknown__",
+   "status": "clientDisconnected"
+  },
+  "quantiles": {
+   "cpuTimeP50": 2589,
+   "cpuTimeP90": 15069,
+   "cpuTimeP99": 15069,
+   "cpuTimeP999": 15069,
+   "wallTimeP50": 305016,
+   "wallTimeP99": 804872
+  },
+  "sum": {
+   "errors": 0,
+   "requests": 6,
+   "subrequests": 12
+  }
+ },
+ {
+  "dimensions": {
+   "scriptName": "__unknown__",
+   "status": "success"
+  },
+  "quantiles": {
+   "cpuTimeP50": 9681,
+   "cpuTimeP90": 31953,
+   "cpuTimeP99": 60810,
+   "cpuTimeP999": 88872,
+   "wallTimeP50": 841092,
+   "wallTimeP99": 3920070
+  },
+  "sum": {
+   "errors": 0,
+   "requests": 1747,
+   "subrequests": 5518
+  }
+ }
+]
