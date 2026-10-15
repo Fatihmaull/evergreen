@@ -49,7 +49,7 @@ Contracts prepay **rent** in XLM to keep entries alive. Extending TTL means topp
 
 When TTL expires, the entry doesn't sit there inert:
 
-- **Persistent entries** and **contract instance/code entries** are **archived** — moved out of the live state. The contract becomes unusable until someone submits a `RestoreFootprintOp` to bring it back. Restoring is slower and more expensive than a normal read because archived entries are treated as disk-based data.
+- **Persistent entries** and **contract instance/code entries** are **archived** — moved out of the live state. Before Protocol 23, the contract became unusable until someone submitted a `RestoreFootprintOp`. **Since Protocol 23, an invocation restores archived entries in its own footprint automatically**; see *Protocol 23 automatic restoration* below. Either way, restoring is slower and more expensive than a normal read, because archived entries are treated as disk-based data.
 - **Temporary entries** are **deleted** outright when they expire. They cannot be restored. Data that must survive should never live in temporary storage.
 
 This distinction matters for the storage optimizer (W2-D12) and for how we report severity: an expiring temporary entry is a different (often worse) problem than an expiring persistent one.
@@ -67,11 +67,11 @@ Evergreen must scan **all** relevant entry types for a contract, not just the in
 
 ## TTL extension is permissionless — the single most important fact in this document
 
-**Anyone may extend anyone's TTL.** From Stellar's state-archival documentation:
-
-> "There is no access control for TTL extension operations. Any user may invoke `ExtendFootprintTTLOp` on any `LedgerEntry`."
+**Anyone may extend anyone's TTL.** We measured it rather than quoting it. On 2026-09-05 (`W1-D4-06`, below), two independently generated testnet accounts were used. The account that did **not** deploy guinea-pig A extended all four of A's entry types, every `liveUntilLedgerSeq` rose, and the extend transaction carried **no auth entries at all**.
 
 The only requirement is paying the resource fee. There is no owner check, no `require_auth`, no signature from the contract's deployer.
+
+> **Source correction, 2026-10-15:** the sentence earlier versions quoted here as Stellar's — *"There is no access control for TTL extension operations…"* — could not be found on 2026-10-15 on the state-archival page this primer cites, on two other Stellar docs pages, or in CAP-46-12. Whether it ever appeared verbatim is undetermined, so it is no longer quoted as a source (`PH2-E0-03`). The measurement below is the evidence; the Stellar links that follow are background on TTL extension, not a citation for permissionlessness.
 
 This is why Evergreen is non-custodial, and it is worth being precise about the reason: **not** because we built a carefully scoped signer, but because there is no authority over your contract to grant in the first place. There is no key to hand over and no permission to revoke. The engine holds nothing but the lumens it uses to pay fees.
 
@@ -83,7 +83,7 @@ Everything downstream follows from this:
 - One public engine protecting every registered contract becomes possible — recorded as an open SOW 2 direction in ADR-004, deliberately not built in v1.
 - The capped policy signer (ADR-002) still matters, but for a different reason than we first wrote down: in v1 the hot key lives on *the user's* server with *the user's* lumens, so capping it protects *them*.
 
-Source: [Smart contract state archival — Stellar Docs](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival). Also relevant: [Extending Wasm TTL](https://developers.stellar.org/docs/build/guides/conventions/extending-wasm-ttl).
+Background: [Smart contract state archival — Stellar Docs](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival). Also relevant: [Extending Wasm TTL](https://developers.stellar.org/docs/build/guides/conventions/extending-wasm-ttl).
 
 ### ✅ Observed on testnet, 2026-09-05 (`W1-D4-06`)
 
@@ -123,7 +123,19 @@ Verified properly, not by trusting a success code:
     So the failure is not only that a user receives a smaller extension than they asked for. **They are quoted for the thing that cannot happen.** Clamp the operation target to `max_entry_ttl - 1` *before* quoting, and read that ceiling from the network — it is `stateArchivalSettings.max_entry_ttl` on the STATE_ARCHIVAL config entry (`AAAACAAAAAo=`), not a constant.
   - **D11 correction, 2026-09-10:** the config setting includes the current live ledger. [Stellar core validates `extendTo <= maxEntryTTL - 1`](https://github.com/stellar/stellar-core/blob/master/src/transactions/ExtendFootprintTTLOpFrame.cpp) and applies `liveUntilLedgerSeq = inclusionLedger + extendTo`. The shared target helper now subtracts that one ledger from the configuration ceiling before simulation. A SUCCESS with unchanged or insufficient post-state remains a failed verification; missing/archived entries can be skipped during application. This correction is source-verified; the D11 live transaction proof is still pending.
   - **Near-zero cost is the tell.** The fixed operation cost was ~11,700 stroops with zero rent in it, while a real 1.68M-ledger extend cost 227,398. If a quote comes back tiny, the target was computed wrong. Measurements: [rent model validation](evidence/2026-09-10-rent-model-validation/README.md).
-- **`RestoreFootprintOp`** — brings archived entries back to live state. Evergreen v1 does not automate restores; it exists to *avoid* needing them. (Candidate for SOW 2.)
+- **`RestoreFootprintOp`** — brings archived entries back to live state. Evergreen v1 does not automate restores; it exists to *avoid* needing them. (Candidate for SOW 2.) Since Protocol 23 it is the fallback rather than the only route; see below.
+
+### Protocol 23 automatic restoration
+
+[CAP-0066](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0066.md) (status *Final*, protocol version 23) adds automatic restoration. When an `InvokeHostFunctionOp` is applied, *"any archived state is automatically restored prior to host function invocation"*.
+- **Declared, not discovered.** The archived keys must be declared in the transaction's resource extension (`archivedSorobanEntries`). Simulation fills this in, as it does the rest of the footprint.
+- **Persistent entries only.** The CAP restricts that list to persistent Soroban entries, and temporary entries are still deleted at expiry, never archived. **Auto-restore cannot bring temporary data back.**
+- **Not free.** Restored entries pay rent and write fees, and are charged as disk reads.
+- **Not always possible.** An invocation already at the resource limits cannot also restore. It still needs one or more explicit `RestoreFootprintOp`s first (CAP-0066, *Handling Invocations that restore too much state*).
+
+**What this changes for Evergreen.** On Protocol ≥ 23, an archived persistent, instance or code entry no longer makes a contract unusable by itself. The next invocation that touches it pays to restore it. Archival is now a **cost and a latency event**, plus a hard failure only for invocations near the resource ceiling. **Temporary-entry expiry is unchanged and is still permanent data loss.** Advice strings that say an archived entry needs a manual restore before use are out of date; updating them is `PH2-E1-05`.
+
+**Measured 2026-10-15:** testnet's `getNetwork` and `getVersionInfo` report `protocolVersion: 29`. Mainnet's protocol version was not read, and is undetermined here.
 
 ## RPC
 

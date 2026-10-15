@@ -208,3 +208,15 @@ describe('scan CLI', () => {
     expect(failed.stderr).not.toContain('SECRET');
   });
 });
+
+describe('usage', () => {
+  it('names both commands when the command is not recognised', async () => {
+    // `extend` shipped in 0.1.0 and the usage line still named only `scan`.
+    for (const args of [[], ['scna'], ['--version']]) {
+      const result = await runCli(args, dependencies());
+      expect(result.exitCode).toBe(2);
+      expect(result.stderr).toContain('usage: evergreen scan <contract-id>');
+      expect(result.stderr).toContain('evergreen extend <contract-id> --ledgers N');
+    }
+  });
+});
