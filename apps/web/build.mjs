@@ -31,6 +31,7 @@ import process from 'node:process';
 import console from 'node:console';
 import { shell } from './src/chrome.mjs';
 import { siteShell } from './src/site.mjs';
+import { parseUsage } from './scripts/parse-cli-usage.mjs';
 import { DOC_PAGES } from './src/docs/nav.mjs';
 import { docsLayout } from './src/docs/shell.mjs';
 // Node 24 strips the types. The manifest is the dashboard package's own entry.
@@ -160,11 +161,36 @@ function readGuard() {
 
 function readCli() {
   const command = readFileSync(join(repo, 'packages/cli/src/command.ts'), 'utf8');
-  const usage = command.match(/const USAGE =\n?\s*'([^']+)'/)?.[1];
+  /**
+   * `parseUsage` lives in its own module so the parsing can be tested on
+   * fixtures; the assertions stay here, where the message can say what this
+   * build was about to publish. `readCli` exists to fail when `command.ts`
+   * moves, and for this class of change it did not fail — it degraded.
+   */
+  const { usage, segments } = parseUsage(command);
   const helpStart = command.indexOf('const HELP = ');
   const helpEnd = command.indexOf('`;', helpStart);
-  if (!usage || helpStart < 0 || helpEnd < 0) {
+  if (segments.length === 0 || helpStart < 0 || helpEnd < 0) {
     throw new Error('packages/cli/src/command.ts moved under the web build: USAGE/HELP not found');
+  }
+  /**
+   * Both commands appear in USAGE. This is the assertion the old reader needed
+   * and did not have.
+   *
+   * There is deliberately no "did an escape survive?" check beside it. The
+   * literal backslash-n on the page was a symptom of this same root cause, and
+   * once `parseUsage` resolves escapes in one pass the only way a backslash-n
+   * can reach the page is when `command.ts` legitimately contains an escaped
+   * backslash followed by an `n` — so such a check could only ever fire as a
+   * false positive. A check that cannot fail correctly is worse than no check.
+   */
+  for (const command_name of ['evergreen scan', 'evergreen extend']) {
+    if (!usage.includes(command_name)) {
+      throw new Error(
+        `USAGE in command.ts no longer states \`${command_name}\`; the docs page would publish ` +
+          `an incomplete usage. Read ${segments.length} segment(s): ${JSON.stringify(usage)}`,
+      );
+    }
   }
   const help = command
     .slice(helpStart, helpEnd)
