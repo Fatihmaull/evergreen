@@ -1,6 +1,6 @@
 # ADR-004: Who pays for extends
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-007](ADR-007-allowance-funded-hosted-engine.md) on 2026-10-15. **The invariant survives:** the user always pays their own rent, and Apex never subsidises it. What ADR-007 replaces is *The hosted question, recorded as open*: it is now answered. *On the dashboard*'s no-accounts scope guard is superseded by [ADR-008](ADR-008-authentication.md).
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -61,3 +61,4 @@ One public engine protecting every registered contract is the eventual direction
 ## Update log
 
 - 2026-09-04: created, following the permissionless-`extendTTL` finding and the Phase 0 alignment pass.
+- **2026-10-15 — superseded by ADR-007 (`PH2-E0-05`).** The open hosted question is answered with neither of the two paths listed above. The preferred path, policy-signer delegation, died with ADR-002's 2026-09-22 no-go. The fallback, custodial prepay, was not taken. A capped SEP-41 allowance (#297) replaced both. Left as written above, because the reasoning at the time is the record.

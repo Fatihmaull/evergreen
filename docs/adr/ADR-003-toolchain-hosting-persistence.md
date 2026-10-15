@@ -1,6 +1,6 @@
 # ADR-003: Toolchain, hosting, scheduler, and persistence
 
-**Status:** Accepted for W1-D6-04 in PR #48, with follow-ups in PR #49: Actions + Node 24; PostgreSQL on Neon adopted in W4 after the Sep 20 proof. The local spike is an unused experiment with adoption prerequisites below. W1 requires no hosted database. Dashboard hosting is separately settled on Pages; deployment remains W1-D5-02.
+**Status:** Accepted for W1-D6-04 in PR #48, with follow-ups in PR #49: Actions + Node 24; PostgreSQL on Neon adopted in W4 after the Sep 20 proof. The local spike is an unused experiment with adoption prerequisites below. W1 requires no hosted database. Dashboard hosting is separately settled on Pages; deployment remains W1-D5-02. **Amended 2026-10-15 for phase 2: Cloudflare Workers + Neon Postgres for the backend and hosted engine (see the last Update log entry).** GitHub Actions cron remains the self-hosted engine's documented scheduler.
 **Date:** 2026-09-04
 **Deciders:** Fatih, Rakha
 
@@ -269,3 +269,30 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 
   Recorded here so a Week 4 revisit starts from the number rather than
   re-measuring it.
+
+- **2026-10-15 — amended for phase 2 (`PH2-E0-05`): Cloudflare + Neon.** Fatih decided Q12 and Q13 in [`phase-2/PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) v4 on 2026-10-14. Recorded here as an amendment; the sprint-era reasoning above is left as written.
+
+  **Decision.**
+  - **Backend API and hosted engine:** Cloudflare Workers, starting on the Free plan.
+  - **Moving to Workers Paid** (about $5/month) happens only if `PH2-E2-01` *measures* the engine over the free limits. Billing stays on one platform.
+  - **Persistence:** PostgreSQL on Neon. That is the provider this ADR already named in W1, now actually adopted.
+  - **Self-hosters:** unchanged. The MIT engine on GitHub Actions cron remains a documented path.
+
+  **What is verified and what is not.** The plan records the Workers Free limits as verified on 2026-10-14: 10 ms CPU per request and per cron invocation, 50 subrequests per invocation, 5 cron triggers per account, 100,000 requests per day. **This ADR did not re-read them.** Still open, all owned by `PH2-E2-01`:
+  - whether the engine fits in 10 ms of CPU;
+  - whether a scan inside `workerd` **matches the CLI's output for the same contract at the same ledger.** A successful build proves nothing: `core` once built fine for the browser and silently mis-scanned (the global `Buffer`);
+  - whether Neon is reached through its serverless driver or through Hyperdrive;
+  - whether Cloudflare Queues is available for enqueue fan-out.
+
+  **Render was evaluated and rejected** (plan §3.2):
+  - free tier has no background workers or cron;
+  - services sleep after 15 minutes idle and take about a minute to wake;
+  - suspension is possible under heavy outbound traffic.
+
+  An autopilot users pay for cannot run on a host that sleeps, and pinging it awake is the platform-gaming this project rejected for GitHub cron.
+
+  **Carried forward, now resolved: whose Cloudflare account?** The 2026-09-08 note above records that the account used for Pages is **shared**: it already runs `focustudio.online` and a Worker named `focuswebstudio`. **Workers Free limits are per account**, so that Worker draws on the same budget the engine would.
+  - **Spike:** `PH2-E2-01` is measuring on a disposable account of Rakha's.
+  - **Production:** decided by Fatih on #299 (2026-10-15). The production Cloudflare and Neon accounts are **project-owned, with Fatih as owner and Rakha as member**, and are created before `PH2-E2-03`. That leaves the shared Pages account out of the engine's budget.
+
+  **Scheduler.** ADR-001 (scheduled serverless, not always-on) is unchanged. Workers cron is a scheduled serverless job. The sprint measured GitHub Actions delivering about 7.5% of a declared 15-minute cron (entry of 2026-09-14), which is fine for a self-hoster with a day of threshold. **It is not a basis for a paid service.** The hosted scheduler is `PH2-E4-04`, per `PH2-E2-01`'s verdict.

@@ -26,7 +26,7 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 | # | Decision | Cost / consequence |
 |---|---|---|
 | Q1 | Shared code entry extended via `stellar` CLI — **done** (#296, live until 8,297,162). Evergreen's CLI must be able to do it in future (`B-D31-04`). | — |
-| Q2 | ~~Retire the evidence-integrity freeze: tag `sow1-final`, verify against the tag, unfreeze `core`.~~ **Corrected 2026-10-15 (PH2-E0-02): there was no freeze.** No gate ever compared `core` with anything, so `core` was always editable. `sow1-final` tags the submitted state as a record, not a gate input. The claim came from a 2026-10-14 evidence README and reached this table without anyone reading the verifier. | No infra PR, no new gate |
+| Q2 | ~~Retire the evidence-integrity freeze: tag `sow1-final`, verify against the tag, unfreeze `core`.~~ **Corrected 2026-10-15 (PH2-E0-02): there was no freeze.** No gate ever compared `core` with anything, so `core` was always editable. `sow1-final` tags the submitted state as a record, not a gate input. The claim ran from the 2026-10-14 extraction, to the handover, to the PM prompt for #296, to #296's evidence README, to `B-D31-04`, to this table. Nobody read the verifier at any step. | No infra PR, no new gate |
 | Q3 | Mainnet hosted autopilot is a paid service. | Supersedes ADR-004's "hosted not built" |
 | Q4 | Goal: real adoption. Usable dashboard and complete CLI. | Needs a backend |
 | Q5 | Mainnet starts read-only. | No mainnet autopilot until extend is hardened |
@@ -278,7 +278,7 @@ PH2-E0-03 contents:
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
 | PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** | CER | L | PH2-E4-01 |
-| PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury; treasury key held by F offline | CER + F | M | PH2-E4-02 |
+| PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |

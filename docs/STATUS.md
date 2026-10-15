@@ -43,7 +43,7 @@
 **The card's premise was false, and the card was re-scoped by Fatih (option A).** The premise was that `check:evidence-integrity` pins `core`, so `core` was frozen until a tag-based gate replaced it. Measured:
 - **No pin:** with `core` edited and `dist` rebuilt, the full `pnpm check` exits 0.
 - **Why:** the verifier only hashes files inside each bundle against that bundle's own `SHA256SUMS`.
-- **Origin:** the claim was written in the #296 evidence README on 2026-10-14, then copied into `B-D31-04`, plan Q2 and the card, without anyone reading the verifier.
+- **Origin:** the claim first appeared in this repository in the #296 evidence README on 2026-10-14. It predates #296: it came from the extraction, through the handover and the PM prompt for #296 (Fatih's PM, 2026-10-15), then copied into `B-D31-04`, plan Q2 and the card, without anyone reading the verifier.
 - **Where it is corrected:** `B-D31-04`, Q2 and the card. The replay-at-`sourceCommit` procedure is in [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md), measured on C at `c38e77f` (exit 0).
 - **Tag:** `sow1-final` is on `fb93b66` as a record of what was submitted, not a gate input. The tag message explains why it is not on `d337153`.
 - **No new gate.**
