@@ -207,6 +207,45 @@ messages use explicit `en-US` numeric formatting so operator and CI locales can
 differ; the machine locale is retained as provenance, not a replay requirement. Hashes detect alteration
 relative to the retained manifest; they are not an independently signed RPC receipt.
 
+### Replaying a sealed capture after `main` has moved
+
+`pnpm verify:crossing` on current `main` **fails** for the sealed captures:
+
+```
+Capture verification failed; do not count this artifact as crossing evidence.
+```
+
+That is the design working, not a damaged bundle. The manifest records the `core/dist` hashes it was captured with, and `main` has rebuilt `core` since (#282 changed `write-guard.ts` and `config.ts`). Replay each capture at **its own recorded source commit**, not at `main` and not at the `sow1-final` tag, because captures were taken at six different commits.
+
+The source commit is in the manifest:
+
+```bash
+node -p 'require("./docs/evidence/2026-09-26-c-crossing-0600/capture/manifest.json").provenance.sourceCommit'
+```
+
+Check that commit out beside the repository, build it, and point its verifier at the bundle in your main checkout. The bundle was committed after the capture, so it is not in the old tree.
+
+```bash
+git worktree add --detach ../replay-c38e77f c38e77f990702809dfcae8ca88321876543abab5
+```
+
+```bash
+cd ../replay-c38e77f && pnpm install --frozen-lockfile --ignore-scripts && pnpm build
+```
+
+```bash
+node scripts/verify-crossing-capture.mjs "$OLDPWD/docs/evidence/2026-09-26-c-crossing-0600/capture" --require-crossing
+```
+
+**Measured 2026-10-15 (`PH2-E0-02`):**
+- **Result:** exit 0, `{"subject":"C","phase":"crossing-refused","qualifiesCrossing":true,"exitCode":0}`.
+- **Node:** the replay ran on v24.20.0; the capture recorded v24.13.0.
+- **Install:** done with `--offline` from the local pnpm store.
+
+Remove the worktree afterwards with `git worktree remove ../replay-c38e77f`.
+
+`check:evidence-integrity` (checksums inside each bundle) and `check:crossing` (`checkRuntime: false`) never compare runtime hashes. That is why editing `core` on `main` has never failed `pnpm check`.
+
 The dated repository gate verifies sealed bundles semantically using current trusted
 code while allowing historical runtime fingerprints. It never executes captured
 code. Changes to producer rendering/semantics can require an explicit compatibility
