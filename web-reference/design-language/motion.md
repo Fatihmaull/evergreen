@@ -76,10 +76,16 @@ text someone is trying to read, and rapid repeated movement.
 | Field change (cream ↔ green) | 400–800ms as a soft wipe; the static gradient is 120–300px deep, so it is a gradual edge rather than a line |
 | A shot holding on one dominant element | long enough to read it — the site's rule is one dominant element per screen, and the video equivalent is one per shot |
 
-## The hero video, as a worked example
+## The hero video, as a worked example of handling
 
 The landing page already carries a 20-second looping product video, and how it
-is handled is the best available statement of intent:
+is **handled** is the best available statement of intent. Its **content** is
+not: it breaks five of the seven rules (bold display type, more than one
+dominant element, a gradient ground, floating rounded cards, and cards that
+slide across the frame when nobody asked), and it is
+being left in place until the phase-2 dashboard work is done (Fatih,
+2026-10-15). The list is in [`motion-graphics.md`](motion-graphics.md). Copy
+the handling below, never the look:
 
 - muted, looping, inline, **no controls** — an artefact, not a player
 - no window chrome around it and no rounded card
