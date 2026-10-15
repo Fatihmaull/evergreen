@@ -48,11 +48,11 @@ The backend's location (folder, Worker name) is decided in **PH2-E2-02**, with W
    - Owners are written `(F · CEF)`, `(R · CER)` and so on.
    - Then rewrite every label in `phase-2/` to its registered ID.
    - Report the label→ID mapping table.
-2. **PH2-E0-02 — retire the evidence freeze.**
-   - Tag `sow1-final` at the commit that holds the sealed bundles.
-   - Make `check:evidence-integrity` verify those bundles against the tag rather than the working tree.
-   - Prove it in both directions: a `core` change no longer fails the gate, and tampering with a sealed file still does.
-   - Only then is `core` editable.
+2. **PH2-E0-02 — retire the evidence freeze.** ✅ Done 2026-10-15, **re-scoped: the premise was wrong.** No gate froze `core`. See the `PH2-E0-02` row in `BACKLOG.md`. The original steps are kept below as the record:
+   - ~~Tag `sow1-final` at the commit that holds the sealed bundles.~~ Tagged at `fb93b66` as a record, not a gate input.
+   - ~~Make `check:evidence-integrity` verify those bundles against the tag rather than the working tree.~~ It never read the working tree outside the bundles.
+   - ~~Prove it in both directions.~~ A `core` change never failed the gate, and tampering with a sealed file still does.
+   - ~~Only then is `core` editable.~~ It always was.
 3. **PH2-E0-03 — docs hygiene.**
    - The gate-Present vs report-Partial D2 note.
    - The protocol blockquote in five docs (`SOROBAN-PRIMER.md:72`, `README.md:23`, `PRD.md:74`, `STATUS.md:1314`, `ADR-002:46` — re-check those line numbers) replaced with the W1 two-identity measurement.

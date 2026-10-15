@@ -26,7 +26,7 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 | # | Decision | Cost / consequence |
 |---|---|---|
 | Q1 | Shared code entry extended via `stellar` CLI — **done** (#296, live until 8,297,162). Evergreen's CLI must be able to do it in future (`B-D31-04`). | — |
-| Q2 | Retire the evidence-integrity freeze: tag `sow1-final`, verify against the tag, unfreeze `core`. | One infra PR first |
+| Q2 | ~~Retire the evidence-integrity freeze: tag `sow1-final`, verify against the tag, unfreeze `core`.~~ **Corrected 2026-10-15 (PH2-E0-02): there was no freeze.** No gate ever compared `core` with anything, so `core` was always editable. `sow1-final` tags the submitted state as a record, not a gate input. The claim came from a 2026-10-14 evidence README and reached this table without anyone reading the verifier. | No infra PR, no new gate |
 | Q3 | Mainnet hosted autopilot is a paid service. | Supersedes ADR-004's "hosted not built" |
 | Q4 | Goal: real adoption. Usable dashboard and complete CLI. | Needs a backend |
 | Q5 | Mainnet starts read-only. | No mainnet autopilot until extend is hardened |
@@ -222,7 +222,7 @@ Weight: **S** = 1, **M** = 2, **L** = 3. Ordered by dependency within each epic.
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E0-01 | Merge #296 and #297 | F | S | — |
-| PH2-E0-02 | Retire the evidence freeze (Q2) | CEF | M | PH2-E0-01 |
+| PH2-E0-02 | Correct the evidence-freeze claim; tag `sow1-final` as a record (Q2, corrected) | CEF | M | PH2-E0-01 |
 | PH2-E0-03 | Docs hygiene, see the list below | CEF | S | — |
 | PH2-E0-04 | Gate inventory: keep / retire / modify, one reason each. **F approves before removal** | CEF → F | S | — |
 | PH2-E0-05 | ADR changes (§2) plus the new auth ADR (§3.1) | CEF | M | PH2-E0-01 |
