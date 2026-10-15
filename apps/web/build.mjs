@@ -38,7 +38,13 @@ import { ROUTES, pageFor } from '../dashboard/src/index.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '../..');
-const out = join(repo, 'apps/dashboard/public');
+/**
+ * Where the build writes. Overridable so `scripts/check-published.mjs` can
+ * build into a temporary directory and compare, instead of overwriting the
+ * directory Cloudflare Pages publishes in order to find out whether it is
+ * current.
+ */
+const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public');
 const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild');
 
 /** Core's write path must never reach a read-only page. */
@@ -623,8 +629,30 @@ async function buildPage(page) {
    * the one place every page is written.
    */
   writeFileSync(target, html.replace(/[ \t]+$/gm, ''));
+  /**
+   * Report the HTML, not the intention.
+   *
+   * This line used to read `page.entry ? 'script, core modules: N' : ...`, so
+   * it printed "script" for `/docs/archival/` on every build while the shell
+   * silently dropped the field and emitted none. A log derived from the input
+   * cannot witness the output. The assertion below is the same thought with
+   * teeth: a page that was given a bundle must point at it.
+   */
+  const emitted = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(([, src]) => src);
+  if (page.entry && !emitted.includes(`/${page.js}`)) {
+    throw new Error(
+      `${page.to} was bundled to /${page.js} but the rendered HTML does not load it` +
+        `${emitted.length > 0 ? ` (it loads ${emitted.join(', ')})` : ' (it loads nothing)'}`,
+    );
+  }
   console.log(
-    `  ${page.to.padEnd(32)} ${page.entry ? `script, core modules: ${coreModules}` : 'static, no script'}`,
+    `  ${page.to.padEnd(32)} ${
+      page.entry
+        ? `loads /${page.js}, core modules: ${coreModules}`
+        : emitted.length > 0
+          ? `loads ${emitted.join(', ')}`
+          : 'static, no script'
+    }`,
   );
 }
 
@@ -654,6 +682,105 @@ async function commission() {
     // Throwaway. Left behind, it is linted as source.
     rmSync(probe, { force: true });
   }
+  commissionAssetGuards();
+}
+
+/**
+ * The two asset guards, proven in both directions on a copy of the output.
+ *
+ * A copy, not the output itself: these plant real defects, and the directory
+ * they would plant them in is the one Cloudflare Pages publishes. The copy is
+ * `.commission-probe.out`, which `apps/web/.gitignore` already covers.
+ *
+ * `expect` is deliberately shaped so that a guard which cannot fail is a
+ * FAILURE of this function. A gate nobody has watched fail is a decoration,
+ * and `guardPublishedAssets` exists only because the three guards before it
+ * all passed while a 748 KB orphan served to nobody.
+ */
+function commissionAssetGuards() {
+  const copy = join(here, '.commission-probe.out');
+  const expect = (label, mutate, guard, fragment) => {
+    rmSync(copy, { recursive: true, force: true });
+    cpSync(out, copy, { recursive: true });
+    mutate();
+    try {
+      guard(copy);
+    } catch (error) {
+      if (!error.message.includes(fragment)) {
+        console.error(`✗ ${label}: the guard failed, but not about ${fragment}: ${error.message}`);
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`✓ ${label}`);
+      return;
+    }
+    console.error(`✗ ${label}: the guard passed. It guards nothing.`);
+    process.exitCode = 1;
+  };
+
+  // The defect that actually shipped: a page loses its script, and the bundle
+  // it was built for keeps being published.
+  expect(
+    'an orphaned bundle is refused',
+    () => {
+      const page = join(copy, 'docs/archival/index.html');
+      writeFileSync(
+        page,
+        readFileSync(page, 'utf8').replace('<script src="/assets/archival.js"></script>', ''),
+      );
+    },
+    guardPublishedAssets,
+    'archival.js',
+  );
+
+  // Any asset nothing reaches, not only a bundle.
+  expect(
+    'an asset no reader mentions is refused',
+    () => writeFileSync(join(copy, 'assets/planted-orphan.json'), '{}\n'),
+    guardPublishedAssets,
+    'planted-orphan.json',
+  );
+
+  // The other direction, which `guardReferencedAssets` owns.
+  expect(
+    'a reference to a missing asset is refused',
+    () => rmSync(join(copy, 'assets/styles.css')),
+    guardReferencedAssets,
+    'styles.css',
+  );
+
+  /**
+   * And what the orphan guard must NOT do: flag an asset that only
+   * JavaScript or only CSS reaches. The clean build passing is that proof —
+   * but only while those two assets are genuinely absent from every page's
+   * HTML. If a page ever names them, the clean pass stops proving anything
+   * and this half of the commission goes quiet, so it is asserted rather
+   * than assumed.
+   */
+  const html = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.html')) html.push(readFileSync(path, 'utf8'));
+    }
+  };
+  walk(out);
+  for (const [name, reader] of [
+    ['snapshot.json', 'overview.ts fetches it'],
+    ['evergreen-logo-mask.svg', 'styles.css masks with it'],
+  ]) {
+    if (html.some((page) => page.includes(`/assets/${name}`))) {
+      console.error(
+        `✗ ${name} is now referenced from HTML, so the clean build no longer proves ` +
+          `that the guard consults ${reader === 'overview.ts fetches it' ? 'bundles' : 'stylesheets'}`,
+      );
+      process.exitCode = 1;
+    } else {
+      console.log(`✓ ${name} is reached only because ${reader} — and the guard is quiet`);
+    }
+  }
+  rmSync(copy, { recursive: true, force: true });
 }
 
 console.log('building the twelve-page preview into apps/dashboard/public');
@@ -781,7 +908,7 @@ guardRenderedPages();
  * because a 404 on a video is invisible to all three. The build log is not
  * evidence that a file was written; this is.
  */
-function guardReferencedAssets() {
+function guardReferencedAssets(root = out) {
   const missing = [];
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -790,14 +917,14 @@ function guardReferencedAssets() {
       else if (entry.name.endsWith('.html')) {
         const html = readFileSync(path, 'utf8');
         for (const [, url] of html.matchAll(/(?:src|href|poster)="(\/assets\/[^"]+)"/g)) {
-          if (!existsSync(join(out, url.slice(1)))) {
-            missing.push(`${path.slice(out.length + 1)} references ${url}, which was not written`);
+          if (!existsSync(join(root, url.slice(1)))) {
+            missing.push(`${path.slice(root.length + 1)} references ${url}, which was not written`);
           }
         }
       }
     }
   };
-  walk(out);
+  walk(root);
   if (missing.length > 0) {
     throw new Error(
       `rendered pages reference assets that do not exist:\n  ${missing.join('\n  ')}`,
@@ -806,6 +933,59 @@ function guardReferencedAssets() {
 }
 
 guardReferencedAssets();
+
+/**
+ * And the other direction: every asset written must be reached by something.
+ *
+ * `guardReferencedAssets` above proves that what a page points at exists. It
+ * cannot see the inverse, and the inverse is what shipped: `/docs/archival/`
+ * lost its `<script>` when the page moved into the documentation shell, so
+ * `assets/archival.js` — 748,893 bytes of it — was built, published, served
+ * with HTTP 200, and fetched by nobody for weeks. The page kept promising a
+ * live reading it had no code to perform. A file that serves and is reachable
+ * by no one is indistinguishable from a file that was never meant to exist,
+ * and neither the route manifest, the residue guard nor the reference guard
+ * can tell them apart.
+ *
+ * A reference from JavaScript or CSS counts, because it is a real reference:
+ * `assets/snapshot.json` is fetched only by `overview.ts` and
+ * `evergreen-logo-mask.svg` only by a `mask:` in the stylesheet. Searching the
+ * published text of every page, bundle and stylesheet is what lets this guard
+ * have no exception list — and an exception list is where a guard like this
+ * goes to die.
+ */
+function guardPublishedAssets(root = out) {
+  const assets = readdirSync(join(root, 'assets'), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name);
+  const readers = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (/\.(html|css|js)$/.test(entry.name)) readers.push(path);
+    }
+  };
+  walk(root);
+  const orphans = assets.filter((name) => {
+    const needle = `/assets/${name}`;
+    return !readers.some(
+      // Self-reference does not count: a bundle naming itself reaches nothing.
+      (path) => !path.endsWith(`assets/${name}`) && readFileSync(path, 'utf8').includes(needle),
+    );
+  });
+  if (orphans.length > 0) {
+    throw new Error(
+      'assets were published that no page, bundle or stylesheet references:\n  ' +
+        orphans
+          .map((name) => `${name} (${statSync(join(root, 'assets', name)).size} bytes)`)
+          .join('\n  '),
+    );
+  }
+  console.log(`  assets: ${assets.length} published, all referenced`);
+}
+
+guardPublishedAssets();
 
 /**
  * The published routes and the route manifest must agree, in both directions.

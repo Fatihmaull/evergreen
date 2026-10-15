@@ -128,8 +128,28 @@ export function refSection({ label, heading, body, id }) {
  * `head` is shared with the dashboard shell on purpose — one place that knows
  * which weights are fetched. Only 400 is loaded for Newsreader here; a weight
  * that is not downloaded cannot be reached for by accident.
+ *
+ * `script` exists because this shell renders documentation pages too, and one
+ * of them reads the network. `/docs/archival/` declared its bundle in its own
+ * meta and `build.mjs` passed it here, but this function did not destructure
+ * it: the field was dropped in silence, the page shipped with the words
+ * "Refreshing live…" and no code to make them true, and 748 KB of bundle was
+ * published for nothing. The build log said "script" throughout, because it
+ * reported the page's intent rather than the emitted HTML. Dropping an unknown
+ * argument is the failure mode a shell has; `guardPublishedAssets` in
+ * `build.mjs` is what makes it loud.
  */
-export function siteShell({ title, description, active, eyebrow, heading, lead, body, navTone }) {
+export function siteShell({
+  title,
+  description,
+  active,
+  eyebrow,
+  heading,
+  lead,
+  body,
+  navTone,
+  script,
+}) {
   /**
    * The landing supplies its own opening section and passes no heading. The
    * reference pages get this one: eyebrow, heading, lead, and nothing else —
@@ -255,7 +275,7 @@ ${body}
           });
         }
       })();
-    </script>
+    </script>${script ? `\n    <script src="${script}"></script>` : ''}
   </body>
 </html>
 `;
