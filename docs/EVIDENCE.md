@@ -157,15 +157,16 @@ no transaction or raw artifact was replaced. See the W3 closeout inventory repor
 
 [B/C raw capture bundles](evidence/2026-09-14-bc-capture-preparation/README.md): B and C before action, plus an explicitly marked B rehearsal. Five read-only calls per capture; full responses, stdout/stderr, provenance and checksums retained. Offline replay verified; none qualifies as actual crossing evidence. No transaction was produced. W3-D18-03 remains In progress for future event capture and acceptance.
 
-## The three-artifact rule — read before recording anything
+## The evidence rule — read before recording anything
 
-**Every transaction row needs three artifacts, not one:**
+**Every transaction row needs two artifacts, not one:**
 
 1. **The tx hash.**
 2. **The full, unedited JSON RPC response** (committed under `docs/evidence/` or in the shared drive).
-3. **An explorer screenshot** showing the transaction.
 
-**Why:** Stellar testnet is periodically reset. A reset between our bump and the reviewer's check makes every explorer link in this file dead — the reviewer clicks and sees nothing, and the strongest evidence in the grant evaporates through no fault of ours. The hash alone is a pointer to a chain that may not exist at review time. The JSON and the screenshot are self-contained and survive it.
+*(Until 2026-10-15 this was the three-artifact rule, and an explorer screenshot was the third. It was dropped in `AGENTS.md` hard rule 7 because the JSON already survives a reset (phase-2 decision Q6). Screenshots already on file stay, and the rows below that carry them are unchanged.)*
+
+**Why:** Stellar testnet is periodically reset. A reset between our bump and the reviewer's check makes every explorer link in this file dead — the reviewer clicks and sees nothing, and the strongest evidence in the grant evaporates through no fault of ours. The hash alone is a pointer to a chain that may not exist at review time. The JSON is self-contained and survives it.
 
 This costs about a minute per transaction if done at capture time and is unrecoverable if skipped. Do it from hash #1.
 
@@ -475,7 +476,7 @@ Preparation merged in [PR #24](https://github.com/Fatihmaull/evergreen/pull/24) 
 The original plan called for a shared cloud drive. **In practice we have been committing evidence into the repository under `docs/evidence/<date>-<topic>/`, and that is the better default** — so it is now the rule, not the accident:
 
 - **It is versioned and reviewable.** Evidence arrives through a PR, gets read, and cannot be edited afterwards without a commit.
-- **It survives a testnet reset**, which is the entire reason for the three-artifact rule. A cloud drive does too, but only if somebody remembers to upload.
+- **It survives a testnet reset**, which is the entire reason for the evidence rule above. A cloud drive does too, but only if somebody remembers to upload.
 - **It cannot drift from the claim it supports**, because the claim and the artifact land in the same commit.
 - **A grant reviewer can see it without being granted access to anything.**
 

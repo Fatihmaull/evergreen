@@ -99,8 +99,8 @@ dry-run procedure above. The [Stage 1 runbook](W3-D17-05-RUNBOOK.md) covers
 journals, alerts, uncertainty and evidence. Do not apply this procedure to the
 project's B/C decay subjects or shared Wasm.
 
-For an actual Testnet transaction, preserve the unedited RPC JSON, transaction
-hash and explorer screenshot immediately in your evidence record. A scheduled
+For an actual Testnet transaction, preserve the unedited RPC JSON and the
+transaction hash immediately in your evidence record. A scheduled
 live service still needs durable reconciliation and independent missed-run
 monitoring; the included cron does not provide a ready-made live deployment.
 The [READY outcome](READY.md) remains a human/fresh-machine acceptance call.

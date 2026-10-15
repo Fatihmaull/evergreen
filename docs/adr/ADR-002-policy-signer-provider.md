@@ -1,6 +1,6 @@
 # ADR-002: Use `stellar/passkey-kit` for the non-custodial policy signer
 
-**Status:** Accepted — amended 2026-09-04 (see Update log). Retained, but moved off the critical path; validation by the Week 3 spike, **now `W3-D19` (was D15/D16)**
+**Status:** Accepted — amended 2026-09-04, no-go recorded 2026-09-22, amended 2026-10-15 (see Update log). **The no-go stands. The capped property it was after is now achieved at the token layer, not by a policy signer** ([ADR-007](ADR-007-allowance-funded-hosted-engine.md)).
 
 > **Task IDs in the Context/Options/Consequences sections below are pre-rescope and no longer resolve to the work they name.** The 2026-09-04 amendment restructured Week 3 into two stages and the day contents moved; the IDs themselves were reused. Current mapping: the spike is **`W3-D19-01/02`**, its fund-rejection check is **`W3-D19-02`**, the end-to-end headless submit is **`W3-D19-03`**, the go/no-go is **`W3-D20-01`**, and the setup guide is **`W3-D20-03`**. The body is left as written because an ADR records the reasoning we had at the time — see the update log for what changed.
 **Date:** 2026-09-04
@@ -73,5 +73,21 @@ Option C is explicitly out of scope for this grant. If both A and B prove insuff
   **Task dispositions:** `W3-D19-01/02/03` recorded as no-go with the reason, out of Blocked. `W3-D20-02` **does not exist** under a no-go and is dropped rather than started — this decision deleted work. `W3-D20-03` becomes the truthful guide.
 
   ⚠️ **Still open, and it is a human action:** the Scope note above assigns Fatih the conversation with the Ambassador Chapter Lead, *"in Week 1 rather than at review."* It is Week 4 and it has not happened. It pairs with the Oct 2 deadline confirmation `docs/PRD.md` has wanted since 2026-09-04.
+
+- **2026-10-15 — amended (`PH2-E0-05`): the capped property is achieved at the token layer; the no-go stands.** Recorded as an amendment, not a rewrite, like the two entries above.
+
+  **What this ADR wanted, restated:** a key that can spend only a capped amount, and that cannot be talked into more. The 2026-09-22 no-go showed a policy signer cannot deliver that. Contract-invocation auth does not constrain the native transaction signature that pays for `extendTTL`, so the cap was on the wrong side of the authorization boundary.
+
+  **What delivers it instead:** a SEP-41 allowance on the native XLM SAC ([#297](https://github.com/Fatihmaull/evergreen/pull/297), [evidence](../evidence/2026-10-14-sac-allowance-spike/README.md)). The user signs `approve(engine, cap, live_until_ledger)`, and the engine can only `transfer_from` up to the cap until expiry. Measured on testnet:
+  - over-cap, expired and revoked pulls are all refused;
+  - **the engine cannot extend its own allowance**, even though `extendTTL` is permissionless and the allowance is an ordinary ledger entry.
+
+  **Why this does not contradict the no-go.** The allowance does not try to constrain the extend transaction at all. It constrains a **separate token transfer that happens first**, and the extend is then paid from funds the engine already holds. The two authorization paths the no-go found to be disjoint stay disjoint; nothing now requires them to be the same path. **The cap moved from the operation to the money.**
+
+  **What is unchanged:**
+  - The engine's own float is still an unconstrained hot Ed25519 key, exactly as `docs/POLICY-SIGNER.md` describes for Stage 1.
+  - The no-go's SOW 1 consequence — Deliverable 2's capability reading as Partial — is a fact about SOW 1 and is not revised.
+
+  **What is superseded:** the 2026-09-04 *"Consequence for SOW 2"* above, which made Stage 2's machinery *"the foundation of a hosted engine that stays non-custodial"*. The foundation is the allowance, and the decision lives in ADR-007.
 
 - *(`W3-D20-01`: record spike outcome — go with A, or fall back to B, and why. Was filed here as W3-D16-03 pre-rescope. **Closed by the entry above.**)*

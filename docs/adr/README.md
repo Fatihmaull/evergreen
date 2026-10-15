@@ -5,11 +5,13 @@ One file per non-trivial decision. Numbered, immutable in spirit: if a decision 
 | ADR | Decision | Status |
 |---|---|---|
 | [ADR-001](ADR-001-scheduled-serverless-engine.md) | Auto-bump engine runs as a scheduled serverless job, not an always-on service | Accepted |
-| [ADR-002](ADR-002-policy-signer-provider.md) | Policy signer via `stellar/passkey-kit`; OpenZeppelin as fallback; custom contract out of scope | Accepted — amended 2026-09-04, moved off the critical path; pending W3 spike validation |
-| [ADR-003](ADR-003-toolchain-hosting-persistence.md) | Toolchain, hosting, scheduler, and persistence | Actions + Node 24 and Pages selected; Neon/PostgreSQL adoption deferred to W4 after Sep 20; spike retained as unused experiment |
-| [ADR-004](ADR-004-payment-model.md) | The user always pays their own extend fees; Apex never subsidises rent | Accepted |
+| [ADR-002](ADR-002-policy-signer-provider.md) | Policy signer via `stellar/passkey-kit`; OpenZeppelin as fallback; custom contract out of scope | No-go 2026-09-22 (Stage 2 shipped partial); amended 2026-10-15 — the capped property is achieved at the token layer (ADR-007) |
+| [ADR-003](ADR-003-toolchain-hosting-persistence.md) | Toolchain, hosting, scheduler, and persistence | Actions + Node 24 and Pages selected; Neon/PostgreSQL adoption deferred to W4 after Sep 20; spike retained as unused experiment. **Amended 2026-10-15:** Cloudflare Workers + Neon for the phase-2 backend and hosted engine |
+| [ADR-004](ADR-004-payment-model.md) | The user always pays their own extend fees; Apex never subsidises rent | **Superseded by ADR-007** 2026-10-15; the invariant survives |
 | [ADR-005](ADR-005-shared-domain-types.md) | JSON-compatible shared domain types: ledger-key-keyed results, money as integer decimal text, explicit variants | **Accepted 2026-09-08** |
 | [ADR-006](ADR-006-scan-health-exit-codes.md) | `scan` exit codes: `3` is a degraded scan, not an undeclared scope; completeness is demanded via `--require-declared-scope`, on by default in the Action. Precedence 2 > 3 > 1 > 0 | **Accepted 2026-09-10 as amended** |
+| [ADR-007](ADR-007-allowance-funded-hosted-engine.md) | Hosted engine funded by a capped SEP-41 allowance; a percentage fee only when Evergreen's infrastructure moves XLM; CLI and self-hosted engine fee-free | **Accepted 2026-10-14** (plan v4), written 2026-10-15 |
+| [ADR-008](ADR-008-authentication.md) | Passwordless email account, wallet linked by signed challenge (SEP-10 pattern), server-side sessions; email never authorises moving XLM | **Accepted 2026-10-14** (plan v4), written 2026-10-15 |
 
 ## When to write one
 
