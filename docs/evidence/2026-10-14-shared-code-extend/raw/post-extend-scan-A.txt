@@ -1,0 +1,44 @@
+Scanned 1 contract(s): CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+Coverage: known keys only — contract storage has NOT been fully enumerated.
+  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L: 2 explicit data key(s)
+
+HEALTHY  instance  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  3,110,396 ledgers — live
+  ends at:    ledger 8,300,246
+  expires ~:  2027-04-12T10:13:41.086Z (estimate — ledgers are the truth)
+  observed:   ledger 5,189,850
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  persistent  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  3,110,397 ledgers — live
+  ends at:    ledger 8,300,247
+  expires ~:  2027-04-12T10:13:46.086Z (estimate — ledgers are the truth)
+  observed:   ledger 5,189,850
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  temporary  AAAABgAAAA…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  remaining:  835,748 ledgers — live
+  ends at:    ledger 6,025,598
+  expires ~:  2026-12-01T18:59:41.086Z (estimate — ledgers are the truth)
+  observed:   ledger 5,189,850
+  health:     HEALTHY — Above threshold.
+
+HEALTHY  code  AAAAB8flXw…
+  contracts:  CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+  ⚠ sharing:  code entries are shared by every contract built from the same Wasm.
+              This scan saw 1. Whether others depend on this entry cannot be
+              determined from a single-contract scan — pass them together.
+  remaining:  3,107,312 ledgers — live
+  ends at:    ledger 8,297,162
+  expires ~:  2027-04-12T05:56:41.086Z (estimate — ledgers are the truth)
+  observed:   ledger 5,189,850
+  health:     HEALTHY — Above threshold.
+
+! sharing-undetermined: Code entries are shared by every contract built from the same Wasm. This scan saw 1. Whether others depend on this entry cannot be determined from a single-contract scan — pass them together to see the real blast radius.
+  contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
+
+Worst entry health: HEALTHY (warn below 120,960 · act below 17,280 ledgers)
+Scan is PARTIAL — 1 issue(s). Absence is not health.
