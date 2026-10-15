@@ -54,7 +54,7 @@ Re-verify against `origin/main` before building on anything in the plan.
 
    Verdict: **free / Workers Paid / not viable**, with the numbers.
 
-**After CEF lands PH2-E0-02 (the `core` unfreeze):**
+**Then — none of these waits on PH2-E0-02, because no gate ever froze `core`:**
 
 2. **PH2-E0-06 — retire the sprint write guard for A/B/C.** `PROTECTED_ENTRIES` exists only to protect sprint evidence. Close `B-D31-04`: either give the CLI a reachable override, or remove the need for one. Mutation-prove whatever guard remains.
 3. **PH2-E1-02 — tests for `cli/extend.ts`.** It is at 37.5% function coverage and is the file that signs; you wrote it (#86). Mutation proof is required.

@@ -584,25 +584,25 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [x] **PH2-E0-01** (F) Merge #296 and #297. ✅ Both on `main` (`ab0056c`, `398b13f`), verified 2026-10-15.
 - [ ] **PH2-E0-02** (F · CEF) **M** Retire the evidence freeze (Q2): tag `sow1-final` at the commit holding the sealed bundles, make `check:evidence-integrity` verify them against the tag rather than the working tree, and prove both directions — a `core` change no longer fails the gate, tampering with a sealed file still does. Unfreezes `core`. *Depends on `PH2-E0-01`.*
 - [ ] **PH2-E0-03** (F · CEF) **S** Docs hygiene: the gate-Present vs report-Partial D2 note; the protocol blockquote in five docs replaced with the W1 two-identity measurement; `USAGE` in `cli/src/command.ts` lists `extend`; Protocol 23 auto-restore in the primer.
-- [ ] **PH2-E0-04** (F · CEF, F approves) **S** Gate inventory: every gate keep / retire / modify, one reason each. **Fatih approves before anything is removed.** *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E0-04** (F · CEF, F approves) **S** Gate inventory: every gate keep / retire / modify, one reason each. **Fatih approves before anything is removed.**
 - [ ] **PH2-E0-05** (F · CEF) **M** ADRs: a new ADR superseding ADR-004 (allowance funding plus fee); ADR-002 amended (capped property via the token layer, #297); ADR-003 amended (Cloudflare + Neon); a new auth ADR (plan §3.1). *Depends on `PH2-E0-01`.*
-- [ ] **PH2-E0-06** (R · CER) **S** Retire the sprint write guard for A/B/C; close `B-D31-04`. *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E0-06** (R · CER) **S** Retire the sprint write guard for A/B/C; close `B-D31-04`.
 - [x] **PH2-E0-07** (F · CEF) **S** Register every phase-2 card here with real IDs and person-first owners, and rewrite the labels in `phase-2/` to these IDs. ✅ This section; `PH2-` added to `scripts/task-id.mjs` with tests in both directions; `phase-2/` added to `check:task-ids`' roots so the rewrite stays checked.
 
 ### E1 — Foundation
 
-- [ ] **PH2-E1-01** (F · CEF) **M** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven. *Depends on `PH2-E0-02`.*
-- [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`. *Depends on `PH2-E0-02`.*
-- [ ] **PH2-E1-03** (F · CEF) **M** Network plumbing: the network chosen explicitly across CLI, engine, signer and dashboard config; today the CLI hardcodes the testnet passphrase. **The user-facing surface is shown to Fatih before merge.** *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E1-01** (F · CEF) **M** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven.
+- [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`.
+- [ ] **PH2-E1-03** (F · CEF) **M** Network plumbing: the network chosen explicitly across CLI, engine, signer and dashboard config; today the CLI hardcodes the testnet passphrase. **The user-facing surface is shown to Fatih before merge.**
 - [ ] **PH2-E1-04** (R · CER) **M** Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit. *Depends on `PH2-E1-03`.*
-- [ ] **PH2-E1-05** (F · CEF) **S** Archived-entry advice strings mention Protocol 23 auto-restore. *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E1-05** (F · CEF) **S** Archived-entry advice strings mention Protocol 23 auto-restore.
 - [ ] **PH2-E1-06** (R, F backup) **S** Publish CLI `0.2.0`. *Depends on `PH2-E1-01`, `PH2-E1-04`.*
 - [ ] **PH2-E1-07** (F · CEF) **M** MCP server, in-repo, importing `core`. *Depends on `PH2-E1-01`.*
 - [ ] **PH2-E1-08** (F · CEF) **S** CLI "Support Evergreen" tip (plan §3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI. *Depends on `PH2-E4-03` (treasury address).*
 
 ### E2 — Backend
 
-- [ ] **PH2-E2-01** (R · CER) **M** Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity. *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E2-01** (R · CER) **M** Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity.
 - [ ] **PH2-E2-02** (F · CEF + WEBF) **M** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
 - [ ] **PH2-E2-03** (R · CER) **M** Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger. *Depends on `PH2-E2-02`.*
 - [ ] **PH2-E2-04** (F · CEF) **L** Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. *Depends on `PH2-E2-03`.*
@@ -616,7 +616,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.*
 - [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. *Depends on `PH2-E4-02`, `PH2-E4-07`.*
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
-- [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). *Depends on `PH2-E3-05`.*
+- [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
 - [ ] **PH2-E3-07** (R · WEBR) **S** Website "Support Evergreen" page: wallet payment to the treasury address. *Depends on `PH2-E4-03`.*
 
 ### E4 — Hosted autopilot
@@ -627,7 +627,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E4-04** (R · CER) **M** Scheduler: Workers cron with enqueue fan-out, or per `PH2-E2-01`'s verdict. *Depends on `PH2-E2-01`, `PH2-E4-02`.*
 - [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. *Depends on `PH2-E4-04`.*
 - [ ] **PH2-E4-06** (F · CEF, F approves) **S** Public custody statement: exact exposure (#297 §6). Drafted by CEF, approved by Fatih. *Depends on `PH2-E4-02`.*
-- [ ] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance. *Depends on `PH2-E0-02`.*
+- [ ] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance.
 
 ### E5 — Initial release and launch
 

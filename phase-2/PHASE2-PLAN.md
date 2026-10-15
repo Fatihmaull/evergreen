@@ -224,9 +224,9 @@ Weight: **S** = 1, **M** = 2, **L** = 3. Ordered by dependency within each epic.
 | PH2-E0-01 | Merge #296 and #297 | F | S | — |
 | PH2-E0-02 | Retire the evidence freeze (Q2) | CEF | M | PH2-E0-01 |
 | PH2-E0-03 | Docs hygiene, see the list below | CEF | S | — |
-| PH2-E0-04 | Gate inventory: keep / retire / modify, one reason each. **F approves before removal** | CEF → F | S | PH2-E0-02 |
+| PH2-E0-04 | Gate inventory: keep / retire / modify, one reason each. **F approves before removal** | CEF → F | S | — |
 | PH2-E0-05 | ADR changes (§2) plus the new auth ADR (§3.1) | CEF | M | PH2-E0-01 |
-| PH2-E0-06 | Retire the sprint write guard for A/B/C; close `B-D31-04` | CER | S | PH2-E0-02 |
+| PH2-E0-06 | Retire the sprint write guard for A/B/C; close `B-D31-04` | CER | S | — |
 | PH2-E0-07 | Register all cards in `BACKLOG.md` with real IDs and `(F · CEF)`-style owners | CEF | S | plan confirmed |
 
 PH2-E0-03 contents:
@@ -239,11 +239,11 @@ PH2-E0-03 contents:
 
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
-| PH2-E1-01 | Fix `#235` (Q16) | CEF | M | PH2-E0-02 |
-| PH2-E1-02 | Tests and mutation proof for `cli/extend.ts` (37.5% functions) | CER | M | PH2-E0-02 |
-| PH2-E1-03 | Network plumbing: explicit network across CLI, engine, signer and dashboard. Today the passphrase is hardcoded at `cli/src/bin.ts:52` | CEF | M | PH2-E0-02 |
+| PH2-E1-01 | Fix `#235` (Q16) | CEF | M | — |
+| PH2-E1-02 | Tests and mutation proof for `cli/extend.ts` (37.5% functions) | CER | M | — |
+| PH2-E1-03 | Network plumbing: explicit network across CLI, engine, signer and dashboard. Today the passphrase is hardcoded at `cli/src/bin.ts:52` | CEF | M | — |
 | PH2-E1-04 | Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit | CER | M | PH2-E1-03 |
-| PH2-E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | PH2-E0-02 |
+| PH2-E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | — |
 | PH2-E1-06 | Publish CLI `0.2.0` | R (F backup) | S | PH2-E1-01, PH2-E1-04 |
 | PH2-E1-07 | MCP server, in-repo, importing `core` | CEF | M | PH2-E1-01 |
 | PH2-E1-08 | CLI "Support Evergreen" tip (§3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI | CEF | S | PH2-E4-03 (treasury address) |
@@ -252,7 +252,7 @@ PH2-E0-03 contents:
 
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
-| PH2-E2-01 | **Workers spike, go/no-go (§3.2).** Measure CPU and subrequests per scan and per extend; match against CLI output; check Neon connectivity | CER | M | PH2-E0-02 |
+| PH2-E2-01 | **Workers spike, go/no-go (§3.2).** Measure CPU and subrequests per scan and per extend; match against CLI output; check Neon connectivity | CER | M | — |
 | PH2-E2-02 | API spec, the CE↔WEB contract. Written before either side builds | CEF + WEBF | M | PH2-E2-01 |
 | PH2-E2-03 | Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger | CER | M | PH2-E2-02 |
 | PH2-E2-04 | Auth (§3.1): passwordless email plus SEP-10-style wallet linking, sessions | CEF | L | PH2-E2-03 |
@@ -268,7 +268,7 @@ PH2-E0-03 contents:
 | PH2-E3-03 | Scan any contract, with "add to watchlist" | WEBF | S | PH2-E2-05 |
 | PH2-E3-04 | Manual extend with fee (§3.3: one click for allowance users, PH2-E4-07's route for others) | WEBR | M | PH2-E4-02, PH2-E4-07 |
 | PH2-E3-05 | Allowance flow: cap sizing, approve, renewal reminders, revoke | WEBR | M | PH2-E4-01 |
-| PH2-E3-06 | Wallet prompt test (#297 left the Freighter prompt count `undetermined`) | WEBR | S | PH2-E3-05 |
+| PH2-E3-06 | Wallet prompt test (#297 left the Freighter prompt count `undetermined`) | WEBR | S | — (only the final check against the real allowance flow follows PH2-E3-05) |
 | PH2-E3-07 | Website "Support Evergreen" page: wallet payment to the treasury address | WEBR | S | PH2-E4-03 |
 
 ### E4 — Hosted autopilot
@@ -281,7 +281,7 @@ PH2-E0-03 contents:
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
-| PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | PH2-E0-02 |
+| PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
 
 ### E5 — Initial release and launch
 
@@ -320,3 +320,10 @@ Shared cards are split half each. **Equal by weight, not by hours** — Rakha's 
 ## 6 · Open conflicts
 
 None. The CLI-fee conflict was resolved by Q21 (a + c).
+
+**Dependency corrections, 2026-10-15.** Three errors in the §5 tables, all in the plan rather than the kickoffs:
+- PH2-E2-01 was listed as depending on PH2-E0-02. It depends on nothing, as the CER kickoff already said.
+- PH2-E3-06 was listed as depending on PH2-E3-05. The Freighter test depends on nothing; only its final check against the real allowance flow follows PH2-E3-05.
+- PH2-E0-02 was listed as a dependency of seven more cards. It blocked none of them, because no gate ever froze `core` — see PH2-E0-02's row in `BACKLOG.md`.
+
+The first two were caught by Rakha on #299.
