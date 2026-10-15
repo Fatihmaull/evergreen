@@ -63,8 +63,25 @@ CPU = on-CPU ns of the owning workerd process (`/proc/<pid>/task/*/schedstat`) /
 - Dev bundle 2.18 MB raw, 306 KB gzip (unminified, includes the Neon driver); the free plan's size limit has not been checked against the live docs here, so treat as undetermined.
 Reading: locally, one scan or one dry-run extend is about 2-4 ms CPU, comfortably under 10 ms. This does NOT establish the deployed number (JIT state, isolate cold start, real submit and confirm polling are not covered).
 
-## Neon
-Load check only: `@neondatabase/serverless` (`neon()`, `Pool`) bundles and constructs in workerd under both variants (`/neon-load`; no connection made). **Reachability from Workers: undetermined.** `NEON_DATABASE_URL` is empty; nothing was created.
+## Neon (local workerd only, read-only)
+**Reachable from workerd under `wrangler dev`: YES**, over both transports of `@neondatabase/serverless` 1.2.0, in both the Buffer (`compatibility_date 2026-10-01`, :8790) and no-Buffer (`2024-01-01`, :8791) variants. Target: pooled endpoint, ap-southeast-1 (Singapore). Code: `/neon?transport=http|ws&q=<queries>` in `src/worker.ts`; harness `tools/measure-neon.mjs`; raw rows `results/measure-neon.jsonl`.
+- Queries sent: `SELECT 1` and `SELECT version()` only (server reported PostgreSQL 18.6). No tables, schema, roles, branches or projects created. Connection string came from a gitignored `.dev.vars` (checked with `git check-ignore`, deleted afterwards); Worker errors are scrubbed (URL, host, user, password, `postgres://...`, `ep-*` hosts); a grep of results, wrangler logs and source for the URL, host and password found no match. No errors occurred in 240 requests.
+- **Transport and counting.** `neon()` (one-shot) uses **HTTPS fetch**: 1 subrequest per query (counted with a wrapper installed as `globalThis.fetch` and `neonConfig.fetchFunction`; all returned 200). `Client`/`Pool` use **one WebSocket** for the whole connection: handshake plus any number of queries = **1 subrequest** (counted by wrapping the `WebSocket` constructor passed in `neonConfig.webSocketConstructor`; 0 fetch calls). Verified by the counters, not by reading driver internals. A fresh Client per request is required in workerd (I/O objects cannot be shared across requests), so each request pays the connect.
+- **Subrequests per request** (q = queries in the request): http q=1 -> 1, q=5 -> 5. ws q=1 -> 1, q=5 -> 1.
+- **Wall times** (N=30 requests each, client wall p50/p95 ms; in-Worker `Date.now` advances on I/O so per-query timings are valid). Connection and warm figures from the Worker:
+| Variant | Transport | q/req | req wall p50 / p95 | connect (WS handshake) p50 / p95 | 1st query p50 / p95 | warm query p50 / p95 | CPU ms/req (warm) |
+|---|---|---|---|---|---|---|---|
+| Buffer | http | 1 | 46 / 365 | n/a | 43 / 361 | n/a | 1.95 |
+| Buffer | http | 5 | 137 / 233 | n/a | 26 / 44 | 26 / 34 | 2.08 |
+| Buffer | ws | 1 | 145 / 207 | 82 / 99 | 32 / 64 | n/a | 2.47 |
+| Buffer | ws | 5 | 239 / 557 | 77 / 233 | 29 / 169 | 25 / 35 | 2.93 |
+| no-Buffer | http | 1 | 29 / 31 | n/a | 26 / 27 | n/a | 1.86 |
+| no-Buffer | http | 5 | 131 / 172 | n/a | 25 / 40 | 25 / 33 | 2.32 |
+| no-Buffer | ws | 1 | 142 / 221 | 82 / 143 | 31 / 55 | n/a | 2.24 |
+| no-Buffer | ws | 5 | 239 / 354 | 78 / 156 | 30 / 38 | 25 / 33 | 2.31 |
+  p95 over 30 samples is the 29th-ranked value, so it is noisy (the 365 ms http outlier is a single slow first request). Fresh-start first request CPU 2.0-3.3 ms.
+- **CPU**: same method as above (workerd process on-CPU ns / N warm sequential requests, includes proxy, TLS and GC). About 1.9-2.9 ms per request including the Neon round trips: comfortably under 10 ms locally, WS a few tenths of a ms above HTTP (WebSocket + protocol handshake). **Not** free-plan enforcement; deployed CPU is undetermined.
+- **Caveats.** Latency is from Rakha's computer to Singapore, not from a Cloudflare edge: deployed Worker -> Neon will differ (likely lower and colo-dependent, but not measured; Smart Placement and Hyperdrive untested). Local workerd does not enforce subrequest or CPU limits. The free-plan subrequest limit was not checked against live docs, but 1-5 subrequests is far below any documented limit I know of; treat as undetermined. Sessions are not pooled across requests here: Client opens a new WebSocket (Neon-side, a new pooled session) per request. Whether the pooled endpoint transaction pooling suits the database layer work (prepared statements, session state) is not tested.
 
 ## Not done / undetermined
 - **Deployed leg: blocked, nothing deployed.** `wrangler whoami` with the `.env` token authenticated (Account API Token, account "the author's account"). `wrangler deploy --name evergreen-spike-tmp-1015` then stopped before upload: `You need to register a workers.dev subdomain before publishing to workers.dev` (non-interactive default answer: no). Registering a subdomain is an account-level resource, outside the "no other resources" instruction, so it was not done. Dashboard link given by wrangler: `https://dash.cloudflare.com/<account-id>/workers/onboarding`.

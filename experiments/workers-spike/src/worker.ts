@@ -17,10 +17,10 @@ import {
 } from '../../../packages/core/dist/index.js';
 import { rpc, Networks, Keypair, TransactionBuilder } from '@stellar/stellar-sdk';
 import recording from './recording.json';
-import { neon, Pool } from '@neondatabase/serverless';
+import { neon, Pool, Client, neonConfig } from '@neondatabase/serverless';
 
 type Rec = { key: string; req: string; status: number; res: string };
-type Env = { RPC_URL: string };
+type Env = { RPC_URL: string; NEON_DATABASE_URL?: string };
 
 const keyOf = (url: string, body: string | undefined): string => {
   let j: { method?: string; params?: unknown } = {};
@@ -151,9 +151,118 @@ async function extendDryRunRaw(rpcUrl: string, contractId: string, source: strin
 }
 void createEd25519Signer;
 
+
+/** Strip anything that could carry the connection string out of an error message. */
+function scrub(msg: string, secret: string | undefined): string {
+  let out = msg;
+  if (secret) {
+    const parts = new Set<string>([secret]);
+    try {
+      const u = new URL(secret);
+      for (const x of [u.host, u.hostname, u.username, u.password, decodeURIComponent(u.password), u.pathname.slice(1)]) if (x && x.length > 2) parts.add(x);
+    } catch {
+      /* not parseable: the full-string replacement below still applies */
+    }
+    for (const x of parts) out = out.split(x).join('[redacted]');
+  }
+  return out.replace(/postgres(ql)?:\/\/\S+/gi, '[redacted-url]').replace(/\b[\w-]*ep-[\w-]+\.[\w.-]+/gi, '[redacted-host]');
+}
+
+const pct = (xs: number[], p: number) => {
+  const a = [...xs].sort((x, y) => x - y);
+  return a.length ? a[Math.min(a.length - 1, Math.ceil(p * a.length) - 1)] : null;
+};
+
+/**
+ * READ-ONLY Neon reachability probe. Only `SELECT 1` and `SELECT version()` are ever sent.
+ *   transport=http : neon() one-shot driver, each query is one HTTPS fetch to the Neon HTTP SQL endpoint.
+ *   transport=ws   : Client over the driver's WebSocket transport; one WebSocket carries handshake + all queries.
+ * Subrequests are counted by wrapping globalThis.fetch, neonConfig.fetchFunction and the WebSocket constructor.
+ * The connection string is read from env (.dev.vars locally) and never returned or logged.
+ */
+async function neonProbe(env: Env, transport: string, queries: number): Promise<Record<string, unknown>> {
+  const cs = env.NEON_DATABASE_URL;
+  if (!cs) return { ok: false, error: 'NEON_DATABASE_URL not set' };
+  const realFetch = globalThis.fetch.bind(globalThis);
+  const fetchCalls: { kind: string; ms: number; status?: number }[] = [];
+  let wsOpened = 0;
+  const countingFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const t0 = Date.now();
+    const res = await realFetch(input as RequestInfo, init);
+    fetchCalls.push({ kind: 'fetch', ms: Date.now() - t0, status: res.status });
+    return res;
+  }) as typeof fetch;
+  globalThis.fetch = countingFetch;
+  const RealWS = globalThis.WebSocket;
+  class CountingWS extends RealWS {
+    constructor(url: string | URL, protocols?: string | string[]) {
+      super(url, protocols);
+      wsOpened++;
+    }
+  }
+  neonConfig.webSocketConstructor = CountingWS as unknown as typeof WebSocket;
+  neonConfig.fetchFunction = countingFetch;
+  const queryMs: number[] = [];
+  let connectMs: number | null = null;
+  let version: string | undefined;
+  let select1: unknown;
+  const t00 = Date.now();
+  let error: string | undefined;
+  try {
+    if (transport === 'http') {
+      const sql = neon(cs);
+      for (let i = 0; i < queries; i++) {
+        const t0 = Date.now();
+        if (i === 0) select1 = (await sql`SELECT 1 AS one`)[0];
+        else if (i === 1) version = String((await sql`SELECT version() AS v`)[0].v).slice(0, 40);
+        else await sql`SELECT 1 AS one`;
+        queryMs.push(Date.now() - t0);
+      }
+    } else {
+      const client = new Client({ connectionString: cs });
+      const t0 = Date.now();
+      await client.connect();
+      connectMs = Date.now() - t0;
+      try {
+        for (let i = 0; i < queries; i++) {
+          const q0 = Date.now();
+          if (i === 0) select1 = (await client.query('SELECT 1 AS one')).rows[0];
+          else if (i === 1) version = String((await client.query('SELECT version() AS v')).rows[0].v).slice(0, 40);
+          else await client.query('SELECT 1 AS one');
+          queryMs.push(Date.now() - q0);
+        }
+      } finally {
+        await client.end();
+      }
+    }
+  } catch (e) {
+    error = scrub((e as Error).name + ': ' + (e as Error).message, cs);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  return {
+    ok: !error,
+    error,
+    transport,
+    queries,
+    select1,
+    version,
+    connectMs,
+    queryMs,
+    totalMs: Date.now() - t00,
+    subrequests: { fetch: fetchCalls.length, websocket: wsOpened, total: fetchCalls.length + wsOpened },
+    fetchStatuses: fetchCalls.map((c) => c.status),
+    neonPoolType: typeof Pool,
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === '/neon') {
+      const r = await neonProbe(env, url.searchParams.get('transport') === 'ws' ? 'ws' : 'http', Math.max(1, Math.min(50, Number(url.searchParams.get('q') ?? '1'))));
+      return new Response(JSON.stringify(r), { status: r.ok ? 200 : 500, headers: { 'content-type': 'application/json' } });
+    }
     const replay = url.searchParams.get('replay') === '1';
     const contract = url.searchParams.get('contract') ?? '';
     const rpcUrl = env.RPC_URL;
@@ -232,7 +341,7 @@ export default {
         stderr = out.stderr;
         exitCode = out.exitCode;
       } else {
-        body = 'routes: /facts /scan /core-scan /extend-dryrun';
+        body = 'routes: /facts /scan /core-scan /extend-dryrun /neon-load /neon';
       }
     } catch (e) {
       error = (e as Error).name + ': ' + (e as Error).message;
