@@ -1,19 +1,16 @@
 #!/usr/bin/env node
 /**
- * Pin policy constants that are copied ACROSS a language boundary.
+ * Pin policy constants that are restated outside their owning file.
  *
  * `eslint.config.js` makes the TTL threshold comparison unwritable outside
- * `packages/core/src/ttl.ts`. That rule cannot reach Python, and
- * `scripts/check-decay-drift.py` restates two values it does not own:
+ * `packages/core/src/ttl.ts`, but a threshold VALUE can still be copied. The
+ * engine's threshold is owned by `evergreen.config.example.json`; core's
+ * health and the CLI's scan restate it and must agree.
  *
- *   THRESHOLD_LEDGERS   - owned by evergreen.config.example.json
- *   SECONDS_PER_LEDGER  - owned by packages/core/src/ttl.ts
- *
- * A comment saying "matches evergreen.config.example.json" is documented
- * intent, not an enforced link. The drift check is what watches guinea-pigs B
- * and C twice a week — the two contracts carrying the most important evidence
- * in the grant — so a silent divergence there would move the projected
- * crossing dates for the proof itself.
+ * Until 2026-10-15 this also pinned `THRESHOLD_LEDGERS` and
+ * `SECONDS_PER_LEDGER` in `scripts/check-decay-drift.py`, the sprint's B/C
+ * watcher. No workflow runs that script, so those pins guarded nothing and
+ * were dropped by the approved gate inventory (`PH2-E0-04`).
  *
  * Same family as the `exitCodeFor` divergence, one language over. See
  * docs/CONVENTIONS.md § One home for a policy.
@@ -48,8 +45,6 @@ function pick(source, label, where, pattern) {
 }
 
 const config = JSON.parse(read('evergreen.config.example.json'));
-const ttl = read('packages/core/src/ttl.ts');
-const drift = read('scripts/check-decay-drift.py');
 const health = read('packages/core/src/health.ts');
 const cliScan = read('packages/cli/src/scan.ts');
 
@@ -57,15 +52,6 @@ const owners = {
   thresholdLedgers: {
     value: config.defaults?.bumpWhenRemainingLedgersBelow,
     owner: 'evergreen.config.example.json → defaults.bumpWhenRemainingLedgersBelow',
-  },
-  secondsPerLedger: {
-    value: pick(
-      ttl,
-      'SECONDS_PER_LEDGER',
-      'packages/core/src/ttl.ts',
-      /export const SECONDS_PER_LEDGER = ([\d_.]+)/,
-    ),
-    owner: 'packages/core/src/ttl.ts → SECONDS_PER_LEDGER',
   },
 };
 
@@ -85,26 +71,6 @@ const owners = {
  * the same chain state. Two thresholds that must agree, with nothing making them.
  */
 const copies = [
-  {
-    owner: 'thresholdLedgers',
-    where: 'scripts/check-decay-drift.py → THRESHOLD_LEDGERS',
-    value: pick(
-      drift,
-      'THRESHOLD_LEDGERS',
-      'scripts/check-decay-drift.py',
-      /^THRESHOLD_LEDGERS = ([\d_]+)/m,
-    ),
-  },
-  {
-    owner: 'secondsPerLedger',
-    where: 'scripts/check-decay-drift.py → SECONDS_PER_LEDGER',
-    value: pick(
-      drift,
-      'SECONDS_PER_LEDGER',
-      'scripts/check-decay-drift.py',
-      /^SECONDS_PER_LEDGER = ([\d_.]+)/m,
-    ),
-  },
   {
     owner: 'thresholdLedgers',
     where: 'packages/core/src/health.ts → DEFAULT_CRITICAL_LEDGERS',
@@ -153,6 +119,6 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `✓ policy constants agree across ${copies.length} copy site(s) in TS/JSON/Python ` +
-    `(threshold ${owners.thresholdLedgers.value}, cadence ${owners.secondsPerLedger.value}s)`,
+  `✓ policy constants agree across ${copies.length} copy site(s) ` +
+    `(threshold ${owners.thresholdLedgers.value})`,
 );
