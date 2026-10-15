@@ -20,7 +20,7 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 
 ## Why this is non-custodial
 
-Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. Stellar's state-archival documentation states it directly — *"There is no access control for TTL extension operations."*
+Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. We measured it on testnet: an account with no relationship to a contract's deployer extended all four of that contract's entry types, and the transaction carried no authorization entries at all. The hashes are in [`docs/SOROBAN-PRIMER.md`](docs/SOROBAN-PRIMER.md) under *Observed on testnet*.
 
 So Evergreen never asks for authority over your contract, because no such authority exists to grant. There is no key to hand over, no permission to revoke, no scope to trust. The engine holds nothing but the lumens it uses to pay fees.
 

@@ -43,7 +43,7 @@ Option C is explicitly out of scope for this grant. If both A and B prove insuff
 - 2026-09-04: created, following the build-vs-buy research pass.
 - **2026-09-04 (amendment — the premise changed, the decision did not):**
 
-  **What we found.** `extendTTL` is *permissionless*. Stellar's state-archival documentation states it directly: "There is no access control for TTL extension operations. Any user may invoke `ExtendFootprintTTLOp` on any `LedgerEntry`." Anyone may extend anyone's TTL provided they pay the resource fee.
+  **What we found.** `extendTTL` is *permissionless*. Stellar's state-archival documentation states it directly: "There is no access control for TTL extension operations. Any user may invoke `ExtendFootprintTTLOp` on any `LedgerEntry`." *(Source note, 2026-10-15, `PH2-E0-03`: that sentence could not be found on Stellar's docs pages or in CAP-46-12, so it is left here as written and no longer relied on. The property was measured on testnet at `W1-D4-06`, where an unrelated account extended all four entry types of a contract it did not deploy, with no auth entries; see `SOROBAN-PRIMER.md`.)* Anyone may extend anyone's TTL provided they pay the resource fee.
 
   **What that invalidates.** The Context section above says the signer "must be *incapable* of moving funds, not merely trusted not to," framed as what makes the engine non-custodial. That framing was wrong. Evergreen is non-custodial because it needs no authority over a user's contract at all — there is no permission to grant, so there is none to abuse. The policy signer is not what earns that property.
 

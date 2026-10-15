@@ -195,6 +195,13 @@ video the only absent type and Deliverable 3 at four of five.*
 | **2 — Auto-Bump Engine** | **All four Deliverable 2 evidence items exist, and the capped policy-signer capability (`docs/POLICY-SIGNER.md`, Stage 2) is not available.** |
 | **3 — Dashboard + CI + Docs** | ✅ **5 of 5.** Dashboard, Action, docs, npm link and the [demo video](https://youtu.be/MIv26uSiOAQ) — published 2026-09-30, 4m31s |
 
+> **Deliverable 2 has two readings, and both are true** (noted 2026-10-15, `PH2-E0-03`).
+>
+> - **The gate reads it Present.** `check:sow` counts evidence *types*. Its `D2.signer-guide` item passes when `docs/POLICY-SIGNER.md` is a real document rather than a self-declared stub. It is: a truthful guide to the plain funded-account path and its limits.
+> - **The record reads the capability Partial.** `W3-D20-01` accepted Stage 2 as partial: the capped policy signer from SOW §4.1 is not delivered, for the protocol reason given in the [handover](B-D30-01-HANDOVER.md) (§6.2, point 1).
+>
+> §6.2 grades evidence items, so the submitted row is Present. The missing capability was disclosed rather than counted. **Do not read the gate's "Present" as "the policy signer ships".** The guide exists; the capability does not.
+
 **Historical snapshot measured 2026-09-22, ten days out: 7 of 13 evidence types
 existed and 6 were absent.** The table below is retained as the dated gap record.
 
