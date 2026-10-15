@@ -283,3 +283,61 @@ describe('extend hands the run exactly what was asked, and never more', () => {
     expect(deps.run.mock.calls[0]?.[0]).toMatchObject({ secretEnv: '_Key_2', maxFeeStroops: '1' });
   });
 });
+
+describe('extend selects data keys only from a well-formed keys file', () => {
+  const INVALID = 'Invalid keys file: expected dataKeys string array.';
+  const UNREADABLE = 'Unable to read a valid keys file.';
+  const withKeys = [...base, '--keys-file', 'keys.json'];
+
+  it('does not read any file unless --keys-file is given', async () => {
+    const deps = makeDeps();
+    await runExtendCli(base, deps);
+    expect(deps.readKeysFile).not.toHaveBeenCalled();
+    expect(deps.run.mock.calls[0]?.[0].dataKeys).toStrictEqual([]);
+  });
+
+  it('forwards exactly the keys in the file, from exactly the path named', async () => {
+    const deps = makeDeps();
+    deps.readKeysFile.mockResolvedValue('{"dataKeys":["AAAA","BBBB"]}');
+    const output = await runExtendCli(withKeys, deps);
+    expect(output.exitCode).toBe(0);
+    expect(deps.readKeysFile).toHaveBeenCalledExactlyOnceWith('keys.json');
+    expect(deps.run.mock.calls[0]?.[0].dataKeys).toStrictEqual(['AAAA', 'BBBB']);
+  });
+
+  const malformed: [string, string, string][] = [
+    ['an object without dataKeys', '{}', INVALID],
+    ['dataKeys as a string', '{"dataKeys":"AAAA"}', INVALID],
+    ['dataKeys as an object', '{"dataKeys":{"0":"AAAA"}}', INVALID],
+    ['a numeric key', '{"dataKeys":["AAAA",1]}', INVALID],
+    ['a null key', '{"dataKeys":[null]}', INVALID],
+    ['a nested array key', '{"dataKeys":[["AAAA"]]}', INVALID],
+    ['a top-level array', '["AAAA"]', INVALID],
+    ['a top-level null', 'null', INVALID],
+    ['a top-level string', '"AAAA"', INVALID],
+    ['a top-level number', '42', INVALID],
+    ['text that is not JSON', 'PRIVATE DATA', UNREADABLE],
+    ['an empty file', '', UNREADABLE],
+  ];
+
+  it.each(malformed)('refuses %s, without running or echoing the file', async (_l, text, msg) => {
+    const deps = makeDeps();
+    deps.readKeysFile.mockResolvedValue(text);
+    const output = await runExtendCli(withKeys, deps);
+    expect(output.exitCode).toBe(2);
+    expect(output.stdout).toBe('');
+    expect(output.stderr).toContain(msg);
+    expect(output.stderr).not.toContain('PRIVATE');
+    expect(deps.run).not.toHaveBeenCalled();
+  });
+
+  it('refuses an unreadable file without running or echoing the system error', async () => {
+    const deps = makeDeps();
+    deps.readKeysFile.mockRejectedValue(new Error('ENOENT: /home/someone/secret-path/keys.json'));
+    const output = await runExtendCli(withKeys, deps);
+    expect(output.exitCode).toBe(2);
+    expect(output.stderr).toContain(UNREADABLE);
+    expect(output.stderr).not.toContain('secret-path');
+    expect(deps.run).not.toHaveBeenCalled();
+  });
+});
