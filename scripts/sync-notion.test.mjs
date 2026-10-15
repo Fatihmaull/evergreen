@@ -192,3 +192,39 @@ test('retiredIds reads the real CONVENTIONS strikethroughs', () => {
   const ids = retiredIds(readFileSync('docs/CONVENTIONS.md', 'utf8'));
   assert.ok(ids.includes('W3-D18-02'), 'W3-D18-02 is struck through in CONVENTIONS');
 });
+
+// ── Phase 2 IDs (PH2-E0-07, 2026-10-15) ──────────────────────────────────────
+
+test('a phase-2 ID parses, and its owner is the person, not the agent track', () => {
+  const rows = parseBacklog(
+    '- [ ] **PH2-E0-07** (F · CEF) something\n' +
+      '- [ ] **PH2-E4-03** (S · CER + F) something\n' +
+      '- [ ] **PH2-BL-01** (R · CER) something\n' +
+      '- [ ] **PH2-E10-02b** (R · WEBR) open-ended epic and suffix\n',
+  );
+  assert.deepEqual(
+    rows.map((r) => [r.id, r.owner]),
+    [
+      ['PH2-E0-07', 'Fatih'],
+      ['PH2-E4-03', 'Shared'],
+      ['PH2-BL-01', 'Rakha'],
+      ['PH2-E10-02b', 'Rakha'],
+    ],
+  );
+});
+
+test('a bare agent code as owner parses as NO owner — why the person goes first', () => {
+  // `(CEF)` reads as owner `C`, which maps to nothing. The live-file test above
+  // is what catches a row written this way.
+  const [row] = parseBacklog('- [ ] **PH2-E0-07** (CEF) something\n');
+  assert.equal(row.owner, undefined);
+});
+
+for (const malformed of ['P2-E0-07', 'PH2-E-07', 'PH2-EO-07', 'PH2-B1-01', 'PH2-E0-']) {
+  test(`a malformed phase-2 ID is refused, not skipped: ${malformed}`, () => {
+    assert.throws(
+      () => parseBacklog(`- [ ] **${malformed}** (F · CEF) something\n`),
+      /look like tasks but did not parse/,
+    );
+  });
+}

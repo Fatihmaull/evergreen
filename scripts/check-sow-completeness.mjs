@@ -208,6 +208,9 @@ const REQUIREMENTS = [
   {
     id: 'D2.signer-guide',
     deliverable: 2,
+    // Present here means a truthful GUIDE exists, not that the capped signer
+    // ships. W3-D20-01 accepted the capability as partial; docs/EVIDENCE.md
+    // records both readings so this pass is not read as the capability.
     text: 'policy-signer configuration / setup guide',
     find: () => {
       const t = read('docs/POLICY-SIGNER.md');

@@ -28,7 +28,9 @@ import console from 'node:console';
 import { ID } from './task-id.mjs';
 
 const BACKLOG = 'BACKLOG.md';
-const ROOTS = ['docs', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
+// `phase-2` since PH2-E0-07: its labels were rewritten to registered IDs, and a
+// rewrite nothing checks is one a typo survives.
+const ROOTS = ['docs', 'phase-2', 'README.md', 'AGENTS.md', 'CLAUDE.md'];
 const SKIP = ['archive', 'node_modules'];
 
 // A registered task is one with a checkbox in BACKLOG...

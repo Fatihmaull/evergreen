@@ -2,7 +2,7 @@
 
 **A Soroban state-archival autopilot.** Monitor contract TTL, predict archival, estimate rent cost, and extend TTL automatically — non-custodially.
 
-Soroban ledger entries expire. An entry is still live on its final ledger — remaining TTL zero means one ledger left, not expired. After that, what happens depends on the entry type: **persistent, instance and code entries are archived** and the contract stops working until someone pays to restore them, while **temporary entries are deleted outright and cannot be recovered at all.** Stellar has no dedicated tooling to automate this today, so developers track TTL by hand. Evergreen fixes that.
+Soroban ledger entries expire. An entry is still live on its final ledger — remaining TTL zero means one ledger left, not expired. After that, what happens depends on the entry type: **persistent, instance and code entries are archived** and the contract stops working until someone pays to restore them (since Protocol 23 the next invocation can do that automatically, at restore cost), while **temporary entries are deleted outright and cannot be recovered at all.** Stellar has no dedicated tooling to automate this today, so developers track TTL by hand. Evergreen fixes that.
 
 > 🚧 **In active development.** Built by [Apex](#team) during a 30-day Stellar Instawards engagement (2026-09-03 → 2026-10-02). Testnet only for now.
 
@@ -20,7 +20,7 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 
 ## Why this is non-custodial
 
-Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. Stellar's state-archival documentation states it directly — *"There is no access control for TTL extension operations."*
+Because Soroban makes it so. **TTL extension is permissionless**: anyone may submit `ExtendFootprintTTLOp` against any ledger entry, provided they pay the resource fee. We measured it on testnet: an account with no relationship to a contract's deployer extended all four of that contract's entry types, and the transaction carried no authorization entries at all. The hashes are in [`docs/SOROBAN-PRIMER.md`](docs/SOROBAN-PRIMER.md) under *Observed on testnet*.
 
 So Evergreen never asks for authority over your contract, because no such authority exists to grant. There is no key to hand over, no permission to revoke, no scope to trust. The engine holds nothing but the lumens it uses to pay fees.
 

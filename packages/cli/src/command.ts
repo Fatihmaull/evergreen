@@ -22,8 +22,11 @@ import {
 /** Matches evergreen.config.example.json's defaults.extendToLedgers (~30 days). */
 const DEFAULT_EXTEND_LEDGERS = 518_400;
 
+// Both commands, because this is what a mistyped command prints: a usage line
+// naming only `scan` hid `extend` from anyone who had not already found it.
 const USAGE =
-  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]';
+  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]\n' +
+  '       evergreen extend <contract-id> --ledgers N [...]   (evergreen extend --help)';
 const HELP = `${USAGE}
 
 Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.

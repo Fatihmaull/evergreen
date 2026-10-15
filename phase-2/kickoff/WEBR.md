@@ -37,32 +37,33 @@ Each of these is a place where the UI must be exactly as honest as the chain.
 
 **Start now. Nothing blocks it:**
 
-1. **E3-06 — the wallet prompt test, done early.** #297 left it `undetermined` whether Freighter shows `approve` as **one legible prompt**.
+1. **PH2-E3-06 — the wallet prompt test, done early.** #297 left it `undetermined` whether Freighter shows `approve` as **one legible prompt**.
    - Build a throwaway testnet page that asks Freighter to sign a native-XLM SAC `approve`.
    - Report how many prompts appear and exactly what the user sees: amount, spender, expiry.
    - Screenshot each prompt.
    - If the prompt is illegible (raw XDR, no amount), that is a finding the allowance UX must design around.
-2. **BL-03 — bundle size.** `core` is embedded separately in each data bundle (732–768 KB each). Measure, then propose one shared chunk. Coordinate with WEBF before restructuring the build.
+2. **PH2-BL-03 — bundle size.** `core` is embedded separately in each data bundle (732–768 KB each). Measure, then propose one shared chunk. Coordinate with WEBF before restructuring the build.
 
-**After E4-01 (CER's multi-tenant engine):**
+**After PH2-E4-01 (CER's multi-tenant engine):**
 
-3. **E3-05 — the allowance flow:**
+3. **PH2-E3-05 — the allowance flow:**
    - **Cap sizing.** Show the estimate: rent for the watched contracts × horizon × (1 + fee) × margin. The margin exists because rent has varied about 18% day to day.
    - approve;
    - renewal reminders at 30, 7 and 1 days;
    - revoke, which is `approve(0)`.
    - An expired allowance shows as **stopped**, never as protected.
 
-**After E4-02 and E4-07:**
+**After PH2-E4-02 and PH2-E4-07:**
 
-4. **E3-04 — manual extend with the fee.**
+4. **PH2-E3-04 — manual extend with the fee.**
    - **Allowance users: one click, no wallet prompt.** The extend runs as an engine job.
-   - **Users without an allowance** follow E4-07's verdict: the router contract (one signature) if viable; otherwise the dashboard requires an allowance first.
+   - **Users without an allowance** follow PH2-E4-07's verdict: the router contract (one signature) if viable; otherwise the dashboard requires an allowance first.
    - **Never build a two-signature extend.** Fatih ruled it out.
+   - **One-click "Extend now" has a daily limit, and the user gets an email notice for each one** (accepted 2026-10-15; the engine side is PH2-E4-02).
 
-**After E4-03 (treasury address exists):**
+**After PH2-E4-03 (treasury address exists):**
 
-5. **E3-07 — "Support Evergreen" page.**
+5. **PH2-E3-07 — "Support Evergreen" page.**
    - The user chooses the amount, sends a wallet payment to the treasury address, and gets a clear receipt.
    - Opt-in only. Never pre-checked, never bundled with another action.
 

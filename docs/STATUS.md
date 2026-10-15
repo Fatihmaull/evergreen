@@ -38,6 +38,24 @@
 
 ---
 
+## Current — PH2-E0-02: there was no evidence freeze, 2026-10-15
+
+**The card's premise was false, and the card was re-scoped by Fatih (option A).** The premise was that `check:evidence-integrity` pins `core`, so `core` was frozen until a tag-based gate replaced it. Measured:
+- **No pin:** with `core` edited and `dist` rebuilt, the full `pnpm check` exits 0.
+- **Why:** the verifier only hashes files inside each bundle against that bundle's own `SHA256SUMS`.
+- **Origin:** the claim was written in the #296 evidence README on 2026-10-14, then copied into `B-D31-04`, plan Q2 and the card, without anyone reading the verifier.
+- **Where it is corrected:** `B-D31-04`, Q2 and the card. The replay-at-`sourceCommit` procedure is in [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md), measured on C at `c38e77f` (exit 0).
+- **Tag:** `sow1-final` is on `fb93b66` as a record of what was submitted, not a gate input. The tag message explains why it is not on `d337153`.
+- **No new gate.**
+
+**Nothing was ever blocked by `PH2-E0-02`.** Its dependencies were removed in #300.
+
+## Current — phase 2 registered (PH2-E0-07), 2026-10-15
+
+Every phase-2 card from [`phase-2/PHASE2-PLAN.md`](../phase-2/PHASE2-PLAN.md) is now a row in `BACKLOG.md` § Phase 2: **43 new `PH2-` IDs**, plus three backlog cards that keep their existing `B-D31-01/02/03` IDs. `scripts/task-id.mjs` learned the `PH2-` form, with tests in both directions, and `check:task-ids` now also scans `phase-2/`, where every provisional label was rewritten to its ID. `PH2-E0-01` is ticked: #296 and #297 are on `main`. Owners changed on two existing rows, per the confirmed plan: `B-D31-01` S → R · CER, `B-D31-02` F → F · CEF.
+
+**Notion sync pending: 68 rows, not 43.** The post-merge mirror sync on `48d1313` (run 38734398544) reports **68 `BACKLOG.md` rows with no Notion row** and 0 phantoms. 43 are the new `PH2-` IDs. **25 predate phase 2:** `W3-D18-03a`, `W4-D22-03` to `W4-D22-19`, `W4-D27-04`, `B-D29-04`, `B-D29-05` and `B-D31-01` to `B-D31-04`. The rows were not created on 2026-10-15 because this session's Notion connector is authenticated to a different workspace, and the Evergreen Tasks database returned 404. `sync-notion` never creates rows (by design), so they need a session with Evergreen workspace access, per AGENTS.md § D.3 and § F.
+
 ## Current — W4-D22-08 supplied website mark requested
 
 Fatih asked Rakha on 2026-09-30 to place the supplied Evergreen JPEG mark in
@@ -1311,7 +1329,7 @@ All dated 2026-09-04, from the Phase 0 alignment pass. Every one has a reason; n
 
 | # | Change | Why |
 |---|---|---|
-| 1 | **`extendTTL` confirmed permissionless** (Stellar state-archival docs: *"There is no access control for TTL extension operations"*). Empirical check queued at `W1-D4-06`. | The plan assumed the engine needed authority over user contracts. It does not. This reshaped Week 3, the payment model, and the dashboard. |
+| 1 | **`extendTTL` confirmed permissionless** (Stellar state-archival docs: *"There is no access control for TTL extension operations"*). Empirical check queued at `W1-D4-06`. *(2026-10-15, `PH2-E0-03`: that quote could not be found in Stellar's docs. The property rests on the `W1-D4-06` measurement, not the quote.)* | The plan assumed the engine needed authority over user contracts. It does not. This reshaped Week 3, the payment model, and the dashboard. |
 | 2 | **Week 3 split into Stage 1 / Stage 2.** Core loop proven with a plain funded account first; policy signer added after. | The never-cut unattended-bump proof moves ~5 days earlier and stops depending on an unverified third-party library. The old ADR-002 fallback (25–40h of Rust starting Sep 19 against a Sep 22 proof) never closed arithmetically; now it doesn't have to. |
 | 3 | **Policy signer restated, not dropped.** SOW-committed; purpose is protecting the *self-hosting user's* hot key, not earning non-custodiality. | The SOW names it in Deliverable 2's description and evidence list. Resequencing is not dropping — Fatih raises the change with Kenny in W1, not at review. |
 | 4 | **ADR-004 written: the user always pays.** Three mechanisms (dashboard signature / self-hosted engine / future hosted prepay), one invariant. Apex never subsidises. | Subsidy is unbounded cost and the hosted-billing non-goal in disguise. Now a hard rule in `AGENTS.md`. |
