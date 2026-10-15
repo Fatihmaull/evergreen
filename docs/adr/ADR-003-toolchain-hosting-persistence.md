@@ -291,8 +291,8 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
 
   An autopilot users pay for cannot run on a host that sleeps, and pinging it awake is the platform-gaming this project rejected for GitHub cron.
 
-  🔴 **Carried forward, and still unresolved: whose Cloudflare account?** The 2026-09-08 note above records that the account used for Pages is **shared**: it already runs `focustudio.online` and a Worker named `focuswebstudio`. **Workers Free limits are per account**, so that Worker draws on the same budget the engine would.
+  **Carried forward, now resolved: whose Cloudflare account?** The 2026-09-08 note above records that the account used for Pages is **shared**: it already runs `focustudio.online` and a Worker named `focuswebstudio`. **Workers Free limits are per account**, so that Worker draws on the same budget the engine would.
   - **Spike:** `PH2-E2-01` is measuring on a disposable account of Rakha's.
-  - **Production:** the production owner of both the Cloudflare and Neon accounts is **`undetermined`** and must be decided before `PH2-E2-03`.
+  - **Production:** decided by Fatih on #299 (2026-10-15). The production Cloudflare and Neon accounts are **project-owned, with Fatih as owner and Rakha as member**, and are created before `PH2-E2-03`. That leaves the shared Pages account out of the engine's budget.
 
   **Scheduler.** ADR-001 (scheduled serverless, not always-on) is unchanged. Workers cron is a scheduled serverless job. The sprint measured GitHub Actions delivering about 7.5% of a declared 15-minute cron (entry of 2026-09-14), which is fine for a self-hoster with a day of threshold. **It is not a basis for a paid service.** The hosted scheduler is `PH2-E4-04`, per `PH2-E2-01`'s verdict.
