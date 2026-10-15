@@ -279,7 +279,7 @@ A workflow concurrency group coordinates only runs using that group in the repos
 
 The spike deliberately refuses to reclaim pending work on lease expiry, and its history accepts only successful outcomes. Adoption needs chain reconciliation, not timer-based release, and a writer that can record failures. The experiment establishes neither production readiness nor exactly-once chain execution. A local SQL write and a Stellar submission are not one atomic transaction.
 
-Summaries and uploaded artifacts help inspect a run but have retention limits. For every new Testnet transaction, commit the hash, **full unedited RPC response and explorer screenshot** with [EVIDENCE.md](EVIDENCE.md) the same day. This durable proof is independent of the later dashboard history source. The W4 dashboard reader is still to be implemented; there is no live history API today.
+Summaries and uploaded artifacts help inspect a run but have retention limits. For every new Testnet transaction, commit the hash and the **full unedited RPC response** with [EVIDENCE.md](EVIDENCE.md) the same day. This durable proof is independent of the later dashboard history source. The W4 dashboard reader is still to be implemented; there is no live history API today.
 
 ## Boundaries we're deliberately holding
 
