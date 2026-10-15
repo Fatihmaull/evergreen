@@ -158,6 +158,7 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 
 **Manual extend with a fee (§4.2):**
 - **Allowance users: one click, zero wallet prompts.** "Extend now" is just an on-demand engine job, running the same flow as above.
+  - **It has a daily limit per user, and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
 - **Users without an allowance:** card PH2-E4-07 researches an Evergreen **router contract** that takes the fee and extends in **one invocation, one signature**.
   - **[to verify]**: whether a contract can extend another contract's instance and code (believed yes), and whether it can extend another contract's *persistent data* (believed no).
   - If it can cover only instance and code, say so and measure how much of a typical contract's rent that is. In #296, the code entry was 99% of the bill.
@@ -226,7 +227,7 @@ Weight: **S** = 1, **M** = 2, **L** = 3. Ordered by dependency within each epic.
 | PH2-E0-03 | Docs hygiene, see the list below | CEF | S | — |
 | PH2-E0-04 | Gate inventory: keep / retire / modify, one reason each. **F approves before removal** | CEF → F | S | — |
 | PH2-E0-05 | ADR changes (§2) plus the new auth ADR (§3.1) | CEF | M | PH2-E0-01 |
-| PH2-E0-06 | Retire the sprint write guard for A/B/C; close `B-D31-04` | CER | S | — |
+| PH2-E0-06 | Retire the sprint write guard for A/B/C; close `B-D31-04`. *Moved from CER 2026-10-15: `write-guard.ts` is in `packages/core`. Rakha reviews.* | CEF | S | — |
 | PH2-E0-07 | Register all cards in `BACKLOG.md` with real IDs and `(F · CEF)`-style owners | CEF | S | plan confirmed |
 
 PH2-E0-03 contents:
@@ -241,10 +242,10 @@ PH2-E0-03 contents:
 |---|---|---|---|---|
 | PH2-E1-01 | Fix `#235` (Q16) | CEF | M | — |
 | PH2-E1-02 | Tests and mutation proof for `cli/extend.ts` (37.5% functions) | CER | M | — |
-| PH2-E1-03 | Network plumbing: explicit network across CLI, engine, signer and dashboard. Today the passphrase is hardcoded at `cli/src/bin.ts:52` | CEF | M | — |
-| PH2-E1-04 | Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit | CER | M | PH2-E1-03 |
+| PH2-E1-03 | Network plumbing: explicit network across CLI, engine, signer and dashboard. Today the passphrase is hardcoded at `cli/src/bin.ts:52`. **Also the mainnet read-only scan path in the CLI** (moved from PH2-E1-04 on 2026-10-15) | CEF | L | — |
+| PH2-E1-04 | `extend` refuses on mainnet until beta exit, tested in both directions, plus `action.yml` mainnet support. *Shrunk 2026-10-15: the scan path moved to PH2-E1-03.* | CER | S | PH2-E1-03 |
 | PH2-E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | — |
-| PH2-E1-06 | Publish CLI `0.2.0` | R (F backup) | S | PH2-E1-01, PH2-E1-04 |
+| PH2-E1-06 | Publish CLI `0.2.0`, **without the Support tip**. PH2-E1-08 is not a dependency, so the #235 fix does not wait on it | R (F backup) | S | PH2-E1-01, PH2-E1-04 |
 | PH2-E1-07 | MCP server, in-repo, importing `core` | CEF | M | PH2-E1-01 |
 | PH2-E1-08 | CLI "Support Evergreen" tip (§3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI | CEF | S | PH2-E4-03 (treasury address) |
 
@@ -266,7 +267,7 @@ PH2-E0-03 contents:
 | PH2-E3-01 | Login UI: email + wallet linking | WEBF | M | PH2-E2-04 |
 | PH2-E3-02 | Watchlist UI: binding expiry first, honest three-state health | WEBF | M | PH2-E2-05 |
 | PH2-E3-03 | Scan any contract, with "add to watchlist" | WEBF | S | PH2-E2-05 |
-| PH2-E3-04 | Manual extend with fee (§3.3: one click for allowance users, PH2-E4-07's route for others) | WEBR | M | PH2-E4-02, PH2-E4-07 |
+| PH2-E3-04 | Manual extend with fee (§3.3: one click for allowance users, PH2-E4-07's route for others). One-click "Extend now" has a **daily limit** and sends the user an **email notice** | WEBR | M | PH2-E4-02, PH2-E4-07 |
 | PH2-E3-05 | Allowance flow: cap sizing, approve, renewal reminders, revoke | WEBR | M | PH2-E4-01 |
 | PH2-E3-06 | Wallet prompt test (#297 left the Freighter prompt count `undetermined`) | WEBR | S | — (only the final check against the real allowance flow follows PH2-E3-05) |
 | PH2-E3-07 | Website "Support Evergreen" page: wallet payment to the treasury address | WEBR | S | PH2-E4-03 |
@@ -276,7 +277,7 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
-| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool | CER | L | PH2-E4-01 |
+| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury; treasury key held by F offline | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |
@@ -289,7 +290,7 @@ PH2-E0-03 contents:
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
 | PH2-E5-02 | Mainnet readiness checklist | F + R | S | PH2-E5-01 |
-| PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-04 data |
+| PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
 ### BL — Backlog (unscheduled, same scheme)
@@ -308,8 +309,15 @@ PH2-E0-03 contents:
 
 | Person | Scheduled (E0–E5) | Backlog | Total |
 |---|---|---|---|
-| **Fatih** (F 6.5 + CEF 22 + WEBF 6) | 34.5 | 3 | 37.5 |
-| **Rakha** (R 2.5 + CER 24 + WEBR 6) | 32.5 | 7 | 39.5 |
+| **Fatih** (F 6.5 + CEF 24 + WEBF 6) | 36.5 | 3 | 39.5 |
+| **Rakha** (R 2.5 + CER 22 + WEBR 6) | 30.5 | 7 | 37.5 |
+
+**Rebalanced 2026-10-15** after the ownership moves accepted on #299. Before the moves it was Fatih 34.5 and Rakha 32.5 scheduled, recomputed from the tables above.
+- PH2-E0-06 moved CER → CEF (S, 1 point).
+- PH2-E1-03 grew M → L when it took the mainnet scan path (+1).
+- PH2-E1-04 shrank M → S (−1).
+
+**That shifts 2 points each way, not 3.** With S/M/L weights, reaching 37.5 / 29.5 would need another card to change.
 
 Shared cards are split half each. **Equal by weight, not by hours** — Rakha's available hours are his to confirm.
 
@@ -327,3 +335,9 @@ None. The CLI-fee conflict was resolved by Q21 (a + c).
 - PH2-E0-02 was listed as a dependency of seven more cards. It blocked none of them, because no gate ever froze `core` — see PH2-E0-02's row in `BACKLOG.md`.
 
 The first two were caught by Rakha on #299.
+
+**Ownership moves, 2026-10-15** (Fatih, after Rakha's comment on #299):
+- PH2-E0-06 moves from CER to CEF, because `write-guard.ts` is in `packages/core`. Rakha reviews the PR.
+- PH2-E1-04 splits. The mainnet read-only scan path joins PH2-E1-03 (CEF, now L). PH2-E1-04 keeps the mainnet `extend` refusal and `action.yml` (CER, now S).
+- One-click "Extend now" gets a daily limit and an email notice (PH2-E3-04, PH2-E4-02).
+- CLI `0.2.0` ships without the Support tip (PH2-E1-06).

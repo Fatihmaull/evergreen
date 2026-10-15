@@ -65,13 +65,16 @@ The backend's location (folder, Worker name) is decided in **PH2-E2-02**, with W
    - a new auth ADR (plan §3.1).
 
    Name each departure in the text. Do not rewrite history.
+4b. **PH2-E0-06 — retire the sprint write guard for A/B/C** (moved from CER on 2026-10-15; Rakha reviews). `PROTECTED_ENTRIES` exists only to protect sprint evidence. Close `B-D31-04`: either give the CLI a reachable override, or remove the need for one. Mutation-prove whatever guard remains. **`check:crossing` fails without A/B/C, so it must be retired first** (PH2-E0-04).
 5. **PH2-E0-04 — gate inventory.** All 19 gates: keep / retire / modify, one reason each. **Report it to Fatih and remove nothing until he approves.**
 6. **PH2-E1-01 — `#235`.**
    - Archived entries get a truthful TTL status (no `known` with negative remaining).
    - `issues[]` names archival.
    - Document the `--json` schema change as breaking, for CLI `0.2.0`.
    - Mutation-prove the fix.
-7. **PH2-E1-03 — network plumbing.** Choose the network explicitly across CLI, engine, signer and dashboard config. Today the CLI hardcodes the testnet passphrase (`cli/src/bin.ts:52`), and every path checks the RPC's network.
+7. **PH2-E1-03 — network plumbing, plus the mainnet read-only scan path** (the latter moved from PH2-E1-04 on 2026-10-15; now weight L). Choose the network explicitly across CLI, engine, signer and dashboard config. Today the CLI hardcodes the testnet passphrase (`cli/src/bin.ts:52`), and every path checks the RPC's network.
+   - **The dashboard is in scope.** `RPC_URL` is a literal at `apps/web/src/lib/evergreen.ts:36` and `apps/web/src/chrome-client.ts:6`. Agree the config shape with WEBF; WEBF edits `apps/`.
+   - **CER's PH2-E1-04 builds on this.** It covers the mainnet `extend` refusal and `action.yml`.
    - Design the user-facing surface (flag name, config key) yourself.
    - Show it to Fatih before merging, because it is public API.
 8. **PH2-E1-05** — archived-entry advice strings mention Protocol 23 auto-restore.
