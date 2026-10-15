@@ -586,17 +586,17 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [x] **PH2-E0-03** (F · CEF) **S** ✅ **DONE 2026-10-15.** *(1)* **D2 note:** `check:sow` reads D2 Present because a truthful signer guide exists, while `W3-D20-01` accepted the capability as Partial. Both readings are now recorded in `docs/EVIDENCE.md` and in the gate itself. *(2)* **The quote was not found.** The "no access control" sentence attributed to Stellar's docs could not be found on the cited page, two other Stellar pages, or CAP-46-12. It is replaced by the `W1-D4-06` two-identity measurement in the primer, README and PRD, and annotated in place in STATUS and ADR-002, which are dated records. *(3)* **`USAGE` names `extend`,** with a test that fails without it. *(4)* **Primer section on Protocol 23 auto-restore,** sourced to CAP-0066 (Final), with testnet measured at protocol 29. The advice-string change it implies is `PH2-E1-05`. **Original text:** Docs hygiene: the gate-Present vs report-Partial D2 note; the protocol blockquote in five docs replaced with the W1 two-identity measurement; `USAGE` in `cli/src/command.ts` lists `extend`; Protocol 23 auto-restore in the primer.
 - [ ] **PH2-E0-04** (F · CEF, F approves) **S** Gate inventory: every gate keep / retire / modify, one reason each. **Fatih approves before anything is removed.**
 - [ ] **PH2-E0-05** (F · CEF) **M** ADRs: a new ADR superseding ADR-004 (allowance funding plus fee); ADR-002 amended (capped property via the token layer, #297); ADR-003 amended (Cloudflare + Neon); a new auth ADR (plan §3.1). *Depends on `PH2-E0-01`.*
-- [ ] **PH2-E0-06** (R · CER) **S** Retire the sprint write guard for A/B/C; close `B-D31-04`.
+- [ ] **PH2-E0-06** (F · CEF, was R · CER) **S** Retire the sprint write guard for A/B/C; close `B-D31-04`. Moved 2026-10-15, because `write-guard.ts` is in `packages/core`. Rakha reviews. **`check:crossing` reads `PROTECTED_ENTRIES` and fails without A/B/C, so it must be retired first** (`PH2-E0-04`).
 - [x] **PH2-E0-07** (F · CEF) **S** Register every phase-2 card here with real IDs and person-first owners, and rewrite the labels in `phase-2/` to these IDs. ✅ This section; `PH2-` added to `scripts/task-id.mjs` with tests in both directions; `phase-2/` added to `check:task-ids`' roots so the rewrite stays checked.
 
 ### E1 — Foundation
 
 - [ ] **PH2-E1-01** (F · CEF) **M** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven.
 - [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`.
-- [ ] **PH2-E1-03** (F · CEF) **M** Network plumbing: the network chosen explicitly across CLI, engine, signer and dashboard config; today the CLI hardcodes the testnet passphrase. **The user-facing surface is shown to Fatih before merge.**
-- [ ] **PH2-E1-04** (R · CER) **M** Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit. *Depends on `PH2-E1-03`.*
+- [ ] **PH2-E1-03** (F · CEF) **L** Network plumbing: the network chosen explicitly across CLI, engine, signer and dashboard config; today the CLI hardcodes the testnet passphrase. **The user-facing surface is shown to Fatih before merge.** **Also the mainnet read-only scan path in the CLI**, moved from `PH2-E1-04` on 2026-10-15, with M → L. **The dashboard is in scope:** `RPC_URL` is a literal at `apps/web/src/lib/evergreen.ts:36` and `apps/web/src/chrome-client.ts:6`. The config shape is agreed with WEBF, and WEBF edits `apps/`.
+- [ ] **PH2-E1-04** (R · CER) **S** `extend` refuses on mainnet until beta exit, tested in both directions, plus `action.yml` mainnet support. *Shrunk 2026-10-15 (M → S): the mainnet scan path moved to `PH2-E1-03`.* *Depends on `PH2-E1-03`.*
 - [ ] **PH2-E1-05** (F · CEF) **S** Archived-entry advice strings mention Protocol 23 auto-restore.
-- [ ] **PH2-E1-06** (R, F backup) **S** Publish CLI `0.2.0`. *Depends on `PH2-E1-01`, `PH2-E1-04`.*
+- [ ] **PH2-E1-06** (R, F backup) **S** Publish CLI `0.2.0`, **without the Support tip**. `PH2-E1-08` is not a dependency, so the #235 fix does not wait on it. *Depends on `PH2-E1-01`, `PH2-E1-04`.*
 - [ ] **PH2-E1-07** (F · CEF) **M** MCP server, in-repo, importing `core`. *Depends on `PH2-E1-01`.*
 - [ ] **PH2-E1-08** (F · CEF) **S** CLI "Support Evergreen" tip (plan §3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI. *Depends on `PH2-E4-03` (treasury address).*
 
@@ -614,7 +614,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E3-01** (F · WEBF) **M** Login UI: email + wallet linking. *Depends on `PH2-E2-04`.*
 - [ ] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.*
 - [ ] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.*
-- [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. *Depends on `PH2-E4-02`, `PH2-E4-07`.*
+- [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. One-click "Extend now" has a **daily limit** and sends the user an **email notice** (accepted 2026-10-15). *Depends on `PH2-E4-02`, `PH2-E4-07`.*
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
 - [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
 - [ ] **PH2-E3-07** (R · WEBR) **S** Website "Support Evergreen" page: wallet payment to the treasury address. *Depends on `PH2-E4-03`.*
@@ -622,7 +622,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E4 — Hosted autopilot
 
 - [ ] **PH2-E4-01** (R · CER) **L** Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB. *Depends on `PH2-E2-03`.*
-- [ ] **PH2-E4-02** (R · CER) **L** The plan §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from the engine pool. *Depends on `PH2-E4-01`.*
+- [ ] **PH2-E4-02** (R · CER) **L** The plan §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from the engine pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** (accepted 2026-10-15). *Depends on `PH2-E4-01`.*
 - [ ] **PH2-E4-03** (S · CER + F) **M** Key separation: float limit, refund headroom, sweep to treasury; treasury key held by Fatih offline. *Depends on `PH2-E4-02`.*
 - [ ] **PH2-E4-04** (R · CER) **M** Scheduler: Workers cron with enqueue fan-out, or per `PH2-E2-01`'s verdict. *Depends on `PH2-E2-01`, `PH2-E4-02`.*
 - [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. *Depends on `PH2-E4-04`.*
@@ -633,7 +633,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 - [ ] **PH2-E5-01** (F) **M** Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics. *Depends on E3 and E4.*
 - [ ] **PH2-E5-02** (S · F + R) **S** Mainnet readiness checklist. *Depends on `PH2-E5-01`.*
-- [ ] **PH2-E5-03** (F) **S** Set the fee percentage from measured mainnet costs. *Depends on `PH2-E1-04` data.*
+- [ ] **PH2-E5-03** (F) **S** Set the fee percentage from measured mainnet costs. *Depends on `PH2-E1-03` data (the mainnet scan path).*
 - [ ] **PH2-E5-04** (S · R + F) **M** Mainnet launch with small caps; Rakha owns the release. *Depends on `PH2-E5-02`, `PH2-E5-03`.*
 
 ### BL — Phase 2 backlog, unscheduled

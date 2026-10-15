@@ -59,6 +59,7 @@ Each of these is a place where the UI must be exactly as honest as the chain.
    - **Allowance users: one click, no wallet prompt.** The extend runs as an engine job.
    - **Users without an allowance** follow PH2-E4-07's verdict: the router contract (one signature) if viable; otherwise the dashboard requires an allowance first.
    - **Never build a two-signature extend.** Fatih ruled it out.
+   - **One-click "Extend now" has a daily limit, and the user gets an email notice for each one** (accepted 2026-10-15; the engine side is PH2-E4-02).
 
 **After PH2-E4-03 (treasury address exists):**
 

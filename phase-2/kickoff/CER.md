@@ -56,10 +56,10 @@ Re-verify against `origin/main` before building on anything in the plan.
 
 **Then — none of these waits on PH2-E0-02, because no gate ever froze `core`:**
 
-2. **PH2-E0-06 — retire the sprint write guard for A/B/C.** `PROTECTED_ENTRIES` exists only to protect sprint evidence. Close `B-D31-04`: either give the CLI a reachable override, or remove the need for one. Mutation-prove whatever guard remains.
+2. ~~**PH2-E0-06 — retire the sprint write guard for A/B/C.**~~ **Moved to CEF on 2026-10-15**, because `write-guard.ts` is in `packages/core`. Rakha reviews CEF's PR.
 3. **PH2-E1-02 — tests for `cli/extend.ts`.** It is at 37.5% function coverage and is the file that signs; you wrote it (#86). Mutation proof is required.
-4. **PH2-E1-04 — mainnet read-only scan** in the CLI and the Action. `extend` must refuse on mainnet, tested in both directions. Depends on CEF's PH2-E1-03 network plumbing.
-5. **PH2-E1-06 (R, in person) — publish CLI `0.2.0`.** You are primary for publishing. Verify against the registry readback, never `package.json`.
+4. **PH2-E1-04 — `extend` refuses on mainnet, plus `action.yml` mainnet support.** The refusal is tested in both directions. *Shrunk on 2026-10-15:* the mainnet read-only scan path moved to CEF's PH2-E1-03, which this card depends on.
+5. **PH2-E1-06 (R, in person) — publish CLI `0.2.0`, without the Support tip** (PH2-E1-08 is not a dependency). You are primary for publishing. Verify against the registry readback, never `package.json`.
 
 **After PH2-E2-02 (the API spec, CEF + WEBF):**
 
@@ -78,7 +78,8 @@ Re-verify against `origin/main` before building on anything in the plan.
    - idempotent `transfer_from(rent + fee)`;
    - extend, with bounded retries;
    - reconcile;
-   - on final failure, **refund from the engine pool, never from treasury**.
+   - on final failure, **refund from the engine pool, never from treasury**;
+   - on-demand "Extend now" jobs: a **daily limit** per user, and an **email notice** to the user for each one (your proposal, accepted 2026-10-15).
 
    Every path needs a failing case first.
 10. **PH2-E4-03 — key separation, with Fatih:**
