@@ -556,6 +556,56 @@ function guardBundle(metafile, label) {
   return included;
 }
 
+/**
+ * What is actually in a browser bundle, by input bytes, largest first.
+ *
+ * Reported every build because the alternative is a remembered number, and a
+ * remembered number here was wrong for weeks. The backlog said these bundles
+ * were large "because core is embedded separately in each", and the planning
+ * that followed was aimed at deduplicating core. Measured on 2026-10-15:
+ *
+ *   @stellar/stellar-sdk    664 KB   87–91%
+ *   @evergreen-stellar/core  13–18 KB   1.8–2.3%
+ *
+ * Deduplicating core would save about 17 KB a page. The SDK is the bundle.
+ *
+ * And the SDK is not reachable by import surgery, which is the obvious next
+ * idea. It publishes subpath exports, and they all land in the same place
+ * because `xdr` is 506 KB of generated definitions and `rpc.Server` needs it:
+ *
+ *   { Networks, rpc } from the root barrel      630 KB   (what we import)
+ *   * as rpc from './rpc' + Networks './base'   630 KB   no saving at all
+ *   { Server } from './rpc'                     629 KB
+ *   { xdr } from './base'                       506 KB   the floor
+ *   { Networks } from './base'                    0 KB
+ *
+ * So ~165 KB gzipped per live page is the price of a browser that reads the
+ * chain with no server in between, and that is the trust property the product
+ * argues for: anyone can check a contract without trusting us. Fatih decided
+ * on 2026-10-15 to pay it and keep public scanning client-side. The watchlist
+ * and the autopilot go through the API because they need a server anyway.
+ */
+function reportComposition(metafile, js) {
+  const output = Object.values(metafile.outputs).find((o) => o.bytes > 0);
+  if (!output) return;
+  const buckets = new Map();
+  for (const [path, info] of Object.entries(output.inputs)) {
+    if (info.bytesInOutput === 0) continue;
+    const after = path.includes('node_modules/') ? path.split('node_modules/').pop() : null;
+    const key = after
+      ? after.startsWith('@')
+        ? after.split('/').slice(0, 2).join('/')
+        : after.split('/')[0]
+      : 'our own source';
+    buckets.set(key, (buckets.get(key) ?? 0) + info.bytesInOutput);
+  }
+  const [name, bytes] = [...buckets].sort((a, b) => b[1] - a[1])[0];
+  const size = output.bytes < 1024 ? `${output.bytes} B` : `${(output.bytes / 1024).toFixed(0)} KB`;
+  console.log(
+    `  ${js.padEnd(32)} ${size} minified, ${((bytes / output.bytes) * 100).toFixed(0)}% ${name}`,
+  );
+}
+
 async function bundle(entry, js) {
   const result = await esbuild.build({
     entryPoints: [join(here, entry)],
@@ -570,6 +620,7 @@ async function bundle(entry, js) {
     nodePaths: [join(repo, 'node_modules')],
     logLevel: 'error',
   });
+  reportComposition(result.metafile, js);
   return guardBundle(result.metafile, js);
 }
 
