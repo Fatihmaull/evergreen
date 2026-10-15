@@ -1,0 +1,98 @@
+{
+ "neon-http-q1": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   null
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 185.2,
+  "client_p90": 839.4,
+  "client_max": 995.5,
+  "worker_wall_p50": 0.0,
+  "errors": []
+ },
+ "neon-http-q2": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   null
+  ],
+  "colo": [
+   "HKG",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 199.7,
+  "client_p90": 945.6,
+  "client_max": 1422.0,
+  "worker_wall_p50": 0.0,
+  "errors": []
+ },
+ "neon-ws-q1": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   null
+  ],
+  "colo": [
+   "HKG",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 324.1,
+  "client_p90": 1417.3,
+  "client_max": 4629.6,
+  "worker_wall_p50": 0.0,
+  "errors": []
+ },
+ "neon-ws-q2": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   null
+  ],
+  "colo": [
+   "HKG",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 486.1,
+  "client_p90": 2602.7,
+  "client_max": 4349.7,
+  "worker_wall_p50": 0.0,
+  "errors": []
+ },
+ "neon-ws-q5": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   null
+  ],
+  "colo": [
+   "HKG",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 178.7,
+  "client_p90": 1855.8,
+  "client_max": 5778.4,
+  "worker_wall_p50": 0.0,
+  "errors": []
+ }
+}
