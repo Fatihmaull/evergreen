@@ -185,7 +185,7 @@ This costs about a minute per transaction if done at capture time and is unrecov
 
 **Measured 2026-09-30 after the demo video was published: all 13 of 13 evidence
 types exist.** All three deliverables are Present on every §6.1 evidence item.
-`pnpm check:sow` reports the same reading independently of this page.
+`pnpm check:sow` reported the same reading independently of this page. *(It was retired on 2026-10-15 by `PH2-E0-04`, after SOW 1 was submitted. That last reading is this table, and the script is readable at the `sow1-final` tag.)*
 
 *Previously, measured 2026-09-24 after the npm publish: 12 of 13, with the demo
 video the only absent type and Deliverable 3 at four of five.*
@@ -198,10 +198,10 @@ video the only absent type and Deliverable 3 at four of five.*
 
 > **Deliverable 2 has two readings, and both are true** (noted 2026-10-15, `PH2-E0-03`).
 >
-> - **The gate reads it Present.** `check:sow` counts evidence *types*. Its `D2.signer-guide` item passes when `docs/POLICY-SIGNER.md` is a real document rather than a self-declared stub. It is: a truthful guide to the plain funded-account path and its limits.
+> - **The gate read it Present** (`check:sow`, retired 2026-10-15). It counted evidence *types*. Its `D2.signer-guide` item passed when `docs/POLICY-SIGNER.md` was a real document rather than a self-declared stub. It was: a truthful guide to the plain funded-account path and its limits.
 > - **The record reads the capability Partial.** `W3-D20-01` accepted Stage 2 as partial: the capped policy signer from SOW §4.1 is not delivered, for the protocol reason given in the [handover](B-D30-01-HANDOVER.md) (§6.2, point 1).
 >
-> §6.2 grades evidence items, so the submitted row is Present. The missing capability was disclosed rather than counted. **Do not read the gate's "Present" as "the policy signer ships".** The guide exists; the capability does not.
+> §6.2 grades evidence items, so the submitted row is Present. The missing capability was disclosed rather than counted. **Do not read the gate's "Present" as "the policy signer shipped".** The guide exists; the capability does not.
 
 **Historical snapshot measured 2026-09-22, ten days out: 7 of 13 evidence types
 existed and 6 were absent.** The table below is retained as the dated gap record.
