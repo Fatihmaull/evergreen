@@ -565,10 +565,85 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 *Nothing here is graded. Each row names what deferred it and when it comes back, because a park without a date is how something quietly never happens.*
 
-- [ ] **B-D31-01** (S) 📅 **After 2026-10-02 — decide the scheduler gap floor. THE REVIEW TRIGGER HAS ALREADY FIRED.** Measured 2026-09-23: worst delivered gap **403 min**, past the recorded `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` (369) **and** past the 384-min review trigger, still below the 480-min floor. The trigger exists precisely so a person decides rather than a number quietly tracking upward — so this is **deferred, not skipped**, and the deferral has a date. Not done on 2026-09-23 because the constant is pinned by `pnpm check:policy` and read by the engine's floor warning, and moving engine behaviour in the week of guinea-pig C's window, for a reason unrelated to the proof, is the wrong trade. The margin holds meanwhile: at a 6.7-hour worst gap the engine still fires three or more times inside C's 24-hour window, and that margin comes from the two-tier threshold rather than the cadence. Dated record: [`docs/evidence/2026-09-23-scheduler-cadence/`](docs/evidence/2026-09-23-scheduler-cadence/README.md). **Decide: update the constant to the new observation, raise the floor, or accept the drift with a reason.**
+- [ ] **B-D31-01** (R · CER, was S) 📅 **After 2026-10-02 — decide the scheduler gap floor. THE REVIEW TRIGGER HAS ALREADY FIRED.** Measured 2026-09-23: worst delivered gap **403 min**, past the recorded `WORST_OBSERVED_SCHEDULER_GAP_MINUTES` (369) **and** past the 384-min review trigger, still below the 480-min floor. The trigger exists precisely so a person decides rather than a number quietly tracking upward — so this is **deferred, not skipped**, and the deferral has a date. Not done on 2026-09-23 because the constant is pinned by `pnpm check:policy` and read by the engine's floor warning, and moving engine behaviour in the week of guinea-pig C's window, for a reason unrelated to the proof, is the wrong trade. The margin holds meanwhile: at a 6.7-hour worst gap the engine still fires three or more times inside C's 24-hour window, and that margin comes from the two-tier threshold rather than the cadence. Dated record: [`docs/evidence/2026-09-23-scheduler-cadence/`](docs/evidence/2026-09-23-scheduler-cadence/README.md). **Decide: update the constant to the new observation, raise the floor, or accept the drift with a reason.**
 - [ ] **B-D31-03** (F) 📅 **After 2026-10-02 — the cold-start read that never happened, as a debt with a date.** `W3-D21-01e` was cut on 2026-09-25 (see the sprint section for the full reasoning): scheduled Sep 24, overtaken by guinea-pig C's window, and its purpose largely served by [`SUBMISSION-WALKTHROUGH.md`](docs/SUBMISSION-WALKTHROUGH.md). 🔴 **What was lost is not recoverable in the same form.** The task existed because Fatih was the closest thing to a stranger the team had, and that is a resource spent the first time anyone explains the engine to him. Nobody did — so it is still unspent, but it now belongs to a reader who has watched the project for a month. **Do this instead:** have Fatih stand the engine up from the documentation alone, and record the first place he had to already know something the guide did not tell him. That sentence is the finding, and it is worth having even late. **Not graded, and not urgent — which is exactly why it needs a date.**
 - [ ] **B-D31-04** (F) 🔴 **The shipped CLI cannot reach the write guard's override — the guard advertises a flag the parser rejects.** Found 2026-10-14 while doing `W3-D18-02d`, which is why that extend was done with the `stellar` CLI instead of ours. `packages/core/src/write-guard.ts:133` and `:154` both print `To override: --acknowledge-protected <key>`. `packages/cli/src/extend.ts:76-92` accepts exactly nine flags — `--ledgers --source-account --keys-file --secret-env --max-fee-stroops --submit --dry-run --json --include-code` — and anything else returns `Unknown or conflicting extend option`. `packages/cli/src/bin.ts` never passes `acknowledgeProtected` into core. **Core accepts it** (`core/src/extend.ts:21,87-89`; `write-guard.ts:93,110`), so the override exists in the library and nowhere a user can reach. **Blast radius, swept:** only those two guard strings are user-facing. No README, help text, docs page or error string elsewhere names the flag. Tests use it through the library API (`core/test/{write-guard,extend,shared-code-unreachable}.test.ts`), which is why it is covered and still unreachable. ⚖️ **One reading before anyone calls it a pure oversight:** `docs/W3-D15-01-PLAN.md:100` says *"Do not expose acknowledgeProtected in this command"* — but that sentence is about the **engine** command, not `extend`, so it does not explain the CLI's omission. Whether `extend` was meant to expose it is **undetermined** from the record. 🔴 **This is the project's signature defect one layer further in:** an instrument describing a state the code does not have. Every previous instance was a document disagreeing with code; this one is **the code disagreeing with itself**, and it is a product gap rather than a docs gap. **Not fixed under the Oct-20 clock**, deliberately: fixing it is a CLI change, a PR and CI, to produce a dogfooding story nothing was waiting for. Also logged here and not fixed: `write-guard.ts:132` still says the extension is *"scheduled … after 2026-09-26"*, a date now past — it lives in `packages/core/`, which `check:evidence-integrity` pins, so retiring it is its own decision.
-- [ ] **B-D31-02** (F) 📅 **After 2026-10-02 — the parked checker work.** `check:cadence` beyond `.md` (12 live hits in `.ts` it cannot see), the `pnpm check` gate-list generator (five prose copies, three different wrong numbers), link-existence in `check:links`, `check-decay-drift.py`'s `ABSENT` branch returning 0 on the catastrophe it watches for, and the five stray threshold constants. **Good engineering, none of it graded**, all of it parked on 2026-09-22 to protect D3. Each is written up in the Sep 22 audit. `check:locale` ROOTS was pulled forward into W4-D22-13 on 2026-09-29; #196 remains in review, not counted Done here.
+- [ ] **B-D31-02** (F · CEF) 📅 **After 2026-10-02 — the parked checker work.** `check:cadence` beyond `.md` (12 live hits in `.ts` it cannot see), the `pnpm check` gate-list generator (five prose copies, three different wrong numbers), link-existence in `check:links`, `check-decay-drift.py`'s `ABSENT` branch returning 0 on the catastrophe it watches for, and the five stray threshold constants. **Good engineering, none of it graded**, all of it parked on 2026-09-22 to protect D3. Each is written up in the Sep 22 audit. `check:locale` ROOTS was pulled forward into W4-D22-13 on 2026-09-29; #196 remains in review, not counted Done here.
+
+---
+
+## Phase 2 — self-directed, after SOW 1 (from 2026-10-15)
+
+**Registered 2026-10-15 by `PH2-E0-07`.** The plan, every decision (Q1–Q21) and the design notes are in [`phase-2/PHASE2-PLAN.md`](phase-2/PHASE2-PLAN.md); each row below is the card, and the plan is where its reasoning lives. Weight: S = 1, M = 2, L = 3.
+
+- **IDs.** `PH2-E<n>-<nn>` for scheduled cards and `PH2-BL-<nn>` for the unscheduled backlog, defined in `scripts/task-id.mjs`. Each ID is the plan's provisional card label with `PH2-` in front, so `E0-07` became `PH2-E0-07`. **Three exceptions, deliberately:** the plan's `BL-04`, `BL-06` and `BL-07` already had IDs (`B-D31-01`, `B-D31-02`, `B-D31-03`, under *After submission* above). Minting a second ID for the same work would give one task two rows, so they keep their IDs and the `PH2-BL` sequence skips 04, 06 and 07.
+- **Owners** are written person first and agent track second: `(F · CEF)`, `(R · CER)`, `(F · WEBF)`, `(R · WEBR)`. The parser and the Notion sync read only the first character, so a bare `(CEF)` would sync with no owner. A card split between the two people is `(S · …)`. Track codes: [`phase-2/README.md`](phase-2/README.md) § Role codes.
+
+### E0 — Close-out and unblock
+
+- [x] **PH2-E0-01** (F) Merge #296 and #297. ✅ Both on `main` (`ab0056c`, `398b13f`), verified 2026-10-15.
+- [ ] **PH2-E0-02** (F · CEF) **M** Retire the evidence freeze (Q2): tag `sow1-final` at the commit holding the sealed bundles, make `check:evidence-integrity` verify them against the tag rather than the working tree, and prove both directions — a `core` change no longer fails the gate, tampering with a sealed file still does. Unfreezes `core`. *Depends on `PH2-E0-01`.*
+- [ ] **PH2-E0-03** (F · CEF) **S** Docs hygiene: the gate-Present vs report-Partial D2 note; the protocol blockquote in five docs replaced with the W1 two-identity measurement; `USAGE` in `cli/src/command.ts` lists `extend`; Protocol 23 auto-restore in the primer.
+- [ ] **PH2-E0-04** (F · CEF, F approves) **S** Gate inventory: every gate keep / retire / modify, one reason each. **Fatih approves before anything is removed.**
+- [ ] **PH2-E0-05** (F · CEF) **M** ADRs: a new ADR superseding ADR-004 (allowance funding plus fee); ADR-002 amended (capped property via the token layer, #297); ADR-003 amended (Cloudflare + Neon); a new auth ADR (plan §3.1). *Depends on `PH2-E0-01`.*
+- [ ] **PH2-E0-06** (R · CER) **S** Retire the sprint write guard for A/B/C; close `B-D31-04`.
+- [x] **PH2-E0-07** (F · CEF) **S** Register every phase-2 card here with real IDs and person-first owners, and rewrite the labels in `phase-2/` to these IDs. ✅ This section; `PH2-` added to `scripts/task-id.mjs` with tests in both directions; `phase-2/` added to `check:task-ids`' roots so the rewrite stays checked.
+
+### E1 — Foundation
+
+- [ ] **PH2-E1-01** (F · CEF) **M** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven.
+- [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`.
+- [ ] **PH2-E1-03** (F · CEF) **M** Network plumbing: the network chosen explicitly across CLI, engine, signer and dashboard config; today the CLI hardcodes the testnet passphrase. **The user-facing surface is shown to Fatih before merge.**
+- [ ] **PH2-E1-04** (R · CER) **M** Mainnet read-only scan in CLI and Action; `extend` refuses on mainnet until beta exit. *Depends on `PH2-E1-03`.*
+- [ ] **PH2-E1-05** (F · CEF) **S** Archived-entry advice strings mention Protocol 23 auto-restore.
+- [ ] **PH2-E1-06** (R, F backup) **S** Publish CLI `0.2.0`. *Depends on `PH2-E1-01`, `PH2-E1-04`.*
+- [ ] **PH2-E1-07** (F · CEF) **M** MCP server, in-repo, importing `core`. *Depends on `PH2-E1-01`.*
+- [ ] **PH2-E1-08** (F · CEF) **S** CLI "Support Evergreen" tip (plan §3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI. *Depends on `PH2-E4-03` (treasury address).*
+
+### E2 — Backend
+
+- [ ] **PH2-E2-01** (R · CER) **M** Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity.
+- [ ] **PH2-E2-02** (F · CEF + WEBF) **M** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
+- [ ] **PH2-E2-03** (R · CER) **M** Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger. *Depends on `PH2-E2-02`.*
+- [ ] **PH2-E2-04** (F · CEF) **L** Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. *Depends on `PH2-E2-03`.*
+- [ ] **PH2-E2-05** (R · CER) **M** Watchlist API (Q14). *Depends on `PH2-E2-04`.*
+- [ ] **PH2-E2-06** (R · CER) **M** Per-user alerts via Resend. *Depends on `PH2-E2-05`.*
+
+### E3 — Dashboard usable by anyone
+
+- [ ] **PH2-E3-01** (F · WEBF) **M** Login UI: email + wallet linking. *Depends on `PH2-E2-04`.*
+- [ ] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.*
+- [ ] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.*
+- [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. *Depends on `PH2-E4-02`, `PH2-E4-07`.*
+- [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
+- [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
+- [ ] **PH2-E3-07** (R · WEBR) **S** Website "Support Evergreen" page: wallet payment to the treasury address. *Depends on `PH2-E4-03`.*
+
+### E4 — Hosted autopilot
+
+- [ ] **PH2-E4-01** (R · CER) **L** Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB. *Depends on `PH2-E2-03`.*
+- [ ] **PH2-E4-02** (R · CER) **L** The plan §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from the engine pool. *Depends on `PH2-E4-01`.*
+- [ ] **PH2-E4-03** (S · CER + F) **M** Key separation: float limit, refund headroom, sweep to treasury; treasury key held by Fatih offline. *Depends on `PH2-E4-02`.*
+- [ ] **PH2-E4-04** (R · CER) **M** Scheduler: Workers cron with enqueue fan-out, or per `PH2-E2-01`'s verdict. *Depends on `PH2-E2-01`, `PH2-E4-02`.*
+- [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. *Depends on `PH2-E4-04`.*
+- [ ] **PH2-E4-06** (F · CEF, F approves) **S** Public custody statement: exact exposure (#297 §6). Drafted by CEF, approved by Fatih. *Depends on `PH2-E4-02`.*
+- [ ] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance.
+
+### E5 — Initial release and launch
+
+- [ ] **PH2-E5-01** (F) **M** Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics. *Depends on E3 and E4.*
+- [ ] **PH2-E5-02** (S · F + R) **S** Mainnet readiness checklist. *Depends on `PH2-E5-01`.*
+- [ ] **PH2-E5-03** (F) **S** Set the fee percentage from measured mainnet costs. *Depends on `PH2-E1-04` data.*
+- [ ] **PH2-E5-04** (S · R + F) **M** Mainnet launch with small caps; Rakha owns the release. *Depends on `PH2-E5-02`, `PH2-E5-03`.*
+
+### BL — Phase 2 backlog, unscheduled
+
+- [ ] **PH2-BL-01** (R · CER) **L** Contract auto-discovery via an indexer (Q14b).
+- [ ] **PH2-BL-02** (R · CER) **M** Telegram and webhook channels (stubs exist in `channel-stubs.ts`).
+- [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each.
+- [ ] **PH2-BL-05** (F · WEBF) **S** Landing and marketing copy for the paid hosted tier.
+
+The plan's other three backlog cards are existing rows: `B-D31-01` (scheduler gap floor, now `(R · CER)`), `B-D31-02` (parked checker work, `(F · CEF)`, mostly superseded by `PH2-E0-04`) and `B-D31-03` (cold read of the docs, `(F)`).
 
 ---
 

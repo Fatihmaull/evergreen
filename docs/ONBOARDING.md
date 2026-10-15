@@ -178,6 +178,8 @@ The repo is canonical precisely so the mirror can be absent without stopping any
 
 **Task IDs are frozen identifiers, not date claims.** `W2-D8-01` means "the eighth task-day in sequence" — *not* Sep 10. Each day-block carries a separate planned date that may slip; the ID never moves, because it is referenced in branch names, commit subjects, evidence rows, and the Notion mirror. **Never renumber.**
 
+Phase 2 has no days, so its IDs carry an epic instead: `PH2-E1-03` is card 3 of epic E1, and `PH2-BL-01` is unscheduled backlog. They live in `BACKLOG.md` § Phase 2, and [`phase-2/`](../phase-2/README.md) is where the plan behind them is.
+
 The plan is [`BACKLOG.md`](../BACKLOG.md): 30 day-blocks, a slack ledger, and a **cut order**. When time runs short we cut from that list in order — we do not improvise. Four items on it are *corrections* rather than scope and are not cut candidates, because cutting them means shipping code that computes wrong answers.
 
 ### Dates that are not ours to move

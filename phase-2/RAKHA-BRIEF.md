@@ -46,21 +46,21 @@ Jadi bagian yang memindahkan uang paling masuk akal ada di tanganmu. Fatih memeg
 
 ## Risiko yang perlu kamu tahu dari awal
 
-**Seluruh autopilot hosted (E4-01 sampai E4-05) ada di jalur kritismu.** Kalau bagian itu molor, pemasukan ikut molor. Kalau kamu melihat risiko itu mulai terjadi, bilang lebih awal. Jangan tunggu sampai tenggat.
+**Seluruh autopilot hosted (PH2-E4-01 sampai PH2-E4-05) ada di jalur kritismu.** Kalau bagian itu molor, pemasukan ikut molor. Kalau kamu melihat risiko itu mulai terjadi, bilang lebih awal. Jangan tunggu sampai tenggat.
 
 ## Cara menyerahkan pekerjaan ke agent-mu
 
 1. `git pull`, lalu buka folder `phase-2/`.
 2. Ke agent CLI/engine-mu, berikan **[`kickoff/CER.md`](kickoff/CER.md)**.
-   - Tugas pertamanya bisa langsung jalan hari ini: **E2-01**, spike Cloudflare Workers. Ini menentukan apakah engine muat di free tier.
+   - Tugas pertamanya bisa langsung jalan hari ini: **PH2-E2-01**, spike Cloudflare Workers. Ini menentukan apakah engine muat di free tier.
 3. Ke agent web-mu, berikan **[`kickoff/WEBR.md`](kickoff/WEBR.md)**.
-   - Tugas pertamanya juga bisa langsung jalan: **E3-06**, tes berapa kali Freighter meminta tanda tangan untuk `approve`.
+   - Tugas pertamanya juga bisa langsung jalan: **PH2-E3-06**, tes berapa kali Freighter meminta tanda tangan untuk `approve`.
 4. Kedua kickoff itu sudah memuat aturan baku fase 2 (lewat `phase-2/README.md`): wilayah path masing-masing agent, testnet-only, bukti mutasi untuk jalur tulis, dan cara bertanya.
 
 ## Yang perlu kamu jawab ke Fatih
 
 - ketersediaan jammu per minggu;
 - apakah ada kartu yang menurutmu salah tempat atau bobotnya keliru;
-- review spesifikasi API (E2-02) ketika sudah ditulis CEF dan WEBF, karena skema database dan engine-mu bergantung padanya.
+- review spesifikasi API (PH2-E2-02) ketika sudah ditulis CEF dan WEBF, karena skema database dan engine-mu bergantung padanya.
 
-Label kartu (E0-01, E4-02, dan seterusnya) masih sementara. Kartu E0-07 akan mendaftarkannya ke `BACKLOG.md` dengan ID resmi, dan sesudah itu folder ini ikut diperbarui.
+Semua kartu sudah terdaftar di `BACKLOG.md` § Phase 2 dengan ID resmi (PH2-E0-07, 2026-10-15): label lama ditambah awalan `PH2-`, misalnya PH2-E4-02. Tiga kartu backlog memakai ID yang sudah ada: `B-D31-01`, `B-D31-02` dan `B-D31-03`.

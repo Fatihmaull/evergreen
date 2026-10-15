@@ -22,8 +22,15 @@
  * it report a cheerful "✓ 142 tasks". `sync-notion.mjs` measures parse coverage
  * against every row that occupies an ID slot, so it fails loudly on the same
  * mutation. Sharing this constant is what puts that guard in front of BOTH.
+ *
+ * `PH2-E<n>-<nn>` and `PH2-BL-<nn>` are phase 2 (2026-10-15, `PH2-E0-07`). The
+ * sprint's day-based forms stop making sense once there are no days, and
+ * reusing `F-\d+` would have put 43 cards in a namespace that means "floating"
+ * and reads like the owner initial `F`. `PH2`, not `P2`, because `P0`/`P1`
+ * already mean priority in this file. The epic number and the suffix letter are
+ * open-ended for the reason above.
  */
-export const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+`;
+export const ID = String.raw`W\d-D\d+-\d+[a-z]*|F-\d+|B-D\d+-\d+|PH2-(?:E\d+|BL)-\d+[a-z]*`;
 
 /**
  * A checkbox row in `BACKLOG.md`, with its optional `(F)`/`(R)`/`(S)` owner.

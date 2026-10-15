@@ -38,6 +38,12 @@
 
 ---
 
+## Current — phase 2 registered (PH2-E0-07), 2026-10-15
+
+Every phase-2 card from [`phase-2/PHASE2-PLAN.md`](../phase-2/PHASE2-PLAN.md) is now a row in `BACKLOG.md` § Phase 2: **43 new `PH2-` IDs**, plus three backlog cards that keep their existing `B-D31-01/02/03` IDs. `scripts/task-id.mjs` learned the `PH2-` form, with tests in both directions, and `check:task-ids` now also scans `phase-2/`, where every provisional label was rewritten to its ID. `PH2-E0-01` is ticked: #296 and #297 are on `main`. Owners changed on two existing rows, per the confirmed plan: `B-D31-01` S → R · CER, `B-D31-02` F → F · CEF.
+
+**Notion sync pending for all 43 new IDs** — rows are created after merge, per AGENTS.md § D.3; `sync-notion` never creates rows.
+
 ## Current — W4-D22-08 supplied website mark requested
 
 Fatih asked Rakha on 2026-09-30 to place the supplied Evergreen JPEG mark in

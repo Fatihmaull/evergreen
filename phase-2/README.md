@@ -22,17 +22,16 @@ Evergreen's second phase, which is self-directed and comes after the SOW 1 submi
 | **CER** | Rakha's CLI/engine agent |
 | **WEBR** | Rakha's web agent |
 
-In `BACKLOG.md`, write owners as **`(F · CEF)`** or **`(R · CER)`**, with the person first. The parser reads only the first character (`scripts/task-id.mjs:42`), and the Notion sync maps only `F/R/S` (`scripts/sync-notion.mjs:48`). A bare `(CEF)` would sync with no owner.
+In `BACKLOG.md`, write owners as **`(F · CEF)`** or **`(R · CER)`**, with the person first. The parser reads only the first character (`scripts/task-id.mjs:49`), and the Notion sync maps only `F/R/S` (`scripts/sync-notion.mjs:48`). A bare `(CEF)` would sync with no owner.
 
-## Card labels are not task IDs
+## Task IDs
 
-`E0-01`, `BL-03` and the rest are provisional planning labels. The first card, **E0-07**, registers them in `BACKLOG.md` under real IDs and rewrites this folder to use those IDs.
+Every card is registered in `BACKLOG.md` § Phase 2 (PH2-E0-07, 2026-10-15). The forms are `PH2-E<n>-<nn>` and `PH2-BL-<nn>`, defined in `scripts/task-id.mjs`, and `pnpm check:task-ids` checks every ID this folder cites.
 
-Until that lands:
-- Do not put a label in a commit subject, PR title or issue.
-- Use the card's description instead.
+- Use the ID in branch names, commit subjects, PR titles and issues, as `docs/CONVENTIONS.md` asks.
+- Three backlog cards already had IDs and kept them: `B-D31-01`, `B-D31-02` and `B-D31-03`. The `PH2-BL` sequence skips 04, 06 and 07 for that reason.
 
-This is a deliberate, temporary departure from the public-naming rule in `docs/CONVENTIONS.md`.
+Until 2026-10-15 the cards carried provisional labels without the `PH2-` prefix, which was a deliberate, temporary departure from the public-naming rule. Registering them ended it.
 
 ## Standing rules for every agent in phase 2
 
@@ -42,7 +41,7 @@ These apply in addition to [`AGENTS.md`](../AGENTS.md). If the two disagree, sto
 2. **Write `undetermined` rather than a plausible guess.** That is the product's thesis, and it applies to your own reports.
 3. **Never name an identifier you have not seen.** This covers task IDs, PR numbers, file paths, flags and CLI commands. The project has paid for an invented task ID and an invented CLI flag.
 4. **Write paths need mutation proof:** a test that fails when the guarded behaviour is removed. Phase 2 moves real money later, so this is non-negotiable.
-5. **Testnet only until the beta exits (E5-02).** No mainnet writes. Mainnet *reads* arrive with E1-04.
+5. **Testnet only until the beta exits (PH2-E5-02).** No mainnet writes. Mainnet *reads* arrive with PH2-E1-04.
 6. **No secrets in argv, chat, commits or PR bodies.** A secret is passed by naming an env var.
 7. **Stay inside your track's paths** (see your kickoff). Need a change in another track's path? Open an issue mentioning that owner; do not edit it.
 8. **Ask in-session, as a decision:** options, the trade-off of each, and your recommendation. Never ask an open question.
@@ -51,7 +50,7 @@ These apply in addition to [`AGENTS.md`](../AGENTS.md). If the two disagree, sto
 
 ## Lighter process than the sprint (decision Q6)
 
-The sealed-evidence machinery and the date-triggered gates existed for grading, and E0-04 inventories and retires them.
+The sealed-evidence machinery and the date-triggered gates existed for grading, and PH2-E0-04 inventories and retires them.
 
 What stays:
 - mutation proof on write paths;
