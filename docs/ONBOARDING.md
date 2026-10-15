@@ -147,7 +147,7 @@ One task per PR. `main` is protected — no direct pushes, and CI must be green.
 
 The body states three things: **what changed**, **how it was verified** (not "tests pass" — what did you actually observe, against which contract, with what output), and **what evidence was captured**.
 
-If the work produced a testnet transaction, `docs/EVIDENCE.md` needs **three artifacts**: the tx hash, the full unedited JSON RPC response, and an explorer screenshot. A hash alone is not evidence — testnet gets reset periodically, and a reset before review makes every explorer link dead. The JSON and screenshot survive it. One minute at capture time; unrecoverable if skipped.
+If the work produced a testnet transaction, `docs/EVIDENCE.md` needs **two artifacts**: the tx hash and the full unedited JSON RPC response. A hash alone is not evidence — testnet gets reset periodically, and a reset makes every explorer link dead. The JSON survives it. (An explorer screenshot was required until 2026-10-15; see `AGENTS.md` hard rule 7.) One minute at capture time; unrecoverable if skipped.
 
 ### When to open a GitHub Issue
 

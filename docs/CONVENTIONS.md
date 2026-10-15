@@ -1479,7 +1479,7 @@ Every secret has exactly one home per surface. If you find yourself copying a va
 - Every code path that can submit a transaction defaults to dry-run/simulation.
 - Live submission requires an explicit flag (`--submit`) or config field. No exceptions.
 - Log the tx hash on every submission, at info level, in a greppable format: `submitted tx=<hash> contract=<id> op=extendTTL`.
-- Copy every meaningful hash into `docs/EVIDENCE.md` the day it happens — **with all three artifacts**: the hash, the full unedited JSON RPC response, and an explorer screenshot. Testnet resets make explorer links dead, and a hash pointing at a chain that no longer exists proves nothing. One minute per transaction now; unrecoverable later.
+- Copy every meaningful hash into `docs/EVIDENCE.md` the day it happens — **with both artifacts**: the hash and the full unedited JSON RPC response (an explorer screenshot was the third until 2026-10-15; `AGENTS.md` hard rule 7). Testnet resets make explorer links dead, and a hash pointing at a chain that no longer exists proves nothing. One minute per transaction now; unrecoverable later.
 
 ## Documentation
 
