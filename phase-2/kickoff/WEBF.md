@@ -41,22 +41,22 @@ Q4 changes the scope, not the rules. The dashboard now serves **anyone's contrac
    - List every route, what it renders, and whether it assumes "our three contracts".
    - Measure bundle sizes. The extraction found 732–768 KB per data bundle because `core` is embedded separately in each.
    - Report only; change nothing yet.
-2. **E2-02 — API spec, co-authored with CEF.** You own the client's needs:
+2. **PH2-E2-02 — API spec, co-authored with CEF.** You own the client's needs:
    - which screens call what;
    - which errors the UI must distinguish;
    - which data must be live and which may be cached.
 
    Nothing is built against the API until the spec is merged.
-3. **E3-01 — login UI.**
+3. **PH2-E3-01 — login UI.**
    - Email is the account (passwordless code or link).
    - The wallet is linked by signing a challenge.
    - **The UI never suggests an email session can move money.**
-4. **E3-02 — watchlist UI.**
+4. **PH2-E3-02 — watchlist UI.**
    - The **binding expiry leads**: the earliest entry, usually the shared code entry, not the instance.
    - Health uses the three honest states.
    - Contracts are added by pasted ID (Q14).
-5. **E3-03 — scan any contract**, with "add to watchlist". The existing `/dashboard/scanner/` route is the starting point.
-6. **BL-05 (backlog)** — landing and pricing copy for the paid hosted tier, once Fatih sets the fee. Say plainly that extension is permissionless and the fee buys convenience (plan §3.3).
+5. **PH2-E3-03 — scan any contract**, with "add to watchlist". The existing `/dashboard/scanner/` route is the starting point.
+6. **PH2-BL-05 (backlog)** — landing and pricing copy for the paid hosted tier, once Fatih sets the fee. Say plainly that extension is permissionless and the fee buys convenience (plan §3.3).
 
 ## Report format
 
