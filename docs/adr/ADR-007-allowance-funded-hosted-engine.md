@@ -64,7 +64,9 @@ This is that ADR. Three things changed since ADR-004:
 3. **Extend** from the engine account, retrying transient failures a bounded number of times.
 4. **Reconcile** the rent actually charged against the rent pulled, and record the difference in the fee ledger.
 5. **On final failure, refund from the engine pool** (§4.3), never from treasury, under the same key.
-6. **Sweep** accumulated fees from the engine account to treasury on a schedule. The treasury key is separate from the engine key (Q17), is held offline by Fatih, and never touches a server.
+6. **Sweep** accumulated fees from the engine account to treasury on a schedule. The treasury key is separate from the engine key (Q17), never touches a server, and is never needed by the sweep, because the engine only *sends* to it. There are two treasuries:
+   - **Testnet:** `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ`, posted by Fatih on #299 on 2026-10-15. Horizon testnet shows it funded with 10,000 XLM. Its key is in Fatih's OS secure store, not in the repo, any server, `.env` or GitHub secrets.
+   - **Mainnet:** a separate key, generated offline on a hardware wallet before `PH2-E5-02`. **"Held offline by Fatih" is true of this one only.** The testnet address is never reused on mainnet.
 
 ### Dashboard manual extend (§4.2)
 
@@ -94,17 +96,25 @@ They cannot raise an allowance, extend its expiry (tested), revive an expired on
 
 The payer is now the user's allowance-holding G-account, and the executing account is the engine's.
 
-🔴 **Undetermined, and `PH2-E4-02` must decide it before any money moves: who absorbs a shortfall?** Step 4 records the difference between the rent charged and the rent pulled. The CLI has measured rent varying about 18% between days. If the charged rent **exceeds** what was pulled, the engine account has paid part of a user's rent. **That is a subsidy, which this ADR forbids.** Two ways to close it:
-- pull a margin and refund the excess;
-- recover the shortfall with a second, idempotent `transfer_from`.
+**Shortfall: decided 2026-10-15 (Fatih, K2): pull with a margin, and refund the excess from the engine pool.** Step 4 records the difference between the rent charged and the rent pulled. The CLI has measured rent varying about 18% between days. If the charged rent **exceeded** what was pulled, the engine account would have paid part of a user's rent, which is a subsidy this ADR forbids. So the pull carries a margin above the simulated rent, and reconcile refunds the unused part to the user from the engine pool. One pull per job keeps the idempotency simple, and the refund path already exists (§4.3).
+- *Rejected:* recovering a shortfall with a second `transfer_from`. It adds a failure mode: if the allowance is exhausted by then, the shortfall becomes a subsidy anyway.
+- **The margin needs allowance headroom.** Cap sizing (`PH2-E3-05`) must include it.
 
-The plan does not choose, and neither does this ADR.
+**[to verify] for CER, in `PH2-E4-02`: the margin may be mostly unnecessary.** A Soroban transaction declares its maximum resource fee from simulation, and the protocol is understood to refund the unused *refundable* part to the transaction's source. If so:
+- pulling exactly the declared maximum covers the extend;
+- the protocol returns any excess to the engine account, which reconcile passes back to the user;
+- a shortfall becomes possible only on a **retry that re-simulates** and declares a higher maximum.
 
-🔴 **Departure from `AGENTS.md`, named rather than absorbed.** Hard rule 4 (`AGENTS.md:135`) reads: *"The bot must never have authority over a user's contract or a user's funds … Any change that gives the bot capability beyond paying fees and submitting `extendTTL` is a security regression requiring explicit human sign-off."*
+This is not verified here. Verify it against CAP-0046-07 (fee and resource model) and one testnet transaction's fee-charged versus declared fee, before sizing the margin.
 
-**An allowance is capped authority over a user's funds.** Q8 is the human sign-off the rule asks for. But the rule's text is unchanged, so `AGENTS.md` and this ADR currently disagree. The phase-2 standing rules say to stop and ask Fatih when they do. **This ADR does not edit `AGENTS.md`.** The amendment is Fatih's decision.
+**Pricing consequence, recorded on `PH2-E5-03`: each hosted action is two or three network transactions, not one.** They are the pull (`transfer_from`, a Soroban invocation), the extend (`ExtendFootprintTTL`), and sometimes a refund. **Each pays its own network fee.** The percentage fee must cover all of them, or the engine subsidises them silently. *(The decision relay called these "classic transactions". The pull and the extend are Soroban transactions, not classic ones; only a refund sent as a plain payment would be classic. The cost point stands either way.)*
 
-Hard rule 5 (*"Evergreen never pays another party's extend fees"*) is unaffected. The unresolved shortfall above is the one place it could be broken by accident.
+**Departure from `AGENTS.md`, named and resolved.** The SOW 1 text of hard rule 4 read: *"The bot must never have authority over a user's contract or a user's funds … Any change that gives the bot capability beyond paying fees and submitting `extendTTL` is a security regression requiring explicit human sign-off."* An allowance is capped authority over a user's funds.
+- **Q8 is the sign-off that rule asked for.**
+- **The rule itself is amended in [#312](https://github.com/Fatihmaull/evergreen/pull/312)** (Fatih's K1 decision, 2026-10-15). The engine may draw on a user's funds only through a capped, expiring allowance the user signed, and only for rent plus fee.
+- The amended list also names the refund and the sweep, because this ADR's flow requires both.
+
+Hard rule 5 (*"Evergreen never pays another party's extend fees"*) is unaffected. The shortfall decision above is what keeps it that way.
 
 ## Downstream sweep
 
@@ -116,10 +126,11 @@ Every reference to ADR-004 outside `docs/evidence/` and `docs/archive/`, with it
 | `docs/SOROBAN-PRIMER.md:81` | a wallet signature authorises a payment, never access | **Stands.** An `approve` is a payment authorisation, capped. |
 | `docs/adr/ADR-005-shared-domain-types.md:9`, `BACKLOG.md` `W1-D6-01b` | per-payer signing, payer distinct from contract | **Stands**, and is what this ADR builds on. |
 | `docs/PRD.md:41`, `docs/SOROBAN-PRIMER.md:83`, `docs/READY.md:28` | a hosted engine is a future direction, not built in v1 | **True of SOW 1, superseded for phase 2.** PRD and primer get a one-line pointer here. `READY.md` is SOW 1's definition of done and is left as written. |
-| `AGENTS.md:139` (hard rule 5), `AGENTS.md:193` (ADR list) | the ADR-004 invariant | Rule 5 **stands**. The ADR list needs ADR-007 and ADR-008 added, which waits on the hard-rule-4 decision above, so `AGENTS.md` changes once. |
+| `AGENTS.md` hard rule 5 and the ADR list | the ADR-004 invariant | Rule 5 **stands**. ADR-007 and ADR-008 are added to the list in #312, together with the rule 4 amendment, so `AGENTS.md` changes once. |
 | `BACKLOG.md` `W4-D26-04` | "hosted engine per ADR-004" as a SOW 2 candidate | **Stands** as the sprint-era record. Phase 2 is that direction. |
 | `phase-2/` cards `PH2-E1-08`, `PH2-E3-04`, `PH2-E3-05`, `PH2-E3-07`, `PH2-E4-01` to `PH2-E4-07`, `PH2-E5-03` | the allowance flow and fee | **Consistent.** They are where this ADR came from. |
 
 ## Update log
 
 - 2026-10-15: created by `PH2-E0-05`, recording decisions made in plan v4 on 2026-10-14. Supersedes ADR-004.
+- 2026-10-15: the shortfall is decided (K2: margin plus refund from the engine pool), with a protocol `[to verify]` for CER and the multi-transaction pricing consequence. The `AGENTS.md` hard rule 4 departure now points at #312. Both treasuries are distinguished: the testnet key is in Fatih's OS secure store, and only the mainnet key is held offline.
