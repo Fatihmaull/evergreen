@@ -1,0 +1,12 @@
+# Throwaway spike config. Local `wrangler dev` (workerd) only: never deployed.
+name = "evergreen-workers-spike"
+main = "src/worker.ts"
+compatibility_date = "2026-10-01"
+
+# Variant under test is chosen on the command line, so the same source is run with and
+# without the Node compatibility layer:
+#   wrangler dev                                  -> no nodejs_compat (global Buffer absent)
+#   wrangler dev --compatibility-flag nodejs_compat -> Buffer, process, node:* available
+
+[vars]
+RPC_URL = "https://soroban-testnet.stellar.org"

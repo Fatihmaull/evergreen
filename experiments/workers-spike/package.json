@@ -1,0 +1,11 @@
+{
+  "name": "evergreen-workers-spike",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Throwaway Cloudflare Workers go/no-go spike. Not part of the pnpm workspace; installed with npm so the root lockfile is untouched.",
+  "type": "module",
+  "devDependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "wrangler": "^4.151.0"
+  }
+}
