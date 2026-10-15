@@ -38,6 +38,27 @@
 
 ---
 
+## Current — design language extended to every medium, 2026-10-15
+
+Design audit, then Fatih's five decisions of the same day, applied in
+`web-reference/design-language/`. **No task ID:** none of the 43 `PH2-` cards
+registered by `PH2-E0-07` covers design, so this is described rather than
+numbered; whether to register one is Fatih's call (asked in #304). Added `brand.md`, `formats.md`, `infographic.md`,
+`motion-graphics.md` and `source/` (vector masters traced from the shipped
+mask at IoU 0.9927, the favicon set, seven canvas templates and their renders).
+Corrected contradictions inside the directory (radius, uppercase, chip size,
+docs type sizes), gated `claims-and-copy.md` on phase-2 features shipping, and
+pointed the README at production. Decisions: the header mark is the mark
+(`W4-D22-08` gets its favicon; the figurative search is still open); the hero
+video is left until the phase-2 dashboard is done; two dark-ground state marks;
+design is set in `web-reference/design-language/` and implemented by the web
+agents (kickoffs amended); Inter confirmed. **Nothing in `apps/` changed** —
+wiring the favicon, the dashboard's extra font weights, the uppercase table
+headers and the docs' 11px tag are handed to the web track. No testnet
+operation. Notion sync pending.
+
+---
+
 ## Current — PH2-E0-02: there was no evidence freeze, 2026-10-15
 
 **The card's premise was false, and the card was re-scoped by Fatih (option A).** The premise was that `check:evidence-integrity` pins `core`, so `core` was frozen until a tag-based gate replaced it. Measured:

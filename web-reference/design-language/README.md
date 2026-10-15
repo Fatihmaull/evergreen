@@ -16,15 +16,28 @@ written so an agent with no access to the running site can match it.
 | [`tokens.md`](tokens.md) | Every colour, size, space and duration, with the value that actually ships |
 | [`components.md`](components.md) | The recurring objects — chips, terminals, figures, tables — and their exact appearance |
 | [`motion.md`](motion.md) | The motion grammar, and what this product deliberately never animates |
-| [`claims-and-copy.md`](claims-and-copy.md) | What may appear as on-screen text, what may not, and the real numbers |
+| [`claims-and-copy.md`](claims-and-copy.md) | What may appear as on-screen text, what may not, when each ban lifts, and the real numbers |
+| [`brand.md`](brand.md) | The mark, wordmark, lockup, clear space, minimum sizes, favicon, misuse |
+| [`formats.md`](formats.md) | Canvas sizes, safe areas and the scale rule for social, link cards, video frames and print |
+| [`infographic.md`](infographic.md) | Data in an image: scope, unrounded figures, six answers each with a shape, charts |
+| [`motion-graphics.md`](motion-graphics.md) | `motion.md`'s grammar extended to video: the shot, what may move, what never does |
+| [`source/`](source/README.md) | Vector masters, the favicon set, canvas templates, the tools that build and render them, and the renders |
+
+**Who decides.** Since 2026-10-15 this directory has one owner, the design
+authority, for every medium: site, dashboard, posters, social, infographics,
+video, the identity. The web agents implement it in `apps/`; the marketing
+agent consumes it and its output is reviewed against it. A new colour, face or
+weight needs Fatih's approval.
 
 ---
 
 ## The seven rules
 
-If nothing else survives the trip, these do. Six of the seven are enforced by
-`apps/web/scripts/check-design.mjs`, which fails the build rather than filing a
-complaint, so they are not preferences.
+If nothing else survives the trip, these do. Six of the seven are measured by
+`apps/web/scripts/check-design.mjs`, which exits non-zero on a regression.
+**It is not in CI and not in `pnpm check`** (its own header says so, and so do
+`check-layout.mjs` and `check-design-language.mjs`), so today it fails only
+when someone runs it. It is a gate a person has to open, not a build failure.
 
 **1 · Nothing is bold.** Every weight on the site is 400. Hierarchy is carried
 by size and colour alone. A 600 was tried once, on one heading, and removed
@@ -86,12 +99,39 @@ before writing a single frame of on-screen text — it is the shortest file here
 and the one that prevents a re-cut.
 
 The live site is the other reference, and it is the authority when anything
-here is ambiguous: <https://feat-w4-d25-01-ui-rework.evergreen-stellar.pages.dev>
+here is ambiguous: **<https://evergreen-stellar.pages.dev>**. Production deploys
+from `main`, and its stylesheet and landing page were byte-identical to the
+repository on 2026-10-15. The preview this file used to name,
+`feat-w4-d25-01-ui-rework.evergreen-stellar.pages.dev`, is stale: it predates
+the mark.
+
+## Decisions of 2026-10-15
+
+Taken by Fatih after the design audit of the same day.
+
+| Decision | Where it lives |
+|---|---|
+| The mark is the one in the header, unchanged; only a favicon was missing | [`brand.md`](brand.md) |
+| The hero video stays until the phase-2 dashboard work is done, then is re-cut | [`motion-graphics.md`](motion-graphics.md) |
+| A state palette for dark grounds: two new marks | [`tokens.md`](tokens.md) § State on dark grounds |
+| This directory is the single design authority; web agents implement | above; `phase-2/kickoff/WEBF.md`, `WEBR.md` |
+| Inter is confirmed as the body and interface face | [`tokens.md`](tokens.md) § Type |
 
 ## Verifying
 
 `node apps/web/scripts/check-design.mjs` counts type sizes, cards, icons,
 gradients, bold elements, elements over 40px and opaque borders on 19 pages and
-fails when any exceeds its budget. `--commission` plants each defect and proves
+fails when any exceeds its budget. One known blind spot: it measures each page
+300ms after load, and on `/dashboard/` it reads **0 cards against a budget of
+6**, while production shows at least five card-shaped panels once the live
+read returns. The cause is probably that timing; that is *undetermined*. `--commission` plants each defect and proves
 the check still catches it. `node apps/web/scripts/check-layout.mjs` renders
 31 routes at two widths and asserts nothing overflows its box.
+
+`node web-reference/design-language/source/tools/render.mjs` renders every
+canvas template and refuses to when `source/templates/base.css` has drifted
+from `styles.css`; `--commission` proves the refusal.
+`python3 -I web-reference/design-language/source/tools/build_brand.py` rebuilds
+the vector masters and favicons, and refuses when the trace stops matching the
+mask the site renders.
+

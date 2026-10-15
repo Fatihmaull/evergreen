@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Square 1080 × 1080 — on pine</title>
+  </head>
+  <body>
+    <!-- The dark-ground variant. Expired inverts against its ground: on pine it is
+     a cream cell. The legend exercises the dark-ground state marks. -->
+    <div
+      class="canvas on-pine"
+      data-format="square on pine 1080×1080 · k=2"
+      style="
+        --w: 1080px;
+        --h: 1080px;
+        --safe-t: 64px;
+        --safe-r: 64px;
+        --safe-b: 64px;
+        --safe-l: 64px;
+      "
+    >
+      <div class="safe" style="gap: 32px">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <p class="head" style="margin-top: 8px; max-width: 20ch">
+          One of ours expired, and we watched it happen.
+        </p>
+        <div
+          class="on-surface"
+          style="
+            border-radius: calc(4px * var(--k));
+            padding: calc(24px * var(--k));
+            display: grid;
+            gap: calc(8px * var(--k));
+          "
+        >
+          <span class="label muted">guinea-pig B · instance</span>
+          <span class="figure-value">expired</span>
+          <span class="label second">on 21 September 2026 · at ledger 4,793,687</span>
+        </div>
+        <div class="spacer"></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px">
+          <span class="chip healthy"><span class="shape"></span>healthy</span>
+          <span class="chip warning"><span class="shape"></span>warning</span>
+          <span class="chip critical"><span class="shape"></span>critical</span>
+          <span class="chip expired"><span class="shape"></span>archived</span>
+          <span class="chip undetermined"><span class="shape"></span>undetermined</span>
+        </div>
+        <p class="label muted">Stellar testnet · evergreen-stellar.pages.dev</p>
+      </div>
+    </div>
+  </body>
+</html>
