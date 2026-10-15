@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runExtendCli } from '../src/extend.js';
+import { EXTEND_HELP, extensionPreview, runExtendCli } from '../src/extend.js';
 import type { ExtendCliDependencies, ExtendReport, ExtendRequest } from '../src/extend.js';
+import type { PreparedExtension } from '@evergreen-stellar/core';
 
 /**
  * Guards on the `extend` signing path (`PH2-E1-02`).
@@ -191,7 +192,8 @@ describe('extend refuses before anything can be prepared or signed', () => {
   });
 
   it('refuses when neither a flag nor a default names a payer', async () => {
-    const deps = makeDeps({ sourceAccount: undefined });
+    const deps = makeDeps();
+    delete (deps as { sourceAccount?: string }).sourceAccount;
     const output = await runExtendCli(base, deps);
     expect(output.exitCode).toBe(2);
     expect(output.stderr).toContain(PAYER);
@@ -338,6 +340,164 @@ describe('extend selects data keys only from a well-formed keys file', () => {
     expect(output.exitCode).toBe(2);
     expect(output.stderr).toContain(UNREADABLE);
     expect(output.stderr).not.toContain('secret-path');
+    expect(deps.run).not.toHaveBeenCalled();
+  });
+});
+
+const HASH = 'a'.repeat(64);
+const SUBMITTED_HASH = 'b'.repeat(64);
+
+function prepared(wasCapped: boolean): PreparedExtension {
+  return {
+    entry: {
+      entryKey: 'KEY1',
+      kind: 'instance',
+      contracts: [A],
+      before: { observedAtLedger: 1000, endsAtLedger: 1100 },
+      extendToLedgers: 120,
+      wasCapped,
+      skip: false,
+    },
+    sourceAccount: G,
+    transactionXdr: 'unsigned',
+    transactionHash: HASH,
+    feeStroops: '600',
+    simulatedAtLedger: 1001,
+  };
+}
+
+const PREVIEW_LINES = [
+  'Selected instance KEY1',
+  `Known consumers: ${A}`,
+  `Payer: ${G}`,
+  `Prepared hash (not yet sent): ${HASH}`,
+  'Before: ledger 1000, live until 1100',
+  'Target remaining: 120; prepared fee cap: 600 stroops',
+  'Selected scope only. Code may have consumers outside this scan.',
+];
+const INCOMPLETE =
+  'Extension incomplete. Inspect per-entry outcomes and reconcile any submitted hash before retrying.';
+
+describe('extend previews the prepared hash before the run can sign', () => {
+  it('forwards the run preview to the sink, ahead of the run finishing', async () => {
+    const order: string[] = [];
+    const deps = makeDeps({ preview: vi.fn((text: string) => void order.push(`preview:${text}`)) });
+    deps.run.mockImplementation(async (_request, preview) => {
+      preview(`Prepared hash (not yet sent): ${HASH}`);
+      order.push('run-finished');
+      return report();
+    });
+    await runExtendCli(live, deps);
+    expect(order).toStrictEqual([`preview:Prepared hash (not yet sent): ${HASH}`, 'run-finished']);
+  });
+
+  it('keeps the preview out of stdout so --json stays valid', async () => {
+    const deps = makeDeps({ preview: vi.fn() });
+    deps.run.mockImplementation(async (_request, preview) => {
+      preview('PREVIEW-TEXT');
+      return report();
+    });
+    const output = await runExtendCli([...live, '--json'], deps);
+    expect(output.stdout).not.toContain('PREVIEW-TEXT');
+    expect(() => JSON.parse(output.stdout)).not.toThrow();
+  });
+
+  it('runs without a preview sink instead of crashing', async () => {
+    const deps = makeDeps();
+    deps.run.mockImplementation(async (_request, preview) => {
+      preview('PREVIEW-TEXT');
+      return report();
+    });
+    const output = await runExtendCli(live, deps);
+    expect(output.exitCode).toBe(0);
+  });
+
+  it('renders the whole preview, marking a capped target', () => {
+    expect(extensionPreview(prepared(false))).toBe(PREVIEW_LINES.join('\n'));
+    const capped = PREVIEW_LINES.map((l) => l.replace('120;', '120 (CAPPED);'));
+    expect(extensionPreview(prepared(true))).toBe(capped.join('\n'));
+  });
+});
+
+describe('extend reports the outcome, and never calls a partial run complete', () => {
+  const incomplete = report({
+    ok: false,
+    mode: 'live',
+    records: [
+      { entryKey: 'key1', outcome: 'submitted', transactionHash: SUBMITTED_HASH },
+      { entryKey: 'key2', outcome: 'failed' },
+    ] as unknown as ExtendReport['result']['records'],
+    skipped: ['key3'],
+    unattempted: ['key4'],
+  });
+  const withPlan: ExtendReport = {
+    ...incomplete,
+    plan: { ...incomplete.plan, warnings: ['selected keys only'] },
+    previews: [prepared(false)],
+  };
+
+  it('prints every entry outcome, the submitted hash and the reconcile notice', async () => {
+    const deps = makeDeps();
+    deps.run.mockResolvedValue(withPlan);
+    const output = await runExtendCli(live, deps);
+    expect(output.stdout).toBe(
+      [
+        'Mode: live. Incomplete.',
+        'selected keys only',
+        PREVIEW_LINES.join('\n'),
+        `key1: submitted (${SUBMITTED_HASH})`,
+        'key2: failed',
+        'key3: no-op (target already satisfied)',
+        'key4: not attempted',
+        'A submitted/unconfirmed hash must be reconciled before retrying; no automatic replacement was sent.',
+      ].join('\n'),
+    );
+  });
+
+  it('exits 2 with the reconcile instruction when the run is incomplete', async () => {
+    const deps = makeDeps();
+    deps.run.mockResolvedValue(withPlan);
+    const output = await runExtendCli(live, deps);
+    expect(output.exitCode).toBe(2);
+    expect(output.stderr).toBe(INCOMPLETE);
+    const json = await runExtendCli([...live, '--json'], deps);
+    expect(json.exitCode).toBe(2);
+    expect(json.stderr).toBe(INCOMPLETE);
+    expect(JSON.parse(json.stdout).result.ok).toBe(false);
+  });
+
+  it('exits 0 with a clean stderr and says Complete when the run is complete', async () => {
+    const deps = makeDeps();
+    const output = await runExtendCli(base, deps);
+    expect(output.exitCode).toBe(0);
+    expect(output.stderr).toBe('');
+    expect(output.stdout.split('\n')[0]).toBe('Mode: dry-run. Complete.');
+  });
+});
+
+describe('extend turns a failed run into a refusal that leaks nothing', () => {
+  const GENERIC =
+    'Extension preparation failed. Check Testnet RPC, selected live keys, public payer and network configuration. No raw provider details are printed.';
+
+  it.each([
+    [
+      'an Error carrying a secret and a host',
+      new Error('SECRET-VALUE at https://rpc.internal.example/x'),
+    ],
+    ['a thrown string', 'SECRET-VALUE at https://rpc.internal.example/x'],
+  ])('maps %s to one fixed message, exit 2 and empty stdout', async (_label, thrown) => {
+    const deps = makeDeps();
+    deps.run.mockRejectedValue(thrown);
+    const output = await runExtendCli(live, deps);
+    expect(output).toStrictEqual({ stdout: '', stderr: GENERIC, exitCode: 2 });
+  });
+});
+
+describe('extend --help', () => {
+  it('prints the help and exits 0 without running anything', async () => {
+    const deps = makeDeps();
+    const output = await runExtendCli(['extend', '--help'], deps);
+    expect(output).toStrictEqual({ stdout: EXTEND_HELP, stderr: '', exitCode: 0 });
     expect(deps.run).not.toHaveBeenCalled();
   });
 });
