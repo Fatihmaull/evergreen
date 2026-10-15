@@ -38,7 +38,7 @@ Soroban developers must manually monitor and extend the TTL of every contract's 
 - **Mainnet auto-bump** — v1 runs and is validated on testnet only; mainnet is a follow-on phase once the non-custodial signer model is battle-tested.
 - **Hosted billing / rent-as-a-service** — Evergreen estimates and reports rent cost; it does not collect payment or manage a billing relationship.
 - **Rent subsidy** — Apex never pays another party's extend fees, in any phase. The user always pays their own (ADR-004). This is unbounded cost and it is the hosted-billing non-goal in disguise.
-- **A hosted multi-tenant service** — v1 is self-hosted by the user. A single public engine is a genuine SOW 2 direction (ADR-004), but v1 must only avoid foreclosing it, never implement it.
+- **A hosted multi-tenant service** — v1 is self-hosted by the user. A single public engine is a genuine SOW 2 direction (ADR-004), but v1 must only avoid foreclosing it, never implement it. *(SOW 1 scope. Phase 2 builds the hosted engine as a paid service: [ADR-007](adr/ADR-007-allowance-funded-hosted-engine.md).)*
 - **Multi-sig custody** — out of scope; the policy-signer model is capped-permission, single-org, not a multi-party custody product.
 - **Non-Soroban chains** — Evergreen is Stellar/Soroban-specific; no EVM or other chain support.
 - **Formal verification / audit tooling** — Evergreen assumes contracts are already correct; it doesn't try to verify contract logic.

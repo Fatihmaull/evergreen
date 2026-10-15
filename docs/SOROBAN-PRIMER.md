@@ -80,7 +80,7 @@ Everything downstream follows from this:
 - The engine never needs a user's key, so no component should be designed as though it does.
 - A wallet signature in Evergreen authorizes a **payment**, never **access**. Any code, type, doc string, or UI label implying otherwise is a bug (ADR-004).
 - The dashboard can scan *any* contract for *anyone*, because scanning is a permissionless read.
-- One public engine protecting every registered contract becomes possible — recorded as an open SOW 2 direction in ADR-004, deliberately not built in v1.
+- One public engine protecting every registered contract becomes possible — recorded as an open SOW 2 direction in ADR-004, deliberately not built in v1. *(Phase 2 builds it, funded by a capped allowance: [ADR-007](adr/ADR-007-allowance-funded-hosted-engine.md).)*
 - The capped policy signer (ADR-002) still matters, but for a different reason than we first wrote down: in v1 the hot key lives on *the user's* server with *the user's* lumens, so capping it protects *them*.
 
 Background: [Smart contract state archival — Stellar Docs](https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival). Also relevant: [Extending Wasm TTL](https://developers.stellar.org/docs/build/guides/conventions/extending-wasm-ttl).
