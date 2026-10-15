@@ -1,0 +1,287 @@
+{
+ "buf/neon-http-q1": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 130,
+  "p90": 462,
+  "max": 639,
+  "worker_total_ms_p50_SIN_only": 49,
+  "n_SIN": 17,
+  "connect_ms_p50": null,
+  "first_query_ms_p50": 130,
+  "warm_query_ms_p50": null,
+  "colos": {
+   "SIN": 17,
+   "HKG": 7,
+   "MRS": 6
+  },
+  "cpu_p50": 3,
+  "cpu_p90": 10,
+  "cpu_max": 11,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": []
+ },
+ "buf/neon-http-q2": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   2
+  ],
+  "worker_total_ms_p50": 37,
+  "p90": 250,
+  "max": 316,
+  "worker_total_ms_p50_SIN_only": 27,
+  "n_SIN": 24,
+  "connect_ms_p50": null,
+  "first_query_ms_p50": 18,
+  "warm_query_ms_p50": 16,
+  "colos": {
+   "HKG": 4,
+   "SIN": 24,
+   "MRS": 2
+  },
+  "cpu_p50": 3,
+  "cpu_p90": 6,
+  "cpu_max": 11,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ },
+ "buf/neon-ws-q1": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 130,
+  "p90": 721,
+  "max": 848,
+  "worker_total_ms_p50_SIN_only": 54,
+  "n_SIN": 24,
+  "connect_ms_p50": 117,
+  "first_query_ms_p50": 9,
+  "warm_query_ms_p50": null,
+  "colos": {
+   "HKG": 3,
+   "SIN": 24,
+   "MRS": 3
+  },
+  "cpu_p50": 12,
+  "cpu_p90": 23,
+  "cpu_max": 31,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": []
+ },
+ "buf/neon-ws-q2": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 67,
+  "p90": 869,
+  "max": 977,
+  "worker_total_ms_p50_SIN_only": 34,
+  "n_SIN": 18,
+  "connect_ms_p50": 39,
+  "first_query_ms_p50": 10,
+  "warm_query_ms_p50": 6,
+  "colos": {
+   "HKG": 5,
+   "SIN": 18,
+   "MRS": 6,
+   "KIX": 1
+  },
+  "cpu_p50": 6,
+  "cpu_p90": 16,
+  "cpu_max": 24,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ },
+ "buf/neon-ws-q5": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 47,
+  "p90": 385,
+  "max": 1492,
+  "worker_total_ms_p50_SIN_only": 45,
+  "n_SIN": 23,
+  "connect_ms_p50": 20,
+  "first_query_ms_p50": 9,
+  "warm_query_ms_p50": 4,
+  "colos": {
+   "SIN": 23,
+   "KIX": 1,
+   "HKG": 5,
+   "MRS": 1
+  },
+  "cpu_p50": 6,
+  "cpu_p90": 11,
+  "cpu_max": 17,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ },
+ "nobuf/neon-http-q1": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 48,
+  "p90": 341,
+  "max": 449,
+  "worker_total_ms_p50_SIN_only": 19,
+  "n_SIN": 21,
+  "connect_ms_p50": null,
+  "first_query_ms_p50": 48,
+  "warm_query_ms_p50": null,
+  "colos": {
+   "HKG": 4,
+   "SIN": 21,
+   "KIX": 1,
+   "MRS": 4
+  },
+  "cpu_p50": 3,
+  "cpu_p90": 7,
+  "cpu_max": 8,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": []
+ },
+ "nobuf/neon-http-q2": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   2
+  ],
+  "worker_total_ms_p50": 50,
+  "p90": 322,
+  "max": 905,
+  "worker_total_ms_p50_SIN_only": 31,
+  "n_SIN": 19,
+  "connect_ms_p50": null,
+  "first_query_ms_p50": 36,
+  "warm_query_ms_p50": 17,
+  "colos": {
+   "SIN": 19,
+   "HKG": 8,
+   "MRS": 3
+  },
+  "cpu_p50": 4,
+  "cpu_p90": 8,
+  "cpu_max": 11,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ },
+ "nobuf/neon-ws-q1": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 84,
+  "p90": 883,
+  "max": 4370,
+  "worker_total_ms_p50_SIN_only": 39,
+  "n_SIN": 19,
+  "connect_ms_p50": 71,
+  "first_query_ms_p50": 10,
+  "warm_query_ms_p50": null,
+  "colos": {
+   "SIN": 19,
+   "MRS": 1,
+   "HKG": 10
+  },
+  "cpu_p50": 10,
+  "cpu_p90": 30,
+  "cpu_max": 31,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": []
+ },
+ "nobuf/neon-ws-q2": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 74,
+  "p90": 917,
+  "max": 1097,
+  "worker_total_ms_p50_SIN_only": 40,
+  "n_SIN": 18,
+  "connect_ms_p50": 41,
+  "first_query_ms_p50": 12,
+  "warm_query_ms_p50": 8,
+  "colos": {
+   "HKG": 6,
+   "MRS": 6,
+   "SIN": 18
+  },
+  "cpu_p50": 7,
+  "cpu_p90": 13,
+  "cpu_max": 20,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ },
+ "nobuf/neon-ws-q5": {
+  "n": 30,
+  "ok": 30,
+  "subrequests": [
+   1
+  ],
+  "worker_total_ms_p50": 49,
+  "p90": 1293,
+  "max": 5537,
+  "worker_total_ms_p50_SIN_only": 49,
+  "n_SIN": 26,
+  "connect_ms_p50": 19,
+  "first_query_ms_p50": 10,
+  "warm_query_ms_p50": 4,
+  "colos": {
+   "MRS": 2,
+   "SIN": 26,
+   "HKG": 2
+  },
+  "cpu_p50": 8,
+  "cpu_p90": 21,
+  "cpu_max": 23,
+  "sel1": [
+   "{\"one\": 1}"
+  ],
+  "version": [
+   "PostgreSQL 18.6 (653b019) on aarch64-unk"
+  ]
+ }
+}

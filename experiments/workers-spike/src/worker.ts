@@ -261,7 +261,8 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/neon') {
       const r = await neonProbe(env, url.searchParams.get('transport') === 'ws' ? 'ws' : 'http', Math.max(1, Math.min(50, Number(url.searchParams.get('q') ?? '1'))));
-      return new Response(JSON.stringify(r), { status: r.ok ? 200 : 500, headers: { 'content-type': 'application/json' } });
+      const cf = (request as unknown as { cf?: { colo?: string; country?: string } }).cf;
+      return new Response(JSON.stringify({ ...r, colo: cf?.colo, country: cf?.country }), { status: r.ok ? 200 : 500, headers: { 'content-type': 'application/json', 'x-colo': String(cf?.colo) } });
     }
     const replay = url.searchParams.get('replay') === '1';
     const contract = url.searchParams.get('contract') ?? '';
@@ -352,6 +353,7 @@ export default {
       'content-type': 'text/plain; charset=utf-8',
       'x-subrequests': String(count),
       'x-wall-ms': String(Date.now() - started),
+      'x-colo': String((request as unknown as { cf?: { colo?: string } }).cf?.colo),
       'x-fetch-log': JSON.stringify(log),
     });
     if (exitCode !== undefined) headers.set('x-exit-code', String(exitCode));
