@@ -75,7 +75,9 @@ carries its word and a shape — the mark is never the only signal.
 
 ### State on dark grounds
 
-Approved by Fatih on 2026-10-15. On `--pine`, the critical mark measured
+**The approach was approved by Fatih on 2026-10-15; the two new values below
+are pending his confirmation.** Until he confirms them they are used only in
+the canvas templates. On `--pine`, the critical mark measured
 **2.29:1** and the undetermined mark **2.72:1**, so neither could be seen on
 the grounds social and video use most. Two marks are added; nothing else is.
 
@@ -101,7 +103,9 @@ ink chip, on pine a cream one.
 
 In the canvas templates these are `--crit-on-dark` and `--und-on-dark`. They
 are **not yet in `styles.css`**; the site has no state on a dark ground today.
-When the dashboard needs one, the stylesheet takes these values, not new ones.
+Once Fatih confirms them, and when the dashboard needs a state on a dark
+ground, the web track adds them to `styles.css`. That stylesheet is theirs, and
+this file is checked against it.
 
 For completeness, the light-ground chips have the same gap the site has always
 had: on its own tint the healthy mark measures **2.51:1**. It is why the word
