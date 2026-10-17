@@ -1,0 +1,10 @@
+2026-10-15T12:04:04.558Z  #1 CALL requestAccess
+2026-10-15T12:04:18.823Z  #1 RETURN requestAccess after 14265 ms ok
+2026-10-15T12:04:29.783Z  #2 CALL signTransaction
+2026-10-15T12:05:09.882Z  #2 RETURN signTransaction after 40098 ms ok
+2026-10-15T12:05:50.247Z  #3 CALL signTransaction
+2026-10-15T12:06:10.717Z  #3 RETURN signTransaction after 20469 ms ok
+2026-10-15T12:06:27.652Z  #4 CALL signTransaction
+2026-10-15T12:06:47.891Z  #4 RETURN signTransaction after 20239 ms ok
+2026-10-15T12:07:06.311Z  #5 CALL signTransaction
+2026-10-15T12:07:29.690Z  #5 RETURN signTransaction after 23378 ms ERROR={"code":-4,"message":"The user rejected this request."}
