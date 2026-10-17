@@ -1,5 +1,7 @@
 # W3-D18-03 — capture preparation, 2026-09-14
 
+> **Retired on `main` 2026-10-17 (`PH2-E0-04`, cluster 3).** The scripts this page runs no longer exist on `main`. Run every command here in a checkout of the capture's own `sourceCommit`, or of the `sow1-final` tag; [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md) § *Replaying a sealed capture after `main` has moved* has the steps. The page itself is a dated record and is otherwise unchanged.
+
 Implementation is local on `feat/W3-D18-03-crossing-capture`, based on main
 `91ad650` (#154). Runtime commit: `2ac20f4cda5dca2b34798287a2a9be412a1e108b`.
 Separate internal review and publication are still pending. W3-D18-03 remains

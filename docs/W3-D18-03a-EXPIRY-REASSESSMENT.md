@@ -1,5 +1,7 @@
 # W3-D18-03a — offline expiry compatibility assessment
 
+> **Retired on `main` 2026-10-17 (`PH2-E0-04`, cluster 3).** The scripts this page runs no longer exist on `main`. Run every command here in a checkout of the capture's own `sourceCommit`, or of the `sow1-final` tag; [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md) § *Replaying a sealed capture after `main` has moved* has the steps. The page itself is a dated record and is otherwise unchanged.
+
 The final B reads were taken on time, but the version1 capture classifier expected
 expired entries to disappear. Stellar RPC instead returned their XDR with absolute
 `liveUntilLedgerSeq: 0`. The [official method reference](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries)
