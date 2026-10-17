@@ -10,9 +10,19 @@ describe('observeTTL — the inclusive boundary', () => {
     expect(isLive(ttl)).toBe(true);
   });
 
-  it('reports remainingLedgers -1 on the first dead ledger — expired', () => {
+  it('reports the first dead ledger as EXPIRED, keeping the real final ledger (#235)', () => {
+    // Before 0.2.0 this was `known` with remainingLedgers -1.
     const ttl = observeTTL({ liveUntilLedgerSeq: 4_529_810, observedAtLedger: 4_529_811 });
-    expect(ttl).toMatchObject({ remainingLedgers: -1 });
+    expect(ttl).toEqual({ status: 'expired', endedAtLedger: 4_529_810 });
+    expect(isLive(ttl)).toBe(false);
+  });
+
+  it('reports an archived entry (RPC liveUntilLedgerSeq 0) as EXPIRED with no ledger at all (#235)', () => {
+    // Measured on guinea-pigs B and C: RPC keeps returning the archived entry,
+    // with 0 as a placeholder. 0.1.x turned that into `endsAtLedger: 0` and a
+    // remaining count of minus the current ledger.
+    const ttl = observeTTL({ liveUntilLedgerSeq: 0, observedAtLedger: 4_896_141 });
+    expect(ttl).toEqual({ status: 'expired' });
     expect(isLive(ttl)).toBe(false);
   });
 
