@@ -10,7 +10,7 @@ import type {
   LedgerEntryTTL,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
+import { isExpiredObservation, isValidThreshold, needsAction } from './ttl.js';
 
 /**
  * The liveness assertion (`W2-D10-04`).
@@ -83,7 +83,7 @@ export interface LivenessFinding {
   readonly reason: LivenessReason;
   readonly severity: LivenessSeverity;
   readonly remediation: LivenessRemediation;
-  /** Absent when the entry was never observed. Negative means already expired. */
+  /** Absent when the entry was never observed, or is expired (#235: no count from a placeholder). */
   readonly remainingLedgers?: number;
   /** True past the live boundary: archived data needs restore; deleted data cannot be restored. */
   readonly isExpired: boolean;
@@ -143,12 +143,13 @@ function describe(
   note?: string,
   endBehavior: LedgerEntryTTL['endBehavior'] = 'archived',
 ): string {
-  const where =
-    remainingLedgers === undefined
+  // Expired first: since #235 an expired entry carries no remaining count, and
+  // "could not be read" would be the wrong answer for it.
+  const where = isExpired
+    ? 'EXPIRED, past its final live ledger'
+    : remainingLedgers === undefined
       ? 'its TTL could not be read'
-      : isExpired
-        ? `EXPIRED ${formatCount(Math.abs(remainingLedgers))} ledgers ago`
-        : `${formatCount(remainingLedgers)} ledgers remain`;
+      : `${formatCount(remainingLedgers)} ledgers remain`;
   // Said once, here, so no caller has to remember which operation applies.
   const fix = !isExpired
     ? ''
@@ -222,8 +223,16 @@ export function assertLiveness(args: {
       continue;
     }
 
-    const { remainingLedgers } = entry.ttl;
-    if (!needsAction(remainingLedgers, args.actionThresholdByEntry?.[entryKey] ?? threshold))
+    // Expiry is the protocol boundary, not the policy one: an `expired` entry
+    // always needs attention, and `extendTTL` cannot reach it. Since #235 it
+    // carries no remaining count, so nothing below is measured from a placeholder.
+    const isExpired = isExpiredObservation(entry.ttl);
+    const remainingLedgers =
+      entry.ttl.status === 'known' && !isExpired ? entry.ttl.remainingLedgers : undefined;
+    if (
+      remainingLedgers !== undefined &&
+      !needsAction(remainingLedgers, args.actionThresholdByEntry?.[entryKey] ?? threshold)
+    )
       continue;
 
     const temporaryRetention =
@@ -233,11 +242,6 @@ export function assertLiveness(args: {
       temporaryConsent(args.config, entryKey, entry.contracts[0]!).allowed;
     const forEntry = byEntry.get(entryKey) ?? [];
     if (forEntry.some(confirmedBump)) continue;
-
-    // Expiry is the protocol boundary, not the policy one: live AT zero, dead
-    // below it. `extendTTL` cannot reach an entry past this line. Calls the
-    // predicate rather than restating it — see CONVENTIONS § one home.
-    const isExpired = hasExpired(remainingLedgers);
 
     const candidates = forEntry.map((record): { reason: LivenessReason; note?: string } => {
       switch (record.outcome) {
@@ -272,7 +276,7 @@ export function assertLiveness(args: {
           ? 'investigate'
           : 'restore'
         : 'extend',
-      remainingLedgers,
+      ...(remainingLedgers === undefined ? {} : { remainingLedgers }),
       isExpired,
       detail:
         describe(chosen.reason, remainingLedgers, isExpired, chosen.note, entry.endBehavior) +

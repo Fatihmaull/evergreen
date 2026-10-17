@@ -8,7 +8,7 @@ import type {
 } from '@evergreen-stellar/shared-types';
 import type { LedgerEntryReader } from './rpc.js';
 import { instanceKey } from './rpc.js';
-import { observeTTL } from './ttl.js';
+import { expiredEntryIssues, observeTTL } from './ttl.js';
 
 /**
  * Assemble a `ScanResult` from a reader. Pure given the reader, so tests run
@@ -112,5 +112,6 @@ export async function scanInstances(
     }
   }
 
+  issues.push(...expiredEntryIssues(entries));
   return { network: reader.network ?? 'testnet', contracts, entries, issues };
 }

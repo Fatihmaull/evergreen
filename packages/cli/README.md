@@ -143,6 +143,28 @@ Zero applies only to the supplied/discovered keys; it never guarantees complete 
 
 `--json` emits `ScanResult` alone on stdout once scanning starts, including partial results. Argument/file/connection failures emit a diagnostic on stderr and exit `2`. Successful entries survive another batch's failure. Dates are approximate display projections; each entry's own observation ledger drives its TTL math.
 
+### ⚠️ Breaking in 0.2.0: expired entries in `--json`
+
+An entry past its final live ledger is no longer `ttl.status: "known"` with a negative count ([#235](https://github.com/Fatihmaull/evergreen/issues/235)). RPC keeps returning an archived entry with `liveUntilLedgerSeq: 0`, and 0.1.x passed that placeholder through as if it were a measurement:
+
+```json
+"ttl": { "status": "known", "endsAtLedger": 0, "remainingLedgers": -4896141 }
+```
+
+From 0.2.0 the same entry reads:
+
+```json
+"ttl": { "status": "expired" }
+```
+
+- **`ttl.status` gains a third value, `"expired"`.** That arm has no `endsAtLedger` and no `remainingLedgers`.
+- **`endedAtLedger` appears only when RPC reported a real, non-zero final ledger** that is already past.
+- **`issues[]` gains `kind: "entry-expired"`**, one per expired entry. So `issues.length === 0` no longer reads an archived contract as clean.
+- **`"known"` now always means live:** `remainingLedgers` is never negative.
+- **Exit codes are unchanged:** an expired entry still exits `1`.
+
+**If your script reads `ttl.remainingLedgers` or `ttl.endsAtLedger`, branch on `ttl.status` first.** A script that treated every non-`"known"` status as "unread" will now mislabel expired entries.
+
 ## Publication
 
 The public npm package is `@evergreen-stellar/cli`, with command name `evergreen`.
