@@ -9,7 +9,6 @@ import {
   validateExtensionEnvelope,
   isValidPayerAccount,
   assertLiveness,
-  assertWriteAllowed,
   scanContract,
   decideBumps,
   parseStateArchivalSettings,
@@ -278,11 +277,6 @@ export async function runEngineExecution(
           },
           signer(prepared, remainingFeeStroops) {
             transport.checkDeadline();
-            assertWriteAllowed({
-              contractId: prepared.entry.contracts[0]!,
-              entryKeys: [prepared.entry.entryKey],
-              scan: preview.scan,
-            });
             return createEd25519Signer({
               payer: payerId,
               sourceAccount: payer.sourceAccount,
@@ -299,11 +293,6 @@ export async function runEngineExecution(
           },
           async beforeSubmit(prepared, signer) {
             transport.checkDeadline();
-            assertWriteAllowed({
-              contractId: prepared.entry.contracts[0]!,
-              entryKeys: [prepared.entry.entryKey],
-              scan: preview.scan,
-            });
             const tx = validateExtensionEnvelope(prepared.transactionXdr, {
               sourceAccount: payer.sourceAccount,
               entryKey: prepared.entry.entryKey,
