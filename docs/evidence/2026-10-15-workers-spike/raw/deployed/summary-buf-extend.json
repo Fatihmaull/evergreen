@@ -1,0 +1,24 @@
+{
+ "extendA-dryrun": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   "7"
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 2437.4,
+  "client_p90": 3155.8,
+  "client_max": 4087.7,
+  "worker_wall_p50": 2242.5,
+  "errors": [],
+  "cli_masked_identical": "30/30 vs cli-before (cli-before==cli-after masked: True)",
+  "raw_identical": 0
+ }
+}
