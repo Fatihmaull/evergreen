@@ -49,9 +49,13 @@ export function render(ctx) {
 
     <h2 id="archived-vs-deleted">Archived is not deleted</h2>
     <p>
-      An archived entry still exists. Its data is moved out of the live state and the contract
-      stops working until someone restores it with <span class="mono">RestoreFootprintOp</span> and
-      pays for the restoration. It is an outage and a bill, not a loss.
+      An archived entry still exists. Its data is moved out of the live state, and the next
+      invocation that declares it in its footprint restores it automatically and is charged for
+      the restoration — slower and dearer than a normal read, because an archived entry is read
+      from disk. An explicit <span class="mono">RestoreFootprintOp</span> is still needed when
+      restoring would push that invocation past its resource limits, and extending an archived
+      entry still requires restoring it first: an extend is not an invocation, so nothing
+      restores it on the way. Archival is a cost and a delay, not a loss.
     </p>
     <p>
       A deleted temporary entry is a loss. There is no restore operation for it, and no amount of

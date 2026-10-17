@@ -35,8 +35,10 @@ export function render(ctx) {
     <h2 class="section">What happens at zero</h2>
     <p class="muted">
       An entry is still live at its final ledger — remaining zero means one ledger left, not expired. Past it,
-      instance, code and persistent entries are <strong>archived</strong>: unusable until someone pays to restore
-      them, slower and more expensive than a normal read. Temporary entries are <strong>deleted outright</strong>
+      instance, code and persistent entries are <strong>archived</strong>: moved out of the live state until
+      something pays to restore them. The next invocation that declares an archived entry restores it and is
+      charged for it, so archival is a cost and a delay rather than an outage — slower and more expensive than
+      a normal read. Temporary entries are <strong>deleted outright</strong>
       and cannot be restored at any price. Reporting those two fates the same way is a serious interface bug,
       so they are never the same chip anywhere on this site.
     </p>
