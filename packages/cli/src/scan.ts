@@ -5,7 +5,7 @@ import {
   resolveHealthThresholds,
   coverageIssues,
   estimateEndsAt,
-  isLive,
+  isExpiredObservation,
   needsAction,
   worstHealth,
 } from '@evergreen-stellar/core';
@@ -179,7 +179,6 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
   }
 
   for (const [key, entry] of entries) {
-    const live = isLive(entry.ttl);
     const assessment = assessEntryWithThresholds(entry, tiers(thresholdLedgers));
     assessments.push(assessment);
     const shortKey = `${key.slice(0, 10)}…`;
@@ -212,45 +211,35 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
       // Say "no TTL", never "0 ledgers" — an entry type that carries no TTL is
       // not an entry that is about to expire.
       lines.push('  ttl:        no TTL metadata returned; health is unknown');
+    } else if (entry.ttl.status === 'known' && !isExpiredObservation(entry.ttl)) {
+      // `known` is live by construction since #235; an entry past its final
+      // ledger is `expired` below.
+      lines.push(`  remaining:  ${formatCount(entry.ttl.remainingLedgers)} ledgers — live`);
+      lines.push(`  ends at:    ledger ${formatCount(entry.ttl.endsAtLedger)}`);
+      const at = estimateEndsAt(entry.ttl, now);
+      // "expires", not "approx" or "crosses". The engine's alert threshold sits
+      // exactly 24h before expiry because THRESHOLD_LEDGERS is exactly one day,
+      // which is what made the 2026-09-12 collision so convincing. Both were
+      // right, and a vague label is what let one word cover two events.
+      if (at) lines.push(`  expires ~:  ${at.toISOString()} (estimate — ledgers are the truth)`);
     } else {
-      const state = live ? 'live' : `EXPIRED (${entry.endBehavior})`;
-      if (live) {
-        lines.push(`  remaining:  ${formatCount(entry.ttl.remainingLedgers)} ledgers — ${state}`);
-        lines.push(`  ends at:    ledger ${formatCount(entry.ttl.endsAtLedger)}`);
-        const at = estimateEndsAt(entry.ttl, now);
-        // "expires", not "approx" or "crosses". `check-decay-drift.py` projects
-        // the ALERT THRESHOLD and this projects EXPIRY; they sit exactly 24h
-        // apart because THRESHOLD_LEDGERS is exactly one day, which is what made
-        // the 2026-09-12 collision so convincing. Both were right, and a vague
-        // label is what let one word cover two events.
-        if (at) lines.push(`  expires ~:  ${at.toISOString()} (estimate — ledgers are the truth)`);
-      } else {
-        // #235. RPC does not stop returning an archived entry — it returns it
-        // with `liveUntilLedgerSeq: 0`. So `endsAtLedger` is 0 and
-        // `remainingLedgers` is `0 - observedLedger`. Neither is a measurement:
-        // 0 is not a ledger the entry ever lived to, and the projected date
-        // derived from it lands in the PAST. Measured on guinea-pig C on
-        // 2026-09-26, the published 0.1.0 printed:
-        //
-        //   remaining:  -4,884,961 ledgers — EXPIRED (archived)
-        //   ends at:    ledger 0
-        //   expires ~:  2025-12-18T02:06:28.760Z
-        //
-        // A date nine months before this project began, stated confidently,
-        // directly beneath a correct verdict. This repository's whole argument is
-        // that it refuses to state what it cannot know — `sharing undetermined`
-        // rather than `false`, rent `unavailable` rather than `0` — so a
-        // fabricated expiry date is that same failure in the place a reader is
-        // most likely to look.
-        //
-        // The fix is presentation-only and deliberately narrow: core still
-        // reports what RPC said. What stops is this renderer dressing a
-        // placeholder as a measurement.
-        lines.push(`  remaining:  none — ${state}`);
-        lines.push(
-          '  ends at:    not reported — RPC returns 0 for an archived entry, not the ledger it ended on',
-        );
-      }
+      // #235. RPC does not stop returning an archived entry — it returns it
+      // with `liveUntilLedgerSeq: 0`. The published 0.1.0 printed, for
+      // guinea-pig C on 2026-09-26:
+      //
+      //   remaining:  -4,884,961 ledgers — EXPIRED (archived)
+      //   ends at:    ledger 0
+      //   expires ~:  2025-12-18T02:06:28.760Z
+      //
+      // #262 fixed this renderer; since 0.2.0 core no longer produces those
+      // numbers at all, so `--json` cannot carry them either. The final ledger
+      // is printed only when RPC reported a real one.
+      lines.push(`  remaining:  none — EXPIRED (${entry.endBehavior})`);
+      lines.push(
+        entry.ttl.status !== 'expired' || entry.ttl.endedAtLedger === undefined
+          ? '  ends at:    not reported — RPC returns 0 for an archived entry, not the ledger it ended on'
+          : `  ended at:   ledger ${formatCount(entry.ttl.endedAtLedger)}`,
+      );
     }
     lines.push(`  observed:   ledger ${formatCount(entry.observedAtLedger)}`);
     lines.push(`  health:     ${LABEL[assessment.health]} — ${assessment.reason}`);
@@ -364,6 +353,10 @@ export function exitCodeFor(
   // is worse than no gate. See CONVENTIONS § one home for a policy.
   for (const entry of Object.values(result.entries)) {
     if (entry.ttl.status === 'unavailable') continue;
+    // Expired is below every threshold. Before #235 this fell out of
+    // `needsAction` on a negative count; the exit code is unchanged.
+    if (entry.ttl.status === 'expired' || isExpiredObservation(entry.ttl))
+      return EXIT_BELOW_THRESHOLD;
     if (needsAction(entry.ttl.remainingLedgers, thresholdLedgers)) return EXIT_BELOW_THRESHOLD;
   }
   return EXIT_OK;

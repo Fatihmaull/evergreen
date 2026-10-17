@@ -366,3 +366,46 @@ describe('scanContracts — instance batches', () => {
     },
   );
 });
+
+// ── #235: an archived entry is EXPIRED, not a `known` TTL from a placeholder ──
+describe('scanContracts — an archived entry (#235, PH2-E1-01)', () => {
+  // RPC keeps returning an archived entry with `liveUntilLedgerSeq: 0`. Measured
+  // on guinea-pigs B and C after they expired; 0.1.x reported it as
+  // `{ status: 'known', endsAtLedger: 0, remainingLedgers: -<current ledger> }`
+  // with an EMPTY `issues` array.
+  const archivedRows = () =>
+    recorded.map((r) => (r.key === CODE ? { ...r, liveUntilLedgerSeq: 0 } : r));
+
+  it('reports the archived entry as expired, with no fabricated ledger or count', async () => {
+    const result = await scanContracts(reader(archivedRows()), [{ contract: { id: A } }]);
+    // Through JSON, because that is exactly what `--json` prints.
+    const json = JSON.parse(JSON.stringify(result)) as typeof result;
+    expect(json.entries[CODE]?.ttl).toEqual({ status: 'expired' });
+    expect(json.entries[CODE]?.ttl).not.toHaveProperty('endsAtLedger');
+    expect(json.entries[CODE]?.ttl).not.toHaveProperty('remainingLedgers');
+  });
+
+  it('names the archival in issues[], so `issues.length === 0` is no longer a false "clean"', async () => {
+    const result = await scanContracts(reader(archivedRows()), [{ contract: { id: A } }]);
+    const expired = result.issues.filter((i) => i.kind === 'entry-expired');
+    expect(expired).toHaveLength(1);
+    expect(expired[0]).toMatchObject({ entryKey: CODE, contracts: [A], observedAtLedger: at });
+    expect(expired[0]?.message).toContain('ARCHIVED');
+    expect(expired[0]?.message).toContain('RPC reported no final ledger');
+  });
+
+  it('keeps a real final ledger when RPC reports one that is already past', async () => {
+    const rows = recorded.map((r) => (r.key === CODE ? { ...r, liveUntilLedgerSeq: at - 10 } : r));
+    const result = await scanContracts(reader(rows), [{ contract: { id: A } }]);
+    expect(result.entries[CODE]?.ttl).toEqual({ status: 'expired', endedAtLedger: at - 10 });
+    expect(result.issues.find((i) => i.kind === 'entry-expired')?.message).toContain(
+      `final live ledger ${at - 10}`,
+    );
+  });
+
+  it('still reports a live entry as `known`, with no expiry issue', async () => {
+    const result = await scanContracts(reader(), [{ contract: { id: A } }]);
+    expect(result.entries[CODE]?.ttl.status).toBe('known');
+    expect(result.issues.filter((i) => i.kind === 'entry-expired')).toEqual([]);
+  });
+});

@@ -34,6 +34,20 @@ export type TTLObservation =
       readonly status: 'unavailable';
       readonly endsAtLedger?: never;
       readonly remainingLedgers?: never;
+    }
+  | {
+      /**
+       * Past its final live ledger (#235). The RPC keeps returning an archived
+       * entry, with `liveUntilLedgerSeq: 0` — a placeholder, not the ledger it
+       * ended on. So this arm carries no remaining count and no end ledger, and
+       * `endedAtLedger` appears only when the RPC reported a real, non-zero one.
+       * Before 0.2.0 this was `status: 'known'` with `endsAtLedger: 0` and a
+       * negative `remainingLedgers` measured from that placeholder.
+       */
+      readonly status: 'expired';
+      readonly endedAtLedger?: number;
+      readonly endsAtLedger?: never;
+      readonly remainingLedgers?: never;
     };
 
 export type LedgerEntryTTL = EntryLifecycle & {
@@ -58,7 +72,13 @@ export interface ScanIssue {
     | 'invalid-response'
     | 'unsupported-executable'
     | 'coverage-limited'
-    | 'sharing-undetermined';
+    | 'sharing-undetermined'
+    /**
+     * An entry past its final live ledger (#235). Archived entries need a
+     * restore and temporary ones are gone, so a consumer checking
+     * `issues.length === 0` must not read an expired contract as clean.
+     */
+    | 'entry-expired';
   readonly contracts: readonly ContractId[];
   readonly entryKey?: LedgerKey;
   /** Present only when a valid RPC response supplied it. */
