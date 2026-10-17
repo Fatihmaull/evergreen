@@ -34,7 +34,7 @@
 | 16 | `check:workflows` | **Keep** | A scheduled transaction-submitting workflow whose timeout exceeds its interval becomes an unbounded queue. `engine-cron.yml` and every self-hoster's copy still run on GitHub cron. |
 | 17 | `lint` | **Keep** | It enforces the TTL-comparison rule (`eslint.config.js`): the threshold comparison is unwritable outside `core/ttl.ts`. |
 | 18 | `format:check` | **Keep** | Standard. CI and local stay identical. |
-| 19 | `test` | **Modify** | Keep it, and in a follow-up move the **sprint-instrument suites** out of the chain together with their scripts: `test:crossing-capture`, `test:save-proof`, `test:proof-runtime`, `test:expiry-assessment`, `test:scheduler-watch`, `test:failure-rehearsal`. They test tools whose only consumers are sealed B/C captures. Those replay at their own `sourceCommit` (`docs/W3-D18-03-CAPTURE.md`), so `main`'s copies verify nothing. **Mutation-proof suites on write paths stay**, per Q6. |
+| 19 | `test` | **Modify** — ✅ **done 2026-10-17, with one correction:** `test:scheduler-watch` stays. `scripts/scheduler-watch.mjs` is a generic missed-run watcher for the GitHub-cron engine, not a crossing instrument; this inventory misclassified it | Keep it, and in a follow-up move the **sprint-instrument suites** out of the chain together with their scripts: `test:crossing-capture`, `test:save-proof`, `test:proof-runtime`, `test:expiry-assessment`, `test:scheduler-watch`, `test:failure-rehearsal`. They test tools whose only consumers are sealed B/C captures. Those replay at their own `sourceCommit` (`docs/W3-D18-03-CAPTURE.md`), so `main`'s copies verify nothing. **Mutation-proof suites on write paths stay**, per Q6. |
 
 ## Order, if approved
 
