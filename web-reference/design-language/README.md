@@ -117,6 +117,23 @@ Taken by Fatih after the design audit of the same day.
 | This directory is the single design authority; web agents implement | above; `phase-2/kickoff/WEBF.md`, `WEBR.md` |
 | Inter is confirmed as the body and interface face | [`tokens.md`](tokens.md) § Type |
 
+## Decisions of 2026-10-18
+
+Taken by Fatih on review of #304. The values are now settled; the web track
+implements what applies to the site, in `styles.css`.
+
+| Approved | Where it lives |
+|---|---|
+| Dark-ground state marks `#e75e4c` (critical) and `#9584cc` (undetermined), and their chip rules | [`tokens.md`](tokens.md) § State on dark grounds |
+| Input border `rgba(15,15,15,.5)`; dialog scrim `--ink` at `.30` | [`components.md`](components.md) § Phase 2 components |
+| The 9 × 2 bar for *incomplete* | [`components.md`](components.md), [`infographic.md`](infographic.md) |
+| Canvas scale *k* = 2, for templates only | [`formats.md`](formats.md) |
+| `--sage` as text: document what ships, not a blanket ban | [`tokens.md`](tokens.md) § State |
+
+Still WEBF's to fix in `styles.css`, against rules that already exist: the
+11px `.docs-tag`, the weights above 400 fetched by the dashboard, and the
+uppercase table and stat headers.
+
 ## Verifying
 
 `node apps/web/scripts/check-design.mjs` counts type sizes, cards, icons,

@@ -9,7 +9,9 @@ same hairlines, same single dominant element. Nothing is invented per format.
 
 ## The canvas scale *k*
 
-Every size on a canvas is a site size multiplied by **k**. That covers type,
+Every size on a canvas is a site size multiplied by **k** (approved by Fatih
+2026-10-18, **for the templates only**: *k* never enters `styles.css`, and the
+site keeps its own sizes). That covers type,
 gaps, padding, radius and the lockup. At the reference sizes below, **k = 2**
 everywhere, because each canvas is shown at about half its pixel width (a
 1080px post on a ~540pt phone, a 1920px frame in a ~960px player, an A3 poster

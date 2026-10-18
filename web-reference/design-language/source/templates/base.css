@@ -26,7 +26,7 @@
   --und: #7c6bb0;
   --und-ink: #5d4e8c;
 
-  /* State marks on pine and pine-deep (tokens.md, approved 2026-10-15).
+  /* State marks on pine and pine-deep (tokens.md, approved by Fatih 2026-10-18).
      Measured against the chip's own tint, which is what a mark sits on.
      Healthy and warning reuse the light-ground marks; these two did not pass. */
   --crit-on-dark: #e75e4c;

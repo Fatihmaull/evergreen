@@ -52,7 +52,7 @@ three.
 | critical | square, 8, rotated 45° | `#c0392b` / `#a93226` | `#e75e4c` / cream .82 |
 | expired | solid square, chip inverted | `#fcf9f8` on `#0f0f0f` | `#0f0f0f` on `#fcf9f8` |
 | undetermined | hollow ring, 2px stroke | `#7c6bb0` / `#5d4e8c` | `#9584cc` / cream .82 |
-| incomplete | short bar, 9 × 2 | `--ink-2` / `--ink`, hairline outline, no fill | cream .82 / cream, hairline outline |
+| incomplete | short bar, 9 × 2 (approved 2026-10-18) | `--ink-2` / `--ink`, hairline outline, no fill | cream .82 / cream, hairline outline |
 
 Sizes are at site scale; multiply by *k* on a canvas. The chip geometry is in
 [`source/templates/base.css`](source/templates/base.css) and is the site's own.

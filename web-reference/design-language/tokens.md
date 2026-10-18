@@ -62,11 +62,21 @@ Five states, and each has a **shape as well as a colour** — see
 | expired | `#fcf9f8` | `#fcf9f8` | `#0f0f0f` — solid, inverted |
 | undetermined | `#7c6bb0` | `#5d4e8c` | `rgba(124,107,176,.10)` |
 
-`--sage` `#7fa893` exists for chart strokes. It is not a text colour, and at
-**2.53:1** on `--surface` it is also not enough on its own for a line that
-carries meaning — see [`infographic.md`](infographic.md). The brand mark does
-not use it: the mark is one colour, `--pine` on light grounds and `--surface`
-on dark ones ([`brand.md`](brand.md)).
+`--sage` `#7fa893` is used for chart strokes and fills (`svg.graph .edge`,
+`.decay-step`), and as text in exactly two places, both on dark grounds and
+both clear of 4.5:1, measured on production 2026-10-18:
+
+| Where | Selector | Ground | Measured |
+|---|---|---|---|
+| The `$` before the landing page's install command | `.command-prompt` (`styles.css:1308` on `main`, 2026-10-18) | the command's tint over `--pine-deep` | **5.48:1** |
+| The dashboard sidebar's mono foot line, "testnet only" | `.sidebar-foot .mono` (`styles.css:1864`) | `--pine` | **4.69:1** |
+
+On light grounds it is a different colour in effect: **2.53:1** on
+`--surface`, under 4.5:1 for text and under the 3:1 a line needs when it
+carries meaning by itself (see [`infographic.md`](infographic.md)). So sage as
+text belongs on pine or pine-deep, as it ships, and not on the light grounds.
+The brand mark does not use it: the mark is one colour, `--pine` on light
+grounds and `--surface` on dark ones ([`brand.md`](brand.md)).
 
 The state marks above are for light grounds. Measured on `--surface`: healthy
 **2.79:1**, warning **3.26:1**, critical **5.19:1**, undetermined **4.37:1**.
@@ -75,9 +85,9 @@ carries its word and a shape — the mark is never the only signal.
 
 ### State on dark grounds
 
-**The approach was approved by Fatih on 2026-10-15; the two new values below
-are pending his confirmation.** Until he confirms them they are used only in
-the canvas templates. On `--pine`, the critical mark measured
+**The approach was approved by Fatih on 2026-10-15, and the two values and
+the chip rules below were approved by Fatih, 2026-10-18.** On `--pine`, the
+critical mark measured
 **2.29:1** and the undetermined mark **2.72:1**, so neither could be seen on
 the grounds social and video use most. Two marks are added; nothing else is.
 
@@ -103,9 +113,8 @@ ink chip, on pine a cream one.
 
 In the canvas templates these are `--crit-on-dark` and `--und-on-dark`. They
 are **not yet in `styles.css`**; the site has no state on a dark ground today.
-Once Fatih confirms them, and when the dashboard needs a state on a dark
-ground, the web track adds them to `styles.css`. That stylesheet is theirs, and
-this file is checked against it.
+When the dashboard needs a state on a dark ground, the web track adds them to
+`styles.css`. That stylesheet is theirs, and this file is checked against it.
 
 For completeness, the light-ground chips have the same gap the site has always
 had: on its own tint the healthy mark measures **2.51:1**. It is why the word

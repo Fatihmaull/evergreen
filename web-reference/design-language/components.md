@@ -63,7 +63,7 @@ the state's name; it is the word in the inverted cell below, not on the chip.
 site it is the neutral verdict panel — `--paper`, a `--rule-strong` border, no
 state colour, never violet. Where it has to be drawn as a chip (a canvas, a
 legend), it is a 9 × 2px bar in `--ink-2` inside a hairline outline with no
-fill ([`infographic.md`](infographic.md)).
+fill ([`infographic.md`](infographic.md); approved by Fatih 2026-10-18).
 
 On pine and pine-deep the chips change: the word turns cream, the fill is the
 mark at `.14`, and two marks change. See [`tokens.md`](tokens.md) § State on
@@ -176,7 +176,8 @@ tracks build one version rather than two. Behaviour comes from
 
 **Text input.** As it ships on the scanner: `--paper` fill, Space Mono 14px
 for addresses and IDs (Inter 14px for an email), `12px 14px` padding, 6px
-radius. **One change:** the border is `rgba(15,15,15,.5)`, not `--rule-strong`.
+radius. **One change, approved by Fatih 2026-10-18:** the border is
+`rgba(15,15,15,.5)`, not `--rule-strong`.
 At `.44` an input's edge measures 2.98:1 on paper, under the 3:1 a control's
 boundary needs; `.5` measures 3.59:1. It is still an alpha of the foreground,
 not a grey. The label sits above the field in `.field-label` (12px, `--ink-3`,
@@ -198,7 +199,7 @@ text and at body size: what will be signed, the amount and the destination,
 and that it authorises **a payment, never access to a contract** (AGENTS.md
 hard rule 3: `extendTTL` is permissionless). A dialog is a `--paper` panel with
 a hairline border and 8px radius on the dashboard. No shadow, no backdrop blur;
-the backdrop is `--ink` at `.30`.
+the backdrop is `--ink` at `.30` (approved by Fatih 2026-10-18).
 
 **Empty and loading states.** A sentence, not a skeleton: nothing shimmers
 ([`motion.md`](motion.md)). `reading…` in `--ink-3` until the value arrives, as
