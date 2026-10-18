@@ -108,25 +108,79 @@ function knownEndFor(e: AssessedEntry): { ledger?: number | undefined; on?: stri
   return {};
 }
 
+/**
+ * The third TTL status core is adding in `PH2-E1-01` (#235), recognised here
+ * BEFORE core ships it.
+ *
+ * `TTLObservation` is `known | unavailable` today, so `ttl.status === 'expired'`
+ * does not typecheck against it. This widening is the whole fix: without it,
+ * the `status !== 'known'` return below catches every archived entry the day
+ * core changes and renders it as **unread** — a wrong answer, with no error, no
+ * failing test and no type error, because the fixtures still carry the old
+ * shape. The hazard is written up at the head of this file; #325 is the issue.
+ *
+ * It is deliberately a local type rather than an import. Core does not export
+ * `isExpiredObservation` yet, and importing a symbol that does not exist is how
+ * this file would fail to build on today's `main` instead of being safe on both.
+ * Replace this with core's predicate once `PH2-E1-01` lands.
+ */
+type ExpiredObservation = { readonly status: 'expired'; readonly endedAtLedger?: number };
+
+type Observation = AssessedEntry['entry']['ttl'];
+
+function expiredObservation(ttl: Observation): ExpiredObservation | undefined {
+  const observation = ttl as Observation | ExpiredObservation;
+  return observation.status === 'expired' ? observation : undefined;
+}
+
+/**
+ * The expired view, built once.
+ *
+ * `fromCore` is the real final ledger when RPC reported a non-zero one that has
+ * already passed. It wins over `KNOWN_ENDS`, which is our own measured record
+ * and exists only because an archived entry reports `liveUntilLedgerSeq: 0` —
+ * the chain's own answer about this entry is better evidence than our schedule.
+ *
+ * The DATE is taken from the schedule only when the schedule's ledger agrees
+ * with the one being shown. A date measured against one ledger printed beside a
+ * different ledger is two readings presented as one, and on this site ledgers
+ * are the truth while dates are estimates.
+ */
+function expiredView(e: AssessedEntry, observedAtLedger: number, fromCore?: number): EntryView {
+  const known = knownEndFor(e);
+  const endedAtLedger = fromCore ?? known.ledger;
+  const endedOn =
+    known.on !== undefined && (known.ledger === undefined || known.ledger === endedAtLedger)
+      ? known.on
+      : undefined;
+  return {
+    state: 'expired',
+    word: e.entry.endBehavior === 'deleted' ? 'deleted' : 'archived',
+    reason: e.assessment.reason,
+    observedAtLedger,
+    ...(endedAtLedger === undefined ? {} : { endedAtLedger }),
+    ...(endedOn === undefined ? {} : { endedOn }),
+  };
+}
+
 /** Raw TTL in, renderable state out. Reuses core's `hasExpired` and its reason. */
 export function entryView(e: AssessedEntry, now = new Date()): EntryView {
   const ttl = e.entry.ttl;
   const observedAtLedger = e.entry.observedAtLedger;
+
+  /**
+   * Before the `unread` return, not after. This is the one ordering that
+   * matters in this file.
+   */
+  const expired = expiredObservation(ttl);
+  if (expired) return expiredView(e, observedAtLedger, expired.endedAtLedger);
 
   if (ttl.status !== 'known') return { state: 'unread', observedAtLedger };
 
   // `hasExpired` is core's, not a local `< 0`: remaining 0 is the final LIVE
   // ledger, and re-deriving that boundary is how it gets got wrong.
   if (hasExpired(ttl.remainingLedgers) || e.assessment.isExpired) {
-    const known = knownEndFor(e);
-    return {
-      state: 'expired',
-      word: e.entry.endBehavior === 'deleted' ? 'deleted' : 'archived',
-      reason: e.assessment.reason,
-      observedAtLedger,
-      ...(known.ledger === undefined ? {} : { endedAtLedger: known.ledger }),
-      ...(known.on === undefined ? {} : { endedOn: known.on }),
-    };
+    return expiredView(e, observedAtLedger);
   }
 
   return {
