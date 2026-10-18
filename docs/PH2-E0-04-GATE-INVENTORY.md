@@ -17,12 +17,12 @@
 | # | Gate | Verdict | One reason |
 |---|---|---|---|
 | 1 | `check:locale` | **Keep** | Guards a live product bug class. A number formatted in the reader's locale prints different bytes per machine, which breaks `--json` consumers, the Action and the MCP server phase 2 adds. |
-| 2 | `check:links` | **Retire** | Its four pages are sprint runbooks for crossings that have already happened: `SEP-20-PREFLIGHT`, `W3-D18-03-CAPTURE`, `W3-SEP18-READINESS`, `W3-D17-05-RUNBOOK`. Nobody opens them "on a day" any more, which was the gate's whole premise. |
-| 3 | `check:schedule` | **Retire** | It generates the B/C crossing-watch tables from `ops/crossing-schedule.json`. C expired on 2026-09-26, so the tables are history and cannot drift into being wrong about the future. |
-| 4 | `check:cadence` | **Retire** | It stops prose restating one sprint measurement: GitHub cron delivery. The hosted scheduler moves to Workers (ADR-003 amendment). `B-D31-02` records that it cannot see `.ts`, where 12 live quotes sit. The constant it protects stays pinned by `check:policy`. |
+| 2 | `check:links` | **Retire** — ✅ **retired 2026-10-15** | Its four pages are sprint runbooks for crossings that have already happened: `SEP-20-PREFLIGHT`, `W3-D18-03-CAPTURE`, `W3-SEP18-READINESS`, `W3-D17-05-RUNBOOK`. Nobody opens them "on a day" any more, which was the gate's whole premise. |
+| 3 | `check:schedule` | **Retire** — ✅ **retired 2026-10-15** | It generates the B/C crossing-watch tables from `ops/crossing-schedule.json`. C expired on 2026-09-26, so the tables are history and cannot drift into being wrong about the future. |
+| 4 | `check:cadence` | **Retire** — ✅ **retired 2026-10-15** | It stops prose restating one sprint measurement: GitHub cron delivery. The hosted scheduler moves to Workers (ADR-003 amendment). `B-D31-02` records that it cannot see `.ts`, where 12 live quotes sit. The constant it protects stays pinned by `check:policy`. |
 | 5 | `check:conflicts` | **Keep** | Generic and cheap. It guards a real silent pass: a conflict marker in `.prettierignore` once made Prettier match nothing and stay green. |
 | 6 | `check:task-ids` | **Keep** | Phase 2 has 43 new IDs and now four agents writing them. Recommissioned for `PH2-` in #300. |
-| 7 | `check:policy` | **Modify** | **Keep** the pins across `config.example`, `core/ttl.ts`, `core/health.ts` and `cli/scan.ts`; those are live product constants. **Drop** the two pins into `scripts/check-decay-drift.py`, a sprint B/C watcher **that no workflow runs** (checked: no file under `.github/workflows/` names it). It is pinning constants into a script nobody executes. |
+| 7 | `check:policy` | **Modify** — ✅ **done 2026-10-15** (the `secondsPerLedger` owner went too, since it had no copies left) | **Keep** the pins across `config.example`, `core/ttl.ts`, `core/health.ts` and `cli/scan.ts`; those are live product constants. **Drop** the two pins into `scripts/check-decay-drift.py`, a sprint B/C watcher **that no workflow runs** (checked: no file under `.github/workflows/` names it). It is pinning constants into a script nobody executes. |
 | 8 | `typecheck` | **Keep** | It is also what builds `core/dist` before the tests run. |
 | 9 | `check:bundle` | **Keep** | The npm tarball ships again as `0.2.0` (`PH2-E1-06`), and strangers download it. |
 | 10 | `check:publish` | **Keep** | Same reason: it guards the bundle-and-publish-one-package decision that ended three publishing defects. |
@@ -34,7 +34,7 @@
 | 16 | `check:workflows` | **Keep** | A scheduled transaction-submitting workflow whose timeout exceeds its interval becomes an unbounded queue. `engine-cron.yml` and every self-hoster's copy still run on GitHub cron. |
 | 17 | `lint` | **Keep** | It enforces the TTL-comparison rule (`eslint.config.js`): the threshold comparison is unwritable outside `core/ttl.ts`. |
 | 18 | `format:check` | **Keep** | Standard. CI and local stay identical. |
-| 19 | `test` | **Modify** | Keep it, and in a follow-up move the **sprint-instrument suites** out of the chain together with their scripts: `test:crossing-capture`, `test:save-proof`, `test:proof-runtime`, `test:expiry-assessment`, `test:scheduler-watch`, `test:failure-rehearsal`. They test tools whose only consumers are sealed B/C captures. Those replay at their own `sourceCommit` (`docs/W3-D18-03-CAPTURE.md`), so `main`'s copies verify nothing. **Mutation-proof suites on write paths stay**, per Q6. |
+| 19 | `test` | **Modify** — ✅ **done 2026-10-17, with one correction:** `test:scheduler-watch` stays. `scripts/scheduler-watch.mjs` is a generic missed-run watcher for the GitHub-cron engine, not a crossing instrument; this inventory misclassified it | Keep it, and in a follow-up move the **sprint-instrument suites** out of the chain together with their scripts: `test:crossing-capture`, `test:save-proof`, `test:proof-runtime`, `test:expiry-assessment`, `test:scheduler-watch`, `test:failure-rehearsal`. They test tools whose only consumers are sealed B/C captures. Those replay at their own `sourceCommit` (`docs/W3-D18-03-CAPTURE.md`), so `main`'s copies verify nothing. **Mutation-proof suites on write paths stay**, per Q6. |
 
 ## Order, if approved
 
@@ -57,7 +57,7 @@ Fixing that count is `B-D31-02`'s gate-list generator, which this inventory make
 | Workflow | What it does | Owner and disposition |
 |---|---|---|
 | `engine-cron.yml` | "Engine (fallback runner)": dry-run decisions every 15 minutes on GitHub cron | CER (`PH2-E0-06` / `PH2-E4-04`): out of scope here |
-| `scheduler-smoke.yml` | reads guinea-pig A's instance TTL every 15 minutes on GitHub cron | **Retire with cluster 2** (approved 2026-10-15). Its measurement is recorded, and the hosted scheduler moves to Workers (ADR-003 amendment) |
+| `scheduler-smoke.yml` | reads guinea-pig A's instance TTL every 15 minutes on GitHub cron | ✅ **Retired 2026-10-15 with cluster 2**, along with `scripts/scheduler-smoke.mjs` and its test. Its measurement is recorded, and the hosted scheduler moves to Workers (ADR-003 amendment) |
 | `evergreen-check-demo.yml` | the Action's green/red demo pair, manual dispatch only | SOW 1 evidence. Its runs are the record; disabling it changes nothing on file |
 | `flake-hunt.yml` | manual dispatch, reruns a test N times | Keep, because it is a tool rather than a gate |
 

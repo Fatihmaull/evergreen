@@ -2,8 +2,8 @@
   "_comment": [
     "SINGLE SOURCE OF TRUTH for the guinea-pig crossing watch schedules.",
     "Every table in docs/ that names a time, an owner or a trigger is GENERATED",
-    "from this file by scripts/render-crossing-schedule.mjs. Do not hand-edit those",
-    "tables — `pnpm check:schedule` fails if they drift from this file.",
+    "from this file by scripts/render-crossing-schedule.mjs, retired 2026-10-15 (PH2-E0-04).",
+    "Those tables are now a dated record. This file is still read by apps/web/build.mjs.",
     "",
     "WHY: on 2026-09-16 four documents restated this schedule and gave three",
     "different answers. Two operational pages said 'Fatih primary, Rakha backup',",

@@ -1,5 +1,7 @@
 # W3-D18-03 — read-only B/C capture
 
+> **Retired on `main` 2026-10-17 (`PH2-E0-04`, cluster 3).** The scripts this page runs no longer exist on `main`. Run every command here in a checkout of the capture's own `sourceCommit`, or of the `sow1-final` tag; § *Replaying a sealed capture after `main` has moved* has the steps. The page itself is a dated record and is otherwise unchanged.
+
 This supplements [the crossing runbook](SEP-20-PREFLIGHT.md). It prepares evidence
 collection; it does not complete the crossing, expiry or unattended-operation gate.
 

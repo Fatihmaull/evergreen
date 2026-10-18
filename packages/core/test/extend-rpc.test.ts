@@ -7,7 +7,7 @@ import {
   TransactionBuilder,
   xdr,
 } from '@stellar/stellar-sdk';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { instanceKey } from '../src/rpc.js';
 import { prepareExtension, confirmExtension, submitExtension } from '../src/extend-rpc.js';
 
@@ -213,5 +213,29 @@ describe('extension RPC envelope', () => {
     await expect(
       confirmExtension(server, 'a'.repeat(64), { attempts: 1, sleep: async () => {} }),
     ).rejects.toThrow();
+  });
+});
+
+describe('prepareExtension without a global Buffer (#311)', () => {
+  // The Worker spike's failure: a dry-run extend of A on a runtime with no
+  // `Buffer` died in `extensionKey`. The SDK carries its own Buffer, so this
+  // proves core's own code no longer reaches for the global.
+  const saved = globalThis.Buffer;
+  beforeAll(() => {
+    // @ts-expect-error — removing a Node global on purpose.
+    delete globalThis.Buffer;
+  });
+  afterAll(() => {
+    globalThis.Buffer = saved;
+  });
+
+  it('prepares the dry-run envelope, and its hash is the transaction hash', async () => {
+    expect(typeof globalThis.Buffer).toBe('undefined');
+    const p = await prepareExtension(fakeServer(), ENTRY, SOURCE);
+    expect(p.transactionHash).toMatch(/^[0-9a-f]{64}$/);
+    const hash = TransactionBuilder.fromXDR(p.transactionXdr, Networks.TESTNET).hash();
+    expect(p.transactionHash).toBe(
+      Array.from(hash, (b) => b.toString(16).padStart(2, '0')).join(''),
+    );
   });
 });

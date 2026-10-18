@@ -1,5 +1,7 @@
 # Crossing pre-flight — B (Sep 20–21, done) and C (Sep 25–26, next)
 
+> **Retired on `main` 2026-10-17 (`PH2-E0-04`, cluster 3).** The scripts this page runs no longer exist on `main`. Run every command here in a checkout of the capture's own `sourceCommit`, or of the `sow1-final` tag; [`W3-D18-03-CAPTURE.md`](W3-D18-03-CAPTURE.md) § *Replaying a sealed capture after `main` has moved* has the steps. The page itself is a dated record and is otherwise unchanged.
+
 **B crosses its action threshold (17,280 ledgers) ~2026-09-20 12:00 UTC and expires ~2026-09-21
 12:00 UTC.** The expiry cannot be re-armed inside this sprint. C is the only
 spare, five days later.
