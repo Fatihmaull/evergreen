@@ -80,6 +80,7 @@ function readKnownEnds() {
     const s = watch.subject;
     if (!s?.contractId) continue;
     ends[s.contractId] = {
+      ...(typeof s.label === 'string' ? { label: s.label } : {}),
       ...(typeof s.expiresAtLedger === 'number' ? { instance: s.expiresAtLedger } : {}),
       ...(typeof s.persistentExpiresAtLedger === 'number'
         ? { persistent: s.persistentExpiresAtLedger }
@@ -123,40 +124,6 @@ function readKnownEnds() {
     };
   }
   return ends;
-}
-
-function readGuard() {
-  const src = readFileSync(join(repo, 'packages/core/src/write-guard.ts'), 'utf8');
-  const alerts = [...src.matchAll(/alertThresholdOn: '(\d{4}-\d{2}-\d{2})'/g)].map((m) => m[1]);
-  const expiries = [...src.matchAll(/expiresOn: '(\d{4}-\d{2}-\d{2})'/g)].map((m) => m[1]);
-  const key = src.match(/SHARED_CODE_ENTRY_KEY = '([A-Za-z0-9+/=]+)'/)?.[1];
-  if (alerts.length !== 2 || expiries.length !== 2 || !key) {
-    throw new Error(
-      'write-guard.ts moved under the web build: expected two alert dates, two expiries, one shared key',
-    );
-  }
-  /**
-   * The protected subjects, read whole rather than as four loose dates, so the
-   * guards page cannot list a subject the guard does not actually hold.
-   */
-  const subjects = [
-    ...src.matchAll(
-      /contractId:\s*'(C[A-Z2-7]{55})',\s*label:\s*'([^']+)',[\s\S]*?alertThresholdOn:\s*'(\d{4}-\d{2}-\d{2})',\s*expiresOn:\s*'(\d{4}-\d{2}-\d{2})'/g,
-    ),
-  ].map((m) => ({ id: m[1], label: m[2], alert: m[3], expires: m[4] }));
-  if (subjects.length !== 2) {
-    throw new Error(
-      `write-guard.ts holds ${subjects.length} protected subjects; the docs page expects two`,
-    );
-  }
-  return {
-    bAlert: alerts[0],
-    bExpires: expiries[0],
-    cAlert: alerts[1],
-    cExpires: expiries[1],
-    sharedKey: key,
-    subjects,
-  };
 }
 
 function readCli() {
@@ -279,7 +246,6 @@ if (grades.capturedAt !== snapshot.capturedAt) {
 }
 const decay = readJson('data/decay.json');
 const archival = readJson('data/archival.json');
-const guard = readGuard();
 const cli = readCli();
 const knownEnds = readKnownEnds();
 
@@ -291,7 +257,24 @@ const knownEnds = readKnownEnds();
  * write-path guard caught that, which is the whole reason it exists. A plain
  * JSON import tree-shakes normally and is typed.
  */
-writeFileSync(join(here, 'data/known-ends.json'), `${JSON.stringify(knownEnds, null, 2)}\n`);
+/**
+ * `label` is dropped on the way out: the documentation page that needs it runs
+ * at build time, and the browser bundles import this file, so a string no
+ * client reads would otherwise ride into three 760 KB bundles.
+ */
+writeFileSync(
+  join(here, 'data/known-ends.json'),
+  `${JSON.stringify(
+    Object.fromEntries(
+      Object.entries(knownEnds).map(([id, end]) => [
+        id,
+        Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
+      ]),
+    ),
+    null,
+    2,
+  )}\n`,
+);
 const evidence = {
   count: readdirSync(join(repo, 'docs/evidence'), { withFileTypes: true }).filter((d) =>
     d.isDirectory(),
@@ -513,7 +496,6 @@ const ctx = {
   grades,
   decay,
   archival,
-  guard,
   cli,
   evidence,
   knownEnds,

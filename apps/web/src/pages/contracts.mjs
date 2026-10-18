@@ -41,11 +41,20 @@ export function render(ctx) {
     // NaN" on this page for four days, because nothing asserted it resolved.
     const at = g.observedAtLedger;
     if (typeof at !== 'number') throw new Error(`contracts page: no observedAtLedger for ${c.id}`);
+    /**
+     * Both dates come from `ops/crossing-schedule.json` via `knownEnds`, which
+     * is where they were measured. They used to be parsed out of
+     * `packages/core/src/write-guard.ts`, a file that is being deleted
+     * (PH2-E0-06) — and reading an expiry date out of a guard's source meant
+     * the page lost its dates the moment the guard did, which is not a
+     * relationship those two things should have had.
+     */
+    const ends = ctx.knownEnds[c.id] ?? {};
     const guard =
       c.label === 'guinea-pig B'
-        ? `<p class="small">Alert threshold ${esc(dateLong(ctx.guard.bAlert))} · <strong>expired ${esc(dateLong(ctx.guard.bExpires))}</strong> at ledger <span class="mono">${fmt(ctx.knownEnds[c.id].instance)}</span>. It was left alone on purpose, and that is the proof.</p>`
+        ? `<p class="small">Alert threshold ${esc(dateLong(ends.crossesOn))} · <strong>expired ${esc(dateLong(ends.endsOn))}</strong> at ledger <span class="mono">${fmt(ends.instance)}</span>. It was left alone on purpose, and that is the proof.</p>`
         : c.label === 'guinea-pig C'
-          ? `<p class="small">Alert threshold ${esc(dateLong(ctx.guard.cAlert))} · <strong>expires ${esc(dateLong(ctx.guard.cExpires))}</strong> at ledger <span class="mono">${fmt(ctx.knownEnds[c.id].instance)}</span>. That expiry is the unrepeatable event.</p>`
+          ? `<p class="small">Alert threshold ${esc(dateLong(ends.crossesOn))} · <strong>expired ${esc(dateLong(ends.endsOn))}</strong> at ledger <span class="mono">${fmt(ends.instance)}</span>. That expiry was the unrepeatable event.</p>`
           : `<p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>${esc(approxDate(5290829, at, ctx.snapshotCapturedAt).slice(1))}</strong> at ledger <span class="mono">${fmt(5290829)}</span>, shared with B and C.</p>`;
     return `<article class="card card-pad stack">
       <div class="row"><span class="name">${esc(c.label)}</span><span class="chip ${g.worst}"><span class="shape"></span>${esc(g.worst)}</span></div>
