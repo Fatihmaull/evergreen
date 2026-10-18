@@ -271,6 +271,7 @@ PH2-E0-03 contents:
 | PH2-E3-05 | Allowance flow: cap sizing, approve, renewal reminders, revoke | WEBR | M | PH2-E4-01 |
 | PH2-E3-06 | Wallet prompt test (#297 left the Freighter prompt count `undetermined`) | WEBR | S | — (only the final check against the real allowance flow follows PH2-E3-05) |
 | PH2-E3-07 | Website "Support Evergreen" page: wallet payment to the treasury address | WEBR | S | PH2-E4-03 |
+| PH2-E3-08 | Design-language reference for the brand, formats, infographics, motion and templates, plus the `tokens.md` update (#304). Fatih's design agent (DES), on demand | F (DES) | M | — |
 
 ### E4 — Hosted autopilot
 
@@ -309,7 +310,7 @@ PH2-E0-03 contents:
 
 | Person | Scheduled (E0–E5) | Backlog | Total |
 |---|---|---|---|
-| **Fatih** (F 6.5 + CEF 24 + WEBF 6) | 36.5 | 3 | 39.5 |
+| **Fatih** (F 8.5 + CEF 24 + WEBF 6) | 38.5 | 3 | 41.5 |
 | **Rakha** (R 2.5 + CER 22 + WEBR 6) | 30.5 | 7 | 37.5 |
 
 **Rebalanced 2026-10-15** after the ownership moves accepted on #299. Before the moves it was Fatih 34.5 and Rakha 32.5 scheduled, recomputed from the tables above.
@@ -341,3 +342,5 @@ The first two were caught by Rakha on #299.
 - PH2-E1-04 splits. The mainnet read-only scan path joins PH2-E1-03 (CEF, now L). PH2-E1-04 keeps the mainnet `extend` refusal and `action.yml` (CER, now S).
 - One-click "Extend now" gets a daily limit and an email notice (PH2-E3-04, PH2-E4-02).
 - CLI `0.2.0` ships without the Support tip (PH2-E1-06).
+
+**Card added, 2026-10-18:** PH2-E3-08 registers the design agent's work (#304) under hard rule 8, at weight M, which moves Fatih's scheduled total to 38.5. The weight is CEF's default; Fatih may change it.

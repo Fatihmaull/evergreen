@@ -619,6 +619,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
 - [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
 - [ ] **PH2-E3-07** (R · WEBR) **S** Website "Support Evergreen" page: wallet payment to the treasury address. *Depends on `PH2-E4-03`.*
+- [~] **PH2-E3-08** (F) **M** Design-language reference for the brand, formats, infographics, motion graphics and templates, plus the `tokens.md` update: #304, by Fatih's **design agent** (DES). DES is invoked on demand, outside the four phase-2 tracks, and is the authority on design decisions; WEBF and WEBR implement them in code. Registered 2026-10-18 under hard rule 8. Owner is `(F)`, because `DES` is not a parseable track code. `tokens.md` is machine-checked against `apps/web/src/styles.css` by `check:design-language` (blocking in `pnpm check` from 2026-10-18).
 
 ### E4 — Hosted autopilot
 
