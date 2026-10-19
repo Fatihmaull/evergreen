@@ -32,6 +32,46 @@ const MONTHS = [
 ];
 
 /** Ledger delta converted at 5 seconds per ledger, as a `~date` estimate. */
+/**
+ * An end ledger that is still in the future, or the build stops.
+ *
+ * On 2026-10-19 `/dashboard/contracts/` and `/dashboard/decay/` told visitors
+ * that the shared code entry — the one this product calls 98% of the bill, the
+ * entry that binds all three contracts — **expires about 20 October 2026 at
+ * ledger 5,290,829**. It had been extended to 8,297,162 five days earlier
+ * (#296), and the chain had been saying so ever since. The page said it in the
+ * present tense, two days before the date it named, about the claim the whole
+ * product rests on. Wrong, and wrong in the frightening direction.
+ *
+ * The number was a LITERAL typed into page source. No reader fetched it, so no
+ * reader could refuse when it moved; `5290829` appeared four times across two
+ * pages and nothing related any of them to the chain.
+ *
+ * So a future expiry is rendered through here or not at all. The ledger must be
+ * ahead of the one the snapshot was observed at — a ledger already passed
+ * cannot be something an entry "expires at", and saying so is the failure this
+ * product exists to name, committed by its own dashboard.
+ *
+ * A RECORDED past end — guinea-pig B's 4,793,687 — is a different statement and
+ * does not come through here. It is read from `ops/crossing-schedule.json` via
+ * `knownEnds`, and it is written in the past tense.
+ */
+export function futureEnd(targetLedger, observedAtLedger, label = 'an end ledger') {
+  if (!Number.isInteger(targetLedger) || !Number.isInteger(observedAtLedger)) {
+    throw new Error(
+      `${label}: expected two ledger numbers, got ${targetLedger} and ${observedAtLedger}`,
+    );
+  }
+  if (targetLedger <= observedAtLedger) {
+    throw new Error(
+      `${label}: ledger ${targetLedger} is not ahead of the snapshot's ${observedAtLedger}. ` +
+        'A page may not present a ledger that has already passed as a future expiry; ' +
+        'refresh the snapshot (apps/web/scripts/make-snapshot.mjs) or write it in the past tense.',
+    );
+  }
+  return targetLedger;
+}
+
 export function approxDate(targetLedger, refLedger, refIso) {
   const ms = Date.parse(refIso) + (targetLedger - refLedger) * 5000;
   const d = new Date(ms);

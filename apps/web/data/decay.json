@@ -107,10 +107,10 @@
       "id": "shared-code",
       "contract": null,
       "label": "shared code entry",
-      "role": "One entry all three contracts depend on — A, B and C were built from one Wasm. Due to be extended at W3-D18-02d; touching it touches both decay proofs, which is why the write guard refuses it by key.",
+      "role": "One entry all three contracts depend on — A, B and C were built from one Wasm. Extended on 2026-10-14, eighteen days late, after the decay proofs were captured.",
       "key": "AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7",
-      "expiryLedger": 5290829,
-      "expiryApprox": "2026-10-20",
+      "expiryLedger": null,
+      "expiryApprox": null,
       "observations": [
         {
           "ledger": 4586511,
@@ -121,9 +121,24 @@
           "ledger": 4821462,
           "endsAt": 5290829,
           "source": "apps/web/data/snapshot.json"
+        },
+        {
+          "ledger": 5271773,
+          "endsAt": 8297162,
+          "source": "apps/web/data/snapshot.json"
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "atLedger": 5186763,
+          "before": 5290829,
+          "after": 8297162,
+          "actor": "manual stellar CLI",
+          "hash": "ef5817188b0405bea7e5622365cc2fb8585438fc164890104aff5114630340fb",
+          "note": "The entry that governs whether A, B and C are usable at all, 104,101 ledgers from archival. Remaining went from 104,101 to 3,107,326. Fee charged 289,112,648 stroops.",
+          "source": "docs/evidence/2026-10-14-shared-code-extend/README.md"
+        }
+      ]
     }
   ]
 }
