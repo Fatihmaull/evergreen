@@ -1,77 +1,48 @@
 /**
  * /docs/engine/guards/ — every layer between a scheduled run and a signature.
  */
-import { esc } from '../_shared.mjs';
 
 export const meta = {
   title: 'Guards',
   description:
-    'Dry-run by default, the write guard and its protected subjects, fee caps, and why a refusal is recorded rather than thrown.',
+    'Dry-run by default, fee caps, the checks before anything is signed, and why a refusal is recorded rather than thrown.',
   heading: 'Guards',
   lead: 'The repository cron only scans and decides. A separate local operator path may sign and submit with explicit live opt-in; these guards constrain that path and record refusals.',
 };
 
-export function render(ctx) {
-  /**
-   * From `ops/crossing-schedule.json` via `knownEnds`, not from
-   * `packages/core/src/write-guard.ts`. The guard's source used to be parsed
-   * for this table; it is being deleted (PH2-E0-06), and a documentation page
-   * that reads a mechanism's source file to list its subjects breaks when the
-   * mechanism is retired rather than when the list is wrong.
-   */
-  const subjects = Object.entries(ctx.knownEnds)
-    .filter(([, e]) => typeof e.label === 'string' && e.crossesOn && e.endsOn)
-    .map(
-      ([id, e]) =>
-        `<tr><td class="num">${esc(e.label)}</td><td class="num">${esc(id.slice(0, 10))}…</td><td>Crossed ${esc(e.crossesOn)}, expired ${esc(e.endsOn)}</td></tr>`,
-    )
-    .join('');
-  /**
-   * An empty table here is a page telling the reader that nothing is
-   * protected, which is a different claim from the one this section makes.
-   * The previous reader threw when `write-guard.ts` did not yield exactly two
-   * subjects; a `filter` that quietly yields none would have lost that.
-   */
-  if (subjects === '') {
-    throw new Error(
-      'the guards page found no protected subjects in ops/crossing-schedule.json; ' +
-        'it would publish an empty table under "Protected subjects"',
-    );
-  }
+export function render() {
   return `
-    <h2 id="layers">Two independent layers</h2>
+    <h2 id="layers">What keeps a contract out of reach</h2>
     <p>
-      A contract can be kept out of the engine’s reach two ways: by not being in the watched list,
-      and by the write guard refusing it. These are deliberately separate, so that
-      <strong>a misconfiguration and a code path have to fail together</strong> for a protected
-      contract to be touched.
+      A contract the engine does not watch is a contract it never selects. That is the whole of it
+      today, and it is worth saying plainly rather than implying a second layer that no longer
+      exists.
     </p>
     <p class="note">
-      The list is documentation; the guard is a mechanism. That distinction was learned the hard
-      way — a pre-flight document once claimed that leaving a subject out of the watched list was
-      enough, because “the engine still scans and decides, the guard still refuses”. It does not:
-      the engine iterates the watched contracts, so an unwatched subject is never selected and the
-      guard is never consulted. Measured against the real config, that produced two decisions and
-      no refusal anywhere.
+      There was a second one. A write guard held guinea-pigs B, C and their shared code entry by
+      key and refused to write to them regardless of configuration, because they were
+      natural-decay subjects whose ageing could not be recovered once an extension reset it. B
+      expired on 21 September, C on 26 September, and the shared code entry was extended on
+      14 October — every subject it held is spent, so the guard was retired rather than left
+      holding an empty list. A guard that cannot fire and a guard that fires wrongly are the same
+      defect seen from two sides.
     </p>
-
-    <h2 id="protected">Protected subjects</h2>
-    <p>
-      The guard refuses to write to these regardless of configuration, because they are
-      natural-decay subjects whose ageing cannot be recovered once an extension resets it.
+    <p class="note">
+      The distinction it taught is the part worth keeping: <strong>the watched list is
+      documentation, a guard is a mechanism.</strong> A pre-flight document once claimed that
+      leaving a subject out of the watched list was enough, because “the engine still scans and
+      decides, the guard still refuses”. It does not: the engine iterates the watched contracts,
+      so an unwatched subject is never selected and the guard was never consulted. Measured
+      against the real config, that produced two decisions and no refusal anywhere.
     </p>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Subject</th><th scope="col">Contract</th><th scope="col">Schedule</th></tr></thead>
-      <tbody>${subjects}</tbody>
-    </table></div>
 
     <h2 id="refusal">A refusal is recorded, not thrown</h2>
     <p>
-      When the guard declines, the run records <span class="mono">REFUSED BY WRITE GUARD</span>
-      with the subject named, and continues to the next contract. Two reasons, and both matter:
+      When a run declines a contract it records the reason with the subject named and continues to
+      the next one. Two reasons, and both still hold for every check below:
     </p>
     <ul>
-      <li>One protected subject must not abort a run, or a guard on one contract would silence the engine for every other contract in the same pass.</li>
+      <li>One declined subject must not abort a run, or a refusal on one contract would silence the engine for every other contract in the same pass.</li>
       <li><strong>The refusal is the evidence.</strong> A refusal leaves no transaction, no hash and no explorer trace, so the only proof it happened is the line in the run record.</li>
     </ul>
 

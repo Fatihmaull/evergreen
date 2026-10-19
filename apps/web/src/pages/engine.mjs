@@ -56,8 +56,8 @@ export function render() {
   <section class="card card-pad stack">
     <h2 class="section">What it decided</h2>
     <p class="muted">
-      Decide-only runs read the watched entries, resolve one target per key, refuse expired candidates and
-      protected subjects, and record skips with reasons. The correction history is committed:
+      Decide-only runs read the watched entries, resolve one target per key, refuse expired candidates,
+      and record skips with reasons. The correction history is committed:
       <span class="mono">docs/evidence/2026-09-12-engine-decision-correction/</span> (targets, expiry refusal,
       shared-payer agreement) and <span class="mono">docs/evidence/2026-09-13-engine-thresholds/</span>
       (warning tier visible without becoming action).
@@ -76,10 +76,11 @@ export function render() {
   <section class="card card-pad stack">
     <h2 class="section">What it refused</h2>
     <p class="muted">
-      Guinea-pigs B and C sit outside the watched config until their crossings, and the write guard refuses
-      them — and the shared code entry — by default, naming the date an override would spend. If the engine
-      saw them early it would dutifully bump them and destroy weeks of ageing with no error anywhere. The
-      refusal is the feature.
+      Guinea-pigs B and C sat outside the watched config until their crossings, and a write guard refused
+      them — and the shared code entry — by key, naming the date an override would spend. Had the engine
+      seen them early it would dutifully have bumped them and destroyed weeks of ageing with no error
+      anywhere; the refusal was the feature. Both subjects have since expired and the guard was retired
+      with them, so nothing holds that list today. The refusals it recorded are in the run history.
     </p>
   </section>`;
 }
