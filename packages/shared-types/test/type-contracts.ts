@@ -27,6 +27,10 @@ export const deletedPersistent: EntryLifecycle = { kind: 'persistent', endBehavi
 export const incompleteTTL: TTLObservation = { status: 'known' };
 // @ts-expect-error This project's network type does not accept mainnet.
 export const wrongNetwork: TestnetPassphrase = 'Public Global Stellar Network ; September 2015';
+// A scan may report mainnet since PH2-E1-03; the write-path passphrase above may not.
+export const mainnetScanNetwork: ScanResult['network'] = 'mainnet';
+// @ts-expect-error Only testnet and mainnet are scan targets.
+export const futurenetScan: ScanResult['network'] = 'futurenet';
 // @ts-expect-error Fees must survive JSON without floating-point rounding.
 export const numericFee: Stroops = 1;
 // @ts-expect-error Stroops are integer quantities, not decimal XLM.

@@ -167,3 +167,10 @@ describe('basic storage advice', () => {
     expect(r.findings.find((f) => f.entryKey === key)?.action).not.toContain('hour');
   });
 });
+
+describe('analyzeStorage — advice stays testnet-only (PH2-E1-03)', () => {
+  it('refuses a mainnet scan', async () => {
+    const mainnet = { ...(await scan()), network: 'mainnet' as const };
+    expect(() => analyzeStorage(mainnet, {})).toThrow(/Testnet/);
+  });
+});

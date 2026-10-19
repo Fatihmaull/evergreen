@@ -60,7 +60,7 @@ export async function scanInstances(
 
   const keys = [...byKey.keys()];
   if (keys.length === 0) {
-    return { network: 'testnet', contracts, entries: {}, issues };
+    return { network: reader.network ?? 'testnet', contracts, entries: {}, issues };
   }
 
   let latestLedger: number;
@@ -69,7 +69,7 @@ export async function scanInstances(
     ({ latestLedger, entries: raw } = await reader.read(keys));
   } catch (err) {
     return {
-      network: 'testnet',
+      network: reader.network ?? 'testnet',
       contracts,
       entries: {},
       issues: [
@@ -112,5 +112,5 @@ export async function scanInstances(
     }
   }
 
-  return { network: 'testnet', contracts, entries, issues };
+  return { network: reader.network ?? 'testnet', contracts, entries, issues };
 }

@@ -498,3 +498,10 @@ describe('executeExtensions — a runtime error is not a simulation failure (#31
     expect(deps.submit).not.toHaveBeenCalled();
   });
 });
+
+describe('planExtension — writes stay testnet-only (PH2-E1-03, hard rule 1)', () => {
+  it('refuses a mainnet scan, which PH2-E1-03 made representable', async () => {
+    const mainnet = { ...(await atRemaining()), network: 'mainnet' as const };
+    expect(() => planExtension(mainnet, options)).toThrow();
+  });
+});

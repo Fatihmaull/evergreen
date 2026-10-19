@@ -85,7 +85,8 @@ export async function scanContracts(
   const declarations: Record<string, boolean> = {};
   const contracts = new Map<string, ContractRef>();
   const result: ScanResult = {
-    network: 'testnet',
+    // The network the reader was verified against (PH2-E1-03); testnet if unstated.
+    network: reader.network ?? 'testnet',
     contracts: [],
     entries,
     issues,
