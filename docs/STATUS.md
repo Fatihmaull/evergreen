@@ -41,9 +41,9 @@
 ## Current — design language extended to every medium, 2026-10-15
 
 Design audit, then Fatih's five decisions of the same day, applied in
-`web-reference/design-language/`. **No task ID:** none of the 43 `PH2-` cards
-registered by `PH2-E0-07` covers design, so this is described rather than
-numbered; whether to register one is Fatih's call (asked in #304). Added `brand.md`, `formats.md`, `infographic.md`,
+`web-reference/design-language/`. **Task ID: `PH2-E3-08`**, registered on
+2026-10-18 by #332 under hard rule 8, after this note was written. #304 merged on
+2026-10-19 as `e3248ca`, so the card is done. Added `brand.md`, `formats.md`, `infographic.md`,
 `motion-graphics.md` and `source/` (vector masters traced from the shipped
 mask at IoU 0.9927, the favicon set, seven canvas templates and their renders).
 Corrected contradictions inside the directory (radius, uppercase, chip size,
