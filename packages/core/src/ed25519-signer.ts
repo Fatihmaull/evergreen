@@ -1,6 +1,7 @@
 import { Keypair, Networks, StrKey, Transaction, TransactionBuilder } from '@stellar/stellar-sdk';
 import type { Signer } from '@evergreen-stellar/shared-types';
 import { extensionKey } from './extend.js';
+import { bytesToHex } from './encoding.js';
 
 export interface ExtensionPolicy {
   readonly sourceAccount: string;
@@ -31,7 +32,7 @@ export function validateExtensionEnvelope(
     tx.signatures.length !== 0 ||
     tx.operations.length !== 1 ||
     tx.memo.type !== 'none' ||
-    Buffer.from(tx.hash()).toString('hex') !== policy.expectedHash
+    bytesToHex(tx.hash()) !== policy.expectedHash
   )
     throw new Error('Extension envelope does not match its approved identity');
   const op = tx.operations[0]!;

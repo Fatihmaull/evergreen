@@ -12,6 +12,7 @@ import {
 import type { PlannedExtension } from './extend.js';
 import { extensionKey } from './extend.js';
 import { validateExtensionEnvelope } from './ed25519-signer.js';
+import { bytesToHex } from './encoding.js';
 
 export interface ExtensionRpc {
   getNetwork(): Promise<{ passphrase: string }>;
@@ -67,7 +68,7 @@ export async function prepareExtension(
     throw new Error('Extension simulation failed or returned invalid resources');
   const prepared = rpc.assembleTransaction(tx, simulation).build();
   const transactionXdr = prepared.toXDR();
-  const transactionHash = Buffer.from(prepared.hash()).toString('hex');
+  const transactionHash = bytesToHex(prepared.hash());
   validateExtensionEnvelope(transactionXdr, {
     sourceAccount,
     entryKey: entry.entryKey,
@@ -112,7 +113,7 @@ export async function confirmExtension(
         response.envelopeXdr.toXDR('base64'),
         Networks.TESTNET,
       );
-      if (Buffer.from(transaction.hash()).toString('hex') !== hash)
+      if (bytesToHex(transaction.hash()) !== hash)
         throw new Error('Transaction confirmation envelope hash mismatch');
     }
     if (response.status === 'FAILED') return { status: 'failed' };
@@ -137,7 +138,7 @@ export async function submitExtension(
   if (
     !(signed instanceof Transaction) ||
     signed.source !== prepared.sourceAccount ||
-    Buffer.from(signed.hash()).toString('hex') !== prepared.transactionHash ||
+    bytesToHex(signed.hash()) !== prepared.transactionHash ||
     signed.signatures.length !== 1
   )
     throw new Error('Signed envelope differs from the prepared transaction');
