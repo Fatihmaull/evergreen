@@ -133,11 +133,14 @@ Three faces, one weight.
 **Only weight 400 is downloaded** on the marketing and docs pages. A weight
 that is not fetched cannot be reached for by accident, and that is deliberate.
 
-> ⚠️ **The seven dashboard pages still fetch more.** `apps/web/src/chrome.mjs`
-> requests Inter 500 and 600, Newsreader 500 and Space Mono 700. Nothing
-> renders in them — every route measured 0 elements over 400 on 2026-10-15 —
-> but they are downloaded, and a fetched weight is one a rule can reach. Logged
-> for the web track to remove; this file states the target, not the defect.
+**Fixed 2026-10-19.** The seven dashboard pages used to fetch more: Inter 500
+and 600, Newsreader 500 and Space Mono 700, from `apps/web/src/chrome.mjs`.
+Nothing rendered in them, but a fetched weight is one a rule can reach. Both
+surfaces now request the same single weight per face, and all 31 routes measure
+**zero elements above 400**. Three declarations did ask for `600` — the global
+`th` rule, `.stat-label` and `.nav-section` — and every one was overridden, so
+removing the weights changed nothing on screen. The dead `600` went with them:
+a declaration that loses a cascade should not read as a rule.
 
 **Inter is confirmed** as the interface and body face (Fatih, 2026-10-15). It
 had been "proposed, awaiting confirmation" since the 2026-09-17 spec.
@@ -158,9 +161,11 @@ Six sizes per surface, and one surface adds a seventh for long-form reference.
 
 Two notes on what renders, measured on production 2026-10-15:
 
-- **Docs pages render a sixth size, 11px**: the `.docs-tag` in the rail. It is
-  below the 12px floor the stylesheet itself states, and it is the only text
-  under 12px on any page. Treat it as a defect to remove, not as a step.
+- **Fixed 2026-10-19.** Docs pages used to render a sixth size, 11px — the
+  `.docs-tag` in the rail, below the 12px floor the stylesheet itself states,
+  and the only text under 12px on any page. It is 12px now, and a sweep of all
+  31 routes measures **no text under 12px anywhere**. Its tracking came down
+  from 0.04em to 0.02em with it, since the wider figure was tuned for 11px.
 - **The dashboard's 40px figure is declared but did not render** on any of the
   seven dashboard routes at 1367px. The largest text there was 28px. Whether a
   state not visited shows it is undetermined.
