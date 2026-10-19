@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Poster A3 — one entry</title>
+    <style>
+      /* Print. The page is A3 plus 3mm bleed on every side (303 × 426mm); trim is
+     A3. At 96 CSS px per inch A3 is 1123 × 1587px, so k=2 matches the
+     digital canvases. Safe area: 12mm inside the trim, plus the bleed. */
+      @page {
+        size: 303mm 426mm;
+        margin: 0;
+      }
+      html,
+      body {
+        background: var(--surface);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="canvas"
+      data-format="poster A3 + 3mm bleed · k=2"
+      style="--w: 303mm; --h: 426mm; --safe-t: 15mm; --safe-r: 15mm; --safe-b: 15mm; --safe-l: 15mm"
+    >
+      <div class="safe" style="gap: 12mm">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <div class="spacer"></div>
+        <p class="label muted">The shared code entry</p>
+        <p class="display" style="max-width: 20ch">
+          One entry. Every contract built from that Wasm. They fail together.
+        </p>
+        <div class="figure">
+          <span class="label">of the rent</span>
+          <span class="figure-value">98%</span>
+          <p class="figure-caption body">
+            is that one shared code entry — 8,116,648 of 8,264,289 stroops, across all four of
+            guinea-pig A's entries. Scanning only its instance and code, the same entry is 99%:
+            identical rent, different denominator. The scope travels with the number.
+          </p>
+        </div>
+        <div class="spacer"></div>
+        <hr class="rule" />
+        <p class="label muted">
+          Stellar testnet only · evergreen-stellar.pages.dev · Built for Stellar, backed by
+          Instawards.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

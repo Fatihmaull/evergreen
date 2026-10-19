@@ -7,7 +7,7 @@
  * observation to a known expiry ledger; nothing past an expiry. The build
  * validates every one of those claims and fails when the data breaks them.
  */
-import { esc, explorerTx, fmt } from './_shared.mjs';
+import { approxDate, CONTRACTS, dateLong, esc, explorerTx, fmt, futureEnd } from './_shared.mjs';
 
 const WARN = 120960;
 const CRIT = 17280;
@@ -224,6 +224,26 @@ function panel(s, state, crossesOn, expiryObserved) {
 }
 
 export function render(ctx, now = new Date()) {
+  /**
+   * Both ends read rather than typed. The shared code entry goes through
+   * `futureEnd`, because it is stated in the present tense and was wrong here
+   * for five days; guinea-pig B's does not, because it is a recorded past end
+   * the chain can no longer answer — an archived entry reports zero.
+   */
+  const sharedCode = futureEnd(
+    ctx.sharedCodeEnd.ledger,
+    ctx.sharedCodeEnd.observedAtLedger,
+    'the shared code entry',
+  );
+  const b = CONTRACTS.find((contract) => contract.label === 'guinea-pig B');
+  const bRecord = b === undefined ? undefined : ctx.knownEnds[b.id];
+  if (bRecord === undefined || typeof bRecord.instance !== 'number' || !bRecord.endsOn) {
+    throw new Error(
+      'the decay page has no recorded end for guinea-pig B; it would have to state a typed one',
+    );
+  }
+  const bEnd = { ledger: bRecord.instance, on: dateLong(bRecord.endsOn) };
+
   validate(ctx.decay.series);
   const panels = ctx.decay.series
     .map((s) =>
@@ -241,9 +261,9 @@ export function render(ctx, now = new Date()) {
     <p class="muted">
       A sawtooth is the product working: decay, then an extension, then decay again. A straight decline is
       the control: guinea-pig B was calibrated once on 5 September and left alone, so its two observations
-      agree on one expiry — ledger 4,793,687, about 21 September 2026. A's steps each link to the transaction
+      agree on one expiry — ledger ${fmt(bEnd.ledger)}, ${esc(bEnd.on)}. A's steps each link to the transaction
       that made them; the second step's timing was arranged by raising the threshold, the response was not.
-      The shared code entry binds all three contracts and expires about 20 October 2026 at ledger 5,290,829.
+      The shared code entry binds all three contracts and ends at ledger ${fmt(sharedCode)}, ${esc(approxDate(sharedCode, ctx.snapshotLedger, ctx.snapshotCapturedAt))}.
     </p>
   </section>`;
 }

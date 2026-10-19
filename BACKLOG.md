@@ -619,6 +619,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
 - [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
 - [ ] **PH2-E3-07** (R · WEBR) **S** Website "Support Evergreen" page: wallet payment to the treasury address. *Depends on `PH2-E4-03`.*
+- [x] **PH2-E3-08** (F) **M** ✅ **#304 merged 2026-10-19** (`e3248ca`), after the branch was brought up to date so `check:design-language` ran on it in CI. **Original text:** Design-language reference for the brand, formats, infographics, motion graphics and templates, plus the `tokens.md` update: #304, by Fatih's **design agent** (DES). DES is invoked on demand, outside the four phase-2 tracks, and is the authority on design decisions; WEBF and WEBR implement them in code. Registered 2026-10-18 under hard rule 8. Owner is `(F)`, because `DES` is not a parseable track code. `tokens.md` is machine-checked against `apps/web/src/styles.css` by `check:design-language` (blocking in `pnpm check` from 2026-10-18).
 
 ### E4 — Hosted autopilot
 
@@ -643,6 +644,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-BL-02** (R · CER) **M** Telegram and webhook channels (stubs exist in `channel-stubs.ts`).
 - [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each.
 - [ ] **PH2-BL-05** (F · WEBF) **S** Landing and marketing copy for the paid hosted tier.
+- [ ] **PH2-BL-08** (F · WEBF + CEF) **M** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
 
 The plan's other three backlog cards are existing rows: `B-D31-01` (scheduler gap floor, now `(R · CER)`), `B-D31-02` (parked checker work, `(F · CEF)`, mostly superseded by `PH2-E0-04`) and `B-D31-03` (cold read of the docs, `(F)`).
 

@@ -1,7 +1,7 @@
 # Evergreen — Product & Design Specification
 
 **For:** the agent building the website, landing page and dashboard
-**Status:** authoritative for design and information architecture; the repository is authoritative for behaviour
+**Status:** authoritative for behaviour, states, honesty and information architecture. **Its appearance sections (Parts Two and Three, and the appearance notes in Parts Seven and Eight) are superseded by [`design-language/`](design-language/README.md)**, which describes what ships (2026-10-15). Where the two disagree on how something looks, `design-language/` is right; on what something does or claims, this document is
 **Design reference:** stellar.org, token system extracted live 2026-09-17
 **Revision:** 3 — decisions of 2026-09-17 applied; see *Revision 3* below
 
@@ -274,6 +274,8 @@ Read §10 before implementing this.
 `--status-critical` passes as text on both grounds (5.44:1 and 5.19:1). **Expired** is core's `critical` with `isExpired`: an inverted black chip reading *archived* or *deleted*, from the entry's `endBehavior`.
 
 ## 9. Logo — does not exist yet, and is needed
+
+> **Superseded 2026-10-15.** A mark was supplied and placed on 2026-09-30 (#287), and Fatih confirmed it on 2026-10-15 as the mark, unchanged. It is a leaf, which this section advised against; the departure is his decision and is recorded here rather than hidden. Its rules, favicon and vector masters are in [`design-language/brand.md`](design-language/brand.md). The section below is the original brief, kept as history.
 
 There is no Evergreen mark. One is required for the favicon, the header, the npm README and the demo video. **Produce three directions as mockups before choosing**, and treat this as its own piece of work rather than a detail of the header.
 
@@ -628,9 +630,9 @@ Wallet connection. Extending from the interface. Any write to the chain. Mainnet
 | Multi-contract | **Its own entry point** at `/dashboard/blast-radius` |
 | Decay story | **Timeline of recorded evidence**, not present-state only. The expiry marker persists after the event; expired is a rendered state (amended 2026-09-23). Three panels of entries, not two lines of contracts (§18.3, 2026-09-17). |
 | Language | **English only.** Strings in one module; no i18n scaffolding yet. |
-| Logo | **Does not exist.** Three directions to mock per §9 before choosing. |
+| Logo | ~~**Does not exist.** Three directions to mock per §9 before choosing.~~ **Superseded 2026-10-15:** the supplied mark is the mark — [`design-language/brand.md`](design-language/brand.md). |
 | Page exports | **Not committed.** Only this spec and `DESIGN.md` are; every web PR attaches a render of what it built (2026-09-17). |
-| Typefaces and surface | **Newsreader, Space Mono and the warm `#fcf9f8`** from the exports; the body sans is proposed as Inter and awaiting confirmation (2026-09-17). |
+| Typefaces and surface | **Newsreader, Space Mono and the warm `#fcf9f8`** from the exports; the body sans is **Inter, confirmed by Fatih 2026-10-15** (proposed 2026-09-17). |
 | Claims | **Nothing ships that is not in the repository, the PRD or the SOW** (Part Ten, 2026-09-17). |
 
 **Answered 2026-09-17:**
@@ -682,7 +684,7 @@ not wrong when taken; the build and the chain moved.*
 
 **Still open, with proposed defaults:**
 
-1. **The body sans.** Inter is named for body and interface text by `DESIGN.md` and loaded by every export. Awaiting confirmation.
+1. ~~**The body sans.** Inter is named for body and interface text by `DESIGN.md` and loaded by every export. Awaiting confirmation.~~ **Answered 2026-10-15:** Inter, confirmed by Fatih.
 2. **The decay chart's horizontal axis.** Proposed: ledgers, with approximate dates (`~`) as labels. The solid-segment rule in §18.3 is exact arithmetic in ledgers and only approximately so in time.
 3. **An extension between two observations.** Proposed: draw the step at the transaction's ledger from its recorded before-and-after values; where those were not recorded, leave the two observations unconnected rather than draw a line that is not arithmetic.
 4. **Observations after an expiry**, when the entry is absent. Proposed: annotations on the permanent expiry marker, with their ledgers and evidence links — never points on the line, which ends at the expiry.

@@ -1,0 +1,372 @@
+/* Evergreen canvas templates — the site's language at a fixed size.
+
+   Every value below is copied from apps/web/src/styles.css, and
+   ../tools/render.mjs refuses to render if one of them has drifted. The only
+   value that is not the site's is `--k`, the canvas scale (formats.md): every
+   size is a site size times k. Do not add a size here; add it to the site
+   first, or do not add it. */
+:root {
+  --surface: #fcf9f8;
+  --paper: #ffffff;
+  --ink: #0f0f0f;
+  --ink-2: rgba(15, 15, 15, 0.72);
+  --ink-3: rgba(15, 15, 15, 0.62);
+  --rule: rgba(15, 15, 15, 0.1);
+  --rule-strong: rgba(15, 15, 15, 0.44);
+  --pine: #1a3a2e;
+  --pine-deep: #022419;
+  --off-black: #262626;
+
+  --ok: #00a7b5;
+  --ok-ink: #00737d;
+  --warn: #c07c26;
+  --warn-ink: #965d17;
+  --crit: #c0392b;
+  --crit-ink: #a93226;
+  --und: #7c6bb0;
+  --und-ink: #5d4e8c;
+
+  /* State marks on pine and pine-deep (tokens.md, approved by Fatih 2026-10-18).
+     Measured against the chip's own tint, which is what a mark sits on.
+     Healthy and warning reuse the light-ground marks; these two did not pass. */
+  --crit-on-dark: #e75e4c;
+  --und-on-dark: #9584cc;
+
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --t-figure: 72px;
+  --t-display: 36px;
+  --t-head: 28px;
+  --t-sub: 20px;
+  --t-lead: 16px;
+  --t-body: 14px;
+  --t-label: 12px;
+
+  --k: 2;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  background: #808080; /* outside the canvas only; never rendered */
+}
+.canvas {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 calc(var(--t-body) * var(--k)) / 1.5 var(--sans);
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+.canvas.on-pine {
+  background: var(--pine);
+  color: var(--surface);
+}
+.canvas.on-pine-deep {
+  background: var(--pine-deep);
+  color: var(--surface);
+}
+
+/* The safe area. Content lives inside it; only the ground crosses it. */
+.safe {
+  position: absolute;
+  inset: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+  display: flex;
+  flex-direction: column;
+}
+.guides .safe {
+  outline: 2px dashed rgba(192, 57, 43, 0.9);
+  outline-offset: 0;
+}
+.guides .canvas::after {
+  content: attr(data-format);
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font: 400 20px/1 var(--mono);
+  color: rgba(192, 57, 43, 0.9);
+}
+
+/* Type: six roles, one weight. Tracking flips at the lead step. */
+.figure-value {
+  font: 400 calc(var(--t-figure) * var(--k)) / 1.06 var(--serif);
+  letter-spacing: -0.03em;
+}
+.display {
+  font: 400 calc(var(--t-display) * var(--k)) / 1.12 var(--serif);
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+.head {
+  font: 400 calc(var(--t-head) * var(--k)) / 1.18 var(--serif);
+  letter-spacing: -0.0125em;
+  text-wrap: balance;
+}
+.sub {
+  font: 400 calc(var(--t-sub) * var(--k)) / 1.3 var(--serif);
+  letter-spacing: -0.005em;
+}
+.lead {
+  font-size: calc(var(--t-lead) * var(--k));
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.body {
+  font-size: calc(var(--t-body) * var(--k));
+}
+.label {
+  font: 400 calc(var(--t-label) * var(--k)) / 1.4 var(--mono);
+  letter-spacing: 0.02em;
+}
+.muted {
+  color: var(--ink-3);
+}
+.second {
+  color: var(--ink-2);
+}
+.on-pine .muted,
+.on-pine-deep .muted {
+  color: rgba(252, 249, 248, 0.62);
+}
+.on-pine .second,
+.on-pine-deep .second {
+  color: rgba(252, 249, 248, 0.82);
+}
+p {
+  margin: 0;
+}
+.measure {
+  max-width: 44ch;
+}
+
+/* Lockup: measured on the live header, 2026-10-15 — a 24px mark slot, a 9px
+   gap, the word in Newsreader 16px at −0.005em. */
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: calc(9px * var(--k));
+}
+.mark {
+  width: calc(24px * var(--k));
+  height: calc(24px * var(--k));
+  flex: none;
+  background: currentColor;
+  -webkit-mask: url('../brand/evergreen-mark-ink.svg') center / contain no-repeat;
+  mask: url('../brand/evergreen-mark-ink.svg') center / contain no-repeat;
+}
+.lockup .word {
+  font: 400 calc(var(--t-lead) * var(--k)) / 1 var(--serif);
+  letter-spacing: -0.005em;
+}
+.lockup {
+  color: var(--pine);
+}
+.on-pine .lockup,
+.on-pine-deep .lockup {
+  color: var(--surface);
+}
+
+/* The figure slab (components.md). The one element over 40px × k. */
+.figure {
+  background: var(--pine);
+  color: var(--surface);
+  border-radius: calc(4px * var(--k));
+  padding: calc(32px * var(--k));
+  display: grid;
+  gap: calc(10px * var(--k));
+  justify-items: start;
+}
+.figure .label {
+  color: rgba(252, 249, 248, 0.62);
+}
+.figure-caption {
+  color: rgba(252, 249, 248, 0.78);
+  max-width: 44ch;
+}
+
+/* Hairline grid, radius 0 where borders meet; one cell may invert. */
+.hairline-grid {
+  display: grid;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+.hairline-grid > * {
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: calc(20px * var(--k));
+  display: grid;
+  gap: calc(8px * var(--k));
+  align-content: start;
+}
+.hairline-grid > .inverted {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+.inverted .second {
+  color: rgba(252, 249, 248, 0.82);
+}
+.inverted .muted {
+  color: rgba(252, 249, 248, 0.62);
+}
+
+/* State chips: the site's geometry (styles.css .chip, .shape) times k. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(7px * var(--k));
+  white-space: nowrap;
+  font: 400 calc(var(--t-label) * var(--k)) / 1 var(--mono);
+  padding: calc(5px * var(--k)) calc(10px * var(--k));
+  border-radius: 100vw;
+}
+.shape {
+  width: calc(9px * var(--k));
+  height: calc(9px * var(--k));
+  flex: none;
+}
+.chip.healthy {
+  color: var(--ok-ink);
+  background: rgba(0, 167, 181, 0.1);
+}
+.chip.healthy .shape {
+  border-radius: 50%;
+  background: var(--ok);
+}
+.chip.warning {
+  color: var(--warn-ink);
+  background: rgba(192, 124, 38, 0.1);
+}
+.chip.warning .shape {
+  width: 0;
+  height: 0;
+  border-left: calc(5px * var(--k)) solid transparent;
+  border-right: calc(5px * var(--k)) solid transparent;
+  border-bottom: calc(9px * var(--k)) solid var(--warn);
+}
+.chip.critical {
+  color: var(--crit-ink);
+  background: rgba(192, 57, 43, 0.09);
+}
+.chip.critical .shape {
+  background: var(--crit);
+  transform: rotate(45deg);
+  width: calc(8px * var(--k));
+  height: calc(8px * var(--k));
+}
+.chip.expired {
+  color: var(--surface);
+  background: var(--ink);
+}
+.chip.expired .shape {
+  background: var(--surface);
+}
+.chip.undetermined {
+  color: var(--und-ink);
+  background: rgba(124, 107, 176, 0.1);
+}
+.chip.undetermined .shape {
+  border-radius: 50%;
+  border: calc(2px * var(--k)) solid var(--und);
+}
+/* Incomplete: the check did not run. No state colour, never violet. */
+.chip.incomplete {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  padding: calc(5px * var(--k) - 1px) calc(10px * var(--k) - 1px);
+}
+.chip.incomplete .shape {
+  height: calc(2px * var(--k));
+  background: var(--ink-2);
+}
+
+/* On dark grounds the word is cream and only the mark carries the hue. */
+.on-pine .chip,
+.on-pine-deep .chip {
+  color: rgba(252, 249, 248, 0.82);
+}
+.on-pine .chip.healthy,
+.on-pine-deep .chip.healthy {
+  background: rgba(0, 167, 181, 0.14);
+}
+.on-pine .chip.warning,
+.on-pine-deep .chip.warning {
+  background: rgba(192, 124, 38, 0.14);
+}
+.on-pine .chip.critical,
+.on-pine-deep .chip.critical {
+  background: rgba(231, 94, 76, 0.14);
+}
+.on-pine .chip.critical .shape,
+.on-pine-deep .chip.critical .shape {
+  background: var(--crit-on-dark);
+}
+.on-pine .chip.undetermined,
+.on-pine-deep .chip.undetermined {
+  background: rgba(149, 132, 204, 0.14);
+}
+.on-pine .chip.undetermined .shape,
+.on-pine-deep .chip.undetermined .shape {
+  border-color: var(--und-on-dark);
+}
+/* Expired inverts against its ground: on dark, a solid cream chip. */
+.on-pine .chip.expired,
+.on-pine-deep .chip.expired {
+  background: var(--surface);
+  color: var(--ink);
+}
+.on-pine .chip.expired .shape,
+.on-pine-deep .chip.expired .shape {
+  background: var(--ink);
+}
+.on-pine .chip.incomplete,
+.on-pine-deep .chip.incomplete {
+  border-color: rgba(252, 249, 248, 0.28);
+  color: var(--surface);
+}
+.on-pine .chip.incomplete .shape,
+.on-pine-deep .chip.incomplete .shape {
+  background: rgba(252, 249, 248, 0.82);
+}
+
+.rule {
+  height: 1px;
+  background: var(--rule);
+  border: 0;
+  margin: 0;
+}
+.on-pine .rule,
+.on-pine-deep .rule {
+  background: rgba(252, 249, 248, 0.18);
+}
+.spacer {
+  flex: 1;
+}
+
+/* A light cell on a dark canvas is a light ground again. Without this its
+   muted text inherits cream from the canvas and disappears — caught on the
+   first render of square-dark.html, 2026-10-15. */
+.on-pine .on-surface,
+.on-pine-deep .on-surface {
+  background: var(--surface);
+  color: var(--ink);
+}
+.on-pine .on-surface .muted,
+.on-pine-deep .on-surface .muted {
+  color: var(--ink-3);
+}
+.on-pine .on-surface .second,
+.on-pine-deep .on-surface .second {
+  color: var(--ink-2);
+}
