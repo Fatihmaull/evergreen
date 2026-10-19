@@ -11,6 +11,7 @@ import type {
 import { DEFAULT_WARN_LEDGERS, resolveHealthThresholds } from './health.js';
 import { needsAction, SECONDS_PER_LEDGER } from './ttl.js';
 import { isValidPayerAccount } from './ed25519-signer.js';
+import { NETWORKS } from './networks.js';
 
 /**
  * Config loading (`W2-D13-01`). Pure: takes text, returns a validated config.
@@ -30,7 +31,7 @@ import { isValidPayerAccount } from './ed25519-signer.js';
  * eventually, so the loader rejects anything that looks like one.
  */
 
-export const TESTNET_PASSPHRASE: TestnetPassphrase = 'Test SDF Network ; September 2015';
+export const TESTNET_PASSPHRASE: TestnetPassphrase = NETWORKS.testnet.passphrase;
 
 export interface ConfigLoadResult {
   readonly config: EvergreenConfig;

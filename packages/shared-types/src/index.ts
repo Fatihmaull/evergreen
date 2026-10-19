@@ -67,8 +67,17 @@ export interface ScanIssue {
   readonly message: string;
 }
 
+/** The networks a READ may target. Defined on `ScanResult`, its one home. */
+export type NetworkName = ScanResult['network'];
+
 export interface ScanResult {
-  readonly network: 'testnet';
+  /**
+   * Which network the RPC reported, as verified against its passphrase
+   * (PH2-E1-03). Mainnet reads are allowed; every write path stays
+   * testnet-only — `TestnetPassphrase` still types the signer and engine
+   * config, and `extend` refuses a non-testnet scan.
+   */
+  readonly network: 'testnet' | 'mainnet';
   readonly contracts: readonly ContractRef[];
   /** Each canonical ledger key occurs once; contracts are back-references on entries. */
   readonly entries: Readonly<Record<LedgerKey, LedgerEntryTTL>>;

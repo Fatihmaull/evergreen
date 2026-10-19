@@ -86,6 +86,7 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 ## Options
 
 ```
+--network testnet|mainnet which network to read (default testnet; see below)
 --json                     machine-readable output; the complete record
 --cost [--ledgers N]       estimate the cost of N more ledgers (default 518,400 ≈ 30 days)
 --keys-file <path>         supply explicit persistent/temporary data keys
@@ -95,7 +96,15 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 --help                     usage, without connecting
 ```
 
-`SOROBAN_RPC_URL` overrides the default public Testnet RPC. The live network passphrase is checked before anything is read: pointed at mainnet, the command refuses and says so.
+### Choosing the network
+
+`evergreen scan` reads **testnet** by default. To read mainnet instead, pass `--network mainnet` or set `EVERGREEN_NETWORK=mainnet`; the flag wins over the variable.
+
+- **Mainnet has no default RPC endpoint.** Set `SOROBAN_RPC_URL` to a mainnet RPC; without one, the command stops and says so. The Stellar Development Foundation runs public RPC for Testnet and Futurenet only, and mainnet RPC comes from third-party providers listed at [developers.stellar.org/docs/data/apis/rpc/providers](https://developers.stellar.org/docs/data/apis/rpc/providers). Evergreen does not recommend one.
+- **`SOROBAN_RPC_URL` also overrides the default public Testnet RPC.**
+- **The RPC's own network passphrase is checked before anything is read.** An endpoint that serves a different network from the one you chose is refused, with both names printed. A URL that *says* mainnet proves nothing.
+- **`--json` records the network it read**, as `"network": "testnet"` or `"mainnet"`.
+- **Writes stay testnet-only.** `extend` refuses anything but testnet, whatever `--network` says.
 
 `--ledgers N` means **"give me N more ledgers."** The protocol wants an absolute target rather than an increment, so the CLI computes that for you and caps it at the protocol maximum, saying so when it does.
 
