@@ -11,6 +11,7 @@ import { resolveExtendTarget } from './network-config.js';
 import { hasExpired, needsAction } from './ttl.js';
 import { assertWriteAllowed } from './write-guard.js';
 import { isCanonicalBase64 } from './encoding.js';
+import { NETWORKS } from './networks.js';
 
 export interface ExtensionOptions {
   readonly contractId: string;
@@ -267,7 +268,7 @@ export async function executeExtensionEntries(
       }
       knownSigner = signer.identity;
       const signed = await signer.signExtendTTL({
-        networkPassphrase: 'Test SDF Network ; September 2015',
+        networkPassphrase: NETWORKS.testnet.passphrase,
         transactionXdr: prepared.transactionXdr,
       });
       await deps.beforeSubmit?.(prepared, signer.identity);

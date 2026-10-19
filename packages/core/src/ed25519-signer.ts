@@ -1,7 +1,8 @@
-import { Keypair, Networks, StrKey, Transaction, TransactionBuilder } from '@stellar/stellar-sdk';
+import { Keypair, StrKey, Transaction, TransactionBuilder } from '@stellar/stellar-sdk';
 import type { Signer } from '@evergreen-stellar/shared-types';
 import { extensionKey } from './extend.js';
 import { bytesToHex } from './encoding.js';
+import { NETWORKS } from './networks.js';
 
 export interface ExtensionPolicy {
   readonly sourceAccount: string;
@@ -24,7 +25,7 @@ export function validateExtensionEnvelope(
   transactionXdr: string,
   policy: ExtensionPolicy,
 ): Transaction {
-  const tx = TransactionBuilder.fromXDR(transactionXdr, Networks.TESTNET);
+  const tx = TransactionBuilder.fromXDR(transactionXdr, NETWORKS.testnet.passphrase);
   if (
     !(tx instanceof Transaction) ||
     !StrKey.isValidEd25519PublicKey(policy.sourceAccount) ||
@@ -85,7 +86,7 @@ export function createEd25519Signer(
     payer: options.payer,
     identity: { kind: 'ed25519', account: options.sourceAccount },
     async signExtendTTL(request) {
-      if (request.networkPassphrase !== Networks.TESTNET)
+      if (request.networkPassphrase !== NETWORKS.testnet.passphrase)
         throw new Error('Only Testnet signing is permitted');
       const tx = validateExtensionEnvelope(request.transactionXdr, options);
       // Decided by OUR control flow, never by inspecting the caught error. The

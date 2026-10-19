@@ -86,6 +86,7 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 ## Options
 
 ```
+--network testnet|mainnet which network to read (default testnet; see below)
 --json                     machine-readable output; the complete record
 --cost [--ledgers N]       estimate the cost of N more ledgers (default 518,400 ≈ 30 days)
 --keys-file <path>         supply explicit persistent/temporary data keys
@@ -95,7 +96,15 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 --help                     usage, without connecting
 ```
 
-`SOROBAN_RPC_URL` overrides the default public Testnet RPC. The live network passphrase is checked before anything is read: pointed at mainnet, the command refuses and says so.
+### Choosing the network
+
+`evergreen scan` reads **testnet** by default. To read mainnet instead, pass `--network mainnet` or set `EVERGREEN_NETWORK=mainnet`; the flag wins over the variable.
+
+- **Mainnet has no default RPC endpoint.** Set `SOROBAN_RPC_URL` to a mainnet RPC; without one, the command stops and says so. The Stellar Development Foundation runs public RPC for Testnet and Futurenet only, and mainnet RPC comes from third-party providers listed at [developers.stellar.org/docs/data/apis/rpc/providers](https://developers.stellar.org/docs/data/apis/rpc/providers). Evergreen does not recommend one.
+- **`SOROBAN_RPC_URL` also overrides the default public Testnet RPC.**
+- **The RPC's own network passphrase is checked before anything is read.** An endpoint that serves a different network from the one you chose is refused, with both names printed. A URL that *says* mainnet proves nothing.
+- **`--json` records the network it read**, as `"network": "testnet"` or `"mainnet"`.
+- **Writes stay testnet-only.** `extend` refuses anything but testnet, whatever `--network` says.
 
 `--ledgers N` means **"give me N more ledgers."** The protocol wants an absolute target rather than an increment, so the CLI computes that for you and caps it at the protocol maximum, saying so when it does.
 
@@ -133,6 +142,28 @@ Precedence is **2 > 3 > 1 > 0**. If a low TTL is observed alongside a missing en
 Zero applies only to the supplied/discovered keys; it never guarantees complete storage coverage. Missing entries are reported as issues, not asserted to be archived or deleted. Temporary entries expire by deletion; other supported entry types archive. Zero remaining ledgers is still the final live ledger.
 
 `--json` emits `ScanResult` alone on stdout once scanning starts, including partial results. Argument/file/connection failures emit a diagnostic on stderr and exit `2`. Successful entries survive another batch's failure. Dates are approximate display projections; each entry's own observation ledger drives its TTL math.
+
+### ⚠️ Breaking in 0.2.0: expired entries in `--json`
+
+An entry past its final live ledger is no longer `ttl.status: "known"` with a negative count ([#235](https://github.com/Fatihmaull/evergreen/issues/235)). RPC keeps returning an archived entry with `liveUntilLedgerSeq: 0`, and 0.1.x passed that placeholder through as if it were a measurement:
+
+```json
+"ttl": { "status": "known", "endsAtLedger": 0, "remainingLedgers": -4896141 }
+```
+
+From 0.2.0 the same entry reads:
+
+```json
+"ttl": { "status": "expired" }
+```
+
+- **`ttl.status` gains a third value, `"expired"`.** That arm has no `endsAtLedger` and no `remainingLedgers`.
+- **`endedAtLedger` appears only when RPC reported a real, non-zero final ledger** that is already past.
+- **`issues[]` gains `kind: "entry-expired"`**, one per expired entry. So `issues.length === 0` no longer reads an archived contract as clean.
+- **`"known"` now always means live:** `remainingLedgers` is never negative.
+- **Exit codes are unchanged:** an expired entry still exits `1`.
+
+**If your script reads `ttl.remainingLedgers` or `ttl.endsAtLedger`, branch on `ttl.status` first.** A script that treated every non-`"known"` status as "unread" will now mislabel expired entries.
 
 ## Publication
 

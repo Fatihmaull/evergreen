@@ -2,9 +2,11 @@
 import process from 'node:process';
 import console from 'node:console';
 import { readFile } from 'node:fs/promises';
-import { rpc, Networks } from '@stellar/stellar-sdk';
+import { rpc } from '@stellar/stellar-sdk';
 import {
-  connectTestnet,
+  connectNetwork,
+  resolveNetwork,
+  NETWORKS,
   createSimulatingQuoter,
   estimateRent,
   readStateArchivalSettings,
@@ -24,9 +26,10 @@ import type { ExtendReport, ExtendRequest } from './extend.js';
 import type { ScanResult, Stroops } from '@evergreen-stellar/shared-types';
 import type { CostLine } from './cost.js';
 import { runCli } from './command.js';
+import { takeNetworkFlag } from './network-args.js';
+import type { NetworkChoice } from '@evergreen-stellar/core';
 import { EXIT_ERROR } from './scan.js';
 
-const DEFAULT_RPC = 'https://soroban-testnet.stellar.org';
 /** Base inclusion fee per operation, added so the total is what actually leaves the account. */
 const BASE_FEE_STROOPS = 100n;
 
@@ -41,15 +44,16 @@ const BASE_FEE_STROOPS = 100n;
  * settings are configuration rather than constants to hardcode.
  */
 async function priceExtend(
-  rpcUrl: string,
+  network: NetworkChoice,
   sourceAccountId: string | undefined,
   args: { scan: ScanResult; additionalLedgers: number },
 ): Promise<CostLine> {
-  const server = new rpc.Server(rpcUrl);
+  // Simulation is a read, so it follows the chosen network (PH2-E1-03).
+  const server = new rpc.Server(network.rpcUrl);
   const settings = await readStateArchivalSettings(server);
   const quoter = createSimulatingQuoter(server, {
     ...(sourceAccountId === undefined ? {} : { sourceAccountId }),
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: network.passphrase,
   });
 
   // EACH entry gets its own target. `extendTo` is absolute, so entries with
@@ -96,23 +100,44 @@ async function priceExtend(
 }
 
 async function main(): Promise<number> {
-  const rpcUrl = process.env.SOROBAN_RPC_URL ?? DEFAULT_RPC;
+  // `--network` is global, so it is lifted out before a command parses argv.
+  const {
+    network: networkFlag,
+    rest: args,
+    error: networkFlagError,
+  } = takeNetworkFlag(process.argv.slice(2));
+  if (networkFlagError !== undefined) {
+    console.error(networkFlagError);
+    return EXIT_ERROR;
+  }
+  // Resolved lazily, on first use: `--help` must not need an RPC URL, and a
+  // NetworkConfigError (unknown name, mainnet with no RPC) surfaces through the
+  // command's own error reporting rather than as a crash.
+  let chosen: NetworkChoice | undefined;
+  const network = (): NetworkChoice =>
+    (chosen ??= resolveNetwork({
+      flag: networkFlag,
+      env: process.env.EVERGREEN_NETWORK,
+      rpcUrl: process.env.SOROBAN_RPC_URL,
+    }));
   // Colour only for a human at a terminal. Piped output, CI logs and captured
   // evidence stay clean, and NO_COLOR is honoured (no-color.org). The health
   // WORD prints either way — colour is never the only carrier of the state.
   const color = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
-  const output = await runCli(process.argv.slice(2), {
+  const output = await runCli(args, {
     extend: {
       ...(process.env.EVERGREEN_SOURCE_ACCOUNT
         ? { sourceAccount: process.env.EVERGREEN_SOURCE_ACCOUNT }
         : {}),
       readKeysFile: (path) => readFile(path, 'utf8'),
       preview: (text) => console.error(text),
-      run: (request, preview) => runExtension(rpcUrl, request, preview),
+      // Writes stay testnet-only whatever --network says (hard rule 1):
+      // runExtension compares the RPC against testnet and refuses anything else.
+      run: (request, preview) => runExtension(network().rpcUrl, request, preview),
     },
-    connect: () => connectTestnet(rpcUrl),
+    connect: () => connectNetwork(network()),
     readStorageSettings: () =>
-      readStateArchivalSettings(new rpc.Server(rpcUrl, { timeout: 10_000 })),
+      readStateArchivalSettings(new rpc.Server(network().rpcUrl, { timeout: 10_000 })),
     readKeysFile: (path) => readFile(path, 'utf8'),
     now: () => new Date(),
     color,
@@ -121,7 +146,8 @@ async function main(): Promise<number> {
     // No account is passed: simulation neither signs nor needs one to exist.
     // EVERGREEN_SOURCE_ACCOUNT stays available for anyone who wants a specific
     // identity in their own RPC logs.
-    priceExtend: (args) => priceExtend(rpcUrl, process.env.EVERGREEN_SOURCE_ACCOUNT, args),
+    priceExtend: (scanArgs) =>
+      priceExtend(network(), process.env.EVERGREEN_SOURCE_ACCOUNT, scanArgs),
   });
   if (output.stdout) console.log(output.stdout);
   if (output.stderr) console.error(output.stderr);
@@ -143,7 +169,7 @@ async function runExtension(
   preview: (text: string) => void,
 ): Promise<ExtendReport> {
   const server = new rpc.Server(rpcUrl, { timeout: 10_000 });
-  if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
+  if ((await server.getNetwork()).passphrase !== NETWORKS.testnet.passphrase)
     throw new Error('RPC is not Testnet');
   const reader = createRpcReader(server);
   const scan = await scanContract(reader, { id: request.contractId }, request.dataKeys);

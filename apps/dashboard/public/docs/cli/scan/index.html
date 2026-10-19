@@ -40,10 +40,16 @@
             </header>
 
     <h2 id="usage">Usage</h2>
-    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
+    <div class="terminal">usage: evergreen scan &lt;contract-id&gt; [&lt;contract-id&gt; ...] [--network testnet|mainnet] [--keys-file &lt;path&gt; | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]
        evergreen extend &lt;contract-id&gt; --ledgers N [...]   (evergreen extend --help)
 
-Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
+Reads instance/Wasm and supplied persistent/temporary keys, on Stellar Testnet
+by default. --network mainnet (or EVERGREEN_NETWORK=mainnet) reads mainnet; the
+flag wins over the variable. Mainnet has no default RPC: set SOROBAN_RPC_URL to
+a mainnet endpoint. Providers are listed at
+https://developers.stellar.org/docs/data/apis/rpc/providers
+The RPC&#39;s own network passphrase is always checked against the one chosen.
+Writes stay testnet-only.
 Keys file: { &quot;dataKeys&quot;: [&quot;base64 XDR LedgerKey&quot;, ...] }
 
 PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts

@@ -8,7 +8,7 @@ import type {
 } from '@evergreen-stellar/shared-types';
 import type { LedgerEntryReader } from './rpc.js';
 import { codeKey, instanceKey } from './rpc.js';
-import { observeTTL } from './ttl.js';
+import { expiredEntryIssues, observeTTL } from './ttl.js';
 import { isCanonicalBase64 } from './encoding.js';
 
 const MAX_KEYS_PER_READ = 200;
@@ -85,7 +85,8 @@ export async function scanContracts(
   const declarations: Record<string, boolean> = {};
   const contracts = new Map<string, ContractRef>();
   const result: ScanResult = {
-    network: 'testnet',
+    // The network the reader was verified against (PH2-E1-03); testnet if unstated.
+    network: reader.network ?? 'testnet',
     contracts: [],
     entries,
     issues,
@@ -362,6 +363,7 @@ export async function scanContracts(
     }
   }
   await read(data);
+  issues.push(...expiredEntryIssues(entries));
   return {
     ...result,
     contracts: [...contracts.values()],
