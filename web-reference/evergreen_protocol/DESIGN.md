@@ -146,7 +146,7 @@ spacing:
   space-xl: 2.5rem
 ---
 
-> **Committed 2026-09-17 under `W4-D22-03`.** Adopted from this file: **Newsreader** for display, **Space Mono** for data, **Inter** for body and interface (awaiting confirmation), the warm surface **`#fcf9f8`**, and the darker **status label tones**. Everything else — the type scale, spacing, radii, breakpoints, behaviour and every status definition — is governed by [`EVERGREEN-PRODUCT-AND-DESIGN-SPEC.md`](../EVERGREEN-PRODUCT-AND-DESIGN-SPEC.md). Statements the project does not make were removed on commit; the pull request that committed this file lists each one.
+> **Committed 2026-09-17 under `W4-D22-03`.** Adopted from this file: **Newsreader** for display, **Space Mono** for data, **Inter** for body and interface (confirmed by Fatih 2026-10-15), the warm surface **`#fcf9f8`**, and the darker **status label tones**. Everything else — the type scale, spacing, radii, breakpoints, behaviour and every status definition — is governed by [`EVERGREEN-PRODUCT-AND-DESIGN-SPEC.md`](../EVERGREEN-PRODUCT-AND-DESIGN-SPEC.md) for behaviour and by [`../design-language/`](../design-language/README.md) for appearance. Statements the project does not make were removed on commit; the pull request that committed this file lists each one.
 
 ## Brand & Style
 

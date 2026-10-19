@@ -21,19 +21,33 @@ would survive being moved to a different product do not belong here.
 These are not stylistic preferences. Each one is either false, forbidden by
 the project's own record, or has already been removed once.
 
-| Never | Why |
-|---|---|
-| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label |
-| A **protocol version number** | This project does not publish one. The design export said "Testnet v21"; it was removed |
-| **Wallet connect**, sign-in, accounts, or any disabled control standing in for one | Cut deliberately as the next scope's headline. A disabled control is a promise with a date on it |
-| "**Non-custodial**", "zero-privilege", "no keys" | False. The engine holds a funded testnet payer. A "Zero-Privilege Node · No Keys" panel was removed from the export for exactly this |
-| "**Policy signer**" as a shipped feature | `docs/POLICY-SIGNER.md`: "Stage2 policy signer is not available"; the engine rejects that payer kind |
-| A **daemon**, uptime figure, or "always on" | ADR-001 chose a scheduled job and rejected a long-running service by name |
-| **Discord, Telegram, Slack or webhook** notifications | Email is the only implemented channel |
-| `evergreen bump` or `evergreen estimate` | The commands are `scan` and `extend`. Forecasting is `scan --cost` |
-| `@evergreen/cli`, `evergreen.sh` | The package is `@evergreen-stellar/cli`; that domain is not ours |
-| A **rounded** measured number | See below |
-| A **fabricated** figure of any kind | If a panel has no real number, it shows no number |
+Phase 2 (`phase-2/PHASE2-PLAN.md`) will make some of them true. **A row lifts
+only when the feature is on `origin/main` and verified on production**, not
+when it is planned, merged to a branch, or announced. Lifting one is an edit to
+this file, with the evidence named, made by the design authority. Cards are
+named by their registered task IDs in `BACKLOG.md` § Phase 2 (`PH2-…`).
+
+| Never | Why | Lifts when |
+|---|---|---|
+| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label | Mainnet **read-only scan** may be named once it ships (`PH2-E1-03`). Mainnet writes, extends and autopilot: not before the beta exits (`PH2-E5-02`) and the mainnet launch ships (`PH2-E5-04`) |
+| A **protocol version number** | This project does not publish one. The design export said "Testnet v21"; it was removed | Never |
+| **Wallet connect**, sign-in, accounts, or any disabled control standing in for one | Cut deliberately as the next scope's headline. A disabled control is a promise with a date on it | Login and wallet linking ship (`PH2-E3-01`). A **disabled** control standing in for an unshipped feature never appears |
+| "**Non-custodial**", "zero-privilege", "no keys" | False. The engine holds a funded testnet payer. A "Zero-Privilege Node · No Keys" panel was removed from the export for exactly this | Only in the words of the **public custody statement Fatih approves** (`PH2-E4-06`), quoted, not paraphrased. The allowance design is "allowance, not custody" in the plan; that phrase is not copy until then |
+| **Fees, prices, percentages, billing**, "paid tier", "free" as a price | No fee exists. The spec's out-of-scope list forbids payment and billing (Part Ten) | A fee number appears only after Fatih sets it (`PH2-E5-03`) and it ships. "Open source, MIT" is true now and may be said |
+| "**Support Evergreen**", tips, donations | Not built | When the CLI tip or the website page ships (`PH2-E1-08`, `PH2-E3-07`). Never with a promise of what a tip buys |
+| "**Policy signer**" as a shipped feature | `docs/POLICY-SIGNER.md`: "Stage2 policy signer is not available"; the engine rejects that payer kind | That document changes |
+| A **daemon**, uptime figure, or "always on" | ADR-001 chose a scheduled job and rejected a long-running service by name | "Always on" never. An uptime or delivery figure only as measured, with its date. A hosted autopilot is described as **scheduled** when it ships (`PH2-E4-01`–`PH2-E4-05`) |
+| **Discord, Telegram, Slack or webhook** notifications | Email is the only implemented channel | Per channel, when that channel ships (Telegram and webhook: `PH2-BL-02`) |
+| `evergreen bump` or `evergreen estimate` | The commands are `scan` and `extend`. Forecasting is `scan --cost` | Never; new commands are named as they ship |
+| `@evergreen/cli`, `evergreen.sh` | The package is `@evergreen-stellar/cli`; that domain is not ours | Never |
+| A **rounded** measured number | See below | Never |
+| A **fabricated** figure of any kind | If a panel has no real number, it shows no number | Never |
+
+**One live instance to fix.** The landing page's closing section says "Stellar
+testnet, read-only, no key and no account" (checked 2026-10-15). It means the
+visitor needs no key, which is true. But it is the forbidden "no keys" phrase,
+and "no account" stops being true when login ships. Say whose key: "You need
+no key and no account to scan." Re-check it when `PH2-E3-01` ships.
 
 ## The real numbers
 
@@ -67,7 +81,16 @@ These are load-bearing and should be quoted rather than paraphrased:
 
 The footer states on every page: **"Testnet only. Read-only: these pages never
 sign or submit anything."** Any deliverable that shows the product should be
-able to say the same without qualification.
+able to say the same without qualification. On a canvas it is the label line
+"Stellar testnet" ([`formats.md`](formats.md)).
+
+**This sentence becomes false in phase 2** on the first page that signs: the
+extend flow, the allowance flow, the "Support Evergreen" page (`PH2-E3-04`, `PH2-E3-05`,
+`PH2-E3-07`). When the first of them ships, the footer is scoped per page: pages
+that are still read-only keep the sentence for themselves ("This page is
+read-only: it never signs or submits anything."). The wording for a page that
+signs is **undetermined**. It goes to Fatih with that feature, and nothing
+ships in the meantime that says either sentence falsely.
 
 ## Attribution
 
@@ -75,3 +98,18 @@ Short form, as it appears on the site: **"Built for Stellar, backed by
 Instawards."** The full form — the team, the Stellar Ambassador Chapter
 Indonesia, the grant's size and dates, and the MIT licence — lives on `/about/`
 and should be taken from there rather than retyped.
+
+## Review
+
+Anything made for Evergreen — by the marketing agent, a web agent, or a
+person — passes this file before it is published. The design authority
+rejects any output that breaks it, whoever made it, and says which row. The
+quick check:
+
+1. Every number is in § The real numbers or names its committed source, and
+   none is rounded.
+2. Every number has its scope beside it.
+3. Nothing in § Never appears, unless that row has lifted.
+4. "Stellar testnet" is visible wherever the product is.
+5. No sentence that would survive being moved to a different product.
+
