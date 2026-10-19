@@ -45,12 +45,10 @@ describe('projectEnd — the inclusive boundary, in wall-clock form', () => {
     expect(p.estimatedEndsAt.toISOString()).toBe(NOW.toISOString());
   });
 
-  it('projects the first dead ledger into the past and reports it NOT live', () => {
+  it('reports the first dead ledger as EXPIRED, NOT live, and projects no date (#235)', () => {
     const p = projectEnd(archived(4_529_810, 4_529_811), NOW, EXACT);
-    if (p.status !== 'known') throw new Error('expected known');
-    expect(p.remainingLedgers).toBe(-1);
-    expect(p.isLive).toBe(false);
-    expect(p.estimatedEndsAt.getTime()).toBe(NOW.getTime() - 5_000);
+    expect(p).toMatchObject({ status: 'expired', isLive: false, endedAtLedger: 4_529_810 });
+    expect(p).not.toHaveProperty('estimatedEndsAt');
   });
 
   it('converts a full day of ledgers to exactly a day', () => {
@@ -106,14 +104,13 @@ describe('projectEnd — ledger close-time drift', () => {
     expect(p.latestEndsAt.getTime()).toBeGreaterThan(p.estimatedEndsAt.getTime());
   });
 
-  it('keeps the band ordered for an ALREADY EXPIRED entry', () => {
-    // Bounds swap sign with remainingLedgers. Naively assigning slow->latest
-    // inverts the band in the past, so earliest would exceed latest.
+  it('projects NO band for an archived entry: ledger 0 is a placeholder (#235)', () => {
+    // 0.1.x projected a past date band from `liveUntilLedgerSeq: 0`, which is
+    // where "expires ~ 2025-12-18" came from.
     const p = projectEnd(archived(0, 100_000), NOW, MEASURED_TESTNET_CADENCE);
-    if (p.status !== 'known') throw new Error('expected known');
-    expect(p.remainingLedgers).toBeLessThan(0);
-    expect(p.earliestEndsAt.getTime()).toBeLessThanOrEqual(p.estimatedEndsAt.getTime());
-    expect(p.estimatedEndsAt.getTime()).toBeLessThanOrEqual(p.latestEndsAt.getTime());
+    expect(p).toMatchObject({ status: 'expired', isLive: false });
+    expect(p).not.toHaveProperty('endedAtLedger');
+    expect(p).not.toHaveProperty('earliestEndsAt');
   });
 
   it('collapses the band only when the caller asserts zero uncertainty', () => {

@@ -6,7 +6,7 @@ import type {
   LedgerKey,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { hasExpired, needsAction } from './ttl.js';
+import { isExpiredObservation, needsAction } from './ttl.js';
 import { assessEntryWithThresholds, resolveHealthThresholds } from './health.js';
 import type { EntryAssessment, HealthThresholds } from './health.js';
 import { assertLiveness, type LivenessVerdict } from './liveness.js';
@@ -110,6 +110,16 @@ function evaluateBumps(
       skip('TTL could not be read. Unknown is not healthy — investigate rather than extend.');
       continue;
     }
+    if (entry.ttl.status === 'expired' || isExpiredObservation(entry.ttl)) {
+      skip(
+        entry.endBehavior === 'deleted'
+          ? 'Expired temporary entry cannot be extended or restored.'
+          : 'Expired entry requires restoration, not extendTTL.',
+      );
+      continue;
+    }
+    // `known` never carries a negative balance since #235: an entry past its
+    // final ledger is `expired`, handled above.
     const { remainingLedgers } = entry.ttl;
     if (!needsAction(remainingLedgers, actionThreshold)) {
       skip(
@@ -126,14 +136,6 @@ function evaluateBumps(
     } catch (error) {
       if (!(error instanceof ProtectedEntryError)) throw error;
       skip(`REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`);
-      continue;
-    }
-    if (hasExpired(remainingLedgers)) {
-      skip(
-        entry.endBehavior === 'deleted'
-          ? 'Expired temporary entry cannot be extended or restored.'
-          : 'Expired entry requires restoration, not extendTTL.',
-      );
       continue;
     }
     if (entry.kind === 'temporary') {

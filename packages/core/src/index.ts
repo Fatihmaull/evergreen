@@ -13,6 +13,8 @@ export {
   isValidThreshold,
   measureCadence,
   needsAction,
+  expiredEntryIssues,
+  isExpiredObservation,
   observeTTL,
   projectEnd,
   uniqueEntryCount,

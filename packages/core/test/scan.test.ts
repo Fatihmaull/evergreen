@@ -78,3 +78,15 @@ describe('scanInstances', () => {
     expect(result.issues.some((i) => i.kind === 'invalid-response')).toBe(true);
   });
 });
+
+describe('scanInstances — an archived instance (#235)', () => {
+  it('is expired with no fabricated numbers, and issues[] says so', async () => {
+    const keyA = instanceKey(A);
+    const reader = createMockReader(4_896_141, [{ key: keyA, liveUntilLedgerSeq: 0 }]);
+    const result = await scanInstances(reader, [{ id: A }]);
+    expect(result.entries[keyA]?.ttl).toEqual({ status: 'expired' });
+    expect(result.issues).toEqual([
+      expect.objectContaining({ kind: 'entry-expired', entryKey: keyA, contracts: [A] }),
+    ]);
+  });
+});

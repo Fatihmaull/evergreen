@@ -8,7 +8,7 @@ import type {
 } from '@evergreen-stellar/shared-types';
 import type { LedgerEntryReader } from './rpc.js';
 import { codeKey, instanceKey } from './rpc.js';
-import { observeTTL } from './ttl.js';
+import { expiredEntryIssues, observeTTL } from './ttl.js';
 import { isCanonicalBase64 } from './encoding.js';
 
 const MAX_KEYS_PER_READ = 200;
@@ -363,6 +363,7 @@ export async function scanContracts(
     }
   }
   await read(data);
+  issues.push(...expiredEntryIssues(entries));
   return {
     ...result,
     contracts: [...contracts.values()],
