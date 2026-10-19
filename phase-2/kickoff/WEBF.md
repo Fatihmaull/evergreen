@@ -20,11 +20,17 @@ You are the web agent working for **Fatih**. Rakha has his own web agent (WEBR).
 - bundle-size work.
 
 **Shared inside `apps/`:**
-- layout and design tokens;
+- layout;
 - the API client;
 - the wallet-connect primitive.
 
 Agree these with WEBR at the start rather than discovering a conflict in a PR.
+
+**Design tokens are not shared — they are set.** The design authority owns
+[`web-reference/design-language/`](../../web-reference/design-language/README.md);
+you and WEBR implement it in `apps/` and do not change a token, a size or a
+component's appearance on your own (Fatih, 2026-10-15). Need one changed? Ask
+for it, with the reason.
 
 ## What the product must keep, from the sprint spec
 

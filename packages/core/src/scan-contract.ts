@@ -9,6 +9,7 @@ import type {
 import type { LedgerEntryReader } from './rpc.js';
 import { codeKey, instanceKey } from './rpc.js';
 import { observeTTL } from './ttl.js';
+import { isCanonicalBase64 } from './encoding.js';
 
 const MAX_KEYS_PER_READ = 200;
 
@@ -21,26 +22,12 @@ function ledger(value: unknown): value is number {
 }
 
 /**
- * Canonical base64 only: the text must survive a decode/encode round trip
- * unchanged. A lenient decoder silently "repairs" invalid characters or missing
- * padding, and a repaired key is a different key.
- *
- * `atob`/`btoa`, NOT Node's global `Buffer`. This used `Buffer` until
- * 2026-09-22, and `Buffer` does not exist in a browser: every key raised a
- * ReferenceError, was reported as "RPC returned a malformed ledger key", and a
- * scan of a live contract returned ZERO entries and a rent of "0" with no error
- * (#194, measured in headless Chrome 152). Every test ran on Node, where the
- * global is always present, so all of them passed while it shipped.
- * `test/browser-no-buffer.test.ts` now runs without it.
+ * Canonical base64 only (`isCanonicalBase64`, in `encoding.ts`). This used
+ * Node's global `Buffer` until 2026-09-22; in a browser every key raised a
+ * ReferenceError reported as "RPC returned a malformed ledger key", and a scan
+ * of a live contract returned ZERO entries with no error (#194). The extend
+ * path had the same defect until #311.
  */
-function isCanonicalBase64(text: string): boolean {
-  try {
-    return btoa(atob(text)) === text;
-  } catch {
-    return false;
-  }
-}
-
 function parseKey(value: unknown): xdr.LedgerKey {
   if (typeof value !== 'string') throw new Error('Invalid ledger key');
   const text = value.trim();

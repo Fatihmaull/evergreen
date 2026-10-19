@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Portrait 1080 × 1350 — the four kinds</title>
+  </head>
+  <body>
+    <!-- Feed portrait 4:5. A hairline grid, radius 0, one cell inverted to mark
+     the exception — the site's "four kinds of entry" drawn for a phone. -->
+    <div
+      class="canvas"
+      data-format="portrait 1080×1350 · k=2"
+      style="
+        --w: 1080px;
+        --h: 1350px;
+        --safe-t: 64px;
+        --safe-r: 64px;
+        --safe-b: 64px;
+        --safe-l: 64px;
+      "
+    >
+      <div class="safe" style="gap: 40px">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <div style="display: grid; gap: 20px; margin-top: 24px">
+          <p class="label muted">The four kinds of entry</p>
+          <p class="display">Three are recoverable. One is not.</p>
+        </div>
+        <div class="hairline-grid" style="grid-template-columns: 1fr 1fr">
+          <div>
+            <span class="sub">instance</span>
+            <p class="body second">The contract's own state pointer.</p>
+            <span class="label muted">archived</span>
+          </div>
+          <div>
+            <span class="sub">code</span>
+            <p class="body second">
+              The compiled Wasm. Every contract built from it shares this one entry.
+            </p>
+            <span class="label muted">archived</span>
+          </div>
+          <div>
+            <span class="sub">persistent</span>
+            <p class="body second">Durable stored values.</p>
+            <span class="label muted">archived</span>
+          </div>
+          <div class="inverted">
+            <span class="sub">temporary</span>
+            <p class="body second">Disposable stored values. Gone permanently, with no restore.</p>
+            <span class="label muted">deleted</span>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <p class="body second measure">
+          Read from the network's own configuration: a temporary entry's minimum is 720 ledgers,
+          about an hour.
+        </p>
+        <p class="label muted">Stellar testnet · evergreen-stellar.pages.dev</p>
+      </div>
+    </div>
+  </body>
+</html>

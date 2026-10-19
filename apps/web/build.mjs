@@ -238,6 +238,40 @@ function docModule(route) {
 const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
 
 const snapshot = readJson('data/snapshot.json');
+
+/**
+ * The shared `ContractCode` entry's end, read from the snapshot rather than
+ * typed into a page.
+ *
+ * This entry is the product's headline — one entry built from one Wasm, shared
+ * by all three contracts, 98% of the bill, and they stop together. Its end
+ * ledger was a literal in two pages (`5290829`, four occurrences). It was
+ * extended to 8,297,162 on 2026-10-14 (#296) and the pages went on announcing
+ * the old number in the present tense for five days, two of them inside the
+ * window the old number named.
+ *
+ * Exactly one code entry, asserted: the three contracts share one, and that
+ * sharing IS the claim. If a snapshot ever carries two, the pages would be
+ * picking one of them silently and the sentence beside the number would be
+ * false.
+ */
+function readSharedCodeEnd() {
+  const code = Object.values(snapshot.result.entries).filter((e) => e.kind === 'code');
+  if (code.length !== 1) {
+    throw new Error(
+      `the snapshot holds ${code.length} code entries; the pages say the three contracts share one`,
+    );
+  }
+  const [entry] = code;
+  if (entry.ttl.status !== 'known' || typeof entry.ttl.endsAtLedger !== 'number') {
+    throw new Error(
+      'the snapshot has no readable end for the shared code entry; a page would have nothing to show',
+    );
+  }
+  return { ledger: entry.ttl.endsAtLedger, observedAtLedger: entry.observedAtLedger };
+}
+
+const sharedCodeEnd = readSharedCodeEnd();
 const grades = readJson('data/snapshot-grades.json');
 if (grades.capturedAt !== snapshot.capturedAt) {
   throw new Error(
@@ -493,6 +527,7 @@ const ctx = {
     ...Object.values(snapshot.result.entries).map((e) => e.observedAtLedger),
   ),
   snapshotCapturedAt: snapshot.capturedAt,
+  sharedCodeEnd,
   grades,
   decay,
   archival,
@@ -742,6 +777,43 @@ async function commission() {
     rmSync(probe, { force: true });
   }
   commissionAssetGuards();
+  await commissionFutureEnd();
+}
+
+/**
+ * Prove the PAGES are wired to `futureEnd`, not merely that `futureEnd` works.
+ *
+ * Its unit tests pass whether or not anything calls it. The defect being
+ * guarded is a page stating a stale ledger, so the thing worth proving is that
+ * the pages refuse one — which means rendering them against a snapshot that
+ * has aged past the entry they describe, and watching them throw.
+ *
+ * `5290829` is the real number: the shared code entry's end before #296
+ * extended it, against a snapshot observed after that ledger had passed. This
+ * is the exact state the site was in for five days.
+ */
+async function commissionFutureEnd() {
+  const stale = {
+    ...ctx,
+    sharedCodeEnd: { ledger: 5_290_829, observedAtLedger: 5_300_000 },
+  };
+  for (const module of ['src/pages/contracts.mjs', 'src/pages/decay.mjs']) {
+    const { render } = await import(join(here, module));
+    try {
+      render(stale);
+      console.error(
+        `✗ ${module} rendered a shared code entry that had already expired; it is not using futureEnd`,
+      );
+      process.exitCode = 1;
+    } catch (error) {
+      if (!String(error.message).includes('not ahead of the snapshot')) {
+        console.error(`✗ ${module} failed, but not about a stale end ledger: ${error.message}`);
+        process.exitCode = 1;
+      } else {
+        console.log(`✓ ${module} refuses a shared code entry that has already expired`);
+      }
+    }
+  }
 }
 
 /**
