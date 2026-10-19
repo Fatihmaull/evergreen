@@ -77,11 +77,6 @@ export function render() {
           <td>The submission’s outcome is not established.</td>
           <td><strong>Do not resend.</strong> There is no replacement send after an uncertain result — check the chain for the transaction before doing anything else.</td>
         </tr>
-        <tr>
-          <td>REFUSED BY WRITE GUARD</td>
-          <td>The subject is protected. This is the guard working.</td>
-          <td>Nothing. The refusal is recorded and the run continues. <a class="site-more" href="/docs/engine/guards/">Guards</a></td>
-        </tr>
       </tbody>
     </table></div>
 
