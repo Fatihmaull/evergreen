@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-23T03:07:12.241Z",
+  "capturedAt": "2026-10-19T04:00:53.942Z",
   "thresholds": {
     "warnBelowLedgers": 120960,
     "criticalBelowLedgers": 17280
@@ -13,12 +13,12 @@
         "isExpired": false,
         "reason": "Above threshold.",
         "endBehavior": "archived",
-        "endsAt": 5290829,
-        "remaining": 468981,
+        "endsAt": 8297162,
+        "remaining": 3025389,
         "kind": "code",
-        "observedAtLedger": 4821848
+        "observedAtLedger": 5271773
       },
-      "observedAtLedger": 4821848
+      "observedAtLedger": 5271773
     },
     "CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ": {
       "worst": "critical",
@@ -31,24 +31,24 @@
         "endsAt": null,
         "remaining": null,
         "kind": "instance",
-        "observedAtLedger": 4821848
+        "observedAtLedger": 5271773
       },
-      "observedAtLedger": 4821848
+      "observedAtLedger": 5271773
     },
     "CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL": {
-      "worst": "warning",
+      "worst": "critical",
       "binding": {
         "key": "AAAABgAAAAGXbvXIIM6pdGcZiA2HRdZq6cb5Q57t+kJh2wrusCGjHQAAABQAAAAB",
-        "health": "warning",
-        "isExpired": false,
-        "reason": "Low, recoverable, and affects only this contract. Above action threshold (17280 ledgers); warning only, no bump needed.",
+        "health": "critical",
+        "isExpired": true,
+        "reason": "Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.",
         "endBehavior": "archived",
-        "endsAt": 4880097,
-        "remaining": 58249,
+        "endsAt": null,
+        "remaining": null,
         "kind": "instance",
-        "observedAtLedger": 4821848
+        "observedAtLedger": 5271773
       },
-      "observedAtLedger": 4821848
+      "observedAtLedger": 5271773
     }
   }
 }

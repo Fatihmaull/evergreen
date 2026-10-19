@@ -47,18 +47,18 @@
             <p class="lead">A is the working subject, B is the control left to decay, C is the backup proof. All three were built from one Wasm, so one code entry binds them all — and touching it touches both proofs, which is why the write guard refuses it by key.</p>
           </header>
           <section>
-    <p class="small muted">Health graded by core from the snapshot committed with this build: as of ledger 4,821,848. Not current — <a href="/dashboard/">the overview</a> reads the chain live.</p>
+    <p class="small muted">Health graded by core from the snapshot committed with this build: as of ledger 5,271,773. Not current — <a href="/dashboard/">the overview</a> reads the chain live.</p>
     <div class="contract-grid"><article class="card card-pad stack">
       <div class="row"><span class="name">guinea-pig A</span><span class="chip healthy"><span class="shape"></span>healthy</span></div>
       <div class="id mono">CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L</div>
       <p class="muted">The working subject. Bump it, break it, redeploy it freely — it is what every scan, screenshot and live proof is verified against.</p>
       <dl class="facts">
         <dt>binds</dt><dd>contract code</dd>
-        <dt>remaining</dt><dd>468,981 ledgers</dd>
-               <dt>expires</dt><dd>~20 October 2026 · ledger <span class="mono">5,290,829</span></dd>
+        <dt>remaining</dt><dd>3,025,389 ledgers</dd>
+               <dt>expires</dt><dd>~12 April 2027 · ledger <span class="mono">8,297,162</span></dd>
       </dl>
 
-      <p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>20 October 2026</strong> at ledger <span class="mono">5,290,829</span>, shared with B and C.</p>
+      <p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>12 April 2027</strong> at ledger <span class="mono">8,297,162</span>, shared with B and C.</p>
     </article><article class="card card-pad stack">
       <div class="row"><span class="name">guinea-pig B</span><span class="chip critical"><span class="shape"></span>critical</span></div>
       <div class="id mono">CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ</div>
@@ -67,20 +67,21 @@
         <dt>binds</dt><dd>contract instance</dd>
         <dt>state</dt><dd class="expired-cell">archived</dd>
                <dt>ended at</dt><dd>ledger <span class="mono">4,793,687</span> · ~21 September 2026</dd>
-               <dt>read at</dt><dd>ledger <span class="mono">4,821,848</span></dd>
+               <dt>read at</dt><dd>ledger <span class="mono">5,271,773</span></dd>
       </dl>
       <p class="small">Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.</p>
       <p class="small">Alert threshold 20 September 2026 · <strong>expired 21 September 2026</strong> at ledger <span class="mono">4,793,687</span>. It was left alone on purpose, and that is the proof.</p>
     </article><article class="card card-pad stack">
-      <div class="row"><span class="name">guinea-pig C</span><span class="chip warning"><span class="shape"></span>warning</span></div>
+      <div class="row"><span class="name">guinea-pig C</span><span class="chip critical"><span class="shape"></span>critical</span></div>
       <div class="id mono">CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL</div>
       <p class="muted">The backup proof, five days behind B: threshold crossing 25 September, expiry the 26th. The only second shot if B is missed.</p>
       <dl class="facts">
         <dt>binds</dt><dd>contract instance</dd>
-        <dt>remaining</dt><dd>58,249 ledgers</dd>
-               <dt>expires</dt><dd>~26 September 2026 · ledger <span class="mono">4,880,097</span></dd>
+        <dt>state</dt><dd class="expired-cell">archived</dd>
+               <dt>ended at</dt><dd>ledger <span class="mono">4,880,097</span> · ~26 September 2026</dd>
+               <dt>read at</dt><dd>ledger <span class="mono">5,271,773</span></dd>
       </dl>
-
+      <p class="small">Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.</p>
       <p class="small">Alert threshold 25 September 2026 · <strong>expires 26 September 2026</strong> at ledger <span class="mono">4,880,097</span>. That expiry is the unrepeatable event.</p>
     </article></div>
   </section>
@@ -88,10 +89,11 @@
     <h2 class="section">The shared code entry</h2>
     <p class="muted">
       Key <span class="mono">AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7</span>, from Wasm hash
-      <span class="mono">c7e55f0a…98bfb</span>. Ends at ledger <span class="mono">5,290,829</span>,
-      ~20 October 2026. A scan of one contract reports it with one
+      <span class="mono">c7e55f0a…98bfb</span>. Ends at ledger <span class="mono">8,297,162</span>,
+      ~12 April 2027 — read from the scan captured
+      19 October 2026, not typed into this page. A scan of one contract reports it with one
       consumer, because the chain does not index reverse dependencies — <a href="/dashboard/blast-radius/">scan
-      all three together</a> to see the real number. Due to be extended at W3-D18-02d, after the proofs are captured.
+      all three together</a> to see the real number.
     </p>
   </section>
         </main>

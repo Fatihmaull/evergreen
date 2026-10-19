@@ -3,7 +3,7 @@
  * health graded by core from the committed snapshot, its binding entry and
  * date. No registration, no policy column, no payer pool, no actions.
  */
-import { approxDate, dateLong, esc, fmt, CONTRACTS } from './_shared.mjs';
+import { approxDate, dateLong, esc, fmt, futureEnd, CONTRACTS } from './_shared.mjs';
 
 export const meta = {
   title: 'Our contracts — Evergreen',
@@ -33,6 +33,16 @@ function knownEnd(ctx, contractId, kind) {
 }
 
 export function render(ctx) {
+  /**
+   * The shared code entry's end, once, from the snapshot. Every page that
+   * states it reads it; none of them types it. See `futureEnd`.
+   */
+  const sharedCode = futureEnd(
+    ctx.sharedCodeEnd.ledger,
+    ctx.sharedCodeEnd.observedAtLedger,
+    'the shared code entry',
+  );
+
   const cards = CONTRACTS.map((c) => {
     const g = ctx.grades.grades[c.id];
     if (g === undefined) throw new Error(`contracts page: no grade for ${c.id}`);
@@ -46,7 +56,17 @@ export function render(ctx) {
         ? `<p class="small">Alert threshold ${esc(dateLong(ctx.guard.bAlert))} · <strong>expired ${esc(dateLong(ctx.guard.bExpires))}</strong> at ledger <span class="mono">${fmt(ctx.knownEnds[c.id].instance)}</span>. It was left alone on purpose, and that is the proof.</p>`
         : c.label === 'guinea-pig C'
           ? `<p class="small">Alert threshold ${esc(dateLong(ctx.guard.cAlert))} · <strong>expires ${esc(dateLong(ctx.guard.cExpires))}</strong> at ledger <span class="mono">${fmt(ctx.knownEnds[c.id].instance)}</span>. That expiry is the unrepeatable event.</p>`
-          : `<p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>${esc(approxDate(5290829, at, ctx.snapshotCapturedAt).slice(1))}</strong> at ledger <span class="mono">${fmt(5290829)}</span>, shared with B and C.</p>`;
+          : (() => {
+              // Read, never typed. This number was the literal `5290829` here
+              // and in three other places; the entry was extended on
+              // 2026-10-14 and the page kept announcing the old one.
+              const end = futureEnd(
+                ctx.sharedCodeEnd.ledger,
+                ctx.sharedCodeEnd.observedAtLedger,
+                "guinea-pig A's shared code entry",
+              );
+              return `<p class="small">Extended by hand on 9 September past the sprint, then twice more — see <a href="/dashboard/history/">the extension history</a>. Its code entry still binds it: <strong>${esc(approxDate(end, at, ctx.snapshotCapturedAt).slice(1))}</strong> at ledger <span class="mono">${fmt(end)}</span>, shared with B and C.</p>`;
+            })();
     return `<article class="card card-pad stack">
       <div class="row"><span class="name">${esc(c.label)}</span><span class="chip ${g.worst}"><span class="shape"></span>${esc(g.worst)}</span></div>
       <div class="id mono">${esc(c.id)}</div>
@@ -75,10 +95,11 @@ export function render(ctx) {
     <h2 class="section">The shared code entry</h2>
     <p class="muted">
       Key <span class="mono">AAAAB8flXwrYnvsGALwVBIsVUJn6TZfO4WRm+hJEs9y86Yv7</span>, from Wasm hash
-      <span class="mono">c7e55f0a…98bfb</span>. Ends at ledger <span class="mono">${fmt(5290829)}</span>,
-      ${esc(approxDate(5290829, ctx.snapshotLedger, ctx.snapshotCapturedAt))}. A scan of one contract reports it with one
+      <span class="mono">c7e55f0a…98bfb</span>. Ends at ledger <span class="mono">${fmt(sharedCode)}</span>,
+      ${esc(approxDate(sharedCode, ctx.snapshotLedger, ctx.snapshotCapturedAt))} — read from the scan captured
+      ${esc(dateLong(ctx.snapshotCapturedAt.slice(0, 10)))}, not typed into this page. A scan of one contract reports it with one
       consumer, because the chain does not index reverse dependencies — <a href="/dashboard/blast-radius/">scan
-      all three together</a> to see the real number. Due to be extended at W3-D18-02d, after the proofs are captured.
+      all three together</a> to see the real number.
     </p>
   </section>`;
 }
