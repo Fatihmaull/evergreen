@@ -4,7 +4,7 @@
  * fee, and who triggered it. Fees are in stroops. "Gas" is not Stellar
  * terminology and appears nowhere here.
  */
-import { esc, txLink } from './_shared.mjs';
+import { esc, fmt, futureEnd, txLink } from './_shared.mjs';
 
 export const meta = {
   title: 'Extension history — Evergreen',
@@ -31,7 +31,18 @@ function row(date, entry, change, fee, actor, hash, source) {
   </tr>`;
 }
 
-export function render() {
+export function render(ctx) {
+  /**
+   * Read, not typed. This sentence said the code entry "still expires 20
+   * October 2026 and is refused by the guard until W3-D18-02d" — both halves
+   * stale: it was extended on 14 October, and that task is closed.
+   */
+  const sharedCode = futureEnd(
+    ctx.sharedCodeEnd.ledger,
+    ctx.sharedCodeEnd.observedAtLedger,
+    'the shared code entry',
+  );
+
   const shortA = `${A.slice(0, 6)}…${A.slice(-6)}`;
   return `<section class="card card-pad stack">
     <h2 class="section">5 September — calibration, disclosed</h2>
@@ -57,7 +68,7 @@ export function render() {
     </table></div>
     <p class="small muted">
       The 9 September rescue found A nine days from archival and carried all three entries to December; its code
-      entry still expires 20 October 2026 and is refused by the guard until W3-D18-02d. The 14 September save ran
+      entry was left for later and extended on 14 October, to ledger ${fmt(sharedCode)}. The 14 September save ran
       under a threshold raised to 1,500,000 — arranged timing, genuine response. "Charged" means decoded from the
       receipt; "as recorded" means the evidence record's fee column, not re-decoded here.
     </p>

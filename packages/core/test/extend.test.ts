@@ -453,3 +453,55 @@ describe('🔴 layered defences that nothing was testing', () => {
     expect(deps.signer).toHaveBeenCalled();
   });
 });
+
+describe('executeExtensions — a runtime error is not a simulation failure (#311)', () => {
+  it('records a ReferenceError as RUNTIME_ERROR, naming what is missing', async () => {
+    const deps = executionDependencies();
+    deps.prepare.mockRejectedValue(new ReferenceError('Buffer is not defined'));
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual' },
+      deps,
+    );
+    expect(result.records[0]).toMatchObject({
+      outcome: 'failed',
+      mode: 'dry-run',
+      error: { code: 'RUNTIME_ERROR', message: expect.stringContaining('Buffer is not defined') },
+    });
+    expect(result.records[0]).not.toMatchObject({ error: { code: 'SIMULATION_FAILED' } });
+  });
+
+  it('still records an ordinary failure as SIMULATION_FAILED, without its message', async () => {
+    // The detector, tested on what it must ignore: a provider error may carry
+    // a URL with credentials, so it keeps the fixed sentence.
+    const deps = executionDependencies();
+    deps.prepare.mockRejectedValue(new Error('rpc https://user:secret@host failed'));
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual' },
+      deps,
+    );
+    expect(result.records[0]).toMatchObject({ error: { code: 'SIMULATION_FAILED' } });
+    expect(JSON.stringify(result)).not.toContain('secret');
+  });
+
+  it('records a live ReferenceError before any send as RUNTIME_ERROR, with nothing submitted', async () => {
+    const deps = executionDependencies();
+    deps.prepare.mockRejectedValue(new ReferenceError('Buffer is not defined'));
+    const result = await executeExtensions(
+      planExtension(await atRemaining(), options),
+      { payer: 'manual', submit: true, maxFeeStroops: '600' },
+      deps,
+    );
+    expect(result.records[0]).toMatchObject({ mode: 'live', error: { code: 'RUNTIME_ERROR' } });
+    expect(result.records[0]).not.toHaveProperty('transactionHash');
+    expect(deps.submit).not.toHaveBeenCalled();
+  });
+});
+
+describe('planExtension — writes stay testnet-only (PH2-E1-03, hard rule 1)', () => {
+  it('refuses a mainnet scan, which PH2-E1-03 made representable', async () => {
+    const mainnet = { ...(await atRemaining()), network: 'mainnet' as const };
+    expect(() => planExtension(mainnet, options)).toThrow();
+  });
+});

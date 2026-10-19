@@ -217,3 +217,10 @@ describe('🔴 the payer agreement check on the EXECUTION path', () => {
     );
   });
 });
+
+describe('planEngineExecution — writes stay testnet-only (PH2-E1-03, hard rule 1)', () => {
+  it('refuses a mainnet scan', async () => {
+    const mainnet = { ...(await scan()), network: 'mainnet' as const };
+    expect(() => planEngineExecution(mainnet, [decision()], config)).toThrow(/Testnet/);
+  });
+});

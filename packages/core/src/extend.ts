@@ -10,6 +10,8 @@ import { instanceKey, isValidContractId } from './rpc.js';
 import { resolveExtendTarget } from './network-config.js';
 import { hasExpired, needsAction } from './ttl.js';
 import { assertWriteAllowed } from './write-guard.js';
+import { isCanonicalBase64 } from './encoding.js';
+import { NETWORKS } from './networks.js';
 
 export interface ExtensionOptions {
   readonly contractId: string;
@@ -36,10 +38,9 @@ export interface ExtensionPlan {
   readonly warnings: readonly string[];
 }
 
-/** Strict base64 round trip: Buffer alone would silently repair invalid input. */
+/** Strict base64 round trip, with no Node global (#311): a lenient decode repairs invalid input. */
 export function extensionKey(text: string): xdr.LedgerKey {
-  if (!text || Buffer.from(text, 'base64').toString('base64') !== text)
-    throw new Error('Invalid extension ledger key');
+  if (!text || !isCanonicalBase64(text)) throw new Error('Invalid extension ledger key');
   const key = xdr.LedgerKey.fromXDR(text, 'base64');
   if (key.toXDR('base64') !== text) throw new Error('Invalid extension ledger key');
   return key;
@@ -267,7 +268,7 @@ export async function executeExtensionEntries(
       }
       knownSigner = signer.identity;
       const signed = await signer.signExtendTTL({
-        networkPassphrase: 'Test SDF Network ; September 2015',
+        networkPassphrase: NETWORKS.testnet.passphrase,
         transactionXdr: prepared.transactionXdr,
       });
       await deps.beforeSubmit?.(prepared, signer.identity);
@@ -303,7 +304,7 @@ export async function executeExtensionEntries(
         signer: sent.signer,
         after,
       });
-    } catch {
+    } catch (error) {
       ok = false;
       if (sent && !confirmed) {
         records.push({
@@ -313,6 +314,28 @@ export async function executeExtensionEntries(
           transactionHash: sent.hash,
           signer: sent.signer,
         });
+      } else if (error instanceof ReferenceError && !sent) {
+        // #311: a missing runtime global (here `Buffer` on Workers) was
+        // recorded as SIMULATION_FAILED, sending the operator to check fees and
+        // RPC while the real cause was the runtime. A ReferenceError names an
+        // identifier, never a credential or a provider response, so its
+        // message is safe to keep. Only when nothing was sent: a sent
+        // transaction keeps its hash in the live record below.
+        const runtimeError = {
+          code: 'RUNTIME_ERROR',
+          message: `This runtime cannot run the extension path (${error.message}). Nothing was submitted.`,
+        };
+        records.push(
+          live
+            ? {
+                ...base(),
+                outcome: 'failed',
+                mode: 'live',
+                ...(knownSigner ? { signer: knownSigner } : {}),
+                error: runtimeError,
+              }
+            : { ...base(), outcome: 'failed', mode: 'dry-run', error: runtimeError },
+        );
       } else if (live) {
         records.push({
           ...base(),

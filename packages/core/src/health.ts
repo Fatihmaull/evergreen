@@ -4,7 +4,7 @@ import type {
   ScanIssue,
   ScanResult,
 } from '@evergreen-stellar/shared-types';
-import { hasExpired, isValidThreshold, needsAction } from './ttl.js';
+import { isExpiredObservation, isValidThreshold, needsAction } from './ttl.js';
 
 /**
  * Display health for one ledger entry (`W2-D10-01`).
@@ -184,7 +184,7 @@ export function assessEntryWithThresholds(
 ): EntryAssessment {
   assertHealthThresholds(thresholds);
   const assessment = assessEntry(entry, thresholds.warnBelowLedgers);
-  if (entry.ttl.status === 'unavailable' || assessment.isExpired) return assessment;
+  if (entry.ttl.status !== 'known' || assessment.isExpired) return assessment;
   if (needsAction(entry.ttl.remainingLedgers, thresholds.criticalBelowLedgers)) {
     return {
       ...assessment,
@@ -226,11 +226,7 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
     };
   }
 
-  const { remainingLedgers } = entry.ttl;
-  const isExpired = hasExpired(remainingLedgers);
-  const act = needsAction(remainingLedgers, thresholdLedgers);
-
-  if (isExpired) {
+  if (entry.ttl.status === 'expired' || isExpiredObservation(entry.ttl)) {
     return {
       health: 'critical',
       needsAction: true,
@@ -244,6 +240,9 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
           : 'Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.',
     };
   }
+
+  const { remainingLedgers } = entry.ttl;
+  const act = needsAction(remainingLedgers, thresholdLedgers);
 
   if (!act) {
     return {

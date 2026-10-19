@@ -1,6 +1,5 @@
 import {
   Account,
-  Networks,
   Operation,
   SorobanDataBuilder,
   StrKey,
@@ -12,6 +11,8 @@ import {
 import type { PlannedExtension } from './extend.js';
 import { extensionKey } from './extend.js';
 import { validateExtensionEnvelope } from './ed25519-signer.js';
+import { bytesToHex } from './encoding.js';
+import { NETWORKS } from './networks.js';
 
 export interface ExtensionRpc {
   getNetwork(): Promise<{ passphrase: string }>;
@@ -41,13 +42,13 @@ export async function prepareExtension(
 ): Promise<PreparedExtension> {
   if (!StrKey.isValidEd25519PublicKey(sourceAccount) || entry.skip)
     throw new Error('Invalid extension payer or no-op');
-  if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
+  if ((await server.getNetwork()).passphrase !== NETWORKS.testnet.passphrase)
     throw new Error('RPC is not Stellar Testnet');
   const account = await server.getAccount(sourceAccount);
   if (account.accountId() !== sourceAccount) throw new Error('RPC returned another payer');
   const tx = new TransactionBuilder(new Account(sourceAccount, account.sequenceNumber()), {
     fee: '100',
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: NETWORKS.testnet.passphrase,
   })
     .addOperation(Operation.extendFootprintTtl({ extendTo: entry.extendToLedgers }))
     .setSorobanData(new SorobanDataBuilder().setReadOnly([extensionKey(entry.entryKey)]).build())
@@ -67,7 +68,7 @@ export async function prepareExtension(
     throw new Error('Extension simulation failed or returned invalid resources');
   const prepared = rpc.assembleTransaction(tx, simulation).build();
   const transactionXdr = prepared.toXDR();
-  const transactionHash = Buffer.from(prepared.hash()).toString('hex');
+  const transactionHash = bytesToHex(prepared.hash());
   validateExtensionEnvelope(transactionXdr, {
     sourceAccount,
     entryKey: entry.entryKey,
@@ -110,9 +111,9 @@ export async function confirmExtension(
       if (!response.envelopeXdr) throw new Error('Missing transaction confirmation envelope');
       const transaction = TransactionBuilder.fromXDR(
         response.envelopeXdr.toXDR('base64'),
-        Networks.TESTNET,
+        NETWORKS.testnet.passphrase,
       );
-      if (Buffer.from(transaction.hash()).toString('hex') !== hash)
+      if (bytesToHex(transaction.hash()) !== hash)
         throw new Error('Transaction confirmation envelope hash mismatch');
     }
     if (response.status === 'FAILED') return { status: 'failed' };
@@ -133,15 +134,15 @@ export async function submitExtension(
   prepared: PreparedExtension,
   signedXdr: string,
 ): Promise<{ status: string; hash: string }> {
-  const signed = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+  const signed = TransactionBuilder.fromXDR(signedXdr, NETWORKS.testnet.passphrase);
   if (
     !(signed instanceof Transaction) ||
     signed.source !== prepared.sourceAccount ||
-    Buffer.from(signed.hash()).toString('hex') !== prepared.transactionHash ||
+    bytesToHex(signed.hash()) !== prepared.transactionHash ||
     signed.signatures.length !== 1
   )
     throw new Error('Signed envelope differs from the prepared transaction');
-  if ((await server.getNetwork()).passphrase !== Networks.TESTNET)
+  if ((await server.getNetwork()).passphrase !== NETWORKS.testnet.passphrase)
     throw new Error('RPC is not Stellar Testnet');
   const response = await server.sendTransaction(signed);
   if (response.hash !== prepared.transactionHash) throw new Error('Submission hash mismatch');

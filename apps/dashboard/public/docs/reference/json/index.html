@@ -41,7 +41,13 @@
 
     <h2 id="declaration">The declaration</h2>
     <div class="terminal">export interface ScanResult {
-  readonly network: &#39;testnet&#39;;
+  /**
+   * Which network the RPC reported, as verified against its passphrase
+   * (PH2-E1-03). Mainnet reads are allowed; every write path stays
+   * testnet-only — `TestnetPassphrase` still types the signer and engine
+   * config, and `extend` refuses a non-testnet scan.
+   */
+  readonly network: &#39;testnet&#39; | &#39;mainnet&#39;;
   readonly contracts: readonly ContractRef[];
   /** Each canonical ledger key occurs once; contracts are back-references on entries. */
   readonly entries: Readonly&lt;Record&lt;LedgerKey, LedgerEntryTTL&gt;&gt;;

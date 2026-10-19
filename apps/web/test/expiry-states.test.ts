@@ -40,8 +40,39 @@ function panelFor(html: string, label: string): string {
   return found;
 }
 
+/**
+ * The same snapshot-derived values `build.mjs` hands the page, so the test
+ * renders what ships. `decay.mjs` now reads the shared code entry's end from
+ * the snapshot rather than from a literal — the number was typed into the page
+ * and went stale for five days — and `futureEnd` refuses a ctx that cannot
+ * supply it, which is why this fixture is real data rather than a stub.
+ */
+const snapshot = read('../data/snapshot.json') as {
+  capturedAt: string;
+  result: {
+    entries: Record<
+      string,
+      { kind: string; observedAtLedger: number; ttl: { endsAtLedger?: number } }
+    >;
+  };
+};
+const codeEntry = Object.values(snapshot.result.entries).find((e) => e.kind === 'code');
+if (codeEntry?.ttl.endsAtLedger === undefined) {
+  throw new Error('the snapshot has no shared code entry; the decay page cannot be rendered');
+}
+const snapshotCtx = {
+  sharedCodeEnd: {
+    ledger: codeEntry.ttl.endsAtLedger,
+    observedAtLedger: codeEntry.observedAtLedger,
+  },
+  snapshotLedger: Math.max(
+    ...Object.values(snapshot.result.entries).map((e) => e.observedAtLedger),
+  ),
+  snapshotCapturedAt: snapshot.capturedAt,
+};
+
 function renderAt(now: Date, ends: typeof knownEnds): string {
-  return render({ decay, knownEnds: ends }, now) as string;
+  return render({ ...snapshotCtx, decay, knownEnds: ends }, now) as string;
 }
 
 /** No capture, independent of the assessment now present in current data. */

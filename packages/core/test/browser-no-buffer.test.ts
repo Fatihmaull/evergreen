@@ -19,6 +19,8 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { scanContract } from '../src/scan-contract.js';
+import { extensionKey } from '../src/extend.js';
+import { bytesToHex } from '../src/encoding.js';
 import type { RawLedgerEntry } from '../src/rpc.js';
 import { createMockReader } from './mock-rpc.js';
 
@@ -98,5 +100,36 @@ describe('scanContract without a global Buffer (the browser condition)', () => {
     const result = await scanContract(reader(), { id: A }, [bad]);
     expect(result.issues.map((i) => i.kind)).toContain('invalid-response');
     expect(Object.keys(result.entries)).not.toContain(bad);
+  });
+});
+
+// ── #311: the extend path, under the same condition ───────────────────────────
+describe('extend key parsing without a global Buffer (#311)', () => {
+  // Guinea-pig A's instance key, as in the issue's reproduction.
+  const KEY = 'AAAABgAAAAEblswW+PDBZ8QGOhf7+j8AvTtHrEL+O4eNCZiCZ4RiuwAAABQAAAAB';
+  const saved = globalThis.Buffer;
+  beforeAll(() => {
+    // @ts-expect-error — removing a Node global on purpose, to be a browser or old Worker.
+    delete globalThis.Buffer;
+  });
+  afterAll(() => {
+    globalThis.Buffer = saved;
+  });
+
+  it('parses a valid key (on main this threw ReferenceError: Buffer is not defined)', () => {
+    expect(typeof globalThis.Buffer).toBe('undefined');
+    expect(extensionKey(KEY).toXDR('base64')).toBe(KEY);
+  });
+
+  it('still rejects a key that is not canonical base64 — the strict round trip survives', () => {
+    // A trailing pad on unpadded input and a URL-safe character both decode
+    // leniently somewhere; neither is the key that was asked for.
+    expect(() => extensionKey(KEY + '=')).toThrow('Invalid extension ledger key');
+    expect(() => extensionKey(KEY.replace('+', '-'))).toThrow('Invalid extension ledger key');
+    expect(() => extensionKey('')).toThrow('Invalid extension ledger key');
+  });
+
+  it('renders bytes as lower-case hex, as Buffer did', () => {
+    expect(bytesToHex(new Uint8Array([0, 15, 16, 255]))).toBe('000f10ff');
   });
 });
