@@ -62,3 +62,37 @@ describe.skipIf(!existsSync(BIN))('the built artifact runs', () => {
     }
   });
 });
+
+// PH2-E1-04: the mainnet refusal depends on bin.ts handing extend the chosen
+// network's name, which only the built entry point shows. Offline: the refusal
+// comes before any RPC is resolved, so no SOROBAN_RPC_URL is needed.
+describe.skipIf(!existsSync(BIN))('the built artifact refuses extend on mainnet', () => {
+  const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+  const G = 'GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE';
+  function runWith(args: string[], env: Record<string, string>) {
+    try {
+      execFileSync('node', [BIN, ...args], {
+        encoding: 'utf8',
+        env: { ...process.env, NO_COLOR: '1', EVERGREEN_NETWORK: '', SOROBAN_RPC_URL: '', ...env },
+        timeout: 20_000,
+      });
+      return { stderr: '', status: 0 };
+    } catch (error) {
+      const e = error as { stderr?: string; status?: number };
+      return { stderr: e.stderr ?? '', status: e.status ?? -1 };
+    }
+  }
+  const EXTEND = ['extend', A, '--ledgers', '20', '--source-account', G];
+
+  it('with --network mainnet', () => {
+    const { stderr, status } = runWith(['--network', 'mainnet', ...EXTEND], {});
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+  });
+
+  it('with EVERGREEN_NETWORK=mainnet', () => {
+    const { stderr, status } = runWith(EXTEND, { EVERGREEN_NETWORK: 'mainnet' });
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+  });
+});
