@@ -21,7 +21,8 @@
  */
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
@@ -85,6 +86,24 @@ function rpc(socket, id, method, params) {
 }
 
 async function main() {
+  /**
+   * A fresh profile and no HTTP cache, both deliberate.
+   *
+   * On 2026-10-19 a probe of this same site on the same port returned the
+   * PREVIOUS build's stylesheet: `.docs-tag` measured 11px after it had been
+   * changed to 12px, and two rules still read `uppercase` after the declaration
+   * was removed. Re-running with `--user-data-dir` and `Network.setCacheDisabled`
+   * gave the correct answer from the same build.
+   *
+   * The exact cause was not isolated. What is certain is that headless Chrome
+   * without `--user-data-dir` shares one profile, and therefore one disk cache,
+   * with every other headless run on this machine — and that a gate which can
+   * read a previous build's CSS is a gate that can pass the regression it exists
+   * to catch. This gate was tested afterwards by planting a third gradient and
+   * it caught it, so it was not blind in that case; the isolation is here so the
+   * question stops depending on which resource Chrome happened to revalidate.
+   */
+  const profile = mkdtempSync(join(tmpdir(), 'evergreen-chrome-'));
   if (!CHROME) {
     console.error('no Chrome found. Set CHROME_PATH to a Chrome or Chromium binary.');
     process.exitCode = 1;
@@ -99,6 +118,7 @@ async function main() {
     CHROME,
     [
       '--headless=new',
+      `--user-data-dir=${profile}`,
       '--remote-debugging-port=9337',
       '--no-first-run',
       '--no-default-browser-check',
@@ -109,6 +129,17 @@ async function main() {
   );
   const stop = () => {
     chrome.kill();
+    /**
+     * Best effort. Chrome is still flushing its profile when `kill` returns,
+     * so `rmSync` races it and throws ENOTEMPTY — and a gate that fails
+     * because it could not delete a temporary directory is a gate that
+     * reports a defect it did not find.
+     */
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    } catch {
+      // The OS clears its temp directory; the measurement already happened.
+    }
     server.kill();
   };
 
@@ -134,6 +165,8 @@ async function main() {
       await new Promise((resolve) => socket.addEventListener('open', resolve));
       let id = 0;
       await rpc(socket, (id += 1), 'Page.enable', {});
+      await rpc(socket, (id += 1), 'Network.enable', {});
+      await rpc(socket, (id += 1), 'Network.setCacheDisabled', { cacheDisabled: true });
       await rpc(socket, (id += 1), 'Emulation.setDeviceMetricsOverride', {
         width: size.width,
         height: size.height,

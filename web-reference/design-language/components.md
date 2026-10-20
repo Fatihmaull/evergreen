@@ -14,13 +14,16 @@ passage rather than a label. **Uppercase is still rendered in three places**,
 measured on production 2026-10-15, and this file used to say there was one:
 
 - the dashboard sidebar's group labels (`.nav-section`), three short words;
-- the dashboard's stat labels (`.stat-label`, `styles.css`);
-- every table header row on the docs and dashboard pages, from a global `th`
-  rule (`styles.css`, `th { … text-transform: uppercase }`).
+- ~~the dashboard's stat labels (`.stat-label`)~~ — **removed 2026-10-19**;
+- ~~every table header row, from a global `th` rule~~ — **removed 2026-10-19**.
 
-The first is the intended one. The other two are defects against the
-sentence-case rule and are logged for the web track. **New work in any medium
-uses sentence case**, table headers included.
+**One place renders uppercase now**, `.nav-section`, on the seven dashboard
+routes — swept across all 31 routes on 2026-10-19. That is the intended one.
+The other two were defects against the sentence-case rule and are gone; their
+tracking came down from 0.06em and 0.07em to 0.02em at the same time, because
+the wider figures existed for the uppercase and leave a page looking spaced-out
+without it. **New work in any medium uses sentence case**, table headers
+included.
 
 ## Buttons
 
@@ -111,8 +114,9 @@ values.
 ## Tables
 
 Hairlines only. **No card around them**, no fill, no radius on the marketing
-and docs surfaces. Header row in Space Mono 12px `--ink-3`, sentence case (it
-renders uppercase today; see the eyebrow above), with a hairline under it; cells at 14px with a hairline under each row; numeric and identifier
+and docs surfaces. Header row in Space Mono 12px `--ink-3`, sentence
+case — and it renders that way since 2026-10-19 — with a hairline under it;
+cells at 14px with a hairline under each row; numeric and identifier
 cells in Space Mono, `white-space: nowrap`.
 
 Capped at **620px** where the content is narrow — a two-column table stretched
