@@ -1,5 +1,5 @@
 import type { LedgerKey, RentEstimate, ScanResult, Stroops } from '@evergreen-stellar/shared-types';
-import { hasExpired } from './ttl.js';
+import { isExpiredObservation } from './ttl.js';
 
 /**
  * Rent estimation (`W2-D9-01`).
@@ -40,7 +40,7 @@ export interface RentEstimateResult {
   /** Keys deliberately left out, with the reason. Never silently dropped. */
   readonly excluded: readonly {
     readonly entryKey: LedgerKey;
-    readonly reason: 'already-expired' | 'no-quote-returned';
+    readonly reason: 'already-expired' | 'ttl-unavailable' | 'no-quote-returned';
     readonly detail: string;
   }[];
 }
@@ -95,7 +95,7 @@ export async function estimateRent(
 
   const excluded: {
     entryKey: LedgerKey;
-    reason: 'already-expired' | 'no-quote-returned';
+    reason: 'already-expired' | 'ttl-unavailable' | 'no-quote-returned';
     detail: string;
   }[] = [];
   const quotable: LedgerKey[] = [];
@@ -103,13 +103,29 @@ export async function estimateRent(
 
   for (const [entryKey, entry] of Object.entries(scan.entries)) {
     estimatedAtLedger = Math.max(estimatedAtLedger, entry.observedAtLedger);
-    if (entry.ttl.status === 'known' && hasExpired(entry.ttl.remainingLedgers)) {
+    // By status, not by a negative count: since #235 an entry past its final
+    // live ledger is `status: 'expired'`. Testing only the old `known` and
+    // negative shape let it through to a quote it has no target for, which
+    // threw and took the whole estimate down with it.
+    if (isExpiredObservation(entry.ttl)) {
       // `extendTTL` cannot reach an entry past its final live ledger. Quoting
       // one would produce a number for an operation that cannot be performed.
       excluded.push({
         entryKey,
         reason: 'already-expired',
-        detail: 'Already past its final live ledger — needs RestoreFootprintOp, not an extend.',
+        detail:
+          entry.endBehavior === 'deleted'
+            ? 'Already past its final live ledger — temporary data is deleted, so there is nothing to extend.'
+            : 'Already past its final live ledger — needs RestoreFootprintOp, not an extend.',
+      });
+      continue;
+    }
+    if (entry.ttl.status === 'unavailable') {
+      // An increment needs the current remaining count, so no TTL means no target.
+      excluded.push({
+        entryKey,
+        reason: 'ttl-unavailable',
+        detail: 'Its TTL could not be read, so there is no extend target to price.',
       });
       continue;
     }
