@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
 import { EXIT_BELOW_THRESHOLD, exitCodeFor, formatHuman, healthReport } from '../src/scan.js';
+import { ARCHIVED_ENTRY_ADVICE } from '@evergreen-stellar/core';
 
 const NOW = new Date('2026-09-10T00:00:00Z');
 const THRESHOLD = 17_280;
@@ -214,6 +215,12 @@ describe('W2-D10-03 — an absent entry names both causes', () => {
       { thresholdLedgers: THRESHOLD },
     );
     expect(out).toContain('RestoreFootprintOp');
+    // PH2-E1-05: core's advice word for word, only wrapped, so the CLI cannot
+    // drift from the other surfaces; and wrapped to the terminal, not past it.
+    expect(out.replace(/\s+/g, ' ')).toContain(ARCHIVED_ENTRY_ADVICE);
+    for (const line of out.split('\n').filter((l) => l.includes('restore'))) {
+      expect(line.length).toBeLessThanOrEqual(80);
+    }
     expect(out).toContain('never existed');
     // It must not assert either cause — the scan does not know which.
     expect(out).toContain('cannot distinguish them');

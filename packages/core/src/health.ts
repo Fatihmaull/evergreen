@@ -1,3 +1,4 @@
+import { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 import type {
   BumpThresholds,
   LedgerEntryTTL,
@@ -237,7 +238,7 @@ export function assessEntry(entry: LedgerEntryTTL, thresholdLedgers: number): En
       reason:
         entry.endBehavior === 'deleted'
           ? 'Already deleted. Temporary entries are not recoverable.'
-          : 'Already archived. Restore it with RestoreFootprintOp — extendTTL cannot reach it.',
+          : `Already archived. ${ARCHIVED_ENTRY_ADVICE}`,
     };
   }
 

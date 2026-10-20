@@ -1,3 +1,4 @@
+import { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 import { formatCount } from './format.js';
 import { temporaryConsent } from './temporary-policy.js';
 import type { EvergreenConfig } from '@evergreen-stellar/shared-types';
@@ -155,7 +156,7 @@ function describe(
     ? ''
     : endBehavior === 'deleted'
       ? ' Past extendTTL — temporary data was deleted and cannot be restored.'
-      : ' Past extendTTL — this needs RestoreFootprintOp, not a bump.';
+      : ` Past extendTTL — archived, not deleted. ${ARCHIVED_ENTRY_ADVICE}`;
   switch (reason) {
     case 'no-action-recorded':
       return `Needs action (${where}) and this run recorded nothing for it.${fix}`;

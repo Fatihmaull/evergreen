@@ -1,3 +1,4 @@
+import { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 import type { LedgerKey, RentEstimate, ScanResult, Stroops } from '@evergreen-stellar/shared-types';
 import { isExpiredObservation } from './ttl.js';
 
@@ -116,7 +117,7 @@ export async function estimateRent(
         detail:
           entry.endBehavior === 'deleted'
             ? 'Already past its final live ledger — temporary data is deleted, so there is nothing to extend.'
-            : 'Already past its final live ledger — needs RestoreFootprintOp, not an extend.',
+            : `Already past its final live ledger, so there is no extend to price. ${ARCHIVED_ENTRY_ADVICE}`,
       });
       continue;
     }

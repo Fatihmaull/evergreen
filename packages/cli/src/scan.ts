@@ -1,4 +1,4 @@
-import { formatCount } from '@evergreen-stellar/core';
+import { ARCHIVED_ENTRY_ADVICE, formatCount } from '@evergreen-stellar/core';
 import type { ScanResult } from '@evergreen-stellar/shared-types';
 import {
   assessEntryWithThresholds,
@@ -135,6 +135,21 @@ export function healthReport(result: ScanResult, thresholdLedgers: number): Scan
   };
 }
 
+/** Word-wraps `text` to `width` columns, every line starting with `indent`. */
+function wrapIndented(text: string, indent: string, width = 80): string[] {
+  const out: string[] = [];
+  let line = indent;
+  for (const word of text.split(' ')) {
+    if (line !== indent && line.length + 1 + word.length > width) {
+      out.push(line);
+      line = indent;
+    }
+    line += line === indent ? word : ` ${word}`;
+  }
+  if (line !== indent) out.push(line);
+  return out;
+}
+
 export function formatHuman(result: ScanResult, now: Date, options: FormatOptions = {}): string {
   const color = options.color === true;
   const thresholdLedgers = options.thresholdLedgers ?? DEFAULT_THRESHOLD_LEDGERS;
@@ -255,8 +270,10 @@ export function formatHuman(result: ScanResult, now: Date, options: FormatOption
     // a reader to guess at the moment they are trying to act.
     if (issue.kind === 'entry-not-found') {
       lines.push('  This means one of two things, and a scan cannot distinguish them:');
-      lines.push('    · the entry was ARCHIVED — restore it with RestoreFootprintOp, or');
+      lines.push('    · the entry was ARCHIVED, or');
       lines.push('    · it never existed — check the contract ID and that it is deployed here.');
+      // Core's wording, not a paraphrase of it (PH2-E1-05).
+      lines.push('  If it was archived:', ...wrapIndented(ARCHIVED_ENTRY_ADVICE, '    '));
     }
     lines.push('');
   }

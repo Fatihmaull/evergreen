@@ -2,7 +2,7 @@
 
 **Find out when your Soroban contract's data expires, and what keeping it alive costs.**
 
-Soroban ledger entries have a TTL measured in ledgers, not seconds. Every closed ledger decrements it. When it runs out the entry is **archived** — or for temporary entries **deleted outright** — and your contract stops working until someone pays to restore it. `evergreen scan` tells you how long you have, what happens when time runs out, and what an extension would cost.
+Soroban ledger entries have a TTL measured in ledgers, not seconds. Every closed ledger decrements it. When it runs out the entry is **archived** — or for temporary entries **deleted outright**. An archived entry is restored, and charged for, by the next invocation that lists it in its restore list (simulation fills that list in), and it has to be restored before it can be extended. Deleted data is gone at any price. `evergreen scan` tells you how long you have, what happens when time runs out, and what an extension would cost.
 
 `scan` is read-only: it never signs or submits. [Manual extension](#manual-extension-testnet) simulates by default and requires explicit flags before signing or submitting.
 
