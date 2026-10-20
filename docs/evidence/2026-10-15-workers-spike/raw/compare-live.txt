@@ -1,0 +1,8 @@
+[A] worker-nobuffer: cli before ledger [5208536], worker ledger [5208537], cli after ledger [5208537]
+   raw identical: True; masked identical (vs cli-before): True; vs cli-after: True; remaining==ends-observed: True
+[A] worker-buffer: cli before ledger [5208537], worker ledger [5208537], cli after ledger [5208537, 5208538]
+   raw identical: True; masked identical (vs cli-before): True; vs cli-after: True; remaining==ends-observed: True
+[A+B+C] worker-nobuffer: cli before ledger [5208538], worker ledger [5208538], cli after ledger [5208538]
+   raw identical: True; masked identical (vs cli-before): True; vs cli-after: True; remaining==ends-observed: True
+[A+B+C] worker-buffer: cli before ledger [5208538], worker ledger [5208539], cli after ledger [5208539]
+   raw identical: True; masked identical (vs cli-before): True; vs cli-after: True; remaining==ends-observed: True
