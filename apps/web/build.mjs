@@ -45,6 +45,7 @@ const repo = join(here, '../..');
  * directory Cloudflare Pages publishes in order to find out whether it is
  * current.
  */
+const redirected = Boolean(process.env.EVERGREEN_WEB_OUT);
 const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public');
 
 /**
@@ -344,19 +345,40 @@ const knownEnds = readKnownEnds();
  * at build time, and the browser bundles import this file, so a string no
  * client reads would otherwise ride into three 760 KB bundles.
  */
-writeFileSync(
-  join(here, 'data/known-ends.json'),
-  `${JSON.stringify(
-    Object.fromEntries(
-      Object.entries(knownEnds).map(([id, end]) => [
-        id,
-        Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
-      ]),
-    ),
-    null,
-    2,
-  )}\n`,
-);
+/**
+ * A redirected build does not write here.
+ *
+ * `data/known-ends.json` is generated from `ops/crossing-schedule.json` and
+ * committed, and the browser bundles import it — so it is a SOURCE file that
+ * the build happens to produce. Writing it on every run meant that
+ * `check-published.mjs`, which builds into a temporary directory to compare
+ * against the published one, mutated the repository as a side effect of
+ * verifying it: the comparison changed a file the thing being compared is
+ * built from.
+ *
+ * That is almost certainly the transient same-length mismatch on the four
+ * minified bundles, seen three times and never on demand. esbuild is
+ * deterministic across processes — three separate builds of the same source
+ * give byte-identical output, measured — so a differing bundle means a
+ * differing input, and this was the one input a verification run could move.
+ *
+ * Since #324 this gate blocks every merge in the repository. A gate that
+ * edits the tree it is checking cannot be trusted about it.
+ */
+if (!redirected)
+  writeFileSync(
+    join(here, 'data/known-ends.json'),
+    `${JSON.stringify(
+      Object.fromEntries(
+        Object.entries(knownEnds).map(([id, end]) => [
+          id,
+          Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
+        ]),
+      ),
+      null,
+      2,
+    )}\n`,
+  );
 const evidence = {
   count: readdirSync(join(repo, 'docs/evidence'), { withFileTypes: true }).filter((d) =>
     d.isDirectory(),
