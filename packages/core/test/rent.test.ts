@@ -138,6 +138,82 @@ describe('estimateRent — what it refuses to price', () => {
     expect(excluded[0]?.detail).toContain('RestoreFootprintOp');
   });
 
+  // Since #235 an entry past its final live ledger is `status: 'expired'`, not
+  // `known` with a negative count. Both callers (the CLI's `scan --cost` and the
+  // dashboard's rent panel) pass per-entry targets for live `known` entries
+  // only, so an expired or unreadable entry that reaches the quoter has no
+  // target and used to throw, losing the price of every live entry with it.
+  // Measured on guinea-pig B: "Could not price an extend: the network declined
+  // to simulate it", when the network had not been asked.
+  const liveTargetOnly = { [SHARED_CODE]: 900_000 };
+
+  it.each([
+    ['archived, RPC reported no final ledger', { status: 'expired' as const }],
+    ['archived, with its final ledger', { status: 'expired' as const, endedAtLedger: 4_597_000 }],
+  ])('🔴 excludes an expired entry (%s) and still prices the live ones', async (_, ttl) => {
+    const scan: ScanResult = {
+      ...factoryScan,
+      entries: {
+        [INSTANCE_B]: { ...entry([B]), ttl },
+        [SHARED_CODE]: entry([B, C], 693_256, 'code'),
+      },
+    };
+    const { estimate, excluded } = await estimateRent(
+      scan,
+      { extendToLedgers: liveTargetOnly },
+      flatQuoter('100000'),
+    );
+    expect(estimate.estimatedRentStroopsByEntry).toEqual({ [SHARED_CODE]: '100000' });
+    expect(excluded).toEqual([
+      {
+        entryKey: INSTANCE_B,
+        reason: 'already-expired',
+        detail: expect.stringContaining('RestoreFootprintOp'),
+      },
+    ]);
+  });
+
+  it('does not offer a restore for an expired temporary entry', async () => {
+    const scan: ScanResult = {
+      ...factoryScan,
+      entries: {
+        [INSTANCE_B]: { ...entry([B], 1, 'temporary'), ttl: { status: 'expired' } },
+        [SHARED_CODE]: entry([B, C], 693_256, 'code'),
+      },
+    };
+    const { excluded } = await estimateRent(
+      scan,
+      { extendToLedgers: liveTargetOnly },
+      flatQuoter('100000'),
+    );
+    expect(excluded[0]?.reason).toBe('already-expired');
+    expect(excluded[0]?.detail).toContain('deleted');
+    expect(excluded[0]?.detail).not.toContain('RestoreFootprintOp');
+  });
+
+  it('🔴 excludes an entry whose TTL could not be read and still prices the live ones', async () => {
+    const scan: ScanResult = {
+      ...factoryScan,
+      entries: {
+        [INSTANCE_B]: { ...entry([B]), ttl: { status: 'unavailable' } },
+        [SHARED_CODE]: entry([B, C], 693_256, 'code'),
+      },
+    } as ScanResult;
+    const { estimate, excluded } = await estimateRent(
+      scan,
+      { extendToLedgers: liveTargetOnly },
+      flatQuoter('100000'),
+    );
+    expect(estimate.estimatedRentStroopsByEntry).toEqual({ [SHARED_CODE]: '100000' });
+    expect(excluded).toEqual([
+      {
+        entryKey: INSTANCE_B,
+        reason: 'ttl-unavailable',
+        detail: expect.stringContaining('could not be read'),
+      },
+    ]);
+  });
+
   it('🔴 reports a missing quote rather than treating it as zero', async () => {
     // A silent zero understates a bill, which is the direction that matters:
     // a user budgets for less than they owe and the extend fails funded short.
