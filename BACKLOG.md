@@ -642,7 +642,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 - [ ] **PH2-BL-01** (R · CER) **L** Contract auto-discovery via an indexer (Q14b).
 - [ ] **PH2-BL-02** (R · CER) **M** Telegram and webhook channels (stubs exist in `channel-stubs.ts`).
-- [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each.
+- [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each. Proposed fix (one shared SDK chunk): [Issue #321](https://github.com/Fatihmaull/evergreen/issues/321). **Not now:** deferred until after beta, at Fatih's request.
 - [ ] **PH2-BL-05** (F · WEBF) **S** Landing and marketing copy for the paid hosted tier.
 - [ ] **PH2-BL-08** (F · WEBF + CEF) **M** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
 
