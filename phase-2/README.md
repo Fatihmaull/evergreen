@@ -11,6 +11,10 @@ Evergreen's second phase, which is self-directed and comes after the SOW 1 submi
 | [`kickoff/CER.md`](kickoff/CER.md) | Rakha's CLI/engine agent |
 | [`kickoff/WEBR.md`](kickoff/WEBR.md) | Rakha's web agent |
 
+## Definitions of Done
+
+Phase 2 has two official gates (Fatih, 2026-10-20), defined in [`PHASE2-PLAN.md` § Definitions of Done](PHASE2-PLAN.md#definitions-of-done): **DoD-1 — Beta (testnet)** and **DoD-2 — Stable (testnet, post-beta)**. Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2, and `PH2-E5-02`'s core criterion is "DoD-2 met".
+
 ## Role codes
 
 | Code | Who |

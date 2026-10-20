@@ -21,6 +21,55 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 
 ---
 
+## Definitions of Done
+
+**Official, Fatih, 2026-10-20.** Two gates. The thresholds are written as Fatih set them; where one cannot be measured with what the plan will build, the note under them says which and why.
+
+**P0** = loss of funds, failed protection, or a false health state shown to a user.
+
+### DoD-1 — Beta (testnet)
+
+Met when:
+- every E0–E4 card is done;
+- at least 10 external users (not the team) are onboarded on testnet, each having logged in with email + wallet, added ≥1 contract to a watchlist, and run ≥1 extend (autopilot or manual) recorded in the fee ledger;
+- every user's feedback is recorded in one place (`PH2-E5-01`);
+- the public custody statement is approved by Fatih and live (`PH2-E4-06`);
+- no open P0.
+
+### DoD-2 — Stable (testnet, post-beta)
+
+Measured over 30 consecutive days after DoD-1:
+- zero missed protections (no watched entry archived while its allowance was valid and funded);
+- ≥99% of autopilot jobs succeed and 100% of failed pulls are refunded from the engine pool;
+- zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
+- the worst scheduler gap is measured, dated, and below the 17,280-ledger act threshold;
+- no open P0/P1, every incident has a postmortem;
+- every failure mode is shown to alert both user and operator, and a Neon backup restore has been exercised;
+- engine and treasury keys are separate and the float never exceeded its cap;
+- a cold reader can onboard from the docs alone (`B-D31-03`).
+
+**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2.** `PH2-E5-02`'s core criterion is "DoD-2 met".
+
+### Measurability: what these need that nothing yet provides
+
+Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from records the plan already calls for (the `PH2-E2-03` tables, transaction results, the engine account's history). These are not, as things stand:
+
+1. **"No open P1" is unmeasurable: P1 is not defined.** Only P0 is. The repo also has no priority labels (`gh label list`: `bug`, `documentation`, `enhancement` and the GitHub defaults), so "no open P0" has nowhere to be counted either. Both need a definition and a label before DoD-1 can be checked.
+2. **"Every failure mode is shown to alert both user and operator" needs a list of failure modes.** None exists. `PH2-E4-05` names operator conditions (failed pulls or extends, float low, allowance expiries), and §3.3 names user alerts (pre-flight abort, expired allowance, renewal reminders), but nothing enumerates the modes, so "every" cannot be checked.
+3. **"100% of failed pulls are refunded" does not match the flow it measures.** A pull that fails moves no XLM, so there is nothing to refund. §3.3 step 5 and §4.3 refund when *a pull succeeds and the extend fails*. As written the threshold is either vacuous or measures the wrong event.
+4. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
+5. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
+6. **The 30 days assume testnet is not reset during them.** A testnet reset wipes every watched entry. Whether one falls inside the window is **undetermined**, and the DoD does not say whether a reset restarts the 30 days.
+7. **"A cold reader" cannot be Fatih any more.** `B-D31-03`'s own row says the cold read now belongs to someone who has watched the project for a month. The reader has to be someone else, for example one of the external beta users.
+
+Measurable with records still to be built:
+- *zero missed protections*: §3.3's pre-flight reads the allowance and the user's balance before every job. It is measurable only for entries the scan can see (instance, code, and declared data keys).
+- *≥99% of autopilot jobs succeed*: below 100 jobs in the window, 99% means zero failures. Whether a clean pre-flight abort (a user's empty balance, alerted) counts as a failure is not defined.
+- *the float never exceeded its cap*: needs the cap recorded as a number (`PH2-E4-03`), and the engine account's balance recorded continuously or reconstructed from its history.
+- *zero subsidy*: from the fee ledger plus each transaction's charged fee. ADR-007's `[to verify]` on resource-fee refunds changes what reconcile records, not whether it is measurable.
+
+---
+
 ## 2 · Decision record
 
 | # | Decision | Cost / consequence |
@@ -290,7 +339,7 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
-| PH2-E5-02 | Mainnet readiness checklist | F + R | S | PH2-E5-01 |
+| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done) | F + R | S | PH2-E5-01 |
 | PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 

@@ -634,7 +634,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E5 — Initial release and launch
 
 - [ ] **PH2-E5-01** (F) **M** Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics. *Depends on E3 and E4.*
-- [ ] **PH2-E5-02** (S · F + R) **S** Mainnet readiness checklist. *Depends on `PH2-E5-01`.*
+- [ ] **PH2-E5-02** (S · F + R) **S** Mainnet readiness checklist. **Core criterion: DoD-2 met** ([`phase-2/PHASE2-PLAN.md` § Definitions of Done](phase-2/PHASE2-PLAN.md#definitions-of-done), official 2026-10-20). Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2. *Depends on `PH2-E5-01`.*
 - [ ] **PH2-E5-03** (F) **S** Set the fee percentage from measured mainnet costs. **Each hosted action is two or three network transactions** (pull, extend, sometimes a refund), each paying its own fee. The percentage must cover all of them, or the engine subsidises them silently (ADR-007). *Depends on `PH2-E1-03` data (the mainnet scan path).*
 - [ ] **PH2-E5-04** (S · R + F) **M** Mainnet launch with small caps; Rakha owns the release. *Depends on `PH2-E5-02`, `PH2-E5-03`.*
 
