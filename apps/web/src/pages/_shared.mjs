@@ -78,7 +78,7 @@ export function approxDate(targetLedger, refLedger, refIso) {
   return `~${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
-/** '2026-09-21' → '21 September 2026'. Read from the write guard, never typed. */
+/** '2026-09-21' → '21 September 2026'. Read from the crossing schedule, never typed. */
 export function dateLong(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${d} ${MONTHS[m - 1]} ${y}`;

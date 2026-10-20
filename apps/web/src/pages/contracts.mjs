@@ -12,7 +12,7 @@ export const meta = {
   active: '/dashboard/contracts/',
   eyebrow: 'Our contracts · three, for three different reasons',
   heading: 'The contracts this project runs against',
-  lead: 'A is the working subject, B is the control left to decay, C is the backup proof. All three were built from one Wasm, so one code entry binds them all — and touching it touches both proofs, which is why the write guard refuses it by key.',
+  lead: 'A is the working subject, B is the control left to decay, C is the backup proof. All three were built from one Wasm, so one code entry binds them all — and touching it touches both proofs, which is why a write guard refused it by key while the two decay proofs were running.',
   script: null,
 };
 

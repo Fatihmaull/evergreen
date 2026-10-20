@@ -5,7 +5,6 @@ import { extensionKey } from './extend.js';
 import type { PlannedExtension } from './extend.js';
 import { hasExpired, isExpiredObservation, needsAction } from './ttl.js';
 import { resolveHealthThresholds } from './health.js';
-import { assertWriteAllowed, ProtectedEntryError } from './write-guard.js';
 
 export interface EngineExecutionEntry {
   readonly payer: string;
@@ -64,13 +63,6 @@ export function planEngineExecution(
       decision.contracts[0] !== owner
     ) {
       throw new Error('Selected key kind or consumer mismatch');
-    }
-    try {
-      assertWriteAllowed({ contractId: owner, entryKeys: [decision.entryKey], scan });
-    } catch (error) {
-      if (!(error instanceof ProtectedEntryError)) throw error;
-      skip(`REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`);
-      continue;
     }
     if (kind === 'temporary') {
       const consent = temporaryConsent(config, decision.entryKey, owner);

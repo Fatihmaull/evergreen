@@ -37,14 +37,7 @@ export {
   WORST_OBSERVED_SCHEDULER_GAP_MINUTES,
   SCHEDULER_GAP_FLOOR_MINUTES,
 } from './config.js';
-export {
-  PROTECTED_ENTRIES,
-  ProtectedEntryError,
-  SHARED_CODE_ENTRY_KEY,
-  SHARED_CODE_UNTIL,
-  assertWriteAllowed,
-} from './write-guard.js';
-export type { WriteGuardOptions } from './write-guard.js';
+export { SHARED_CODE_ENTRY_KEY } from './shared-code.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
