@@ -9,9 +9,21 @@ Space Mono, **12px**, `+0.02em`, `--ink-3`. Sentence case — **not uppercase**.
 It sits above a heading and names the section, and on a documentation page it
 also does the job a breadcrumb would.
 
-There is one uppercase label left on the site, in the dashboard sidebar, and it
-is three short words. Thirty-three characters of uppercase was removed on
-2026-09-26 for being a passage rather than a label.
+Thirty-three characters of uppercase was removed on 2026-09-26 for being a
+passage rather than a label. **Uppercase is still rendered in three places**,
+measured on production 2026-10-15, and this file used to say there was one:
+
+- the dashboard sidebar's group labels (`.nav-section`), three short words;
+- ~~the dashboard's stat labels (`.stat-label`)~~ — **removed 2026-10-19**;
+- ~~every table header row, from a global `th` rule~~ — **removed 2026-10-19**.
+
+**One place renders uppercase now**, `.nav-section`, on the seven dashboard
+routes — swept across all 31 routes on 2026-10-19. That is the intended one.
+The other two were defects against the sentence-case rule and are gone; their
+tracking came down from 0.06em and 0.07em to 0.02em at the same time, because
+the wider figures existed for the uppercase and leave a page looking spaced-out
+without it. **New work in any medium uses sentence case**, table headers
+included.
 
 ## Buttons
 
@@ -32,8 +44,9 @@ opacity on hover over 200ms. Six or so appearances on a 4,700px page.
 
 ## State chips
 
-Height ~24px, `5px 10px`, full pill, Space Mono 12px. A 6px mark leads the
-label, and **the mark's shape differs per state** — colour is never the only
+Height ~24px, `5px 10px`, full pill, Space Mono 12px, a 7px gap. A **9px**
+mark leads the label (this file said 6px until 2026-10-15; `styles.css .shape`
+is 9px), and **the mark's shape differs per state** — colour is never the only
 signal:
 
 | State | Mark |
@@ -42,10 +55,22 @@ signal:
 | warning | triangle, 10px base × 9px |
 | critical | 8px square rotated 45° |
 | expired | a light square on a solid `#0f0f0f` chip |
-| undetermined | hollow ring |
+| undetermined | hollow ring, 2px |
 
 The expired chip is the only one that inverts: solid ink ground, warm-white
-mark and text.
+mark and text. **Its word is the entry's ending, not "expired"**: *archived*,
+or *deleted* for a temporary entry (spec §8, and what renders). "Expired" is
+the state's name; it is the word in the inverted cell below, not on the chip.
+
+**Incomplete** is not a chip state of an entry: the check did not run. On the
+site it is the neutral verdict panel — `--paper`, a `--rule-strong` border, no
+state colour, never violet. Where it has to be drawn as a chip (a canvas, a
+legend), it is a 9 × 2px bar in `--ink-2` inside a hairline outline with no
+fill ([`infographic.md`](infographic.md); approved by Fatih 2026-10-18).
+
+On pine and pine-deep the chips change: the word turns cream, the fill is the
+mark at `.14`, and two marks change. See [`tokens.md`](tokens.md) § State on
+dark grounds.
 
 ## Terminal
 
@@ -89,8 +114,9 @@ values.
 ## Tables
 
 Hairlines only. **No card around them**, no fill, no radius on the marketing
-and docs surfaces. Header row in Space Mono 12px `--ink-3` with a hairline
-under it; cells at 14px with a hairline under each row; numeric and identifier
+and docs surfaces. Header row in Space Mono 12px `--ink-3`, sentence
+case — and it renders that way since 2026-10-19 — with a hairline under it;
+cells at 14px with a hairline under each row; numeric and identifier
 cells in Space Mono, `white-space: nowrap`.
 
 Capped at **620px** where the content is narrow — a two-column table stretched
@@ -110,7 +136,8 @@ with `temporary` inverted because it is the one that cannot be recovered.
 ## Dashboard panel
 
 The dashboard is an instrument and is allowed panels: `--paper` fill, 1px
-`--rule` border, 8px radius, `20px 22px` padding. A panel holds a chart and its
+`--rule` border, 8px radius, `20px 22px` padding. The 8px is the dashboard's
+only; see [`tokens.md`](tokens.md) § Radius. A panel holds a chart and its
 source table. It is **not** a way to put text in a box — the marketing pages
 have none, and the design budget holds the dashboard's count to what each page
 measured at so a new one is a decision rather than drift.
@@ -143,3 +170,42 @@ honest. Chart text is Space Mono **12px**. Marks use `--sage` for edges and
 Every dot is a recorded observation, and the build asserts the dot count
 matches the observation count — because the caption says so, and a caption is
 a claim the rendering has to support.
+
+## Phase 2 components
+
+Specified 2026-10-15 for the surfaces phase 2 adds (login, watchlist, extend,
+allowance). **None of these is built yet.** They are stated here so the two web
+tracks build one version rather than two. Behaviour comes from
+`phase-2/PHASE2-PLAN.md`; this is appearance only.
+
+**Text input.** As it ships on the scanner: `--paper` fill, Space Mono 14px
+for addresses and IDs (Inter 14px for an email), `12px 14px` padding, 6px
+radius. **One change, approved by Fatih 2026-10-18:** the border is
+`rgba(15,15,15,.5)`, not `--rule-strong`.
+At `.44` an input's edge measures 2.98:1 on paper, under the 3:1 a control's
+boundary needs; `.5` measures 3.59:1. It is still an alpha of the foreground,
+not a grey. The label sits above the field in `.field-label` (12px, `--ink-3`,
+sentence case).
+
+**Focus.** As it ships: `2px solid --pine`, offset 2px, radius 3px, on every
+interactive element. Never removed, never replaced by a glow.
+
+**Error under a field.** `--crit-ink` text at 12px, led by the critical mark (a
+rotated square), saying what was wrong and what to do. Not red borders alone.
+
+**Amounts of XLM.** Space Mono, unrounded at the precision the chain reports,
+with the unit (`XLM` or `stroops`) every time. Rent and Evergreen's fee are
+**always two separate lines, never one summed figure**, because they are two
+separate transactions (plan §3.3). An estimate carries the word *estimate*.
+
+**The signing step.** Before a wallet prompt opens, the page states, in plain
+text and at body size: what will be signed, the amount and the destination,
+and that it authorises **a payment, never access to a contract** (AGENTS.md
+hard rule 3: `extendTTL` is permissionless). A dialog is a `--paper` panel with
+a hairline border and 8px radius on the dashboard. No shadow, no backdrop blur;
+the backdrop is `--ink` at `.30` (approved by Fatih 2026-10-18).
+
+**Empty and loading states.** A sentence, not a skeleton: nothing shimmers
+([`motion.md`](motion.md)). `reading…` in `--ink-3` until the value arrives, as
+the status bar does today; on failure, the incomplete state with the endpoint named.
+

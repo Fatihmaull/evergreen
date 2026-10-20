@@ -7,7 +7,7 @@
     <meta name="description" content="Recorded remaining-TTL observations for our three testnet subjects: the control that decays, the contract that was extended, and the shared code entry. Every point cites its evidence." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;500&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body class="app">
@@ -102,11 +102,11 @@
     </details>
   </article><article class="card card-pad stack">
     <h2>shared code entry</h2>
-    <p class="muted">One entry all three contracts depend on — A, B and C were built from one Wasm. Due to be extended at W3-D18-02d; touching it touches both decay proofs, which is why the write guard refuses it by key.</p>
+    <p class="muted">One entry all three contracts depend on — A, B and C were built from one Wasm. Extended on 2026-10-14, eighteen days late, after the decay proofs were captured.</p>
     <div class="graph-wrap"><svg class="decay" viewBox="0 0 940 300" role="img" aria-label="Remaining ledgers over time for shared code entry. Dots are recorded observations; steps are real extensions.">
-    <line class="decay-band" x1="92" y1="220.7318398791455" x2="916" y2="220.7318398791455" /><text class="decay-band-label" x="916" y="215.7318398791455" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="250.9616914113065" x2="916" y2="250.9616914113065" /><text class="decay-band-label" x="916" y="245.9616914113065" text-anchor="end">act 17,280</text>
-    <path class="decay-line" d="M92.0 50.6 L366.9 119.1" />
-    <line class="decay-dash" x1="366.8753034850735" y1="119.1472345283969" x2="916" y2="256" /><circle class="decay-dot" cx="92" cy="50.64285714285717" r="4.5" /><circle class="decay-dot" cx="366.8753034850735" cy="119.1472345283969" r="4.5" /><text class="decay-expiry upcoming" x="916" y="288" text-anchor="end">expires ~2026-10-20 · ledger 5,290,829 · not yet</text>
+    <line class="decay-band" x1="92" y1="248.0138863213369" x2="916" y2="248.0138863213369" /><text class="decay-band-label" x="916" y="243.0138863213369" text-anchor="end">warning 120,960</text><line class="decay-band" x1="92" y1="254.85912661733386" x2="916" y2="254.85912661733386" /><text class="decay-band-label" x="916" y="249.85912661733386" text-anchor="end">act 17,280</text>
+    <path class="decay-line" d="M92.0 209.5 L374.5 225.0 L813.8 249.1 L813.8 50.6 L916.0 56.3" />
+    <circle class="decay-dot" cx="92" cy="209.49897805945247" r="4.5" /><circle class="decay-dot" cx="374.51912990943606" cy="225.01109276609574" r="4.5" /><circle class="decay-dot" cx="916" cy="56.25545241255912" r="4.5" /><circle class="decay-step" cx="813.7788933283912" cy="50.64285714285717" r="5.5" /><text class="decay-step-label" x="813.7788933283912" y="38.64285714285717" text-anchor="middle">manual stellar CLI · <a href="https://stellar.expert/explorer/testnet/tx/ef5817188b0405bea7e5622365cc2fb8585438fc164890104aff5114630340fb">ef581718…</a></text>
     <text class="decay-axis" x="92" y="288">ledger 4,586,511</text>
   </svg></div>
     <p class="small muted">The dashed segment is a projection to a known expiry ledger, not a reading. Nothing has been recorded past the last dot.</p>
@@ -115,7 +115,7 @@
       <summary>Every point behind this panel, with its source</summary>
       <div class="table-wrap"><table>
         <thead><tr><th scope="col">Ledger</th><th scope="col">Remaining</th><th scope="col">What happened</th></tr></thead>
-        <tbody><tr><td class="num">4,586,511</td><td class="num">704,318</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,821,462</td><td class="num">469,367</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr></tbody>
+        <tbody><tr><td class="num">4,586,511</td><td class="num">704,318</td><td>observed · <span class="mono">docs/evidence/2026-09-09-scan-dedup/scan.json</span></td></tr><tr><td class="num">4,821,462</td><td class="num">469,367</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr><tr><td class="num">5,271,773</td><td class="num">3,025,389</td><td>observed · <span class="mono">apps/web/data/snapshot.json</span></td></tr><tr><td class="num">5,186,763</td><td class="num">104,066 → 3,110,399</td><td>manual stellar CLI · <a class="mono" href="https://stellar.expert/explorer/testnet/tx/ef5817188b0405bea7e5622365cc2fb8585438fc164890104aff5114630340fb">ef5817188b0405bea7e5622365cc2fb8585438fc164890104aff5114630340fb</a> · The entry that governs whether A, B and C are usable at all, 104,101 ledgers from archival. Remaining went from 104,101 to 3,107,326. Fee charged 289,112,648 stroops. <span class="mono">docs/evidence/2026-10-14-shared-code-extend/README.md</span></td></tr></tbody>
       </table></div>
     </details>
   </article></section>
@@ -124,9 +124,9 @@
     <p class="muted">
       A sawtooth is the product working: decay, then an extension, then decay again. A straight decline is
       the control: guinea-pig B was calibrated once on 5 September and left alone, so its two observations
-      agree on one expiry — ledger 4,793,687, about 21 September 2026. A's steps each link to the transaction
+      agree on one expiry — ledger 4,793,687, 21 September 2026. A's steps each link to the transaction
       that made them; the second step's timing was arranged by raising the threshold, the response was not.
-      The shared code entry binds all three contracts and expires about 20 October 2026 at ledger 5,290,829.
+      The shared code entry binds all three contracts and ends at ledger 8,297,162, ~12 April 2027.
     </p>
   </section>
         </main>

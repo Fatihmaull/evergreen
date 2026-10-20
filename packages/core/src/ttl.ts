@@ -1,5 +1,10 @@
 import { formatCount } from './format.js';
-import type { LedgerEntryTTL, TTLObservation } from '@evergreen-stellar/shared-types';
+import type {
+  LedgerEntryTTL,
+  LedgerKey,
+  ScanIssue,
+  TTLObservation,
+} from '@evergreen-stellar/shared-types';
 
 /**
  * TTL math. Pure — no SDK, no I/O, no clock.
@@ -32,11 +37,17 @@ export function observeTTL(args: {
   // Absent for entry types that carry no TTL. Never fabricate a zero: "unknown"
   // and "expiring now" must not collapse into the same value.
   if (args.liveUntilLedgerSeq === undefined) return { status: 'unavailable' };
-  return {
-    status: 'known',
-    endsAtLedger: args.liveUntilLedgerSeq,
-    remainingLedgers: args.liveUntilLedgerSeq - args.observedAtLedger,
-  };
+  // An archived entry comes back with liveUntilLedgerSeq 0 (#235, measured on
+  // guinea-pigs B and C). Zero is not a ledger it lived to, so nothing is
+  // derived from it: no end ledger, and no "remaining" counted from a placeholder.
+  if (args.liveUntilLedgerSeq === 0) return { status: 'expired' };
+  const remainingLedgers = args.liveUntilLedgerSeq - args.observedAtLedger;
+  // A real final ledger that is already behind us is still an expiry, not a
+  // TTL we "know" with a negative balance.
+  if (hasExpired(remainingLedgers)) {
+    return { status: 'expired', endedAtLedger: args.liveUntilLedgerSeq };
+  }
+  return { status: 'known', endsAtLedger: args.liveUntilLedgerSeq, remainingLedgers };
 }
 
 /**
@@ -73,10 +84,22 @@ export function hasExpired(remainingLedgers: number): boolean {
   return remainingLedgers < 0;
 }
 
+/**
+ * Is this observation past its final live ledger? `observeTTL` reports that as
+ * `expired` since #235, but a `known` observation with a negative count can
+ * still arrive from outside this function: a 0.1.x `--json` result fed back in,
+ * a stored record, a hand-built fixture. Treat that legacy shape as expired too,
+ * so no assessor grades it live or healthy.
+ */
+export function isExpiredObservation(ttl: TTLObservation): boolean {
+  if (ttl.status === 'expired') return true;
+  return ttl.status === 'known' && hasExpired(ttl.remainingLedgers);
+}
+
 /** Is the entry still live? Zero remaining is its final live ledger, not death. */
 export function isLive(ttl: TTLObservation): boolean | undefined {
   if (ttl.status === 'unavailable') return undefined;
-  return !hasExpired(ttl.remainingLedgers);
+  return !isExpiredObservation(ttl);
 }
 
 /**
@@ -122,7 +145,10 @@ export function needsAction(remainingLedgers: number, thresholdLedgers: number):
  * ledger number, and cadence is measured rather than guaranteed.
  */
 export function estimateEndsAt(ttl: TTLObservation, now: Date): Date | undefined {
-  if (ttl.status === 'unavailable') return undefined;
+  // An expired entry gets no date: before #235 this projected one from the
+  // RPC's placeholder ledger 0, and printed "expires ~2025-12-18" for entries
+  // that expired in September 2026.
+  if (ttl.status !== 'known' || isExpiredObservation(ttl)) return undefined;
   return new Date(now.getTime() + ttl.remainingLedgers * SECONDS_PER_LEDGER * 1000);
 }
 
@@ -261,6 +287,17 @@ export type EndProjection =
       readonly isRestorableAfterEnd: boolean;
     }
   | {
+      /**
+       * Past its final live ledger (#235). No dates: the only ledger the RPC
+       * may report is the one it ended on, and often not even that.
+       */
+      readonly status: 'expired';
+      readonly endedAtLedger?: number;
+      readonly endBehavior: LedgerEntryTTL['endBehavior'];
+      readonly isLive: false;
+      readonly isRestorableAfterEnd: boolean;
+    }
+  | {
       readonly status: 'known';
       /** Final LIVE ledger, inclusive. The truth; store this, not a date. */
       readonly endsAtLedger: number;
@@ -307,6 +344,16 @@ export function projectEnd(
   if (entry.ttl.status === 'unavailable') {
     return { status: 'unavailable', endBehavior: entry.endBehavior, isRestorableAfterEnd };
   }
+  if (entry.ttl.status === 'expired' || isExpiredObservation(entry.ttl)) {
+    const endedAtLedger = entry.ttl.status === 'expired' ? entry.ttl.endedAtLedger : undefined;
+    return {
+      status: 'expired',
+      ...(endedAtLedger === undefined ? {} : { endedAtLedger }),
+      endBehavior: entry.endBehavior,
+      isLive: false,
+      isRestorableAfterEnd,
+    };
+  }
   if (!(cadence.secondsPerLedger > 0)) {
     throw new Error('Cadence must be a positive number of seconds per ledger');
   }
@@ -337,4 +384,33 @@ export function projectEnd(
     latestEndsAt: new Date(Math.max(slow, fast)),
     cadence,
   };
+}
+
+/**
+ * One `entry-expired` issue per expired entry (#235). Before 0.2.0 an archived
+ * entry produced an EMPTY `issues` array beside `ttl.status: 'known'`, so the
+ * machine channel said nothing was wrong while the assessment said critical.
+ */
+export function expiredEntryIssues(
+  entries: Readonly<Record<LedgerKey, LedgerEntryTTL>>,
+): ScanIssue[] {
+  const out: ScanIssue[] = [];
+  for (const [entryKey, entry] of Object.entries(entries)) {
+    if (entry.ttl.status !== 'expired') continue;
+    const ended =
+      entry.ttl.endedAtLedger === undefined
+        ? 'RPC reported no final ledger'
+        : `final live ledger ${entry.ttl.endedAtLedger}`;
+    out.push({
+      kind: 'entry-expired',
+      contracts: [...entry.contracts],
+      entryKey,
+      observedAtLedger: entry.observedAtLedger,
+      message:
+        entry.endBehavior === 'deleted'
+          ? `Temporary entry is past its final live ledger and was deleted; it cannot be restored (${ended}).`
+          : `Entry is ARCHIVED, past its final live ledger; extendTTL cannot reach it, it needs a restore (${ended}).`,
+    });
+  }
+  return out;
 }

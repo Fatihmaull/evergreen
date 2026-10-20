@@ -177,3 +177,94 @@ describe('an expired entry states what it is', () => {
     expect(Object.keys(view)).not.toContain('endsAt');
   });
 });
+
+/**
+ * The shape core emits after `PH2-E1-01` (#235), tested before core ships it.
+ *
+ * Every fixture above carries the OLD shape — `status: 'known'` with a
+ * negative `remainingLedgers` — which is precisely why nothing in this suite
+ * would have caught the break. The day core starts reporting
+ * `status: 'expired'`, `view.ts`'s `status !== 'known'` return catches every
+ * archived entry and renders it **unread**: a wrong answer, no error, no type
+ * error, and a green suite. `unread` means "we could not read this"; `archived`
+ * means "this is gone until someone pays". Giving the first answer when the
+ * second is true is the failure this product exists to name.
+ *
+ * So these assert against what core will emit, not against what it emits now.
+ */
+describe('the expired TTL status core is adding', () => {
+  const base = {
+    key: 'AAAABg==',
+    entry: {
+      kind: 'persistent' as const,
+      endBehavior: 'archived' as const,
+      contracts: ['CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ'] as const,
+      observedAtLedger: 5_200_000,
+    },
+    assessment: {
+      health: 'expired' as const,
+      needsAction: false,
+      isExpired: true,
+      observedContractCount: 1,
+      blastRadiusAtLeast: 1,
+      sharingStatus: 'exclusive' as const,
+      reason: 'Archived. Restoring it is a cost, not a loss.',
+    },
+  };
+
+  /** `{ status: 'expired' }` — an archived entry, where RPC reports a zero. */
+  const archived = {
+    ...base,
+    entry: { ...base.entry, ttl: { status: 'expired' } },
+  } as unknown as Parameters<typeof entryView>[0];
+
+  /** `{ status: 'expired', endedAtLedger }` — RPC reported a real final ledger. */
+  const withLedger = {
+    ...base,
+    entry: { ...base.entry, ttl: { status: 'expired', endedAtLedger: 4_793_688 } },
+  } as unknown as Parameters<typeof entryView>[0];
+
+  test('renders as expired, never as unread', () => {
+    expect(entryView(archived).state).toBe('expired');
+    expect(entryView(withLedger).state).toBe('expired');
+  });
+
+  test('keeps archived and deleted as different words', () => {
+    const view = entryView(archived);
+    expect(view).toMatchObject({ state: 'expired', word: 'archived' });
+
+    const temporary = {
+      ...base,
+      entry: {
+        ...base.entry,
+        kind: 'temporary' as const,
+        endBehavior: 'deleted' as const,
+        ttl: { status: 'expired' },
+      },
+    } as unknown as Parameters<typeof entryView>[0];
+    expect(entryView(temporary)).toMatchObject({ state: 'expired', word: 'deleted' });
+  });
+
+  test("prefers core's real final ledger over our recorded schedule", () => {
+    // 4,793,688 is guinea-pig B's persistent end in `known-ends.json`, so this
+    // asserts the two agree rather than that one silently shadowed the other.
+    expect(entryView(withLedger)).toMatchObject({ endedAtLedger: 4_793_688 });
+  });
+
+  test('shows no end ledger when core reports none and the schedule has none', () => {
+    const unknownSubject = {
+      ...base,
+      entry: {
+        ...base.entry,
+        contracts: ['CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L'] as const,
+        kind: 'code' as const,
+        endBehavior: 'archived' as const,
+        ttl: { status: 'expired' },
+      },
+    } as unknown as Parameters<typeof entryView>[0];
+    const view = entryView(unknownSubject);
+    expect(view.state).toBe('expired');
+    // Nowhere to put a number beats a number that is the arithmetic of a zero.
+    expect(view).not.toHaveProperty('endedAtLedger');
+  });
+});

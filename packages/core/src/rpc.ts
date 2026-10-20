@@ -1,5 +1,6 @@
-import { Contract, Networks, rpc, xdr } from '@stellar/stellar-sdk';
-import type { ContractId, LedgerKey } from '@evergreen-stellar/shared-types';
+import { Contract, rpc, xdr } from '@stellar/stellar-sdk';
+import type { ContractId, LedgerKey, NetworkName } from '@evergreen-stellar/shared-types';
+import { NETWORKS } from './networks.js';
 
 /**
  * The only place in the system that talks to the network.
@@ -18,6 +19,11 @@ export interface RawLedgerEntry {
 }
 
 export interface LedgerEntryReader {
+  /**
+   * The network this reader was VERIFIED against (PH2-E1-03), so a scan can
+   * report it. Absent on test doubles and legacy readers, which mean testnet.
+   */
+  readonly network?: NetworkName;
   /** One round trip: `latestLedger` arrives with the entries, so callers must not fetch it separately. */
   read(keys: readonly LedgerKey[]): Promise<{
     readonly latestLedger: number;
@@ -84,6 +90,6 @@ export function createRpcReader(server: rpc.Server): LedgerEntryReader {
 export async function connectTestnet(rpcUrl: string): Promise<LedgerEntryReader> {
   const server = new rpc.Server(rpcUrl);
   const { passphrase } = await server.getNetwork();
-  if (passphrase !== Networks.TESTNET) throw new NotTestnetError(passphrase);
+  if (passphrase !== NETWORKS.testnet.passphrase) throw new NotTestnetError(passphrase);
   return createRpcReader(server);
 }

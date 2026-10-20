@@ -38,6 +38,27 @@
 
 ---
 
+## Current — design language extended to every medium, 2026-10-15
+
+Design audit, then Fatih's five decisions of the same day, applied in
+`web-reference/design-language/`. **Task ID: `PH2-E3-08`**, registered on
+2026-10-18 by #332 under hard rule 8, after this note was written. #304 merged on
+2026-10-19 as `e3248ca`, so the card is done. Added `brand.md`, `formats.md`, `infographic.md`,
+`motion-graphics.md` and `source/` (vector masters traced from the shipped
+mask at IoU 0.9927, the favicon set, seven canvas templates and their renders).
+Corrected contradictions inside the directory (radius, uppercase, chip size,
+docs type sizes), gated `claims-and-copy.md` on phase-2 features shipping, and
+pointed the README at production. Decisions: the header mark is the mark
+(`W4-D22-08` gets its favicon; the figurative search is still open); the hero
+video is left until the phase-2 dashboard is done; two dark-ground state marks;
+design is set in `web-reference/design-language/` and implemented by the web
+agents (kickoffs amended); Inter confirmed. **Nothing in `apps/` changed** —
+wiring the favicon, the dashboard's extra font weights, the uppercase table
+headers and the docs' 11px tag are handed to the web track. No testnet
+operation. Notion sync pending.
+
+---
+
 ## Current — PH2-E0-02: there was no evidence freeze, 2026-10-15
 
 **The card's premise was false, and the card was re-scoped by Fatih (option A).** The premise was that `check:evidence-integrity` pins `core`, so `core` was frozen until a tag-based gate replaced it. Measured:
@@ -54,7 +75,7 @@
 
 Every phase-2 card from [`phase-2/PHASE2-PLAN.md`](../phase-2/PHASE2-PLAN.md) is now a row in `BACKLOG.md` § Phase 2: **43 new `PH2-` IDs**, plus three backlog cards that keep their existing `B-D31-01/02/03` IDs. `scripts/task-id.mjs` learned the `PH2-` form, with tests in both directions, and `check:task-ids` now also scans `phase-2/`, where every provisional label was rewritten to its ID. `PH2-E0-01` is ticked: #296 and #297 are on `main`. Owners changed on two existing rows, per the confirmed plan: `B-D31-01` S → R · CER, `B-D31-02` F → F · CEF.
 
-**Notion sync pending: 68 rows, not 43.** The post-merge mirror sync on `48d1313` (run 38734398544) reports **68 `BACKLOG.md` rows with no Notion row** and 0 phantoms. 43 are the new `PH2-` IDs. **25 predate phase 2:** `W3-D18-03a`, `W4-D22-03` to `W4-D22-19`, `W4-D27-04`, `B-D29-04`, `B-D29-05` and `B-D31-01` to `B-D31-04`. The rows were not created on 2026-10-15 because this session's Notion connector is authenticated to a different workspace, and the Evergreen Tasks database returned 404. `sync-notion` never creates rows (by design), so they need a session with Evergreen workspace access, per AGENTS.md § D.3 and § F.
+**Notion sync: done 2026-10-18.** The connector was first on a different workspace (IBUNDA.ID), and nothing was written there. After Fatih reconnected it, `notion-get-self` reported "Fatih maulana's Notion" and the Evergreen Tasks database read correctly. 70 missing rows were created: the 68 known, plus `PH2-E1-09` and `PH2-E3-08`. A presence diff in both directions then found **0 missing and 0 phantoms**: 220 Notion rows, all distinct, which is every `BACKLOG.md` ID plus the retired ~~W3-D18-02~~.
 
 ## Current — W4-D22-08 supplied website mark requested
 

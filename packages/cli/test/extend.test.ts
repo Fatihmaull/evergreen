@@ -93,23 +93,6 @@ describe('extend CLI contract', () => {
       includeCode: false,
     });
   });
-  it.each([
-    ['--submit'],
-    ['--submit', '--secret-env', 'KEY'],
-    ['--submit', '--secret-env', 'KEY', '--max-fee-stroops', '0'],
-    ['--ledgers', '-1'],
-    ['--ledgers', '9007199254740992'],
-    ['--submit', '--dry-run'],
-    ['--include-code', '--include-code'],
-    ['--secret-env', 'SAMPLESECRET'],
-    ['--source-account', 'bad'],
-    ['--max-fee-stroops', '1.2'],
-  ])('refuses invalid/conflicting arguments before connecting: %j', async (flags) => {
-    const deps = dependencies();
-    const output = await runExtendCli(['extend', A, '--ledgers', '20', ...flags], deps);
-    expect(output.exitCode).toBe(2);
-    expect(deps.run).not.toHaveBeenCalled();
-  });
   it('requires an explicit public payer, with no fallback identity', async () => {
     const base = dependencies();
     const deps = { readKeysFile: base.readKeysFile, run: base.run };

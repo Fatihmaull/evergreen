@@ -3,7 +3,7 @@ import { Address } from '@stellar/stellar-sdk';
 import type { BumpDecision, EvergreenConfig, ScanResult } from '@evergreen-stellar/shared-types';
 import { extensionKey } from './extend.js';
 import type { PlannedExtension } from './extend.js';
-import { hasExpired, needsAction } from './ttl.js';
+import { hasExpired, isExpiredObservation, needsAction } from './ttl.js';
 import { resolveHealthThresholds } from './health.js';
 import { assertWriteAllowed, ProtectedEntryError } from './write-guard.js';
 
@@ -91,6 +91,12 @@ export function planEngineExecution(
       !registrations.some((c) => c.dataKeys?.some((k) => k.trim() === decision.entryKey))
     ) {
       throw new Error('Persistent execution key was not declared');
+    }
+    // Expired before unreadable: since #235 an expired entry is reported as
+    // such, with an `entry-expired` issue, and calling it "unreadable" would be
+    // the wrong answer about an entry that was read perfectly well.
+    if (entry.ttl.status === 'expired' || isExpiredObservation(entry.ttl)) {
+      throw new Error('Selected entry is not valid live state: it is past its final live ledger');
     }
     if (
       entry.ttl.status !== 'known' ||

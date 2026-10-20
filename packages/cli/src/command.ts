@@ -1,4 +1,6 @@
 import {
+  NetworkConfigError,
+  NetworkMismatchError,
   NotTestnetError,
   coverageIssues,
   isValidContractId,
@@ -25,11 +27,17 @@ const DEFAULT_EXTEND_LEDGERS = 518_400;
 // Both commands, because this is what a mistyped command prints: a usage line
 // naming only `scan` hid `extend` from anyone who had not already found it.
 const USAGE =
-  'usage: evergreen scan <contract-id> [<contract-id> ...] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]\n' +
+  'usage: evergreen scan <contract-id> [<contract-id> ...] [--network testnet|mainnet] [--keys-file <path> | --no-data-keys] [--require-declared-scope] [--threshold N] [--json] [--cost [--ledgers N]] [--optimize]\n' +
   '       evergreen extend <contract-id> --ledgers N [...]   (evergreen extend --help)';
 const HELP = `${USAGE}
 
-Reads instance/Wasm and supplied persistent/temporary keys on Stellar Testnet.
+Reads instance/Wasm and supplied persistent/temporary keys, on Stellar Testnet
+by default. --network mainnet (or EVERGREEN_NETWORK=mainnet) reads mainnet; the
+flag wins over the variable. Mainnet has no default RPC: set SOROBAN_RPC_URL to
+a mainnet endpoint. Providers are listed at
+https://developers.stellar.org/docs/data/apis/rpc/providers
+The RPC's own network passphrase is always checked against the one chosen.
+Writes stay testnet-only.
 Keys file: { "dataKeys": ["base64 XDR LedgerKey", ...] }
 
 PASS SEVERAL CONTRACTS TOGETHER to see real shared-code blast radius. Contracts
@@ -259,6 +267,12 @@ export async function runCli(
     // the more important of the two: the testnet guard firing means you are
     // pointed at another network, most likely MAINNET, which is a safety event
     // rather than a connectivity one.
+    // PH2-E1-03: a network that cannot be used as chosen, and an RPC serving a
+    // different network than chosen, are both configuration problems with an
+    // exact fix, so each prints its own message rather than "could not reach".
+    if (error instanceof NetworkConfigError || error instanceof NetworkMismatchError) {
+      return fail(error.message);
+    }
     if (error instanceof NotTestnetError) {
       return fail(
         `${error.message}\n` +

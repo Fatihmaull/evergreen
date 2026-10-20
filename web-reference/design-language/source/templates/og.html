@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Link card 1200 × 630</title>
+  </head>
+  <body>
+    <!-- Open Graph / link preview. Some clients crop to the centre square, so the
+     words that must survive sit in the left 630px; the lockup is the brand,
+     the line is the page's own title. -->
+    <div
+      class="canvas"
+      data-format="link card 1200×630 · k=2"
+      style="
+        --w: 1200px;
+        --h: 630px;
+        --safe-t: 64px;
+        --safe-r: 64px;
+        --safe-b: 64px;
+        --safe-l: 64px;
+      "
+    >
+      <div class="safe">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <div class="spacer"></div>
+        <p class="display" style="max-width: 20ch">Soroban contract rent, configured once</p>
+        <div class="spacer"></div>
+        <p class="label muted">evergreen-stellar.pages.dev</p>
+      </div>
+    </div>
+  </body>
+</html>

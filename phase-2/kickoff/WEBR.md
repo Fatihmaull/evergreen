@@ -24,7 +24,9 @@ Each of these is a place where the UI must be exactly as honest as the chain.
 
 **WEBF's** (open an issue mentioning Fatih instead of editing): login, account, watchlist, scan, landing and docs pages.
 
-**Shared:** layout, design tokens, the API client, the wallet-connect primitive. Agree these with WEBF at the start.
+**Shared:** layout, the API client, the wallet-connect primitive. Agree these with WEBF at the start.
+
+**Design tokens are not shared — they are set.** The design authority owns [`web-reference/design-language/`](../../web-reference/design-language/README.md); you and WEBF implement it in `apps/` and do not change a token, a size or a component's appearance on your own (Fatih, 2026-10-15). Need one changed? Ask for it, with the reason. The signing step and amounts are already specified in its `components.md` § Phase 2 components.
 
 ## Facts your screens must reflect (from #297 and the docs, all verified)
 

@@ -12,12 +12,32 @@ export const meta = {
 };
 
 export function render(ctx) {
-  const subjects = ctx.guard.subjects
+  /**
+   * From `ops/crossing-schedule.json` via `knownEnds`, not from
+   * `packages/core/src/write-guard.ts`. The guard's source used to be parsed
+   * for this table; it is being deleted (PH2-E0-06), and a documentation page
+   * that reads a mechanism's source file to list its subjects breaks when the
+   * mechanism is retired rather than when the list is wrong.
+   */
+  const subjects = Object.entries(ctx.knownEnds)
+    .filter(([, e]) => typeof e.label === 'string' && e.crossesOn && e.endsOn)
     .map(
-      (s) =>
-        `<tr><td class="num">${esc(s.label)}</td><td class="num">${esc(s.id.slice(0, 10))}…</td><td>Crosses ${esc(s.alert)}, expires ${esc(s.expires)}</td></tr>`,
+      ([id, e]) =>
+        `<tr><td class="num">${esc(e.label)}</td><td class="num">${esc(id.slice(0, 10))}…</td><td>Crossed ${esc(e.crossesOn)}, expired ${esc(e.endsOn)}</td></tr>`,
     )
     .join('');
+  /**
+   * An empty table here is a page telling the reader that nothing is
+   * protected, which is a different claim from the one this section makes.
+   * The previous reader threw when `write-guard.ts` did not yield exactly two
+   * subjects; a `filter` that quietly yields none would have lost that.
+   */
+  if (subjects === '') {
+    throw new Error(
+      'the guards page found no protected subjects in ops/crossing-schedule.json; ' +
+        'it would publish an empty table under "Protected subjects"',
+    );
+  }
   return `
     <h2 id="layers">Two independent layers</h2>
     <p>

@@ -303,6 +303,7 @@ PH2-E0-03 contents:
 | PH2-BL-03 | Dashboard bundle size: `core` embedded in 3 bundles of 732–768 KB each | WEBR | S |
 | B-D31-01 | Scheduler gap floor, still relevant for self-hosters on GitHub cron | CER | S |
 | PH2-BL-05 | Landing and marketing copy for the paid hosted tier | WEBF | S |
+| PH2-BL-08 | Build the site on Cloudflare Pages from source instead of committing `apps/dashboard/public/`; retires `check:published`. After PH2-E2-02 | WEBF + CEF | M |
 | B-D31-02 | Parked checker work — mostly superseded by PH2-E0-04; retire what PH2-E0-04 retires | CEF | S |
 | B-D31-03 | Cold read of the docs by someone who has not seen them, before the beta | F | S |
 
@@ -310,7 +311,7 @@ PH2-E0-03 contents:
 
 | Person | Scheduled (E0–E5) | Backlog | Total |
 |---|---|---|---|
-| **Fatih** (F 8.5 + CEF 24 + WEBF 6) | 38.5 | 3 | 41.5 |
+| **Fatih** (F 8.5 + CEF 24 + WEBF 6) | 38.5 | 5 | 43.5 |
 | **Rakha** (R 2.5 + CER 22 + WEBR 6) | 30.5 | 7 | 37.5 |
 
 **Rebalanced 2026-10-15** after the ownership moves accepted on #299. Before the moves it was Fatih 34.5 and Rakha 32.5 scheduled, recomputed from the tables above.

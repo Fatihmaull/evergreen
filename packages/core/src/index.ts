@@ -13,6 +13,8 @@ export {
   isValidThreshold,
   measureCadence,
   needsAction,
+  expiredEntryIssues,
+  isExpiredObservation,
   observeTTL,
   projectEnd,
   uniqueEntryCount,
@@ -111,3 +113,12 @@ export { validateExtensionEnvelope } from './ed25519-signer.js';
 export { formatCount, EVIDENCE_LOCALE } from './format.js';
 
 export { temporaryConsent } from './temporary-policy.js';
+export {
+  NETWORKS,
+  RPC_PROVIDERS_URL,
+  NetworkConfigError,
+  NetworkMismatchError,
+  connectNetwork,
+  resolveNetwork,
+} from './network.js';
+export type { NetworkChoice } from './network.js';

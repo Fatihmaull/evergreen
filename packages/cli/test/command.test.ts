@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { runCli } from '../src/command.js';
+import { NetworkMismatchError, resolveNetwork } from '@evergreen-stellar/core';
 import { readerFromFixture } from '../../core/test/mock-rpc.js';
 
 const FIXTURE = new URL(
@@ -218,5 +219,44 @@ describe('usage', () => {
       expect(result.stderr).toContain('usage: evergreen scan <contract-id>');
       expect(result.stderr).toContain('evergreen extend <contract-id> --ledgers N');
     }
+  });
+});
+
+describe('scan on a chosen network (PH2-E1-03)', () => {
+  it('reports the network the reader was verified against in --json', async () => {
+    const deps = dependencies();
+    deps.connect.mockImplementation(async () => ({
+      ...(await readerFromFixture(FIXTURE)),
+      network: 'mainnet' as const,
+    }));
+    const result = await runCli(['scan', A, '--no-data-keys', '--json'], deps);
+    expect(JSON.parse(result.stdout).network).toBe('mainnet');
+  });
+
+  it('prints the exact fix when mainnet has no RPC, not "could not reach"', async () => {
+    const deps = dependencies();
+    deps.connect.mockImplementation(async () => resolveNetwork({ flag: 'mainnet' }) as never);
+    const result = await runCli(['scan', A, '--no-data-keys'], deps);
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toMatch(/SOROBAN_RPC_URL/);
+    expect(result.stderr).not.toMatch(/Could not reach/);
+  });
+
+  it('names both networks when the RPC serves a different one', async () => {
+    const deps = dependencies();
+    deps.connect.mockRejectedValue(
+      new NetworkMismatchError('mainnet', 'Test SDF Network ; September 2015'),
+    );
+    const result = await runCli(['scan', A, '--no-data-keys'], deps);
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toContain('chosen network is mainnet');
+    expect(result.stderr).toContain('Test SDF Network');
+  });
+
+  it('documents --network and the mainnet RPC requirement in --help', async () => {
+    const result = await runCli(['--help'], dependencies());
+    expect(result.stdout).toContain('[--network testnet|mainnet]');
+    expect(result.stdout).toContain('EVERGREEN_NETWORK');
+    expect(result.stdout).toContain('Mainnet has no default RPC');
   });
 });

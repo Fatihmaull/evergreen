@@ -80,6 +80,7 @@ function readKnownEnds() {
     const s = watch.subject;
     if (!s?.contractId) continue;
     ends[s.contractId] = {
+      ...(typeof s.label === 'string' ? { label: s.label } : {}),
       ...(typeof s.expiresAtLedger === 'number' ? { instance: s.expiresAtLedger } : {}),
       ...(typeof s.persistentExpiresAtLedger === 'number'
         ? { persistent: s.persistentExpiresAtLedger }
@@ -123,40 +124,6 @@ function readKnownEnds() {
     };
   }
   return ends;
-}
-
-function readGuard() {
-  const src = readFileSync(join(repo, 'packages/core/src/write-guard.ts'), 'utf8');
-  const alerts = [...src.matchAll(/alertThresholdOn: '(\d{4}-\d{2}-\d{2})'/g)].map((m) => m[1]);
-  const expiries = [...src.matchAll(/expiresOn: '(\d{4}-\d{2}-\d{2})'/g)].map((m) => m[1]);
-  const key = src.match(/SHARED_CODE_ENTRY_KEY = '([A-Za-z0-9+/=]+)'/)?.[1];
-  if (alerts.length !== 2 || expiries.length !== 2 || !key) {
-    throw new Error(
-      'write-guard.ts moved under the web build: expected two alert dates, two expiries, one shared key',
-    );
-  }
-  /**
-   * The protected subjects, read whole rather than as four loose dates, so the
-   * guards page cannot list a subject the guard does not actually hold.
-   */
-  const subjects = [
-    ...src.matchAll(
-      /contractId:\s*'(C[A-Z2-7]{55})',\s*label:\s*'([^']+)',[\s\S]*?alertThresholdOn:\s*'(\d{4}-\d{2}-\d{2})',\s*expiresOn:\s*'(\d{4}-\d{2}-\d{2})'/g,
-    ),
-  ].map((m) => ({ id: m[1], label: m[2], alert: m[3], expires: m[4] }));
-  if (subjects.length !== 2) {
-    throw new Error(
-      `write-guard.ts holds ${subjects.length} protected subjects; the docs page expects two`,
-    );
-  }
-  return {
-    bAlert: alerts[0],
-    bExpires: expiries[0],
-    cAlert: alerts[1],
-    cExpires: expiries[1],
-    sharedKey: key,
-    subjects,
-  };
 }
 
 function readCli() {
@@ -271,6 +238,40 @@ function docModule(route) {
 const CAPTURE = 'docs/evidence/2026-09-12-w2-review/scan-a-human.txt';
 
 const snapshot = readJson('data/snapshot.json');
+
+/**
+ * The shared `ContractCode` entry's end, read from the snapshot rather than
+ * typed into a page.
+ *
+ * This entry is the product's headline — one entry built from one Wasm, shared
+ * by all three contracts, 98% of the bill, and they stop together. Its end
+ * ledger was a literal in two pages (`5290829`, four occurrences). It was
+ * extended to 8,297,162 on 2026-10-14 (#296) and the pages went on announcing
+ * the old number in the present tense for five days, two of them inside the
+ * window the old number named.
+ *
+ * Exactly one code entry, asserted: the three contracts share one, and that
+ * sharing IS the claim. If a snapshot ever carries two, the pages would be
+ * picking one of them silently and the sentence beside the number would be
+ * false.
+ */
+function readSharedCodeEnd() {
+  const code = Object.values(snapshot.result.entries).filter((e) => e.kind === 'code');
+  if (code.length !== 1) {
+    throw new Error(
+      `the snapshot holds ${code.length} code entries; the pages say the three contracts share one`,
+    );
+  }
+  const [entry] = code;
+  if (entry.ttl.status !== 'known' || typeof entry.ttl.endsAtLedger !== 'number') {
+    throw new Error(
+      'the snapshot has no readable end for the shared code entry; a page would have nothing to show',
+    );
+  }
+  return { ledger: entry.ttl.endsAtLedger, observedAtLedger: entry.observedAtLedger };
+}
+
+const sharedCodeEnd = readSharedCodeEnd();
 const grades = readJson('data/snapshot-grades.json');
 if (grades.capturedAt !== snapshot.capturedAt) {
   throw new Error(
@@ -279,7 +280,6 @@ if (grades.capturedAt !== snapshot.capturedAt) {
 }
 const decay = readJson('data/decay.json');
 const archival = readJson('data/archival.json');
-const guard = readGuard();
 const cli = readCli();
 const knownEnds = readKnownEnds();
 
@@ -291,7 +291,24 @@ const knownEnds = readKnownEnds();
  * write-path guard caught that, which is the whole reason it exists. A plain
  * JSON import tree-shakes normally and is typed.
  */
-writeFileSync(join(here, 'data/known-ends.json'), `${JSON.stringify(knownEnds, null, 2)}\n`);
+/**
+ * `label` is dropped on the way out: the documentation page that needs it runs
+ * at build time, and the browser bundles import this file, so a string no
+ * client reads would otherwise ride into three 760 KB bundles.
+ */
+writeFileSync(
+  join(here, 'data/known-ends.json'),
+  `${JSON.stringify(
+    Object.fromEntries(
+      Object.entries(knownEnds).map(([id, end]) => [
+        id,
+        Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
+      ]),
+    ),
+    null,
+    2,
+  )}\n`,
+);
 const evidence = {
   count: readdirSync(join(repo, 'docs/evidence'), { withFileTypes: true }).filter((d) =>
     d.isDirectory(),
@@ -510,10 +527,10 @@ const ctx = {
     ...Object.values(snapshot.result.entries).map((e) => e.observedAtLedger),
   ),
   snapshotCapturedAt: snapshot.capturedAt,
+  sharedCodeEnd,
   grades,
   decay,
   archival,
-  guard,
   cli,
   evidence,
   knownEnds,
@@ -760,6 +777,43 @@ async function commission() {
     rmSync(probe, { force: true });
   }
   commissionAssetGuards();
+  await commissionFutureEnd();
+}
+
+/**
+ * Prove the PAGES are wired to `futureEnd`, not merely that `futureEnd` works.
+ *
+ * Its unit tests pass whether or not anything calls it. The defect being
+ * guarded is a page stating a stale ledger, so the thing worth proving is that
+ * the pages refuse one — which means rendering them against a snapshot that
+ * has aged past the entry they describe, and watching them throw.
+ *
+ * `5290829` is the real number: the shared code entry's end before #296
+ * extended it, against a snapshot observed after that ledger had passed. This
+ * is the exact state the site was in for five days.
+ */
+async function commissionFutureEnd() {
+  const stale = {
+    ...ctx,
+    sharedCodeEnd: { ledger: 5_290_829, observedAtLedger: 5_300_000 },
+  };
+  for (const module of ['src/pages/contracts.mjs', 'src/pages/decay.mjs']) {
+    const { render } = await import(join(here, module));
+    try {
+      render(stale);
+      console.error(
+        `✗ ${module} rendered a shared code entry that had already expired; it is not using futureEnd`,
+      );
+      process.exitCode = 1;
+    } catch (error) {
+      if (!String(error.message).includes('not ahead of the snapshot')) {
+        console.error(`✗ ${module} failed, but not about a stale end ledger: ${error.message}`);
+        process.exitCode = 1;
+      } else {
+        console.log(`✓ ${module} refuses a shared code entry that has already expired`);
+      }
+    }
+  }
 }
 
 /**
