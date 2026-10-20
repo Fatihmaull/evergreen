@@ -6,16 +6,7 @@ import { scanContract } from '../src/scan-contract.js';
 import { instanceKey } from '../src/rpc.js';
 import { planExtension, executeExtensions } from '../src/extend.js';
 import { coverageIssues } from '../src/health.js';
-import { ProtectedEntryError, SHARED_CODE_ENTRY_KEY } from '../src/write-guard.js';
-
-/**
- * These fixtures ARE guinea-pig A, whose code entry is the real shared one
- * protected by `assertWriteAllowed`. Acknowledging it explicitly is what the
- * escape hatch is for, and doing so here also proves the override works —
- * a guard with no tested way through is a guard that will be deleted the
- * first time someone legitimately needs to pass it.
- */
-const ACK = { acknowledgeProtected: [SHARED_CODE_ENTRY_KEY] };
+import { SHARED_CODE_ENTRY_KEY } from '../src/shared-code.js';
 
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
 const fixture = JSON.parse(
@@ -66,7 +57,7 @@ describe('manual extension selection', () => {
     const report = { ...advisory, issues: coverageIssues(advisory) };
     expect(planExtension(report, options).entries).toHaveLength(1);
     expect(
-      planExtension(report, { ...options, ...ACK, includeCode: true }).entries.map((e) => e.kind),
+      planExtension(report, { ...options, includeCode: true }).entries.map((e) => e.kind),
     ).toEqual(['instance', 'code']);
   });
   it('selects only the instance by default and adds a delta to its current TTL', async () => {
@@ -90,7 +81,7 @@ describe('manual extension selection', () => {
     ).toBe('temporary');
   });
   it('requires explicit code selection and warns about invisible consumers', async () => {
-    const p = planExtension(await atRemaining(), { ...options, ...ACK, includeCode: true });
+    const p = planExtension(await atRemaining(), { ...options, includeCode: true });
     expect(p.entries.map((e) => e.kind)).toEqual(['instance', 'code']);
     expect(p.warnings.join(' ')).toContain('outside this scan');
   });
@@ -139,7 +130,7 @@ describe('manual extension selection', () => {
       ],
     };
     expect(planExtension(partial, options).entries).toHaveLength(1);
-    expect(() => planExtension(partial, { ...options, ...ACK, includeCode: true })).toThrow();
+    expect(() => planExtension(partial, { ...options, includeCode: true })).toThrow();
   });
 });
 
@@ -372,11 +363,11 @@ describe('entries execution seam for the engine', () => {
 describe('🔴 layered defences that nothing was testing', () => {
   const B = 'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ';
 
-  it('planExtension itself refuses a protected contract — not just assertWriteAllowed in isolation', () => {
-    // `write-guard.test.ts` proves the FUNCTION refuses. Nothing proved the CALL
-    // SITE existed: deleting `assertWriteAllowed(...)` from planExtension left
-    // all 620 tests green. This is the CLI's manual extend path — the one the
-    // live transaction in #105 was signed through.
+  it('plans a former decay subject now that the sprint write guard is retired (PH2-E0-06)', () => {
+    // This test used to assert the REFUSAL, by `assertWriteAllowed` at
+    // planExtension's call site. The guard was retired once B, C and the shared
+    // code entry were all spent; the test is flipped rather than deleted so the
+    // change stays visible.
     const key = instanceKey(B);
     const scan = {
       network: 'testnet',
@@ -392,15 +383,15 @@ describe('🔴 layered defences that nothing was testing', () => {
         },
       },
     } as unknown as ScanResult;
-    expect(() =>
+    expect(
       planExtension(scan, {
         contractId: B,
         additionalLedgers: 100,
         maxEntryTtl: 3_110_400,
         dataKeys: [],
         includeCode: false,
-      }),
-    ).toThrow(ProtectedEntryError);
+      }).entries.map((e) => e.entryKey),
+    ).toEqual([key]);
   });
 
   it('refuses to sign when the signer is not the payer the caller asked for', async () => {
@@ -503,5 +494,15 @@ describe('planExtension — writes stay testnet-only (PH2-E1-03, hard rule 1)', 
   it('refuses a mainnet scan, which PH2-E1-03 made representable', async () => {
     const mainnet = { ...(await atRemaining()), network: 'mainnet' as const };
     expect(() => planExtension(mainnet, options)).toThrow();
+  });
+});
+
+describe('the inverse proof for PH2-E0-06: extend A --include-code now plans', () => {
+  it('plans the shared ContractCode entry, which the retired guard refused by key', async () => {
+    // Before PH2-E0-06 this threw ProtectedEntryError: A, B and C share one code
+    // entry, and the guard refused it whatever contract was named.
+    const p = planExtension(await atRemaining(), { ...options, includeCode: true });
+    expect(p.entries.map((e) => e.entryKey)).toContain(SHARED_CODE_ENTRY_KEY);
+    expect(p.entries.find((e) => e.entryKey === SHARED_CODE_ENTRY_KEY)?.kind).toBe('code');
   });
 });

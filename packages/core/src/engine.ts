@@ -10,7 +10,6 @@ import { isExpiredObservation, needsAction } from './ttl.js';
 import { assessEntryWithThresholds, resolveHealthThresholds } from './health.js';
 import type { EntryAssessment, HealthThresholds } from './health.js';
 import { assertLiveness, type LivenessVerdict } from './liveness.js';
-import { ProtectedEntryError, assertWriteAllowed } from './write-guard.js';
 import {
   STATE_ARCHIVAL_CONFIG_KEY,
   parseStateArchivalSettings,
@@ -128,16 +127,7 @@ function evaluateBumps(
       continue;
     }
 
-    // Preserve refusals as decisions, before payer selection or target planning.
-    // The full scan lets the guard check every consumer, including shared keys.
     const first = configured[0]!;
-    try {
-      assertWriteAllowed({ contractId: first.id, entryKeys: [entryKey], scan });
-    } catch (error) {
-      if (!(error instanceof ProtectedEntryError)) throw error;
-      skip(`REFUSED BY WRITE GUARD — ${error.message.split('\n')[0]}`);
-      continue;
-    }
     if (entry.kind === 'temporary') {
       const consent = temporaryConsent(config, entryKey, first.id);
       if (!consent.allowed) {

@@ -239,7 +239,7 @@ Insurance against a single unrecoverable date. Same method as B, different targe
 | 🔴 **Expiry** | 🔴 **2026-09-26 ~12:00 UTC — a Saturday, and the last unrepeatable event in the sprint** |
 | Interventions since | none, and none permitted |
 
-> **B and C have different dates, and each subject has TWO of them.** The alert threshold and the expiry are one day apart and are not interchangeable — `write-guard.ts` owns both as `alertThresholdOn` and `expiresOn`, and its comment warns that reading only the first makes you *"arrive a day early for the expiry — and the expiry is the unrepeatable event."* **This table published only the threshold until 2026-09-22.**
+> **B and C have different dates, and each subject has TWO of them.** The alert threshold and the expiry are one day apart and are not interchangeable — `write-guard.ts` owned both as `alertThresholdOn` and `expiresOn` until `PH2-E0-06` retired it on 2026-10-19, and its comment warned that reading only the first makes you *"arrive a day early for the expiry — and the expiry is the unrepeatable event."* **This table published only the threshold until 2026-09-22.**
 
 > ⚠️ **C is no longer a free spare.** B's expiry was captured, but only by one operator — the secondary machine slept through the window. C is the only remaining chance at a second independent expiry bundle, it falls on a weekend, and nothing comes after it.
 
@@ -247,7 +247,7 @@ Insurance against a single unrecoverable date. Same method as B, different targe
 
 B and C were deployed from the same Wasm, so **they share one `ContractCode` ledger entry**. Extending it for one extends it for both — it cannot be staggered.
 
-It has been pushed to ledger **5,290,829 (~2026-10-19)**, past the entire sprint, so it drives neither crossing. Each contract's crossing is governed by its own instance and persistent entries. Do not "helpfully" extend or shorten it; doing so affects both proofs at once. Full explanation in `docs/SOROBAN-PRIMER.md`.
+During the sprint it was pushed to ledger **5,290,829 (~2026-10-19)**, past the entire sprint, so it drove neither crossing. **On 2026-10-14 it was extended again, to 8,297,162** (#296, `W3-D18-02d`). Each contract's crossing is governed by its own instance and persistent entries. Do not "helpfully" extend or shorten it; doing so affects both proofs at once. Full explanation in `docs/SOROBAN-PRIMER.md`.
 
 ### Watching for drift
 
@@ -259,7 +259,7 @@ python3 scripts/check-decay-drift.py
 
 ### Putting B and C into the engine config
 
-The old instruction was "keep them strictly out of the config." That was written before calibration existed. Now that both are calibrated against a specific threshold, they can sit in the config early — the engine will correctly do nothing until the crossing. **And underneath that, `write-guard.ts` refuses every write touching B or C unconditionally, with no date logic at all** — so a wrong threshold and a code path would both have to fail together. [`ONBOARDING.md` §4](ONBOARDING.md) carried the superseded "must not enter the engine config early" heading until 2026-09-22 and now points here.
+The old instruction was "keep them strictly out of the config." That was written before calibration existed. Now that both are calibrated against a specific threshold, they can sit in the config early — the engine will correctly do nothing until the crossing. **And underneath that, until 2026-10-19, `write-guard.ts` refused every write touching B or C unconditionally, with no date logic at all**, so a wrong threshold and a code path would both have had to fail together. Both subjects have expired, and the guard was retired with them (`PH2-E0-06`). [`ONBOARDING.md` §4](ONBOARDING.md) carried the superseded "must not enter the engine config early" heading until 2026-09-22 and now points here.
 
 **But that safety depends entirely on the configured threshold matching the calibration.** So add them as a deliberate, verified step, never as a convenience:
 

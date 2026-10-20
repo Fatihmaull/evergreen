@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EvergreenConfig, LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
 import { decideBumps } from '../src/engine.js';
-import { SHARED_CODE_ENTRY_KEY } from '../src/write-guard.js';
+import { SHARED_CODE_ENTRY_KEY } from '../src/shared-code.js';
 
 /**
  * `W3-D15-03` — the decision logic, against fixtures, no network.
@@ -68,33 +68,34 @@ describe('decideBumps — acting', () => {
 });
 
 describe('decideBumps — refusing', () => {
-  it('🔴 records a guard refusal as a DECISION, and does not throw', () => {
-    // The Sep 20 sequence: B crosses, the guard refuses, and the refusal is the
-    // evidence. A throw here would take the whole run — and the alert — down.
+  it('no longer refuses former decay subject B (sprint write guard retired, PH2-E0-06)', () => {
+    // Flipped, not deleted: this asserted the Sep 20 refusal while B aged.
     const decisions = decideBumps(scanOf({ k1: entry([B], 100) }), configFor([B]), 3_110_400);
     expect(decisions).toHaveLength(1);
-    expect(decisions[0]?.action).toBe('skip');
-    expect(decisions[0]?.reason).toContain('REFUSED BY WRITE GUARD');
+    expect(decisions[0]?.action).toBe('extend');
+    expect(decisions[0]?.reason ?? '').not.toContain('WRITE GUARD');
   });
 
-  it('🔴 one protected subject does not abort deciding for the others', () => {
-    // A crash on B would silence the engine for A in the same run.
+  it('decides A and former subject B independently in one run', () => {
+    // Was: one protected subject does not abort deciding for the others.
     const decisions = decideBumps(
       scanOf({ kA: entry([A], 100), kB: entry([B], 100) }),
       configFor([A, B]),
       3_110_400,
     );
-    expect(decisions.map((d) => d.action).sort()).toEqual(['extend', 'skip']);
+    expect(decisions.map((d) => d.action).sort()).toEqual(['extend', 'extend']);
   });
 
-  it('🔴 refuses the shared ContractCode entry by key', () => {
+  it('no longer refuses the shared ContractCode entry by key (PH2-E0-06)', () => {
     const decisions = decideBumps(
       scanOf({ [SHARED_CODE_ENTRY_KEY]: entry([A], 100) }),
       configFor([A]),
       3_110_400,
     );
-    expect(decisions[0]?.action).toBe('skip');
-    expect(decisions[0]?.reason).toContain('REFUSED BY WRITE GUARD');
+    // Deciding is not executing: the engine's execution scope still excludes
+    // code entries (planEngineExecution), so this never reaches a signer.
+    expect(decisions[0]?.action).toBe('extend');
+    expect(decisions[0]?.reason ?? '').not.toContain('WRITE GUARD');
   });
 
   it('never extends an entry whose TTL could not be read', () => {
