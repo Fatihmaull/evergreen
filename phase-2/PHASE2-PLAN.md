@@ -21,6 +21,62 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 
 ---
 
+## Definitions of Done
+
+**Official, Fatih, 2026-10-20; refined the same day.** Two gates. The thresholds are written as Fatih set them. The first version's measurability note found five gaps, and Fatih closed them: P1 defined, the failure-mode list assigned, the refund wording, the testnet-reset rule, and the cold reader. The note below keeps what is still open.
+
+**P0** = loss of funds, failed protection, or a false health state shown to a user.
+
+**P1** = a failure that would become P0 if unnoticed: a missed alert, a delayed refund, the engine down past the warning window, or wrong copy about money.
+
+Both are GitHub labels, `P0` and `P1`, with these definitions in their descriptions. An issue counts as open P0 or P1 by its label.
+
+### DoD-1 — Beta (testnet)
+
+Met when:
+- every E0–E4 card is done;
+- at least 10 external users (not the team) are onboarded on testnet, each having logged in with email + wallet, added ≥1 contract to a watchlist, and run ≥1 extend (autopilot or manual) recorded in the fee ledger;
+- every user's feedback is recorded in one place (`PH2-E5-01`);
+- the public custody statement is approved by Fatih and live (`PH2-E4-06`);
+- no open P0.
+
+### DoD-2 — Stable (testnet, post-beta)
+
+Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 days restarts the window.**
+- zero missed protections (no watched entry archived while its allowance was valid and funded);
+- ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;
+- zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
+- the worst scheduler gap is measured, dated, and below the 17,280-ledger act threshold;
+- no open P0/P1, every incident has a postmortem;
+- every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator, and a Neon backup restore has been exercised;
+- engine and treasury keys are separate and the float never exceeded its cap;
+- a cold reader can onboard from the docs alone (`B-D31-03`). The cold reader is an external beta user.
+
+**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2.** `PH2-E5-02`'s core criterion is "DoD-2 met".
+
+### Measurability: what these need that nothing yet provides
+
+Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from records the plan already calls for (the `PH2-E2-03` tables, transaction results, the engine account's history).
+
+**Resolved by Fatih, 2026-10-20:**
+- **P1 is defined** (above), and the `P0` and `P1` labels exist with the definitions in their descriptions.
+- **The failure-mode list is a deliverable of `PH2-E4-05`.** "Every failure mode" means every mode on that list.
+- **The refund threshold now counts pulls whose extend finally failed.** That matches §3.3 step 5 and §4.3. A failed pull moves no XLM, so the first wording was vacuous.
+- **A testnet reset restarts the 30-day window.**
+- **The cold reader is an external beta user.** `B-D31-03`'s own row says Fatih no longer qualifies.
+
+**Still open:**
+1. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
+2. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
+
+Measurable with records still to be built:
+- *zero missed protections*: §3.3's pre-flight reads the allowance and the user's balance before every job. It is measurable only for entries the scan can see (instance, code, and declared data keys).
+- *≥99% of autopilot jobs succeed*: below 100 jobs in the window, 99% means zero failures. Whether a clean pre-flight abort (a user's empty balance, alerted) counts as a failure is not defined.
+- *the float never exceeded its cap*: needs the cap recorded as a number (`PH2-E4-03`), and the engine account's balance recorded continuously or reconstructed from its history.
+- *zero subsidy*: from the fee ledger plus each transaction's charged fee. ADR-007's `[to verify]` on resource-fee refunds changes what reconcile records, not whether it is measurable.
+
+---
+
 ## 2 · Decision record
 
 | # | Decision | Cost / consequence |
@@ -246,7 +302,7 @@ PH2-E0-03 contents:
 | PH2-E1-04 | `extend` refuses on mainnet until beta exit, tested in both directions, plus `action.yml` mainnet support. *Shrunk 2026-10-15: the scan path moved to PH2-E1-03.* | CER | S | PH2-E1-03 |
 | PH2-E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | — |
 | PH2-E1-06 | Publish CLI `0.2.0`, **without the Support tip**. PH2-E1-08 is not a dependency, so the #235 fix does not wait on it | R (F backup) | S | PH2-E1-01, PH2-E1-04 |
-| PH2-E1-07 | MCP server, in-repo, importing `core` | CEF | M | PH2-E1-01 |
+| PH2-E1-07 | MCP server, in-repo, importing `core`. **Shape decided 2026-10-20, built later (paused for PH2-E2-02):** a separate `@evergreen-stellar/mcp` package on the official MCP SDK, so the CLI keeps one runtime dependency; read-only tools only (scan, cost); the network chosen at server start; the RPC URL from the environment only, never a tool argument. Release owner: R | CEF | M | PH2-E1-01 |
 | PH2-E1-08 | CLI "Support Evergreen" tip (§3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI | CEF | S | PH2-E4-03 (treasury address) |
 
 ### E2 — Backend
@@ -281,7 +337,7 @@ PH2-E0-03 contents:
 | PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
-| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |
+| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
 
@@ -290,7 +346,7 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
-| PH2-E5-02 | Mainnet readiness checklist | F + R | S | PH2-E5-01 |
+| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done) | F + R | S | PH2-E5-01 |
 | PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
@@ -305,7 +361,7 @@ PH2-E0-03 contents:
 | PH2-BL-05 | Landing and marketing copy for the paid hosted tier | WEBF | S |
 | PH2-BL-08 | Build the site on Cloudflare Pages from source instead of committing `apps/dashboard/public/`; retires `check:published`. After PH2-E2-02 | WEBF + CEF | M |
 | B-D31-02 | Parked checker work — mostly superseded by PH2-E0-04; retire what PH2-E0-04 retires | CEF | S |
-| B-D31-03 | Cold read of the docs by someone who has not seen them, before the beta | F | S |
+| B-D31-03 | Cold read of the docs by someone who has not seen them, before the beta. For DoD-2, the cold reader is an external beta user | F | S |
 
 ### The balance
 

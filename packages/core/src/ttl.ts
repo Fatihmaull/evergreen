@@ -1,3 +1,4 @@
+import { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 import { formatCount } from './format.js';
 import type {
   LedgerEntryTTL,
@@ -409,7 +410,7 @@ export function expiredEntryIssues(
       message:
         entry.endBehavior === 'deleted'
           ? `Temporary entry is past its final live ledger and was deleted; it cannot be restored (${ended}).`
-          : `Entry is ARCHIVED, past its final live ledger; extendTTL cannot reach it, it needs a restore (${ended}).`,
+          : `Entry is ARCHIVED, past its final live ledger (${ended}). ${ARCHIVED_ENTRY_ADVICE}`,
     });
   }
   return out;

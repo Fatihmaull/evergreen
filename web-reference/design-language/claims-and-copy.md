@@ -29,7 +29,7 @@ named by their registered task IDs in `BACKLOG.md` § Phase 2 (`PH2-…`).
 
 | Never | Why | Lifts when |
 |---|---|---|
-| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label | Mainnet **read-only scan** may be named once it ships (`PH2-E1-03`). Mainnet writes, extends and autopilot: not before the beta exits (`PH2-E5-02`) and the mainnet launch ships (`PH2-E5-04`) |
+| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label | Mainnet **read-only scan** may be named once it ships (`PH2-E1-03`). Mainnet writes, extends and autopilot: not until DoD-2 is met (`PH2-E5-02`) and the mainnet launch ships (`PH2-E5-04`) |
 | A **protocol version number** | This project does not publish one. The design export said "Testnet v21"; it was removed | Never |
 | **Wallet connect**, sign-in, accounts, or any disabled control standing in for one | Cut deliberately as the next scope's headline. A disabled control is a promise with a date on it | Login and wallet linking ship (`PH2-E3-01`). A **disabled** control standing in for an unshipped feature never appears |
 | "**Non-custodial**", "zero-privilege", "no keys" | False. The engine holds a funded testnet payer. A "Zero-Privilege Node · No Keys" panel was removed from the export for exactly this | Only in the words of the **public custody statement Fatih approves** (`PH2-E4-06`), quoted, not paraphrased. The allowance design is "allowance, not custody" in the plan; that phrase is not copy until then |
