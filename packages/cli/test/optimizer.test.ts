@@ -111,6 +111,26 @@ describe('opt-in scan storage advice', () => {
     expect(text).toContain('isolated temporary-entry experiment');
     expect(text).toContain('outside this scan');
   });
+  it.each([
+    ['a local error from core', new Error('No positive extend target supplied for X')],
+    ['an RPC error', new Error('simulation failed')],
+  ])('names no cause it did not establish after %s', async (_, failure) => {
+    // #346: a local throw from core was reported as "the network declined to
+    // simulate it". Nothing here can tell those apart, so neither is named.
+    const deps = dependencies();
+    deps.priceExtend.mockRejectedValue(failure);
+    const output = await runCli(['scan', A, '--keys-file', 'keys.json', '--cost'], deps);
+    expect(output.stdout).toContain('Could not price an extend.');
+    expect(output.stdout).not.toMatch(/declined|refus/);
+    expect(output.stdout).not.toContain(failure.message);
+  });
+  it('calls a TypeError a fault in evergreen, not the network', async () => {
+    const deps = dependencies();
+    deps.priceExtend.mockRejectedValue(new TypeError('x is not a function'));
+    const output = await runCli(['scan', A, '--keys-file', 'keys.json', '--cost'], deps);
+    expect(output.stdout).toContain('a fault in evergreen, not a refusal by the network');
+    expect(output.stdout).not.toContain('x is not a function');
+  });
   it('appends advice in human mode even after a failed quote', async () => {
     const deps = dependencies();
     deps.priceExtend.mockRejectedValue(new Error('private'));

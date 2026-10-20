@@ -326,8 +326,17 @@ export async function runCli(
     try {
       if (dependencies.priceExtend === undefined) throw new Error('No pricing backend');
       cost = await dependencies.priceExtend({ scan: result, additionalLedgers });
-    } catch {
+    } catch (error) {
       const optimization = advice();
+      // Name no cause this did not establish. Until PH2-E1-01's follow-up every
+      // throw here read "the network declined to simulate it", including a
+      // local throw from core that never reached the network (#346). The
+      // error's own text is not printed either: an RPC error can carry the
+      // endpoint URL, and a provider key with it.
+      const ours = error instanceof ReferenceError || error instanceof TypeError;
+      const why = ours
+        ? ': a fault in evergreen, not a refusal by the network. Please report it.'
+        : '. The cause is not shown, because an RPC error can carry the endpoint and its key.';
       // A failed quote must not take the scan down with it — the TTL answer is
       // still correct and still worth printing.
       return {
@@ -344,7 +353,7 @@ export async function runCli(
           : `${formatHuman(result, dependencies.now(), {
               color: dependencies.color === true,
               thresholdLedgers,
-            })}\n\n! Could not price an extend: the network declined to simulate it.\n  The TTL results above are unaffected.${optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`}`,
+            })}\n\n! Could not price an extend${why}\n  The TTL results above are unaffected.${optimization === undefined ? '' : `\n\n${formatStorageAdvice(optimization).join('\n')}`}`,
         stderr: '',
         exitCode: exitCodeFor(result, thresholdLedgers, { requireDeclaredScope }),
       };
