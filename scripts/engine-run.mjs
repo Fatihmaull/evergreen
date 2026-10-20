@@ -77,7 +77,6 @@ const record = {
   observedAtLedger: Object.values(run.scan.entries)[0]?.observedAtLedger ?? null,
   contracts: run.scan.contracts.map((c) => c.id),
   decisions: run.decisions,
-  refusedByGuard: run.decisions.filter((d) => d.reason.includes('REFUSED BY WRITE GUARD')).length,
   liveness: { isAlarm: run.liveness.isAlarm, severity: run.liveness.severity ?? null },
   issues: run.scan.issues.map((i) => i.kind),
 };
@@ -86,18 +85,12 @@ if (recordPath) {
   writeFileSync(recordPath, JSON.stringify(record, null, 2) + '\n');
   console.log(`run record written to ${recordPath}`);
 }
-const refused = run.decisions.filter((d) => d.reason.includes('REFUSED BY WRITE GUARD'));
 
 console.log(formatEngineRun(run));
 
-// A refusal is a non-event — no transaction, no hash, nothing in an explorer.
-// On ~2026-09-20 this line is the evidence for W3-D18-02b, so it is printed
-// loudly and counted, not left to be inferred from an absence.
-if (refused.length > 0) {
-  console.log(`\n🔴 ${refused.length} write(s) REFUSED by the guard. This is expected for`);
-  console.log('   guinea-pigs B and C and the shared code entry, and it is EVIDENCE:');
-  console.log('   capture this log. A refusal leaves no other trace anywhere.');
-}
+// The sprint write guard and its `refusedByGuard` count were retired by
+// PH2-E0-06 (2026-10-19): every subject was spent, so the count could only ever
+// be zero. Run records written before then keep the field.
 
 if (run.liveness.isAlarm) {
   console.error(`\n✖ liveness alarm (${run.liveness.severity ?? 'unknown'}):`);

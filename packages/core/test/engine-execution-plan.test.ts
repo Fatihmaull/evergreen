@@ -160,7 +160,8 @@ describe('🔴 the write guard on the EXECUTION path', () => {
     } as ScanResult;
   }
 
-  it('refuses an extend decision naming guinea-pig B, even when handed one directly', async () => {
+  it('plans an extend decision naming former decay subject B (sprint write guard retired, PH2-E0-06)', async () => {
+    // Flipped, not deleted: this asserted the guard's refusal on the execution path.
     const bKey = instanceKey(B);
     const configWithB: EvergreenConfig = {
       ...config,
@@ -180,10 +181,8 @@ describe('🔴 the write guard on the EXECUTION path', () => {
       ],
       configWithB,
     );
-    expect(result.entries).toHaveLength(0);
-    expect(result.skipped?.[0]?.reason ?? JSON.stringify(result)).toContain(
-      'REFUSED BY WRITE GUARD',
-    );
+    expect(result.entries.map((e) => e.entry.entryKey)).toEqual([bKey]);
+    expect(JSON.stringify(result)).not.toContain('WRITE GUARD');
   });
 });
 

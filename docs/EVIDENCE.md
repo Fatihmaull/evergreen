@@ -335,6 +335,18 @@ On **Sep 16**, each of the four rows above gets a **yes or a no**. Not a project
 
 ## Transaction hashes
 
+### 2026-10-15 — Freighter prompt for a SAC `approve` (PH2-E3-06)
+
+[Full record with the wallet-prompt log, Horizon records and screenshots](evidence/2026-10-15-freighter-approve-prompt/README.md). Three testnet transactions on the native XLM SAC, signed through Freighter 5.49.0 in a real browser by a throwaway account (`GC33TNWS…IQWN`), granting and then revoking an allowance for `GCEZBCVV…M26L`. A fourth prompt was rejected in the wallet and submitted nothing. Each row has the hash, the full Horizon record under `raw/` and an explorer screenshot.
+
+| Run | Hash | What | Ledger | Fee charged |
+|---|---|---|---|---|
+| 1 | `e11b1eaba34dbe4f14580c14ab376a4fe7e05f5dfc677ac85a674d97194d8b74` | `approve` 500000000 | 5208465 | 90,709 stroops |
+| 2 | `94eea4085c93add010d13ac2657bc1d1d070a081084203c9a9ebef5e8fae1593` | `approve` 300000000 over a live 500000000 | 5208478 | 5,728 stroops |
+| 3 | `4140dc441de6ab2977cfbaa0802a8299ace145d0c72873564f52fa3b5f87b505` | `approve` 0, the revoke | 5208485 | 4,441 stroops |
+
+Two earlier approve and revoke transactions (`aeefc103…ab3b6`, `fcc2ad77…baf6`) were signed with an in-memory throwaway key, not through Freighter. They are named in the README and say nothing about the wallet prompt.
+
 ### 2026-09-09 — guinea-pig A extended past the sprint (W1-D7-08)
 
 [Full record with before/after RPC and Horizon confirmations](evidence/2026-09-09-guinea-pig-a-extend/README.md). Three `ExtendFootprintTTLOp` transactions from `evergreen-b` (`GDGAWY72…MASE`), which holds no authority over A and needs none.

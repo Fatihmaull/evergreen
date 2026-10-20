@@ -33,10 +33,9 @@ export function render() {
       submitted. Live is an explicit opt-in, never a default and never inferred.
     </p>
     <p>
-      A refusal is a first-class outcome, not an error. When the write guard declines a subject the
-      run records <span class="mono">REFUSED BY WRITE GUARD</span> and carries on to the next
-      contract — one protected subject must not abort a run, or a guard on one contract would
-      silence the engine for every other.
+      A refusal is a first-class outcome, not an error. A run that declines a contract records the
+      reason and carries on to the next one — a single refusal must not abort a run, or one
+      contract would silence the engine for every other.
       <a class="site-more" href="/docs/engine/guards/">Guards</a>
     </p>
 

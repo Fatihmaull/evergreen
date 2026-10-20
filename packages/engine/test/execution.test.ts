@@ -11,10 +11,15 @@ import {
 import type { Transaction } from '@stellar/stellar-sdk';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EvergreenConfig } from '@evergreen-stellar/shared-types';
-import { instanceKey, PROTECTED_ENTRIES, SHARED_CODE_ENTRY_KEY } from '@evergreen-stellar/core';
+import { instanceKey, SHARED_CODE_ENTRY_KEY } from '@evergreen-stellar/core';
 import { runEngineExecution } from '../src/execution.js';
 
 const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+/** Guinea-pigs B and C: the sprint write guard's subjects until PH2-E0-06. */
+const FORMER_SUBJECTS = [
+  'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',
+  'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL',
+];
 const D = StrKey.encodeContract(Buffer.alloc(32, 9));
 const fixture = JSON.parse(
   readFileSync(
@@ -411,17 +416,19 @@ describe('engine execution — real core primitives over fixture RPC', () => {
 });
 
 describe('engine execution — review boundaries', () => {
-  it('executes A while preserving B/C and shared-code refusals in the same pass', async () => {
+  it('no longer refuses B, C or the shared code entry', async () => {
+    // Rakha's flip from #316, applied in PH2-E0-06 step 3. B and C are named
+    // here directly: `PROTECTED_ENTRIES` was deleted with the guard.
     const s = setup();
     const value = xdr.LedgerEntryData.fromXDR(fixture.entries[0]!.xdr, 'base64');
     if (value.type !== 'contractData') throw new Error('fixture');
-    for (const subject of PROTECTED_ENTRIES) {
-      s.rows.set(instanceKey(subject.contractId), {
-        key: instanceKey(subject.contractId),
+    for (const subject of FORMER_SUBJECTS) {
+      s.rows.set(instanceKey(subject), {
+        key: instanceKey(subject),
         entryXdr: xdr.LedgerEntryData.contractData(
           new xdr.ContractDataEntry({
             ...value.contractData,
-            contract: new Address(subject.contractId).toScAddress(),
+            contract: new Address(subject).toScAddress(),
           }),
         ).toXDR('base64'),
         liveUntilLedgerSeq: fixture.latestLedger + 50,
@@ -432,30 +439,31 @@ describe('engine execution — review boundaries', () => {
       {
         ...s.config,
         mode: 'live',
-        contracts: [...s.config.contracts, ...PROTECTED_ENTRIES.map((p) => ({ id: p.contractId }))],
+        payers: { ...s.config.payers, first: { ...s.config.payers.first!, maxFeeStroops: '4800' } },
+        contracts: [
+          ...s.config.contracts,
+          ...FORMER_SUBJECTS.map((id) => ({ id, payer: 'first' })),
+        ],
       },
       s.deps,
       { submit: true },
     );
+    const protectedInstances = FORMER_SUBJECTS.map((id) => instanceKey(id));
     expect(result.records.map((r) => [r.entryKey, r.outcome])).toEqual([
       [instanceKey(A), 'succeeded'],
+      ...protectedInstances.map((key) => [key, 'succeeded']),
       [persistent, 'succeeded'],
     ]);
-    expect(s.rpc.sendTransaction).toHaveBeenCalledTimes(2);
-    for (const key of [
-      ...PROTECTED_ENTRIES.map((p) => instanceKey(p.contractId)),
-      SHARED_CODE_ENTRY_KEY,
-    ]) {
-      expect(result.decisions.find((d) => d.entryKey === key)).toMatchObject({
-        action: 'skip',
-        reason: expect.stringContaining('WRITE GUARD'),
-      });
-      expect(result.previews.some((p) => p.entry.entryKey === key)).toBe(false);
-      expect(
-        result.liveness.findings.some((f) => f.entryKey === key && f.reason === 'skipped'),
-      ).toBe(true);
+    expect(s.rpc.sendTransaction).toHaveBeenCalledTimes(2 + protectedInstances.length);
+    // The shared code entry is still left alone, but by the engine's execution
+    // scope, not by the retired write guard.
+    for (const key of [...protectedInstances, SHARED_CODE_ENTRY_KEY]) {
+      expect(result.decisions.find((d) => d.entryKey === key)?.reason).not.toContain('WRITE GUARD');
     }
-    expect(result.exitCode).toBe(1);
+    expect(result.decisions.find((d) => d.entryKey === SHARED_CODE_ENTRY_KEY)).toMatchObject({
+      action: 'skip',
+      reason: expect.stringContaining('Execution scope excludes code entries'),
+    });
   });
   it('fails closed on an incomplete initial scan even when other keys are due', async () => {
     const s = setup(true);
