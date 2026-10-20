@@ -45,7 +45,7 @@ These apply in addition to [`AGENTS.md`](../AGENTS.md). If the two disagree, sto
 2. **Write `undetermined` rather than a plausible guess.** That is the product's thesis, and it applies to your own reports.
 3. **Never name an identifier you have not seen.** This covers task IDs, PR numbers, file paths, flags and CLI commands. The project has paid for an invented task ID and an invented CLI flag.
 4. **Write paths need mutation proof:** a test that fails when the guarded behaviour is removed. Phase 2 moves real money later, so this is non-negotiable.
-5. **Testnet only until the beta exits (PH2-E5-02).** No mainnet writes. Mainnet *reads* arrive with PH2-E1-03.
+5. **Testnet only until DoD-2 is met (PH2-E5-02).** No mainnet writes. Mainnet *reads* arrive with PH2-E1-03.
 6. **No secrets in argv, chat, commits or PR bodies.** A secret is passed by naming an env var.
 7. **Stay inside your track's paths** (see your kickoff). Need a change in another track's path? Open an issue mentioning that owner; do not edit it.
 8. **Ask in-session, as a decision:** options, the trade-off of each, and your recommendation. Never ask an open question.
