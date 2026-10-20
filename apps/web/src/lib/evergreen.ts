@@ -93,15 +93,52 @@ export function health(result: ScanResult): unknown {
   return healthReport(result, DEFAULT_CRITICAL_LEDGERS);
 }
 
+/**
+ * An `rpc.Server` whose network has been checked, for every live read.
+ *
+ * `connectNetwork` compares the RPC's reported passphrase, so `reader()` was
+ * safe — but `archivalSettings()` and `quoteRent()` built their own
+ * `new rpc.Server(NETWORK.rpcUrl)` and compared nothing. Rakha found that on
+ * #345: point the build at another network's endpoint and those two would
+ * read it and render the answer, on a page whose footer says "Testnet only".
+ * A URL that says testnet proves nothing about what it serves; the passphrase
+ * is the only thing that does.
+ *
+ * Verified ONCE and memoised, including the rejection. Three live panels on
+ * one page must not mean three `getNetwork` round trips, and a failed check
+ * must not be retried into a success by the next caller.
+ */
+let verified: Promise<rpc.Server> | undefined;
+
+export function verifiedServer(): Promise<rpc.Server> {
+  verified ??= (async () => {
+    const server = new rpc.Server(NETWORK.rpcUrl);
+    const { passphrase } = await server.getNetwork();
+    if (passphrase !== NETWORK.passphrase) {
+      throw new Error(
+        `Refusing to read: this site is built for ${NETWORK.name}, but ${NETWORK.rpcUrl} reports ` +
+          `"${passphrase}". Nothing on this page may show data from another network.`,
+      );
+    }
+    return server;
+  })();
+  return verified;
+}
+
+/** Test seam: forget the memoised verification. Not used by the site. */
+export function forgetVerifiedServer(): void {
+  verified = undefined;
+}
+
 export async function reader(): Promise<Awaited<ReturnType<typeof connectNetwork>>> {
-  return connectNetwork(NETWORK);
+  return connectNetwork(NETWORK, await verifiedServer());
 }
 
 /** The network's own archival configuration, read live — never hard-coded. */
 export async function archivalSettings(): Promise<
   Awaited<ReturnType<typeof readArchivalSettings>>
 > {
-  return readArchivalSettings(new rpc.Server(NETWORK.rpcUrl));
+  return readArchivalSettings(await verifiedServer());
 }
 
 export async function scanOne(id: string, dataKeys: readonly string[] = []): Promise<ScanResult> {
@@ -141,7 +178,7 @@ export interface RentQuote {
  * "total".
  */
 export async function quoteRent(scan: ScanResult, additionalLedgers: number): Promise<RentQuote> {
-  const server = new rpc.Server(NETWORK.rpcUrl);
+  const server = await verifiedServer();
   const settings = await readArchivalSettings(server);
   const targets: Record<string, number> = {};
   let cappedEntries = 0;

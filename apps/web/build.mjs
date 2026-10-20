@@ -80,12 +80,66 @@ if (NETWORK_NAME !== 'testnet') {
  * and its default RPC — so a plain `node apps/web/build.mjs` produces exactly
  * the site that shipped before this existed.
  */
+/**
+ * Testnet's passphrase and default RPC, read from core's table.
+ *
+ * `chrome-client.ts` is the one script every page loads, and its header
+ * promises "no SDK, no core". Importing `NETWORK` made it import
+ * `resolveNetwork` and the whole table with it, and `chrome.js` went from
+ * 495 B to 1.3 KB — Rakha's second point on #345. So the shell gets two
+ * resolved literals instead of a module, and the promise in its header stays
+ * true.
+ *
+ * Parsed from the source rather than retyped, and it refuses when the shape
+ * moves — the same bargain as `readCli()` above. A second copy of a passphrase
+ * is exactly the kind of literal `PH2-E1-03` existed to remove.
+ */
+function readTestnetNetwork() {
+  const src = readFileSync(join(repo, 'packages/core/src/networks.ts'), 'utf8');
+  const block = src.match(/testnet:\s*\{([\s\S]*?)\n {2}\}/)?.[1];
+  const passphrase = block?.match(/passphrase:\s*'([^']+)'/)?.[1];
+  const defaultRpcUrl = block?.match(/defaultRpcUrl:\s*'([^']+)'/)?.[1];
+  if (!passphrase || !defaultRpcUrl) {
+    throw new Error(
+      'packages/core/src/networks.ts moved under the web build: no testnet passphrase or default RPC',
+    );
+  }
+  return { passphrase, defaultRpcUrl };
+}
+
+const TESTNET = readTestnetNetwork();
+
+const WEB_RPC_URL = process.env.EVERGREEN_WEB_RPC_URL;
 const NETWORK_DEFINE = {
   __EVERGREEN_NETWORK__: JSON.stringify(NETWORK_NAME),
-  __SOROBAN_RPC_URL__: process.env.SOROBAN_RPC_URL
-    ? JSON.stringify(process.env.SOROBAN_RPC_URL)
-    : 'undefined',
+  __EVERGREEN_WEB_RPC_URL__: WEB_RPC_URL ? JSON.stringify(WEB_RPC_URL) : 'undefined',
+  // For the shell only, so it carries no core. Same resolution rule as
+  // `resolveNetwork`: an explicit override, else the table's default.
+  __EVERGREEN_RPC_URL__: JSON.stringify(WEB_RPC_URL || TESTNET.defaultRpcUrl),
+  __EVERGREEN_PASSPHRASE__: JSON.stringify(TESTNET.passphrase),
 };
+
+/**
+ * `SOROBAN_RPC_URL` IS NOT INHERITED, and saying so is half the fix.
+ *
+ * Rakha found this on #345: the refusal above only reads a network NAME, and an
+ * RPC URL is not one. `resolveNetwork({ env: 'testnet', rpcUrl: <a mainnet
+ * endpoint> })` returns the testnet name and the testnet passphrase pointed at
+ * mainnet, so the refusal never fires and the site publishes "Testnet only"
+ * over mainnet data. #338 tells developers to export `SOROBAN_RPC_URL` for the
+ * CLI's mainnet reads, which makes this a normal shell, not a contrived one.
+ *
+ * Refusing outright would break every developer who followed #338, so the
+ * variable is ignored — and announced, because a silent ignore is its own trap:
+ * someone pointing the site at a private testnet RPC would watch it quietly not
+ * work. `EVERGREEN_WEB_RPC_URL` is the one this build reads.
+ */
+if (process.env.SOROBAN_RPC_URL && !WEB_RPC_URL) {
+  console.log(
+    "  note: SOROBAN_RPC_URL is set and NOT used — the site does not inherit the CLI's RPC.\n" +
+      '        Set EVERGREEN_WEB_RPC_URL to point the site at a different testnet endpoint.',
+  );
+}
 const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild');
 
 /** Core's write path must never reach a read-only page. */

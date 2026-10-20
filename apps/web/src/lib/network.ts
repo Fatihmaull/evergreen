@@ -8,7 +8,7 @@
  * `chrome-client.ts`, and `Networks.TESTNET` was a third answer to the same
  * question in a third place.
  *
- * `__EVERGREEN_NETWORK__` and `__SOROBAN_RPC_URL__` are esbuild `define`s that
+ * `__EVERGREEN_NETWORK__` and `__EVERGREEN_WEB_RPC_URL__` are esbuild `define`s that
  * `build.mjs` always sets — to the literal `undefined` when the environment
  * does not, so this resolves to testnet and the default build is exactly
  * today's site. They are declared rather than imported because they do not
@@ -27,7 +27,7 @@ import { resolveNetwork } from '../../../../packages/core/src/index';
 import type { NetworkChoice } from '../../../../packages/core/src/index';
 
 declare const __EVERGREEN_NETWORK__: string | undefined;
-declare const __SOROBAN_RPC_URL__: string | undefined;
+declare const __EVERGREEN_WEB_RPC_URL__: string | undefined;
 
 /**
  * `typeof` first, because a bare reference is a ReferenceError.
@@ -39,9 +39,22 @@ declare const __SOROBAN_RPC_URL__: string | undefined;
  * `typeof` on an undeclared identifier is legal and answers `'undefined'`, and
  * esbuild folds it through the define, so one expression is correct in both
  * worlds. An absent define means unset, which `resolveNetwork` reads as
- * testnet.
+ * testnet and its default RPC.
+ *
+ * THE SITE DOES NOT INHERIT `SOROBAN_RPC_URL`, and that is Rakha's finding on
+ * #345. `build.mjs` refuses a non-testnet `EVERGREEN_NETWORK`, but an RPC URL
+ * is not a network name: `resolveNetwork({ env: 'testnet', rpcUrl: <a mainnet
+ * endpoint> })` returns the testnet NAME and PASSPHRASE pointed at mainnet,
+ * and the refusal never fires. #338 tells developers to export
+ * `SOROBAN_RPC_URL` for the CLI's mainnet reads, so anyone who had done that
+ * and then built the site would have published a page saying "Testnet only"
+ * that reads mainnet.
+ *
+ * So the override has a name only this build uses. It cannot be inherited by
+ * accident, and `build.mjs` says out loud when it ignores the other one.
  */
 const network = typeof __EVERGREEN_NETWORK__ === 'undefined' ? undefined : __EVERGREEN_NETWORK__;
-const rpcUrl = typeof __SOROBAN_RPC_URL__ === 'undefined' ? undefined : __SOROBAN_RPC_URL__;
+const rpcUrl =
+  typeof __EVERGREEN_WEB_RPC_URL__ === 'undefined' ? undefined : __EVERGREEN_WEB_RPC_URL__;
 
 export const NETWORK: NetworkChoice = resolveNetwork({ env: network, rpcUrl });

@@ -19,10 +19,11 @@
  */
 import { describe, expect, test } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveNetwork } from '../../../packages/core/src/index';
 
 const BUILD = fileURLToPath(new URL('../build.mjs', import.meta.url));
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -75,6 +76,53 @@ describe('the site refuses to be built for another network', () => {
       expect(stderr).not.toContain('EVERGREEN_NETWORK is');
       expect(stdout).toContain('building 31 routes into');
       expect(status).toBe(0);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  /**
+   * Rakha's blocker on #345. The refusal above reads a network NAME, and an
+   * RPC URL is not one: `resolveNetwork({ env: 'testnet', rpcUrl: <a mainnet
+   * endpoint> })` returns the testnet name and the testnet passphrase pointed
+   * at mainnet, so the refusal never fires. #338 tells developers to export
+   * `SOROBAN_RPC_URL` for the CLI's mainnet reads, so this is a normal shell
+   * rather than a contrived one, and the result was a page saying "Testnet
+   * only" over mainnet data.
+   */
+  test('SOROBAN_RPC_URL is not inherited by the site', { timeout: 180_000 }, () => {
+    const out = mkdtempSync(join(tmpdir(), 'evergreen-rpc-test-'));
+    try {
+      const { status, stdout } = build({
+        SOROBAN_RPC_URL: 'https://mainnet.example.invalid/rpc',
+        EVERGREEN_WEB_OUT: out,
+      });
+      expect(status).toBe(0);
+      // Announced, not silently dropped: someone pointing the site at a
+      // private testnet RPC would otherwise watch it quietly not work.
+      expect(stdout).toContain('SOROBAN_RPC_URL is set and NOT used');
+      for (const bundle of readdirSync(join(out, 'assets')).filter((f) => f.endsWith('.js'))) {
+        expect(readFileSync(join(out, 'assets', bundle), 'utf8')).not.toContain('mainnet.example');
+      }
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  /**
+   * The shell's two literals must be the same answer core's resolver gives.
+   * `chrome-client.ts` cannot import `resolveNetwork` without pulling core's
+   * table into every page's bundle, so `build.mjs` reads the table itself —
+   * and two readers of one fact are two chances to disagree.
+   */
+  test("the shell's literals match core's resolver", { timeout: 180_000 }, () => {
+    const out = mkdtempSync(join(tmpdir(), 'evergreen-shell-test-'));
+    try {
+      build({ EVERGREEN_WEB_OUT: out });
+      const shell = readFileSync(join(out, 'assets/chrome.js'), 'utf8');
+      const expected = resolveNetwork({});
+      expect(shell).toContain(expected.rpcUrl);
+      expect(shell).toContain(expected.passphrase);
     } finally {
       rmSync(out, { recursive: true, force: true });
     }
