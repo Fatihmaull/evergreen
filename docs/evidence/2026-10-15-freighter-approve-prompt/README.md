@@ -257,6 +257,9 @@ request. What it does:
 
 Versions: `@stellar/freighter-api` 6.0.1, `@stellar/stellar-sdk` 17.2.1,
 `vite` 8.3.4.
+The repository pins `@stellar/stellar-sdk` 17.0.1 (root, `packages/core` and
+`packages/cli` `package.json`, and `pnpm-lock.yaml`), so the test page ran a
+newer SDK than the product does.
 
 **Two earlier transactions are not evidence for the wallet prompt.** While the
 page's build and readback code was being checked, an approve
