@@ -80,6 +80,25 @@ same read locally with `npx @evergreen-stellar/cli@0.1.1 scan` and the
 corresponding `--keys-file`, `--threshold` and
 `--require-declared-scope` flags.
 
+### Scan mainnet
+
+Scanning is a read, so the Action can watch a mainnet contract. Set
+`network: mainnet` and give it an RPC endpoint with `rpc-url`; mainnet has no
+default RPC, and providers are listed at
+[developers.stellar.org/docs/data/apis/rpc/providers](https://developers.stellar.org/docs/data/apis/rpc/providers).
+Pass the URL from a secret if it carries a key. Mainnet needs a CLI `version`
+with `--network` (0.2.0 or later); an older pin fails the job on the unknown
+flag rather than quietly scanning testnet. The Action never writes on either
+network, and the CLI's `extend` refuses mainnet.
+
+```yaml
+      - uses: Fatihmaull/evergreen@v1
+        with:
+          contracts: C...
+          network: mainnet
+          rpc-url: ${{ secrets.MAINNET_RPC_URL }}
+```
+
 For reproducibility, pin both the Action and CLI versions. `@v1` is a public
 major tag; for an immutable Action reference use commit
 `2a4ab0a5a916ee156149c1f7e5a2ca8802c2fdc6` (the commit behind the

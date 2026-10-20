@@ -50,6 +50,8 @@ function runAction({
   keysFile = '',
   noDataKeys = 'false',
   requireScope = 'true',
+  network = 'testnet',
+  rpcUrl = '',
   cliExit = 0,
 }) {
   const dir = mkdtempSync(join(tmpdir(), 'evergreen-action-'));
@@ -57,7 +59,7 @@ function runAction({
   const stub = join(dir, 'npx');
   writeFileSync(
     stub,
-    `#!/usr/bin/env bash\nprintf '%s\\n' "$@" > '${argvFile}'\necho "stub scan output"\nexit ${cliExit}\n`,
+    `#!/usr/bin/env bash\nprintf '%s\\n' "$@" > '${argvFile}'\nprintf '%s' "\${SOROBAN_RPC_URL-UNSET}" > '${argvFile}.rpc'\necho "stub scan output"\nexit ${cliExit}\n`,
   );
   chmodSync(stub, 0o755);
   const script = join(dir, 'run.sh');
@@ -81,6 +83,8 @@ function runAction({
         EVERGREEN_KEYS_FILE: keysFile,
         EVERGREEN_NO_DATA_KEYS: noDataKeys,
         EVERGREEN_REQUIRE_SCOPE: requireScope,
+        EVERGREEN_ACTION_NETWORK: network,
+        EVERGREEN_ACTION_RPC_URL: rpcUrl,
       },
     });
   } catch (error) {
@@ -91,6 +95,7 @@ function runAction({
     output: readFileSync(output, 'utf8'),
     summary: readFileSync(summary, 'utf8'),
     argv: existsSync(argvFile) ? readFileSync(argvFile, 'utf8').trim().split('\n') : null,
+    rpc: existsSync(`${argvFile}.rpc`) ? readFileSync(`${argvFile}.rpc`, 'utf8') : null,
     dir,
   };
 }
@@ -300,3 +305,56 @@ test('no input is interpolated with ${{ }} inside a run: body', () => {
   const script = actionScript();
   assert.doesNotMatch(script, /\$\{\{/);
 });
+
+// ── Network (PH2-E1-04) ────────────────────────────────────────────────────
+// Mainnet is a read, so the action supports it. The flag is passed only for
+// mainnet: a testnet run must keep working on CLI pins older than --network.
+test('network and rpc-url are declared, defaulted, and reach the script through env', () => {
+  assert.equal(inputDefault('network'), 'testnet');
+  assert.equal(inputDefault('rpc-url'), '');
+  const yml = readFileSync('action.yml', 'utf8');
+  assert.match(yml, /EVERGREEN_ACTION_NETWORK: \$\{\{ inputs\.network \}\}/);
+  assert.match(yml, /EVERGREEN_ACTION_RPC_URL: \$\{\{ inputs\.rpc-url \}\}/);
+});
+
+test('testnet (the default) passes no --network and no RPC override', () => {
+  const r = runAction({ contracts: A });
+  assert.equal(r.code, 0);
+  assert.equal(r.argv.includes('--network'), false);
+  assert.equal(r.rpc, 'UNSET');
+});
+
+test('mainnet passes --network mainnet and the RPC as SOROBAN_RPC_URL', () => {
+  const url = 'https://rpc.example.invalid/key-in-path';
+  const r = runAction({ contracts: A, network: 'mainnet', rpcUrl: url });
+  assert.equal(r.code, 0);
+  const at = r.argv.indexOf('--network');
+  assert.ok(at > 0);
+  assert.equal(r.argv[at + 1], 'mainnet');
+  assert.equal(r.rpc, url);
+  assert.equal(r.summary.includes(url), false, 'the RPC URL may carry a key and is never echoed');
+  assert.match(r.summary, /Network: `mainnet`/);
+});
+
+test('mainnet without rpc-url fails before the CLI runs', () => {
+  const r = runAction({ contracts: A, network: 'mainnet' });
+  assert.equal(r.code, 2);
+  assert.equal(r.argv, null);
+  assert.match(r.output, /exit-code=2/);
+});
+
+test('a testnet rpc-url is passed through without --network', () => {
+  const r = runAction({ contracts: A, rpcUrl: 'https://testnet-rpc.example.invalid' });
+  assert.equal(r.code, 0);
+  assert.equal(r.argv.includes('--network'), false);
+  assert.equal(r.rpc, 'https://testnet-rpc.example.invalid');
+});
+
+for (const bad of ['Mainnet', 'futurenet', '', 'mainnet; touch pwned']) {
+  test(`refuses network '${bad}' without running the CLI`, () => {
+    const r = runAction({ contracts: A, network: bad, rpcUrl: 'https://x.invalid' });
+    assert.equal(r.code, 2);
+    assert.equal(r.argv, null);
+    assert.equal(existsSync(join(r.dir, 'pwned')), false);
+  });
+}
