@@ -95,4 +95,22 @@ describe.skipIf(!existsSync(BIN))('the built artifact refuses extend on mainnet'
     expect(status).toBe(2);
     expect(stderr).toContain('extend is testnet-only');
   });
+
+  it('with --network mainnet even when EVERGREEN_NETWORK=testnet, because the flag wins', () => {
+    const { stderr, status } = runWith(['--network', 'mainnet', ...EXTEND], {
+      EVERGREEN_NETWORK: 'testnet',
+    });
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+  });
+
+  it('not when EVERGREEN_NETWORK is empty and no flag is given: an empty value means testnet', () => {
+    // An invalid payer is checked after the network, so reaching its offline
+    // error proves the network check let the run through.
+    const args = ['extend', A, '--ledgers', '20', '--source-account', 'GBAD'];
+    const { stderr, status } = runWith(args, { EVERGREEN_NETWORK: '' });
+    expect(status).toBe(2);
+    expect(stderr).not.toContain('extend is testnet-only');
+    expect(stderr).toContain('A valid public payer is required');
+  });
 });
