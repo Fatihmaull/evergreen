@@ -3,13 +3,13 @@
  * the status bar. A single `getHealth` read — no SDK, no core, nothing signed.
  * If it fails the bar says so; the page content is unaffected.
  */
-const RPC_URL = 'https://soroban-testnet.stellar.org';
+import { NETWORK } from './lib/network';
 
 async function fillLiveLedger(): Promise<void> {
   const slot = document.querySelector('[data-live-ledger]');
   if (!slot) return;
   try {
-    const response = await fetch(RPC_URL, {
+    const response = await fetch(NETWORK.rpcUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 'live-ledger', method: 'getHealth' }),

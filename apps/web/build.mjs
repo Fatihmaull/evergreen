@@ -25,7 +25,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
@@ -46,6 +46,45 @@ const repo = join(here, '../..');
  * current.
  */
 const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public');
+
+/**
+ * THIS SITE IS BUILT FOR TESTNET, AND A NON-TESTNET BUILD IS REFUSED HERE.
+ *
+ * `resolveNetwork` in core refuses a mainnet build that is MISCONFIGURED — no
+ * `SOROBAN_RPC_URL` — which is the right guard for the CLI and the wrong level
+ * for this site. A correctly configured mainnet build would sail past it and
+ * publish a dashboard reading mainnet with "Testnet only. Read-only: these
+ * pages never sign or submit anything." still in the footer of every page.
+ * That is one environment variable away and it would raise no error anywhere.
+ *
+ * Testnet only until the beta exits (`AGENTS.md` hard rule 1, `PH2-E5-02`), and
+ * `web-reference/design-language/claims-and-copy.md` puts any mainnet
+ * reference on the never-appears list. The plumbing in `src/lib/network.ts` is
+ * deliberately network-agnostic so that the day the rule lifts the work is this
+ * flag plus the copy — but until then the artefact may not be mainnet, whatever
+ * the plumbing can express.
+ */
+const NETWORK_NAME = process.env.EVERGREEN_NETWORK || 'testnet';
+if (NETWORK_NAME !== 'testnet') {
+  throw new Error(
+    `EVERGREEN_NETWORK is "${NETWORK_NAME}". This site is built for testnet only until the ` +
+      'beta exits (PH2-E5-02): every page states "Testnet only" in its footer, and the design ' +
+      'language forbids a mainnet reference. A mainnet dashboard is a later step with its own copy.',
+  );
+}
+
+/**
+ * Always defined, so `src/lib/network.ts` never references a binding that does
+ * not exist. Unset becomes the literal `undefined`, which resolves to testnet
+ * and its default RPC — so a plain `node apps/web/build.mjs` produces exactly
+ * the site that shipped before this existed.
+ */
+const NETWORK_DEFINE = {
+  __EVERGREEN_NETWORK__: JSON.stringify(NETWORK_NAME),
+  __SOROBAN_RPC_URL__: process.env.SOROBAN_RPC_URL
+    ? JSON.stringify(process.env.SOROBAN_RPC_URL)
+    : 'undefined',
+};
 const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild');
 
 /** Core's write path must never reach a read-only page. */
@@ -284,12 +323,21 @@ const cli = readCli();
 const knownEnds = readKnownEnds();
 
 /**
- * Written rather than injected with esbuild's `define`.
+ * Written to a JSON file rather than injected, because it is data a page reads
+ * and a typed import is the better shape for that.
  *
- * A `define` turned out to disable cross-module tree-shaking: the bundle went
- * from 6 core modules to 22 and pulled the entire write path in with it. The
- * write-path guard caught that, which is the whole reason it exists. A plain
- * JSON import tree-shakes normally and is typed.
+ * This comment used to warn that esbuild's `define` disabled cross-module
+ * tree-shaking — "the bundle went from 6 core modules to 22 and pulled the
+ * entire write path in with it". **Measured again on 2026-10-19 and it does not
+ * reproduce.** With esbuild 0.25.0, adding the two network defines produced a
+ * byte-identical bundle: 756 KB either way, 7 core modules either way, no write
+ * path. Whatever caused it then — most likely defining an identifier core
+ * itself referenced, rather than two names only this app uses — is not this
+ * shape, and `PH2-E1-03` now ships those defines.
+ *
+ * Corrected rather than deleted: a warning that no longer holds costs the next
+ * person a design they could have had, and I nearly rejected CEF's config
+ * proposal on the strength of it.
  */
 /**
  * `label` is dropped on the way out: the documentation page that needs it runs
@@ -660,6 +708,7 @@ async function bundle(entry, js) {
     minify: true,
     metafile: true,
     legalComments: 'none',
+    define: NETWORK_DEFINE,
     nodePaths: [join(repo, 'node_modules')],
     logLevel: 'error',
   });
@@ -914,7 +963,17 @@ function commissionAssetGuards() {
   rmSync(copy, { recursive: true, force: true });
 }
 
-console.log('building the twelve-page preview into apps/dashboard/public');
+/**
+ * Say where it is actually writing, and how many pages there actually are.
+ *
+ * This read "building the twelve-page preview into apps/dashboard/public" — a
+ * fixed string, so it named the wrong directory whenever `EVERGREEN_WEB_OUT`
+ * redirected the output, which is every run of `check-published.mjs`. There
+ * are 31 routes, not twelve. Same rule as the per-page line below: report the
+ * output, not the intention.
+ */
+const where = relative(repo, out);
+console.log(`building ${ROUTES.length} routes into ${where.startsWith('..') ? out : where}`);
 /**
  * Start from an empty directory. A previous build's orphan is worse than a
  * missing file: it keeps serving, it is committed, and nothing regenerates it

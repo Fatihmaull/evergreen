@@ -10,7 +10,7 @@
 import {
   DEFAULT_CRITICAL_LEDGERS,
   assessEntryWithThresholds,
-  connectTestnet,
+  connectNetwork,
   coverageIssues,
   createSimulatingQuoter,
   estimateEndsAt,
@@ -31,9 +31,8 @@ import type {
   ScanIssue,
   ScanResult,
 } from '../../../../packages/shared-types/src/index';
-import { Networks, rpc } from '@stellar/stellar-sdk';
-
-export const RPC_URL = 'https://soroban-testnet.stellar.org';
+import { rpc } from '@stellar/stellar-sdk';
+import { NETWORK } from './network';
 
 /** Our own contracts, from `docs/SETUP.md`. No other IDs are hard-coded anywhere. */
 export const OUR_CONTRACTS = [
@@ -94,15 +93,15 @@ export function health(result: ScanResult): unknown {
   return healthReport(result, DEFAULT_CRITICAL_LEDGERS);
 }
 
-export async function reader(): Promise<Awaited<ReturnType<typeof connectTestnet>>> {
-  return connectTestnet(RPC_URL);
+export async function reader(): Promise<Awaited<ReturnType<typeof connectNetwork>>> {
+  return connectNetwork(NETWORK);
 }
 
 /** The network's own archival configuration, read live — never hard-coded. */
 export async function archivalSettings(): Promise<
   Awaited<ReturnType<typeof readArchivalSettings>>
 > {
-  return readArchivalSettings(new rpc.Server(RPC_URL));
+  return readArchivalSettings(new rpc.Server(NETWORK.rpcUrl));
 }
 
 export async function scanOne(id: string, dataKeys: readonly string[] = []): Promise<ScanResult> {
@@ -142,7 +141,7 @@ export interface RentQuote {
  * "total".
  */
 export async function quoteRent(scan: ScanResult, additionalLedgers: number): Promise<RentQuote> {
-  const server = new rpc.Server(RPC_URL);
+  const server = new rpc.Server(NETWORK.rpcUrl);
   const settings = await readArchivalSettings(server);
   const targets: Record<string, number> = {};
   let cappedEntries = 0;
@@ -160,7 +159,7 @@ export async function quoteRent(scan: ScanResult, additionalLedgers: number): Pr
     if (resolved.wasCapped) cappedEntries += 1;
     targets[key] = resolved.extendToLedgers;
   }
-  const quoter = createSimulatingQuoter(server, { networkPassphrase: Networks.TESTNET });
+  const quoter = createSimulatingQuoter(server, { networkPassphrase: NETWORK.passphrase });
   const { estimate, excluded } = await estimateRent(scan, { extendToLedgers: targets }, quoter);
   return {
     totalRentStroops: estimate.totalEstimatedRentStroops,
