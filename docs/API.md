@@ -2,7 +2,7 @@
 
 **Status: DRAFT for review (`PH2-E2-02`), 2026-10-20.**
 - **Server side:** written by CEF. It covers auth, watchlist, scan, allowance state, jobs and history, and fee-ledger reads.
-- **Client side:** WEBF. The user-facing error taxonomy comes from WEBF and replaces the provisional codes in §9.
+- **Client side:** WEBF — §9a the error taxonomy, §9b the screen→call map, §9c what may be cached. §9a replaces the provisional user-facing set.
 - **Rakha (CER) reviews** against the Neon schema he is drafting (`PH2-E2-03`). The spec's shapes follow what the engine actually stores; where his schema says otherwise, the schema wins and this changes.
 
 Nothing is built against this until it merges. "Written before either side builds" is the card.
@@ -266,7 +266,7 @@ The exact row split is Rakha's schema; this shape is the read view.
 - **Accept an RPC URL from a client.** RPC endpoints are server configuration, as for the MCP server (`PH2-E1-07`): a URL can carry a provider key.
 - **Serve mainnet writes** before DoD-2 is met (`PH2-E5-02`).
 
-## 9 · Errors (provisional: WEBF's taxonomy replaces the user-facing set)
+## 9 · The error envelope (CEF)
 
 ```json
 { "error": { "code": "DAILY_LIMIT_REACHED", "message": "…", "retryable": false, "details": {} } }
@@ -281,6 +281,159 @@ Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_
 
 **`UPSTREAM_UNAVAILABLE` means the RPC or the database did not answer.** It is never reported as "unhealthy" or "not found": absence is not health.
 
+## 9a · The error taxonomy, user-facing (WEBF)
+
+This replaces the provisional set. §9's envelope is unchanged; this is the part
+the dashboard branches on and what it says to a person.
+
+**Three rules before the table.**
+
+1. **The client branches on `code` and never on `message` or on the HTTP
+   status.** Two codes share a status all over this spec — `422` carries six —
+   so a status is not a branch.
+2. **The set is closed, and the default is `undetermined`.** An unrecognised
+   code must render as *"we could not establish this"*, never as an empty
+   state, a zero or a success. A dashboard that meets a code it does not know
+   and shows nothing has invented an answer. A new code is therefore a
+   deliberate client change, and adding one to the server without telling the
+   client degrades gracefully instead of lying.
+3. **Every code has one of two kinds of next step, and the table says which:**
+   something the user can do, or nothing they can do. *Nothing they can do* is
+   a real and acceptable answer, written as such. What is not acceptable is an
+   error that implies an action the user does not have.
+
+### Authentication and session
+
+| Code | The UI shows | Next step |
+|---|---|---|
+| `CODE_INVALID` | "That code did not work. Request a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
+| `UNAUTHENTICATED` | the signed-out state for the whole screen, not an error toast | Sign in. The screen's own data is cleared first: a stale watchlist under a sign-in prompt is another user's data as far as the next person at that keyboard knows |
+| `CSRF_FAILED` | "This page was open too long. Reload and try again." | Reload. Never retried automatically — a silent retry of a state-changing request is the thing CSRF protection exists to stop |
+| `RATE_LIMITED` | "Too many attempts. Try again in N minutes." from `Retry-After` | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
+| `WALLET_LINKED_ELSEWHERE` | "That wallet is already linked to another account." | **Nothing they can do here.** No "contact support" — there is no support channel, and offering one is a promise with a date on it |
+| `CHALLENGE_INVALID` | "The signing request expired. Try linking again." | Retry from the start. Never reuse a challenge |
+
+**The rule the login screen is built around:** nothing on it may suggest an
+email session can move XLM (`PH2-E3-01`, ADR-008). That is copy, not an error
+code, and it is why "Extend now" is never reachable from a signed-in state
+without a linked wallet and a live allowance — the button is absent, not
+disabled.
+
+### Health, and the three honest states
+
+**This is not an error taxonomy and it must not be rendered as one.** Core
+emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
+`PH2-E1-01` adds `expired` as its own TTL status. The dashboard renders
+**three conclusions**, which is the product's thesis and not a style choice:
+
+| Conclusion | From | Rendered as |
+|---|---|---|
+| **healthy** | `health: 'healthy'` with its observation | the healthy chip and its word |
+| **at risk** | `'warning'`, `'critical'`, or expired | the matching chip; `expired` carries *archived* or *deleted*, never the same chip for both |
+| **undetermined** | `'unknown'`, a missing observation, or **any failed read** | its own colour, its own shape and its own word |
+
+- **Absence is not health.** `UPSTREAM_UNAVAILABLE` on a watch item renders
+  **undetermined**, never "healthy", never an empty row, never "not found".
+  This is the one the taxonomy exists for.
+- **The UI must distinguish two things that both render undetermined:** *the
+  API answered and could not establish the state* versus *the API did not
+  answer*. Same colour, different sentence, because the first is about the
+  contract and the second is about us.
+- **`NOT_FOUND` on a scan is not undetermined.** "No entry came back" is a
+  finding with its own copy; it is reported as a result, with its observation.
+- **A health state without `observedAtLedger` is a client-side error, not a
+  state to render.** §2 says the API never returns one; if it does, the
+  dashboard shows undetermined and that is a P0 against the Definitions of
+  Done, not a display bug.
+
+### Watchlist, jobs and allowance
+
+| Code | The UI shows | Next step |
+|---|---|---|
+| `AUTOPILOT_OFF` | the autopilot toggle, with what turning it on needs | Turn it on. This is a precondition stated as one, not a failure |
+| `ALLOWANCE_MISSING` | "No allowance yet. Approve one to let Evergreen extend for you." | Approve, in the user's wallet — **with the full §3.3 disclosure, every time**: amount in XLM *and* stroops, the spender, the expiry as a date *and* a ledger, and that a new approve **replaces** the current cap |
+| `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
+| `DAILY_LIMIT_REACHED` | "You have used today's extends (N of N)." with the reset time | Wait, or let the autopilot handle it |
+| `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
+| `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
+| `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
+| `IDEMPOTENCY_KEY_REUSED` | "That action was already taken." and then the existing job | **Nothing to retry** — this is the protection working, so it reads as information, not failure |
+
+**`NETWORK_NOT_WRITABLE` should be unreachable from the dashboard** and is
+listed so it is handled rather than assumed away. The site refuses to be
+*built* for anything but testnet (`PH2-E1-03`), so a client that could send a
+mainnet write would be a second defect. If it ever arrives, it renders as
+undetermined with the generic sentence — which is the closed-set default doing
+its job.
+
+**One thing the client needs that §7 does not provide.** `ALLOWANCE_EXPIRED`
+and `GET /allowance` give a status, and the copy above needs *how long it has
+been expired* to say "nothing has been protected since …". `liveUntilLedger`
+plus `observedAtLedger` is enough to derive it, and the client should derive it
+rather than ask for a field. Noting it so nobody adds one.
+
+---
+
+## 9b · Screen → call map (WEBF)
+
+What each screen calls, and what it must not. **No screen calls a route it does
+not need** — the watchlist does not fetch allowance state until an item shows
+autopilot, because a page that reads a wallet's balance to render a list has
+made a list into a financial disclosure.
+
+| Screen | Card | On load | On action |
+|---|---|---|---|
+| `/` landing, `/docs/*`, `/about/` | shipped | **nothing.** Static, and they stay static | — |
+| the shell's status bar | shipped | one RPC read, in the browser, no API | — |
+| `/dashboard/scanner/` (anonymous scan) | `PH2-E3-03` | nothing | `POST /scans`, **or the browser's own scan as today** — see the note below |
+| login | `PH2-E3-01` | `GET /me` | `POST /auth/email/start` → `POST /auth/email/verify` |
+| account | `PH2-E3-01` | `GET /me` | `POST /wallets/challenge` → `POST /wallets`; `DELETE /wallets/{account}`; `POST /auth/logout` |
+| watchlist | `PH2-E3-02` | `GET /watchlist` | `POST /watchlist`; `PATCH …`; `DELETE …` |
+| one watch item | `PH2-E3-02` | from the list's `lastObservation` — **no second call** | `POST /scans` to refresh; `GET /jobs?contractId=` for its history |
+| extend (WEBR) | `PH2-E3-04` | `GET /wallets/{account}/allowance` | `POST /jobs` with `Idempotency-Key`; then `GET /jobs/{id}` |
+| allowance (WEBR) | `PH2-E3-05` | `GET /wallets/{account}/allowance` | nothing through the API — the wallet signs, the API reads |
+| support (WEBR) | `PH2-E3-07` | nothing | nothing |
+
+**Anonymous scan keeps working in the browser, and that is a decision, not an
+omission.** Scanning from the browser straight to the chain is a trust property
+the product argues for: anyone can check a contract without trusting us, and it
+costs about 165 KB gzipped per live page (measured, `PH2-BL-03`). Fatih
+confirmed it on 2026-10-15. `POST /scans` exists for the watchlist's add and
+refresh paths, where there is a server in the loop anyway.
+
+**`GET /me` is the session's single source of truth** and carries the CSRF
+token, so every screen that can make a state-changing request has it from one
+call. A screen that has not called `GET /me` may not render a signed-in state.
+
+---
+
+## 9c · What may be cached (WEBF)
+
+The discipline the site already has: **a figure read live says so, and a figure
+that was recorded says when.** This maps it onto the API.
+
+| Data | Cache | Why |
+|---|---|---|
+| `GET /me` | in memory, for the page's life | Invalidated by logout and by any `UNAUTHENTICATED`. Never `localStorage`: a session fact in a store that outlives the session is how the next person at that keyboard sees the last one's state |
+| `GET /watchlist` | yes, with its `lastObservation` age **shown** | The list is the engine's last scan, not now. The age is rendered beside every health state, not hidden in a tooltip |
+| `POST /scans` results | yes, keyed by `(network, contractId, dataKeys)`, age shown | A scan is an observation at a ledger. It does not become stale, it becomes **older**, and the UI says how much |
+| `GET /jobs/{id}` **while in flight** | **never** | A job moves through pull, extend, reconcile. A cached "pulled" rendered as current is a wrong answer about money |
+| `GET /wallets/{account}/allowance` **before signing** | **never** | The screen that asks a user to approve a cap must show the cap that is live at that moment. §3.3's "a new approve replaces the current one" is only true copy if the current one is current |
+| `GET /ledger` | yes, paginated, append-only | Rows do not change once written |
+| the status bar's ledger | not cached | It is the page's one claim to being live |
+
+**Two rules that outrank the table.**
+
+- **Nothing cached is rendered without its age.** If a screen cannot show the
+  age, it may not use the cache.
+- **Cache is per session and in memory.** No `localStorage`, no
+  `sessionStorage`, for anything derived from a signed-in call. The site's own
+  rule for browser storage is per-viewer conveniences only, and a watchlist is
+  not a convenience.
+
+---
+
+
 ## 10 · Open questions
 
 1. **Location** (§1). Recommended B, with a [to verify] on whether Workers Paid covers both Workers.
@@ -290,4 +443,5 @@ Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_
 3. **Session lifetime** (§3) and **rate-limit numbers**: Fatih's numbers, Rakha's rows.
 4. **Cap-sizing estimate.** Plan §3.3 sizes the cap as estimated rent × horizon × (1 + fee) × margin. There is no fee percentage until `PH2-E5-03`, and the copy rules forbid showing one before then. **Proposed:** `GET /allowance/estimate` arrives with `PH2-E5-03`; until then the UI sizes on rent × horizon × margin and says the fee is not set.
 5. **Router-contract extends** (`PH2-E4-07`) do not pass through a job. If the router is viable, how its transactions reach the fee ledger (DoD-1 counts "an extend recorded in the fee ledger") needs a route. That is undecided until the spike's verdict.
-6. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.
+6. **The daily limit's number** (§9a `DAILY_LIMIT_REACHED`). The copy is "N of N", so the client needs the limit and the count used, not just the refusal. Proposed: both on `GET /me`, since every screen that can queue a job has already called it. Fatih sets the number (plan §3.3).
+7. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.
