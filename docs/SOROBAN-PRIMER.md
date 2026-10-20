@@ -133,9 +133,9 @@ Verified properly, not by trusting a success code:
 - **Not free.** Restored entries pay rent and write fees, and are charged as disk reads.
 - **Not always possible.** An invocation already at the resource limits cannot also restore. It still needs one or more explicit `RestoreFootprintOp`s first (CAP-0066, *Handling Invocations that restore too much state*).
 
-**What this changes for Evergreen.** On Protocol ≥ 23, an archived persistent, instance or code entry no longer makes a contract unusable by itself. The next invocation that touches it pays to restore it. Archival is now a **cost and a latency event**, plus a hard failure only for invocations near the resource ceiling. **Temporary-entry expiry is unchanged and is still permanent data loss.** Advice strings that say an archived entry needs a manual restore before use are out of date; updating them is `PH2-E1-05`.
+**What this changes for Evergreen.** On Protocol ≥ 23, an archived persistent, instance or code entry no longer makes a contract unusable by itself. The next invocation that touches it pays to restore it. Archival is now a **cost**, plus a hard failure for invocations near the resource ceiling and for any transaction built without simulation. **Temporary-entry expiry is unchanged and is still permanent data loss.** An extend is not an invocation, so an archived entry must still be restored before it can be extended. Since `PH2-E1-05`, every CLI and core surface gives this advice in one string, `ARCHIVED_ENTRY_ADVICE` in `packages/core/src/archived-advice.ts`, worded as the site words it (#322). ("Latency" was dropped with #322: nothing sourced it.)
 
-**Measured 2026-10-15:** testnet's `getNetwork` and `getVersionInfo` report `protocolVersion: 29`. Mainnet's protocol version was not read, and is undetermined here.
+**Measured 2026-10-15:** testnet's `getNetwork` and `getVersionInfo` report `protocolVersion: 29`. Mainnet's protocol version was not read then. **Measured 2026-10-20:** Horizon reports `current_protocol_version: 29` for both testnet and mainnet, so the behaviour above holds on both networks Evergreen reads.
 
 ## RPC
 
@@ -238,7 +238,7 @@ That is the worst possible shape for a monitoring tool — confidently green imm
 Consequences, all of which caught us:
 
 - **Extending the code entry for one contract extends it for every contract sharing that Wasm.** We tried to give B and C staggered TTLs and found the code entry could not be staggered at all.
-- **A contract is only as alive as its code entry.** If the shared Wasm entry is archived, every contract deployed from it is unusable, regardless of how healthy its own instance and data entries look.
+- **A contract is only as alive as its code entry.** If the shared Wasm entry is archived, every contract deployed from it depends on that one restore, regardless of how healthy its own instance and data entries look: each invocation must list it for restoring (and pay), and none of them can extend it until it is restored. (Observed before automatic restoration, when it made every such contract unusable.)
 - **A scan must report the code entry, and should say when it is shared.** Reporting per-contract TTL without it gives a false picture — a user could see four healthy contracts whose common code entry expires tomorrow.
 - Our fix for the guinea-pigs was to extend the shared code entry well past the whole sprint (to ledger 5,290,829, ~2026-10-19) so it drives neither crossing, leaving each contract's crossing governed by its own instance and persistent entries.
 

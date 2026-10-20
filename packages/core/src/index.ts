@@ -38,6 +38,7 @@ export {
   SCHEDULER_GAP_FLOOR_MINUTES,
 } from './config.js';
 export { SHARED_CODE_ENTRY_KEY } from './shared-code.js';
+export { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
