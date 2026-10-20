@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Guards</title>
-    <meta name="description" content="Dry-run by default, the write guard and its protected subjects, fee caps, and why a refusal is recorded rather than thrown." />
+    <meta name="description" content="Dry-run by default, fee caps, the checks before anything is signed, and why a refusal is recorded rather than thrown." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap" />
@@ -39,39 +39,37 @@
               <p class="lead">The repository cron only scans and decides. A separate local operator path may sign and submit with explicit live opt-in; these guards constrain that path and record refusals.</p>
             </header>
 
-    <h2 id="layers">Two independent layers</h2>
+    <h2 id="layers">What keeps a contract out of reach</h2>
     <p>
-      A contract can be kept out of the engine’s reach two ways: by not being in the watched list,
-      and by the write guard refusing it. These are deliberately separate, so that
-      <strong>a misconfiguration and a code path have to fail together</strong> for a protected
-      contract to be touched.
+      A contract the engine does not watch is a contract it never selects. That is the whole of it
+      today, and it is worth saying plainly rather than implying a second layer that no longer
+      exists.
     </p>
     <p class="note">
-      The list is documentation; the guard is a mechanism. That distinction was learned the hard
-      way — a pre-flight document once claimed that leaving a subject out of the watched list was
-      enough, because “the engine still scans and decides, the guard still refuses”. It does not:
-      the engine iterates the watched contracts, so an unwatched subject is never selected and the
-      guard is never consulted. Measured against the real config, that produced two decisions and
-      no refusal anywhere.
+      There was a second one. A write guard held guinea-pigs B, C and their shared code entry by
+      key and refused to write to them regardless of configuration, because they were
+      natural-decay subjects whose ageing could not be recovered once an extension reset it. B
+      expired on 21 September, C on 26 September, and the shared code entry was extended on
+      14 October — every subject it held is spent, so the guard was retired rather than left
+      holding an empty list. A guard that cannot fire and a guard that fires wrongly are the same
+      defect seen from two sides.
     </p>
-
-    <h2 id="protected">Protected subjects</h2>
-    <p>
-      The guard refuses to write to these regardless of configuration, because they are
-      natural-decay subjects whose ageing cannot be recovered once an extension resets it.
+    <p class="note">
+      The distinction it taught is the part worth keeping: <strong>the watched list is
+      documentation, a guard is a mechanism.</strong> A pre-flight document once claimed that
+      leaving a subject out of the watched list was enough, because “the engine still scans and
+      decides, the guard still refuses”. It does not: the engine iterates the watched contracts,
+      so an unwatched subject is never selected and the guard was never consulted. Measured
+      against the real config, that produced two decisions and no refusal anywhere.
     </p>
-    <div class="table-wrap"><table>
-      <thead><tr><th scope="col">Subject</th><th scope="col">Contract</th><th scope="col">Schedule</th></tr></thead>
-      <tbody><tr><td class="num">guinea-pig B</td><td class="num">CCYGO7KQ6F…</td><td>Crossed 2026-09-20, expired 2026-09-21</td></tr><tr><td class="num">guinea-pig C</td><td class="num">CCLW55OIED…</td><td>Crossed 2026-09-25, expired 2026-09-26</td></tr></tbody>
-    </table></div>
 
     <h2 id="refusal">A refusal is recorded, not thrown</h2>
     <p>
-      When the guard declines, the run records <span class="mono">REFUSED BY WRITE GUARD</span>
-      with the subject named, and continues to the next contract. Two reasons, and both matter:
+      When a run declines a contract it records the reason with the subject named and continues to
+      the next one. Two reasons, and both still hold for every check below:
     </p>
     <ul>
-      <li>One protected subject must not abort a run, or a guard on one contract would silence the engine for every other contract in the same pass.</li>
+      <li>One declined subject must not abort a run, or a refusal on one contract would silence the engine for every other contract in the same pass.</li>
       <li><strong>The refusal is the evidence.</strong> A refusal leaves no transaction, no hash and no explorer trace, so the only proof it happened is the line in the run record.</li>
     </ul>
 
@@ -112,7 +110,7 @@
           </main>
           <nav class="docs-toc" aria-label="On this page">
           <p class="eyebrow">On this page</p>
-          <a class="docs-toc-link" href="#layers">Two independent layers</a><a class="docs-toc-link" href="#protected">Protected subjects</a><a class="docs-toc-link" href="#refusal">A refusal is recorded, not thrown</a><a class="docs-toc-link" href="#before-signing">Before anything is signed</a><a class="docs-toc-link" href="#idempotency">Overlapping runs</a>
+          <a class="docs-toc-link" href="#layers">What keeps a contract out of reach</a><a class="docs-toc-link" href="#refusal">A refusal is recorded, not thrown</a><a class="docs-toc-link" href="#before-signing">Before anything is signed</a><a class="docs-toc-link" href="#idempotency">Overlapping runs</a>
         </nav>
         </div>
       </div>

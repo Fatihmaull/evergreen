@@ -185,9 +185,12 @@ describe('D15-02 review — combined policy boundaries', () => {
       expect(early.liveness.isAlarm).toBe(false);
       const due = await runEngine(reader(2000, true), cfg);
       expect(due.health.byEntry[code]?.needsAction).toBe(true);
+      // PH2-E0-06: the shared code entry used to be refused by the retired
+      // sprint guard. It is now decided on its merits; execution scope still
+      // keeps code entries away from the signer.
       expect(due.decisions.find((d) => d.entryKey === code)).toMatchObject({
-        action: 'skip',
-        reason: expect.stringContaining('REFUSED BY WRITE GUARD'),
+        action: 'extend',
+        reason: expect.stringContaining('shared by 2 contracts'),
       });
       expect(due.liveness.findings.some((f) => f.entryKey === code)).toBe(true);
     },

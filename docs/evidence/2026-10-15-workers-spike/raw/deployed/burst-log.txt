@@ -1,0 +1,2 @@
+buf scanA-json N 300 conc 24 secs 15.0 status {'200': 300} rps 20.0
+buf extendA-dryrun N 60 conc 8 secs 20.7 status {'200': 60} rps 2.9

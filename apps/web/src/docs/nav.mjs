@@ -111,7 +111,7 @@ export const DOC_NAV = [
       {
         route: '/docs/engine/guards/',
         title: 'Guards',
-        blurb: 'Dry-run by default, the write guard, protected subjects and fee caps.',
+        blurb: 'Dry-run by default, fee caps, and every check before anything is signed.',
       },
       {
         route: '/docs/engine/notifications/',

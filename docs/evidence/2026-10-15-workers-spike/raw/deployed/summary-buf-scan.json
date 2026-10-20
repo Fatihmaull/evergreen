@@ -1,0 +1,89 @@
+{
+ "scanA-json": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   "3"
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 1268.9,
+  "client_p90": 1744.2,
+  "client_max": 2120.1,
+  "worker_wall_p50": 930.0,
+  "errors": [],
+  "cli_masked_identical": "30/30 vs cli-before (cli-before==cli-after masked: True)",
+  "raw_identical": 2
+ },
+ "scanABC-json": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   "3"
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 1028.3,
+  "client_p90": 2013.3,
+  "client_max": 2307.8,
+  "worker_wall_p50": 777.5,
+  "errors": [],
+  "cli_masked_identical": "30/30 vs cli-before (cli-before==cli-after masked: True)",
+  "raw_identical": 2
+ },
+ "scanA-human": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   "3"
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 1122.1,
+  "client_p90": 1573.3,
+  "client_max": 1637.0,
+  "worker_wall_p50": 912.5,
+  "errors": [],
+  "cli_human_identical": 0
+ },
+ "extendA-dryrun": {
+  "n": 30,
+  "status": [
+   200
+  ],
+  "subreq": [
+   "7"
+  ],
+  "colo": [
+   "HKG",
+   "KIX",
+   "MRS",
+   "SIN"
+  ],
+  "client_p50": 2607.5,
+  "client_p90": 3010.8,
+  "client_max": 3135.6,
+  "worker_wall_p50": 2256.0,
+  "errors": [],
+  "cli_masked_identical": "4/30 vs cli-before (cli-before==cli-after masked: False)",
+  "raw_identical": 0
+ }
+}
