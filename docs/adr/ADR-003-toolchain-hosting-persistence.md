@@ -296,3 +296,24 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
   - **Production:** decided by Fatih on #299 (2026-10-15). The production Cloudflare and Neon accounts are **project-owned, with Fatih as owner and Rakha as member**, and are created before `PH2-E2-03`. That leaves the shared Pages account out of the engine's budget.
 
   **Scheduler.** ADR-001 (scheduled serverless, not always-on) is unchanged. Workers cron is a scheduled serverless job. The sprint measured GitHub Actions delivering about 7.5% of a declared 15-minute cron (entry of 2026-09-14), which is fine for a self-hoster with a day of threshold. **It is not a basis for a paid service.** The hosted scheduler is `PH2-E4-04`, per `PH2-E2-01`'s verdict.
+- **2026-10-21 — amended (`PH2-E2-02`): where the backend API lives.** Fatih chose **option B** on 2026-10-20, from [`docs/API.md`](../API.md) §1.
+
+  **Decision.**
+  - **The API is its own Worker**, in `apps/api` (Worker name `evergreen-api`).
+  - **The dashboard reaches it same-origin** through a thin `/api/*` Pages Function in the dashboard's Pages project, which forwards over a service binding.
+  - **Secrets live only in the API Worker:** the SEP-10 challenge-signing key, the Resend key and `DATABASE_URL`. The Pages project holds the proxy and nothing secret.
+  - **The two deploy separately.**
+  - **The hosted engine** is a separate Worker again (`PH2-E4-04`).
+
+  **Why the API cannot have its own hostname.** `pages.dev` and `workers.dev` are both on the Public Suffix List (publicsuffix.org, Cloudflare's section, read 2026-10-20). So `evergreen-stellar.pages.dev` and any `*.workers.dev` Worker are different *sites*. ADR-008's `SameSite=Lax` session cookie would not be sent on the dashboard's requests to it. A custom domain for both (option C) would also work; it needs a domain bought, and B moves to it unchanged later.
+
+  **Plan, verified and not.**
+  - **Verified:** Workers Paid is billed per account. Cloudflare's pricing page states a *"minimum charge of $5 USD per month for an account"* (developers.cloudflare.com/workers/platform/pricing, read 2026-10-20). That supersedes the 2026-10-15 entry's "starting on the Free plan" for this account: `PH2-E2-01` measured the engine at 10–29 ms median CPU against the free limit of 10 ms.
+  - **Undetermined:** whether the included allotments are pooled across the account's Workers. The page does not say. To confirm on the account's billing page after Fatih's upgrade.
+
+  **🔴 Open: which account the dashboard's Pages project lives in.** Cloudflare's service-binding docs: *"This Worker must be on your Cloudflare account."* A service binding cannot cross accounts. Today the site is served from the **shared** account noted on 2026-09-08. Production Workers go in the **project-owned** account (2026-10-15 entry above). So option B as decided needs one of:
+  - **(a) Move the Pages project to the project-owned account.** Whether the `evergreen-stellar` subdomain can be kept is **undetermined**; a `pages.dev` name is global, and the old project holds it. A changed URL breaks every link that names `evergreen-stellar.pages.dev`, including the published CLI README.
+  - **(b) Keep Pages where it is, and proxy with a plain `fetch`** to the API Worker's own URL. That works across accounts, but the API is then reachable directly on `workers.dev`. The session cookie still never reaches it there, because it is scoped to the dashboard's host. But the proxy needs a shared token to tell its own traffic apart, and that is a secret in the Pages project.
+  - **(c) A custom domain** (option C), which makes the account question moot for the URL.
+
+  This is Fatih's decision, recorded here rather than chosen.

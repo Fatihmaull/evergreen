@@ -1,6 +1,6 @@
 # Evergreen API v1: the contract between the backend and the dashboard
 
-**Status: DRAFT for review (`PH2-E2-02`), 2026-10-20.**
+**Status: DRAFT for review (`PH2-E2-02`), 2026-10-20. Both halves are in (WEBF's #351 folded in), and Fatih's decisions are applied.**
 - **Server side:** written by CEF. It covers auth, watchlist, scan, allowance state, jobs and history, and fee-ledger reads.
 - **Client side:** WEBF — §9a the error taxonomy, §9b the screen→call map, §9c what may be cached. §9a replaces the provisional user-facing set.
 - **Rakha (CER) reviews** against the Neon schema he is drafting (`PH2-E2-03`). The spec's shapes follow what the engine actually stores; where his schema says otherwise, the schema wins and this changes.
@@ -16,7 +16,7 @@ Nothing is built against this until it merges. "Written before either side build
 
 ---
 
-## 1 · Where the backend lives (this card decides it)
+## 1 · Where the backend lives: decided, option B (Fatih, 2026-10-20)
 
 **A constraint found while writing this, and verified:** `pages.dev` and `workers.dev` are both on the Public Suffix List (publicsuffix.org, read 2026-10-20, Cloudflare's section). So `evergreen-stellar.pages.dev` and any `*.workers.dev` Worker are **different sites**. ADR-008's session cookie is `SameSite=Lax`, which a browser does not send on a cross-site `fetch`. **A backend on its own `workers.dev` hostname cannot use ADR-008's cookie from the dashboard.**
 
@@ -26,14 +26,16 @@ Nothing is built against this until it merges. "Written before either side build
 | **B. Its own Worker, reached through a Pages Function proxy** (recommended) | API code in `apps/api` as its own Worker. The dashboard's `/api/*` is a few-line Pages Function forwarding over a **service binding** (Cloudflare: *"Service bindings enable you to call a Worker from within your Pages Function"*) | Same origin to the browser, so the cookie works. Secrets stay in the API Worker. The two deploy independently. One extra in-datacenter hop |
 | **C. A custom domain** for both | Site and API as routes on one registered domain | Cleanest URLs. Needs a domain bought and owned. Not decided anywhere; that is Fatih's call |
 
-**Recommendation: B, now.** It moves to C unchanged if a domain is bought later, because only the proxy goes away.
+**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key and `DATABASE_URL`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker name:** `evergreen-api`.
 - **Engine:** a separate Worker, Rakha's (`PH2-E4-04`). The API never signs or submits anything; it writes job rows the engine picks up.
 
-**Plan.** The spike recommends **Workers Paid** for the engine.
-- **[to verify]** whether Workers Paid is an account-level plan that then also covers the API Worker.
-- If it is not, the API's CPU-heavy routes (§5's live scan and SEP-10 verification) need measuring against the free 10 ms limit before launch.
+**🔴 Open: the Pages project's account.** A service binding cannot cross accounts (Cloudflare: *"This Worker must be on your Cloudflare account."*). The site is served today from the shared account, and production Workers go in the project-owned one (ADR-003, 2026-10-15). The options (move Pages, `fetch` proxy, custom domain) are in ADR-003's 2026-10-21 amendment, for Fatih.
+
+**Plan.** The spike recommends **Workers Paid** for the engine, and Fatih is upgrading the account.
+- **Verified, per account:** Cloudflare's pricing page states a *"minimum charge of $5 USD per month for an account"* (developers.cloudflare.com/workers/platform/pricing, read 2026-10-20). The subscription is the account's, not one Worker's, so the API Worker runs under the same plan as the engine.
+- **Undetermined:** whether the included allotments (10 million requests and 30 million CPU ms a month) are pooled across the account's Workers. The page describes them at account level but does not say how usage is aggregated. To confirm on the account's billing page after the upgrade, not by assumption.
 
 ---
 
@@ -56,7 +58,7 @@ Nothing is built against this until it merges. "Written before either side build
 **The session cookie** (ADR-008):
 - `__Host-evergreen_session`, `HttpOnly; Secure; SameSite=Lax; Path=/`, an opaque random ID.
 - Its row is server-side (`PH2-E2-03`).
-- Short-lived and rotated on use. The lifetime is **undetermined here**; I propose 12 hours idle and 7 days absolute, for Rakha and Fatih to set.
+- Rotated on use. Lifetimes are **configuration, not constants** (Fatih's starting values, 2026-10-20; he may tune them): `SESSION_IDLE_TIMEOUT` **7 days**, `SESSION_ABSOLUTE_TIMEOUT` **30 days**.
 - Logout deletes the row.
 
 **CSRF:** every state-changing request (`POST`, `PATCH`, `DELETE`) must pass both checks, or it is refused with `403 CSRF_FAILED`:
@@ -67,23 +69,26 @@ Nothing is built against this until it merges. "Written before either side build
 - They answer `429` with `Retry-After` (seconds) and error code `RATE_LIMITED`.
 - They are **required**, not polish. ADR-008: without per-address and per-IP limits, the login form is a free mail relay.
 
-| Route | Limit (proposed; the numbers are Fatih's) |
-|---|---|
-| `POST /auth/email/start` | per address and per IP, e.g. 5 per address per hour, 20 per IP per hour |
-| `POST /auth/email/verify` | 5 attempts per issued code, after which the code is void |
-| `POST /scans` | per IP for anonymous callers, per user for signed-in ones |
-| `POST /jobs` | the **daily limit** per user (plan §3.3), plus a per-minute burst limit |
+Every number below is **configuration** (named, read at startup), not a constant in code. The starting values are Fatih's (2026-10-20), and he may tune them.
+
+| Route | Setting | Starting value |
+|---|---|---|
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS` | **3 per address per 15 minutes** |
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_IP` | **20 per IP per hour** |
+| `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts** |
+| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per day** (plan §3.3's daily limit) |
+| `POST /scans` | `SCANS_PER_IP`, `SCANS_PER_USER` | per IP for anonymous callers, per user when signed in. **No value set yet**, so it is set before launch |
 
 ## 4 · Auth (ADR-008; built by `PH2-E2-04`)
 
 | Route | Auth | Does |
 |---|---|---|
-| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **Always `202`, whether or not an account exists**, so the route cannot enumerate users. The code: 10–15 min expiry, single use, stored hashed |
+| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **Always `202`, whether or not an account exists**, so the route cannot enumerate users. The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed |
 | `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
 | `POST /auth/logout` | session | Deletes the session row. Returns `204` |
 | `GET /me` | session | `{ user: { id, email, createdAt }, wallets: Wallet[], csrfToken }` |
 
-**A code, not a magic link** (proposed). It survives a phone-to-laptop switch and gives phishing nothing to click. ADR-008 allows either; the choice is Fatih's.
+**A code, not a magic link** (Fatih, 2026-10-20). It survives a phone-to-laptop switch and gives phishing nothing to click. ADR-008 allows either.
 
 **Wallet linking** (the SEP-10 pattern; the pinned SDK 17.0.1 ships `WebAuth`):
 
@@ -91,7 +96,7 @@ Nothing is built against this until it merges. "Written before either side build
 |---|---|---|
 | `POST /wallets/challenge` `{ account }` | session | Builds a challenge with `WebAuth.buildChallengeTx`, signed by the **challenge-signing key**. Returns `{ challengeXdr, networkPassphrase, expiresAt }` |
 | `POST /wallets` `{ challengeXdr }` (signed by the wallet) | session + CSRF | Verifies it with `WebAuth.readChallengeTx` and `verifyChallengeTxSigners`, then links `account` to the user. Returns `201 { wallet }`, or `200` if already linked to this user. If another user has the wallet, `409 WALLET_LINKED_ELSEWHERE` |
-| `DELETE /wallets/{account}` | session + CSRF | Unlinks the wallet. **See the open question in §10:** an allowance on chain does not go away when the link does |
+| `DELETE /wallets/{account}` | session + CSRF | Unlinks the wallet. **Refused with `409 WALLET_PAYS_FOR_WATCHED_CONTRACT` while any watch item uses it as `payerWallet`** (Fatih, 2026-10-20). An allowance on chain does not go away when the link does, so the dashboard shows the revoke (`approve(0)`, signed by the user's wallet) next to unlink |
 
 `Wallet = { account: string /* G… */, network: 'testnet', linkedAt: string }`
 
@@ -135,6 +140,11 @@ type WatchItem = {
         extendToLedgers: number;
         budget: { perJobMaxStroops: Stroops; per30DaysMaxStroops: Stroops };
       };
+  /**
+   * "Extend now" use for this contract today, so the client can say "N of N"
+   * without a second call (§9b: one watch item renders from the list).
+   */
+  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string };
   /** The engine's most recent scan of this item, or null before the first one. */
   lastObservation: {
     observedAtLedger: number;
@@ -156,16 +166,19 @@ type WatchItem = {
 
 | Route | Auth | Does |
 |---|---|---|
-| `GET /wallets/{account}/allowance` | session (own wallet only) | Reads the native-XLM SAC `allowance(from: account, spender: engine)` and the account's XLM balance **on chain, now** |
+| `GET /wallets/{account}/allowance` | session (own wallet only) | Reads the native-XLM SAC `allowance(from: account, spender: engine)` and the account's XLM balance **on chain, now**, and joins the engine's last stored record of this allowance |
 
 ```ts
 type AllowanceState = {
   network: 'testnet';
   account: string;
   spender: string; // the engine's public account
-  amountStroops: Stroops; // 0 after a revoke
-  liveUntilLedger: number | null; // null when none exists
-  status: 'active' | 'expired' | 'none';
+  amountStroops: Stroops; // as read now: 0 after expiry, after a revoke, and when none ever existed
+  liveUntilLedger: number | null; // as read now; null unless active
+  /** From the chain read joined with stored history. See the note below: the chain alone cannot tell the last three apart. */
+  status: 'active' | 'expired' | 'revoked' | 'none';
+  /** The last allowance the engine recorded for this wallet, or null if it never saw one. */
+  lastKnown: { amountStroops: Stroops; liveUntilLedger: number; observedAtLedger: number } | null;
   balanceStroops: Stroops;
   observedAtLedger: number;
   observedAt: string;
@@ -174,8 +187,9 @@ type AllowanceState = {
 };
 ```
 
+- **The chain cannot tell expired from revoked from never.** The #297 spike measured `allowance()` reading `"0"` after expiry **and** after revocation ([evidence](evidence/2026-10-14-sac-allowance-spike/README.md)); the allowance is a temporary entry, so expiry deletes it. So `expired` and `revoked` come from `lastKnown`, the engine's stored history (`PH2-E2-03`): an allowance last seen live whose `liveUntilLedger` has passed is `expired`, and one that reads zero before then is `revoked`. With no history, zero is `none`. §9a's `ALLOWANCE_EXPIRED` copy ("the ledger it expired at") reads `lastKnown.liveUntilLedger`.
 - **The API never builds, signs or submits an `approve` or a revoke.** The dashboard builds it and the user's wallet signs it (`PH2-E3-05`, WEBR). The API reads the result.
-- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy, and the cap-sizing estimate is not served here yet. It depends on a fee percentage that does not exist until `PH2-E5-03`; see §10.
+- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate waits for the fee percentage** (Fatih, 2026-10-20): no estimate route until `PH2-E5-03` sets the fee.
 
 ### Jobs: one hosted action
 
@@ -227,7 +241,7 @@ type Job = {
 |---|---|
 | `422 AUTOPILOT_OFF` | the item has no autopilot |
 | `422 ALLOWANCE_MISSING` / `ALLOWANCE_EXPIRED` | the payer wallet has no live allowance |
-| `429 DAILY_LIMIT_REACHED` | the user's daily "Extend now" limit is used |
+| `429 DAILY_LIMIT_REACHED` | this contract's "Extend now" uses today have reached `EXTEND_NOW_PER_CONTRACT_PER_DAY`. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
 
 Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1).
@@ -277,7 +291,7 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
 
 **`UPSTREAM_UNAVAILABLE` means the RPC or the database did not answer.** It is never reported as "unhealthy" or "not found": absence is not health.
 
@@ -312,6 +326,7 @@ the dashboard branches on and what it says to a person.
 | `RATE_LIMITED` | "Too many attempts. Try again in N minutes." from `Retry-After` | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
 | `WALLET_LINKED_ELSEWHERE` | "That wallet is already linked to another account." | **Nothing they can do here.** No "contact support" — there is no support channel, and offering one is a promise with a date on it |
 | `CHALLENGE_INVALID` | "The signing request expired. Try linking again." | Retry from the start. Never reuse a challenge |
+| `WALLET_PAYS_FOR_WATCHED_CONTRACT` | which watched contracts this wallet pays for, and that unlinking does not stop the allowance on chain | Move those contracts to another wallet or turn their autopilot off, **and** the revoke button beside unlink. *(Row added by CEF when folding #351, for Fatih's unlink decision; copy for WEBF to confirm.)* |
 
 **The rule the login screen is built around:** nothing on it may suggest an
 email session can move XLM (`PH2-E3-01`, ADR-008). That is copy, not an error
@@ -339,8 +354,11 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
   API answered and could not establish the state* versus *the API did not
   answer*. Same colour, different sentence, because the first is about the
   contract and the second is about us.
-- **`NOT_FOUND` on a scan is not undetermined.** "No entry came back" is a
-  finding with its own copy; it is reported as a result, with its observation.
+- **"No entry came back" is not undetermined.** It is a finding with its own
+  copy, reported as a result with its observation. *(CEF, folding: on the wire
+  it is never the `NOT_FOUND` error code. `POST /scans` answers `200` with an
+  `entry-not-found` issue in the `ScanResult`, exactly as `scan --json` does.
+  `NOT_FOUND` is for a missing route resource, such as an unknown job ID.)*
 - **A health state without `observedAtLedger` is a client-side error, not a
   state to render.** §2 says the API never returns one; if it does, the
   dashboard shows undetermined and that is a P0 against the Definitions of
@@ -353,7 +371,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `AUTOPILOT_OFF` | the autopilot toggle, with what turning it on needs | Turn it on. This is a precondition stated as one, not a failure |
 | `ALLOWANCE_MISSING` | "No allowance yet. Approve one to let Evergreen extend for you." | Approve, in the user's wallet — **with the full §3.3 disclosure, every time**: amount in XLM *and* stroops, the spender, the expiry as a date *and* a ledger, and that a new approve **replaces** the current cap |
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
-| `DAILY_LIMIT_REACHED` | "You have used today's extends (N of N)." with the reset time | Wait, or let the autopilot handle it |
+| `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
 | `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
@@ -434,14 +452,17 @@ that was recorded says when.** This maps it onto the API.
 ---
 
 
-## 10 · Open questions
+## 10 · Decided, and still open
 
-1. **Location** (§1). Recommended B, with a [to verify] on whether Workers Paid covers both Workers.
-2. **Unlinking a wallet with a live allowance.** The allowance lives on chain, so unlinking cannot revoke it. **Proposed:**
-   - the API refuses `DELETE /wallets/{account}` while any watch item uses it as `payerWallet`;
-   - the dashboard shows the revoke (`approve(0)`, user-signed) next to unlink.
-3. **Session lifetime** (§3) and **rate-limit numbers**: Fatih's numbers, Rakha's rows.
-4. **Cap-sizing estimate.** Plan §3.3 sizes the cap as estimated rent × horizon × (1 + fee) × margin. There is no fee percentage until `PH2-E5-03`, and the copy rules forbid showing one before then. **Proposed:** `GET /allowance/estimate` arrives with `PH2-E5-03`; until then the UI sizes on rent × horizon × margin and says the fee is not set.
-5. **Router-contract extends** (`PH2-E4-07`) do not pass through a job. If the router is viable, how its transactions reach the fee ledger (DoD-1 counts "an extend recorded in the fee ledger") needs a route. That is undecided until the spike's verdict.
-6. **The daily limit's number** (§9a `DAILY_LIMIT_REACHED`). The copy is "N of N", so the client needs the limit and the count used, not just the refusal. Proposed: both on `GET /me`, since every screen that can queue a job has already called it. Fatih sets the number (plan §3.3).
-7. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.
+**Decided by Fatih, 2026-10-20:**
+1. **Location:** option B (§1).
+2. **A wallet that pays for a watched contract cannot be unlinked.** The revoke button is shown next to unlink (§4).
+3. **Session lifetimes, sign-in codes and rate limits:** the starting values in §3, as configuration.
+4. **"Extend now"** is limited per contract, at 3 a day. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
+5. **The cap-sizing estimate** waits for the fee percentage (`PH2-E5-03`).
+
+**Still open:**
+6. **Which account the dashboard's Pages project lives in** (§1, ADR-003 2026-10-21). Option B's service binding needs it in the same account as the API Worker.
+7. **Router-contract extends** (`PH2-E4-07`) do not pass through a job. If the router is viable, how its transactions reach the fee ledger (DoD-1 counts "an extend recorded in the fee ledger") needs a route. That is undecided until the spike's verdict.
+8. **Rakha's schema review** (`PH2-E2-03`). Where the stored shape disagrees with §6 and §7, the schema wins. The allowance history behind `lastKnown` is one thing it must hold.
+9. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.
