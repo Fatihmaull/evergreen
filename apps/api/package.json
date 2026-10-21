@@ -2,12 +2,15 @@
   "name": "@evergreen/api",
   "version": "0.0.0",
   "private": true,
-  "description": "The backend API Worker (docs/API.md, option B). Never signs or submits a transaction.",
+  "description": "The backend API Worker (docs/API.md). Auth per ADR-008; never signs or submits a transaction.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc --build"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.0.1"
   }
 }
