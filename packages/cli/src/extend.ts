@@ -42,7 +42,7 @@ export const EXTEND_HELP = `usage: evergreen extend <contract-id> --ledgers N
                        an absence. Mutually exclusive with --submit.
 
 Testnet only: refused on mainnet (--network mainnet or EVERGREEN_NETWORK=mainnet)
-until the beta exits; scan still reads mainnet. Default: simulate, never sign or submit. Supply a public payer
+until DoD-2 is met (PH2-E5-02); scan still reads mainnet. Default: simulate, never sign or submit. Supply a public payer
 with --source-account or EVERGREEN_SOURCE_ACCOUNT; there is no fallback payer.
 --ledgers N adds N ledgers to each selected entry's current remaining TTL.
 The operation target is capped at max_entry_ttl - 1; capping is reported.
@@ -71,7 +71,7 @@ export async function runExtendCli(
   const fail = (message: string): CliOutput => ({ stdout: '', stderr: message, exitCode: 2 });
   if (args.length === 2 && args[1] === '--help')
     return { stdout: EXTEND_HELP, stderr: '', exitCode: 0 };
-  // PH2-E1-04: writes stay testnet-only until the beta exits (AGENTS.md hard
+  // PH2-E1-04: writes stay testnet-only until DoD-2 is met (PH2-E5-02) (AGENTS.md hard
   // rule 1). The RPC passphrase check in bin.ts would also stop a mainnet run,
   // but only after preparation, and as a generic failure. Refusing here, before
   // `run`, names the real reason. Anything that is not testnet is refused, so a
@@ -79,7 +79,7 @@ export async function runExtendCli(
   const network = deps.network?.() ?? 'testnet';
   if (network !== 'testnet')
     return fail(
-      `Refusing: extend is testnet-only until the beta exits, and the chosen network is ${network} (--network or EVERGREEN_NETWORK).\n` +
+      `Refusing: extend is testnet-only until DoD-2 is met (PH2-E5-02), and the chosen network is ${network} (--network or EVERGREEN_NETWORK).\n` +
         '  `evergreen scan --network mainnet` reads mainnet and never writes. To extend, choose testnet.',
     );
   const contractId = args[1];

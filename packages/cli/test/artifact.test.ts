@@ -88,6 +88,7 @@ describe.skipIf(!existsSync(BIN))('the built artifact refuses extend on mainnet'
     const { stderr, status } = runWith(['--network', 'mainnet', ...EXTEND], {});
     expect(status).toBe(2);
     expect(stderr).toContain('extend is testnet-only');
+    expect(stderr).toContain('until DoD-2 is met (PH2-E5-02)');
   });
 
   it('with EVERGREEN_NETWORK=mainnet', () => {

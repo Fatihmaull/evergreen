@@ -3,7 +3,7 @@ import { runExtendCli } from '../src/extend.js';
 import { runCli } from '../src/command.js';
 import { readerFromFixture } from '../../core/test/mock-rpc.js';
 
-// PH2-E1-04: `extend` refuses mainnet until the beta exits (AGENTS.md hard
+// PH2-E1-04: `extend` refuses mainnet until DoD-2 is met (PH2-E5-02) (AGENTS.md hard
 // rule 1, PH2-E5-02). The refusal is the CLI's own, before `run` is called,
 // so an operator who chose mainnet reads why instead of a generic
 // "preparation failed" from the RPC passphrase check deeper down.
