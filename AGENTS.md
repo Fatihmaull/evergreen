@@ -127,7 +127,7 @@ If keeping the mirror current starts costing meaningful time in a 24-effective-d
 
 ## Hard rules — these are not suggestions
 
-1. **Testnet only until the beta exits (`PH2-E5-02`).** Before then, never write to mainnet and never use a key that controls real funds. Mainnet *reads* arrive with `PH2-E1-03`. If a task seems to need a mainnet write before `PH2-E5-02`, stop and ask. *(Amended 2026-10-15: the SOW 1 text read "Mainnet is explicitly out of scope for this grant (PRD §3)". That was true of the grant; phase 2 plans mainnet behind the beta, decisions Q5 and Q18.)*
+1. **Testnet only until DoD-2 is met (`PH2-E5-02`).** Before then, never write to mainnet and never use a key that controls real funds. Mainnet *reads* arrive with `PH2-E1-03`. If a task seems to need a mainnet write before `PH2-E5-02`, stop and ask. *(Amended 2026-10-15: the SOW 1 text read "Mainnet is explicitly out of scope for this grant (PRD §3)". That was true of the grant; phase 2 plans mainnet behind the beta, decisions Q5 and Q18.)*
 2. **No secrets in the repo.** Not in code, not in docs, not in tests, not in commit messages, not in this file. Keys and API tokens live in `.env` (gitignored) and platform secret stores only. If you find a committed secret, stop everything and say so.
 3. **Never invent Soroban APIs.** If you are unsure whether a method, XDR type, or SDK signature exists, check `docs/SOROBAN-PRIMER.md` first, then the official Stellar docs. A plausible-looking hallucinated RPC method will cost hours. Say "I need to verify this" rather than guessing.
 
