@@ -12,6 +12,7 @@ import {
   type ScanReport,
 } from '../lib/evergreen';
 import { approxDate, esc, formatCount } from '../lib/format';
+import { NETWORK } from '../lib/network';
 import { entryTable, graph, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
 import { entryView } from '../lib/view';
 
@@ -95,7 +96,7 @@ async function run(event?: Event): Promise<void> {
     wireCopyButtons(out);
   } catch (error) {
     out.innerHTML = `<div class="error-box"><p><strong>The scan could not be completed.</strong> ${esc((error as Error).message)}</p>
-      <p class="small muted">The endpoint is <span class="mono">https://soroban-testnet.stellar.org</span>. The contracts are unaffected by our failure to read them.</p></div>`;
+      <p class="small muted">The endpoint is <span class="mono">${esc(NETWORK.rpcUrl)}</span>. The contracts are unaffected by our failure to read them.</p></div>`;
   } finally {
     button.disabled = false;
     button.textContent = 'Scan together';
