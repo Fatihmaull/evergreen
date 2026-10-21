@@ -19,7 +19,16 @@
  * site build, only the second one runs on a pull request.
  */
 import { describe, expect, test } from 'vitest';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -98,8 +107,12 @@ describe('the published-output checker', () => {
     try {
       // "74" → "77" was the real drift: same byte count, different page.
       writeFileSync(join(a, 'index.html'), '<p>s4me</p>\n');
+      // The offset and its context are part of the contract: a same-length
+      // mismatch on a minified bundle is unreadable without them, and the one
+      // this check exists for was "74" → "77".
       expect(differences(a, b)).toEqual([
-        'index.html: published copy differs in content, same length (12 bytes)',
+        'index.html: published copy differs in content, same length (12 bytes), ' +
+          'first at byte 4: built "<p>s4me</p>\\n" vs published "<p>same</p>\\n"',
       ]);
     } finally {
       clean();
@@ -125,6 +138,45 @@ describe('the published-output checker', () => {
       ]);
     } finally {
       clean();
+    }
+  });
+});
+
+describe('a verification build does not edit the tree it verifies', () => {
+  /**
+   * `check-published.mjs` builds into a temporary directory and compares. It
+   * used to rewrite `apps/web/data/known-ends.json` while doing so — a SOURCE
+   * file that the browser bundles import — so the comparison moved one of the
+   * inputs of the thing being compared.
+   *
+   * That is almost certainly the transient same-length mismatch on the four
+   * minified bundles, seen three times and never reproducible on demand.
+   * esbuild is deterministic across processes: three separate builds of the
+   * same source give byte-identical output, measured. So a differing bundle
+   * means a differing input, and this was the one input a verification run
+   * could move.
+   *
+   * Since #324 the gate blocks every merge in the repository. A gate that
+   * edits the tree it is checking cannot be trusted about it.
+   */
+  test('a redirected build does not write data/known-ends.json', { timeout: 180_000 }, () => {
+    const data = fileURLToPath(new URL('../data/known-ends.json', import.meta.url));
+    // mtime, not a planted marker: this file is shared with every other test
+    // file vitest runs in parallel, and editing it under them made a sibling
+    // build fail. A write changes the timestamp whether or not it changes the
+    // bytes, which is the property being asserted.
+    const before = statSync(data).mtimeMs;
+    const out = mkdtempSync(join(tmpdir(), 'evergreen-redirect-test-'));
+    try {
+      const result = spawnSync('node', [fileURLToPath(new URL('../build.mjs', import.meta.url))], {
+        cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+        encoding: 'utf8',
+        env: { ...process.env, EVERGREEN_WEB_OUT: out },
+      });
+      expect(result.status).toBe(0);
+      expect(statSync(data).mtimeMs).toBe(before);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
     }
   });
 });

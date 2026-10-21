@@ -54,10 +54,10 @@ export function render(ctx) {
     /**
      * Both dates come from `ops/crossing-schedule.json` via `knownEnds`, which
      * is where they were measured. They used to be parsed out of
-     * `packages/core/src/write-guard.ts`, a file that is being deleted
+     * `packages/core/src/write-guard.ts`, which was deleted in #340
      * (PH2-E0-06) — and reading an expiry date out of a guard's source meant
-     * the page lost its dates the moment the guard did, which is not a
-     * relationship those two things should have had.
+     * the page would have lost its dates the moment the guard did, which is
+     * not a relationship those two things should ever have had.
      */
     const ends = ctx.knownEnds[c.id] ?? {};
     const guard =

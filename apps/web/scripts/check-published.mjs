@@ -77,10 +77,36 @@ export function differences(builtDir, publishedDir) {
        * and a message reading "12761 → 12761 bytes" reads like a broken
        * check rather than a stale file.
        */
+      /**
+       * Say WHERE it differs, not only that it does.
+       *
+       * This check has reported a same-length content mismatch on the four
+       * browser bundles twice, both times immediately after merging `main`,
+       * and both times a plain rebuild cleared it. Two consecutive builds into
+       * different directories are byte-identical when measured directly, so
+       * the build is deterministic in the case I could test, and the cause of
+       * those two is still unisolated.
+       *
+       * Since #324 this gate blocks every merge in the repository, so a
+       * transient here is expensive. The first differing offset with its
+       * context turns the next occurrence into evidence instead of another
+       * mystery — minified identifier names, a path, a number, each points
+       * somewhere different.
+       */
+      const published = live.get(path);
+      const at = bytes.findIndex((byte, index) => byte !== published[index]);
+      const near =
+        at < 0
+          ? ''
+          : `, first at byte ${at}: built ${JSON.stringify(
+              bytes.subarray(Math.max(0, at - 24), at + 24).toString('utf8'),
+            )} vs published ${JSON.stringify(
+              published.subarray(Math.max(0, at - 24), at + 24).toString('utf8'),
+            )}`;
       out.push(
         was === bytes.length
-          ? `${path}: published copy differs in content, same length (${was} bytes)`
-          : `${path}: published copy differs (${was} → ${bytes.length} bytes)`,
+          ? `${path}: published copy differs in content, same length (${was} bytes)${near}`
+          : `${path}: published copy differs (${was} → ${bytes.length} bytes)${near}`,
       );
     }
   }
