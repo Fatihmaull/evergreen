@@ -25,7 +25,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 import console from 'node:console';
@@ -45,7 +45,101 @@ const repo = join(here, '../..');
  * directory Cloudflare Pages publishes in order to find out whether it is
  * current.
  */
+const redirected = Boolean(process.env.EVERGREEN_WEB_OUT);
 const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public');
+
+/**
+ * THIS SITE IS BUILT FOR TESTNET, AND A NON-TESTNET BUILD IS REFUSED HERE.
+ *
+ * `resolveNetwork` in core refuses a mainnet build that is MISCONFIGURED — no
+ * `SOROBAN_RPC_URL` — which is the right guard for the CLI and the wrong level
+ * for this site. A correctly configured mainnet build would sail past it and
+ * publish a dashboard reading mainnet with "Testnet only. Read-only: these
+ * pages never sign or submit anything." still in the footer of every page.
+ * That is one environment variable away and it would raise no error anywhere.
+ *
+ * Testnet only until the beta exits (`AGENTS.md` hard rule 1, `PH2-E5-02`), and
+ * `web-reference/design-language/claims-and-copy.md` puts any mainnet
+ * reference on the never-appears list. The plumbing in `src/lib/network.ts` is
+ * deliberately network-agnostic so that the day the rule lifts the work is this
+ * flag plus the copy — but until then the artefact may not be mainnet, whatever
+ * the plumbing can express.
+ */
+const NETWORK_NAME = process.env.EVERGREEN_NETWORK || 'testnet';
+if (NETWORK_NAME !== 'testnet') {
+  throw new Error(
+    `EVERGREEN_NETWORK is "${NETWORK_NAME}". This site is built for testnet only until the ` +
+      'beta exits (PH2-E5-02): every page states "Testnet only" in its footer, and the design ' +
+      'language forbids a mainnet reference. A mainnet dashboard is a later step with its own copy.',
+  );
+}
+
+/**
+ * Always defined, so `src/lib/network.ts` never references a binding that does
+ * not exist. Unset becomes the literal `undefined`, which resolves to testnet
+ * and its default RPC — so a plain `node apps/web/build.mjs` produces exactly
+ * the site that shipped before this existed.
+ */
+/**
+ * Testnet's passphrase and default RPC, read from core's table.
+ *
+ * `chrome-client.ts` is the one script every page loads, and its header
+ * promises "no SDK, no core". Importing `NETWORK` made it import
+ * `resolveNetwork` and the whole table with it, and `chrome.js` went from
+ * 495 B to 1.3 KB — Rakha's second point on #345. So the shell gets two
+ * resolved literals instead of a module, and the promise in its header stays
+ * true.
+ *
+ * Parsed from the source rather than retyped, and it refuses when the shape
+ * moves — the same bargain as `readCli()` above. A second copy of a passphrase
+ * is exactly the kind of literal `PH2-E1-03` existed to remove.
+ */
+function readTestnetNetwork() {
+  const src = readFileSync(join(repo, 'packages/core/src/networks.ts'), 'utf8');
+  const block = src.match(/testnet:\s*\{([\s\S]*?)\n {2}\}/)?.[1];
+  const passphrase = block?.match(/passphrase:\s*'([^']+)'/)?.[1];
+  const defaultRpcUrl = block?.match(/defaultRpcUrl:\s*'([^']+)'/)?.[1];
+  if (!passphrase || !defaultRpcUrl) {
+    throw new Error(
+      'packages/core/src/networks.ts moved under the web build: no testnet passphrase or default RPC',
+    );
+  }
+  return { passphrase, defaultRpcUrl };
+}
+
+const TESTNET = readTestnetNetwork();
+
+const WEB_RPC_URL = process.env.EVERGREEN_WEB_RPC_URL;
+const NETWORK_DEFINE = {
+  __EVERGREEN_NETWORK__: JSON.stringify(NETWORK_NAME),
+  __EVERGREEN_WEB_RPC_URL__: WEB_RPC_URL ? JSON.stringify(WEB_RPC_URL) : 'undefined',
+  // For the shell only, so it carries no core. Same resolution rule as
+  // `resolveNetwork`: an explicit override, else the table's default.
+  __EVERGREEN_RPC_URL__: JSON.stringify(WEB_RPC_URL || TESTNET.defaultRpcUrl),
+  __EVERGREEN_PASSPHRASE__: JSON.stringify(TESTNET.passphrase),
+};
+
+/**
+ * `SOROBAN_RPC_URL` IS NOT INHERITED, and saying so is half the fix.
+ *
+ * Rakha found this on #345: the refusal above only reads a network NAME, and an
+ * RPC URL is not one. `resolveNetwork({ env: 'testnet', rpcUrl: <a mainnet
+ * endpoint> })` returns the testnet name and the testnet passphrase pointed at
+ * mainnet, so the refusal never fires and the site publishes "Testnet only"
+ * over mainnet data. #338 tells developers to export `SOROBAN_RPC_URL` for the
+ * CLI's mainnet reads, which makes this a normal shell, not a contrived one.
+ *
+ * Refusing outright would break every developer who followed #338, so the
+ * variable is ignored — and announced, because a silent ignore is its own trap:
+ * someone pointing the site at a private testnet RPC would watch it quietly not
+ * work. `EVERGREEN_WEB_RPC_URL` is the one this build reads.
+ */
+if (process.env.SOROBAN_RPC_URL && !WEB_RPC_URL) {
+  console.log(
+    "  note: SOROBAN_RPC_URL is set and NOT used — the site does not inherit the CLI's RPC.\n" +
+      '        Set EVERGREEN_WEB_RPC_URL to point the site at a different testnet endpoint.',
+  );
+}
 const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild');
 
 /** Core's write path must never reach a read-only page. */
@@ -284,31 +378,61 @@ const cli = readCli();
 const knownEnds = readKnownEnds();
 
 /**
- * Written rather than injected with esbuild's `define`.
+ * Written to a JSON file rather than injected, because it is data a page reads
+ * and a typed import is the better shape for that.
  *
- * A `define` turned out to disable cross-module tree-shaking: the bundle went
- * from 6 core modules to 22 and pulled the entire write path in with it. The
- * write-path guard caught that, which is the whole reason it exists. A plain
- * JSON import tree-shakes normally and is typed.
+ * This comment used to warn that esbuild's `define` disabled cross-module
+ * tree-shaking — "the bundle went from 6 core modules to 22 and pulled the
+ * entire write path in with it". **Measured again on 2026-10-19 and it does not
+ * reproduce.** With esbuild 0.25.0, adding the two network defines produced a
+ * byte-identical bundle: 756 KB either way, 7 core modules either way, no write
+ * path. Whatever caused it then — most likely defining an identifier core
+ * itself referenced, rather than two names only this app uses — is not this
+ * shape, and `PH2-E1-03` now ships those defines.
+ *
+ * Corrected rather than deleted: a warning that no longer holds costs the next
+ * person a design they could have had, and I nearly rejected CEF's config
+ * proposal on the strength of it.
  */
 /**
  * `label` is dropped on the way out: the documentation page that needs it runs
  * at build time, and the browser bundles import this file, so a string no
  * client reads would otherwise ride into three 760 KB bundles.
  */
-writeFileSync(
-  join(here, 'data/known-ends.json'),
-  `${JSON.stringify(
-    Object.fromEntries(
-      Object.entries(knownEnds).map(([id, end]) => [
-        id,
-        Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
-      ]),
-    ),
-    null,
-    2,
-  )}\n`,
-);
+/**
+ * A redirected build does not write here.
+ *
+ * `data/known-ends.json` is generated from `ops/crossing-schedule.json` and
+ * committed, and the browser bundles import it — so it is a SOURCE file that
+ * the build happens to produce. Writing it on every run meant that
+ * `check-published.mjs`, which builds into a temporary directory to compare
+ * against the published one, mutated the repository as a side effect of
+ * verifying it: the comparison changed a file the thing being compared is
+ * built from.
+ *
+ * That is almost certainly the transient same-length mismatch on the four
+ * minified bundles, seen three times and never on demand. esbuild is
+ * deterministic across processes — three separate builds of the same source
+ * give byte-identical output, measured — so a differing bundle means a
+ * differing input, and this was the one input a verification run could move.
+ *
+ * Since #324 this gate blocks every merge in the repository. A gate that
+ * edits the tree it is checking cannot be trusted about it.
+ */
+if (!redirected)
+  writeFileSync(
+    join(here, 'data/known-ends.json'),
+    `${JSON.stringify(
+      Object.fromEntries(
+        Object.entries(knownEnds).map(([id, end]) => [
+          id,
+          Object.fromEntries(Object.entries(end).filter(([field]) => field !== 'label')),
+        ]),
+      ),
+      null,
+      2,
+    )}\n`,
+  );
 const evidence = {
   count: readdirSync(join(repo, 'docs/evidence'), { withFileTypes: true }).filter((d) =>
     d.isDirectory(),
@@ -660,6 +784,7 @@ async function bundle(entry, js) {
     minify: true,
     metafile: true,
     legalComments: 'none',
+    define: NETWORK_DEFINE,
     nodePaths: [join(repo, 'node_modules')],
     logLevel: 'error',
   });
@@ -914,7 +1039,17 @@ function commissionAssetGuards() {
   rmSync(copy, { recursive: true, force: true });
 }
 
-console.log('building the twelve-page preview into apps/dashboard/public');
+/**
+ * Say where it is actually writing, and how many pages there actually are.
+ *
+ * This read "building the twelve-page preview into apps/dashboard/public" — a
+ * fixed string, so it named the wrong directory whenever `EVERGREEN_WEB_OUT`
+ * redirected the output, which is every run of `check-published.mjs`. There
+ * are 31 routes, not twelve. Same rule as the per-page line below: report the
+ * output, not the intention.
+ */
+const where = relative(repo, out);
+console.log(`building ${ROUTES.length} routes into ${where.startsWith('..') ? out : where}`);
 /**
  * Start from an empty directory. A previous build's orphan is worse than a
  * missing file: it keeps serving, it is committed, and nothing regenerates it
