@@ -26,7 +26,7 @@ Nothing is built against this until it merges. "Written before either side build
 | **B. Its own Worker, reached through a Pages Function proxy** (recommended) | API code in `apps/api` as its own Worker. The dashboard's `/api/*` is a few-line Pages Function forwarding over a **service binding** (Cloudflare: *"Service bindings enable you to call a Worker from within your Pages Function"*) | Same origin to the browser, so the cookie works. Secrets stay in the API Worker. The two deploy independently. One extra in-datacenter hop |
 | **C. A custom domain** for both | Site and API as routes on one registered domain | Cleanest URLs. Needs a domain bought and owned. Not decided anywhere; that is Fatih's call |
 
-**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key and `DATABASE_URL`. The Pages project holds the proxy and the service binding, nothing secret.
+**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key, `DATABASE_URL`, and `SIGNIN_CODE_PEPPER`, the HMAC key that sign-in codes are stored under (`PH2-E2-04`). The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker name:** `evergreen-api`.
 - **Engine:** a separate Worker, Rakha's (`PH2-E4-04`). The API never signs or submits anything; it writes job rows the engine picks up.
@@ -73,9 +73,9 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 | Route | Setting | Starting value |
 |---|---|---|
-| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS` | **3 per address per 15 minutes** |
-| `POST /auth/email/start` | `EMAIL_SENDS_PER_IP` | **20 per IP per hour** |
-| `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts** |
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes** |
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_IP`, `EMAIL_SENDS_PER_IP_WINDOW` | **20 per IP per hour** |
+| `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES`, `SIGNIN_CODE_DIGITS` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts**. **8 digits** by default; Fatih set the limits, not the length, and the arithmetic for 8 is in `apps/api/src/auth/config.ts` |
 | `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per day** (plan §3.3's daily limit) |
 | `POST /scans` | `SCANS_PER_IP`, `SCANS_PER_USER` | per IP for anonymous callers, per user when signed in. **No value set yet**, so it is set before launch |
 
