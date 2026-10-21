@@ -203,6 +203,7 @@ type AllowanceState = {
 - The XLM it moves is authorised by the user's **on-chain allowance**: their own wallet signature, capped and expiring (ADR-007).
 - The session only asks the engine to use an authority the user already granted, within the item's `budget`.
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
+- **The limit is per contract, and that bound reads smaller than it is.** `EXTEND_NOW_PER_CONTRACT_PER_DAY` is 3, so a session takeover's daily ceiling is `3 × (autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
 - Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
 
 ```ts
@@ -371,7 +372,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `AUTOPILOT_OFF` | the autopilot toggle, with what turning it on needs | Turn it on. This is a precondition stated as one, not a failure |
 | `ALLOWANCE_MISSING` | "No allowance yet. Approve one to let Evergreen extend for you." | Approve, in the user's wallet — **with the full §3.3 disclosure, every time**: amount in XLM *and* stroops, the spender, the expiry as a date *and* a ledger, and that a new approve **replaces** the current cap |
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
-| `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it |
+| `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it. **The screen states the limit before it is reached** (Fatih, 2026-10-21) — a limit a user discovers by hitting it reads as a fault, so the count is shown beside the control from the first use, not only on refusal |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
 | `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
