@@ -4,8 +4,7 @@
  * `resolveNetwork` in core refuses a mainnet build that is **misconfigured** —
  * no `SOROBAN_RPC_URL` — which is the right guard for the CLI and the wrong
  * level for this site. A *correctly* configured mainnet build would sail past
- * it and publish a dashboard reading mainnet with "Testnet only. Read-only:
- * these pages never sign or submit anything." still in the footer of every
+ * it and publish a dashboard reading mainnet with "Testnet only." still in the footer of every
  * page. One environment variable, no error anywhere.
  *
  * Testnet only until DoD-2 is met (`PH2-E5-02`, `AGENTS.md` hard rule 1), and

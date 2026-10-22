@@ -92,7 +92,7 @@ function footer(tone) {
   return `<footer class="site-foot${tone === 'dark' ? ' on-dark' : ''}">
       <div class="site-wrap">
         <div class="site-foot-links">${links}</div>
-        <p class="site-foot-note">Testnet only. Read-only: these pages never sign or submit anything.</p>
+        <p class="site-foot-note">Testnet only.</p>
         <p class="site-foot-note">Built for Stellar, backed by Instawards.</p>
       </div>
     </footer>`;
