@@ -1,0 +1,138 @@
+/**
+ * Watchlist calls (spec #350 §6) and the copy for their outcomes (§9a).
+ *
+ * "Add to watchlist" is `POST /watchlist`, which needs session + CSRF (§3):
+ * the token comes from `GET /me`, the session's single source of truth (§9b).
+ * No other route is called. In particular nothing here reads allowance state.
+ */
+import type {
+  ContractId,
+  LedgerKey,
+  NetworkName,
+} from '../../../../packages/shared-types/src/index';
+import { apiRequest, type ApiOutcome, type FetchLike, type Me } from './api';
+import { esc } from './format';
+
+export type WatchScope =
+  { readonly dataKeys: readonly LedgerKey[] } | { readonly noDataKeys: true };
+
+export interface AddRequest {
+  readonly network: NetworkName;
+  readonly contractId: ContractId;
+  readonly scope: WatchScope;
+  readonly label?: string;
+}
+
+/** The scope a scan used, carried into the watch item so coverage travels with it. */
+export function scopeFor(dataKeys: readonly LedgerKey[]): WatchScope {
+  return dataKeys.length > 0 ? { dataKeys } : { noDataKeys: true };
+}
+
+export type AddOutcome =
+  | { readonly kind: 'added' }
+  | { readonly kind: 'already-present' }
+  | Exclude<ApiOutcome<unknown>, { kind: 'ok' }>;
+
+export async function addToWatchlist(req: AddRequest, fetchImpl?: FetchLike): Promise<AddOutcome> {
+  const me = await apiRequest<Me>('/me', { method: 'GET' }, fetchImpl);
+  if (me.kind !== 'ok') return me;
+  if (typeof me.data?.csrfToken !== 'string' || me.data.csrfToken === '') {
+    // §9a rule 2: a shape we cannot use is undetermined, not a go-ahead.
+    return { kind: 'error', status: me.status, code: 'UNRECOGNISED' };
+  }
+  const res = await apiRequest<unknown>(
+    '/watchlist',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Evergreen-CSRF': me.data.csrfToken },
+      body: JSON.stringify(req),
+    },
+    fetchImpl,
+  );
+  if (res.kind !== 'ok') return res;
+  if (res.status === 201) return { kind: 'added' };
+  if (res.status === 200) return { kind: 'already-present' };
+  return { kind: 'error', status: res.status, code: 'UNRECOGNISED' };
+}
+
+export interface OutcomeCopy {
+  /** The chip class: only `healthy` for a confirmed write; `undetermined` otherwise. */
+  readonly tone: 'healthy' | 'undetermined' | 'warning';
+  readonly word: string;
+  readonly html: string;
+}
+
+/** What a person reads. Only a 201 or 200 from the API says "added". */
+export function addOutcomeCopy(outcome: AddOutcome, contractId: string): OutcomeCopy {
+  const id = `<span class="mono">${esc(contractId.slice(0, 6))}…${esc(contractId.slice(-4))}</span>`;
+  switch (outcome.kind) {
+    case 'added':
+      return { tone: 'healthy', word: 'added', html: `${id} is on your watchlist.` };
+    case 'already-present':
+      return {
+        tone: 'healthy',
+        word: 'already there',
+        html: `${id} was already on your watchlist. Nothing changed.`,
+      };
+    case 'unavailable':
+      return {
+        tone: 'undetermined',
+        word: 'undetermined',
+        html:
+          outcome.reason === 'network'
+            ? 'The Evergreen API did not answer, so nothing was added. The scan above is unaffected: it read the chain directly.'
+            : 'The Evergreen API is not available on this site yet, so nothing was added. The scan above is unaffected: it read the chain directly.',
+      };
+    case 'error':
+      switch (outcome.code) {
+        case 'UNAUTHENTICATED':
+          return {
+            tone: 'undetermined',
+            word: 'not added',
+            html: 'Not added. A watchlist belongs to a signed-in session, and this browser has none.',
+          };
+        case 'CSRF_FAILED':
+          return {
+            tone: 'warning',
+            word: 'not added',
+            html: 'This page was open too long. Reload and try again.',
+          };
+        case 'RATE_LIMITED': {
+          const s = outcome.retryAfterSeconds;
+          const mins = s === undefined ? undefined : Math.max(1, Math.ceil(s / 60));
+          return {
+            tone: 'warning',
+            word: 'not added',
+            html:
+              mins === undefined
+                ? 'Too many attempts. Try again later.'
+                : `Too many attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`,
+          };
+        }
+        case 'NETWORK_UNAVAILABLE':
+          return {
+            tone: 'undetermined',
+            word: 'not added',
+            html: 'That network cannot be read here yet.',
+          };
+        case 'UPSTREAM_UNAVAILABLE':
+          return {
+            tone: 'undetermined',
+            word: 'undetermined',
+            html: 'The API answered, but its own upstream did not. Nothing was confirmed as added.',
+          };
+        default:
+          return {
+            tone: 'undetermined',
+            word: 'undetermined',
+            html: 'We could not establish whether this was added.',
+          };
+      }
+  }
+}
+
+/** The chip plus sentence, as rendered into the scan panel. */
+export function addOutcomeHtml(outcome: AddOutcome, contractId: string): string {
+  const c = addOutcomeCopy(outcome, contractId);
+  return `<p class="small"><span class="chip ${c.tone}"><span class="shape"></span>${esc(c.word)}</span> ${c.html}</p>`;
+}
