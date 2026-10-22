@@ -116,3 +116,5 @@ export {
   resolveNetwork,
 } from './network.js';
 export type { NetworkChoice } from './network.js';
+export { priceExtend } from './price-extend.js';
+export type { ExtendPrice } from './price-extend.js';
