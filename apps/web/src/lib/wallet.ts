@@ -74,8 +74,28 @@ export const DECLINED_CODE = -4;
 /** How long a prompt may stay open. A default, not a measurement. */
 export const DEFAULT_TIMEOUT_MS = 120_000;
 
+const WALLET_FAILURE_KINDS: ReadonlySet<string> = new Set<WalletFailure['kind']>([
+  'not-installed',
+  'locked',
+  'not-connected',
+  'wrong-network',
+  'account-mismatch',
+  'rejected',
+  'timeout',
+  'unavailable',
+]);
+
+/**
+ * By kind, not by the presence of `kind`: `wallet-money.ts` returns
+ * `WalletFailure | MoneyFailure` (Rakha, #327 point 4), and a guard that
+ * matched any `{ kind }` would call a money failure a wallet one.
+ */
 export function isWalletFailure(value: unknown): value is WalletFailure {
-  return typeof value === 'object' && value !== null && 'kind' in value;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    WALLET_FAILURE_KINDS.has(String((value as { kind?: unknown }).kind))
+  );
 }
 
 const TIMED_OUT = Symbol('timeout');

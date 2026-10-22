@@ -5,7 +5,7 @@
  * produces it fails here rather than on a signing screen.
  */
 import { describe, expect, test } from 'vitest';
-import { DECLINED_CODE, createWallet, type WalletPort } from '../src/lib/wallet';
+import { DECLINED_CODE, createWallet, isWalletFailure, type WalletPort } from '../src/lib/wallet';
 import { NETWORK } from '../src/lib/network';
 import { exactXlm } from '../src/lib/format';
 
@@ -174,5 +174,14 @@ describe('exactXlm', () => {
   test('refuses what it cannot state exactly', () => {
     for (const bad of ['-1', '1.5', '', '1e9', 'abc'])
       expect(() => exactXlm(bad)).toThrow(RangeError);
+  });
+});
+
+describe('isWalletFailure', () => {
+  test('every wallet kind, and not a money-side kind', () => {
+    expect(isWalletFailure({ kind: 'account-mismatch', expected: ME, reported: OTHER })).toBe(true);
+    expect(isWalletFailure({ kind: 'timeout' })).toBe(true);
+    expect(isWalletFailure({ kind: 'submit-failed' })).toBe(false);
+    expect(isWalletFailure({ signedXdr: 'X' })).toBe(false);
   });
 });
