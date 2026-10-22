@@ -12,7 +12,9 @@ pub struct SpikeTarget;
 #[contractimpl]
 impl SpikeTarget {
     pub fn seed(env: Env, value: u32) {
-        env.storage().persistent().set(&symbol_short!("data"), &value);
+        env.storage()
+            .persistent()
+            .set(&symbol_short!("data"), &value);
     }
     pub fn read(env: Env) -> Option<u32> {
         env.storage().persistent().get(&symbol_short!("data"))
