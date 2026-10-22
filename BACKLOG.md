@@ -629,8 +629,8 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E3 — Dashboard usable by anyone
 
 - [ ] **PH2-E3-01** (F · WEBF) **M** Login UI: email + wallet linking. *Depends on `PH2-E2-04`.*
-- [ ] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.*
-- [ ] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.*
+- [~] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.* `/dashboard/watchlist/` built against spec #350 §6: undetermined until the API answers, no example data on screen; done when verified against the deployed API.
+- [~] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.* Client side built against spec #350 §6: the action reads `undetermined` until the API answers; done when it is verified against the deployed API.
 - [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. One-click "Extend now" has a **daily limit** and sends the user an **email notice** (accepted 2026-10-15). *Depends on `PH2-E4-02`, `PH2-E4-07`.*
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
 - [ ] **PH2-E3-06** (R · WEBR) **S** Wallet prompt test (#297 left the Freighter prompt count `undetermined`). The Freighter test itself depends on nothing; only its final check against the real allowance flow follows `PH2-E3-05`.
@@ -661,7 +661,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-BL-02** (R · CER) **M** Telegram and webhook channels (stubs exist in `channel-stubs.ts`).
 - [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each. Proposed fix (one shared SDK chunk): [Issue #321](https://github.com/Fatihmaull/evergreen/issues/321). **Not now:** deferred until after beta, at Fatih's request.
 - [ ] **PH2-BL-05** (F · WEBF) **S** Landing and marketing copy for the paid hosted tier.
-- [ ] **PH2-BL-08** (F · WEBF + CEF) **M** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
+- [x] **PH2-BL-08** (F · WEBF + CEF) **M** ✅ **DONE 2026-10-22 via #371 (`76592f7`).** Pages builds the site from source; `apps/dashboard/public/` is no longer committed and `check:published` is retired (no references remain in `scripts/`, `package.json`, `docs/` or `AGENTS.md`). **Original text:** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
 
 The plan's other three backlog cards are existing rows: `B-D31-01` (scheduler gap floor, now `(R · CER)`), `B-D31-02` (parked checker work, `(F · CEF)`, mostly superseded by `PH2-E0-04`) and `B-D31-03` (cold read of the docs, `(F)`).
 
