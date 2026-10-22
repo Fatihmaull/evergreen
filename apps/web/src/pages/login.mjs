@@ -32,7 +32,7 @@ export function render() {
           <span class="small muted">A one-time code, valid for a limited time and usable once.</span>
         </div>
       </form>
-      <form class="card card-pad stack" id="code-form" hidden>
+      <form class="card card-pad stack" id="code-form" hidden style="display: none">
         <div>
           <label class="field-label" for="code">The code from the email</label>
           <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" spellcheck="false" required />

@@ -141,7 +141,10 @@ async function startEmail(event: Event): Promise<void> {
     const a = await api('/auth/email/start', { method: 'POST', body: JSON.stringify({ email }) });
     if (a.kind === 'json' && a.status === 202) {
       pendingEmail = email;
-      $('code-form').hidden = false;
+      const codeForm = $('code-form');
+      codeForm.hidden = false;
+      // `.stack > *` sets display, which beats the `hidden` attribute.
+      codeForm.style.display = '';
       out.innerHTML = note(
         `If <strong>${esc(email)}</strong> can receive mail, a code is on its way. The answer is the same whether or not an account exists.`,
       );
