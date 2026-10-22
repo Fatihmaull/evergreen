@@ -200,6 +200,8 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 4. **Reconcile.** Compare the rent actually charged with the rent pulled, and record the difference in the fee ledger.
 5. **On final failure, refund from the engine pool** (§4.3) with the same idempotency key.
 6. **Sweep.** Fees accumulate in the engine account and are swept to treasury on a schedule (Q17). The treasury key never touches a server.
+   - **Router fees skip this step** (ADR-009, Fatih 2026-10-22): the router pays its fee straight to the treasury address. Spike `PH2-E4-07`: instance 5,443,860 → 6,322,913, code 5,443,859 → 6,322,913, persistent unchanged at 5,443,867; instance + code = 99.21% of simulated rent; fee 0.1 XLM; user paid ~6.1 XLM rent (tx `3c112235…de24a`).
+   - **Wording rule:** for a user without an allowance, no UI or custody copy (`PH2-E4-06`) may call a contract "fully safe"; the router does not extend persistent data.
 
 **Sizing the user's cap:**
 - Shown to the user as: estimated rent for the watched contracts × chosen horizon × (1 + fee) × a safety margin.
@@ -340,6 +342,7 @@ PH2-E0-03 contents:
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
+| PH2-E4-08 | Production router (ADR-009): audit, Rust CI (DevOps Assistant), final fee address = treasury | CEF | L | PH2-E4-03, PH2-E4-07 |
 
 ### E5 — Initial release and launch
 
