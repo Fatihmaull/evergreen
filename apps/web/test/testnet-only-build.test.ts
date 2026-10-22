@@ -16,6 +16,7 @@
  * The refusal is the first thing `build.mjs` does, before it typechecks or
  * writes anything, so these spawns cost milliseconds rather than a build.
  */
+import { ROUTES } from '../../dashboard/src/index';
 import { describe, expect, test } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -73,7 +74,7 @@ describe('the site refuses to be built for another network', () => {
     try {
       const { status, stdout, stderr } = build({ EVERGREEN_NETWORK: '', EVERGREEN_WEB_OUT: out });
       expect(stderr).not.toContain('EVERGREEN_NETWORK is');
-      expect(stdout).toContain('building 31 routes into');
+      expect(stdout).toContain(`building ${ROUTES.length} routes into`);
       expect(status).toBe(0);
     } finally {
       rmSync(out, { recursive: true, force: true });
