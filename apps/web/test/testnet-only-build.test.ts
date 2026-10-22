@@ -8,7 +8,7 @@
  * these pages never sign or submit anything." still in the footer of every
  * page. One environment variable, no error anywhere.
  *
- * Testnet only until the beta exits (`AGENTS.md` hard rule 1, `PH2-E5-02`), and
+ * Testnet only until DoD-2 is met (`PH2-E5-02`, `AGENTS.md` hard rule 1), and
  * `web-reference/design-language/claims-and-copy.md` puts any mainnet reference
  * on the never-appears list. `src/lib/network.ts` is network-agnostic on
  * purpose, so this is the one thing standing between that plumbing and a

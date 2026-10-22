@@ -58,7 +58,7 @@ const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public')
  * pages never sign or submit anything." still in the footer of every page.
  * That is one environment variable away and it would raise no error anywhere.
  *
- * Testnet only until the beta exits (`AGENTS.md` hard rule 1, `PH2-E5-02`), and
+ * Testnet only until DoD-2 is met (`PH2-E5-02`, `AGENTS.md` hard rule 1), and
  * `web-reference/design-language/claims-and-copy.md` puts any mainnet
  * reference on the never-appears list. The plumbing in `src/lib/network.ts` is
  * deliberately network-agnostic so that the day the rule lifts the work is this
@@ -68,8 +68,8 @@ const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public')
 const NETWORK_NAME = process.env.EVERGREEN_NETWORK || 'testnet';
 if (NETWORK_NAME !== 'testnet') {
   throw new Error(
-    `EVERGREEN_NETWORK is "${NETWORK_NAME}". This site is built for testnet only until the ` +
-      'beta exits (PH2-E5-02): every page states "Testnet only" in its footer, and the design ' +
+    `EVERGREEN_NETWORK is "${NETWORK_NAME}". This site is built for testnet only until ` +
+      'DoD-2 is met (PH2-E5-02): every page states "Testnet only" in its footer, and the design ' +
       'language forbids a mainnet reference. A mainnet dashboard is a later step with its own copy.',
   );
 }
