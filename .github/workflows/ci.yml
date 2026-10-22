@@ -29,6 +29,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # The site is no longer committed (PH2-BL-08): Cloudflare Pages builds it
+      # from source. Building here runs the guards inside build.mjs on every PR
+      # and gives the tests that read apps/dashboard/public a fresh build.
+      # `pnpm build` first: the site imports the workspace packages' dist/.
+      - run: pnpm build && node apps/web/build.mjs
+
       # One canonical pipeline: build/typecheck precedes artifact inspection,
       # and CI cannot omit newly added repository, bundle or publish gates.
       - run: pnpm check

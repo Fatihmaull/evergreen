@@ -22,13 +22,17 @@ Twelve routes, one shared shell (sidebar, status bar, footer — `src/chrome.mjs
 ```bash
 node apps/web/scripts/make-snapshot.mjs   # read-only scan of A, B and C + live archival settings → data/
 node apps/web/scripts/grade-snapshot.mjs   # grade the snapshot with core's health rules → data/snapshot-grades.json
-node apps/web/build.mjs                    # build into apps/dashboard/public
+pnpm build && node apps/web/build.mjs      # build packages, then the site into apps/dashboard/public (gitignored)
 node apps/web/build.mjs --commission       # prove the write-path guard can fail
 node apps/web/scripts/serve.mjs 4317       # serve the built site locally
 ```
 
 `grade-snapshot.mjs` must run after every `make-snapshot.mjs`: the build refuses
 grades that are not from the committed snapshot.
+
+The build output in `apps/dashboard/public/` is **not committed** (PH2-BL-08).
+Cloudflare Pages builds it on every deploy with Node 24, and CI builds it before
+`pnpm check`. Run the build locally before `pnpm test`: some tests read it.
 
 ## What it will not do
 

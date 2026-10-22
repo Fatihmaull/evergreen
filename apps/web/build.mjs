@@ -40,10 +40,10 @@ import { ROUTES, pageFor } from '../dashboard/src/index.ts';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '../..');
 /**
- * Where the build writes. Overridable so `scripts/check-published.mjs` can
- * build into a temporary directory and compare, instead of overwriting the
- * directory Cloudflare Pages publishes in order to find out whether it is
- * current.
+ * Where the build writes. Overridable so a verification build (the former
+ * `check-published.mjs`, retired in PH2-BL-08, and the known-ends test) can
+ * build into a temporary directory instead of the directory Cloudflare Pages
+ * publishes.
  */
 const redirected = Boolean(process.env.EVERGREEN_WEB_OUT);
 const out = process.env.EVERGREEN_WEB_OUT ?? join(repo, 'apps/dashboard/public');

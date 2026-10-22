@@ -44,4 +44,5 @@ apps/web/data/
 # Pages publishes this directory, so the files are committed — but they are
 # generated, and reformatting them means Prettier and the build overwrite each
 # other forever. The sources under `apps/web/src/` are formatted and checked.
+# Build output, gitignored since PH2-BL-08 (Pages builds it).
 apps/dashboard/public/
