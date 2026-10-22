@@ -12,7 +12,7 @@ Soroban ledger entries expire. An entry is still live on its final ledger — re
 |---|---|
 | **`evergreen` CLI** | Scan any contract: remaining TTL, projected archive date, estimated rent cost, storage inefficiencies. Human-readable or `--json`. |
 | **Auto-Bump Engine** | A scheduled worker that submits `extendTTL` before expiry. You self-host it and fund its hot payer account; the normal engine path restricts operations and fees, but the raw v1 key is not cryptographically scoped. Email alerts on every bump. |
-| **Dashboard + `evergreen-check`** | A public read-only view — scan any contract's TTL health, no wallet or signup — plus a GitHub Action that fails CI when a contract's TTL gets dangerously low. |
+| **Dashboard + `evergreen-check`** | A public view — scan any contract's TTL health, no wallet or signup — plus a GitHub Action that fails CI when a contract's TTL gets dangerously low. |
 
 **Try it without installing anything: [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/)** — paste any testnet contract ID. No wallet, no signup, no account.
 
@@ -27,7 +27,7 @@ So Evergreen never asks for authority over your contract, because no such author
 Two consequences worth stating plainly:
 
 - **You always pay your own rent.** Evergreen supplies the automation, not the money. Apex never funds another party's extend fees — see [`docs/adr/ADR-004`](docs/adr/ADR-004-payment-model.md).
-- **The dashboard does not ask for a wallet.** It is a public read-only view: paste a contract ID and read TTL health. There is no "extend now". That path was cut on 2026-09-10 (`W4-D24-04`). Where a signature does appear — `evergreen extend` — it authorizes a payment, never access, and the command simulates unless you pass `--submit`.
+- **Scanning does not ask for a wallet.** Paste a contract ID and read TTL health, with no wallet or signup. The dashboard has no "extend now" today. That path was cut on 2026-09-10 (`W4-D24-04`). Where a signature does appear — `evergreen extend` — it authorizes a payment, never access, and the command simulates unless you pass `--submit`.
 
 The engine's signing key is a hot key on **your** server, paying from **your** funded account. Stage 1 checks operations and fees in its normal execution path, but a leaked raw key can bypass those software checks. A hardened policy signer is **not currently available**; the accepted v1 disposition is to ship policy scoping as partial and defer full scoping to SOW 2. [`docs/POLICY-SIGNER.md`](docs/POLICY-SIGNER.md) explains the implemented path and its limits.
 

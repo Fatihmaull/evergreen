@@ -58,11 +58,6 @@ export function render(ctx) {
         </tr>
       </tbody>
     </table></div>
-    <p class="note">
-      It also has no wallet connection and no web control that signs anything. This site is
-      read-only: every page here renders committed data or reads the chain, and none of them can
-      submit a transaction.
-    </p>
 
     <h2 id="four-kinds">Four kinds of entry, and one that matters most</h2>
     <p>
