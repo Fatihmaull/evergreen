@@ -11,7 +11,7 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "typecheck": "tsc --build --force && pnpm typecheck:shared-types",
+    "typecheck": "tsc --build --force && pnpm typecheck:shared-types && pnpm typecheck:functions",
     "build": "tsc --build",
     "cli": "pnpm build && node packages/cli/dist/bin.js",
     "lint": "eslint .",
@@ -28,6 +28,7 @@
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
     "check:locale": "node scripts/check-locale-pinning.mjs",
     "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json",
+    "typecheck:functions": "tsc --project functions/tsconfig.json",
     "email:smoke": "node scripts/send-test-email.mjs",
     "test:email": "node --test --test-isolation=none scripts/send-test-email.test.mjs",
     "persistence:spike": "node --env-file-if-exists=.env scripts/persistence-spike.mjs",
