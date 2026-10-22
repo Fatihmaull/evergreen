@@ -31,6 +31,14 @@ describe('login calls only the routes API spec #350 states', () => {
   });
 });
 
+describe('login reaches the API only through the same-origin proxy', () => {
+  test('API_BASE is relative /api/v1 and no absolute URL is fetched', () => {
+    expect(page).toMatch(/const API_BASE = '\/api\/v1';/);
+    expect(page).not.toMatch(/fetch\(\s*['"`]https?:/);
+    expect(page).not.toMatch(/workers\.dev/);
+  });
+});
+
 describe('the login bundle carries no money path', () => {
   test('it does not import wallet-money', () => {
     expect(page).not.toMatch(/wallet-money/);

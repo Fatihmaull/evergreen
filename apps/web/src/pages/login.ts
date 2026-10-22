@@ -12,10 +12,11 @@
  * { email, code }`, `POST /wallets/challenge { account }`, `POST /wallets
  * { challengeXdr }`. #350 is unmerged; if it changes, this changes.
  *
- * WHERE. `/api/*` on this origin, the Pages Function proxy of decision B
- * (#350 §1, ADR-003 amendment). The proxy's exact shape — whether it strips
- * `/api` before forwarding — is UNDETERMINED and open with CEF; `API_BASE` is
- * the one place it lands.
+ * WHERE. Relative `/api/v1/...` on this origin, and never an absolute host.
+ * The Pages Function proxies `/api/*` to the API Worker over a service binding
+ * (#350 decision B, base path `/api/v1`; CEF on #361), so the session cookie is
+ * same-origin. A direct `*.workers.dev` call would be cross-site and the
+ * `SameSite=Lax` cookie would not be sent. `API_BASE` is the one place it lands.
  *
  * WHEN IT IS NOT THERE. Any answer that is not one of #350's answers for that
  * route — a 404 from Pages, an HTML page, a network error — is reported as
@@ -30,7 +31,7 @@ import { NETWORK } from '../lib/network';
 import { createWallet, isWalletFailure, type WalletFailure } from '../lib/wallet';
 import { freighterPort } from '../lib/wallet-freighter';
 
-const API_BASE = '/api';
+const API_BASE = '/api/v1';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
