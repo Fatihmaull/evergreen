@@ -301,7 +301,7 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
   **Decision.**
   - **The API is its own Worker**, in `apps/api` (Worker name `evergreen-api`).
   - **The dashboard reaches it same-origin** through a thin `/api/*` Pages Function in the dashboard's Pages project, which forwards over a service binding.
-  - **Secrets live only in the API Worker:** the SEP-10 challenge-signing key, the Resend key and `DATABASE_URL`. The Pages project holds the proxy and nothing secret.
+  - **Secrets live only in the API Worker:** the SEP-10 challenge-signing key, the Resend key, `DATABASE_URL` and `SIGNIN_CODE_PEPPER` (the HMAC key sign-in codes are stored under, `PH2-E2-04`; added 2026-10-22, Rakha's review point 12 on #350). The Pages project holds the proxy and nothing secret.
   - **The two deploy separately.**
   - **The hosted engine** is a separate Worker again (`PH2-E4-04`).
 
@@ -311,9 +311,6 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
   - **Verified:** Workers Paid is billed per account. Cloudflare's pricing page states a *"minimum charge of $5 USD per month for an account"* (developers.cloudflare.com/workers/platform/pricing, read 2026-10-20). That supersedes the 2026-10-15 entry's "starting on the Free plan" for this account: `PH2-E2-01` measured the engine at 10–29 ms median CPU against the free limit of 10 ms.
   - **Undetermined:** whether the included allotments are pooled across the account's Workers. The page does not say. To confirm on the account's billing page after Fatih's upgrade.
 
-  **🔴 Open: which account the dashboard's Pages project lives in.** Cloudflare's service-binding docs: *"This Worker must be on your Cloudflare account."* A service binding cannot cross accounts. Today the site is served from the **shared** account noted on 2026-09-08. Production Workers go in the **project-owned** account (2026-10-15 entry above). So option B as decided needs one of:
-  - **(a) Move the Pages project to the project-owned account.** Whether the `evergreen-stellar` subdomain can be kept is **undetermined**; a `pages.dev` name is global, and the old project holds it. A changed URL breaks every link that names `evergreen-stellar.pages.dev`, including the published CLI README.
-  - **(b) Keep Pages where it is, and proxy with a plain `fetch`** to the API Worker's own URL. That works across accounts, but the API is then reachable directly on `workers.dev`. The session cookie still never reaches it there, because it is scoped to the dashboard's host. But the proxy needs a shared token to tell its own traffic apart, and that is a secret in the Pages project.
-  - **(c) A custom domain** (option C), which makes the account question moot for the URL.
-
-  This is Fatih's decision, recorded here rather than chosen.
+  **Resolved: one Cloudflare account** (Fatih, decided 2026-10-18 on [#310](https://github.com/Fatihmaull/evergreen/issues/310); recorded here 2026-10-22). Pages and the API Worker live in the **same** account, the one that already hosts the `evergreen-stellar` Pages project, upgraded to Workers Paid. Cloudflare's service-binding docs say *"This Worker must be on your Cloudflare account"*, and with both in one account that condition holds, so the service binding is usable and nothing moves accounts. The `evergreen-stellar.pages.dev` URL is unchanged.
+  - **Departure, named:** this supersedes the 2026-10-15 entry's "production Cloudflare account is project-owned" for Cloudflare. The shared account's existing Worker (`focuswebstudio`, 2026-09-08 note) therefore runs under the same subscription as ours.
+  - **Undetermined:** whether Workers Paid's included usage is pooled account-wide, which matters precisely because of that other Worker. To verify on the account's billing page once Fatih reports the upgrade done, not by assumption. Neon is not affected by this entry.

@@ -207,7 +207,7 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 
 **Manual extend with a fee (§4.2):**
 - **Allowance users: one click, zero wallet prompts.** "Extend now" is just an on-demand engine job, running the same flow as above.
-  - **It has a daily limit per user, and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
+  - **It has a daily limit per contract** (3 per rolling 24 hours; only a job that pulled funds counts; amended 2026-10-22 from "per user", Fatih's decisions recorded in `docs/API.md` §7 and §10) **and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
 - **Users without an allowance:** card PH2-E4-07 researches an Evergreen **router contract** that takes the fee and extends in **one invocation, one signature**.
   - **[to verify]**: whether a contract can extend another contract's instance and code (believed yes), and whether it can extend another contract's *persistent data* (believed no).
   - If it can cover only instance and code, say so and measure how much of a typical contract's rent that is. In #296, the code entry was 99% of the bill.
@@ -327,7 +327,7 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
-| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** | CER | L | PH2-E4-01 |
+| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per contract and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |

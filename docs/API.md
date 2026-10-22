@@ -31,11 +31,11 @@ Nothing is built against this until it merges. "Written before either side build
 - **Worker name:** `evergreen-api`.
 - **Engine:** a separate Worker, Rakha's (`PH2-E4-04`). The API never signs or submits anything; it writes job rows the engine picks up.
 
-**🔴 Open: the Pages project's account.** A service binding cannot cross accounts (Cloudflare: *"This Worker must be on your Cloudflare account."*). The site is served today from the shared account, and production Workers go in the project-owned one (ADR-003, 2026-10-15). The options (move Pages, `fetch` proxy, custom domain) are in ADR-003's 2026-10-21 amendment, for Fatih.
+**Resolved: one Cloudflare account** (Fatih, decided 2026-10-18 on [#310](https://github.com/Fatihmaull/evergreen/issues/310) and in ADR-003). Pages and the API Worker share the account that already hosts the `evergreen-stellar` Pages project, upgraded to Workers Paid. A service binding needs both in one account (Cloudflare: *"This Worker must be on your Cloudflare account."*), so it is usable, nothing moves accounts, and the URL is unchanged.
 
 **Plan.** The spike recommends **Workers Paid** for the engine, and Fatih is upgrading the account.
 - **Verified, per account:** Cloudflare's pricing page states a *"minimum charge of $5 USD per month for an account"* (developers.cloudflare.com/workers/platform/pricing, read 2026-10-20). The subscription is the account's, not one Worker's, so the API Worker runs under the same plan as the engine.
-- **Undetermined:** whether the included allotments (10 million requests and 30 million CPU ms a month) are pooled across the account's Workers. The page describes them at account level but does not say how usage is aggregated. To confirm on the account's billing page after the upgrade, not by assumption.
+- **Undetermined:** whether the included allotments (10 million requests and 30 million CPU ms a month) are pooled across the account's Workers, including the shared account's other Worker. The page describes them at account level but does not say how usage is aggregated. To confirm on the account's billing page after the upgrade, not by assumption.
 
 ---
 
@@ -76,7 +76,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes** |
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_IP`, `EMAIL_SENDS_PER_IP_WINDOW` | **20 per IP per hour** |
 | `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES`, `SIGNIN_CODE_DIGITS` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts**. **8 digits** by default; Fatih set the limits, not the length, and the arithmetic for 8 is in `apps/api/src/auth/config.ts` |
-| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per day** (plan §3.3's daily limit) |
+| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per rolling 24 hours** (plan §3.3's daily limit). Only a job that pulled funds counts (§7) |
 | `POST /scans` | `SCANS_PER_IP`, `SCANS_PER_USER` | per IP for anonymous callers, per user when signed in. **No value set yet**, so it is set before launch |
 
 ## 4 · Auth (ADR-008; built by `PH2-E2-04`)
@@ -121,7 +121,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 | `GET /watchlist` | session | `{ items: WatchItem[] }` |
 | `POST /watchlist` `{ network, contractId, label?, scope }` | session + CSRF | Adds the contract. Returns `201`, or `200` if already present: idempotent on (user, network, contractId) |
 | `PATCH /watchlist/{network}/{contractId}` `{ label?, scope?, autopilot? }` | session + CSRF | Updates the item. Turning autopilot on needs a linked `payerWallet` and a `budget` |
-| `DELETE /watchlist/{network}/{contractId}` | session + CSRF | Removes it. Returns `204`. Any queued job for it is cancelled if it has not pulled yet |
+| `DELETE /watchlist/{network}/{contractId}` | session + CSRF | Removes it from the user's view. Returns `204`. **A soft delete:** the item gets `removed_at`, and the jobs → watch item FK stays `ON DELETE RESTRICT`, so jobs and their fee-ledger rows survive for reconciliation (Fatih, 2026-10-22; Rakha's point 2). Any job for it still `queued` (not pulled) moves to `cancelled`; a job that has pulled runs to completion. A later `POST /watchlist` for the same contract restores the item (clears `removed_at`) |
 
 ```ts
 type WatchItem = {
@@ -144,7 +144,7 @@ type WatchItem = {
    * "Extend now" use for this contract today, so the client can say "N of N"
    * without a second call (§9b: one watch item renders from the list).
    */
-  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string };
+  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string }; // rolling 24h: resetsAt is when the oldest counted use leaves the window
   /** The engine's most recent scan of this item, or null before the first one. */
   lastObservation: {
     observedAtLedger: number;
@@ -188,6 +188,7 @@ type AllowanceState = {
 ```
 
 - **The chain cannot tell expired from revoked from never.** The #297 spike measured `allowance()` reading `"0"` after expiry **and** after revocation ([evidence](evidence/2026-10-14-sac-allowance-spike/README.md)); the allowance is a temporary entry, so expiry deletes it. So `expired` and `revoked` come from `lastKnown`, the engine's stored history (`PH2-E2-03`): an allowance last seen live whose `liveUntilLedger` has passed is `expired`, and one that reads zero before then is `revoked`. With no history, zero is `none`. §9a's `ALLOWANCE_EXPIRED` copy ("the ledger it expired at") reads `lastKnown.liveUntilLedger`.
+- **The engine stores the allowance's expiry in its history** (amount, `liveUntilLedger`, the ledger it was observed at), append-only. An expired allowance reads `"0"` on chain exactly like a revoked one, so without the stored expiry the two cannot be told apart. One limit, stated: a revoke that happens after the last observation reads as `expired` once `liveUntilLedger` passes (Rakha's point 10). Retention of this history is undetermined (§10).
 - **The API never builds, signs or submits an `approve` or a revoke.** The dashboard builds it and the user's wallet signs it (`PH2-E3-05`, WEBR). The API reads the result.
 - **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate waits for the fee percentage** (Fatih, 2026-10-20): no estimate route until `PH2-E5-03` sets the fee.
 
@@ -203,7 +204,8 @@ type AllowanceState = {
 - The XLM it moves is authorised by the user's **on-chain allowance**: their own wallet signature, capped and expiring (ADR-007).
 - The session only asks the engine to use an authority the user already granted, within the item's `budget`.
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
-- **The limit is per contract, and that bound reads smaller than it is.** `EXTEND_NOW_PER_CONTRACT_PER_DAY` is 3, so a session takeover's daily ceiling is `3 × (autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
+- **The limit is per contract, and that bound reads smaller than it is.** `EXTEND_NOW_PER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
+- **What counts as a use** (Fatih, 2026-10-22). The window is a **rolling 24 hours**, not a UTC day. **Only a job that actually pulled funds counts.** A job that ends `preflight-failed`, is `cancelled`, or is refused before queuing never consumes quota: a refusal before money moves is not a use.
 - Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
 
 ```ts
@@ -213,7 +215,7 @@ type Job = {
   contractId: ContractId;
   kind: 'extend-now' | 'autopilot';
   createdAt: string;
-  status: 'queued' | 'preflight-failed' | 'pulled' | 'extended' | 'refunded' | 'failed';
+  status: 'queued' | 'preflight-failed' | 'cancelled' | 'pulled' | 'extended' | 'refunded' | 'failed'; // cancelled: only from queued, before any pull
   /** The §3.3 steps, each with its own transaction where one exists. */
   steps: {
     preflight?: { at: string; ok: boolean; reason?: string; rentStroops?: Stroops };
@@ -233,7 +235,8 @@ type Job = {
 - **`Idempotency-Key` is required.** A UUID v4 from the client, one per user intent. A missing key is refused with `400 IDEMPOTENCY_KEY_REQUIRED`.
 - **Same key, same body:** returns the same job (`200`), never a second one.
 - **Same key, different body:** `409 IDEMPOTENCY_KEY_REUSED`.
-- **Keys are kept at least 24 hours,** scoped per user.
+- **Keys are kept as long as the job row exists,** scoped per user, stored on the job with a hash of the request body (Fatih, 2026-10-22; **pending Rakha's confirmation**). Pruning would only follow a job-retention decision.
+- **Autopilot jobs carry no client key** (Rakha's point 7). They are deduplicated on a **scheduler key**: one autopilot job per (watch item, scheduler window), enforced by a unique constraint in the schema. The window's definition belongs to the hosted scheduler, `PH2-E4-04`, and is undetermined until it lands.
 - **The job ID is the engine's pull idempotency key.** One job is at most one `transfer_from` (ADR-007 step 2), and a refund reuses the same key (step 5). That part is the engine's guarantee (`PH2-E4-02`); the API's part is that one intent makes one job.
 
 **Refused before queuing:**
@@ -245,7 +248,7 @@ type Job = {
 | `429 DAILY_LIMIT_REACHED` | this contract's "Extend now" uses today have reached `EXTEND_NOW_PER_CONTRACT_PER_DAY`. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
 
-Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1).
+Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1). It does not count against the daily limit.
 
 ### Fee ledger (reads)
 
@@ -260,16 +263,18 @@ type LedgerRow = {
   network: 'testnet';
   wallet: string;
   contractId: ContractId;
-  kind: 'pull' | 'rent' | 'network-fee' | 'evergreen-fee' | 'refund';
+  kind: 'pull' | 'rent' | 'network-fee' | 'evergreen-fee' | 'refund' | 'difference';
   amountStroops: Stroops; // always positive; `kind` gives the direction
-  txHash: string | null; // null only for derived rows, e.g. `rent` split out of a pull
+  txHash: string | null; // null exactly for derived kinds: see below
   ledger: number | null;
   recordedAt: string;
 };
 ```
 
 This is what DoD-2's **zero subsidy** is measured from. Every XLM the engine moves for a user has a row, and the rows reconcile against the transactions:
-- per job, `pull` = `rent` + `network-fee` + `evergreen-fee` + `refund` + any recorded difference;
+- per job, `pull` = `rent` + `network-fee` + `evergreen-fee` + `refund` + `difference`;
+- **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the extend transaction's fee). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
+- how declared vs charged resource fee are stored stays a placeholder until the `PH2-E4-02` spike (Rakha's point 8);
 - an unexplained difference is a P0 or P1 by definition.
 
 The exact row split is Rakha's schema; this shape is the read view.
@@ -462,8 +467,19 @@ that was recorded says when.** This maps it onto the API.
 4. **"Extend now"** is limited per contract, at 3 a day. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
 5. **The cap-sizing estimate** waits for the fee percentage (`PH2-E5-03`).
 
+**Decided by Fatih, 2026-10-22** (after Rakha's review of #350):
+- **Account:** Pages and the API Worker share one Cloudflare account (§1; decided on #310 on 2026-10-18, confirmed for the spec today).
+- **`DELETE /watchlist` is a soft delete** with `removed_at`; the jobs FK stays `ON DELETE RESTRICT` (§6).
+- **The "Extend now" window is a rolling 24 hours**, 3 per contract. It is not an account-level brake (§7).
+- **Only a job that pulled funds counts as a use.** `preflight-failed`, `cancelled` and refused-before-queuing never consume quota (§7).
+- **Idempotency keys live as long as the job row**, pending Rakha's confirmation (§7).
+
 **Still open:**
-6. **Which account the dashboard's Pages project lives in** (§1, ADR-003 2026-10-21). Option B's service binding needs it in the same account as the API Worker.
+6. ~~Which account the dashboard's Pages project lives in.~~ Resolved 2026-10-22, above.
 7. **Router-contract extends** (`PH2-E4-07`) do not pass through a job. If the router is viable, how its transactions reach the fee ledger (DoD-1 counts "an extend recorded in the fee ledger") needs a route. That is undecided until the spike's verdict.
-8. **Rakha's schema review** (`PH2-E2-03`). Where the stored shape disagrees with §6 and §7, the schema wins. The allowance history behind `lastKnown` is one thing it must hold.
+8. **Rakha's schema review** (`PH2-E2-03`). Where the stored shape disagrees with §6 and §7, the schema wins. The allowance history behind `lastKnown` is one thing it must hold. His 2026-10-21 points 1–4, 7 and 12 are applied; these stay open:
+   - `fee_ledger.job_id` is `NOT NULL`, so router extends cannot be recorded without a job (his point 9; same as item 7).
+   - Retention of observation and allowance history (point 10).
+   - Personal-data deletion: soft delete, or hard delete with ledger anonymisation (point 11).
+   - The scheduler window behind autopilot dedupe (point 7, `PH2-E4-04`).
 9. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.
