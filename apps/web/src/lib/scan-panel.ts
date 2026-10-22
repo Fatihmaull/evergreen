@@ -22,6 +22,7 @@ import {
   type ScanResult,
 } from './evergreen';
 import { approxXlm, esc, formatCount } from './format';
+import { NETWORK } from './network';
 import { blastRadiusPanel, entryTable, jsonPanel, verdict, wireCopyButtons } from './ui';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -71,7 +72,7 @@ async function runScan(event: Event): Promise<void> {
   } catch (error) {
     out.innerHTML = `<div class="error-box"><p><strong>The scan could not be completed.</strong> ${esc(
       (error as Error).message,
-    )}</p><p class="small muted">The endpoint is <span class="mono">https://soroban-testnet.stellar.org</span>. The contract is unaffected by our failure to read it.</p></div>`;
+    )}</p><p class="small muted">The endpoint is <span class="mono">${esc(NETWORK.rpcUrl)}</span>. The contract is unaffected by our failure to read it.</p></div>`;
   } finally {
     button.disabled = false;
     button.textContent = 'Scan';
