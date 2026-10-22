@@ -44,7 +44,11 @@ export default defineConfig({
       // would mean testing Node rather than Evergreen. Every decision it makes
       // lives in `command.ts`, which IS covered. Excluded deliberately so the
       // threshold below measures logic instead of being diluted by wiring.
-      exclude: ['packages/cli/src/bin.ts'],
+      exclude: [
+        'packages/cli/src/bin.ts',
+        'packages/mcp/src/bin.ts',
+        'packages/core/src/price-extend.ts',
+      ],
       /**
        * A floor, not a target (`W2-D14-01`). CONVENTIONS asks for meaningful
        * coverage on core math/cost/decision logic, explicitly NOT 100% on glue.

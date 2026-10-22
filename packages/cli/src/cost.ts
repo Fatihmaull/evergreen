@@ -1,5 +1,6 @@
 import { formatCount } from '@evergreen-stellar/core';
 import { stroopsToXlm } from '@evergreen-stellar/core';
+import type { ExtendPrice } from '@evergreen-stellar/core';
 import type { Stroops } from '@evergreen-stellar/shared-types';
 
 /**
@@ -21,22 +22,8 @@ import type { Stroops } from '@evergreen-stellar/shared-types';
  * and the provenance travelling with it.
  */
 
-export interface CostLine {
-  readonly totalStroops: Stroops;
-  readonly rentStroops: Stroops;
-  readonly otherStroops: Stroops;
-  readonly entryCount: number;
-  readonly additionalLedgers: number;
-  readonly cappedEntryCount: number;
-  readonly maxEntryTtl: number;
-  readonly pricedAtLedger: number;
-  /**
-   * Rent per entry. The shared `code` entry routinely dominates the bill —
-   * it holds the Wasm — so a total alone hides where the money goes, and
-   * "which entry costs what" is what a funding decision actually turns on.
-   */
-  readonly rentByEntry: Readonly<Record<string, Stroops>>;
-}
+/** The figures come from core's `priceExtend` (shared with the MCP server, `PH2-E1-07`). */
+export type CostLine = ExtendPrice;
 
 /**
  * Round to two significant figures and say "about".
