@@ -4,16 +4,20 @@ name: router-spike-rust
 on:
   pull_request:
     paths:
-      - "experiments/router-spike/**"
-      - ".github/workflows/router-spike-rust.yml"
+      - 'experiments/router-spike/**'
+      - '.github/workflows/router-spike-rust.yml'
   push:
     branches: [main]
     paths:
-      - "experiments/router-spike/**"
-      - ".github/workflows/router-spike-rust.yml"
+      - 'experiments/router-spike/**'
+      - '.github/workflows/router-spike-rust.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: router-spike-rust-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   rust:
@@ -24,10 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install toolchain (pinned by rust-toolchain.toml)
-        run: |
-          rustup show active-toolchain || rustup toolchain install
-          rustup component add clippy rustfmt
-          rustup target add wasm32v1-none
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: experiments/router-spike
       - name: cargo fmt
         run: cargo fmt --all --check
       - name: cargo clippy
@@ -38,8 +42,11 @@ jobs:
         run: cargo build --release --target wasm32v1-none
       - name: Wasm size limit (65536 bytes)
         run: |
+          shopt -s nullglob
+          files=(target/wasm32v1-none/release/*.wasm)
+          if [ ${#files[@]} -eq 0 ]; then echo "::error::no .wasm built"; exit 1; fi
           fail=0
-          for f in target/wasm32v1-none/release/*.wasm; do
+          for f in "${files[@]}"; do
             size=$(stat -c %s "$f")
             echo "$f: $size bytes"
             if [ "$size" -gt 65536 ]; then echo "::error::$f is $size bytes (> 65536)"; fail=1; fi
