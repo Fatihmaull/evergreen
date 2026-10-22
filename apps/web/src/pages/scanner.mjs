@@ -2,7 +2,7 @@
 export const meta = {
   title: 'Contract scanner — Evergreen',
   description:
-    'Scan one Soroban testnet contract for TTL health, the entry that binds its expiry, and a rent estimate. Read-only.',
+    'Scan one Soroban testnet contract for TTL health, the entry that binds its expiry, and a rent estimate. No wallet, no signup.',
   active: '/dashboard/scanner/',
   eyebrow: 'Contract scanner · Stellar testnet',
   heading: 'Scan one contract',

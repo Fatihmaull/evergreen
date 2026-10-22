@@ -4,8 +4,7 @@
  *
  * TWO READS, not one, and the first is the network. A URL that says testnet
  * proves nothing about what it serves, and this script runs on every page of a
- * site whose footer says "Testnet only. Read-only: these pages never sign or
- * submit anything." A ledger number from another network rendered under that
+ * site whose footer says "Testnet only." A ledger number from another network rendered under that
  * sentence is the product's own failure mode — a confident figure with nothing
  * behind it. Rakha found the gap on #345.
  *

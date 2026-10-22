@@ -70,7 +70,6 @@ function statusBar(cadence) {
       <span class="status-item"><span class="dot"></span>Soroban testnet</span>
       <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
       <span class="status-item dim">ledger close ${cadence.value} <span class="dim">· measured, not assumed</span></span>
-      <span class="status-item right dim">read-only · these pages never sign or submit</span>
     </div>`;
 }
 
@@ -108,7 +107,6 @@ export function shell({
         <nav aria-label="Sections">${navHtml(active)}</nav>
         <div class="sidebar-foot">
           <p class="mono">testnet only</p>
-          <p>Read-only. There is no extend, renew or broadcast control on any page here.</p>
         </div>
       </aside>
       <div class="content">

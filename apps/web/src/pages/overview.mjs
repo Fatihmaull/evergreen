@@ -1,8 +1,7 @@
 /** /dashboard/ — Overview. Stat strip and contract cards, read live in the browser. */
 export const meta = {
   title: 'Overview — Evergreen',
-  description:
-    'Remaining TTL for our three testnet contracts, read live. No wallet, no signup. Read-only.',
+  description: 'Remaining TTL for our three testnet contracts, read live. No wallet, no signup.',
   active: '/dashboard/',
   eyebrow: 'Overview · Stellar testnet',
   heading: 'Three contracts, one shared code entry',

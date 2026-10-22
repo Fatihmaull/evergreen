@@ -283,7 +283,7 @@ export function render(ctx) {
           <h2>Ready to safeguard your Soroban contracts?</h2>
           <p class="lead">
             Open the dashboard, run the CLI against any contract, or read the evidence we recorded
-            doing it. Stellar testnet, read-only, no key and no account.
+            doing it. Stellar testnet. You need no key and no account to scan.
           </p>
           <div class="command">
             <span class="command-prompt" aria-hidden="true">$</span>
