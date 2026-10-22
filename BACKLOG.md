@@ -126,7 +126,7 @@ None of this is new scope. The rent model always needed to not double-count; the
 | W1 | Sep 3 – Sep 9 | **Foundation ready.** Repo, monorepo skeleton, CI, testnet accounts, all third-party services connected, agent context docs complete, and one real `scan` call returning live testnet TTL data. Week 2 can start with zero setup work. |
 | W2 | Sep 10 – Sep 16 | **CLI complete (Deliverable 1).** Published-quality `evergreen scan`, TTL/archive prediction, rent cost model, manual `extendTTL` proven on testnet with tx hash, storage optimizer, tests green. |
 | W3 | Sep 17 – Sep 23 | **Auto-bump engine live (Deliverable 2).** *Stage 1:* scheduled worker prevents archival end-to-end on testnet with a plain funded account, email alerts firing, bump history persisted, unattended-bump proof captured. *Stage 2 (off the critical path):* capped policy signer + setup guide. |
-| W4 | Sep 24 – Sep 30 | **Dashboard + CI check + docs (Deliverable 3).** Public read-only dashboard deployed, `evergreen-check` Action published, docs complete, npm packages published. |
+| W4 | Sep 24 – Sep 30 | **Dashboard + CI check + docs (Deliverable 3).** Public read-only dashboard deployed, `evergreen-check` Action published, docs complete, npm packages published. *Keputusan lama, diganti oleh #364 (2026-10-22)* |
 | Buffer | Oct 1 – Oct 2 | **Evidence submitted.** Demo video recorded, evidence bundle assembled per SOW §6.1, handed to Ambassador Chapter Lead, retro + SOW 2 candidate list written. |
 
 **Non-negotiable ordering rule:** a week does not start until the previous week's milestone is met. If a week slips, cut P1 scope (see PRD §7), never cut evidence capture.
@@ -448,8 +448,11 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 > **Dependency:** if Stage 2 runs long, `W4-D25` (Action) and `W4-D27` (npm publish) come back to Fatih. That is the first sign Week 4 is in trouble — surface it in STATUS the day it happens, don't absorb it quietly.
 
 ### Day 22 · Dashboard — public read-only (P0)
+*Keputusan lama, diganti oleh #364 (2026-10-22)*
+
 *Planned: Thu Sep 24 — may slip; the D-number does not.*
 - [ ] **W4-D22-01** (F) Dashboard scaffold. **No wallet, no signup, no accounts.** Build the public view as the whole product — the write path is additive and must be removable without leaving dead buttons or empty auth-gated regions.
+  *Keputusan lama, diganti oleh #364 (2026-10-22)*
 - [ ] **W4-D22-02** (F) **Scan any contract.** Paste any contract ID → TTL health, projected archive date, rent estimate. Scanning is a permissionless read, `core` already does it, and the dashboard already renders `ScanResult` — near-zero cost, and it makes the deployed instance a real utility for strangers rather than a display case.
 
 ### Day 22 · Web surface — registered 2026-09-17
@@ -488,6 +491,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **W4-D24-02** (F) Mobile-reasonable layout; the Ambassador may review on a phone.
 - [ ] **W4-D24-03** (F) Rent cost view: estimated ongoing storage cost per contract *(P1 — **cut order #4**; the write path took #3 when it was added)*.
 - [-] **W4-D24-04** (F) **CUT 2026-09-10 — cut order #3, confirmed by Fatih. Becomes the SOW 2 headline, not a deferred task.** Naming what this reverses rather than letting it pass as routine: **Fatih asked for this directly** — maintainers extending rent from the dashboard was the DX play. It was set P1 at the time *precisely* so this decision could be made cheaply if the week tightened, with the explicit note that it becomes the SOW 2 headline rather than a loss. The cut is inside the framework it was designed for. The dashboard ships **read-only**, which was always the P0 shape. **Original text:** Wallet-connect + user-signed "extend now" *(P1 — the DX feature; ship only if the `W2-D13-02` spike said it fits. Wallet-connect authorizes a **payment**, never access — check the UI copy says so.)*
+  *Keputusan lama, diganti oleh #364 (2026-10-22)*
 
 ### Day 25 · `evergreen-check` Action — **owner: R**
 *Planned: **Fri Sep 25–Sat Sep 26** — moved later 2026-09-09; the D-number does not move.*

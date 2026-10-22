@@ -522,7 +522,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
-| Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path |
+| Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path *Keputusan lama, diganti oleh #364 (2026-10-22)* |
 | Demo video (3–5 min) | [**Watch it — 4 min 31 s**](https://youtu.be/MIv26uSiOAQ) | ✅ 2026-09-30; public on YouTube, opens with **no account** — verified with an unauthenticated request, not from a signed-in browser. A byte-identical copy is kept in-repo at [`demo-v1`](https://github.com/Fatihmaull/evergreen/releases/tag/demo-v1), SHA-256 `9f0f751f…2903a` |
 | Docs site / README | [Documentation](https://evergreen-stellar.pages.dev/docs/) · [README](../README.md) | ✅ Live docs site and repository README |
 
