@@ -28,7 +28,8 @@ Nothing is built against this until it merges. "Written before either side build
 
 **Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key, `DATABASE_URL`, and `SIGNIN_CODE_PEPPER`, the HMAC key that sign-in codes are stored under (`PH2-E2-04`). The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
-- **Worker name:** `evergreen-api`.
+- **Worker names:** production `evergreen-api`; preview `evergreen-api-preview`.
+- **Service binding:** the Pages project binds the API Worker as `API`. The dashboard's `/api/*` is a Pages Function that forwards each request over `API` to the Worker; the Worker serves base path `/api/v1`.
 - **Engine:** a separate Worker, Rakha's (`PH2-E4-04`). The API never signs or submits anything; it writes job rows the engine picks up.
 
 **Resolved: one Cloudflare account** (Fatih, decided 2026-10-18 on [#310](https://github.com/Fatihmaull/evergreen/issues/310) and in ADR-003). Pages and the API Worker share the account that already hosts the `evergreen-stellar` Pages project, upgraded to Workers Paid. A service binding needs both in one account (Cloudflare: *"This Worker must be on your Cloudflare account."*), so it is usable, nothing moves accounts, and the URL is unchanged.
