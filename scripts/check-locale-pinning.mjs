@@ -34,7 +34,7 @@ const SKIP = [
   'node_modules',
   'dist',
   '.evergreen',
-  'apps/dashboard/public', // Generated bundles; lint the apps/web source instead.
+  'apps/dashboard/public', // Build output (gitignored, PH2-BL-08); lint the apps/web source instead.
   'apps/web/test', // Fixtures deliberately contain examples of the forbidden form.
   'apps/dashboard/test',
 ];

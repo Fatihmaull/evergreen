@@ -459,8 +459,9 @@ The click-by-click walkthroughs live in their task issues and die with them. Wha
 | Deploy URL | **https://evergreen-stellar.pages.dev** — verified HTTP 200 |
 | Production branch | `main` — auto-deploys on push |
 | Framework preset | **None** |
-| Build command | **empty** |
-| Output directory | **`apps/dashboard/public`** |
+| Build command | **`corepack enable && pnpm install --frozen-lockfile && pnpm build && node apps/web/build.mjs`** (PH2-BL-08; was empty while the output was committed) |
+| Node version | **24** — `.nvmrc`, plus env `NODE_VERSION=24` for Production and Preview |
+| Output directory | **`apps/dashboard/public`** — built on deploy, gitignored, never committed |
 | Why Cloudflare | Not on hosting merit — the P0 dashboard is static, so Vercel/Netlify/Pages are identical. Chosen because the same account can answer whether the Stellar SDK runs on Workers, which is the blocking unknown in ADR-003 Part 2. |
 | If redone | Any static host works. **Do not infer that the engine or its persistence lives on Cloudflare** — see the warning in ADR-003. |
 

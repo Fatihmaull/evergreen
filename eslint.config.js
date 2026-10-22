@@ -37,6 +37,7 @@ export default tseslint.config(
       // here and Cloudflare Pages publishes it, so the files are committed —
       // but they are minified bundles, and linting one reports 132 problems
       // about code nobody wrote. Their sources under `apps/web/src/` are linted.
+      // Build output, gitignored since PH2-BL-08 (Pages builds it).
       'apps/dashboard/public/**',
     ],
   },

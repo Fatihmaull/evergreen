@@ -67,3 +67,6 @@ pnpm-debug.log*
 # there were no logs. The two survivors under 2026-09-07-scheduler-runs/ were
 # force-added, so the trap was worked around twice and never closed.
 !docs/evidence/**/*.log
+
+# Site build output. Cloudflare Pages builds it from source (PH2-BL-08).
+apps/dashboard/public/
