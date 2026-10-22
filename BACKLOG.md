@@ -642,6 +642,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** that DoD-2 checks, where every mode must alert both user and operator (Fatih, 2026-10-20). *Depends on `PH2-E4-04`.*
 - [ ] **PH2-E4-06** (F · CEF, F approves) **S** Public custody statement: exact exposure (#297 §6). Drafted by CEF, approved by Fatih. *Depends on `PH2-E4-02`.*
 - [x] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance. **Done 2026-10-22: instance + code only** (99.21% of simulated rent on the spike subject), see [`docs/evidence/2026-10-22-router-spike`](docs/evidence/2026-10-22-router-spike/README.md).
+- [ ] **PH2-E4-08** (F · CEF) **L** Production router ([ADR-009](docs/adr/ADR-009-router-scope-and-fee-destination.md), Fatih 2026-10-22): extends instance + code only, fee straight to the treasury address. Includes an audit, Rust CI (build, test, `cargo clippy`, WASM size; job owned by the DevOps Assistant), and the final fee address. *Depends on `PH2-E4-03` (treasury address), `PH2-E4-07`.*
 
 ### E5 — Initial release and launch
 
