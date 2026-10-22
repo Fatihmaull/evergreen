@@ -24,10 +24,12 @@ import {
 import { approxXlm, esc, formatCount } from './format';
 import { NETWORK } from './network';
 import { blastRadiusPanel, entryTable, jsonPanel, verdict, wireCopyButtons } from './ui';
+import { addOutcomeHtml, addToWatchlist, scopeFor } from './watchlist';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
-let lastScan: { result: ScanResult; report: ScanReport } | undefined;
+let lastScan:
+  { result: ScanResult; report: ScanReport; id: string; dataKeys: readonly string[] } | undefined;
 
 async function runScan(event: Event): Promise<void> {
   event.preventDefault();
@@ -53,7 +55,7 @@ async function runScan(event: Event): Promise<void> {
       : [];
     const result = await scanOne(id, dataKeys);
     const rep = report(result);
-    lastScan = { result, report: rep };
+    lastScan = { result, report: rep, id, dataKeys };
     out.innerHTML = [
       verdict(rep),
       entryTable(rep),
@@ -65,10 +67,18 @@ async function runScan(event: Event): Promise<void> {
          </div>
          <p class="small muted">Pricing asks the network to simulate the extension, one entry at a time, so it takes a moment. Nothing is submitted.</p>
        </div>`,
+      `<div class="card card-pad stack" id="watch-panel">
+         <div class="row">
+           <button class="secondary" type="button" id="watch-button">Add to watchlist</button>
+         </div>
+         <p class="small muted">Adds this contract, with the same data keys, to a watchlist the Evergreen API keeps. The scan itself never needs it.</p>
+         <div id="watch-result" aria-live="polite"></div>
+       </div>`,
       jsonPanel(result, health(result)),
     ].join('');
     wireCopyButtons(out);
     $('cost-button').addEventListener('click', () => void runCost());
+    $('watch-button').addEventListener('click', () => void runAdd());
   } catch (error) {
     out.innerHTML = `<div class="error-box"><p><strong>The scan could not be completed.</strong> ${esc(
       (error as Error).message,
@@ -76,6 +86,26 @@ async function runScan(event: Event): Promise<void> {
   } finally {
     button.disabled = false;
     button.textContent = 'Scan';
+  }
+}
+
+async function runAdd(): Promise<void> {
+  if (!lastScan) return;
+  const button = $<HTMLButtonElement>('watch-button');
+  const target = $('watch-result');
+  button.disabled = true;
+  button.textContent = 'Adding…';
+  target.innerHTML = '';
+  try {
+    const outcome = await addToWatchlist({
+      network: lastScan.result.network,
+      contractId: lastScan.id,
+      scope: scopeFor(lastScan.dataKeys),
+    });
+    target.innerHTML = addOutcomeHtml(outcome, lastScan.id);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Add to watchlist';
   }
 }
 
