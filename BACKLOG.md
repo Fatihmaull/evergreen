@@ -641,7 +641,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E4-04** (R · CER) **M** Scheduler: Workers cron with enqueue fan-out, or per `PH2-E2-01`'s verdict. *Depends on `PH2-E2-01`, `PH2-E4-02`.*
 - [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** that DoD-2 checks, where every mode must alert both user and operator (Fatih, 2026-10-20). *Depends on `PH2-E4-04`.*
 - [ ] **PH2-E4-06** (F · CEF, F approves) **S** Public custody statement: exact exposure (#297 §6). Drafted by CEF, approved by Fatih. *Depends on `PH2-E4-02`.*
-- [ ] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance.
+- [x] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance. **Done 2026-10-22: instance + code only** (99.21% of simulated rent on the spike subject), see [`docs/evidence/2026-10-22-router-spike`](docs/evidence/2026-10-22-router-spike/README.md).
 
 ### E5 — Initial release and launch
 

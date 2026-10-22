@@ -59,6 +59,10 @@ operation. Notion sync pending.
 
 ---
 
+## Current — PH2-E4-07 router spike: instance + code only, 2026-10-22
+
+One `fee_and_extend` invocation with one user signature took the fee and extended another contract's instance and code (tx `3c112235…de24a`). Persistent data is out of reach, because soroban-sdk 27.0.6 only extends another address's instance and code. On the spike subject, instance + code is 99.21% of the simulated rent. The share on real watched contracts is undetermined. For PH2-E3-04, the router covers instance + code for users without an allowance, and what happens to persistent entries is a decision for Fatih. Evidence: [`docs/evidence/2026-10-22-router-spike`](evidence/2026-10-22-router-spike/README.md). Notion sync pending for PH2-E4-07.
+
 ## Current — PH2-E0-02: there was no evidence freeze, 2026-10-15
 
 **The card's premise was false, and the card was re-scoped by Fatih (option A).** The premise was that `check:evidence-integrity` pins `core`, so `core` was frozen until a tag-based gate replaced it. Measured:

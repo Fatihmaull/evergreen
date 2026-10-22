@@ -609,3 +609,14 @@ message was resent and the original confirmation record remains unchanged.
 - W3-D15-02b seed Testnet transaction: `e893648c48b276af3fcd15ac0705899113de3c7d6a8e01b3034547adb18c3067`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
 
 - W3-D15-02b temporary extension: `c696f477bd50ecaa0574d557c2981aac6c28646cf1e71c7e07dcfae4decdb8fd`; full raw RPC in [evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
+
+## 2026-10-22 — router-contract spike (PH2-E4-07)
+
+Verdict **instance + code only**: one invocation and one user signature took the fee and extended another contract's instance and code. Persistent data was not extended, and no host function can extend it. Instance + code came to 99.21% of the simulated rent on the spike subject. Full record, and the full raw `getTransaction` JSON for every hash below: [router spike evidence](evidence/2026-10-22-router-spike/README.md).
+
+- Subject Wasm upload: `055c68a8faa9ed2fb3e07b33a1dd7d533cfc82d137c26a87e6fae9a9c692e859`
+- Subject deploy: `0de1e3ca5c3feaa2ae1bdec9d54dbf0bb476810a37eac6af61df9a11690a4fce`
+- Router Wasm upload: `0ff73efba27f241635eb9e0e41f9b9b54f936388ff13e0eb46688e47bb694ec4`
+- Router deploy: `f4f2a6a59d33b6a5a88f32a1bb4067ac070e2437144d66ac439e9a9a20d19e3b`
+- Subject seed: `1cf2ce3780c734c93eab675b6fcc9b1d75415cec0f2025caa696f0f1661cc086`
+- Router `fee_and_extend` (fee + extend, one signature): `3c1122353a0d881667e7ae6c44c024590c8c094113aaf1ab8ad5132b461de24a`
