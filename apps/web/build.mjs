@@ -680,6 +680,12 @@ const PAGES = [
     to: 'dashboard/scanner/index.html',
   },
   {
+    module: 'src/pages/watchlist.mjs',
+    entry: 'src/pages/watchlist.ts',
+    js: 'assets/watchlist.js',
+    to: 'dashboard/watchlist/index.html',
+  },
+  {
     module: 'src/pages/blast-radius.mjs',
     entry: 'src/pages/blast-radius.ts',
     js: 'assets/blast-radius.js',

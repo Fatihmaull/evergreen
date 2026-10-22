@@ -40,6 +40,11 @@ export const ROUTES: readonly DashboardRoute[] = [
   },
   { route: '/dashboard/scanner/', does: 'The scan panel on its own page.', reads: 'live' },
   {
+    route: '/dashboard/watchlist/',
+    does: "A signed-in user's watched contracts, binding expiry first, from the Evergreen API.",
+    reads: 'live',
+  },
+  {
     route: '/dashboard/blast-radius/',
     does: 'Scan several contracts together to resolve what one scan cannot.',
     reads: 'live',
