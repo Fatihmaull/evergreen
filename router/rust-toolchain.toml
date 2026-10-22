@@ -1,0 +1,5 @@
+# PH2-E4-08: the router workspace pins its own toolchain with clippy (the root one is minimal).
+[toolchain]
+channel = "1.98.1"
+targets = ["wasm32v1-none"]
+components = ["clippy", "rustfmt"]
