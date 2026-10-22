@@ -6,6 +6,7 @@
     { "path": "packages/cli" },
     { "path": "packages/mcp" },
     { "path": "packages/engine" },
-    { "path": "apps/dashboard" }
+    { "path": "apps/dashboard" },
+    { "path": "apps/api" }
   ]
 }
