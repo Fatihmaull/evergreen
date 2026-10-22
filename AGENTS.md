@@ -14,7 +14,7 @@ Read this file every session. It tells you what this project is, how to pick up 
 
 An open-source toolkit that stops Soroban smart contracts from being archived. Soroban ledger entries have a TTL measured in ledgers; remaining TTL zero is the final live ledger. After it, persistent entries are archived and temporary entries are deleted. Archived state must be restored before use. Evergreen monitors TTL, predicts archival, estimates rent cost, and automatically extends TTL before expiry — non-custodially.
 
-Three components: a CLI, a scheduled auto-bump engine, and a public read-only dashboard + CI check.
+Three components: a CLI, a scheduled auto-bump engine, and a public dashboard (scan any contract without a wallet; sign-in and wallet signing arrive in phase 2) + CI check.
 
 This is a funded 30-day grant engagement (Stellar Instawards, $4,800). **Deadline 2026-10-02 is hard.** Scope discipline matters more than elegance.
 
@@ -174,9 +174,9 @@ packages/
   cli/                  the `evergreen` command
   engine/               scheduled auto-bump worker
 apps/
-  dashboard/            public read-only web dashboard. READ-ONLY, full stop —
-                        the P1 user-signed extend was CUT 2026-09-10 (W4-D24-04,
-                        cut order #3) and is a SOW 2 direction, not a deferred task
+  dashboard/            public web dashboard. No automated write path; any
+                        signature is the user's own wallet, never an email
+                        session (ADR-008)
 scripts/                every gate, capture and instrument. `pnpm check` runs the
                         check:* ones; capture-crossing-probe and
                         verify-crossing-capture are the evidence pair
