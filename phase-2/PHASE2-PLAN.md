@@ -135,7 +135,7 @@ These are recommendations for the ADRs to record. Facts marked **[verified]** we
 - Server-side session rows in Neon, referenced by an `httpOnly; Secure; SameSite=Lax` cookie.
 - Short-lived and rotated. CSRF protection on state-changing routes. Logout invalidates server-side.
 
-**Account deletion is a soft delete** (Fatih, 2026-10-22, from Rakha's review of `PH2-E2-02`). The account is deactivated: the email and personal data stay in the database. So the custody statement (`PH2-E4-06`) and all public copy say **"deactivated", never "deleted"**. Observation and allowance history are kept forever until the DoD-2 evidence is gathered. Both are recorded in `docs/API.md` §10.
+**Account deletion is a soft delete** (Fatih, 2026-10-22, from Rakha's review of `PH2-E2-02`). The account is deactivated: the email and personal data stay in the database. So the custody statement (`PH2-E4-06`) and all public copy say accounts are **"deactivated and can be reactivated by email", never "deleted"**. Observation and allowance history are kept forever until the DoD-2 evidence is gathered. Signing in again with the same email **reactivates the old account** (one email never has two accounts), but never re-enables autopilot or allowance use by itself: the user re-signs with their wallet first, because an email session never authorises XLM movement (ADR-008). All of this is recorded in `docs/API.md` §10.
 
 **Recovery.** Email recovers the account, never funds. Funds were never ours to recover, which is the point of Q8.
 

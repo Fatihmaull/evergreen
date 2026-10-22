@@ -84,7 +84,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 | Route | Auth | Does |
 |---|---|---|
 | `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **Always `202`, whether or not an account exists**, so the route cannot enumerate users. The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed |
-| `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
+| `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, **or reactivates a deactivated one** (§10), sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
 | `POST /auth/logout` | session | Deletes the session row. Returns `204` |
 | `GET /me` | session | `{ user: { id, email, createdAt }, wallets: Wallet[], csrfToken }` |
 
@@ -473,7 +473,9 @@ that was recorded says when.** This maps it onto the API.
 - **The "Extend now" window is a rolling 24 hours**, 3 per contract. It is not an account-level brake (§7).
 - **Only a job that pulled funds counts as a use.** `preflight-failed`, `cancelled` and refused-before-queuing never consume quota (§7).
 - **Idempotency keys live as long as the job row**, pending Rakha's confirmation (§7).
-- **Personal-data deletion is a soft delete** (Fatih, 2026-10-22; Rakha's point 11). Deleting an account deactivates it: the user row, its email and linked wallets stay in the database, marked deactivated, and sessions are revoked. **Consequence:** because the email and personal data stay stored, the custody statement (`PH2-E4-06`) and all public copy must say **"deactivated", never "deleted"**.
+- **Personal-data deletion is a soft delete** (Fatih, 2026-10-22; Rakha's point 11). Deleting an account deactivates it: the user row, its email and linked wallets stay in the database, marked deactivated, and sessions are revoked. **Consequence:** because the email and personal data stay stored, the custody statement (`PH2-E4-06`) and all public copy must say accounts are **"deactivated and can be reactivated by email", never "deleted"**.
+- **A deactivated user who signs in again with the same email gets the old account reactivated** (Fatih, 2026-10-22). **Reactivation by email does not re-enable autopilot or allowance use.** Every watch item's autopilot comes back off, and the engine draws on no allowance, until the user re-signs with their wallet (the §4 challenge) and turns autopilot on again. An email session never authorises XLM movement (ADR-008). **One email can never have two accounts:** reactivation is the only path, never a fresh account (ADR-008, 2026-10-22).
+- **`focuswebstudio`** (the shared account's other Worker) stays as it is, not deleted (Fatih, 2026-10-22), and is reviewed again at `PH2-E5-02`. Whether it draws on Workers Paid's included usage is undetermined until the billing check.
 - **Observation and allowance history are kept forever** until the DoD-2 evidence is gathered (Fatih, 2026-10-22; Rakha's point 10). Retention is decided again after that.
 - **One shared Cloudflare account** supersedes the 2026-10-15 project-owned decision (#299, #310); reviewed again at `PH2-E5-02` (ADR-003, 2026-10-22).
 
