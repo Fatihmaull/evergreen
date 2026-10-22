@@ -29,6 +29,17 @@ describe('RPC addresses come from NETWORK', () => {
     expect(offenders.map((p) => p.slice(SRC.length))).toEqual([]);
   });
 
+  test('apps/web/scripts carries none either: the snapshot reads the endpoint the pages read', () => {
+    const scripts = fileURLToPath(new URL('../scripts/', import.meta.url));
+    const offenders = sources(scripts).filter((path) =>
+      RPC_LITERAL.test(readFileSync(path, 'utf8')),
+    );
+    expect(offenders.map((p) => p.slice(scripts.length))).toEqual([]);
+    expect(readFileSync(join(scripts, 'make-snapshot.mjs'), 'utf8')).toContain(
+      'connectTestnet(NETWORK.rpcUrl)',
+    );
+  });
+
   test('the two failure panels name the endpoint through NETWORK.rpcUrl', () => {
     for (const file of ['lib/scan-panel.ts', 'pages/blast-radius.ts']) {
       expect(readFileSync(join(SRC, file), 'utf8')).toContain('${esc(NETWORK.rpcUrl)}');

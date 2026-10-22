@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import console from 'node:console';
+import process from 'node:process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const web = join(here, '..');
@@ -20,14 +21,15 @@ const esbuild = createRequire(join(repo, 'packages/cli/package.json'))('esbuild'
 const entry = `
 import { connectTestnet, readStateArchivalSettings, scanContracts } from ${JSON.stringify(join(repo, 'packages/core/src/index'))};
 import { rpc } from '@stellar/stellar-sdk';
+import { NETWORK } from ${JSON.stringify(join(web, 'src/lib/network'))};
 const IDS = [
   'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L',
   'CCYGO7KQ6FCAZBZAUWAPCAX4RBDIPZK4BJR2KGKISEIGARTJPB7KLTTQ',
   'CCLW55OIEDHKS5DHDGEA3B2F2ZVOTRXZIOPO36SCMHNQV3VQEGRR33FL',
 ];
-const reader = await connectTestnet('https://soroban-testnet.stellar.org');
+const reader = await connectTestnet(NETWORK.rpcUrl);
 const result = await scanContracts(reader, IDS.map((id) => ({ contract: { id } })));
-const archival = await readStateArchivalSettings(new rpc.Server('https://soroban-testnet.stellar.org'));
+const archival = await readStateArchivalSettings(new rpc.Server(NETWORK.rpcUrl));
 console.log(JSON.stringify({ capturedAt: new Date().toISOString(), result, archival }));
 `;
 
@@ -39,6 +41,14 @@ await esbuild.build({
   platform: 'node',
   format: 'esm',
   nodePaths: [join(repo, 'node_modules')],
+  // The same override the site build reads, so the snapshot and the pages it
+  // backs read one endpoint. `SOROBAN_RPC_URL` is not inherited (#345).
+  define: {
+    __EVERGREEN_NETWORK__: JSON.stringify('testnet'),
+    __EVERGREEN_WEB_RPC_URL__: process.env.EVERGREEN_WEB_RPC_URL
+      ? JSON.stringify(process.env.EVERGREEN_WEB_RPC_URL)
+      : 'undefined',
+  },
   logLevel: 'error',
 });
 
