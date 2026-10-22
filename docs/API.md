@@ -188,7 +188,7 @@ type AllowanceState = {
 ```
 
 - **The chain cannot tell expired from revoked from never.** The #297 spike measured `allowance()` reading `"0"` after expiry **and** after revocation ([evidence](evidence/2026-10-14-sac-allowance-spike/README.md)); the allowance is a temporary entry, so expiry deletes it. So `expired` and `revoked` come from `lastKnown`, the engine's stored history (`PH2-E2-03`): an allowance last seen live whose `liveUntilLedger` has passed is `expired`, and one that reads zero before then is `revoked`. With no history, zero is `none`. §9a's `ALLOWANCE_EXPIRED` copy ("the ledger it expired at") reads `lastKnown.liveUntilLedger`.
-- **The engine stores the allowance's expiry in its history** (amount, `liveUntilLedger`, the ledger it was observed at), append-only. An expired allowance reads `"0"` on chain exactly like a revoked one, so without the stored expiry the two cannot be told apart. One limit, stated: a revoke that happens after the last observation reads as `expired` once `liveUntilLedger` passes (Rakha's point 10). Retention of this history is undetermined (§10).
+- **The engine stores the allowance's expiry in its history** (amount, `liveUntilLedger`, the ledger it was observed at), append-only. An expired allowance reads `"0"` on chain exactly like a revoked one, so without the stored expiry the two cannot be told apart. One limit, stated: a revoke that happens after the last observation reads as `expired` once `liveUntilLedger` passes (Rakha's point 10). This history is kept forever until DoD-2's evidence is gathered (Fatih, 2026-10-22; §10).
 - **The API never builds, signs or submits an `approve` or a revoke.** The dashboard builds it and the user's wallet signs it (`PH2-E3-05`, WEBR). The API reads the result.
 - **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate waits for the fee percentage** (Fatih, 2026-10-20): no estimate route until `PH2-E5-03` sets the fee.
 
@@ -473,13 +473,16 @@ that was recorded says when.** This maps it onto the API.
 - **The "Extend now" window is a rolling 24 hours**, 3 per contract. It is not an account-level brake (§7).
 - **Only a job that pulled funds counts as a use.** `preflight-failed`, `cancelled` and refused-before-queuing never consume quota (§7).
 - **Idempotency keys live as long as the job row**, pending Rakha's confirmation (§7).
+- **Personal-data deletion is a soft delete** (Fatih, 2026-10-22; Rakha's point 11). Deleting an account deactivates it: the user row, its email and linked wallets stay in the database, marked deactivated, and sessions are revoked. **Consequence:** because the email and personal data stay stored, the custody statement (`PH2-E4-06`) and all public copy must say **"deactivated", never "deleted"**.
+- **Observation and allowance history are kept forever** until the DoD-2 evidence is gathered (Fatih, 2026-10-22; Rakha's point 10). Retention is decided again after that.
+- **One shared Cloudflare account** supersedes the 2026-10-15 project-owned decision (#299, #310); reviewed again at `PH2-E5-02` (ADR-003, 2026-10-22).
 
 **Still open:**
 6. ~~Which account the dashboard's Pages project lives in.~~ Resolved 2026-10-22, above.
 7. **Router-contract extends** (`PH2-E4-07`) do not pass through a job. If the router is viable, how its transactions reach the fee ledger (DoD-1 counts "an extend recorded in the fee ledger") needs a route. That is undecided until the spike's verdict.
 8. **Rakha's schema review** (`PH2-E2-03`). Where the stored shape disagrees with §6 and §7, the schema wins. The allowance history behind `lastKnown` is one thing it must hold. His 2026-10-21 points 1–4, 7 and 12 are applied; these stay open:
    - `fee_ledger.job_id` is `NOT NULL`, so router extends cannot be recorded without a job (his point 9; same as item 7).
-   - Retention of observation and allowance history (point 10).
-   - Personal-data deletion: soft delete, or hard delete with ledger anonymisation (point 11).
+   - ~~Retention of observation and allowance history (point 10).~~ Decided 2026-10-22: kept forever until DoD-2's evidence is gathered.
+   - ~~Personal-data deletion (point 11).~~ Decided 2026-10-22: soft delete, "deactivated" in all copy.
    - The scheduler window behind autopilot dedupe (point 7, `PH2-E4-04`).
 9. **Machine-checkable form.** Once this text is agreed, the shapes above move into `packages/shared-types` as TypeScript types both sides compile against. That is a shared-types change, so Fatih reviews it.

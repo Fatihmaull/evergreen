@@ -104,7 +104,7 @@ Measurable with records still to be built:
 **ADR changes (card PH2-E0-05):**
 - ADR-004 is superseded by a new ADR covering allowance funding and the fee. The invariant *Apex never subsidises rent* survives.
 - ADR-002 is amended: the capped property is achieved at the token layer (#297); the no-go stands.
-- ADR-003 is amended: Cloudflare + Neon.
+- ADR-003 is amended: Cloudflare + Neon. *(2026-10-22: one shared Cloudflare account, superseding the project-owned one from #299; see #310 and ADR-003's update log. Reviewed again at PH2-E5-02.)*
 - New ADR for authentication (§3.1).
 
 ---
@@ -134,6 +134,8 @@ These are recommendations for the ADRs to record. Facts marked **[verified]** we
 **Sessions.**
 - Server-side session rows in Neon, referenced by an `httpOnly; Secure; SameSite=Lax` cookie.
 - Short-lived and rotated. CSRF protection on state-changing routes. Logout invalidates server-side.
+
+**Account deletion is a soft delete** (Fatih, 2026-10-22, from Rakha's review of `PH2-E2-02`). The account is deactivated: the email and personal data stay in the database. So the custody statement (`PH2-E4-06`) and all public copy say **"deactivated", never "deleted"**. Observation and allowance history are kept forever until the DoD-2 evidence is gathered. Both are recorded in `docs/API.md` §10.
 
 **Recovery.** Email recovers the account, never funds. Funds were never ours to recover, which is the point of Q8.
 
