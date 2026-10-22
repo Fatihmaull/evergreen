@@ -2,9 +2,16 @@
  * `lib/wallet-money.ts` against stand-ins for the wallet and the RPC.
  */
 import { describe, expect, test } from 'vitest';
-import { isMoneyFailure, signAndSubmit, type ChainPort } from '../src/lib/wallet-money';
+import {
+  describeTxResult,
+  isMoneyFailure,
+  rpcChain,
+  signAndSubmit,
+  type ChainPort,
+} from '../src/lib/wallet-money';
 import { isWalletFailure, type Wallet } from '../src/lib/wallet';
 import { NETWORK } from '../src/lib/network';
+import { rpc, xdr } from '@stellar/stellar-sdk';
 
 const ME = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const noSleep = async () => {};
@@ -123,5 +130,45 @@ describe('MoneyFailure and WalletFailure are told apart', () => {
     }
     for (const kind of ['timeout', 'rejected', 'account-mismatch', 'wrong-network'])
       expect(isMoneyFailure({ kind })).toBe(false);
+  });
+});
+
+describe('describeTxResult', () => {
+  // Built with the SDK's own xdr constructors (17.0.1) and frozen here.
+  test('a failed invoke names the transaction, operation and invoke results', () => {
+    expect(describeTxResult('AAAAAAAAAGT/////AAAAAQAAAAAAAAAY/////gAAAAA=')).toBe(
+      'txFailed; op 0: invokeHostFunction → invokeHostFunctionTrapped',
+    );
+  });
+  test('a fee bump names the inner transaction too', () => {
+    expect(
+      describeTxResult(
+        'AAAAAAAAAGT////zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf////8AAAABAAAAAAAAABj////+AAAAAAAAAAA=',
+      ),
+    ).toBe(
+      'txFeeBumpInnerFailed; inner txFailed; op 0: invokeHostFunction → invokeHostFunctionTrapped',
+    );
+  });
+  test('a transaction-level code with no operations', () => {
+    expect(describeTxResult('AAAAAAAAAGT////7AAAAAA==')).toBe('txBadSeq');
+  });
+  test('what does not decode comes back raw', () => {
+    expect(describeTxResult('not-xdr')).toBe('not-xdr');
+    expect(describeTxResult('AAAA')).toBe('AAAA');
+  });
+});
+
+describe('rpcChain status', () => {
+  test('a FAILED transaction carries the decoded codes', async () => {
+    const server = {
+      getTransaction: async () => ({
+        status: rpc.Api.GetTransactionStatus.FAILED,
+        resultXdr: xdr.TransactionResult.fromXdr('AAAAAAAAAGT////7AAAAAA==', 'base64'),
+      }),
+    } as unknown as rpc.Server;
+    expect(await rpcChain(async () => server).status('H')).toEqual({
+      status: 'FAILED',
+      detail: 'txBadSeq',
+    });
   });
 });
