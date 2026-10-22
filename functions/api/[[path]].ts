@@ -6,7 +6,8 @@
  * client cannot parse. This forwards every request, unchanged, to the service
  * binding `API` (`evergreen-api` in production, `evergreen-api-preview` on
  * preview). If the binding is absent it answers JSON 503 in the API's error
- * shape (`{ error: { code, message } }`, mirroring apps/api's 404) — never HTML.
+ * shape (docs/API.md §9 envelope from #350:
+ * `{ error: { code: 'UPSTREAM_UNAVAILABLE', message, retryable: true, details: {} } }`) — never HTML.
  *
  * Lives at the REPO ROOT `functions/` because the Pages project's root
  * directory is empty; `apps/dashboard/functions/` would not be read.
@@ -31,7 +32,12 @@ export interface ProxyContext {
 export function bindingMissing(): Response {
   return new Response(
     JSON.stringify({
-      error: { code: 'API_UNAVAILABLE', message: 'The API service binding is not configured.' },
+      error: {
+        code: 'UPSTREAM_UNAVAILABLE',
+        message: 'The API service binding is not configured.',
+        retryable: true,
+        details: {},
+      },
     }),
     {
       status: 503,

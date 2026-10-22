@@ -49,7 +49,12 @@ describe('Pages Function /api/* proxy', () => {
     expect(res.status).toBe(503);
     expect(res.headers.get('content-type')).toMatch(/^application\/json/);
     expect(await res.json()).toEqual({
-      error: { code: 'API_UNAVAILABLE', message: 'The API service binding is not configured.' },
+      error: {
+        code: 'UPSTREAM_UNAVAILABLE',
+        message: 'The API service binding is not configured.',
+        retryable: true,
+        details: {},
+      },
     });
   });
 
