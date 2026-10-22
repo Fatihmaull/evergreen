@@ -75,7 +75,7 @@ This is that ADR. Three things changed since ADR-004:
 
 ### Scope and timing
 
-Testnet only until the beta exits (`PH2-E5-02`, Q18). Mainnet starts read-only (Q5).
+Testnet only until DoD-2 is met (`PH2-E5-02`). Mainnet starts read-only (Q5).
 
 ## Consequences
 
