@@ -6,7 +6,10 @@ import { success, submitted, failed, simulated } from './email-fixtures.js';
 
 const hookUrl = 'https://example.invalid/evergreen-hook';
 
-function setup(mode?: 'send' | 'dry-run', extras: { url?: string; readSecret?: () => string | undefined } = {}) {
+function setup(
+  mode?: 'send' | 'dry-run',
+  extras: { url?: string; readSecret?: () => string | undefined } = {},
+) {
   const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 204 }));
   const readSecret = extras.readSecret ?? vi.fn(() => undefined);
   const options = {
