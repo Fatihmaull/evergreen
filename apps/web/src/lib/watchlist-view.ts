@@ -19,6 +19,7 @@ import type {
   NetworkName,
 } from '../../../../packages/shared-types/src/index';
 import type { ApiOutcome } from './api';
+import type { RemoveOutcome } from './watchlist';
 import { report, type EntryHealth, type ScanResult } from './evergreen';
 import { approxDate, esc, formatCount, stamp } from './format';
 import { bindingEntry, entryView } from './view';
@@ -193,6 +194,7 @@ export function rowHtml(r: Row): string {
       <td>${name}</td>
       <td class="small">${seen}</td>
       <td class="small muted">${esc(coverage(item))}</td>
+      <td><button type="button" class="btn" data-remove-network="${esc(item.network)}" data-remove-contract="${esc(item.contractId)}">Remove</button> <span class="small" data-remove-status role="status"></span></td>
     </tr>`;
 }
 
@@ -202,7 +204,7 @@ export function tableHtml(items: readonly WatchItem[], now = new Date()): string
   }
   const rows = orderRows(items.map((i) => rowFor(i, now)));
   return `<div class="table-wrap"><table>
-      <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th></tr></thead>
+      <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Remove</th></tr></thead>
       <tbody>${rows.map(rowHtml).join('')}</tbody></table></div>
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
@@ -255,4 +257,28 @@ export function watchlistScreenHtml(
     );
   }
   return undeterminedBox('We could not establish this.');
+}
+
+/**
+ * What a row says after `DELETE /watchlist/...` answers. Only `removed` (a 204)
+ * takes the row away; every other answer says the contract is still listed.
+ * Returns `undefined` for `removed`, because the row is simply gone.
+ */
+export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
+  if (outcome.kind === 'removed') return undefined;
+  if (outcome.kind === 'unavailable') {
+    return outcome.reason === 'network'
+      ? 'The Evergreen API did not answer. Nothing was removed.'
+      : 'The Evergreen API is not available on this site yet. Nothing was removed.';
+  }
+  if (outcome.code === 'UNAUTHENTICATED') {
+    return 'This browser is signed out, so nothing was removed. Sign in and try again.';
+  }
+  if (outcome.code === 'RATE_LIMITED') {
+    const s = outcome.retryAfterSeconds;
+    return s === undefined
+      ? 'Too many attempts. Nothing was removed. Try again later.'
+      : `Too many attempts. Nothing was removed. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
+  }
+  return `The API did not remove this (${outcome.code}, HTTP ${outcome.status}). It is still on your watchlist.`;
 }
