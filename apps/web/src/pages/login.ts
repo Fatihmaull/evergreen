@@ -32,6 +32,7 @@ import { API_BASE } from '../lib/api';
 import { esc, short } from '../lib/format';
 import {
   linkWallet as postWallet,
+  logout,
   readSession,
   requestChallenge,
   startEmail as postEmailStart,
@@ -73,7 +74,26 @@ function renderSession(): void {
     out.innerHTML = note(
       `Signed in as <strong>${esc(me.user.email)}</strong>. ${
         linked.length ? `Linked: ${linked.join(', ')}.` : 'No wallet linked.'
-      }`,
+      }</p><p><button id="logout-button" class="secondary" type="button">Sign out</button>`,
+    );
+    $('logout-button').addEventListener('click', () => void signOut());
+  }
+}
+
+async function signOut(): Promise<void> {
+  if (!me) return;
+  const r = await logout(me.csrfToken);
+  if (r.kind === 'signed-out') {
+    signedOut();
+  } else if (r.kind === 'csrf-failed') {
+    $('session').insertAdjacentHTML(
+      'beforeend',
+      note('This page was open too long. Reload and try again.'),
+    );
+  } else {
+    $('session').insertAdjacentHTML(
+      'beforeend',
+      undetermined('Whether you are signed out.', r.detail),
     );
   }
 }

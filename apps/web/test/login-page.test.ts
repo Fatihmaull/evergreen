@@ -29,8 +29,17 @@ describe('login calls only the routes API spec #350 states', () => {
   test('every apiRequest() path is one of #350’s login and account routes', () => {
     const paths = [...client.matchAll(/apiRequest<[^>]*>\(\s*'([^']+)'/g)].map(([, p]) => p);
     expect(new Set(paths)).toEqual(
-      new Set(['/me', '/auth/email/start', '/auth/email/verify', '/wallets/challenge', '/wallets']),
+      new Set([
+        '/me',
+        '/auth/email/start',
+        '/auth/email/verify',
+        '/auth/logout',
+        '/wallets/challenge',
+        '/wallets',
+      ]),
     );
+    const templated = [...client.matchAll(/apiRequest<[^>]*>\(\s*`([^`]+)`/g)].map(([, p]) => p);
+    expect(templated).toEqual(['/wallets/${encodeURIComponent(account)}']);
   });
 });
 

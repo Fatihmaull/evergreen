@@ -10,9 +10,11 @@ import { describe, expect, test } from 'vitest';
 import type { FetchLike } from '../src/lib/api';
 import {
   linkWallet,
+  logout,
   readSession,
   requestChallenge,
   startEmail,
+  unlinkWallet,
   verifyEmail,
 } from '../src/lib/login';
 
@@ -213,5 +215,52 @@ describe('wallet linking (POST /wallets/challenge, POST /wallets)', () => {
   test('a 409 without the envelope is undetermined, not linked-elsewhere', async () => {
     const { f } = fake(json(409, {}));
     expect((await linkWallet('SIGNED', 'tok', f)).kind).toBe('undetermined');
+  });
+});
+
+describe('logout (POST /auth/logout) and unlink (DELETE /wallets/{account})', () => {
+  test('logout 204 is signed out, with CSRF', async () => {
+    const { f, calls } = fake(new Response(null, { status: 204 }));
+    expect(await logout('tok', f)).toEqual({ kind: 'signed-out' });
+    expect(calls[0]!.url).toBe('/api/v1/auth/logout');
+    expect(calls[0]!.init!.method).toBe('POST');
+    expect(headers(calls[0]!)['X-Evergreen-CSRF']).toBe('tok');
+  });
+
+  test('logout UNAUTHENTICATED is the same end state', async () => {
+    const { f } = fake(envelope(401, 'UNAUTHENTICATED'));
+    expect(await logout('tok', f)).toEqual({ kind: 'signed-out' });
+  });
+
+  test.each([
+    ['a Pages 404', () => html(404)],
+    ['a 200 HTML page', () => html(200)],
+    ['an unknown code', () => envelope(400, 'NOPE')],
+  ])('logout: %s is undetermined, not signed out', async (_n, make) => {
+    const { f } = fake(make());
+    expect((await logout('tok', f)).kind).toBe('undetermined');
+  });
+
+  test('unlink 204 is unlinked; the account is path-encoded; CSRF sent', async () => {
+    const { f, calls } = fake(new Response(null, { status: 204 }));
+    expect(await unlinkWallet('GABC', 'tok', f)).toEqual({ kind: 'unlinked' });
+    expect(calls[0]!.url).toBe('/api/v1/wallets/GABC');
+    expect(calls[0]!.init!.method).toBe('DELETE');
+    expect(headers(calls[0]!)['X-Evergreen-CSRF']).toBe('tok');
+  });
+
+  test.each([
+    ['WALLET_PAYS_FOR_WATCHED_CONTRACT', 409, 'pays-for-watched'],
+    ['CSRF_FAILED', 403, 'csrf-failed'],
+    ['UNAUTHENTICATED', 401, 'signed-out'],
+    ['NOT_FOUND', 404, 'undetermined'],
+  ])('unlink %s is %s', async (code, status, kind) => {
+    const { f } = fake(envelope(status, code));
+    expect((await unlinkWallet('GABC', 'tok', f)).kind).toBe(kind);
+  });
+
+  test('unlink: a success status #350 does not state is undetermined', async () => {
+    const { f } = fake(json(200, {}));
+    expect((await unlinkWallet('GABC', 'tok', f)).kind).toBe('undetermined');
   });
 });

@@ -157,3 +157,60 @@ export async function linkWallet(
   }
   return und(o);
 }
+
+export type LogoutResult =
+  { readonly kind: 'signed-out' } | { readonly kind: 'csrf-failed' } | Undetermined;
+
+/** `POST /auth/logout`, §4: `204`. Already signed out (`UNAUTHENTICATED`) is the same end state. */
+export async function logout(csrfToken: string, f?: FetchLike): Promise<LogoutResult> {
+  const o = await apiRequest<unknown>(
+    '/auth/logout',
+    { method: 'POST', headers: { 'X-Evergreen-CSRF': csrfToken } },
+    f,
+  );
+  if (o.kind === 'ok' && o.status === 204) return { kind: 'signed-out' };
+  if (o.kind === 'error' && o.code === 'UNAUTHENTICATED') return { kind: 'signed-out' };
+  if (o.kind === 'error' && o.code === 'CSRF_FAILED') return { kind: 'csrf-failed' };
+  return und(o);
+}
+
+export type UnlinkResult =
+  | { readonly kind: 'unlinked' }
+  | { readonly kind: 'pays-for-watched' }
+  | { readonly kind: 'csrf-failed' }
+  | { readonly kind: 'signed-out' }
+  | Undetermined;
+
+/**
+ * `DELETE /wallets/{account}`, §4. #350 does not state the success status for
+ * this route; `204` is read as unlinked (the convention of §4's logout and
+ * §6's delete), and any other success status stays undetermined until the
+ * spec says.
+ *
+ * Client only, no control yet: §9a's `WALLET_PAYS_FOR_WATCHED_CONTRACT` row
+ * puts the revoke (`approve(0)`, a wallet-signed money path, WEBR) beside
+ * unlink, so the unlink control waits for that screen.
+ */
+export async function unlinkWallet(
+  account: string,
+  csrfToken: string,
+  f?: FetchLike,
+): Promise<UnlinkResult> {
+  const o = await apiRequest<unknown>(
+    `/wallets/${encodeURIComponent(account)}`,
+    { method: 'DELETE', headers: { 'X-Evergreen-CSRF': csrfToken } },
+    f,
+  );
+  if (o.kind === 'ok' && o.status === 204) return { kind: 'unlinked' };
+  if (o.kind === 'error') {
+    switch (o.code) {
+      case 'WALLET_PAYS_FOR_WATCHED_CONTRACT':
+        return { kind: 'pays-for-watched' };
+      case 'CSRF_FAILED':
+        return { kind: 'csrf-failed' };
+      case 'UNAUTHENTICATED':
+        return { kind: 'signed-out' };
+    }
+  }
+  return und(o);
+}
