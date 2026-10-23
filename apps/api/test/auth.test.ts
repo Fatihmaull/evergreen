@@ -152,7 +152,7 @@ describe('email sign-in codes', () => {
 
 describe('sessions', () => {
   it('stores the hash of the token, not the token', async () => {
-    const { token, row } = await createSession('user-1', NOW);
+    const { token, row } = await createSession('user-1', NOW, config);
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(row.tokenHash).toBe(await hashSessionToken(token));
     expect(JSON.stringify(row)).not.toContain(token);
@@ -160,25 +160,30 @@ describe('sessions', () => {
   });
 
   it('🔴 expires at the idle limit since last use', async () => {
-    const { row } = await createSession('user-1', NOW);
-    expect(sessionState(row, NOW + config.sessionIdleTimeout - 1, config)).toBe('valid');
-    expect(sessionState(row, NOW + config.sessionIdleTimeout, config)).toBe('expired');
+    const { row } = await createSession('user-1', NOW, config);
+    expect(sessionState(row, NOW + config.sessionIdleTimeout - 1)).toBe('valid');
+    expect(sessionState(row, NOW + config.sessionIdleTimeout)).toBe('expired');
   });
 
   it('🔴 expires at the absolute limit, however recently used', async () => {
-    const { row } = await createSession('user-1', NOW);
-    const justUsed = { ...row, lastSeenAt: NOW + config.sessionAbsoluteTimeout - 1 };
-    expect(sessionState(justUsed, NOW + config.sessionAbsoluteTimeout - 1, config)).toBe('valid');
-    expect(sessionState(justUsed, NOW + config.sessionAbsoluteTimeout, config)).toBe('expired');
+    const { row } = await createSession('user-1', NOW, config);
+    const justUsed = {
+      ...row,
+      lastUsedAt: NOW + config.sessionAbsoluteTimeout - 1,
+      idleExpiresAt: NOW + config.sessionAbsoluteTimeout + config.sessionIdleTimeout,
+    };
+    expect(sessionState(justUsed, NOW + config.sessionAbsoluteTimeout - 1)).toBe('valid');
+    expect(sessionState(justUsed, NOW + config.sessionAbsoluteTimeout)).toBe('expired');
   });
 
   it('treats a missing row as no session', () => {
-    expect(sessionState(undefined, NOW, config)).toBe('none');
+    expect(sessionState(undefined, NOW)).toBe('none');
   });
 
   it('sets the ADR-008 cookie attributes', async () => {
-    const { token } = await createSession('user-1', NOW);
-    const cookie = sessionCookie(token, config);
+    const { token, row } = await createSession('user-1', NOW, config);
+    const cookie = sessionCookie(token, row, NOW);
+    expect(cookie).toContain(`Max-Age=${config.sessionAbsoluteTimeout}`);
     for (const part of [
       '__Host-evergreen_session=',
       'HttpOnly',
@@ -192,7 +197,7 @@ describe('sessions', () => {
   });
 
   it('reads its token from a Cookie header and nothing malformed', async () => {
-    const { token } = await createSession('user-1', NOW);
+    const { token } = await createSession('user-1', NOW, config);
     expect(readSessionToken(`a=b; __Host-evergreen_session=${token}; c=d`)).toBe(token);
     expect(readSessionToken('__Host-evergreen_session=short')).toBeUndefined();
     expect(readSessionToken(null)).toBeUndefined();

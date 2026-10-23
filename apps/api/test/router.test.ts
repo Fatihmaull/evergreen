@@ -6,7 +6,7 @@ const req = (path: string, method = 'GET') =>
 
 describe('@evergreen/api router', () => {
   it('serves GET /api/v1/health as JSON', async () => {
-    const res = handle(req(`${API_BASE}/health`), { ENVIRONMENT: 'preview' });
+    const res = await handle(req(`${API_BASE}/health`), { ENVIRONMENT: 'preview' });
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toMatch(/^application\/json/);
     expect(await res.json()).toEqual({
@@ -18,12 +18,14 @@ describe('@evergreen/api router', () => {
   });
 
   it('says undetermined when no environment is configured', async () => {
-    const body = (await handle(req(`${API_BASE}/health`)).json()) as { environment: string };
+    const body = (await (await handle(req(`${API_BASE}/health`))).json()) as {
+      environment: string;
+    };
     expect(body.environment).toBe('undetermined');
   });
 
   it('refuses a non-GET on health with 405', async () => {
-    const res = handle(req(`${API_BASE}/health`, 'POST'));
+    const res = await handle(req(`${API_BASE}/health`, 'POST'));
     expect(res.status).toBe(405);
     expect(res.headers.get('allow')).toBe('GET, HEAD');
     expect(res.headers.get('content-type')).toMatch(/^application\/json/);
@@ -63,7 +65,7 @@ describe('@evergreen/api router', () => {
   it.each([`${API_BASE}/nope`, `${API_BASE}`, '/api/v2/health', '/'])(
     'answers %s with a JSON 404',
     async (path) => {
-      const res = handle(req(path));
+      const res = await handle(req(path));
       expect(res.status).toBe(404);
       expect(res.headers.get('content-type')).toMatch(/^application\/json/);
       expect(await res.json()).toEqual({
@@ -73,7 +75,7 @@ describe('@evergreen/api router', () => {
   );
 
   it('exports a Worker fetch handler', async () => {
-    const res = worker.fetch(req(`${API_BASE}/health`), { ENVIRONMENT: 'production' });
+    const res = await worker.fetch(req(`${API_BASE}/health`), { ENVIRONMENT: 'production' });
     expect(((await res.json()) as { environment: string }).environment).toBe('production');
   });
 });

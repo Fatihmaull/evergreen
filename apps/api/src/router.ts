@@ -1,13 +1,15 @@
 /**
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
- * and out. This is the skeleton: health and a JSON 404. No storage, no DB, no
- * secrets read. Auth (`PH2-E2-04`) and the rest of the routes mount here.
+ * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4) and a JSON 404.
  */
+import { authDepsFromEnv, isAuthPath, type AuthEnv, type MountOptions } from './auth/mount.js';
+import { handleAuth } from './auth/routes.js';
+
 export const API_BASE = '/api/v1';
 export const API_VERSION = 'v1';
 export const SERVICE = 'evergreen-api';
 
-export interface Env {
+export interface Env extends AuthEnv {
   /** `production` or `preview`, set per environment in wrangler.jsonc. */
   ENVIRONMENT?: string;
 }
@@ -48,8 +50,22 @@ export function notFound(): Response {
   return apiError('NOT_FOUND', 'No such route.', 404);
 }
 
-export function handle(request: Request, env: Env = {}): Response {
+export async function handle(
+  request: Request,
+  env: Env = {},
+  options: MountOptions = {},
+): Promise<Response> {
   const { pathname } = new URL(request.url);
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
+    if (isAuthPath(path)) {
+      const deps = authDepsFromEnv(env, options);
+      if (deps === undefined) {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Sign-in is not available right now.', 503);
+      }
+      return (await handleAuth(request, path, deps)) ?? notFound();
+    }
+  }
   if (pathname === `${API_BASE}/health`) {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return apiError('METHOD_NOT_ALLOWED', 'Use GET.', 405, { headers: { allow: 'GET, HEAD' } });

@@ -12,7 +12,7 @@ export type { Env } from './router.js';
 // Worker's handler object as the default export.
 // eslint-disable-next-line no-restricted-syntax
 export default {
-  fetch(request: Request, env: Env): Response {
+  fetch(request: Request, env: Env): Promise<Response> {
     return handle(request, env);
   },
 };
@@ -25,7 +25,11 @@ export { hitLimit, MemoryCounterStore } from './auth/rate-limit.js';
 export type { CounterStore, Limit, RateDecision } from './auth/rate-limit.js';
 export {
   SESSION_COOKIE,
+  SESSION_ROTATE_AFTER_SECONDS,
+  SESSION_ROTATION_GRACE_SECONDS,
   clearedSessionCookie,
+  rotateSession,
+  rotationDue,
   createSession,
   hashSessionToken,
   readSessionToken,
@@ -46,3 +50,11 @@ export { MemoryAuthStore, MemoryChallengeStore } from './auth/memory-store.js';
 export { AUTH_WRITE_ROUTES, handleAuth } from './auth/routes.js';
 export type { AuthDeps } from './auth/routes.js';
 export type { AuthStore, LinkResult, Mailer, User, WalletLink } from './auth/store.js';
+export {
+  AUTH_SECRET_NAMES,
+  CHALLENGE_TIMEOUT_SECONDS,
+  ResendMailer,
+  authDepsFromEnv,
+  isAuthPath,
+} from './auth/mount.js';
+export type { AuthEnv, MountOptions, StoreFactory } from './auth/mount.js';

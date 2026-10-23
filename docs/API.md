@@ -26,7 +26,13 @@ Nothing is built against this until it merges. "Written before either side build
 | **B. Its own Worker, reached through a Pages Function proxy** (recommended) | API code in `apps/api` as its own Worker. The dashboard's `/api/*` is a few-line Pages Function forwarding over a **service binding** (Cloudflare: *"Service bindings enable you to call a Worker from within your Pages Function"*) | Same origin to the browser, so the cookie works. Secrets stay in the API Worker. The two deploy independently. One extra in-datacenter hop |
 | **C. A custom domain** for both | Site and API as routes on one registered domain | Cleanest URLs. Needs a domain bought and owned. Not decided anywhere; that is Fatih's call |
 
-**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key, `DATABASE_URL`, and `SIGNIN_CODE_PEPPER`, the HMAC key that sign-in codes are stored under (`PH2-E2-04`). The Pages project holds the proxy and the service binding, nothing secret.
+**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker** (`wrangler secret put`, per environment; names fixed by `PH2-E2-04`):
+- `DATABASE_URL`: the Neon connection string.
+- `SIGNIN_CODE_PEPPER`: the HMAC key that sign-in codes are stored under.
+- `EMAIL_API_KEY`: the Resend key. Same name the engine's EmailChannel already uses (CONVENTIONS.md).
+- `CHALLENGE_SIGNING_KEY`: the `S…` seed of the challenge-signing key (§4).
+
+Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker names:** production `evergreen-api`; preview `evergreen-api-preview`.
 - **Service binding:** the Pages project binds the API Worker as `API`. The dashboard's `/api/*` is a Pages Function that forwards each request over `API` to the Worker; the Worker serves base path `/api/v1`.
@@ -59,8 +65,13 @@ Nothing is built against this until it merges. "Written before either side build
 **The session cookie** (ADR-008):
 - `__Host-evergreen_session`, `HttpOnly; Secure; SameSite=Lax; Path=/`, an opaque random ID.
 - Its row is server-side (`PH2-E2-03`).
-- Rotated on use. Lifetimes are **configuration, not constants** (Fatih's starting values, 2026-10-20; he may tune them): `SESSION_IDLE_TIMEOUT` **7 days**, `SESSION_ABSOLUTE_TIMEOUT` **30 days**.
-- Logout deletes the row.
+- Lifetimes are **configuration, not constants** (Fatih's starting values, 2026-10-20; he may tune them): `SESSION_IDLE_TIMEOUT` **7 days**, `SESSION_ABSOLUTE_TIMEOUT` **30 days**.
+- **Rotation** (Fatih's option 2, `PH2-E2-04`; fixed policy in `apps/api/src/auth/sessions.ts`):
+  - A token older than `SESSION_ROTATE_AFTER_SECONDS` (**24 hours**) is replaced on its next authenticated request; the new cookie rides on that response.
+  - The old token keeps working for `SESSION_ROTATION_GRACE_SECONDS` (**60 seconds**) so in-flight requests do not fail, and is never rotated again.
+  - The new token keeps the session's absolute expiry and CSRF token, so rotation never extends a session past 30 days from login.
+  - Every sign-in issues a fresh token and revokes any session cookie the browser already sent.
+- Logout deletes the row, together with its rotation predecessor or successor, so no grace token survives.
 
 **CSRF:** every state-changing request (`POST`, `PATCH`, `DELETE`) must pass both checks, or it is refused with `403 CSRF_FAILED`:
 - **an `Origin` check:** it must equal the dashboard's origin;
@@ -101,7 +112,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 `Wallet = { account: string /* G… */, network: 'testnet', linkedAt: string }`
 
-**The challenge-signing key** is distinct from the engine and treasury keys and unfunded (ADR-008). It is passed by naming an environment variable: a Worker secret in the API Worker, which is one reason for option B.
+**The challenge-signing key** is distinct from the engine and treasury keys and unfunded (ADR-008). It is the Worker secret `CHALLENGE_SIGNING_KEY` in the API Worker (§1), which is one reason for option B.
 
 **Email never authorises anything that moves XLM.** §7 says exactly how "Extend now" stays inside that rule.
 
