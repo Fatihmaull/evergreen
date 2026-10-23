@@ -36,6 +36,7 @@ export const API_ERROR_CODES = [
   'IDEMPOTENCY_KEY_REQUIRED',
   'IDEMPOTENCY_KEY_REUSED',
   'NOT_FOUND',
+  'METHOD_NOT_ALLOWED',
   'UNAUTHENTICATED',
   'UPSTREAM_UNAVAILABLE',
 ] as const;
@@ -50,6 +51,8 @@ export type ApiOutcome<T> =
       readonly code: ApiErrorCode | 'UNRECOGNISED';
       /** Only from `Retry-After`, in seconds, when the server sent one. */
       readonly retryAfterSeconds?: number;
+      /** §9's `retryable`, only when the envelope carried a boolean. Never acted on silently. */
+      readonly retryable?: boolean;
     }
   | {
       readonly kind: 'unavailable';
@@ -87,8 +90,20 @@ export async function apiRequest<T>(
   }
 
   if (res.status === 204) return { kind: 'ok', status: 204, data: undefined as T };
-
+  // §4: `POST /auth/email/start` answers `202` and states no body. An empty 202
+  // is that answer; a 202 with a body still has to be JSON to count.
   const type = res.headers.get('Content-Type') ?? '';
+  if (res.status === 202 && !type.includes('application/json')) {
+    let text: string;
+    try {
+      text = await res.text();
+    } catch {
+      return { kind: 'unavailable', reason: 'no-api' };
+    }
+    if (text === '') return { kind: 'ok', status: 202, data: undefined as T };
+    return { kind: 'unavailable', reason: 'no-api' };
+  }
+
   if (!type.includes('application/json')) {
     // A static 404 page, or the site's HTML. Not the API speaking.
     return { kind: 'unavailable', reason: 'no-api' };
@@ -102,7 +117,7 @@ export async function apiRequest<T>(
 
   if (res.ok) return { kind: 'ok', status: res.status, data: body as T };
 
-  const envelope = (body as { error?: { code?: unknown } } | null)?.error;
+  const envelope = (body as { error?: { code?: unknown; retryable?: unknown } } | null)?.error;
   if (envelope === undefined || envelope === null || typeof envelope !== 'object') {
     // JSON without §9's envelope is not an API answer either.
     return { kind: 'unavailable', reason: 'no-api' };
@@ -113,6 +128,7 @@ export async function apiRequest<T>(
     status: res.status,
     code: isKnownCode(envelope.code) ? envelope.code : 'UNRECOGNISED',
     ...(seconds === undefined ? {} : { retryAfterSeconds: seconds }),
+    ...(typeof envelope.retryable === 'boolean' ? { retryable: envelope.retryable } : {}),
   };
 }
 

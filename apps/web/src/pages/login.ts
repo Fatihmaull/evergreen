@@ -10,85 +10,44 @@
  * WHAT IT CALLS. Only routes #350 states, with only the fields #350 states:
  * `GET /me`, `POST /auth/email/start { email }`, `POST /auth/email/verify
  * { email, code }`, `POST /wallets/challenge { account }`, `POST /wallets
- * { challengeXdr }`. #350 is unmerged; if it changes, this changes.
+ * { challengeXdr }`. The calls live in `lib/login.ts`, on the shared
+ * `lib/api.ts` client, so the page branches on §9's `code` and nothing else.
  *
  * WHERE. Relative `/api/v1/...` on this origin, and never an absolute host.
  * The Pages Function proxies `/api/*` to the API Worker over a service binding
  * (#350 decision B, base path `/api/v1`; CEF on #361), so the session cookie is
  * same-origin. A direct `*.workers.dev` call would be cross-site and the
- * `SameSite=Lax` cookie would not be sent. `API_BASE` is the one place it lands.
+ * `SameSite=Lax` cookie would not be sent. `API_BASE` in `lib/api.ts` is the one place it lands.
  *
  * WHEN IT IS NOT THERE. Any answer that is not one of #350's answers for that
- * route — a 404 from Pages, an HTML page, a network error — is reported as
- * `undetermined` with what was received. Nothing is assumed: not "signed out",
+ * route — a 404 from Pages, an HTML page, JSON without the error envelope, an
+ * unknown code, a network error — is reported as `undetermined` with what was
+ * received. Nothing is assumed: not "signed out",
  * not "sent".
  *
  * NO MONEY. This page imports `lib/wallet.ts` only; `build.mjs` refuses the
  * build if `wallet-money.ts` reaches this bundle (`LOGIN_FORBIDDEN`).
  */
+import { API_BASE } from '../lib/api';
 import { esc, short } from '../lib/format';
+import {
+  linkWallet as postWallet,
+  readSession,
+  requestChallenge,
+  startEmail as postEmailStart,
+  verifyEmail as postEmailVerify,
+  type Me,
+} from '../lib/login';
 import { NETWORK } from '../lib/network';
 import { createWallet, isWalletFailure, type WalletFailure } from '../lib/wallet';
 import { freighterPort } from '../lib/wallet-freighter';
 
-const API_BASE = '/api/v1';
-
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
-
-interface Me {
-  user: { id: string; email: string; createdAt: string };
-  wallets: { account: string }[];
-  csrfToken: string;
-}
 
 /** In memory, for the page's life. Cleared on any UNAUTHENTICATED. */
 let me: Me | undefined;
 let pendingEmail: string | undefined;
 let connected: string | undefined;
-
-type Answer =
-  | { kind: 'json'; status: number; body: Record<string, unknown> }
-  | { kind: 'undetermined'; detail: string };
-
-async function api(path: string, init: RequestInit = {}): Promise<Answer> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...init,
-      credentials: 'same-origin',
-      headers: {
-        ...(init.body ? { 'content-type': 'application/json' } : {}),
-        ...(me && init.method && init.method !== 'GET' ? { 'X-Evergreen-CSRF': me.csrfToken } : {}),
-        ...(init.headers ?? {}),
-      },
-    });
-  } catch (error) {
-    return { kind: 'undetermined', detail: `no response (${(error as Error).message})` };
-  }
-  if (res.status === 202 || res.status === 204)
-    return { kind: 'json', status: res.status, body: {} };
-  if (!(res.headers.get('content-type') ?? '').includes('application/json')) {
-    return {
-      kind: 'undetermined',
-      detail: `HTTP ${res.status}, ${res.headers.get('content-type') ?? 'no content type'} — not the account service's answer`,
-    };
-  }
-  try {
-    return {
-      kind: 'json',
-      status: res.status,
-      body: (await res.json()) as Record<string, unknown>,
-    };
-  } catch {
-    return { kind: 'undetermined', detail: `HTTP ${res.status} with a body that is not JSON` };
-  }
-}
-
-function code(a: Answer): string | undefined {
-  if (a.kind !== 'json') return undefined;
-  const error = a.body.error as { code?: unknown } | undefined;
-  return typeof error?.code === 'string' ? error.code : undefined;
-}
 
 function undetermined(what: string, detail: string): string {
   return `<div class="panel undetermined"><p><span class="chip undetermined"><span class="shape"></span>undetermined</span> ${esc(
@@ -100,6 +59,11 @@ function undetermined(what: string, detail: string): string {
 
 function note(html: string): string {
   return `<div class="panel note"><p>${html}</p></div>`;
+}
+
+function signedOut(): void {
+  me = undefined;
+  $('session').innerHTML = note('You are not signed in.');
 }
 
 function renderSession(): void {
@@ -115,20 +79,15 @@ function renderSession(): void {
 }
 
 async function loadMe(): Promise<void> {
-  const a = await api('/me');
-  const out = $('session');
-  if (a.kind === 'json' && a.status === 200) {
-    me = a.body as unknown as Me;
+  const r = await readSession();
+  if (r.kind === 'signed-in') {
+    me = r.me;
     renderSession();
-  } else if (a.kind === 'json' && (a.status === 401 || code(a) === 'UNAUTHENTICATED')) {
-    me = undefined;
-    out.innerHTML = note('You are not signed in.');
+  } else if (r.kind === 'signed-out') {
+    signedOut();
   } else {
     me = undefined;
-    out.innerHTML = undetermined(
-      'Whether you are signed in.',
-      a.kind === 'undetermined' ? a.detail : `HTTP ${a.status}${code(a) ? ` ${code(a)}` : ''}`,
-    );
+    $('session').innerHTML = undetermined('Whether you are signed in.', r.detail);
   }
 }
 
@@ -139,8 +98,8 @@ async function startEmail(event: Event): Promise<void> {
   const button = $<HTMLButtonElement>('email-button');
   button.disabled = true;
   try {
-    const a = await api('/auth/email/start', { method: 'POST', body: JSON.stringify({ email }) });
-    if (a.kind === 'json' && a.status === 202) {
+    const r = await postEmailStart(email);
+    if (r.kind === 'sent') {
       pendingEmail = email;
       const codeForm = $('code-form');
       codeForm.hidden = false;
@@ -149,13 +108,14 @@ async function startEmail(event: Event): Promise<void> {
       out.innerHTML = note(
         `If <strong>${esc(email)}</strong> can receive mail, a code is on its way. The answer is the same whether or not an account exists.`,
       );
-    } else if (code(a) === 'RATE_LIMITED') {
-      out.innerHTML = note('Too many codes asked for. Wait, then try again.');
-    } else {
-      out.innerHTML = undetermined(
-        'Whether a code was sent.',
-        a.kind === 'undetermined' ? a.detail : `HTTP ${a.status}${code(a) ? ` ${code(a)}` : ''}`,
+    } else if (r.kind === 'rate-limited') {
+      out.innerHTML = note(
+        r.retryAfterSeconds === undefined
+          ? 'Too many codes asked for. Wait, then try again.'
+          : `Too many codes asked for. Try again in ${Math.ceil(r.retryAfterSeconds / 60)} min.`,
       );
+    } else {
+      out.innerHTML = undetermined('Whether a code was sent.', r.detail);
     }
   } finally {
     button.disabled = false;
@@ -165,22 +125,16 @@ async function startEmail(event: Event): Promise<void> {
 async function verifyEmail(event: Event): Promise<void> {
   event.preventDefault();
   const out = $('email-result');
-  const a = await api('/auth/email/verify', {
-    method: 'POST',
-    body: JSON.stringify({ email: pendingEmail, code: $<HTMLInputElement>('code').value.trim() }),
-  });
-  if (a.kind === 'json' && a.status === 200) {
+  const r = await postEmailVerify(pendingEmail ?? '', $<HTMLInputElement>('code').value.trim());
+  if (r.kind === 'verified') {
     out.innerHTML = '';
     await loadMe();
-  } else if (code(a) === 'CODE_INVALID') {
+  } else if (r.kind === 'code-invalid') {
     out.innerHTML = note(
       'That code did not work. It may be wrong, used or expired. Ask for a new one.',
     );
   } else {
-    out.innerHTML = undetermined(
-      'Whether you are signed in.',
-      a.kind === 'undetermined' ? a.detail : `HTTP ${a.status}${code(a) ? ` ${code(a)}` : ''}`,
-    );
+    out.innerHTML = undetermined('Whether you are signed in.', r.detail);
   }
 }
 
@@ -236,21 +190,17 @@ async function linkWallet(): Promise<void> {
     out.innerHTML = note('Sign in with your email first: a wallet is linked to an account.');
     return;
   }
-  const challenge = await api('/wallets/challenge', {
-    method: 'POST',
-    body: JSON.stringify({ account: connected }),
-  });
-  if (challenge.kind !== 'json' || challenge.status !== 200) {
-    out.innerHTML = undetermined(
-      'Whether a sign-in challenge can be issued.',
-      challenge.kind === 'undetermined' ? challenge.detail : `HTTP ${challenge.status}`,
-    );
+  const challenge = await requestChallenge(connected, me.csrfToken);
+  if (challenge.kind === 'signed-out') {
+    signedOut();
+    out.innerHTML = note('Your session ended. Sign in again, then link.');
     return;
   }
-  const { challengeXdr, networkPassphrase } = challenge.body as {
-    challengeXdr: string;
-    networkPassphrase: string;
-  };
+  if (challenge.kind !== 'challenge') {
+    out.innerHTML = undetermined('Whether a sign-in challenge can be issued.', challenge.detail);
+    return;
+  }
+  const { challengeXdr, networkPassphrase } = challenge.challenge;
   if (networkPassphrase !== NETWORK.passphrase) {
     out.innerHTML = note(
       'The service issued a challenge for a different network than this site reads. Nothing was signed.',
@@ -265,22 +215,27 @@ async function linkWallet(): Promise<void> {
     out.innerHTML = note(walletSentence(signed));
     return;
   }
-  const linked = await api('/wallets', {
-    method: 'POST',
-    body: JSON.stringify({ challengeXdr: signed.signedXdr }),
-  });
-  if (linked.kind === 'json' && (linked.status === 201 || linked.status === 200)) {
-    out.innerHTML = note(`Linked: <span class="mono">${esc(connected)}</span>.`);
-    await loadMe();
-  } else if (code(linked) === 'WALLET_LINKED_ELSEWHERE') {
-    out.innerHTML = note('This wallet is already linked to a different account.');
-  } else if (code(linked) === 'CHALLENGE_INVALID') {
-    out.innerHTML = note('The signing request expired. Try linking again.');
-  } else {
-    out.innerHTML = undetermined(
-      'Whether the wallet was linked.',
-      linked.kind === 'undetermined' ? linked.detail : `HTTP ${linked.status}`,
-    );
+  const linked = await postWallet(signed.signedXdr, me.csrfToken);
+  switch (linked.kind) {
+    case 'linked':
+      out.innerHTML = note(`Linked: <span class="mono">${esc(connected)}</span>.`);
+      await loadMe();
+      return;
+    case 'linked-elsewhere':
+      out.innerHTML = note('This wallet is already linked to a different account.');
+      return;
+    case 'challenge-invalid':
+      out.innerHTML = note('The signing request expired. Try linking again.');
+      return;
+    case 'csrf-failed':
+      out.innerHTML = note('This page was open too long. Reload and try again.');
+      return;
+    case 'signed-out':
+      signedOut();
+      out.innerHTML = note('Your session ended. Sign in again, then link.');
+      return;
+    case 'undetermined':
+      out.innerHTML = undetermined('Whether the wallet was linked.', linked.detail);
   }
 }
 
