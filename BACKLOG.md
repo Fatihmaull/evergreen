@@ -620,7 +620,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E2 — Backend
 
 - [x] **PH2-E2-01** (R · CER) **M** ✅ **DONE 2026-10-20.** #313 merged as `d075829`. Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity. Evidence: [`docs/evidence/2026-10-15-workers-spike`](docs/evidence/2026-10-15-workers-spike/README.md) — Workers Paid go, scan matched CLI, Neon OK over HTTP.
-- [ ] **PH2-E2-02** (F · CEF + WEBF) **M** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
+- [x] **PH2-E2-02** (F · CEF + WEBF) **M** ✅ **DONE 2026-10-23.** #350 merged as `6f73e4d`: the v1 spec is [`docs/API.md`](docs/API.md). **Original text:** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
 - [ ] **PH2-E2-03** (R · CER) **M** Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger. *Depends on `PH2-E2-02`.*
 - [~] **PH2-E2-04** (F · CEF) **L** 🔧 Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. **Started 2026-10-21 in `apps/api`** (option B, ADR-003's 2026-10-21 amendment). **First slice:** the storage-agnostic auth core (sign-in codes, sessions, CSRF, rate limits, wallet challenges). **Still to come:** the routes, the Worker entry and the stores, which wait for `PH2-E2-03`'s tables and for Fatih's decision on the Pages project's account. *Depends on `PH2-E2-03`.*
 - [ ] **PH2-E2-05** (R · CER) **M** Watchlist API (Q14). *Depends on `PH2-E2-04`.*
