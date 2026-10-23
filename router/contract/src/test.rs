@@ -143,11 +143,17 @@ fn refuses_threshold_above_extend_to() {
 
 #[test]
 fn zero_fee_extends_without_a_transfer() {
+    // ADR-009 §3 (#389): the fee is voluntary on-chain. `fee == 0` succeeds,
+    // moves no funds, and still extends the target's instance and code TTL.
     let s = setup();
-    s.client()
-        .fee_and_extend(&s.payer, &0, &s.target, &100_000, &200_000);
-    assert_eq!(s.instance_ttl(), 200_000);
-    assert_eq!(s.balance(&s.treasury), 0);
+    let res = s
+        .client()
+        .try_fee_and_extend(&s.payer, &0, &s.target, &100_000, &200_000);
+    assert_eq!(res, Ok(Ok(())), "a zero fee is accepted");
+    assert_eq!(s.instance_ttl(), 200_000, "and still extends");
+    assert_eq!(s.balance(&s.payer), 1_000, "no transfer from the payer");
+    assert_eq!(s.balance(&s.treasury), 0, "no transfer to the treasury");
+    assert_eq!(s.balance(&s.router), 0, "the router never holds funds");
 }
 
 #[test]
