@@ -32,7 +32,7 @@ Nothing is built against this until it merges. "Written before either side build
 - `EMAIL_API_KEY`: the Resend key. Same name the engine's EmailChannel already uses (CONVENTIONS.md).
 - `CHALLENGE_SIGNING_KEY`: the `S…` seed of the challenge-signing key (§4).
 
-Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
+Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). `DASHBOARD_ORIGIN` is one exact origin per environment, set in `apps/api/wrangler.jsonc`: production `https://evergreen-stellar.pages.dev`, preview `https://preview.evergreen-stellar.pages.dev`. `EMAIL_FROM` is undetermined. Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker names:** production `evergreen-api`; preview `evergreen-api-preview`.
 - **Service binding:** the Pages project binds the API Worker as `API`. The dashboard's `/api/*` is a Pages Function that forwards each request over `API` to the Worker; the Worker serves base path `/api/v1`.
