@@ -87,10 +87,12 @@ Scanning is a read, so the Action can watch a mainnet contract. Set
 default RPC, and providers are listed at
 [developers.stellar.org/docs/data/apis/rpc/providers](https://developers.stellar.org/docs/data/apis/rpc/providers).
 Pass the URL from a secret if it carries a key. Mainnet needs a CLI `version`
-with `--network` (0.2.0 or later, released under `PH2-E1-06`); until 0.2.0 is
-published, `latest` is 0.1.1, and that or any older pin fails the job on the unknown
-flag rather than quietly scanning testnet. The Action never writes on either
-network, and the CLI's `extend` refuses mainnet.
+with `--network` (0.2.0 or later, `PH2-E1-06`). On `main`, `packages/cli` is
+already `0.2.0` (#401) but **npm `latest` stays `0.1.1` until Rakha publishes**;
+pinning `0.1.1` (or `latest` before publish) fails the job on the unknown
+`--network` flag rather than quietly scanning testnet. After publish, pin
+`version: '0.2.0'`. The Action never writes on either network, and the CLI's
+`extend` refuses mainnet.
 
 ```yaml
       - uses: Fatihmaull/evergreen@v1
