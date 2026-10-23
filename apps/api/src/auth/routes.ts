@@ -12,6 +12,7 @@
 import type { Keypair } from '@stellar/stellar-sdk';
 import { StrKey } from '@stellar/stellar-sdk';
 import type { AuthConfig } from './config.js';
+import { apiError } from '../router.js';
 import { CSRF_HEADER, csrfAllows } from './csrf.js';
 import { hitLimit } from './rate-limit.js';
 import {
@@ -46,17 +47,18 @@ export interface AuthDeps {
   readonly now: () => number;
 }
 
-export function apiError(
+/**
+ * Auth's error helper: argument order kept for the call sites below, but the
+ * envelope (and `retryable`, derived from the code) comes from the Worker's one
+ * `apiError` in router.ts, so docs/API.md §9 has a single implementation.
+ */
+function authError(
   status: number,
   code: string,
   message: string,
   headers: Record<string, string> = {},
 ): Response {
-  return jsonResponse(
-    status,
-    { error: { code, message, retryable: status === 429, details: {} } },
-    headers,
-  );
+  return apiError(code, message, status, { headers });
 }
 
 function jsonResponse(
@@ -101,7 +103,7 @@ interface Authed {
 /** Session, then CSRF for unsafe methods. Returns a refusal Response or the session. */
 async function requireSession(request: Request, deps: AuthDeps): Promise<Authed | Response> {
   const token = readSessionToken(request.headers.get('cookie'));
-  const unauth = () => apiError(401, 'UNAUTHENTICATED', 'Sign in first.');
+  const unauth = () => authError(401, 'UNAUTHENTICATED', 'Sign in first.');
   if (token === undefined) return unauth();
   const tokenHash = await hashSessionToken(token);
   const row = await deps.store.getSession(tokenHash);
@@ -118,7 +120,7 @@ async function requireSession(request: Request, deps: AuthDeps): Promise<Authed 
     headerToken: request.headers.get(CSRF_HEADER),
     sessionCsrfToken: row.csrfToken,
   });
-  if (!allowed) return apiError(403, 'CSRF_FAILED', 'Request refused.');
+  if (!allowed) return authError(403, 'CSRF_FAILED', 'Request refused.');
   const user = await deps.store.getUser(row.userId);
   if (user === undefined) return unauth();
   const touched = touchSession(row, now);
@@ -162,14 +164,14 @@ async function emailStart(request: Request, deps: AuthDeps): Promise<Response> {
 }
 
 function rateLimited(retryAfterSeconds: number): Response {
-  return apiError(429, 'RATE_LIMITED', 'Too many requests.', {
+  return authError(429, 'RATE_LIMITED', 'Too many requests.', {
     'retry-after': String(retryAfterSeconds),
   });
 }
 
 async function emailVerify(request: Request, deps: AuthDeps): Promise<Response> {
   const body = await readJson(request);
-  const invalid = () => apiError(401, 'CODE_INVALID', 'That code is not valid.');
+  const invalid = () => authError(401, 'CODE_INVALID', 'That code is not valid.');
   const email = typeof body?.['email'] === 'string' ? normalizeEmail(body['email']) : null;
   const code = body?.['code'];
   if (email === null || typeof code !== 'string') return invalid();
@@ -220,7 +222,7 @@ async function walletChallenge(request: Request, deps: AuthDeps): Promise<Respon
   const body = await readJson(request);
   const account = body?.['account'];
   if (typeof account !== 'string' || !StrKey.isValidEd25519PublicKey(account)) {
-    return apiError(400, 'CHALLENGE_INVALID', 'account must be a G… address.');
+    return authError(400, 'CHALLENGE_INVALID', 'account must be a G… address.');
   }
   const now = deps.now();
   const issued = await issueWalletChallenge({
@@ -244,7 +246,7 @@ async function walletLink(request: Request, deps: AuthDeps): Promise<Response> {
   if (authed instanceof Response) return authed;
   const body = await readJson(request);
   const signedXdr = body?.['challengeXdr'];
-  const refuse = () => apiError(400, 'CHALLENGE_INVALID', 'The signed challenge is not valid.');
+  const refuse = () => authError(400, 'CHALLENGE_INVALID', 'The signed challenge is not valid.');
   if (typeof signedXdr !== 'string') return refuse();
   const account = await verifyWalletChallenge({
     signedXdr,
@@ -256,7 +258,7 @@ async function walletLink(request: Request, deps: AuthDeps): Promise<Response> {
   if (account === null) return refuse();
   const result = await deps.store.linkWallet(authed.user.id, account, deps.now());
   if (result === 'linked-elsewhere') {
-    return apiError(409, 'WALLET_LINKED_ELSEWHERE', 'This wallet is linked to another account.');
+    return authError(409, 'WALLET_LINKED_ELSEWHERE', 'This wallet is linked to another account.');
   }
   const link = (await deps.store.listWallets(authed.user.id)).find((w) => w.account === account);
   return jsonResponse(result === 'created' ? 201 : 200, { wallet: link && walletJson(link) });
@@ -266,14 +268,14 @@ async function walletUnlink(request: Request, deps: AuthDeps, account: string): 
   const authed = await requireSession(request, deps);
   if (authed instanceof Response) return authed;
   if (await deps.store.walletPaysForWatchedContract(authed.user.id, account)) {
-    return apiError(
+    return authError(
       409,
       'WALLET_PAYS_FOR_WATCHED_CONTRACT',
       'This wallet pays for a watched contract. Change the payer first.',
     );
   }
   if (!(await deps.store.unlinkWallet(authed.user.id, account))) {
-    return apiError(404, 'NOT_FOUND', 'No such wallet on this account.');
+    return authError(404, 'NOT_FOUND', 'No such wallet on this account.');
   }
   return jsonResponse(204, null);
 }

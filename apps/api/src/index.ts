@@ -43,6 +43,6 @@ export {
 } from './auth/wallet-challenge.js';
 export type { ChallengeDomains, ChallengeStore } from './auth/wallet-challenge.js';
 export { MemoryAuthStore, MemoryChallengeStore } from './auth/memory-store.js';
-export { AUTH_WRITE_ROUTES, apiError, handleAuth } from './auth/routes.js';
+export { AUTH_WRITE_ROUTES, handleAuth } from './auth/routes.js';
 export type { AuthDeps } from './auth/routes.js';
 export type { AuthStore, LinkResult, Mailer, User, WalletLink } from './auth/store.js';
