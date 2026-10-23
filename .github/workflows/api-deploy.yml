@@ -1,0 +1,86 @@
+name: API deploy
+
+# Auto-deploys the apps/api Worker: evergreen-api-preview on every same-repo PR,
+# evergreen-api (production) on merge to main. Needs repo secret
+# CLOUDFLARE_API_TOKEN and repo variable CLOUDFLARE_ACCOUNT_ID.
+on:
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-deploy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-deploy.yml"
+  # Manual run: deploys preview from any ref, production only from main.
+  workflow_dispatch:
+
+concurrency:
+  group: api-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_VERSION: "4"
+
+jobs:
+  preview:
+    name: deploy evergreen-api-preview
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: test apps/api (if a test script exists)
+        run: pnpm --filter @evergreen/api run --if-present test
+      - name: wrangler deploy --env preview
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview
+
+  production:
+    name: deploy evergreen-api (production)
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: test apps/api (if a test script exists)
+        run: pnpm --filter @evergreen/api run --if-present test
+      - name: wrangler deploy
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy
+      - name: smoke /api/v1/health (200 + application/json)
+        run: |
+          url=https://evergreen-stellar.pages.dev/api/v1/health
+          for i in 1 2 3 4 5; do
+            out=$(curl -sS -o /dev/null -w '%{http_code} %{content_type}' "$url" || true)
+            echo "attempt $i: $out"
+            code=${out%% *}; ctype=${out#* }
+            if [ "$code" = "200" ] && [[ "$ctype" == application/json* ]]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::health check failed: $out"; exit 1
