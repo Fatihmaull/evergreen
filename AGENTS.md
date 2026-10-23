@@ -14,7 +14,7 @@ Read this file every session. It tells you what this project is, how to pick up 
 
 An open-source toolkit that stops Soroban smart contracts from being archived. Soroban ledger entries have a TTL measured in ledgers; remaining TTL zero is the final live ledger. After it, persistent entries are archived and temporary entries are deleted. Archived state must be restored before use. Evergreen monitors TTL, predicts archival, estimates rent cost, and automatically extends TTL before expiry — non-custodially.
 
-Three components: a CLI, a scheduled auto-bump engine, and a public read-only dashboard + CI check.
+Three components: a CLI, a scheduled auto-bump engine, and a public dashboard (scan any contract without a wallet; sign-in and wallet signing arrive in phase 2) + CI check.
 
 This is a funded 30-day grant engagement (Stellar Instawards, $4,800). **Deadline 2026-10-02 is hard.** Scope discipline matters more than elegance.
 
@@ -127,7 +127,7 @@ If keeping the mirror current starts costing meaningful time in a 24-effective-d
 
 ## Hard rules — these are not suggestions
 
-1. **Testnet only until the beta exits (`PH2-E5-02`).** Before then, never write to mainnet and never use a key that controls real funds. Mainnet *reads* arrive with `PH2-E1-03`. If a task seems to need a mainnet write before `PH2-E5-02`, stop and ask. *(Amended 2026-10-15: the SOW 1 text read "Mainnet is explicitly out of scope for this grant (PRD §3)". That was true of the grant; phase 2 plans mainnet behind the beta, decisions Q5 and Q18.)*
+1. **Testnet only until DoD-2 is met (`PH2-E5-02`).** Before then, never write to mainnet and never use a key that controls real funds. Mainnet *reads* arrive with `PH2-E1-03`. If a task seems to need a mainnet write before `PH2-E5-02`, stop and ask. *(Amended 2026-10-15: the SOW 1 text read "Mainnet is explicitly out of scope for this grant (PRD §3)". That was true of the grant; phase 2 plans mainnet behind the beta, decisions Q5 and Q18.)*
 2. **No secrets in the repo.** Not in code, not in docs, not in tests, not in commit messages, not in this file. Keys and API tokens live in `.env` (gitignored) and platform secret stores only. If you find a committed secret, stop everything and say so.
 3. **Never invent Soroban APIs.** If you are unsure whether a method, XDR type, or SDK signature exists, check `docs/SOROBAN-PRIMER.md` first, then the official Stellar docs. A plausible-looking hallucinated RPC method will cost hours. Say "I need to verify this" rather than guessing.
 
@@ -148,6 +148,7 @@ If keeping the mirror current starts costing meaningful time in a 24-effective-d
 7. **Evidence is a deliverable, and a hash alone is not evidence.** Every testnet transaction goes into `docs/EVIDENCE.md` the day it happens with **two** artifacts: the tx hash and the full unedited JSON RPC response. Testnet is periodically reset — a reset makes every explorer link dead, and a hash pointing at a chain that no longer exists proves nothing. The JSON survives it. One minute per transaction at capture time; unrecoverable if skipped. *(Amended 2026-10-15: an explorer screenshot is no longer required, because the JSON already survives a reset, and Q6 lightens process. Screenshots already on file stay.)*
 8. **Don't silently expand scope.** If a task needs something not in the backlog, add it to the backlog and note it in STATUS.md rather than quietly building it. See the cut order at the bottom of BACKLOG.md.
 9. **Tests don't hit the network.** Unit tests use fixtures and the mock RPC client in `packages/core/test/fixtures`. Integration tests that touch testnet are separate, explicitly marked, and never run in CI by default.
+10. **The site's build output is not committed.** `apps/dashboard/public/` is gitignored (PH2-BL-08). Cloudflare Pages builds it on every deploy with **Node 24**, using `corepack enable && pnpm install --frozen-lockfile && pnpm build && node apps/web/build.mjs`, and CI runs `pnpm build && node apps/web/build.mjs` before `pnpm check`. Never commit files under `apps/dashboard/public/`, and never "rebuild and commit" to fix the site: change the source in `apps/web/`. Run `pnpm build && node apps/web/build.mjs` before `pnpm test` or `pnpm check` locally (a clean checkout fails with ENOENT otherwise: five tests read `apps/dashboard/public/`), and run local checks on Node 24 (`node -v`); older Node silently skips `import.meta.main` gates.
 
 ## Repo map
 
@@ -174,9 +175,9 @@ packages/
   cli/                  the `evergreen` command
   engine/               scheduled auto-bump worker
 apps/
-  dashboard/            public read-only web dashboard. READ-ONLY, full stop —
-                        the P1 user-signed extend was CUT 2026-09-10 (W4-D24-04,
-                        cut order #3) and is a SOW 2 direction, not a deferred task
+  dashboard/            public web dashboard. No automated write path; any
+                        signature is the user's own wallet, never an email
+                        session (ADR-008)
 scripts/                every gate, capture and instrument. `pnpm check` runs the
                         check:* ones; capture-crossing-probe and
                         verify-crossing-capture are the evidence pair
@@ -321,7 +322,7 @@ You are the least qualified person to judge whether a doc is clear, because you 
 
 - Behavior works against the guinea-pig testnet contract (ID in `docs/SETUP.md`).
 - Unit tests cover the logic, using fixtures rather than live RPC.
-- `pnpm check` green — it runs exactly what CI runs. Don't substitute a subset here: `pnpm typecheck && pnpm lint && pnpm test` skips three of the six gates, and a local gate weaker than the remote one is worse than no local gate. *(That exact gap shipped once already — `format:check` was in CI but not in `check`.)*
+- `pnpm check` green — it runs exactly what CI runs (build first: `pnpm build && node apps/web/build.mjs`, see hard rule 10). Don't substitute a subset here: `pnpm typecheck && pnpm lint && pnpm test` skips three of the six gates, and a local gate weaker than the remote one is worse than no local gate. *(That exact gap shipped once already — `format:check` was in CI but not in `check`.)*
 
 **This is when a *task* is done. [`docs/READY.md`](docs/READY.md) is when the *product* is done** — four things a stranger must be able to do by Oct 2. Every task above can pass and the product can still fail that, which is the failure this project is actually exposed to. *(Demonstrated 2026-09-09: every gate was green while `npx @evergreen-stellar/cli` would have 404'd for every user, because nothing in the plan installed the package from outside the monorepo until day 27.)*
 - Docs updated if user-facing behavior changed.

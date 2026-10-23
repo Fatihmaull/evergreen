@@ -29,7 +29,7 @@ named by their registered task IDs in `BACKLOG.md` § Phase 2 (`PH2-…`).
 
 | Never | Why | Lifts when |
 |---|---|---|
-| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label | Mainnet **read-only scan** may be named once it ships (`PH2-E1-03`). Mainnet writes, extends and autopilot: not before the beta exits (`PH2-E5-02`) and the mainnet launch ships (`PH2-E5-04`) |
+| Any **mainnet** reference, path or promise | Testnet only. The config compares the network passphrase rather than trusting a label | Mainnet **read-only scan** may be named once it ships (`PH2-E1-03`). Mainnet writes, extends and autopilot: not until DoD-2 is met (`PH2-E5-02`) and the mainnet launch ships (`PH2-E5-04`) |
 | A **protocol version number** | This project does not publish one. The design export said "Testnet v21"; it was removed | Never |
 | **Wallet connect**, sign-in, accounts, or any disabled control standing in for one | Cut deliberately as the next scope's headline. A disabled control is a promise with a date on it | Login and wallet linking ship (`PH2-E3-01`). A **disabled** control standing in for an unshipped feature never appears |
 | "**Non-custodial**", "zero-privilege", "no keys" | False. The engine holds a funded testnet payer. A "Zero-Privilege Node · No Keys" panel was removed from the export for exactly this | Only in the words of the **public custody statement Fatih approves** (`PH2-E4-06`), quoted, not paraphrased. The allowance design is "allowance, not custody" in the plan; that phrase is not copy until then |
@@ -43,11 +43,9 @@ named by their registered task IDs in `BACKLOG.md` § Phase 2 (`PH2-…`).
 | A **rounded** measured number | See below | Never |
 | A **fabricated** figure of any kind | If a panel has no real number, it shows no number | Never |
 
-**One live instance to fix.** The landing page's closing section says "Stellar
-testnet, read-only, no key and no account" (checked 2026-10-15). It means the
-visitor needs no key, which is true. But it is the forbidden "no keys" phrase,
-and "no account" stops being true when login ships. Say whose key: "You need
-no key and no account to scan." Re-check it when `PH2-E3-01` ships.
+**Fixed 2026-10-22.** The landing page's closing section said "Stellar
+testnet, read-only, no key and no account". It now says "You need no key and
+no account to scan", which says whose key. Re-check it when `PH2-E3-01` ships.
 
 ## The real numbers
 
@@ -79,18 +77,26 @@ These are load-bearing and should be quoted rather than paraphrased:
 
 ## Obligatory
 
-The footer states on every page: **"Testnet only. Read-only: these pages never
-sign or submit anything."** Any deliverable that shows the product should be
-able to say the same without qualification. On a canvas it is the label line
-"Stellar testnet" ([`formats.md`](formats.md)).
+The footer states on every page: **"Testnet only."** Any deliverable that
+shows the product should be able to say the same without qualification. On a
+canvas it is the label line "Stellar testnet" ([`formats.md`](formats.md)).
 
-**This sentence becomes false in phase 2** on the first page that signs: the
-extend flow, the allowance flow, the "Support Evergreen" page (`PH2-E3-04`, `PH2-E3-05`,
-`PH2-E3-07`). When the first of them ships, the footer is scoped per page: pages
-that are still read-only keep the sentence for themselves ("This page is
-read-only: it never signs or submits anything."). The wording for a page that
-signs is **undetermined**. It goes to Fatih with that feature, and nothing
-ships in the meantime that says either sentence falsely.
+**No surface says the site never signs** (Fatih, 2026-10-22). "Read-only: these
+pages never sign or submit anything", "never asks you to sign", and any
+equivalent are retired from every page, banner, footer, meta description and
+README, because the product now asks a wallet to sign (wallet linking,
+`PH2-E3-01`; the allowance and extend flows, `PH2-E3-04`, `PH2-E3-05`). A
+retired sentence is not replaced with a new blanket one. What may be said
+instead is narrow and true:
+
+- **"Signing in with email cannot move XLM."** ADR-008: nothing that moves XLM
+  is ever authorised by an email session. It appears only where sign-in
+  appears, so it follows the "Wallet connect, sign-in, accounts" row above.
+- A **page-specific** statement of what that page does ("A scan is a read",
+  "No wallet, no signup") where it is true of that page.
+- Custody wording ("we never hold your keys", "XLM moves only under an
+  allowance you signed") stays behind the custody row above: only in the words
+  of the custody statement Fatih approves (`PH2-E4-06`).
 
 ## Attribution
 

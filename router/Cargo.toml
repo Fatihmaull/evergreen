@@ -1,0 +1,19 @@
+# PH2-E4-08: the production fee router (ADR-009). Its own Cargo workspace,
+# separate from contracts/* (test fixtures, not in CI) and from the spike.
+[workspace]
+resolver = "2"
+members = ["contract", "test-subject"]
+
+[workspace.dependencies]
+# Pinned exactly, as in the root workspace (docs/CONVENTIONS.md § Dependencies).
+soroban-sdk = "=27.0.6"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true

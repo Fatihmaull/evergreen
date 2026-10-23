@@ -5,8 +5,8 @@ import type { NetworkName, TestnetPassphrase } from '@evergreen-stellar/shared-t
  * read from here, so "which network" has a single home instead of a literal per
  * call site.
  *
- * READS may target either network. WRITES stay testnet-only until the beta
- * exits (`AGENTS.md` hard rule 1, `PH2-E5-02`): `planExtension`,
+ * READS may target either network. WRITES stay testnet-only until DoD-2 is
+ * met (`AGENTS.md` hard rule 1, `PH2-E5-02`): `planExtension`,
  * `planEngineExecution`, the optimizer and the signer each refuse anything else,
  * whatever this table contains.
  *

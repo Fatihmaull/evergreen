@@ -1,10 +1,10 @@
 /**
- * The committed site, checked at `pnpm test` time.
+ * The built site, checked at `pnpm test` time.
  *
- * `apps/dashboard/public/` is build output that is COMMITTED, and the
- * Cloudflare Pages project publishes it from `main`. No workflow builds it, so
- * the guards inside `apps/web/build.mjs` only run when somebody runs the
- * build. These tests do run in CI, so they assert the two properties that were
+ * `apps/dashboard/public/` is build output. Since PH2-BL-08 it is NOT
+ * committed: Cloudflare Pages builds it on deploy, and CI runs
+ * `node apps/web/build.mjs` before `pnpm check`, so these tests read a fresh
+ * build. Locally, build first. They assert the two properties that were
  * broken in production on 2026-10-15:
  *
  *   1. a page given a browser bundle actually loads it — `/docs/archival/`
@@ -14,18 +14,15 @@
  *   2. nothing is published that no page, bundle or stylesheet reaches —
  *      748,893 bytes of `archival.js` were served with HTTP 200 to nobody.
  *
- * This repeats logic that `build.mjs` also guards, deliberately. The build's
- * copy fails the build; this copy fails CI. Until `.github/workflows/` gains a
- * site build, only the second one runs on a pull request.
+ * This repeats logic that `build.mjs` also guards, deliberately: the build's
+ * copy fails the build, this copy fails the test run.
  */
 import { describe, expect, test } from 'vitest';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-// @ts-expect-error — a plain .mjs checker with no declarations, imported for
-// its one exported function rather than re-implemented here.
-import { differences } from '../scripts/check-published.mjs';
 
 const PUBLISHED = fileURLToPath(new URL('../../dashboard/public/', import.meta.url));
 
@@ -69,62 +66,41 @@ describe('the published site', () => {
   });
 });
 
-describe('the published-output checker', () => {
-  const fixture = (): { a: string; b: string; clean: () => void } => {
-    const root = mkdtempSync(join(tmpdir(), 'evergreen-published-test-'));
-    for (const name of ['a', 'b']) {
-      mkdirSync(join(root, name, 'assets'), { recursive: true });
-      writeFileSync(join(root, name, 'index.html'), '<p>same</p>\n');
-      writeFileSync(join(root, name, 'assets/styles.css'), 'body{}\n');
-    }
-    return {
-      a: join(root, 'a'),
-      b: join(root, 'b'),
-      clean: () => rmSync(root, { recursive: true, force: true }),
-    };
-  };
-
-  test('reports nothing when the two directories match', () => {
-    const { a, b, clean } = fixture();
+describe('a verification build does not edit the tree it verifies', () => {
+  /**
+   * The former `check-published.mjs` (retired in PH2-BL-08) built into a
+   * temporary directory and compared. It used to rewrite `apps/web/data/known-ends.json` while doing so — a SOURCE
+   * file that the browser bundles import — so the comparison moved one of the
+   * inputs of the thing being compared.
+   *
+   * That is almost certainly the transient same-length mismatch on the four
+   * minified bundles, seen three times and never reproducible on demand.
+   * esbuild is deterministic across processes: three separate builds of the
+   * same source give byte-identical output, measured. So a differing bundle
+   * means a differing input, and this was the one input a verification run
+   * could move.
+   *
+   * Since #324 the gate blocks every merge in the repository. A gate that
+   * edits the tree it is checking cannot be trusted about it.
+   */
+  test('a redirected build does not write data/known-ends.json', { timeout: 180_000 }, () => {
+    const data = fileURLToPath(new URL('../data/known-ends.json', import.meta.url));
+    // mtime, not a planted marker: this file is shared with every other test
+    // file vitest runs in parallel, and editing it under them made a sibling
+    // build fail. A write changes the timestamp whether or not it changes the
+    // bytes, which is the property being asserted.
+    const before = statSync(data).mtimeMs;
+    const out = mkdtempSync(join(tmpdir(), 'evergreen-redirect-test-'));
     try {
-      expect(differences(a, b)).toEqual([]);
+      const result = spawnSync('node', [fileURLToPath(new URL('../build.mjs', import.meta.url))], {
+        cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+        encoding: 'utf8',
+        env: { ...process.env, EVERGREEN_WEB_OUT: out },
+      });
+      expect(result.status).toBe(0);
+      expect(statSync(data).mtimeMs).toBe(before);
     } finally {
-      clean();
-    }
-  });
-
-  test('reports a file whose content differs at the same length', () => {
-    const { a, b, clean } = fixture();
-    try {
-      // "74" → "77" was the real drift: same byte count, different page.
-      writeFileSync(join(a, 'index.html'), '<p>s4me</p>\n');
-      expect(differences(a, b)).toEqual([
-        'index.html: published copy differs in content, same length (12 bytes)',
-      ]);
-    } finally {
-      clean();
-    }
-  });
-
-  test('reports a file the build produces that is not published', () => {
-    const { a, b, clean } = fixture();
-    try {
-      writeFileSync(join(a, 'assets/new.js'), '//\n');
-      expect(differences(a, b)).toEqual(['assets/new.js: built, but not published']);
-    } finally {
-      clean();
-    }
-  });
-
-  test('reports a published file the build no longer produces', () => {
-    const { a, b, clean } = fixture();
-    try {
-      writeFileSync(join(b, 'assets/left-behind.js'), '//\n');
-      expect(differences(a, b)).toEqual([
-        'assets/left-behind.js: published, but this build does not produce it',
-      ]);
-    } finally {
-      clean();
+      rmSync(out, { recursive: true, force: true });
     }
   });
 });

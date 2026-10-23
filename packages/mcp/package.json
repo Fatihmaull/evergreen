@@ -1,0 +1,37 @@
+{
+  "name": "@evergreen-stellar/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A read-only MCP server for Evergreen: scan Soroban contracts for TTL health and price an extend. Never signs or submits.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fatihmaull/evergreen.git",
+    "directory": "packages/mcp"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "type": "module",
+  "bin": {
+    "evergreen-mcp": "./dist/evergreen-mcp.mjs"
+  },
+  "files": [
+    "dist/evergreen-mcp.mjs",
+    "dist/evergreen-mcp.mjs.map"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "bundle": "esbuild src/bin.ts --bundle --platform=node --format=esm --external:@stellar/stellar-sdk --external:@modelcontextprotocol/sdk --external:zod --sourcemap --outfile=dist/evergreen-mcp.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@stellar/stellar-sdk": "17.0.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@evergreen-stellar/core": "workspace:*",
+    "@evergreen-stellar/shared-types": "workspace:*",
+    "esbuild": "0.25.0"
+  }
+}

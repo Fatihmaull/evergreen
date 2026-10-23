@@ -5,6 +5,57 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** the Ambassador Chapter Lead (Indonesia chapter)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## PH2-E4-08 — Fee router deployed to Testnet (2026-10-23)
+
+The [ADR-009](adr/ADR-009-router-scope-and-fee-destination.md) router
+(`router/`, merged #378 at `b73d358`) was built from `main@658fe14` and
+deployed to **Testnet only** on 2026-10-23 03:14 UTC / 10:14 WIB.
+
+| Item | Value |
+|---|---|
+| Contract ID | [`CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3`](https://stellar.expert/explorer/testnet/contract/CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3) |
+| Wasm hash (sha256 of 7,763-byte `evergreen_router.wasm`) | `e1aa4bd67559ed4324daa9a628662eeefeab8d6490e4d36e3d7ced8e5eb3b3d1` |
+| Upload tx (ledger 5,340,331) | [`cc0502076fd976a19a556f1fca78dcefc50efc6bacf1a0efc285e792d466892e`](https://stellar.expert/explorer/testnet/tx/cc0502076fd976a19a556f1fca78dcefc50efc6bacf1a0efc285e792d466892e) |
+| Deploy tx (ledger 5,340,332) | [`0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132`](https://stellar.expert/explorer/testnet/tx/0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132) |
+| Deployer (friendbot-funded, Testnet only) | `GBFY225VJ3OXYG74OSQGV5GLW23F3WR5ENPYJ6764P2NPSGZACFQADAT` |
+| `fee_token` (constructor) | native XLM SAC `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
+| `treasury` (constructor, #381) | `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ` |
+
+The fee (0.1 XLM = `1000000` stroops, Testnet-only until PH2-E5-03) is **not**
+a constructor value: it is the `fee` argument of each `fee_and_extend` call,
+supplied by the caller. The first live `fee_and_extend` call is recorded below. Mainnet
+router: undetermined (mainnet treasury undetermined).
+
+Verification (read-only, no transaction sent):
+
+```bash
+stellar contract invoke --id CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --network testnet --source <any-testnet-identity> --send=no -- treasury   # "GD7LIS…RMMRZ"
+stellar contract invoke --id CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --network testnet --source <any-testnet-identity> --send=no -- fee_token  # "CDLZFC…HGCYSC"
+stellar contract id asset --asset native --network testnet                                                                                                   # same SAC
+curl -s https://horizon-testnet.stellar.org/transactions/0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132 | grep '"successful"'               # true
+cargo build --manifest-path router/Cargo.toml --release --target wasm32v1-none && sha256sum router/target/wasm32v1-none/release/evergreen_router.wasm          # e1aa4b…b3d1
+```
+
+### First live `fee_and_extend` on Testnet (2026-10-23)
+
+One transaction, one signature (payer = deployer `GBFY22…QADAT`): fee
+`1000000` stroops to the treasury, then extend of the router's own instance and
+code TTL (`target` = router, `threshold` 200,000, `extend_to` 300,000).
+
+| Item | Value |
+|---|---|
+| Tx (ledger 5,340,387, 2026-10-23 03:18:42 UTC / 10:18 WIB) | [`e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e`](https://stellar.expert/explorer/testnet/tx/e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e) |
+| SAC `transfer` event | `GBFY22…QADAT` → `GD7LIS…RMMRZ`, `1000000` (native) |
+| Treasury native balance (Horizon) | 10000.0000000 → 10000.1000000 XLM |
+| Router instance `liveUntilLedgerSeq` (RPC) | 5,461,291 → 5,640,387 (= 5,340,387 + 300,000) |
+| Tx fee charged to source, incl. TTL rent (Horizon `fee_charged`) | 99,562,988 stroops (9.9562988 XLM); payer balance 9993.2759441 → 9983.2196453 XLM |
+
+```bash
+curl -s https://horizon-testnet.stellar.org/transactions/e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e | grep '"successful"'   # true
+curl -s https://horizon-testnet.stellar.org/accounts/GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ | grep '"balance"'                       # >= 10000.1 (later payments may add)
+stellar ledger entry fetch contract-data --contract CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --instance --network testnet  # liveUntilLedgerSeq >= 5640387
+```
+
 ## W4-D27-04 — npm CLI 0.1.1 published
 
 [`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1)
@@ -522,7 +573,7 @@ Store ordinary evidence in the repository; use the shared drive only for the lar
 | npm — `core` | — | ⛔ **Deliberately not published.** Bundled into the CLI binary; `check:publish` refuses a library entry point, so unbundled `tsc` output cannot become a public runtime surface. E404 is the intended state, confirmed 2026-09-25 |
 | npm — `shared-types` | — | ⛔ Same — bundled, never published |
 | GitHub Action | [`action.yml`](../action.yml) · [a green run and a red run](https://github.com/Fatihmaull/evergreen/actions/runs/36095411235) | ✅ composite action on `main`; red job at exit 1 |
-| Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path |
+| Dashboard hosting | [evergreen-stellar.pages.dev/dashboard/](https://evergreen-stellar.pages.dev/dashboard/) | ✅ Live read-only dashboard. No wallet, no signup, no write path *Keputusan lama, diganti oleh #364 (2026-10-22)* |
 | Demo video (3–5 min) | [**Watch it — 4 min 31 s**](https://youtu.be/MIv26uSiOAQ) | ✅ 2026-09-30; public on YouTube, opens with **no account** — verified with an unauthenticated request, not from a signed-in browser. A byte-identical copy is kept in-repo at [`demo-v1`](https://github.com/Fatihmaull/evergreen/releases/tag/demo-v1), SHA-256 `9f0f751f…2903a` |
 | Docs site / README | [Documentation](https://evergreen-stellar.pages.dev/docs/) · [README](../README.md) | ✅ Live docs site and repository README |
 
@@ -609,3 +660,14 @@ message was resent and the original confirmation record remains unchanged.
 - W3-D15-02b seed Testnet transaction: `e893648c48b276af3fcd15ac0705899113de3c7d6a8e01b3034547adb18c3067`. Intent and full RPC in [temporary policy evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
 
 - W3-D15-02b temporary extension: `c696f477bd50ecaa0574d557c2981aac6c28646cf1e71c7e07dcfae4decdb8fd`; full raw RPC in [evidence](evidence/2026-09-15-temporary-policy/). Receipt and explorer screenshot captured; see the evidence README.
+
+## 2026-10-22 — router-contract spike (PH2-E4-07)
+
+Verdict **instance + code only**: one invocation and one user signature took the fee and extended another contract's instance and code. Persistent data was not extended, and no host function can extend it. Instance + code came to 99.21% of the simulated rent on the spike subject. Full record, and the full raw `getTransaction` JSON for every hash below: [router spike evidence](evidence/2026-10-22-router-spike/README.md).
+
+- Subject Wasm upload: `055c68a8faa9ed2fb3e07b33a1dd7d533cfc82d137c26a87e6fae9a9c692e859`
+- Subject deploy: `0de1e3ca5c3feaa2ae1bdec9d54dbf0bb476810a37eac6af61df9a11690a4fce`
+- Router Wasm upload: `0ff73efba27f241635eb9e0e41f9b9b54f936388ff13e0eb46688e47bb694ec4`
+- Router deploy: `f4f2a6a59d33b6a5a88f32a1bb4067ac070e2437144d66ac439e9a9a20d19e3b`
+- Subject seed: `1cf2ce3780c734c93eab675b6fcc9b1d75415cec0f2025caa696f0f1661cc086`
+- Router `fee_and_extend` (fee + extend, one signature): `3c1122353a0d881667e7ae6c44c024590c8c094113aaf1ab8ad5132b461de24a`

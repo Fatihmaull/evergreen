@@ -37,6 +37,7 @@ export default tseslint.config(
       // here and Cloudflare Pages publishes it, so the files are committed —
       // but they are minified bundles, and linting one reports 132 problems
       // about code nobody wrote. Their sources under `apps/web/src/` are linted.
+      // Build output, gitignored since PH2-BL-08 (Pages builds it).
       'apps/dashboard/public/**',
     ],
   },
@@ -46,7 +47,13 @@ export default tseslint.config(
   {
     // Type-aware linting for our own TypeScript only. Config files and scripts
     // are deliberately excluded — they aren't part of any package's program.
-    files: ['packages/*/src/**/*.ts', 'packages/*/test/**/*.ts', 'apps/*/**/*.ts', '*.config.ts'],
+    files: [
+      'packages/*/src/**/*.ts',
+      'packages/*/test/**/*.ts',
+      'apps/*/**/*.ts',
+      'functions/**/*.ts',
+      '*.config.ts',
+    ],
     languageOptions: {
       parserOptions: {
         project: ['./tsconfig.eslint.json'],

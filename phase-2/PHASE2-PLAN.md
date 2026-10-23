@@ -23,9 +23,13 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 
 ## Definitions of Done
 
-**Official, Fatih, 2026-10-20.** Two gates. The thresholds are written as Fatih set them; where one cannot be measured with what the plan will build, the note under them says which and why.
+**Official, Fatih, 2026-10-20; refined the same day.** Two gates. The thresholds are written as Fatih set them. The first version's measurability note found five gaps, and Fatih closed them: P1 defined, the failure-mode list assigned, the refund wording, the testnet-reset rule, and the cold reader. The note below keeps what is still open.
 
 **P0** = loss of funds, failed protection, or a false health state shown to a user.
+
+**P1** = a failure that would become P0 if unnoticed: a missed alert, a delayed refund, the engine down past the warning window, or wrong copy about money.
+
+Both are GitHub labels, `P0` and `P1`, with these definitions in their descriptions. An issue counts as open P0 or P1 by its label.
 
 ### DoD-1 — Beta (testnet)
 
@@ -38,29 +42,32 @@ Met when:
 
 ### DoD-2 — Stable (testnet, post-beta)
 
-Measured over 30 consecutive days after DoD-1:
+Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 days restarts the window.**
 - zero missed protections (no watched entry archived while its allowance was valid and funded);
-- ≥99% of autopilot jobs succeed and 100% of failed pulls are refunded from the engine pool;
+- ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;
 - zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
 - the worst scheduler gap is measured, dated, and below the 17,280-ledger act threshold;
 - no open P0/P1, every incident has a postmortem;
-- every failure mode is shown to alert both user and operator, and a Neon backup restore has been exercised;
+- every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator, and a Neon backup restore has been exercised;
 - engine and treasury keys are separate and the float never exceeded its cap;
-- a cold reader can onboard from the docs alone (`B-D31-03`).
+- a cold reader can onboard from the docs alone (`B-D31-03`). The cold reader is an external beta user.
 
 **Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2.** `PH2-E5-02`'s core criterion is "DoD-2 met".
 
 ### Measurability: what these need that nothing yet provides
 
-Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from records the plan already calls for (the `PH2-E2-03` tables, transaction results, the engine account's history). These are not, as things stand:
+Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from records the plan already calls for (the `PH2-E2-03` tables, transaction results, the engine account's history).
 
-1. **"No open P1" is unmeasurable: P1 is not defined.** Only P0 is. The repo also has no priority labels (`gh label list`: `bug`, `documentation`, `enhancement` and the GitHub defaults), so "no open P0" has nowhere to be counted either. Both need a definition and a label before DoD-1 can be checked.
-2. **"Every failure mode is shown to alert both user and operator" needs a list of failure modes.** None exists. `PH2-E4-05` names operator conditions (failed pulls or extends, float low, allowance expiries), and §3.3 names user alerts (pre-flight abort, expired allowance, renewal reminders), but nothing enumerates the modes, so "every" cannot be checked.
-3. **"100% of failed pulls are refunded" does not match the flow it measures.** A pull that fails moves no XLM, so there is nothing to refund. §3.3 step 5 and §4.3 refund when *a pull succeeds and the extend fails*. As written the threshold is either vacuous or measures the wrong event.
-4. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
-5. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
-6. **The 30 days assume testnet is not reset during them.** A testnet reset wipes every watched entry. Whether one falls inside the window is **undetermined**, and the DoD does not say whether a reset restarts the 30 days.
-7. **"A cold reader" cannot be Fatih any more.** `B-D31-03`'s own row says the cold read now belongs to someone who has watched the project for a month. The reader has to be someone else, for example one of the external beta users.
+**Resolved by Fatih, 2026-10-20:**
+- **P1 is defined** (above), and the `P0` and `P1` labels exist with the definitions in their descriptions.
+- **The failure-mode list is a deliverable of `PH2-E4-05`.** "Every failure mode" means every mode on that list.
+- **The refund threshold now counts pulls whose extend finally failed.** That matches §3.3 step 5 and §4.3. A failed pull moves no XLM, so the first wording was vacuous.
+- **A testnet reset restarts the 30-day window.**
+- **The cold reader is an external beta user.** `B-D31-03`'s own row says Fatih no longer qualifies.
+
+**Still open:**
+1. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
+2. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
 
 Measurable with records still to be built:
 - *zero missed protections*: §3.3's pre-flight reads the allowance and the user's balance before every job. It is measurable only for entries the scan can see (instance, code, and declared data keys).
@@ -195,6 +202,8 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 4. **Reconcile.** Compare the rent actually charged with the rent pulled, and record the difference in the fee ledger.
 5. **On final failure, refund from the engine pool** (§4.3) with the same idempotency key.
 6. **Sweep.** Fees accumulate in the engine account and are swept to treasury on a schedule (Q17). The treasury key never touches a server.
+   - **Router fees skip this step** (ADR-009, Fatih 2026-10-22): the router pays its fee straight to the treasury address. Spike `PH2-E4-07`: instance 5,443,860 → 6,322,913, code 5,443,859 → 6,322,913, persistent unchanged at 5,443,867; instance + code = 99.21% of simulated rent; fee 0.1 XLM; user paid ~6.1 XLM rent (tx `3c112235…de24a`).
+   - **Wording rule:** for a user without an allowance, no UI or custody copy (`PH2-E4-06`) may call a contract "fully safe"; the router does not extend persistent data.
 
 **Sizing the user's cap:**
 - Shown to the user as: estimated rent for the watched contracts × chosen horizon × (1 + fee) × a safety margin.
@@ -297,7 +306,7 @@ PH2-E0-03 contents:
 | PH2-E1-04 | `extend` refuses on mainnet until beta exit, tested in both directions, plus `action.yml` mainnet support. *Shrunk 2026-10-15: the scan path moved to PH2-E1-03.* | CER | S | PH2-E1-03 |
 | PH2-E1-05 | Advice strings mention Protocol 23 auto-restore | CEF | S | — |
 | PH2-E1-06 | Publish CLI `0.2.0`, **without the Support tip**. PH2-E1-08 is not a dependency, so the #235 fix does not wait on it | R (F backup) | S | PH2-E1-01, PH2-E1-04 |
-| PH2-E1-07 | MCP server, in-repo, importing `core` | CEF | M | PH2-E1-01 |
+| PH2-E1-07 | MCP server, in-repo, importing `core`. **Shape decided 2026-10-20, built later (paused for PH2-E2-02):** a separate `@evergreen-stellar/mcp` package on the official MCP SDK, so the CLI keeps one runtime dependency; read-only tools only (scan, cost); the network chosen at server start; the RPC URL from the environment only, never a tool argument. Release owner: R | CEF | M | PH2-E1-01 |
 | PH2-E1-08 | CLI "Support Evergreen" tip (§3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI | CEF | S | PH2-E4-03 (treasury address) |
 
 ### E2 — Backend
@@ -332,9 +341,10 @@ PH2-E0-03 contents:
 | PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per contract and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
-| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries | CER | M | PH2-E4-04 |
+| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
+| PH2-E4-08 | Production router (ADR-009): audit, Rust CI (DevOps Assistant), final fee address = treasury | CEF | L | PH2-E4-03, PH2-E4-07 |
 
 ### E5 — Initial release and launch
 
@@ -356,7 +366,7 @@ PH2-E0-03 contents:
 | PH2-BL-05 | Landing and marketing copy for the paid hosted tier | WEBF | S |
 | PH2-BL-08 | Build the site on Cloudflare Pages from source instead of committing `apps/dashboard/public/`; retires `check:published`. After PH2-E2-02 | WEBF + CEF | M |
 | B-D31-02 | Parked checker work — mostly superseded by PH2-E0-04; retire what PH2-E0-04 retires | CEF | S |
-| B-D31-03 | Cold read of the docs by someone who has not seen them, before the beta | F | S |
+| B-D31-03 | Cold read of the docs by someone who has not seen them, before the beta. For DoD-2, the cold reader is an external beta user | F | S |
 
 ### The balance
 

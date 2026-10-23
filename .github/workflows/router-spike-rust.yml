@@ -1,0 +1,54 @@
+# PH2-E4-08 / ADR-009: CI for the router spike's own Cargo workspace.
+name: router-spike-rust
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/router-spike/**'
+      - '.github/workflows/router-spike-rust.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/router-spike/**'
+      - '.github/workflows/router-spike-rust.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: router-spike-rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experiments/router-spike
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install toolchain (pinned by rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: experiments/router-spike
+      - name: cargo fmt
+        run: cargo fmt --all --check
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: cargo test
+        run: cargo test
+      - name: Wasm release build
+        run: cargo build --release --target wasm32v1-none
+      - name: Wasm size limit (65536 bytes)
+        run: |
+          shopt -s nullglob
+          files=(target/wasm32v1-none/release/*.wasm)
+          if [ ${#files[@]} -eq 0 ]; then echo "::error::no .wasm built"; exit 1; fi
+          fail=0
+          for f in "${files[@]}"; do
+            size=$(stat -c %s "$f")
+            echo "$f: $size bytes"
+            if [ "$size" -gt 65536 ]; then echo "::error::$f is $size bytes (> 65536)"; fail=1; fi
+          done
+          exit $fail

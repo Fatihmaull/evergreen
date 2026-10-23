@@ -127,6 +127,7 @@ Reads from the same data the CLI/engine produce. `evergreen-check` GitHub Action
 - Capped policy signer (Stage 2) + `docs/POLICY-SIGNER.md`: **SOW-committed but off the critical path** — sequenced after the core proof so a spike failure costs hardening, not the deliverable. If the spike fails, policy scoping ships documented as partial with full scoping deferred to SOW 2. *(Deliverable 2)*
 - Alerting: email notification on bump success/failure, built behind a `NotificationChannel` interface so Telegram/Discord/webhook channels can be added later without touching the engine core. *(Deliverable 2)*
 - Dashboard: **public read-only** — scan any contract with no wallet, plus bump history for contracts this instance monitors. No signup, no accounts. *(Deliverable 3)*
+  *Keputusan lama, diganti oleh #364 (2026-10-22)*
 - `evergreen-check` GitHub Action published and usable in a real repo. *(Deliverable 3)*
 - Docs + 3–5 min demo video + published npm packages. *(Deliverable 3)*
 
@@ -173,7 +174,7 @@ The open question is only one of *positioning*, and it is answered empirically r
 | 1 | Sep 3 – Sep 9 | Monorepo setup (Vitest, ESLint), Soroban TTL/rent/RPC research, initial scan command + cost model | Working monorepo, first scan command on testnet, first tech spec draft |
 | 2 | Sep 10 – Sep 16 | Manual `extendTTL`, refine prediction model, storage optimizer, unit tests | Successful testnet TTL extension w/ tx hash proof, optimizer recommendations |
 | 3 | Sep 17 – Sep 23 | Auto-bump service (Day 1–2: `passkey-kit` headless-signer spike, see §6.2.1), threshold rules, alerts, end-to-end testnet validation | Fully functional auto-bump workflow, tx proofs, alert notifications |
-| 4 | Sep 24 – Oct 2 | Dashboard (public read-only; wallet-connect at P1), `evergreen-check` Action, docs, demo video, npm publish, evidence packaging | Live testnet dashboard, published Action + packages, docs, demo, evidence bundle submitted to Ambassador |
+| 4 | Sep 24 – Oct 2 | Dashboard (public read-only; wallet-connect at P1), `evergreen-check` Action, docs, demo video, npm publish, evidence packaging | Live testnet dashboard, published Action + packages, docs, demo, evidence bundle submitted to Ambassador *Keputusan lama, diganti oleh #364 (2026-10-22)* |
 
 **Deadline: 2026-10-02** (30 calendar days from the official 2026-09-03 start).
 
@@ -199,6 +200,7 @@ The Ambassador Chapter Lead (Indonesia chapter) is the evidence reviewer, not a 
 - ~~**(Team)** Who are the other Apex contributors, and how is the budget split?~~ → Fatih + Rakha; compensation settled between them; jobdesc proposed in §10.
 - ~~**(Engineering)** Is there stable testnet tooling for the policy signer, or do we build our own?~~ → Use `passkey-kit`/smart-account-kit (Option A, §6.2.1); validate with a Week 3 Day 1–2 spike before committing further.
 - ~~**(Product)** Public dashboard or wallet-scoped?~~ → **Revised 2026-09-04:** public read-only at P0 (scan any contract, no wallet — scanning is a permissionless read), wallet-connect + user-signed extend at P1 (§6.3, §7). The original wallet-scoped answer assumed contract "control" was derivable from chain data; it is not — it would only ever have been an app-level registry.
+  *Keputusan lama, diganti oleh #364 (2026-10-22)*
 - ~~**(Product)** Email vs. webhook alerting for v1?~~ → Email for v1, built behind a `NotificationChannel` interface so Telegram/webhook can be added in SOW 2 without rework (§7 P0/P1).
 - ~~**(Ambassador)** What's the official sprint start date?~~ → 2026-09-03, superseding the SOW's suggested 2026-08-17; the 30-day clock therefore runs Sep 3 (day 1) → **2026-10-02** (day 30). *Confirmed with the Ambassador Chapter Lead on 2026-09-07 (`W1-D1-03`), so both sides' records match.*
 
