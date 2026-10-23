@@ -5,6 +5,37 @@ The grant is judged on this file. Record evidence **the day it is produced**, no
 **Deadline:** 2026-10-02 · **Reviewer:** the Ambassador Chapter Lead (Indonesia chapter)
 **Requirement source:** SOW §6.1 — evidence must be clear, verifiable, and reviewable *with minimal technical expertise*.
 
+## PH2-E4-08 — Fee router deployed to Testnet (2026-10-23)
+
+The [ADR-009](adr/ADR-009-router-scope-and-fee-destination.md) router
+(`router/`, merged #378 at `b73d358`) was built from `main@658fe14` and
+deployed to **Testnet only** on 2026-10-23 03:14 UTC / 10:14 WIB.
+
+| Item | Value |
+|---|---|
+| Contract ID | [`CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3`](https://stellar.expert/explorer/testnet/contract/CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3) |
+| Wasm hash (sha256 of 7,763-byte `evergreen_router.wasm`) | `e1aa4bd67559ed4324daa9a628662eeefeab8d6490e4d36e3d7ced8e5eb3b3d1` |
+| Upload tx (ledger 5,340,331) | [`cc0502076fd976a19a556f1fca78dcefc50efc6bacf1a0efc285e792d466892e`](https://stellar.expert/explorer/testnet/tx/cc0502076fd976a19a556f1fca78dcefc50efc6bacf1a0efc285e792d466892e) |
+| Deploy tx (ledger 5,340,332) | [`0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132`](https://stellar.expert/explorer/testnet/tx/0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132) |
+| Deployer (friendbot-funded, Testnet only) | `GBFY225VJ3OXYG74OSQGV5GLW23F3WR5ENPYJ6764P2NPSGZACFQADAT` |
+| `fee_token` (constructor) | native XLM SAC `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
+| `treasury` (constructor, #381) | `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ` |
+
+The fee (0.1 XLM = `1000000` stroops, Testnet-only until PH2-E5-03) is **not**
+a constructor value: it is the `fee` argument of each `fee_and_extend` call,
+supplied by the caller. No `fee_and_extend` call has been sent yet. Mainnet
+router: undetermined (mainnet treasury undetermined).
+
+Verification (read-only, no transaction sent):
+
+```bash
+stellar contract invoke --id CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --network testnet --source <any-testnet-identity> --send=no -- treasury   # "GD7LIS…RMMRZ"
+stellar contract invoke --id CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --network testnet --source <any-testnet-identity> --send=no -- fee_token  # "CDLZFC…HGCYSC"
+stellar contract id asset --asset native --network testnet                                                                                                   # same SAC
+curl -s https://horizon-testnet.stellar.org/transactions/0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132 | grep '"successful"'               # true
+cargo build --manifest-path router/Cargo.toml --release --target wasm32v1-none && sha256sum router/target/wasm32v1-none/release/evergreen_router.wasm          # e1aa4b…b3d1
+```
+
 ## W4-D27-04 — npm CLI 0.1.1 published
 
 [`@evergreen-stellar/cli@0.1.1`](https://www.npmjs.com/package/@evergreen-stellar/cli/v/0.1.1)
