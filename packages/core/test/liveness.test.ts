@@ -7,6 +7,7 @@ import type {
 } from '@evergreen-stellar/shared-types';
 import { assertLiveness } from '../src/liveness.js';
 import { needsAction } from '../src/ttl.js';
+import { DEFAULT_CRITICAL_LEDGERS } from '../src/health.js';
 
 const KEY = 'AAAAB0NvZGVLZXk=';
 const SHARED = 'AAAAB1NoYXJlZEs=';
@@ -286,7 +287,7 @@ describe("assertLiveness — guinea-pig B's Sunday, simulated", () => {
   // every time, which is its ORDINARY behaviour, so every run does nothing.
   const RUNS = 96;
   const LEDGERS_PER_RUN = 180; // 15 min at 5 s/ledger
-  const THRESHOLD = 17_280; // 24 h
+  const THRESHOLD = DEFAULT_CRITICAL_LEDGERS; // 24 h
 
   function runsAcrossTheWindow(): { isAlarm: boolean; reason?: string }[] {
     const out: { isAlarm: boolean; reason?: string }[] = [];

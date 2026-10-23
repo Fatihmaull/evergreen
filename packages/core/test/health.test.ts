@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
-import { assessEntry, worstHealth } from '../src/health.js';
+import { DEFAULT_CRITICAL_LEDGERS, assessEntry, worstHealth } from '../src/health.js';
 
-const THRESHOLD = 17_280;
+const THRESHOLD = DEFAULT_CRITICAL_LEDGERS;
 
 function entry(
   over: {
