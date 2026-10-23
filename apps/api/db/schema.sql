@@ -1,4 +1,8 @@
--- PH2-E2-03 Neon schema, DRAFT for #350 (PH2-E2-02) review. Not for merge. Postgres (Neon).
+-- PH2-E2-03 Neon schema. Apply candidate for Neon preview (see NOTES.md). Postgres (Neon).
+-- Initial schema (0001). Later changes are numbered files here (0002_*.sql, then 0003_*.sql).
+-- Apply: psql --single-transaction -f apps/api/db/schema.sql
+-- Preview may connect as the database owner. A least-privilege app role and
+-- append-only ledger grants land before production only.
 -- Sources: PHASE2-PLAN §3.3, ADR-007, ADR-008, docs/API.md on #350 at 682ab6b, #382 fee-refund evidence.
 -- Conventions: stroops as numeric(39,0) (never float; API serialises as decimal strings);
 -- ledgers as bigint; times timestamptz (UTC); network constrained to the known names.
@@ -198,7 +202,8 @@ CREATE TABLE fee_ledger (
 CREATE UNIQUE INDEX fee_ledger_one_pull ON fee_ledger (job_id) WHERE kind = 'pull';
 CREATE UNIQUE INDEX fee_ledger_one_refund ON fee_ledger (job_id) WHERE kind = 'refund';
 CREATE INDEX fee_ledger_wallet_idx ON fee_ledger (wallet, recorded_at DESC);
--- Append-only: no UPDATE/DELETE grant for the API role (role names: undetermined).
+-- Append-only: the production API role gets no UPDATE or DELETE on this table.
+-- That role and its grants land before production. Preview connects as the database owner.
 
 -- Reconcile view: per job, pull - (rent + network-fee + evergreen-fee + refund + difference) must be 0.
 CREATE VIEW fee_ledger_job_balance AS

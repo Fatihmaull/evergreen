@@ -1,6 +1,22 @@
-# PH2-E2-03 schema draft: notes for #350 review
+# PH2-E2-03 schema: apply candidate for Neon preview
 
-Draft only, input to PH2-E2-02 (#350). Not for merge. `schema.sql` is plain Postgres for Neon; not run anywhere yet.
+`apps/api/db/schema.sql` is the apply candidate for the Neon `preview` database (Rakha, [#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6357468666)). It is plain Postgres. Smoke-tested on a throwaway Postgres 17 container; not applied to Neon yet. Apply after this PR merges.
+
+Preview may connect as the database owner. A least-privilege application role, and grants that make `fee_ledger` append-only (no `UPDATE` or `DELETE` for that role), land before production only. They do not block the preview apply.
+
+## Migrations
+
+No migration tool. Each file is applied with `psql --single-transaction`.
+
+Numbered SQL files live under `apps/api/db/`:
+
+- `schema.sql` is the initial schema, the `0001_initial` apply. The name stays `schema.sql` for this first apply.
+- The next change is a new file, `0002_<short_name>.sql`, then `0003_*.sql`, in numeric order.
+- Do not edit a file after it has been applied. Add the next number instead.
+
+```
+psql "$DATABASE_URL" --single-transaction -f apps/api/db/schema.sql
+```
 
 ## Mapping to #350 (docs/API.md)
 | API | Table |
@@ -29,7 +45,6 @@ Draft only, input to PH2-E2-02 (#350). Not for merge. `schema.sql` is plain Post
 ## Undetermined
 - Refund semantics depend on the PH2-E4-02 spike (protocol refund of unused refundable fee): whether `reconcile` stores declared vs charged resource fee as separate columns. Placeholder: jsonb.
 - Router-contract extends (PH2-E4-07) and their ledger rows.
-- DB roles/grants (append-only ledger enforced by grants), and migration tool (none chosen in repo; `scripts/persistence-store.mjs` is the only existing CREATE TABLE, from the persistence spike).
 - Personal-data deletion: `users.deleted_at` soft delete vs hard delete + ledger anonymisation (ledger rows must survive for reconciliation).
 - Whether email change is supported (affects `users.email` uniqueness history).
 
@@ -88,4 +103,4 @@ Undetermined:
 ### Still open from #350 §10 item 8
 - `fee_ledger.job_id` is NOT NULL, so router extends need a job (point 9; `PH2-E4-07`).
 - The scheduler window behind autopilot dedupe (point 7; `PH2-E4-04`).
-- DB roles and grants for the append-only ledger, and the migration tool.
+- Least-privilege app role and append-only `fee_ledger` grants: before production, not before the preview apply. Preview connects as the database owner. The role name and the exact grants are not in this file.
