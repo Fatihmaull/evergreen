@@ -97,7 +97,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 |---|---|---|
 | `POST /wallets/challenge` `{ account }` | session | Builds a challenge with `WebAuth.buildChallengeTx`, signed by the **challenge-signing key**. Returns `{ challengeXdr, networkPassphrase, expiresAt }` |
 | `POST /wallets` `{ challengeXdr }` (signed by the wallet) | session + CSRF | Verifies it with `WebAuth.readChallengeTx` and `verifyChallengeTxSigners`, then links `account` to the user. Returns `201 { wallet }`, or `200` if already linked to this user. If another user has the wallet, `409 WALLET_LINKED_ELSEWHERE` |
-| `DELETE /wallets/{account}` | session + CSRF | Unlinks the wallet. **Refused with `409 WALLET_PAYS_FOR_WATCHED_CONTRACT` while any watch item uses it as `payerWallet`** (Fatih, 2026-10-20). An allowance on chain does not go away when the link does, so the dashboard shows the revoke (`approve(0)`, signed by the user's wallet) next to unlink |
+| `DELETE /wallets/{account}` | session + CSRF | Unlinks the wallet; success is `204 No Content` with an empty body. **Refused with `409 WALLET_PAYS_FOR_WATCHED_CONTRACT` while any watch item uses it as `payerWallet`** (Fatih, 2026-10-20). An allowance on chain does not go away when the link does, so the dashboard shows the revoke (`approve(0)`, signed by the user's wallet) next to unlink |
 
 `Wallet = { account: string /* G… */, network: 'testnet', linkedAt: string }`
 
