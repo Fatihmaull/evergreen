@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Typecheck only. Emitting next to the sources would put .js files in
+    // functions/, and Pages turns every file there into a route.
+    "composite": false,
+    "incremental": false,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    // Runs in workerd, not Node: same lib choice as apps/api.
+    "lib": ["ES2023", "WebWorker"],
+    "types": []
+  },
+  "include": ["**/*.ts"]
+}

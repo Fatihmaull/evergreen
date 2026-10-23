@@ -97,3 +97,4 @@ A leak of it lets someone forge challenges, but grants no access to funds. Wheth
 ## Update log
 
 - 2026-10-15: created by `PH2-E0-05`, recording Q20 and plan §3.1. Resolved the plan's SEP-10 "to verify" against the pinned SDK, and named the challenge-signing key the plan did not mention.
+- 2026-10-22 (`PH2-E2-02`, Fatih): **account deletion is a soft delete, and the same email reactivates the old account.** One email can never have two accounts. **Reactivation by email keeps the old autopilot and allowance use off** until the user re-signs with their wallet (the SEP-10-style challenge) and turns autopilot on again, because an email session never authorises XLM movement. Public copy and the custody statement (`PH2-E4-06`) say accounts are "deactivated and can be reactivated by email", never "deleted". Details in [`docs/API.md`](../API.md) §10.

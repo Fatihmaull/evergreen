@@ -47,7 +47,13 @@ export default tseslint.config(
   {
     // Type-aware linting for our own TypeScript only. Config files and scripts
     // are deliberately excluded — they aren't part of any package's program.
-    files: ['packages/*/src/**/*.ts', 'packages/*/test/**/*.ts', 'apps/*/**/*.ts', '*.config.ts'],
+    files: [
+      'packages/*/src/**/*.ts',
+      'packages/*/test/**/*.ts',
+      'apps/*/**/*.ts',
+      'functions/**/*.ts',
+      '*.config.ts',
+    ],
     languageOptions: {
       parserOptions: {
         project: ['./tsconfig.eslint.json'],

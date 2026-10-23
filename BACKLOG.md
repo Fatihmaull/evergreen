@@ -596,7 +596,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E1 — Foundation
 
 - [x] **PH2-E1-01** (F · CEF) **M** ✅ **DONE 2026-10-19.** #326 merged as `8294387`, after WEBF's companion #333, and #235 is closed. Before merging, the web suite ran against the real shape (880 tests). Fix: Option (a): a third TTL status, `expired`, with no fabricated numbers. `endedAtLedger` appears only for a real non-zero final ledger. `issues[]` gains `entry-expired`, and `known` is now always live. The breaking change is documented in the CLI README for 0.2.0. **Mutation-proven:** reverting the `observeTTL` branches fails 7 tests, and dropping the expired issues fails 2. **Verified on testnet:** a branch-built scan of archived guinea-pig C reports `{"status":"expired"}` with an `entry-expired` issue, and exit 1 as before. **Original text:** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven.
-- [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`.
+- [x] **PH2-E1-02** (R · CER) **M** ✅ **DONE 2026-10-20.** #319 merged as `ab40386`. Tests and mutation proof for `cli/extend.ts`: `packages/cli/test/extend-guards.test.ts` pins the guards on extend's signing path. The mutation table is in that PR body.
 - [x] **PH2-E1-03** (F · CEF) **L** ✅ **DONE 2026-10-21.**
   - **Core and CLI** merged 2026-10-19 (#338, `c6ec00c`); mainnet scanning ships in the CLI.
   - **The dashboard switch** merged 2026-10-20 (#345, `429f6ca`, WEBF): the site reads core's network table, and `build.mjs` refuses a non-testnet build.
@@ -619,17 +619,17 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### E2 — Backend
 
-- [ ] **PH2-E2-01** (R · CER) **M** Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity.
+- [x] **PH2-E2-01** (R · CER) **M** ✅ **DONE 2026-10-20.** #313 merged as `d075829`. Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity. Evidence: [`docs/evidence/2026-10-15-workers-spike`](docs/evidence/2026-10-15-workers-spike/README.md) — Workers Paid go, scan matched CLI, Neon OK over HTTP.
 - [ ] **PH2-E2-02** (F · CEF + WEBF) **M** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
 - [ ] **PH2-E2-03** (R · CER) **M** Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger. *Depends on `PH2-E2-02`.*
-- [ ] **PH2-E2-04** (F · CEF) **L** Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. *Depends on `PH2-E2-03`.*
+- [~] **PH2-E2-04** (F · CEF) **L** 🔧 Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. **Started 2026-10-21 in `apps/api`** (option B, ADR-003's 2026-10-21 amendment). **First slice:** the storage-agnostic auth core (sign-in codes, sessions, CSRF, rate limits, wallet challenges). **Still to come:** the routes, the Worker entry and the stores, which wait for `PH2-E2-03`'s tables and for Fatih's decision on the Pages project's account. *Depends on `PH2-E2-03`.*
 - [ ] **PH2-E2-05** (R · CER) **M** Watchlist API (Q14). *Depends on `PH2-E2-04`.*
 - [ ] **PH2-E2-06** (R · CER) **M** Per-user alerts via Resend. *Depends on `PH2-E2-05`.*
 
 ### E3 — Dashboard usable by anyone
 
 - [ ] **PH2-E3-01** (F · WEBF) **M** Login UI: email + wallet linking. *Depends on `PH2-E2-04`.*
-- [~] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.* `/dashboard/watchlist/` built against spec #350 §6: undetermined until the API answers, no example data on screen; done when verified against the deployed API.
+- [~] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.* `/dashboard/watchlist/` built against spec #350 §6: undetermined until the API answers, no example data on screen; done when verified against the deployed API. nav done, belum dites ke API asli
 - [~] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.* Client side built against spec #350 §6: the action reads `undetermined` until the API answers; done when it is verified against the deployed API.
 - [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. One-click "Extend now" has a **daily limit** and sends the user an **email notice** (accepted 2026-10-15). *Depends on `PH2-E4-02`, `PH2-E4-07`.*
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
@@ -646,7 +646,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-E4-05** (R · CER) **M** Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** that DoD-2 checks, where every mode must alert both user and operator (Fatih, 2026-10-20). *Depends on `PH2-E4-04`.*
 - [ ] **PH2-E4-06** (F · CEF, F approves) **S** Public custody statement: exact exposure (#297 §6). Drafted by CEF, approved by Fatih. *Depends on `PH2-E4-02`.*
 - [x] **PH2-E4-07** (F · CEF) **M** Spike: router contract for one-signature fee + extend (plan §3.3). Verdict all entries / instance+code only / not viable, with testnet tx hashes; if not viable, `PH2-E3-04` requires an allowance. **Done 2026-10-22: instance + code only** (99.21% of simulated rent on the spike subject), see [`docs/evidence/2026-10-22-router-spike`](docs/evidence/2026-10-22-router-spike/README.md).
-- [ ] **PH2-E4-08** (F · CEF) **L** Production router ([ADR-009](docs/adr/ADR-009-router-scope-and-fee-destination.md), Fatih 2026-10-22): extends instance + code only, fee straight to the treasury address. Includes an audit, Rust CI (build, test, `cargo clippy`, WASM size; job owned by the DevOps Assistant), and the final fee address. *Depends on `PH2-E4-03` (treasury address), `PH2-E4-07`.*
+- [~] **PH2-E4-08** (F · CEF) **L** 🟡 **Contract, audit tests and CI in `router/` (2026-10-22); the final fee address waits on `PH2-E4-03`, and it is set at deploy, not in code.** Production router ([ADR-009](docs/adr/ADR-009-router-scope-and-fee-destination.md), Fatih 2026-10-22): extends instance + code only, fee straight to the treasury address. Includes an audit, Rust CI (build, test, `cargo clippy`, WASM size; job owned by the DevOps Assistant), and the final fee address. *Depends on `PH2-E4-03` (treasury address), `PH2-E4-07`.*
 
 ### E5 — Initial release and launch
 
@@ -661,7 +661,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 - [ ] **PH2-BL-02** (R · CER) **M** Telegram and webhook channels (stubs exist in `channel-stubs.ts`).
 - [ ] **PH2-BL-03** (R · WEBR) **S** Dashboard bundle size: `core` embedded in three bundles of 732–768 KB each. Proposed fix (one shared SDK chunk): [Issue #321](https://github.com/Fatihmaull/evergreen/issues/321). **Not now:** deferred until after beta, at Fatih's request.
 - [ ] **PH2-BL-05** (F · WEBF) **S** Landing and marketing copy for the paid hosted tier.
-- [ ] **PH2-BL-08** (F · WEBF + CEF) **M** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
+- [x] **PH2-BL-08** (F · WEBF + CEF) **M** ✅ **DONE 2026-10-22 via #371 (`76592f7`).** Pages builds the site from source; `apps/dashboard/public/` is no longer committed and `check:published` is retired (no references remain in `scripts/`, `package.json`, `docs/` or `AGENTS.md`). **Original text:** Build the site on Cloudflare Pages from source, instead of committing `apps/dashboard/public/`. This removes the drift class `check:published` guards (#324), and stops every PR that adds evidence or changes CLI help from also needing a committed site rebuild (Rakha's #320 is the current example; #331 and #326 both had to rebuild). When it lands, `check:published` retires with it. Registered 2026-10-18 (Fatih's K3). **Not now:** after `PH2-E2-02`, since the backend's location and build pipeline are decided there.
 
 The plan's other three backlog cards are existing rows: `B-D31-01` (scheduler gap floor, now `(R · CER)`), `B-D31-02` (parked checker work, `(F · CEF)`, mostly superseded by `PH2-E0-04`) and `B-D31-03` (cold read of the docs, `(F)`).
 
