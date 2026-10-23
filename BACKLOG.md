@@ -629,7 +629,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E3 — Dashboard usable by anyone
 
 - [ ] **PH2-E3-01** (F · WEBF) **M** Login UI: email + wallet linking. *Depends on `PH2-E2-04`.*
-- [~] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.* `/dashboard/watchlist/` built against spec #350 §6: undetermined until the API answers, no example data on screen; done when verified against the deployed API.
+- [x] **PH2-E3-02** (F · WEBF) **M** Watchlist UI: binding expiry first, honest three-state health. *Depends on `PH2-E2-05`.* `/dashboard/watchlist/` built against spec #350 §6: undetermined until the API answers, no example data on screen; done when verified against the deployed API. Marked done per PM (#361 `193eeec`, nav link #393 `7310c75`); not yet verified end-to-end against the real watchlist API — waiting on #391 and the auth routes being mounted.
 - [~] **PH2-E3-03** (F · WEBF) **S** Scan any contract, with "add to watchlist". *Depends on `PH2-E2-05`.* Client side built against spec #350 §6: the action reads `undetermined` until the API answers; done when it is verified against the deployed API.
 - [ ] **PH2-E3-04** (R · WEBR) **M** Manual extend with fee (plan §3.3): one click for allowance users, `PH2-E4-07`'s route for others. One-click "Extend now" has a **daily limit** and sends the user an **email notice** (accepted 2026-10-15). *Depends on `PH2-E4-02`, `PH2-E4-07`.*
 - [ ] **PH2-E3-05** (R · WEBR) **M** Allowance flow: cap sizing, approve, renewal reminders, revoke. *Depends on `PH2-E4-01`.*
