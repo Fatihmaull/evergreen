@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { BumpRecord, NotificationChannel } from '@evergreen-stellar/shared-types';
-import {
-  ChannelNotImplementedError,
-  TelegramChannel,
-  WebhookChannel,
-} from '../src/channel-stubs.js';
+import { ChannelNotImplementedError, TelegramChannel } from '../src/channel-stubs.js';
 
 const record: BumpRecord = Object.freeze({
   entryKey: 'fixture-entry',
@@ -18,20 +14,17 @@ const record: BumpRecord = Object.freeze({
   outcome: 'simulated',
 });
 
-describe.each([
-  { name: 'webhook', Channel: WebhookChannel },
-  { name: 'telegram', Channel: TelegramChannel },
-])('$name unavailable channel', ({ name, Channel }) => {
+describe('telegram unavailable channel', () => {
   it('satisfies the interface and rejects explicitly instead of reporting success', async () => {
-    const channel: NotificationChannel = new Channel();
-    expect(channel.name).toBe(name);
+    const channel: NotificationChannel = new TelegramChannel();
+    expect(channel.name).toBe('telegram');
     const before = JSON.stringify(record);
     const result = channel.notify(record);
     expect(result).toBeInstanceOf(Promise);
     await expect(result).rejects.toBeInstanceOf(ChannelNotImplementedError);
     await expect(result).rejects.toMatchObject({
       code: 'CHANNEL_NOT_IMPLEMENTED',
-      channel: name,
+      channel: 'telegram',
       message: expect.stringContaining('SOW 2'),
     });
     expect(JSON.stringify(record)).toBe(before);
@@ -46,11 +39,11 @@ describe.each([
           throw new Error('Record must not be read');
         },
       });
-      await expect(new Channel().notify(inaccessible)).rejects.toMatchObject({
+      await expect(new TelegramChannel().notify(inaccessible)).rejects.toMatchObject({
         code: 'CHANNEL_NOT_IMPLEMENTED',
-        channel: name,
+        channel: 'telegram',
       });
-      const error = await new Channel().notify(record).catch((e: unknown) => e);
+      const error = await new TelegramChannel().notify(record).catch((e: unknown) => e);
       expect(String(error)).not.toContain('private-record-content');
       expect(fetch).not.toHaveBeenCalled();
       expect(log).not.toHaveBeenCalled();
