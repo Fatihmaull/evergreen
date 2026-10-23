@@ -296,3 +296,25 @@ This publication implements the accepted timing from PR #48/#49; it introduces n
   - **Production:** decided by Fatih on #299 (2026-10-15). The production Cloudflare and Neon accounts are **project-owned, with Fatih as owner and Rakha as member**, and are created before `PH2-E2-03`. That leaves the shared Pages account out of the engine's budget.
 
   **Scheduler.** ADR-001 (scheduled serverless, not always-on) is unchanged. Workers cron is a scheduled serverless job. The sprint measured GitHub Actions delivering about 7.5% of a declared 15-minute cron (entry of 2026-09-14), which is fine for a self-hoster with a day of threshold. **It is not a basis for a paid service.** The hosted scheduler is `PH2-E4-04`, per `PH2-E2-01`'s verdict.
+- **2026-10-21 — amended (`PH2-E2-02`): where the backend API lives.** Fatih chose **option B** on 2026-10-20, from [`docs/API.md`](../API.md) §1.
+
+  **Decision.**
+  - **The API is its own Worker**, in `apps/api` (Worker name `evergreen-api`).
+  - **The dashboard reaches it same-origin** through a thin `/api/*` Pages Function in the dashboard's Pages project, which forwards over a service binding.
+  - **Secrets live only in the API Worker:** the SEP-10 challenge-signing key, the Resend key, `DATABASE_URL` and `SIGNIN_CODE_PEPPER` (the HMAC key sign-in codes are stored under, `PH2-E2-04`; added 2026-10-22, Rakha's review point 12 on #350). The Pages project holds the proxy and nothing secret.
+  - **The two deploy separately.**
+  - **The hosted engine** is a separate Worker again (`PH2-E4-04`).
+
+  **Why the API cannot have its own hostname.** `pages.dev` and `workers.dev` are both on the Public Suffix List (publicsuffix.org, Cloudflare's section, read 2026-10-20). So `evergreen-stellar.pages.dev` and any `*.workers.dev` Worker are different *sites*. ADR-008's `SameSite=Lax` session cookie would not be sent on the dashboard's requests to it. A custom domain for both (option C) would also work; it needs a domain bought, and B moves to it unchanged later.
+
+  **Plan, verified and not.**
+  - **Verified:** Workers Paid is billed per account. Cloudflare's pricing page states a *"minimum charge of $5 USD per month for an account"* (developers.cloudflare.com/workers/platform/pricing, read 2026-10-20). That supersedes the 2026-10-15 entry's "starting on the Free plan" for this account: `PH2-E2-01` measured the engine at 10–29 ms median CPU against the free limit of 10 ms.
+  - **Undetermined:** whether the included allotments are pooled across the account's Workers. The page does not say. To confirm on the account's billing page after Fatih's upgrade.
+
+  **Resolved: one Cloudflare account** (Fatih, decided 2026-10-18 on [#310](https://github.com/Fatihmaull/evergreen/issues/310); recorded here 2026-10-22). Pages and the API Worker live in the **same** account, the one that already hosts the `evergreen-stellar` Pages project, upgraded to Workers Paid. Cloudflare's service-binding docs say *"This Worker must be on your Cloudflare account"*, and with both in one account that condition holds, so the service binding is usable and nothing moves accounts. The `evergreen-stellar.pages.dev` URL is unchanged.
+  - **Departure, named:** this supersedes the 2026-10-15 entry's "production Cloudflare account is project-owned" for Cloudflare. The shared account's existing Worker (`focuswebstudio`, 2026-09-08 note) therefore runs under the same subscription as ours.
+  - **Undetermined:** whether Workers Paid's included usage is pooled account-wide. To verify on the account's billing page once Fatih reports the upgrade done, not by assumption. Neon is not affected by this entry.
+
+- **2026-10-22 — amended (`PH2-E2-02`): one shared Cloudflare account, superseding 2026-10-15.** Fatih decided on 2026-10-22 that production Cloudflare runs in the **one shared account** that already hosts the `evergreen-stellar` Pages project, upgraded to Workers Paid (his 2026-10-18 comment on [#310](https://github.com/Fatihmaull/evergreen/issues/310)). This **supersedes** the 2026-10-15 entry's project-owned Cloudflare account, decided on [#299](https://github.com/Fatihmaull/evergreen/issues/299); that entry is left as written. Neon stays a project of its own (#310).
+  - **The `focuswebstudio` Worker** (2026-09-08 note) is **no longer used, per Fatih**, and **stays as it is**: it is not deleted (Fatih, 2026-10-22), and is reviewed again at `PH2-E5-02`. Whether it draws on the included usage is **undetermined**: nothing in the GitHub record shows it, and no one with the dashboard has checked. Check the billing page after the upgrade.
+  - **Review again at `PH2-E5-02`**, before mainnet, when real money makes account isolation matter more.
