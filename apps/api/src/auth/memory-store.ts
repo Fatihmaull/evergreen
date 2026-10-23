@@ -63,6 +63,26 @@ export class MemoryAuthStore implements AuthStore {
     this.sessions.delete(tokenHash);
     return Promise.resolve();
   }
+  rotateSession(retired: SessionRow, next: SessionRow): Promise<void> {
+    this.sessions.set(retired.tokenHash, retired);
+    this.sessions.set(next.tokenHash, next);
+    return Promise.resolve();
+  }
+  hasSuccessor(tokenHash: string): Promise<boolean> {
+    for (const row of this.sessions.values()) {
+      if (row.rotatedFrom === tokenHash) return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
+  }
+  deleteSessionChain(tokenHash: string): Promise<void> {
+    const row = this.sessions.get(tokenHash);
+    for (const [hash, other] of this.sessions) {
+      if (other.rotatedFrom === tokenHash) this.sessions.delete(hash);
+    }
+    if (row?.rotatedFrom !== undefined) this.sessions.delete(row.rotatedFrom);
+    this.sessions.delete(tokenHash);
+    return Promise.resolve();
+  }
   listWallets(userId: string): Promise<readonly WalletLink[]> {
     return Promise.resolve(
       [...this.wallets.values()].filter((w) => w.userId === userId).map((w) => w.link),

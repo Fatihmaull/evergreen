@@ -1,18 +1,32 @@
-// The API Worker (docs/API.md §1). No secrets here: the challenge-signing key,
-// the Resend key, DATABASE_URL and SIGNIN_CODE_PEPPER are Worker secrets, set
-// with `wrangler secret put` per environment. No account_id: wrangler reads it
-// from CLOUDFLARE_ACCOUNT_ID or the logged-in account.
+// The API Worker (docs/API.md §1). No secrets here. Worker secrets, set with
+// `wrangler secret put <NAME> [--env preview]` per environment:
+//   DATABASE_URL           Neon Postgres connection string
+//   SIGNIN_CODE_PEPPER     HMAC key sign-in codes are stored under
+//   EMAIL_API_KEY          Resend API key (same name as the engine's)
+//   CHALLENGE_SIGNING_KEY  S… seed of the unfunded SEP-10 challenge-signing key
+// Plain vars auth also needs (not secret):
+//   DASHBOARD_ORIGIN  set below per environment (one exact origin, no wildcard)
+//   EMAIL_FROM        undetermined until the Resend sender domain is verified
+// Until all of these are set, the auth routes answer 503 UPSTREAM_UNAVAILABLE.
+// No account_id: wrangler reads it from CLOUDFLARE_ACCOUNT_ID or the
+// logged-in account.
 {
   "name": "evergreen-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-22",
   "workers_dev": false,
-  "vars": { "ENVIRONMENT": "production" },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
+  },
   "env": {
     "preview": {
       "name": "evergreen-api-preview",
       "workers_dev": false,
-      "vars": { "ENVIRONMENT": "preview" },
+      "vars": {
+        "ENVIRONMENT": "preview",
+        "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
+      },
     },
   },
 }

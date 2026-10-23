@@ -20,6 +20,8 @@ import {
   createSession,
   hashSessionToken,
   readSessionToken,
+  rotateSession,
+  rotationDue,
   sessionCookie,
   sessionState,
   touchSession,
@@ -100,6 +102,12 @@ interface Authed {
   readonly user: User;
 }
 
+/**
+ * The rotated cookie a request earned, if any. `handleAuth` adds it to
+ * whatever the handler answers, success or refusal, so no path drops it.
+ */
+const rotatedCookies = new WeakMap<Request, string>();
+
 /** Session, then CSRF for unsafe methods. Returns a refusal Response or the session. */
 async function requireSession(request: Request, deps: AuthDeps): Promise<Authed | Response> {
   const token = readSessionToken(request.headers.get('cookie'));
@@ -108,7 +116,7 @@ async function requireSession(request: Request, deps: AuthDeps): Promise<Authed 
   const tokenHash = await hashSessionToken(token);
   const row = await deps.store.getSession(tokenHash);
   const now = deps.now();
-  const state = sessionState(row, now, deps.config);
+  const state = sessionState(row, now);
   if (row === undefined || state !== 'valid') {
     if (row !== undefined) await deps.store.deleteSession(tokenHash);
     return unauth();
@@ -123,7 +131,17 @@ async function requireSession(request: Request, deps: AuthDeps): Promise<Authed 
   if (!allowed) return authError(403, 'CSRF_FAILED', 'Request refused.');
   const user = await deps.store.getUser(row.userId);
   if (user === undefined) return unauth();
-  const touched = touchSession(row, now);
+  // Rotation (option 2): an old enough token is replaced, once. A token that
+  // was already rotated is inside its grace window: served, never rotated or
+  // extended again.
+  if (rotationDue(row, now)) {
+    if (await deps.store.hasSuccessor(tokenHash)) return { row, user };
+    const rotated = await rotateSession(row, now, deps.config);
+    await deps.store.rotateSession(rotated.retired, rotated.row);
+    rotatedCookies.set(request, sessionCookie(rotated.token, rotated.row, now));
+    return { row: rotated.row, user };
+  }
+  const touched = touchSession(row, now, deps.config);
   await deps.store.putSession(touched);
   return { row: touched, user };
 }
@@ -187,21 +205,27 @@ async function emailVerify(request: Request, deps: AuthDeps): Promise<Response> 
   if (record !== undefined) await deps.store.putSigninCode(record);
   if (result !== 'ok') return invalid();
   const user = await deps.store.upsertUserByEmail(email, now);
-  const session = await createSession(user.id, now);
+  // Always rotate on login: a session cookie the browser already had (anyone's)
+  // is revoked, never upgraded, so a planted cookie cannot be fixated.
+  const previous = readSessionToken(request.headers.get('cookie'));
+  if (previous !== undefined) {
+    await deps.store.deleteSessionChain(await hashSessionToken(previous));
+  }
+  const session = await createSession(user.id, now, deps.config);
   await deps.store.putSession(session.row);
   return jsonResponse(
     200,
     { user: userJson(user) },
-    {
-      'set-cookie': sessionCookie(session.token, deps.config),
-    },
+    { 'set-cookie': sessionCookie(session.token, session.row, now) },
   );
 }
 
 async function logout(request: Request, deps: AuthDeps): Promise<Response> {
   const authed = await requireSession(request, deps);
   if (authed instanceof Response) return authed;
-  await deps.store.deleteSession(authed.row.tokenHash);
+  rotatedCookies.delete(request); // a logout never hands back a fresh cookie
+  // Revoke: the row and every token in its rotation chain, grace token included.
+  await deps.store.deleteSessionChain(authed.row.tokenHash);
   return jsonResponse(204, null, { 'set-cookie': clearedSessionCookie() });
 }
 
@@ -299,9 +323,19 @@ export async function handleAuth(
   path: string,
   deps: AuthDeps,
 ): Promise<Response | undefined> {
+  const res = await route(request, path, deps);
+  const cookie = rotatedCookies.get(request);
+  if (res !== undefined && cookie !== undefined) res.headers.append('set-cookie', cookie);
+  return res;
+}
+
+async function route(
+  request: Request,
+  path: string,
+  deps: AuthDeps,
+): Promise<Response | undefined> {
   const method = request.method.toUpperCase();
-  const route = `${method} ${path}`;
-  switch (route) {
+  switch (`${method} ${path}`) {
     case 'POST /auth/email/start':
       return emailStart(request, deps);
     case 'POST /auth/email/verify':

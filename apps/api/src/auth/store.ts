@@ -1,8 +1,9 @@
 /**
  * Storage behind an interface (`PH2-E2-04`). The real implementation is
- * Postgres on Neon and waits for Rakha's schema (`PH2-E2-03`); until then the
- * routes run against `MemoryAuthStore`. Where his schema disagrees with these
- * shapes, the schema wins and this interface changes.
+ * Postgres on Neon over Rakha's schema (`PH2-E2-03`, #391,
+ * apps/api/db/schema.sql); `SessionRow` mirrors its `sessions` table. Until
+ * that lands the routes run against `MemoryAuthStore` in tests, and the Worker
+ * answers 503 without a store. Where the schema disagrees, the schema wins.
  */
 import type { CounterStore } from './rate-limit.js';
 import type { SessionRow } from './sessions.js';
@@ -39,6 +40,12 @@ export interface AuthStore {
   getSession(tokenHash: string): Promise<SessionRow | undefined>;
   putSession(row: SessionRow): Promise<void>;
   deleteSession(tokenHash: string): Promise<void>;
+  /** Atomic: write `retired` (the old row, cut to the grace window) and insert `next`. */
+  rotateSession(retired: SessionRow, next: SessionRow): Promise<void>;
+  /** True if some row has `rotated_from` = `tokenHash` (it was already rotated). */
+  hasSuccessor(tokenHash: string): Promise<boolean>;
+  /** Logout: deletes the row, its successor and the row it rotated from, so no grace token survives. */
+  deleteSessionChain(tokenHash: string): Promise<void>;
 
   listWallets(userId: string): Promise<readonly WalletLink[]>;
   /** Atomic: a wallet belongs to at most one user. */
