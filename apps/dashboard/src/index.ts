@@ -45,6 +45,11 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'live',
   },
   {
+    route: '/login/',
+    does: 'Sign in by email, and link a Freighter wallet by signing a sign-in challenge.',
+    reads: 'live',
+  },
+  {
     route: '/dashboard/blast-radius/',
     does: 'Scan several contracts together to resolve what one scan cannot.',
     reads: 'live',

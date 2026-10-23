@@ -721,6 +721,13 @@ const PAGES = [
     doc: '/docs/archival/',
   },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
+  {
+    module: 'src/pages/login.mjs',
+    entry: 'src/pages/login.ts',
+    js: 'assets/login.js',
+    to: 'login/index.html',
+    login: true,
+  },
 ];
 
 for (const page of DOC_PAGES) {
