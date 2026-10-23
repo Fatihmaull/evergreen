@@ -23,17 +23,36 @@ export function json(body: unknown, status = 200, headers: Record<string, string
   });
 }
 
+/** Codes whose same request can succeed on retry (docs/API.md §9). */
+const RETRYABLE: ReadonlySet<string> = new Set(['RATE_LIMITED', 'UPSTREAM_UNAVAILABLE']);
+
+/**
+ * The one way this Worker answers an error: the docs/API.md §9 envelope
+ * `{ error: { code, message, retryable, details } }`. `retryable` is derived
+ * from the code, never passed, so it cannot drift from the spec.
+ */
+export function apiError(
+  code: string,
+  message: string,
+  status: number,
+  options: { details?: Record<string, unknown>; headers?: Record<string, string> } = {},
+): Response {
+  return json(
+    { error: { code, message, retryable: RETRYABLE.has(code), details: options.details ?? {} } },
+    status,
+    options.headers,
+  );
+}
+
 export function notFound(): Response {
-  return json({ error: { code: 'NOT_FOUND', message: 'No such route.' } }, 404);
+  return apiError('NOT_FOUND', 'No such route.', 404);
 }
 
 export function handle(request: Request, env: Env = {}): Response {
   const { pathname } = new URL(request.url);
   if (pathname === `${API_BASE}/health`) {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Use GET.' } }, 405, {
-        allow: 'GET, HEAD',
-      });
+      return apiError('METHOD_NOT_ALLOWED', 'Use GET.', 405, { headers: { allow: 'GET, HEAD' } });
     }
     return json({
       ok: true,
