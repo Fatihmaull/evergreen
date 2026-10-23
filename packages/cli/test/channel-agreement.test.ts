@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
 import { coverageIssues } from '@evergreen-stellar/core';
-import { formatHuman, healthReport } from '../src/scan.js';
+import { DEFAULT_THRESHOLD_LEDGERS, formatHuman, healthReport } from '../src/scan.js';
 
 /**
  * The human channel and the machine channel must never disagree about what is
@@ -18,7 +18,7 @@ import { formatHuman, healthReport } from '../src/scan.js';
  */
 
 const NOW = new Date('2026-09-10T00:00:00Z');
-const THRESHOLD = 17_280;
+const THRESHOLD = DEFAULT_THRESHOLD_LEDGERS;
 
 function entry(over: Partial<LedgerEntryTTL> & { remaining?: number } = {}): LedgerEntryTTL {
   const { remaining = 500_000, ...rest } = over;
