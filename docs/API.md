@@ -236,7 +236,7 @@ type Job = {
 - **`Idempotency-Key` is required.** A UUID v4 from the client, one per user intent. A missing key is refused with `400 IDEMPOTENCY_KEY_REQUIRED`.
 - **Same key, same body:** returns the same job (`200`), never a second one.
 - **Same key, different body:** `409 IDEMPOTENCY_KEY_REUSED`.
-- **Keys are kept as long as the job row exists,** scoped per user, stored on the job with a hash of the request body (Fatih, 2026-10-22; **pending Rakha's confirmation**). Pruning would only follow a job-retention decision.
+- **Keys are kept as long as the job row exists,** scoped per user, stored on the job with a hash of the request body (Fatih, 2026-10-22; confirmed by Rakha on #350, 2026-10-22). Pruning would only follow a job-retention decision.
 - **Autopilot jobs carry no client key** (Rakha's point 7). They are deduplicated on a **scheduler key**: one autopilot job per (watch item, scheduler window), enforced by a unique constraint in the schema. The window's definition belongs to the hosted scheduler, `PH2-E4-04`, and is undetermined until it lands.
 - **The job ID is the engine's pull idempotency key.** One job is at most one `transfer_from` (ADR-007 step 2), and a refund reuses the same key (step 5). That part is the engine's guarantee (`PH2-E4-02`); the API's part is that one intent makes one job.
 
@@ -298,7 +298,9 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
+
+`METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
 **`UPSTREAM_UNAVAILABLE` means the RPC or the database did not answer.** It is never reported as "unhealthy" or "not found": absence is not health.
 
@@ -473,7 +475,7 @@ that was recorded says when.** This maps it onto the API.
 - **`DELETE /watchlist` is a soft delete** with `removed_at`; the jobs FK stays `ON DELETE RESTRICT` (§6).
 - **The "Extend now" window is a rolling 24 hours**, 3 per contract. It is not an account-level brake (§7).
 - **Only a job that pulled funds counts as a use.** `preflight-failed`, `cancelled` and refused-before-queuing never consume quota (§7).
-- **Idempotency keys live as long as the job row**, pending Rakha's confirmation (§7).
+- **Idempotency keys live as long as the job row** (§7; confirmed by Rakha on #350).
 - **Personal-data deletion is a soft delete** (Fatih, 2026-10-22; Rakha's point 11). Deleting an account deactivates it: the user row, its email and linked wallets stay in the database, marked deactivated, and sessions are revoked. **Consequence:** because the email and personal data stay stored, the custody statement (`PH2-E4-06`) and all public copy must say accounts are **"deactivated and can be reactivated by email", never "deleted"**.
 - **A deactivated user who signs in again with the same email gets the old account reactivated** (Fatih, 2026-10-22). **Reactivation by email does not re-enable autopilot or allowance use.** Every watch item's autopilot comes back off, and the engine draws on no allowance, until the user re-signs with their wallet (the §4 challenge) and turns autopilot on again. An email session never authorises XLM movement (ADR-008). **One email can never have two accounts:** reactivation is the only path, never a fresh account (ADR-008, 2026-10-22).
 - **`focuswebstudio`** (the shared account's other Worker) stays as it is, not deleted (Fatih, 2026-10-22), and is reviewed again at `PH2-E5-02`. Whether it draws on Workers Paid's included usage is undetermined until the billing check.
