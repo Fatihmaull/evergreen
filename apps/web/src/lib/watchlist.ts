@@ -136,3 +136,31 @@ export function addOutcomeHtml(outcome: AddOutcome, contractId: string): string 
   const c = addOutcomeCopy(outcome, contractId);
   return `<p class="small"><span class="chip ${c.tone}"><span class="shape"></span>${esc(c.word)}</span> ${c.html}</p>`;
 }
+
+export type RemoveOutcome =
+  { readonly kind: 'removed' } | Exclude<ApiOutcome<unknown>, { kind: 'ok' }>;
+
+/**
+ * `DELETE /watchlist/{network}/{contractId}`, §6: `204`, a soft delete. Only a
+ * 204 reads as removed; anything else is passed on for the screen to say, and
+ * an unexpected success status is `UNRECOGNISED`, not removed.
+ */
+export async function removeFromWatchlist(
+  network: 'testnet',
+  contractId: string,
+  fetchImpl?: FetchLike,
+): Promise<RemoveOutcome> {
+  const me = await apiRequest<Me>('/me', { method: 'GET' }, fetchImpl);
+  if (me.kind !== 'ok') return me;
+  if (typeof me.data?.csrfToken !== 'string' || me.data.csrfToken === '') {
+    return { kind: 'error', status: me.status, code: 'UNRECOGNISED' };
+  }
+  const res = await apiRequest<unknown>(
+    `/watchlist/${encodeURIComponent(network)}/${encodeURIComponent(contractId)}`,
+    { method: 'DELETE', headers: { 'X-Evergreen-CSRF': me.data.csrfToken } },
+    fetchImpl,
+  );
+  if (res.kind !== 'ok') return res;
+  if (res.status === 204) return { kind: 'removed' };
+  return { kind: 'error', status: res.status, code: 'UNRECOGNISED' };
+}
