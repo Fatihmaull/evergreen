@@ -596,7 +596,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 ### E1 — Foundation
 
 - [x] **PH2-E1-01** (F · CEF) **M** ✅ **DONE 2026-10-19.** #326 merged as `8294387`, after WEBF's companion #333, and #235 is closed. Before merging, the web suite ran against the real shape (880 tests). Fix: Option (a): a third TTL status, `expired`, with no fabricated numbers. `endedAtLedger` appears only for a real non-zero final ledger. `issues[]` gains `entry-expired`, and `known` is now always live. The breaking change is documented in the CLI README for 0.2.0. **Mutation-proven:** reverting the `observeTTL` branches fails 7 tests, and dropping the expired issues fails 2. **Verified on testnet:** a branch-built scan of archived guinea-pig C reports `{"status":"expired"}` with an `entry-expired` issue, and exit 1 as before. **Original text:** Fix #235 (Q16): archived entries get a truthful TTL status, `issues[]` names archival, the `--json` change is documented as breaking for CLI `0.2.0`, mutation-proven.
-- [ ] **PH2-E1-02** (R · CER) **M** Tests and mutation proof for `cli/extend.ts`.
+- [x] **PH2-E1-02** (R · CER) **M** ✅ **DONE 2026-10-20.** #319 merged as `ab40386`. Tests and mutation proof for `cli/extend.ts`: `packages/cli/test/extend-guards.test.ts` pins the guards on extend's signing path. The mutation table is in that PR body.
 - [x] **PH2-E1-03** (F · CEF) **L** ✅ **DONE 2026-10-21.**
   - **Core and CLI** merged 2026-10-19 (#338, `c6ec00c`); mainnet scanning ships in the CLI.
   - **The dashboard switch** merged 2026-10-20 (#345, `429f6ca`, WEBF): the site reads core's network table, and `build.mjs` refuses a non-testnet build.
@@ -619,7 +619,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
 
 ### E2 — Backend
 
-- [ ] **PH2-E2-01** (R · CER) **M** Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity.
+- [x] **PH2-E2-01** (R · CER) **M** ✅ **DONE 2026-10-20.** #313 merged as `d075829`. Workers spike, go/no-go (plan §3.2): CPU and subrequests per scan and per extend inside `workerd`, output matched against the CLI's for the same contract at the same ledger, Neon connectivity. Evidence: [`docs/evidence/2026-10-15-workers-spike`](docs/evidence/2026-10-15-workers-spike/README.md) — Workers Paid go, scan matched CLI, Neon OK over HTTP.
 - [ ] **PH2-E2-02** (F · CEF + WEBF) **M** API spec, the CE↔WEB contract, written before either side builds. Also decides the backend's location. *Depends on `PH2-E2-01`.*
 - [ ] **PH2-E2-03** (R · CER) **M** Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger. *Depends on `PH2-E2-02`.*
 - [~] **PH2-E2-04** (F · CEF) **L** 🔧 Auth (plan §3.1): passwordless email, SEP-10-style wallet linking, server-side sessions. Email never authorises anything that moves XLM. **Started 2026-10-21 in `apps/api`** (option B, ADR-003's 2026-10-21 amendment). **First slice:** the storage-agnostic auth core (sign-in codes, sessions, CSRF, rate limits, wallet challenges). **Still to come:** the routes, the Worker entry and the stores, which wait for `PH2-E2-03`'s tables and for Fatih's decision on the Pages project's account. *Depends on `PH2-E2-03`.*
