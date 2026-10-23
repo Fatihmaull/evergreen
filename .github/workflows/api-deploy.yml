@@ -6,13 +6,13 @@ name: API deploy
 on:
   pull_request:
     paths:
-      - "apps/api/**"
-      - ".github/workflows/api-deploy.yml"
+      - 'apps/api/**'
+      - '.github/workflows/api-deploy.yml'
   push:
     branches: [main]
     paths:
-      - "apps/api/**"
-      - ".github/workflows/api-deploy.yml"
+      - 'apps/api/**'
+      - '.github/workflows/api-deploy.yml'
   # Manual run: deploys preview from any ref, production only from main.
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 env:
-  WRANGLER_VERSION: "4"
+  WRANGLER_VERSION: '4'
 
 jobs:
   preview:
