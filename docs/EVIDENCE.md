@@ -23,7 +23,7 @@ deployed to **Testnet only** on 2026-10-23 03:14 UTC / 10:14 WIB.
 
 The fee (0.1 XLM = `1000000` stroops, Testnet-only until PH2-E5-03) is **not**
 a constructor value: it is the `fee` argument of each `fee_and_extend` call,
-supplied by the caller. No `fee_and_extend` call has been sent yet. Mainnet
+supplied by the caller. The first live `fee_and_extend` call is recorded below. Mainnet
 router: undetermined (mainnet treasury undetermined).
 
 Verification (read-only, no transaction sent):
@@ -34,6 +34,26 @@ stellar contract invoke --id CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRU
 stellar contract id asset --asset native --network testnet                                                                                                   # same SAC
 curl -s https://horizon-testnet.stellar.org/transactions/0f86a4a5e0235ca5fdb7f1d73b83870502a4b65c63e30fe9d9f71955bb706132 | grep '"successful"'               # true
 cargo build --manifest-path router/Cargo.toml --release --target wasm32v1-none && sha256sum router/target/wasm32v1-none/release/evergreen_router.wasm          # e1aa4b…b3d1
+```
+
+### First live `fee_and_extend` on Testnet (2026-10-23)
+
+One transaction, one signature (payer = deployer `GBFY22…QADAT`): fee
+`1000000` stroops to the treasury, then extend of the router's own instance and
+code TTL (`target` = router, `threshold` 200,000, `extend_to` 300,000).
+
+| Item | Value |
+|---|---|
+| Tx (ledger 5,340,387, 2026-10-23 03:18:42 UTC / 10:18 WIB) | [`e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e`](https://stellar.expert/explorer/testnet/tx/e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e) |
+| SAC `transfer` event | `GBFY22…QADAT` → `GD7LIS…RMMRZ`, `1000000` (native) |
+| Treasury native balance (Horizon) | 10000.0000000 → 10000.1000000 XLM |
+| Router instance `liveUntilLedgerSeq` (RPC) | 5,461,291 → 5,640,387 (= 5,340,387 + 300,000) |
+| Tx fee charged to source, incl. TTL rent (Horizon `fee_charged`) | 99,562,988 stroops (9.9562988 XLM); payer balance 9993.2759441 → 9983.2196453 XLM |
+
+```bash
+curl -s https://horizon-testnet.stellar.org/transactions/e461c877071c0f969048d6268942886b9a6258abe54f5ed80e981c2841627c7e | grep '"successful"'   # true
+curl -s https://horizon-testnet.stellar.org/accounts/GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ | grep '"balance"'                       # >= 10000.1 (later payments may add)
+stellar ledger entry fetch contract-data --contract CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3 --instance --network testnet  # liveUntilLedgerSeq >= 5640387
 ```
 
 ## W4-D27-04 — npm CLI 0.1.1 published
