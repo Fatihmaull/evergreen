@@ -77,7 +77,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes** |
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_IP`, `EMAIL_SENDS_PER_IP_WINDOW` | **20 per IP per hour** |
 | `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES`, `SIGNIN_CODE_DIGITS` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts**. **8 digits** by default; Fatih set the limits, not the length, and the arithmetic for 8 is in `apps/api/src/auth/config.ts` |
-| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per rolling 24 hours** (plan §3.3's daily limit). Only a job that pulled funds counts (§7) |
+| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` | **3 per (user, contract) per rolling 24 hours** (plan §3.3's daily limit; per-user since 2026-10-23, §10). Only a job that pulled funds counts (§7) |
 | `POST /scans` | `SCANS_PER_IP`, `SCANS_PER_USER` | per IP for anonymous callers, per user when signed in. **No value set yet**, so it is set before launch |
 
 ## 4 · Auth (ADR-008; built by `PH2-E2-04`)
@@ -145,7 +145,7 @@ type WatchItem = {
    * "Extend now" use for this contract today, so the client can say "N of N"
    * without a second call (§9b: one watch item renders from the list).
    */
-  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string }; // rolling 24h: resetsAt is when the oldest counted use leaves the window
+  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string }; // rolling 24h, counted for the caller on this contract: resetsAt is when the caller's oldest counted use leaves the window
   /** The engine's most recent scan of this item, or null before the first one. */
   lastObservation: {
     observedAtLedger: number;
@@ -205,7 +205,7 @@ type AllowanceState = {
 - The XLM it moves is authorised by the user's **on-chain allowance**: their own wallet signature, capped and expiring (ADR-007).
 - The session only asks the engine to use an authority the user already granted, within the item's `budget`.
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
-- **The limit is per contract, and that bound reads smaller than it is.** `EXTEND_NOW_PER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
+- **The limit is per (user, contract)** (decided 2026-10-23, §10). It was per contract across all users, which let one watcher use up the quota for everyone else watching the same contract. `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (that user's autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
 - **What counts as a use** (Fatih, 2026-10-22). The window is a **rolling 24 hours**, not a UTC day. **Only a job that actually pulled funds counts.** A job that ends `preflight-failed`, is `cancelled`, or is refused before queuing never consumes quota: a refusal before money moves is not a use.
 - Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
 
@@ -246,7 +246,7 @@ type Job = {
 |---|---|
 | `422 AUTOPILOT_OFF` | the item has no autopilot |
 | `422 ALLOWANCE_MISSING` / `ALLOWANCE_EXPIRED` | the payer wallet has no live allowance |
-| `429 DAILY_LIMIT_REACHED` | this contract's "Extend now" uses today have reached `EXTEND_NOW_PER_CONTRACT_PER_DAY`. `details: { limit, used, resetsAt }` |
+| `429 DAILY_LIMIT_REACHED` | the caller's "Extend now" uses of this contract in the rolling 24 hours have reached `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`; other users watching the same contract are unaffected. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
 
 Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1). It does not count against the daily limit.
@@ -467,7 +467,7 @@ that was recorded says when.** This maps it onto the API.
 1. **Location:** option B (§1).
 2. **A wallet that pays for a watched contract cannot be unlinked.** The revoke button is shown next to unlink (§4).
 3. **Session lifetimes, sign-in codes and rate limits:** the starting values in §3, as configuration.
-4. **"Extend now"** is limited per contract, at 3 a day. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
+4. **"Extend now"** is limited per contract, at 3 a day. **Amended 2026-10-23 (PM decision, on Rakha's proposal in #350): per (user, contract), still 3 per rolling 24 hours, still only jobs that pulled funds; the counting index change is Rakha's `0002_*` migration.** The original text follows. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
 5. **The cap-sizing estimate** waits for the fee percentage (`PH2-E5-03`).
 
 **Decided by Fatih, 2026-10-22** (after Rakha's review of #350):
