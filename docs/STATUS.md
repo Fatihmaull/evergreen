@@ -59,6 +59,10 @@ operation. Notion sync pending.
 
 ---
 
+## Current — PH2-E1-04 mainnet refused in extend, scan allowed, 2026-10-23
+
+#343 (Rakha) merged as `c3f1108`. `evergreen extend` refuses any network but testnet before anything is prepared, with the reason, for both dry run and live submit. The GitHub Action gained `network` (testnet|mainnet, default testnet) and `rpc-url` inputs, so it can scan mainnet read-only. Testnet extend and mainnet scan are tested. `PH2-E1-04` was ticked in `BACKLOG.md` by #398. No testnet operation. Notion sync pending for PH2-E1-04.
+
 ## Current — PH2-E4-07 router spike: instance + code only, 2026-10-22
 
 One `fee_and_extend` invocation with one user signature took the fee and extended another contract's instance and code (tx `3c112235…de24a`). Persistent data is out of reach, because soroban-sdk 27.0.6 only extends another address's instance and code. On the spike subject, instance + code is 99.21% of the simulated rent. The share on real watched contracts is undetermined. For PH2-E3-04, the router covers instance + code for users without an allowance, and what happens to persistent entries is a decision for Fatih. Evidence: [`docs/evidence/2026-10-22-router-spike`](evidence/2026-10-22-router-spike/README.md). Notion sync pending for PH2-E4-07.
