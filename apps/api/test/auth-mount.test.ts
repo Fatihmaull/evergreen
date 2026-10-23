@@ -258,34 +258,73 @@ describe('Worker mount: 503 without a database', () => {
     },
   );
 
-  it.each(AUTH_SECRET_NAMES)('answers 503 when %s is missing or empty', async (name) => {
-    env[name] = '';
-    expect((await call('GET', '/me')).status).toBe(503);
-    delete env[name];
-    expect((await call('GET', '/me')).status).toBe(503);
+  it.each(AUTH_SECRET_NAMES)('%s is listed as a Worker secret', (name) => {
+    expect([
+      'DATABASE_URL',
+      'SIGNIN_CODE_PEPPER',
+      'EMAIL_API_KEY',
+      'CHALLENGE_SIGNING_KEY',
+    ]).toContain(name);
   });
 
-  it.each(['EMAIL_FROM', 'DASHBOARD_ORIGIN'])(
-    'answers 503 when var %s is missing',
-    async (name) => {
-      delete env[name];
-      expect((await call('GET', '/me')).status).toBe(503);
-    },
-  );
-
   it('answers 503, not a crash, on a malformed seed, origin or setting', async () => {
-    for (const patch of [
-      { CHALLENGE_SIGNING_KEY: 'not-a-seed' },
-      { DASHBOARD_ORIGIN: 'not a url' },
-      { SESSION_IDLE_TIMEOUT: '0' },
+    const s = await signIn();
+    const challenge = () =>
+      req('POST', '/wallets/challenge', {
+        cookie: s.cookie,
+        csrf: s.csrf,
+        body: { account: Keypair.random().publicKey() },
+      });
+    expect(
+      (await handle(challenge(), { ...env, CHALLENGE_SIGNING_KEY: 'not-a-seed' }, options)).status,
+    ).toBe(503);
+    expect(
+      (
+        await handle(
+          req('GET', '/me', { cookie: s.cookie }),
+          { ...env, DASHBOARD_ORIGIN: 'not a url' },
+          options,
+        )
+      ).status,
+    ).toBe(503);
+    expect(
+      (
+        await handle(
+          req('GET', '/me', { cookie: s.cookie }),
+          { ...env, SESSION_IDLE_TIMEOUT: '0' },
+          options,
+        )
+      ).status,
+    ).toBe(503);
+  });
+
+  it('a store that throws (database down, migration missing) answers 503, not a crash', async () => {
+    const failing = new Proxy(store, {
+      get(target, prop, receiver) {
+        if (prop === 'getSession' || prop === 'counters') {
+          throw new Error('connection refused: postgres://user:pw@db.invalid');
+        }
+        return Reflect.get(target, prop, receiver) as unknown;
+      },
+    });
+    const o = { ...options, createStore: () => failing };
+    for (const r of [
+      req('GET', '/me', { cookie: `__Host-evergreen_session=${'a'.repeat(43)}` }),
+      req('POST', '/auth/email/start', { body: { email: 'a@b.test' } }),
     ]) {
-      const res = await handle(req('GET', '/me'), { ...env, ...patch }, options);
+      const res = await handle(r, env, o);
       expect(res.status).toBe(503);
+      expect(await res.text()).not.toContain('db.invalid');
     }
   });
 
-  it('answers 503 while no store is wired, even with every secret set', async () => {
-    const res = await handle(req('GET', '/me'), env, {});
+  it('with DATABASE_URL and no injected store, the default Neon store is used and offline answers 503', async () => {
+    // The global fetch throws (beforeEach), so the Neon driver cannot connect.
+    const res = await handle(
+      req('GET', '/me', { cookie: `__Host-evergreen_session=${'a'.repeat(43)}` }),
+      env,
+      {},
+    );
     expect(res.status).toBe(503);
   });
 
@@ -391,6 +430,107 @@ describe('guard removal through the router: every write path', () => {
       body: { email: 'a@example.test', code: '00000000' },
     });
     expect(res.status).toBe(401);
+    expect(store.sessions.size).toBe(0);
+  });
+});
+
+describe('Worker mount: each route requires only its own settings', () => {
+  const EMAIL = [
+    ['POST', '/auth/email/start'],
+    ['POST', '/auth/email/verify'],
+  ] as const;
+  const CHALLENGE = [
+    ['POST', '/wallets/challenge'],
+    ['POST', '/wallets'],
+  ] as const;
+  const SESSION_ONLY = [
+    ['POST', '/auth/logout'],
+    ['GET', '/me'],
+    ['DELETE', '/wallets/{account}'],
+  ] as const;
+
+  it.each(['EMAIL_API_KEY', 'EMAIL_FROM', 'SIGNIN_CODE_PEPPER'])(
+    'without %s: email start and verify answer 503',
+    async (name) => {
+      delete env[name];
+      for (const [m, p] of EMAIL) {
+        expect(
+          (await call(m, p, { body: { email: 'a@example.test', code: '12345678' } })).status,
+        ).toBe(503);
+      }
+      expect(sent).toHaveLength(0);
+    },
+  );
+
+  it.each(['EMAIL_API_KEY', 'EMAIL_FROM', 'SIGNIN_CODE_PEPPER'])(
+    'without %s: session and wallet routes still work',
+    async (name) => {
+      const s = await signIn();
+      delete env[name];
+      expect((await call('GET', '/me', { cookie: s.cookie })).status).toBe(200);
+      const ch = await call('POST', '/wallets/challenge', {
+        cookie: s.cookie,
+        csrf: s.csrf,
+        body: { account: Keypair.random().publicKey() },
+      });
+      expect(ch.status).toBe(200);
+      expect((await call('POST', '/auth/logout', { cookie: s.cookie, csrf: s.csrf })).status).toBe(
+        204,
+      );
+    },
+  );
+
+  it('without CHALLENGE_SIGNING_KEY: challenge and link answer 503, email sign-in and /me still work', async () => {
+    delete env.CHALLENGE_SIGNING_KEY;
+    const s = await signIn();
+    for (const [m, p] of CHALLENGE) {
+      expect((await call(m, p, { cookie: s.cookie, csrf: s.csrf, body: {} })).status).toBe(503);
+    }
+    expect((await call('GET', '/me', { cookie: s.cookie })).status).toBe(200);
+    const unlink = await call('DELETE', concrete('/wallets/{account}'), {
+      cookie: s.cookie,
+      csrf: s.csrf,
+    });
+    expect(unlink.status).toBe(404); // reached the route: no such wallet, not 503
+  });
+
+  it.each([...EMAIL, ...CHALLENGE, ...SESSION_ONLY])(
+    '%s %s answers 503 without DATABASE_URL',
+    async (m, p) => {
+      delete env.DATABASE_URL;
+      expect((await call(m, concrete(p), m === 'GET' ? {} : { body: {} })).status).toBe(503);
+    },
+  );
+
+  it('without DASHBOARD_ORIGIN: session and wallet routes answer 503, email start does not need it', async () => {
+    delete env.DASHBOARD_ORIGIN;
+    for (const [m, p] of [...CHALLENGE, ...SESSION_ONLY]) {
+      expect((await call(m, concrete(p), m === 'GET' ? {} : { body: {} })).status).toBe(503);
+    }
+    expect(
+      (await call('POST', '/auth/email/start', { body: { email: 'a@example.test' } })).status,
+    ).toBe(202);
+  });
+
+  it('🔴 guard removal: a route never reads a setting it did not declare (an empty pepper is not a key)', async () => {
+    const { authDepsFor } = await import('../src/index.js');
+    const deps = authDepsFor({ ...env, SIGNIN_CODE_PEPPER: undefined }, options, [
+      'database',
+      'session',
+    ])!;
+    expect(() => deps.pepper).toThrow(/not configured/);
+    expect(() => deps.mailer.sendSigninCode('a@b.test', '1')).toThrow(/not configured/);
+    expect(() => deps.challengeKeypair.publicKey()).toThrow(/not configured/);
+  });
+
+  it('no route mints a session without the email code: wallet routes need an existing session', async () => {
+    for (const [m, p] of CHALLENGE) {
+      const res = await call(m, p, {
+        body: { account: Keypair.random().publicKey(), challengeXdr: 'AAAA' },
+      });
+      expect(res.status).toBe(401);
+      expect(res.headers.get('set-cookie')).toBeNull();
+    }
     expect(store.sessions.size).toBe(0);
   });
 });

@@ -47,6 +47,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@neondatabase/serverless':
+        specifier: 1.2.0
+        version: 1.2.0
       '@stellar/stellar-sdk':
         specifier: 17.0.1
         version: 17.0.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
@@ -562,6 +565,10 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+
+  '@neondatabase/serverless@1.2.0':
+    resolution: {integrity: sha512-tnaqgixUengZQNd9ZrS3ytQfamJzLKY8QxgqWQTNHHtB+KrFQWk77JTbbpg4RD+J3qE4eO2lVytvGDX5Kj6FdQ==}
+    engines: {node: '>=19.0.0'}
 
   '@noble/ed25519@3.2.0':
     resolution: {integrity: sha512-criDgRlnUA09hchYrTy/JUWPIEap5rZxQe6wDWzRx51oWWpDRcUpuNzlgPxDJaOK6AsW9c0wKcj3rKRv6t+bPQ==}
@@ -2048,6 +2055,8 @@ snapshots:
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
+
+  '@neondatabase/serverless@1.2.0': {}
 
   '@noble/ed25519@3.2.0': {}
 

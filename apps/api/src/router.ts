@@ -2,7 +2,13 @@
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
  * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4) and a JSON 404.
  */
-import { authDepsFromEnv, isAuthPath, type AuthEnv, type MountOptions } from './auth/mount.js';
+import {
+  authDepsFor,
+  authRouteNeeds,
+  isAuthPath,
+  type AuthEnv,
+  type MountOptions,
+} from './auth/mount.js';
 import { handleAuth } from './auth/routes.js';
 
 export const API_BASE = '/api/v1';
@@ -59,11 +65,17 @@ export async function handle(
   if (pathname.startsWith(`${API_BASE}/`)) {
     const path = pathname.slice(API_BASE.length);
     if (isAuthPath(path)) {
-      const deps = authDepsFromEnv(env, options);
-      if (deps === undefined) {
-        return apiError('UPSTREAM_UNAVAILABLE', 'Sign-in is not available right now.', 503);
+      const unavailable = () =>
+        apiError('UPSTREAM_UNAVAILABLE', 'Sign-in is not available right now.', 503);
+      const deps = authDepsFor(env, options, authRouteNeeds(request.method, path));
+      if (deps === undefined) return unavailable();
+      try {
+        return (await handleAuth(request, path, deps)) ?? notFound();
+      } catch {
+        // The database (or mail provider) did not answer, or a migration is
+        // missing: absence is not health, and the error names nothing (§9).
+        return unavailable();
       }
-      return (await handleAuth(request, path, deps)) ?? notFound();
     }
   }
   if (pathname === `${API_BASE}/health`) {

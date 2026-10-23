@@ -53,8 +53,19 @@ export type { AuthStore, LinkResult, Mailer, User, WalletLink } from './auth/sto
 export {
   AUTH_SECRET_NAMES,
   CHALLENGE_TIMEOUT_SECONDS,
+  AuthUnavailableError,
   ResendMailer,
+  authDepsFor,
   authDepsFromEnv,
+  authRouteNeeds,
   isAuthPath,
 } from './auth/mount.js';
-export type { AuthEnv, MountOptions, StoreFactory } from './auth/mount.js';
+export type { AuthEnv, AuthFeature, MountOptions, StoreFactory } from './auth/mount.js';
+export {
+  PgAuthStore,
+  PgChallengeStore,
+  PgCounterStore,
+  neonSqlClient,
+  upsertSessionQuery,
+} from './auth/pg-store.js';
+export type { SqlClient, SqlQuery, SqlRow } from './auth/pg-store.js';

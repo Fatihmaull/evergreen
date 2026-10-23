@@ -1,12 +1,13 @@
 /**
  * Mounting auth in the Worker (`PH2-E2-04`): turns the Worker's environment
- * into `AuthDeps`, or into a reason it cannot serve auth yet. A missing
- * secret, database or store answers `503 UPSTREAM_UNAVAILABLE` per route; it
- * never throws, and the error never names which secret is missing.
+ * into `AuthDeps` per route. A route whose own settings are missing answers
+ * `503 UPSTREAM_UNAVAILABLE`; other routes keep working. It never throws, and
+ * the error never names which setting is missing.
  */
 import { Keypair } from '@stellar/stellar-sdk';
 import { loadAuthConfig, type AuthConfig } from './config.js';
 import type { AuthDeps } from './routes.js';
+import { PgAuthStore, neonSqlClient } from './pg-store.js';
 import type { AuthStore, Mailer } from './store.js';
 
 /** Worker secrets (`wrangler secret put`). Names are also listed in docs/API.md §1. */
@@ -36,7 +37,7 @@ export interface AuthEnv {
   [setting: string]: string | undefined;
 }
 
-/** Builds the Postgres-backed store. Not wired until #391's schema is merged; see the PR. */
+/** Builds the store from `DATABASE_URL`. Defaults to `PgAuthStore` over Neon; tests inject one. */
 export type StoreFactory = (databaseUrl: string) => AuthStore | undefined;
 
 export interface MountOptions {
@@ -72,35 +73,143 @@ export class ResendMailer implements Mailer {
 
 const present = (v: string | undefined): v is string => v !== undefined && v !== '';
 
-/** `AuthDeps` from the environment, or `undefined` when auth cannot be served. */
-export function authDepsFromEnv(env: AuthEnv, options: MountOptions = {}): AuthDeps | undefined {
-  if (!AUTH_SECRET_NAMES.every((name) => present(env[name]))) return undefined;
-  if (!present(env.EMAIL_FROM) || !present(env.DASHBOARD_ORIGIN)) return undefined;
-  let origin: URL;
-  let challengeKeypair: Keypair;
+/**
+ * What an auth route needs from the environment (Fatih, 2026-10-23: each route
+ * requires only the settings it uses, so a missing Resend key cannot take the
+ * wallet routes down, nor a missing signing key the email routes).
+ *
+ * - `database`: `DATABASE_URL` and a store. Every auth route.
+ * - `email`: `SIGNIN_CODE_PEPPER`, `EMAIL_API_KEY`, `EMAIL_FROM`. Email start and verify.
+ * - `session`: a valid `DASHBOARD_ORIGIN`, which CSRF's Origin check compares against.
+ * - `challenge`: a valid `CHALLENGE_SIGNING_KEY` seed. The wallet challenge and link routes.
+ */
+export type AuthFeature = 'database' | 'email' | 'session' | 'challenge';
+
+export function authRouteNeeds(method: string, path: string): readonly AuthFeature[] {
+  switch (`${method.toUpperCase()} ${path}`) {
+    case 'POST /auth/email/start':
+    case 'POST /auth/email/verify':
+      return ['database', 'email'];
+    case 'POST /auth/logout':
+    case 'GET /me':
+      return ['database', 'session'];
+    case 'POST /wallets/challenge':
+    case 'POST /wallets':
+      return ['database', 'session', 'challenge'];
+  }
+  if (method.toUpperCase() === 'DELETE' && /^\/wallets\/[^/]+$/.test(path)) {
+    return ['database', 'session'];
+  }
+  return []; // not an auth route: the router answers 404 without touching anything
+}
+
+/** Thrown if a route ever reaches a setting it did not declare; the router answers 503. */
+export class AuthUnavailableError extends Error {
+  constructor() {
+    super('Auth setting not configured for this route.');
+    this.name = 'AuthUnavailableError';
+  }
+}
+
+function unavailable<T extends object>(): T {
+  return new Proxy({} as T, {
+    get() {
+      throw new AuthUnavailableError();
+    },
+  });
+}
+
+/**
+ * `AuthDeps` for one route, or `undefined` (503) when a setting it needs is
+ * missing or malformed. Settings the route does not need are left as values
+ * that throw when touched, never as empty strings: an empty pepper would
+ * silently MAC codes under no key.
+ */
+export function authDepsFor(
+  env: AuthEnv,
+  options: MountOptions,
+  needs: readonly AuthFeature[],
+): AuthDeps | undefined {
   let config: AuthConfig;
   try {
-    origin = new URL(env.DASHBOARD_ORIGIN);
-    challengeKeypair = Keypair.fromSecret(env.CHALLENGE_SIGNING_KEY!);
     config = loadAuthConfig(env);
   } catch {
-    // A malformed origin, seed or setting (AuthConfigError) is a misconfigured
-    // Worker: answer 503 per request rather than crash or guess.
-    return undefined;
+    return undefined; // AuthConfigError: misconfigured Worker, 503 per request
   }
-  const store = options.createStore?.(env.DATABASE_URL!);
-  if (store === undefined) return undefined;
-  return {
-    store,
-    mailer: new ResendMailer(env.EMAIL_API_KEY!, env.EMAIL_FROM, options.fetch ?? fetch),
+  const deps: Record<string, unknown> = {
     config,
-    pepper: env.SIGNIN_CODE_PEPPER!,
-    challengeKeypair,
-    domains: { homeDomain: origin.host, webAuthDomain: origin.host },
     challengeTimeoutSeconds: CHALLENGE_TIMEOUT_SECONDS,
-    allowedOrigin: origin.origin,
     now: options.now ?? (() => Math.floor(Date.now() / 1000)),
   };
+  const lazy = (name: string) =>
+    Object.defineProperty(deps, name, {
+      enumerable: true,
+      get() {
+        throw new AuthUnavailableError();
+      },
+    });
+
+  if (needs.includes('database')) {
+    if (!present(env.DATABASE_URL)) return undefined;
+    const store = (options.createStore ?? defaultStoreFactory(options))(env.DATABASE_URL);
+    if (store === undefined) return undefined;
+    deps['store'] = store;
+  } else deps['store'] = unavailable<AuthStore>();
+
+  if (needs.includes('email')) {
+    if (
+      !present(env.SIGNIN_CODE_PEPPER) ||
+      !present(env.EMAIL_API_KEY) ||
+      !present(env.EMAIL_FROM)
+    ) {
+      return undefined;
+    }
+    deps['pepper'] = env.SIGNIN_CODE_PEPPER;
+    deps['mailer'] = new ResendMailer(env.EMAIL_API_KEY, env.EMAIL_FROM, options.fetch ?? fetch);
+  } else {
+    lazy('pepper');
+    deps['mailer'] = unavailable<Mailer>();
+  }
+
+  let origin: URL | undefined;
+  if (needs.includes('session') || needs.includes('challenge')) {
+    if (!present(env.DASHBOARD_ORIGIN)) return undefined;
+    try {
+      origin = new URL(env.DASHBOARD_ORIGIN);
+    } catch {
+      return undefined;
+    }
+    deps['allowedOrigin'] = origin.origin;
+    deps['domains'] = { homeDomain: origin.host, webAuthDomain: origin.host };
+  } else {
+    lazy('allowedOrigin');
+    lazy('domains');
+  }
+
+  if (needs.includes('challenge')) {
+    if (!present(env.CHALLENGE_SIGNING_KEY)) return undefined;
+    try {
+      deps['challengeKeypair'] = Keypair.fromSecret(env.CHALLENGE_SIGNING_KEY);
+    } catch {
+      return undefined;
+    }
+  } else deps['challengeKeypair'] = unavailable<Keypair>();
+
+  return deps as unknown as AuthDeps;
+}
+
+/** `DATABASE_URL` set and no factory injected: Postgres on Neon over schema.sql. */
+function defaultStoreFactory(options: MountOptions): StoreFactory {
+  return (databaseUrl) =>
+    new PgAuthStore(
+      neonSqlClient(databaseUrl),
+      options.now ?? (() => Math.floor(Date.now() / 1000)),
+    );
+}
+
+/** `AuthDeps` with every feature, or `undefined` when any setting is missing. */
+export function authDepsFromEnv(env: AuthEnv, options: MountOptions = {}): AuthDeps | undefined {
+  return authDepsFor(env, options, ['database', 'email', 'session', 'challenge']);
 }
 
 /** Paths (relative to `/api/v1`) owned by the auth group. */
