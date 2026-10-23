@@ -5,7 +5,7 @@
  */
 import { handle, type Env } from './router.js';
 
-export { API_BASE, API_VERSION, SERVICE, handle, json, notFound } from './router.js';
+export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
 export type { Env } from './router.js';
 
 // The one default export allowed: the Workers runtime requires a module
