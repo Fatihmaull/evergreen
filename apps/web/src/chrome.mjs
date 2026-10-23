@@ -21,6 +21,15 @@ export const NAV = [
       { href: '/dashboard/decay/', label: 'TTL decay' },
     ],
   },
+  /**
+   * The signed-in surface (PH2-E3-02). The link is always shown; the page
+   * itself says when this browser has no session, rather than the nav hiding
+   * it and the reader never learning the watchlist exists.
+   */
+  {
+    section: 'Your account',
+    items: [{ href: '/dashboard/watchlist/', label: 'Watchlist' }],
+  },
   {
     section: 'Our own record',
     items: [
