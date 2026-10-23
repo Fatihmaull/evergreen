@@ -6,6 +6,10 @@
 #     with:
 #       contracts: CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L
 #       threshold: 120960   # optional; ledgers, default 17,280 (~1 day)
+#       # Mainnet (PH2-E1-04): a read, so allowed. Needs a mainnet RPC, and a CLI
+#       # version with --network (0.2.0 or later).
+#       # network: mainnet
+#       # rpc-url: ${{ secrets.MAINNET_RPC_URL }}
 #
 # Read-only. It scans with the published `@evergreen-stellar/cli` and never
 # signs, submits or extends anything — an exit status never authorizes a write.
@@ -51,6 +55,19 @@ inputs:
       means only "the entries I could see are healthy" and says nothing about persistent storage.
     required: false
     default: 'true'
+  network:
+    description: >-
+      'testnet' (the default) or 'mainnet'. Scanning is a read, so mainnet is allowed; this action
+      never writes on either. Mainnet needs rpc-url and a CLI version with --network (0.2.0 or
+      later): an older pin fails loudly on the unknown flag rather than scanning testnet.
+    required: false
+    default: testnet
+  rpc-url:
+    description: >-
+      RPC endpoint, passed to the CLI as SOROBAN_RPC_URL. Required for mainnet, which has no
+      default RPC; optional on testnet. Pass it from a secret if it carries a key.
+    required: false
+    default: ''
   version:
     description: Version of @evergreen-stellar/cli to run. Pin it for reproducible CI.
     required: false
@@ -93,6 +110,11 @@ runs:
         EVERGREEN_KEYS_FILE: ${{ inputs.keys-file }}
         EVERGREEN_NO_DATA_KEYS: ${{ inputs.no-data-keys }}
         EVERGREEN_REQUIRE_SCOPE: ${{ inputs.require-declared-scope }}
+        # Not EVERGREEN_NETWORK / SOROBAN_RPC_URL directly: a CLI older than
+        # --network would ignore the variable and silently scan testnet, and an
+        # empty SOROBAN_RPC_URL breaks those versions. Both are mapped below.
+        EVERGREEN_ACTION_NETWORK: ${{ inputs.network }}
+        EVERGREEN_ACTION_RPC_URL: ${{ inputs.rpc-url }}
       run: |
         set -uo pipefail
 
@@ -120,7 +142,22 @@ runs:
           fi
         done
 
+        case "$EVERGREEN_ACTION_NETWORK" in
+          testnet|mainnet) ;;
+          *) echo "::error title=evergreen-check::network must be 'testnet' or 'mainnet', got '$EVERGREEN_ACTION_NETWORK'"
+             echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2 ;;
+        esac
+        if [ "$EVERGREEN_ACTION_NETWORK" = mainnet ] && [ -z "$EVERGREEN_ACTION_RPC_URL" ]; then
+          echo "::error title=evergreen-check::network 'mainnet' needs rpc-url: mainnet has no default RPC (providers: https://developers.stellar.org/docs/data/apis/rpc/providers)"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"; exit 2
+        fi
+        # The URL may carry a provider key: exported, never echoed.
+        [ -n "$EVERGREEN_ACTION_RPC_URL" ] && export SOROBAN_RPC_URL="$EVERGREEN_ACTION_RPC_URL"
+
         flags=(--threshold "$EVERGREEN_THRESHOLD")
+        # Only for mainnet, so a testnet run keeps working on CLI pins that
+        # predate --network (testnet is the CLI default either way).
+        [ "$EVERGREEN_ACTION_NETWORK" = mainnet ] && flags+=(--network mainnet)
         for pair in "no-data-keys=$EVERGREEN_NO_DATA_KEYS" "require-declared-scope=$EVERGREEN_REQUIRE_SCOPE"; do
           case "${pair#*=}" in
             true|false) ;;
@@ -160,7 +197,7 @@ runs:
           echo
           echo "$verdict"
           echo
-          echo "Threshold: \`${EVERGREEN_THRESHOLD}\` ledgers · CLI \`@evergreen-stellar/cli@${EVERGREEN_VERSION}\` · exit \`$code\`"
+          echo "Network: \`${EVERGREEN_ACTION_NETWORK}\` · Threshold: \`${EVERGREEN_THRESHOLD}\` ledgers · CLI \`@evergreen-stellar/cli@${EVERGREEN_VERSION}\` · exit \`$code\`"
           echo
           echo '<details><summary>Scan output</summary>'
           echo
