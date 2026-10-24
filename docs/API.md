@@ -85,7 +85,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 | Route | Setting | Starting value |
 |---|---|---|
-| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes** |
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes.** A fixed window aligned to the clock (to Unix time, so a 15-minute window starts at :00, :15, :30 or :45), not a rolling one. `Retry-After` is the seconds until the end of the current window. A refused request still counts, but it does not extend the window (`apps/api/src/auth/rate-limit.ts`, `hitLimit`) |
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_IP`, `EMAIL_SENDS_PER_IP_WINDOW` | **20 per IP per hour** |
 | `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES`, `SIGNIN_CODE_DIGITS` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts**. **8 digits** by default; Fatih set the limits, not the length, and the arithmetic for 8 is in `apps/api/src/auth/config.ts` |
 | `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` | **3 per (user, contract) per rolling 24 hours** (plan §3.3's daily limit; per-user since 2026-10-23, §10). Only a job that pulled funds counts (§7) |
@@ -95,7 +95,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 | Route | Auth | Does |
 |---|---|---|
-| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **`202` whether or not an account exists**, so the route cannot enumerate users, and `202` for a malformed address too (nothing is sent). The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed. If the mail provider **refuses** the send (a sender or key setting, or the sandbox rule in §1), the answer is `502 EMAIL_NOT_SENT`; if it is busy (`429`), down (`5xx`), unreachable, or a setting or the database is unavailable, it is `503 UPSTREAM_UNAVAILABLE`. **Neither depends on whether an account exists.** A refusal writes one log line, `auth.email_send_failed` (§9) |
+| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **`202` whether or not an account exists**, so the route cannot enumerate users, and `202` for a malformed address too (nothing is sent). The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed. If the mail provider **refuses** the send (a sender or key setting, or the sandbox rule in §1), the answer is `502 EMAIL_NOT_SENT`; if it is busy (`429`), down (`5xx`), unreachable, or a setting or the database is unavailable, it is `503 UPSTREAM_UNAVAILABLE`. The send can also be refused with `429 RATE_LIMITED` (§3). **None of these depends on whether an account exists.** A refusal writes one log line, `auth.email_send_failed` (§9) |
 | `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, **or reactivates a deactivated one** (§10), sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
 | `POST /auth/logout` | session | Deletes the session row. Returns `204` |
 | `GET /me` | session | `{ user: { id, email, createdAt }, wallets: Wallet[], csrfToken }` |
@@ -344,11 +344,11 @@ the dashboard branches on and what it says to a person.
 
 | Code | The UI shows | Next step |
 |---|---|---|
-| `CODE_INVALID` | "That code did not work. Request a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
+| `CODE_INVALID` | "That code did not work. It may be wrong, used or expired. Ask for a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
 | `UNAUTHENTICATED` | the signed-out state for the whole screen, not an error toast | Sign in. The screen's own data is cleared first: a stale watchlist under a sign-in prompt is another user's data as far as the next person at that keyboard knows |
 | `EMAIL_NOT_SENT` | "The code could not be sent to that address. Nothing was sent. Trying again will not help; use a different address." (proposed; WEBF owns the copy) | Use a different address. Nothing else the user can do. Not retried automatically |
 | `CSRF_FAILED` | "This page was open too long. Reload and try again." | Reload. Never retried automatically — a silent retry of a state-changing request is the thing CSRF protection exists to stop |
-| `RATE_LIMITED` | "Too many attempts. Try again in N minutes." from `Retry-After` | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
+| `RATE_LIMITED` | "Too many codes asked for. Try again in N min." from `Retry-After` (the login screen: there `RATE_LIMITED` comes only from `POST /auth/email/start`, and wrong guesses are `CODE_INVALID`, never `429`; the watchlist uses generic wording) | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
 | `WALLET_LINKED_ELSEWHERE` | "That wallet is already linked to another account." | **Nothing they can do here.** No "contact support" — there is no support channel, and offering one is a promise with a date on it |
 | `CHALLENGE_INVALID` | "The signing request expired. Try linking again." | Retry from the start. Never reuse a challenge |
 | `WALLET_PAYS_FOR_WATCHED_CONTRACT` | which watched contracts this wallet pays for, and that unlinking does not stop the allowance on chain | Move those contracts to another wallet or turn their autopilot off, **and** the revoke button beside unlink. *(Row added by CEF when folding #351, for Fatih's unlink decision; copy for WEBF to confirm.)* |
