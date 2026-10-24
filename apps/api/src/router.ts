@@ -9,6 +9,7 @@ import {
   type AuthEnv,
   type MountOptions,
 } from './auth/mount.js';
+import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
 
 export const API_BASE = '/api/v1';
@@ -56,6 +57,24 @@ export function notFound(): Response {
   return apiError('NOT_FOUND', 'No such route.', 404);
 }
 
+function logSendFailure(
+  error: MailerError,
+  env: Env,
+  request: Request,
+  options: MountOptions,
+): void {
+  try {
+    (options.log ?? consoleLogger)(
+      emailSendFailedLog(error, {
+        environment: env.ENVIRONMENT ?? 'undetermined',
+        rayId: request.headers.get('cf-ray'),
+      }),
+    );
+  } catch {
+    // A diagnosis aid must never change the answer.
+  }
+}
+
 export async function handle(
   request: Request,
   env: Env = {},
@@ -71,9 +90,18 @@ export async function handle(
       if (deps === undefined) return unavailable();
       try {
         return (await handleAuth(request, path, deps)) ?? notFound();
-      } catch {
+      } catch (error) {
         // The database (or mail provider) did not answer, or a migration is
         // missing: absence is not health, and the error names nothing (§9).
+        // A mail provider that refused this send is the one case with its own
+        // code, because retrying cannot help. Its cause (a status, an error
+        // name, our reason token, two domains) goes to the log, never the wire.
+        if (error instanceof MailerError) {
+          logSendFailure(error, env, request, options);
+          if (error.kind === 'rejected') {
+            return apiError('EMAIL_NOT_SENT', 'The sign-in code could not be sent.', 502);
+          }
+        }
         return unavailable();
       }
     }
