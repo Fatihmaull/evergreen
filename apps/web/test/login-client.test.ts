@@ -7,7 +7,7 @@
  * code or a network error is undetermined, never signed out and never sent.
  */
 import { describe, expect, test } from 'vitest';
-import type { FetchLike } from '../src/lib/api';
+import { apiRequest, type FetchLike } from '../src/lib/api';
 import {
   linkWallet,
   logout,
@@ -153,6 +153,36 @@ describe('startEmail (POST /auth/email/start)', () => {
     expect(await startEmail('a@example.com', f)).toEqual({
       kind: 'not-sent',
       detail: 'HTTP 503 UPSTREAM_UNAVAILABLE',
+    });
+  });
+
+  test('EMAIL_NOT_SENT (502, not retryable) is email-not-sent, carries no detail and no server message', async () => {
+    const { f } = fake(
+      json(502, {
+        error: { code: 'EMAIL_NOT_SENT', message: 'secret-ish', retryable: false },
+      }),
+    );
+    expect(await startEmail('a@example.com', f)).toEqual({ kind: 'email-not-sent' });
+  });
+
+  test('EMAIL_NOT_SENT is read from the code, not the status, and is not UPSTREAM_UNAVAILABLE', async () => {
+    const { f } = fake(envelope(503, 'EMAIL_NOT_SENT'));
+    expect(await startEmail('a@example.com', f)).toEqual({ kind: 'email-not-sent' });
+  });
+
+  test('an HTML 502 is undetermined, never email-not-sent', async () => {
+    const { f } = fake(html(502));
+    expect((await startEmail('a@example.com', f)).kind).toBe('undetermined');
+  });
+
+  test('EMAIL_NOT_SENT is a known code to the shared client, not UNRECOGNISED', async () => {
+    const { f } = fake(envelope(502, 'EMAIL_NOT_SENT'));
+    const o = await apiRequest('/auth/email/start', { method: 'POST' }, f);
+    expect(o).toMatchObject({
+      kind: 'error',
+      status: 502,
+      code: 'EMAIL_NOT_SENT',
+      retryable: false,
     });
   });
 

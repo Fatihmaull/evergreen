@@ -32,6 +32,7 @@ export type StartResult =
   | { readonly kind: 'sent' }
   | { readonly kind: 'rate-limited'; readonly retryAfterSeconds?: number }
   | { readonly kind: 'not-sent'; readonly detail: string }
+  | { readonly kind: 'email-not-sent' }
   | Undetermined;
 export type VerifyResult =
   { readonly kind: 'verified' } | { readonly kind: 'code-invalid' } | Undetermined;
@@ -105,6 +106,9 @@ export async function startEmail(email: string, f?: FetchLike): Promise<StartRes
   if (o.kind === 'error' && o.code === 'UPSTREAM_UNAVAILABLE') {
     return { kind: 'not-sent', detail: describe(o) };
   }
+  // `502 EMAIL_NOT_SENT`, not retryable (§4, §9): the mail provider refused this
+  // send. The client learns the class of the answer and nothing about the cause.
+  if (o.kind === 'error' && o.code === 'EMAIL_NOT_SENT') return { kind: 'email-not-sent' };
   return und(o);
 }
 
