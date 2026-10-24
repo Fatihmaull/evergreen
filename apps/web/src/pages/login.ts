@@ -134,6 +134,10 @@ async function startEmail(event: Event): Promise<void> {
           ? 'Too many codes asked for. Wait, then try again.'
           : `Too many codes asked for. Try again in ${Math.ceil(r.retryAfterSeconds / 60)} min.`,
       );
+    } else if (r.kind === 'not-sent') {
+      out.innerHTML = note(
+        `The service could not send the code, nothing was sent.</p><p class="small muted">${esc(r.detail)}.`,
+      );
     } else {
       out.innerHTML = undetermined('Whether a code was sent.', r.detail);
     }
