@@ -51,6 +51,23 @@ export { AUTH_WRITE_ROUTES, handleAuth } from './auth/routes.js';
 export type { AuthDeps } from './auth/routes.js';
 export type { AuthStore, LinkResult, Mailer, User, WalletLink } from './auth/store.js';
 export {
+  MAX_ERROR_BODY_BYTES,
+  MailerError,
+  classifyResendFailure,
+  consoleLogger,
+  domainOf,
+  emailSendFailedLog,
+  readBoundedText,
+} from './auth/mailer-error.js';
+export type {
+  AuthLogEntry,
+  AuthLogger,
+  EmailSendFailedLog,
+  MailerFailure,
+  MailerFailureKind,
+  MailerFailureReason,
+} from './auth/mailer-error.js';
+export {
   AUTH_SECRET_NAMES,
   CHALLENGE_TIMEOUT_SECONDS,
   AuthUnavailableError,
