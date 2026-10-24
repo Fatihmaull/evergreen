@@ -117,7 +117,11 @@ export class ResendMailer implements Mailer {
     const startedAt = clock();
     let response: Response;
     try {
-      response = await this.fetcher(url, init);
+      // A local, so `fetch` is called with no `this`. `this.fetcher(...)` would
+      // call it with the mailer as `this`, and Workers' global `fetch` throws
+      // `TypeError: Illegal invocation` for that, instantly, before any send.
+      const fetcher = this.fetcher;
+      response = await fetcher(url, init);
     } catch (thrown) {
       let elapsedMs: number | undefined;
       try {
