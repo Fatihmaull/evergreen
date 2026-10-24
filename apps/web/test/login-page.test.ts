@@ -73,3 +73,27 @@ describe('copy', () => {
     expect(copy).not.toMatch(/\bdeleted?\b/i);
   });
 });
+
+describe('the send-code failure copy', () => {
+  test('a 503 from the API says nothing was sent, and names no cause', () => {
+    expect(page).toContain('The service could not send the code, nothing was sent.');
+    const block = page.slice(
+      page.indexOf("r.kind === 'not-sent'"),
+      page.indexOf("r.kind === 'not-sent'") + 400,
+    );
+    expect(block).not.toMatch(/resend|sender|deploy/i);
+  });
+
+  test('the not-sent branch is a plain note, not the undetermined panel', () => {
+    const at = page.indexOf("r.kind === 'not-sent'");
+    const block = page.slice(at, page.indexOf('} else {', at));
+    expect(block).toContain('note(');
+    expect(block).not.toContain('undetermined(');
+  });
+
+  test('"a code is on its way" appears only under the sent branch', () => {
+    const at = page.indexOf('a code is on its way');
+    expect(at).toBeGreaterThan(page.indexOf("r.kind === 'sent'"));
+    expect(at).toBeLessThan(page.indexOf("r.kind === 'rate-limited'"));
+  });
+});
