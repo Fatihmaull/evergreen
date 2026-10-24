@@ -39,6 +39,7 @@ export const API_ERROR_CODES = [
   'METHOD_NOT_ALLOWED',
   'UNAUTHENTICATED',
   'UPSTREAM_UNAVAILABLE',
+  'EMAIL_NOT_SENT',
 ] as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
