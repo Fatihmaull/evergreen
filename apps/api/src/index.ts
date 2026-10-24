@@ -58,6 +58,7 @@ export {
   domainOf,
   emailSendFailedLog,
   readBoundedText,
+  safeFetchErrorName,
 } from './auth/mailer-error.js';
 export type {
   AuthLogEntry,
