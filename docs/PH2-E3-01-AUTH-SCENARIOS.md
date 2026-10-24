@@ -24,6 +24,23 @@ Steps with no A label: **Step 4** (what the page keeps in browser storage) is a 
 
 Steps 6, 7, 8 and 10 are part B (watchlist) and have no A label.
 
+### Why the gaps are not in Tih's manual checklist
+
+The gaps above are **deliberately** not manual steps. They are not overlooked. Each one is covered by the automated tests of #426 (`apps/api/test/auth-e3a-scenarios.test.ts`), checked against the file on main:
+
+| Gap | Covered by (test name, in the `describe` named) |
+|---|---|
+| Cookie attributes in A2 (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain`, `Max-Age`) | `answers 200 { user } and sets one __Host- cookie with the ADR-008 attributes` (`A2 · verify the code: the session cookie`) |
+| Expired code in A7 | `expires at 10 minutes: valid at 599 s, refused at 600 s` (`A7 · wrong, expired and reused codes`) |
+| 5 wrong guesses in A7 | `is void after 5 wrong guesses, even for the right code, until a new code is requested` (`A7 · wrong, expired and reused codes`) |
+| Rate limits in A6 | `allows 3 per address in a 15-minute window, then 429 with Retry-After to the window end`, `opens again when the window rolls over, and a refused request does not extend it`, `counts per address, case and spaces ignored, and leaves other addresses alone`, `counts per IP across addresses: 20 an hour, then 429; another IP is unaffected` and `is checked before the address is looked at: a limited IP gets 429 even for a malformed address` (`A6 · rate limits on requesting a code`) |
+
+Every gap has at least one test. None was found uncovered. These tests run offline through `handle()` with an injected clock, so they check what the real cookie header and the limits do in the Worker, but not what a browser shows or what the real database counts (see "Undetermined" below).
+
+The reason for not adding manual steps: for A6, a manual check means pressing "send" four times in a row and hitting the limit; for the expired code and the 5 wrong guesses, it means more sends or a 10-minute wait on top. Each extra manual step would make Tih press send repeatedly and run into the per-address and per-IP limits, which would spoil the checklist's own sign-in steps for the next 15 minutes.
+
+**A4 (rotation) stays undetermined** by hand: it needs more than 24 hours, so no manual step can check it. Only the automated tests (`A4 · rotation during a signed-in day`) cover it, with an injected clock.
+
 ## Stage → test → what to observe on preview
 
 Browser devtools, Network tab, filter `api/v1`. UI wording is WEBF's and is not asserted here.
