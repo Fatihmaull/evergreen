@@ -18,6 +18,19 @@ Numbered SQL files live under `apps/api/db/`:
 psql "$DATABASE_URL" --single-transaction -f apps/api/db/schema.sql
 ```
 
+Applied in order:
+
+| File | What it does |
+|------|--------------|
+| `schema.sql` | Initial schema (`0001_initial`). |
+| `0002_jobs_daily_limit_per_user.sql` | Replaces `jobs_daily_limit_idx` with `(user_id, network, contract_id, pulled_at)`, same partial predicate. Implements D1. |
+
+```
+psql "$DATABASE_URL" --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
+```
+
+`schema.sql` still shows the cross-user index; it is not edited after apply. The live index is the one from `0002`.
+
 ## Mapping to #350 (docs/API.md)
 | API | Table |
 |---|---|
@@ -111,7 +124,7 @@ Undetermined:
 
 Recorded on PR #391 after Rakha accepted the local proposal. Preview apply is **not** blocked; schema follow-ups that need DDL land as numbered `0002_*.sql` (or later) after apply.
 
-1. **D1 — Daily extend-now limit:** **per `(user_id, network, contract_id)`**, rolling 24 hours, counting only extend-now jobs that pulled (`pull_tx_hash` / `pulled_at` set). The index in `schema.sql` today is still `(network, contract_id)` (cross-user). **Follow-up:** `0002_*.sql` replaces it with `(user_id, network, contract_id, pulled_at)` after preview apply.
+1. **D1 — Daily extend-now limit:** **per `(user_id, network, contract_id)`**, rolling 24 hours, counting only extend-now jobs that pulled (`pull_tx_hash` / `pulled_at` set). The index in `schema.sql` is still `(network, contract_id)` (cross-user); `0002_jobs_daily_limit_per_user.sql` replaces it with `(user_id, network, contract_id, pulled_at)`.
 2. **D2 — Window timestamp:** **`pulled_at`** (not `created_at`).
 3. **D3 — Idempotency key retention:** keys stay on the job row for the **job’s lifetime**; no 24h prune. Broader job-retention policy remains undetermined.
 4. **D4 — Watch item restore:** re-add clears `removed_at` on the same row and **keeps** label, scope and budget; **autopilot stays off** until the user turns it on.
