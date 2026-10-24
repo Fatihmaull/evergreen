@@ -3,7 +3,7 @@
  *
  * Pure and read-only: turns watch items into work groups per (network, payer account), with each
  * item's own budget. Nothing here signs, submits or moves money; the money flow is PH2-E4-02.
- * Never assumes a single global payer (ADR-004): the same contract watched by two users is two
+ * Never assumes a single global payer (ADR-004, superseded by ADR-007; the invariant survives): the same contract watched by two users is two
  * independent items, each with its own payer and budget.
  */
 
@@ -45,6 +45,10 @@ export interface TenantItem {
 
 export interface TenantPlan {
   readonly network: TenantNetwork;
+  /**
+   * The user's allowance-holding G-account (ADR-007), owned by every item's user. Not the
+   * engine's executing account.
+   */
   readonly payerAccount: string;
   readonly items: readonly TenantItem[];
 }
@@ -57,9 +61,11 @@ export function spendKey(userId: string, network: string, contractId: string): s
 }
 
 /**
- * Whether a row may run autopilot on this network. Mirrors the schema CHECK for network, flags,
- * payer and budgets. Ledger threshold ordering is left to the schema CHECK: TTL comparisons
- * belong to core's needsAction() (docs/CONVENTIONS.md § One home for a policy).
+ * Whether a row may run autopilot on this network: testnet, autopilot on, not removed, a payer on
+ * this network owned by the item's user, and non-negative budgets present. It does NOT re-check
+ * threshold_ledgers > 0 or extend_to_ledgers > threshold_ledgers; those are guarded only by the
+ * schema CHECK (TTL comparisons belong to core, see issue #442), so a memory rehearsal can hold
+ * rows the database would refuse.
  */
 export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boolean {
   return (
@@ -123,7 +129,9 @@ export function planTenants(
 }
 
 /**
- * Per-contract budget gate. The estimate is rent + fee in stroops for one job. Reaching a cap
+ * Per-contract budget check (pure; no run calls it yet). The estimate is the amount one job will
+ * pull, in stroops: rent + fee + margin (ADR-007 K2), the same basis as the 30-day spend (pull
+ * minus refund). Reaching a cap
  * exactly is allowed (<=). No estimate means `undetermined`, never `ok`.
  */
 export function checkBudget(item: TenantItem, estimatedStroops: bigint | undefined): BudgetVerdict {
