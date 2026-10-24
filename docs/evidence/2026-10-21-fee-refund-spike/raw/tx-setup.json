@@ -1,0 +1,74 @@
+[
+  {
+    "label": "0a",
+    "op": "upload guinea-pig Wasm",
+    "hash": "e41ba097165fc5a051513c00aa2863e635c20c526c3754e9b8d510ae330309d4",
+    "feeInfo": {
+      "proposed": {
+        "fee": 17379885,
+        "resource_fee": 17379785,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 15110003,
+        "resource_fee": 15109903,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 9611,
+        "refundable_resource_fee": 15100292
+      }
+    },
+    "meta": {
+      "total_non_refundable_resource_fee_charged": "9611",
+      "total_refundable_resource_fee_charged": "15100292",
+      "rent_fee_charged": "15100194"
+    }
+  },
+  {
+    "label": "0b",
+    "op": "create contract (CLI deploy --wasm-hash)",
+    "hash": "57be774b36f560a8acbafda27c07ddeb4064b745b3845c9299abbb5ae663a906",
+    "feeInfo": {
+      "proposed": {
+        "fee": 108572,
+        "resource_fee": 108472,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 90633,
+        "resource_fee": 90533,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 3199,
+        "refundable_resource_fee": 87334
+      }
+    },
+    "meta": {
+      "total_non_refundable_resource_fee_charged": "3199",
+      "total_refundable_resource_fee_charged": "87334",
+      "rent_fee_charged": "87236"
+    }
+  },
+  {
+    "label": "0c",
+    "op": "seed(1)",
+    "hash": "3a2f7a67eedf0103bc935447fbf29eaad67028e816e4c4b2d176e46bce4871e2",
+    "feeInfo": {
+      "proposed": {
+        "fee": 143102,
+        "resource_fee": 143002,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 120981,
+        "resource_fee": 120881,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 5678,
+        "refundable_resource_fee": 115203
+      }
+    },
+    "meta": {
+      "total_non_refundable_resource_fee_charged": "5678",
+      "total_refundable_resource_fee_charged": "115203",
+      "rent_fee_charged": "115193"
+    }
+  }
+]
