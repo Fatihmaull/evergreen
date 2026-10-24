@@ -15,6 +15,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { PgTenantStore } from '../src/pg-tenant-store.js';
 import type { TenantQuery } from '../src/pg-tenant-store.js';
 import { planTenantsFromStore } from '../src/tenant-store.js';
+import { spendKey } from '../src/tenants.js';
 import { C, G, U1, U2 } from './tenant-fixtures.js';
 
 const container = process.env.EVERGREEN_PG_PODMAN_CONTAINER;
@@ -88,6 +89,15 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
     const rows = await new PgTenantStore(query).listAutopilotItems('testnet');
     expect(rows.map((r) => [r.userId, r.contractId])).not.toContainEqual([U2, C('C')]);
     expect(rows.every((r) => r.payerOwnerUserId === r.userId)).toBe(true);
+  });
+
+  it('batch read matches the per-item reads, keyed per (user, contract)', async () => {
+    const store = new PgTenantStore(query);
+    const batch = await store.spentLast30dBatch('testnet');
+    expect(batch.get(spendKey(U1, 'testnet', C('A')))).toBe(60n);
+    expect(batch.get(spendKey(U2, 'testnet', C('A')))).toBe(250n);
+    expect(batch.get(spendKey(U1, 'testnet', C('B'))) ?? 0n).toBe(0n);
+    expect(batch.get(spendKey(U2, 'testnet', C('D')))).toBeNull();
   });
 
   it('plans per payer from the real tables, excluding removed items', async () => {

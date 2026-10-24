@@ -7,6 +7,8 @@
  * independent items, each with its own payer and budget.
  */
 
+import { isValidThreshold } from '@evergreen-stellar/core';
+
 /** Writes stay testnet-only until DoD-2 (PH2-E5-02). */
 export type TenantNetwork = 'testnet';
 
@@ -60,9 +62,16 @@ export function spendKey(userId: string, network: string, contractId: string): s
   return JSON.stringify([userId, network, contractId]);
 }
 
+/** Safe-integer conversion first, so a huge bigint never reaches core as a rounded number. */
+function isValidLedgerCount(v: bigint): boolean {
+  const n = Number(v);
+  return Number.isSafeInteger(n) && isValidThreshold(n);
+}
+
 /**
  * Whether a row may run autopilot on this network: testnet, autopilot on, not removed, a payer on
- * this network owned by the item's user, and non-negative budgets present. It does NOT re-check
+ * this network owned by the item's user, non-negative budgets present, and both ledger values safe
+ * integers that core's isValidThreshold() accepts (>= 0). It does NOT re-check
  * threshold_ledgers > 0 or extend_to_ledgers > threshold_ledgers; those are guarded only by the
  * schema CHECK (TTL comparisons belong to core, see issue #442), so a memory rehearsal can hold
  * rows the database would refuse.
@@ -79,6 +88,8 @@ export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boole
     row.payerOwnerUserId === row.userId &&
     typeof row.thresholdLedgers === 'bigint' &&
     typeof row.extendToLedgers === 'bigint' &&
+    isValidLedgerCount(row.thresholdLedgers) &&
+    isValidLedgerCount(row.extendToLedgers) &&
     typeof row.budgetPerJobMax === 'bigint' &&
     typeof row.budgetPer30dMax === 'bigint' &&
     row.budgetPerJobMax >= 0n &&

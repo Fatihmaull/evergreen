@@ -56,3 +56,20 @@ export {
   SPENT_LAST_30D_SQL,
 } from './pg-tenant-store.js';
 export type { TenantQuery } from './pg-tenant-store.js';
+export { SPENT_LAST_30D_BATCH_SQL } from './pg-tenant-store.js';
+export {
+  runTenantPlan,
+  tenantConfigs,
+  TESTNET_PASSPHRASE,
+  DEFAULT_TENANT_DEADLINE_MS,
+} from './tenant-run.js';
+export type {
+  TenantErrorCode,
+  TenantItemResult,
+  TenantRunDeps,
+  TenantRunReport,
+  TenantRunResult,
+  TenantRunStatus,
+} from './tenant-run.js';
+export { MemoryTenantJournal } from './tenant-journal.js';
+export type { TenantJournal, TenantJournalEntry } from './tenant-journal.js';
