@@ -5,8 +5,16 @@ import type { AutopilotItemRow, TenantNetwork, TenantPlan } from './tenants.js';
 export interface TenantStore {
   /** Watch items with autopilot on and not removed, on this network. */
   listAutopilotItems(network: TenantNetwork): Promise<readonly AutopilotItemRow[]>;
-  /** Stroops pulled minus refunded in the last 30 days for one (user, network, contract). */
-  spentLast30d(userId: string, network: TenantNetwork, contractId: string): Promise<bigint>;
+  /**
+   * Stroops pulled minus refunded in the last 30 days for one (user, network, contract).
+   * `undefined` when undetermined (a pulled job in the window has no pull ledger row); the plan
+   * then treats the item as having nothing left.
+   */
+  spentLast30d(
+    userId: string,
+    network: TenantNetwork,
+    contractId: string,
+  ): Promise<bigint | undefined>;
 }
 
 export async function planTenantsFromStore(
@@ -17,10 +25,8 @@ export async function planTenantsFromStore(
   const spent = new Map<string, bigint>();
   for (const row of rows) {
     if (!isEligible(row, network)) continue;
-    spent.set(
-      spendKey(row.userId, row.network, row.contractId),
-      await store.spentLast30d(row.userId, network, row.contractId),
-    );
+    const used = await store.spentLast30d(row.userId, network, row.contractId);
+    if (used !== undefined) spent.set(spendKey(row.userId, row.network, row.contractId), used);
   }
   return planTenants(rows, spent, network);
 }
@@ -33,6 +39,8 @@ export interface MemorySpendEntry {
   readonly pulledAt: Date;
   readonly pulled: bigint;
   readonly refunded: bigint;
+  /** Whether the pull ledger row exists. Default true; false models a pulled job without one. */
+  readonly pullRecorded?: boolean;
 }
 
 /** In-memory store for tests and rehearsals. */
@@ -62,7 +70,11 @@ export class MemoryTenantStore implements TenantStore {
     );
   }
 
-  async spentLast30d(userId: string, network: TenantNetwork, contractId: string): Promise<bigint> {
+  async spentLast30d(
+    userId: string,
+    network: TenantNetwork,
+    contractId: string,
+  ): Promise<bigint | undefined> {
     const since = this.#now().getTime() - 30 * 24 * 60 * 60 * 1000;
     let total = 0n;
     for (const e of this.#spend)
@@ -71,8 +83,10 @@ export class MemoryTenantStore implements TenantStore {
         e.network === network &&
         e.contractId === contractId &&
         e.pulledAt.getTime() > since
-      )
+      ) {
+        if (e.pullRecorded === false) return undefined;
         total += e.pulled - e.refunded;
+      }
     return total;
   }
 }

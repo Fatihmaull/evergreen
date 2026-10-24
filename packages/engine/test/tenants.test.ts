@@ -167,3 +167,39 @@ describe('MemoryTenantStore + planTenantsFromStore', () => {
     ]);
   });
 });
+
+describe('missing pull ledger row (fail closed)', () => {
+  it('a pulled job without its pull row leaves nothing for that item only', async () => {
+    const now = new Date('2026-10-24T00:00:00Z');
+    const day = new Date('2026-10-23T00:00:00Z');
+    const store = new MemoryTenantStore(
+      [row(), row({ contractId: C('B') })],
+      [
+        {
+          userId: U1,
+          network: 'testnet',
+          contractId: C('A'),
+          pulledAt: day,
+          pulled: 0n,
+          refunded: 0n,
+          pullRecorded: false,
+        },
+        {
+          userId: U1,
+          network: 'testnet',
+          contractId: C('B'),
+          pulledAt: day,
+          pulled: 50n,
+          refunded: 0n,
+        },
+      ],
+      () => now,
+    );
+    expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBeUndefined();
+    const [plan] = await planTenantsFromStore(store);
+    expect(plan!.items.map((i) => [i.contractId, i.budget.per30dRemaining])).toEqual([
+      [C('A'), 0n],
+      [C('B'), 250n],
+    ]);
+  });
+});

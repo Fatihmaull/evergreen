@@ -57,13 +57,15 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
         ('${U1}', 'testnet', '${C('A')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300),
         ('${U2}', 'testnet', '${C('A')}', '{"noDataKeys":true}', true, 'testnet', '${G('B')}', 1000, 5000, 100, 300),
         ('${U1}', 'testnet', '${C('B')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300),
-        ('${U2}', 'testnet', '${C('C')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300);
+        ('${U2}', 'testnet', '${C('C')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300),
+        ('${U2}', 'testnet', '${C('D')}', '{"noDataKeys":true}', true, 'testnet', '${G('B')}', 1000, 5000, 100, 300);
       INSERT INTO watch_items (user_id, network, contract_id, scope, removed_at) VALUES
         ('${U1}', 'testnet', '${C('Z')}', '{"noDataKeys":true}', now());
       INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, status, autopilot_window, pull_tx_hash, pulled_at, pull_amount) VALUES
         ('10000000-0000-4000-8000-000000000001', '${U1}', 'testnet', '${C('A')}', 'autopilot', '${G('A')}', 'refunded', 1, 'p1', now() - interval '1 day', 100),
         ('10000000-0000-4000-8000-000000000002', '${U1}', 'testnet', '${C('A')}', 'autopilot', '${G('A')}', 'extended', 2, 'p2', now() - interval '31 days', 100),
-        ('10000000-0000-4000-8000-000000000003', '${U2}', 'testnet', '${C('A')}', 'autopilot', '${G('B')}', 'extended', 3, 'p3', now() - interval '1 day', 250);
+        ('10000000-0000-4000-8000-000000000003', '${U2}', 'testnet', '${C('A')}', 'autopilot', '${G('B')}', 'extended', 3, 'p3', now() - interval '1 day', 250),
+        ('10000000-0000-4000-8000-000000000004', '${U2}', 'testnet', '${C('D')}', 'autopilot', '${G('B')}', 'extended', 4, 'p4', now() - interval '1 day', 70);
       INSERT INTO fee_ledger (job_id, network, wallet, contract_id, kind, amount, tx_hash) VALUES
         ('10000000-0000-4000-8000-000000000001', 'testnet', '${G('A')}', '${C('A')}', 'pull', 100, 'p1'),
         ('10000000-0000-4000-8000-000000000001', 'testnet', '${G('A')}', '${C('A')}', 'refund', 40, 'r1'),
@@ -78,6 +80,8 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
     expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBe(60n);
     expect(await store.spentLast30d(U2, 'testnet', C('A'))).toBe(250n);
     expect(await store.spentLast30d(U1, 'testnet', C('B'))).toBe(0n);
+    // Pulled job with no pull ledger row: undetermined, never 0.
+    expect(await store.spentLast30d(U2, 'testnet', C('D'))).toBeUndefined();
   });
 
   it('does not list an item paid from another user’s wallet', async () => {
@@ -101,7 +105,13 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
           [U1, C('B'), 300n],
         ],
       ],
-      [G('B'), [[U2, C('A'), 50n]]],
+      [
+        G('B'),
+        [
+          [U2, C('A'), 50n],
+          [U2, C('D'), 0n],
+        ],
+      ],
     ]);
   });
 

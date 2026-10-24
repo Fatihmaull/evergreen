@@ -53,9 +53,18 @@ describe('PgTenantStore', () => {
   });
 
   it('reads the net spend for one (user, network, contract)', async () => {
-    const query = vi.fn<TenantQuery>(async () => [{ spent: '60' }]);
+    const query = vi.fn<TenantQuery>(async () => [{ spent: '60', missing_pull: '0' }]);
     expect(await new PgTenantStore(query).spentLast30d(U1, 'testnet', C('A'))).toBe(60n);
     expect(query).toHaveBeenCalledWith(SPENT_LAST_30D_SQL, [U1, 'testnet', C('A')]);
+  });
+
+  it('fails closed when a pulled job in the window has no pull ledger row', async () => {
+    const store = new PgTenantStore(async () => [{ spent: '0', missing_pull: '1' }]);
+    expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBeUndefined();
+    await expect(
+      new PgTenantStore(async () => [{ spent: '0' }]).spentLast30d(U1, 'testnet', C('A')),
+    ).rejects.toBeInstanceOf(TenantStoreError);
+    expect(SPENT_LAST_30D_SQL).toMatch(/LEFT JOIN fee_ledger/);
   });
 
   it.each([
