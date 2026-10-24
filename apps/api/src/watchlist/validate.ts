@@ -24,8 +24,10 @@ const refuse = (field: string, message: string): Refusal => ({ ok: false, field,
 const ok = <T>(value: T): Parsed<T> => ({ ok: true, value });
 
 /**
- * Caps the spec does not state. They keep one signed-in user from storing an
- * unbounded row, and are listed as open questions in the PR (PH2-E2-05).
+ * Caps the spec does not state: OUR choices, not from the spec (listed in
+ * docs/API.md §6, provisional until Rakha answers in #385). The label is 1 to
+ * 100 characters; scope holds at most 100 data keys of at most 2048 characters
+ * each. They keep one signed-in user from storing an unbounded row.
  */
 export const LABEL_MAX_CHARS = 100;
 export const DATA_KEYS_MAX = 100;

@@ -167,6 +167,13 @@ type WatchItem = {
 };
 ```
 
+**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), provisional until Rakha answers (#385), not requirements from the spec:
+- `label`: 1 to 100 characters after trimming, no control characters.
+- `scope.dataKeys`: 1 to 100 keys, each at most 2048 characters of canonical base64 `LedgerKey` XDR; duplicates are dropped.
+- There is no cap on items per user, no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers`.
+- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops`, and `"0"` is accepted.
+- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined.
+
 **`thresholdLedgers` is per item** because the core config already allows it per contract (`bumpWhenRemainingLedgersBelow`). That bears on DoD-2's scheduler-gap threshold:
 - The engine's worst scheduler gap has to clear the **lowest** threshold in use.
 - So the API refuses a threshold below a floor the engine publishes: `422 THRESHOLD_BELOW_FLOOR`.
@@ -309,7 +316,12 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+
+`INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
+- `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, or a path segment is not a valid network or contract ID.
+- `422`: the request is well-formed but refused on its meaning. Today that is `autopilot.extendToLedgers` not above `thresholdLedgers`, and an `autopilot.payerWallet` that is not linked to the caller.
+- §9a (WEBF) has no user-facing copy for it yet. Until it does, a client treats it as an unrecognised code and renders *undetermined* (§9a rule 2).
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 

@@ -83,8 +83,7 @@ function json(status: number, body: unknown): Response {
 }
 
 /**
- * `INVALID_REQUEST` is not in §9's list yet (open question in the PR): the
- * spec names no code for a malformed body. 400 for malformed input, 422 for a
+ * `INVALID_REQUEST` (docs/API.md §9): 400 for malformed input, 422 for a
  * well-formed request refused on its meaning. `details.field` names the field
  * and never echoes the value.
  */
