@@ -30,6 +30,12 @@ export type { NotifiedRun, RunJournal, AlertReceipt, AlertDelivery } from './not
 
 export { assessScheduler, schedulerNotification } from './scheduler-watch.js';
 export type { WatchPolicy, JobObservation, SchedulerAssessment } from './scheduler-watch.js';
-export { TelegramChannel, ChannelNotImplementedError } from './channel-stubs.js';
+export {
+  TelegramChannel,
+  TelegramDeliveryError,
+  telegramText,
+  TELEGRAM_TEXT_LIMIT,
+} from './telegram-channel.js';
+export type { TelegramChannelOptions, TelegramDeliveryResult } from './telegram-channel.js';
 export { WebhookChannel, WebhookDeliveryError } from './webhook-channel.js';
 export type { WebhookChannelOptions, WebhookDeliveryResult } from './webhook-channel.js';
