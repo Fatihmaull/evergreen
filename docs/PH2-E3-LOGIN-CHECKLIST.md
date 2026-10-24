@@ -1,6 +1,6 @@
 # PH2-E3-01 / PH2-E3-02 — manual test checklist for Tih
 
-**Status: ready for Tih's run. Part A (steps 1 to 5 and 9) is runnable now; part B (steps 6 to 8 and 10) is blocked until `PH2-E2-05`.** First written from `origin/main` at `f3b5701`; `main` has moved since. The login page text was re-verified against the head of the pull request that last changed this file (the login follow-up, `PH2-E3-01`), by reading `apps/web/src/lib/login-view.ts`, `lib/login.ts` and `pages/login.ts`. Every on-screen string below is quoted from that code; where the code does not say, the step says `undetermined`. The preview site may be running an older build than that head: which build it runs is undetermined.
+**Status: ready for Tih's run. Part A (steps 1 to 5 and 9) is runnable now; part B (steps 6 to 8 and 10) is blocked until `PH2-E2-05`.** First written from `origin/main` at `f3b5701`; `main` has moved since. The login page text was re-verified against the head of the pull request that last changed this file (the login follow-up, `PH2-E3-01`), by reading `apps/web/src/lib/login-view.ts`, `lib/login.ts` and `pages/login.ts`. The part B rows were re-read against `apps/web/src/lib/watchlist-view.ts` on `origin/main` at `1fc037a` (#430). Every on-screen string below is quoted from that code; where the code does not say, the step says `undetermined`. The preview site may be running an older build than that head: which build it runs is undetermined.
 
 Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, in a normal browser window. This checklist does not touch the production site. Stellar testnet only.
 
@@ -120,9 +120,9 @@ Neither note says why, and neither says a code was sent. This is the known previ
 | Step | What it will test | What it shows today, from the code | Runnable |
 |---|---|---|---|
 | 6 | On `/dashboard/scanner/`, scan a contract and click "Add to watchlist" | The API answers `404 NOT_FOUND` and the page shows an `undetermined` chip with **"We could not establish whether this was added."** Which contract to use is undetermined here. | After `PH2-E2-05` |
-| 7 | `/dashboard/watchlist/` lists it, binding expiry first | The page shows an `undetermined` box with **"We could not establish this."** | After `PH2-E2-05` |
+| 7 | `/dashboard/watchlist/` lists it, binding expiry first | While the route answers `404 NOT_FOUND` the page shows an `undetermined` box with **"The watchlist route is not available on this API yet. This says nothing about any contract."** and a link to the scanner. | After `PH2-E2-05` |
 | 8 | Click "Remove" on the row | Nothing to remove. A failed removal shows **"The API did not remove this (`<code>`, HTTP `<status>`). It is still on your watchlist."** | After `PH2-E2-05` |
-| 10 | While signed out, open `/dashboard/watchlist/` | **"A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown."** — this needs `GET /watchlist` to answer `UNAUTHENTICATED`, which the router does not do yet. | After `PH2-E2-05` |
+| 10 | While signed out, open `/dashboard/watchlist/` | Expected once the route exists: **"A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown."** This needs `GET /watchlist` to answer `UNAUTHENTICATED`, which the router does not do yet. Until then the page shows the same "route is not available on this API yet" box as step 7. | After `PH2-E2-05` |
 
 Steps 6 to 8 also need the sign-in from part A, and step 10 needs step 9 first.
 
