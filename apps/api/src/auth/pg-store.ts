@@ -7,7 +7,7 @@
  *
  * Rate counters and wallet challenges have no table in 0001. They read the
  * tables `auth_rate_counters` and `wallet_challenges`, which must come from
- * a numbered `0002_*` migration (Rakha's path). Until it is applied those
+ * a numbered `0003_*` migration (Rakha's path, #419). Until it is applied those
  * queries fail, and the router answers 503 `UPSTREAM_UNAVAILABLE`.
  */
 import { neon } from '@neondatabase/serverless';

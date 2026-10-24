@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 const built = new URL('../dist/index.js', import.meta.url).href;
 
 describe('built notification channel exports', () => {
-  it('previews webhook dry-run and refuses telegram without credential, network or logging side effects', () => {
+  it('previews webhook and telegram dry-run without credential, network or logging side effects', () => {
     const program = `
       import assert from 'node:assert/strict';
       let requests = 0;
@@ -19,7 +19,6 @@ describe('built notification channel exports', () => {
       const {
         WebhookChannel,
         TelegramChannel,
-        ChannelNotImplementedError,
       } = await import(${JSON.stringify(built)});
 
       const webhook = new WebhookChannel({ url: 'https://example.invalid/evergreen-hook' });
@@ -32,18 +31,21 @@ describe('built notification channel exports', () => {
       assert.equal(preview.submitted, false);
       assert.equal(requests, 0);
 
-      const record = new Proxy({}, { get() { throw new Error('Record must not be read'); } });
-      const telegram = new TelegramChannel();
-      assert.equal(telegram.name, 'telegram');
-      await assert.rejects(telegram.notify(record), error => {
-        assert.ok(error instanceof ChannelNotImplementedError);
-        assert.equal(error.code, 'CHANNEL_NOT_IMPLEMENTED');
-        assert.equal(error.channel, 'telegram');
-        assert.match(error.message, /SOW 2/);
-        return true;
+      let tokenReads = 0;
+      const telegram = new TelegramChannel({
+        chatId: '-1001234567890',
+        readBotToken: () => { tokenReads++; return 'unused'; },
       });
+      assert.equal(telegram.name, 'telegram');
+      const tg = await telegram.deliver(
+        { severity: 'info', subject: 'Fixture', body: 'Fixture body' },
+        'artifact-event',
+      );
+      assert.equal(tg.status, 'preview');
+      assert.equal(tg.submitted, false);
+      assert.equal(tokenReads, 0);
       assert.equal(requests, 0);
-      console.log(JSON.stringify({ webhook: preview.status, telegram: 'CHANNEL_NOT_IMPLEMENTED', requests }));
+      console.log(JSON.stringify({ webhook: preview.status, telegram: tg.status, requests }));
     `;
     const output = execFileSync(process.execPath, ['--input-type=module', '-e', program], {
       encoding: 'utf8',
@@ -53,7 +55,7 @@ describe('built notification channel exports', () => {
     });
     expect(JSON.parse(output)).toEqual({
       webhook: 'preview',
-      telegram: 'CHANNEL_NOT_IMPLEMENTED',
+      telegram: 'preview',
       requests: 0,
     });
   });
