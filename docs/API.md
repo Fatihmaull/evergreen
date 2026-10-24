@@ -321,7 +321,9 @@ Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_
 `INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
 - `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, or a path segment is not a valid network or contract ID.
 - `422`: the request is well-formed but refused on its meaning. Today that is `autopilot.extendToLedgers` not above `thresholdLedgers`, and an `autopilot.payerWallet` that is not linked to the caller.
-- §9a (WEBF) has no user-facing copy for it yet. Until it does, a client treats it as an unrecognised code and renders *undetermined* (§9a rule 2).
+- **The web client has copy for it** (WEBF's, in `apps/web/src/lib/watchlist.ts`, #444; the copy belongs to the web client, not to the API contract). When `POST /watchlist` answers `INVALID_REQUEST` (`400` or `422`, the code decides, not the status), the dashboard says: "The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly." If the scan declared more data keys than a watchlist item takes, it appends: "This scan declared N data keys, and a watchlist item takes at most 100." (N is the number declared). It branches on the code, never on `message`.
+
+**Known limitation: an absent item and an unknown route look the same.** `DELETE /watchlist/{network}/{contractId}` (and `PATCH`) for an item the caller does not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all, such as `/watchlist/a/b/c`. The two differ only in `message` ("No such watch item." and "No such route."), which is not part of the contract, so a client that branches on the code and status cannot tell them apart. This is documented, not a planned code change. A malformed `network` or `contractId` segment is not part of it: that is `400 INVALID_REQUEST`. The web client shows "Nothing to remove for this account." for the `DELETE` case (its copy, see §9a).
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
@@ -395,7 +397,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
   copy, reported as a result with its observation. *(CEF, folding: on the wire
   it is never the `NOT_FOUND` error code. `POST /scans` answers `200` with an
   `entry-not-found` issue in the `ScanResult`, exactly as `scan --json` does.
-  `NOT_FOUND` is for a missing route resource, such as an unknown job ID.)*
+  `NOT_FOUND` is for a missing route resource, such as an unknown job ID, or a watch item the caller does not have, §9.)*
 - **A health state without `observedAtLedger` is a client-side error, not a
   state to render.** §2 says the API never returns one; if it does, the
   dashboard shows undetermined and that is a P0 against the Definitions of
@@ -410,16 +412,25 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
 | `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it. **The screen states the limit before it is reached** (Fatih, 2026-10-21) — a limit a user discovers by hitting it reads as a fault, so the count is shown beside the control from the first use, not only on refusal |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
-| `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
+| `NETWORK_NOT_WRITABLE` | "That network cannot be written to from here. Nothing was added." (the web client's copy, `apps/web/src/lib/watchlist.ts`; names no network and gives no date) | Nothing. **Should be unreachable from this UI** — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
 | `IDEMPOTENCY_KEY_REUSED` | "That action was already taken." and then the existing job | **Nothing to retry** — this is the protection working, so it reads as information, not failure |
 
 **`NETWORK_NOT_WRITABLE` should be unreachable from the dashboard** and is
 listed so it is handled rather than assumed away. The site refuses to be
 *built* for anything but testnet (`PH2-E1-03`), so a client that could send a
-mainnet write would be a second defect. If it ever arrives, it renders as
-undetermined with the generic sentence — which is the closed-set default doing
-its job.
+mainnet write would be a second defect. If it ever arrives, the client
+shows the sentence in the table above, in the *undetermined* tone with the word
+"not added" (`POST /watchlist`, #444). That wording is the web client's copy
+(WEBF's path), not part of the API contract.
+
+Also in the web client's copy (WEBF's path, not part of the API contract):
+`INVALID_REQUEST` is in the client's known-code list and has its own sentence
+(§9); a `DELETE` that answers `NOT_FOUND` shows "Nothing to remove for this
+account."; and `UPSTREAM_UNAVAILABLE` on the watchlist no longer names a cause:
+"The API answered, but could not complete this, so the watchlist could not be
+read. This is about us, not your contracts." for `GET`, and "The API answered,
+but could not complete this. Nothing was confirmed as added." for `POST`.
 
 **One thing the client needs that §7 does not provide.** `ALLOWANCE_EXPIRED`
 and `GET /allowance` give a status, and the copy above needs *how long it has
