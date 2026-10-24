@@ -10,6 +10,7 @@ import {
   AUTH_SECRET_NAMES,
   AUTH_WRITE_ROUTES,
   CSRF_HEADER,
+  MailerError,
   MemoryAuthStore,
   ResendMailer,
   SESSION_ROTATE_AFTER_SECONDS,
@@ -371,14 +372,21 @@ describe('Worker mount: routes per docs/API.md §4', () => {
     expect(body.challengeXdr.length).toBeGreaterThan(0);
   });
 
-  it('ResendMailer throws on a provider rejection without echoing the body', async () => {
+  it('ResendMailer throws a MailerError on a provider rejection without echoing the body', async () => {
+    // Updated deliberately with the email-failure work: the mailer used to
+    // cancel the provider's body unread and throw "Email provider returned
+    // HTTP 422." Now it reads a bounded slice for the error name and a message
+    // prefix and keeps only our own tokens. The guarantee that stays: nothing
+    // of the body (or the key) is in the error. See email-send-failure.test.ts.
     const mailer = new ResendMailer('k', 'f@example.test', (() =>
       Promise.resolve(
         new Response('secret-ish body', { status: 422 }),
       )) as unknown as typeof fetch);
-    await expect(mailer.sendSigninCode('a@example.test', '12345678')).rejects.toThrow(
-      /^Email provider returned HTTP 422\.$/,
-    );
+    const err = await mailer.sendSigninCode('a@example.test', '12345678').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(MailerError);
+    expect(err).toMatchObject({ kind: 'rejected', reason: 'unclassified', httpStatus: 422 });
+    expect((err as MailerError).message).toBe('The email provider did not send the sign-in code.');
+    expect(JSON.stringify(err)).not.toContain('secret-ish');
   });
 });
 

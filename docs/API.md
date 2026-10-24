@@ -32,7 +32,7 @@ Nothing is built against this until it merges. "Written before either side build
 - `EMAIL_API_KEY`: the Resend key. Same name the engine's EmailChannel already uses (CONVENTIONS.md).
 - `CHALLENGE_SIGNING_KEY`: the `S…` seed of the challenge-signing key (§4).
 
-Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). `DASHBOARD_ORIGIN` is one exact origin per environment, set in `apps/api/wrangler.jsonc`: production `https://evergreen-stellar.pages.dev`, preview `https://preview.evergreen-stellar.pages.dev`. `EMAIL_FROM` is `onboarding@resend.dev` on preview (set in `env.preview` vars), which only delivers to the Resend account owner's email; production is undetermined until a sender domain is verified. Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
+Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). `DASHBOARD_ORIGIN` is one exact origin per environment, set in `apps/api/wrangler.jsonc`: production `https://evergreen-stellar.pages.dev`, preview `https://preview.evergreen-stellar.pages.dev`. `EMAIL_FROM` is `onboarding@resend.dev` on preview (set in `env.preview` vars), which Resend documents as delivering only to the account owner's own email (the sandbox rule; documented by Resend, not yet observed by us). A send to any other address is refused by Resend and surfaces as `502 EMAIL_NOT_SENT` (§4, §9); production is undetermined until a sender domain is verified. Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker names:** production `evergreen-api`; preview `evergreen-api-preview`.
 - **Service binding:** the Pages project binds the API Worker as `API`. The dashboard's `/api/*` is a Pages Function that forwards each request over `API` to the Worker; the Worker serves base path `/api/v1`.
@@ -95,7 +95,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 | Route | Auth | Does |
 |---|---|---|
-| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **Always `202`, whether or not an account exists**, so the route cannot enumerate users. The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed |
+| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **`202` whether or not an account exists**, so the route cannot enumerate users, and `202` for a malformed address too (nothing is sent). The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed. If the mail provider **refuses** the send (a sender or key setting, or the sandbox rule in §1), the answer is `502 EMAIL_NOT_SENT`; if it is busy (`429`), down (`5xx`), unreachable, or a setting or the database is unavailable, it is `503 UPSTREAM_UNAVAILABLE`. **Neither depends on whether an account exists.** A refusal writes one log line, `auth.email_send_failed` (§9) |
 | `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, **or reactivates a deactivated one** (§10), sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
 | `POST /auth/logout` | session | Deletes the session row. Returns `204` |
 | `GET /me` | session | `{ user: { id, email, createdAt }, wallets: Wallet[], csrfToken }` |
@@ -309,11 +309,15 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
-**`UPSTREAM_UNAVAILABLE` means the RPC or the database did not answer.** It is never reported as "unhealthy" or "not found": absence is not health.
+**`UPSTREAM_UNAVAILABLE` means something the API depends on did not answer, or is not set up:** the RPC, the database, the mail provider (busy, down or unreachable), or a required setting that is unset. It is never reported as "unhealthy" or "not found": absence is not health.
+
+**`EMAIL_NOT_SENT` (`502`, `retryable: false`) means the mail provider refused this sign-in send.** Retrying the same request will not help; it needs a setting changed or a different address. Only `POST /auth/email/start` returns it. It tells the caller the cause class (provider refusal rather than we are down), never which setting, and never whether an account exists.
+
+**Diagnosing a refused send.** The Worker writes one JSON line to `console.error`, event `auth.email_send_failed`, with only these fields: `provider` (`resend`), `kind` (`rejected` or `unavailable` or `network`), `reason` (our own token, e.g. `testing_recipient_restricted`, `sender_domain_not_verified`, `api_key_rejected`, `recipient_invalid`, `sender_invalid`, `quota_or_rate_limited`, `provider_5xx`, `network_error`, `unclassified`), `httpStatus` and `providerErrorName` when the provider answered, `senderDomain`, `recipientDomain`, `environment`, and `rayId` when `cf-ray` is present. **Never logged: the full recipient address (the domain only), the API key, the sign-in code, or the provider's message text** (Resend's sandbox message contains the account owner's address). Where the line can be read depends on Workers Logs or `wrangler tail`; whether Workers Logs is enabled is undetermined here.
 
 ## 9a · The error taxonomy, user-facing (WEBF)
 
@@ -342,6 +346,7 @@ the dashboard branches on and what it says to a person.
 |---|---|---|
 | `CODE_INVALID` | "That code did not work. Request a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
 | `UNAUTHENTICATED` | the signed-out state for the whole screen, not an error toast | Sign in. The screen's own data is cleared first: a stale watchlist under a sign-in prompt is another user's data as far as the next person at that keyboard knows |
+| `EMAIL_NOT_SENT` | "The code could not be sent to that address. Nothing was sent. Trying again will not help; use a different address." (proposed; WEBF owns the copy) | Use a different address. Nothing else the user can do. Not retried automatically |
 | `CSRF_FAILED` | "This page was open too long. Reload and try again." | Reload. Never retried automatically — a silent retry of a state-changing request is the thing CSRF protection exists to stop |
 | `RATE_LIMITED` | "Too many attempts. Try again in N minutes." from `Retry-After` | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
 | `WALLET_LINKED_ELSEWHERE` | "That wallet is already linked to another account." | **Nothing they can do here.** No "contact support" — there is no support channel, and offering one is a promise with a date on it |
