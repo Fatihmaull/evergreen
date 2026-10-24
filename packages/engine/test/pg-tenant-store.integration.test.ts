@@ -56,7 +56,8 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
         threshold_ledgers, extend_to_ledgers, budget_per_job_max, budget_per_30d_max) VALUES
         ('${U1}', 'testnet', '${C('A')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300),
         ('${U2}', 'testnet', '${C('A')}', '{"noDataKeys":true}', true, 'testnet', '${G('B')}', 1000, 5000, 100, 300),
-        ('${U1}', 'testnet', '${C('B')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300);
+        ('${U1}', 'testnet', '${C('B')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300),
+        ('${U2}', 'testnet', '${C('C')}', '{"noDataKeys":true}', true, 'testnet', '${G('A')}', 1000, 5000, 100, 300);
       INSERT INTO watch_items (user_id, network, contract_id, scope, removed_at) VALUES
         ('${U1}', 'testnet', '${C('Z')}', '{"noDataKeys":true}', now());
       INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, status, autopilot_window, pull_tx_hash, pulled_at, pull_amount) VALUES
@@ -77,6 +78,12 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
     expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBe(60n);
     expect(await store.spentLast30d(U2, 'testnet', C('A'))).toBe(250n);
     expect(await store.spentLast30d(U1, 'testnet', C('B'))).toBe(0n);
+  });
+
+  it('does not list an item paid from another user’s wallet', async () => {
+    const rows = await new PgTenantStore(query).listAutopilotItems('testnet');
+    expect(rows.map((r) => [r.userId, r.contractId])).not.toContainEqual([U2, C('C')]);
+    expect(rows.every((r) => r.payerOwnerUserId === r.userId)).toBe(true);
   });
 
   it('plans per payer from the real tables, excluding removed items', async () => {

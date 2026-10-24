@@ -19,13 +19,15 @@ export class TenantStoreError extends Error {
 }
 
 /** Read-only. Numeric columns are cast to text so stroops never pass through a float. */
-export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT user_id::text AS user_id, network, contract_id, scope,
-  autopilot_enabled, (removed_at IS NOT NULL) AS removed, payer_network, payer_account,
-  threshold_ledgers::text AS threshold_ledgers, extend_to_ledgers::text AS extend_to_ledgers,
-  budget_per_job_max::text AS budget_per_job_max, budget_per_30d_max::text AS budget_per_30d_max
-FROM watch_items
-WHERE network = $1 AND autopilot_enabled AND removed_at IS NULL
-ORDER BY payer_account, contract_id, user_id`;
+export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT i.user_id::text AS user_id, i.network, i.contract_id, i.scope,
+  i.autopilot_enabled, (i.removed_at IS NOT NULL) AS removed, i.payer_network, i.payer_account,
+  w.user_id::text AS payer_owner_user_id,
+  i.threshold_ledgers::text AS threshold_ledgers, i.extend_to_ledgers::text AS extend_to_ledgers,
+  i.budget_per_job_max::text AS budget_per_job_max, i.budget_per_30d_max::text AS budget_per_30d_max
+FROM watch_items i
+JOIN wallets w ON w.network = i.payer_network AND w.account = i.payer_account AND w.user_id = i.user_id
+WHERE i.network = $1 AND i.autopilot_enabled AND i.removed_at IS NULL
+ORDER BY i.payer_account, i.contract_id, i.user_id`;
 
 /** Pulled minus refunded, for jobs of this (user, network, contract) that pulled in the last 30 days. */
 export const SPENT_LAST_30D_SQL = `SELECT coalesce(sum(CASE WHEN f.kind = 'pull' THEN f.amount ELSE -f.amount END), 0)::text AS spent
@@ -74,6 +76,7 @@ export class PgTenantStore implements TenantStore {
       removed: bool(row, 'removed'),
       payerNetwork: optStr(row, 'payer_network'),
       payerAccount: optStr(row, 'payer_account'),
+      payerOwnerUserId: optStr(row, 'payer_owner_user_id'),
       thresholdLedgers: optInt(row, 'threshold_ledgers'),
       extendToLedgers: optInt(row, 'extend_to_ledgers'),
       budgetPerJobMax: optInt(row, 'budget_per_job_max'),

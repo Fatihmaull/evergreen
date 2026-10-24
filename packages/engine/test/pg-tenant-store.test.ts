@@ -17,6 +17,7 @@ const dbRow = {
   removed: false,
   payer_network: 'testnet',
   payer_account: G('A'),
+  payer_owner_user_id: U1,
   threshold_ledgers: '1000',
   extend_to_ledgers: '5000',
   budget_per_job_max: '123456789012345678901234567890',
@@ -41,7 +42,10 @@ describe('PgTenantStore', () => {
       expect(sql.trimStart().startsWith('SELECT')).toBe(true);
       expect(sql).not.toMatch(/\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i);
     }
-    expect(LIST_AUTOPILOT_ITEMS_SQL).toMatch(/autopilot_enabled AND removed_at IS NULL/);
+    expect(LIST_AUTOPILOT_ITEMS_SQL).toMatch(/i\.autopilot_enabled AND i\.removed_at IS NULL/);
+    expect(LIST_AUTOPILOT_ITEMS_SQL).toMatch(
+      /JOIN wallets w ON w\.network = i\.payer_network AND w\.account = i\.payer_account AND w\.user_id = i\.user_id/,
+    );
     expect(SPENT_LAST_30D_SQL).toMatch(
       /j\.user_id = \$1::uuid AND j\.network = \$2 AND j\.contract_id = \$3/,
     );

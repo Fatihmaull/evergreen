@@ -16,12 +16,22 @@ describe('planTenants', () => {
     expect(plan[0]!.network).toBe('testnet');
   });
 
-  it('keeps two users on one contract as two items when they share a payer', () => {
-    const a = row({ userId: U2 });
-    const b = row({ userId: U1 });
-    const plan = planTenants([a, b], zero(a, b));
+  it('excludes an item whose payer wallet belongs to another user (ADR-004/ADR-007)', () => {
+    const own = row({ userId: U1 });
+    const foreign = row({ userId: U2, payerOwnerUserId: U1 });
+    const plan = planTenants([foreign, own], zero(own, foreign));
     expect(plan).toHaveLength(1);
-    expect(plan[0]!.items.map((i) => i.userId)).toEqual([U1, U2]);
+    expect(plan[0]!.items.map((i) => i.userId)).toEqual([U1]);
+  });
+
+  it('excludes an item whose payer owner is unknown', () => {
+    const r = row({ payerOwnerUserId: null });
+    expect(planTenants([r], zero(r))).toEqual([]);
+  });
+
+  it('the memory store drops items paid from another user’s wallet, like the SQL JOIN', async () => {
+    const store = new MemoryTenantStore([row(), row({ userId: U2, payerOwnerUserId: U1 })]);
+    expect((await store.listAutopilotItems('testnet')).map((r) => r.userId)).toEqual([U1]);
   });
 
   it('puts many contracts of one payer in one group, sorted by contract', () => {

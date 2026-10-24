@@ -20,5 +20,6 @@ export function row(over: Partial<AutopilotItemRow> = {}): AutopilotItemRow {
     budgetPerJobMax: 100n,
     budgetPer30dMax: 300n,
     ...over,
+    payerOwnerUserId: 'payerOwnerUserId' in over ? over.payerOwnerUserId! : (over.userId ?? U1),
   };
 }

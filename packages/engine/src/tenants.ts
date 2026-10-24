@@ -19,6 +19,8 @@ export interface AutopilotItemRow {
   readonly removed: boolean;
   readonly payerNetwork: string | null;
   readonly payerAccount: string | null;
+  /** Owner (`wallets.user_id`) of the payer wallet; null when unknown. Must equal `userId`. */
+  readonly payerOwnerUserId: string | null;
   readonly thresholdLedgers: bigint | null;
   readonly extendToLedgers: bigint | null;
   /** Stroops. */
@@ -68,6 +70,7 @@ export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boole
     row.payerNetwork === network &&
     typeof row.payerAccount === 'string' &&
     row.payerAccount !== '' &&
+    row.payerOwnerUserId === row.userId &&
     typeof row.thresholdLedgers === 'bigint' &&
     typeof row.extendToLedgers === 'bigint' &&
     typeof row.budgetPerJobMax === 'bigint' &&

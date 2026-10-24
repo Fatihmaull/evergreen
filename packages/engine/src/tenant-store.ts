@@ -52,7 +52,14 @@ export class MemoryTenantStore implements TenantStore {
   }
 
   async listAutopilotItems(network: TenantNetwork): Promise<readonly AutopilotItemRow[]> {
-    return this.#rows.filter((r) => r.network === network && r.autopilotEnabled && !r.removed);
+    // Mirrors the SQL JOIN on wallets: only items paid from the item owner's own wallet.
+    return this.#rows.filter(
+      (r) =>
+        r.network === network &&
+        r.autopilotEnabled &&
+        !r.removed &&
+        r.payerOwnerUserId === r.userId,
+    );
   }
 
   async spentLast30d(userId: string, network: TenantNetwork, contractId: string): Promise<bigint> {
