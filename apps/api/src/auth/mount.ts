@@ -11,7 +11,9 @@ import {
   classifyResendFailure,
   describeKey,
   domainOf,
+  isRedirectResponse,
   readBoundedText,
+  redirectFailure,
   roundElapsedMs,
   safeFetchErrorName,
   type AuthLogger,
@@ -87,7 +89,11 @@ export class ResendMailer implements Mailer {
     const url = 'https://api.resend.com/emails';
     const init: RequestInit = {
       method: 'POST',
-      redirect: 'error',
+      // Workers does not implement `redirect: 'error'`: it throws a TypeError when
+      // the Request is built, before anything is sent (Workers docs, Request). So
+      // `manual`, and any 3xx answer below is a failed send, never followed. The
+      // Authorization header therefore never goes to any other URL.
+      redirect: 'manual',
       headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         from: this.from,
@@ -120,6 +126,15 @@ export class ResendMailer implements Mailer {
         elapsedMs = undefined; // a clock that throws costs the field, not the answer
       }
       throw this.networkFailure('send', 'network_error', thrown, domains, elapsedMs);
+    }
+    if (isRedirectResponse(response)) {
+      // Not followed, `Location` not read, body dropped unread.
+      try {
+        await response.body?.cancel();
+      } catch {
+        // an unreadable body costs nothing here
+      }
+      throw new MailerError(redirectFailure(response.status, domains));
     }
     if (response.ok) {
       await response.body?.cancel();

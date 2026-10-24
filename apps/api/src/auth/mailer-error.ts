@@ -31,6 +31,7 @@ export type MailerFailureReason =
   | 'provider_5xx'
   | 'network_error'
   | 'request_invalid'
+  | 'unexpected_redirect'
   | 'unclassified';
 
 /**
@@ -265,6 +266,7 @@ export function classifyResendFailure(
   } catch {
     // Not JSON: status only.
   }
+  if (status >= 300 && status < 400) return redirectFailure(status, domains);
   const base = {
     httpStatus: status,
     ...(name === undefined ? {} : { providerErrorName: name }),
@@ -274,6 +276,43 @@ export function classifyResendFailure(
   if (status >= 500) return { kind: 'unavailable', reason: 'provider_5xx', ...base };
   if (status >= 400) return { kind: 'rejected', reason: reasonFor(name, message), ...base };
   return { kind: 'unavailable', reason: 'unclassified', ...base };
+}
+
+/**
+ * True for an answer the mailer must not act on as a send result: any 3xx, or
+ * the opaque redirect a runtime may return under `redirect: 'manual'` (type
+ * `opaqueredirect`, status 0). Reads only `status` and `type`, never `Location`
+ * or any other header, and never throws.
+ */
+export function isRedirectResponse(response: {
+  readonly status: number;
+  readonly type?: string;
+}): boolean {
+  try {
+    return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
+  } catch {
+    return false; // a getter that throws is not a redirect we can name
+  }
+}
+
+/**
+ * The failure for a redirect answer. `unavailable`, not `rejected`: `rejected`
+ * becomes `502 EMAIL_NOT_SENT`, whose page text tells the person to use a
+ * different address, and a redirect from Resend's API has nothing to do with the
+ * address; it is our setup or the provider. Retrying will not fix it, but the
+ * person cannot either, so the plain `503` is the honest answer. `httpStatus` is
+ * kept only for a real 3xx (an opaque redirect has status 0).
+ */
+export function redirectFailure(
+  status: number,
+  domains: { readonly senderDomain: string; readonly recipientDomain: string },
+): MailerFailure {
+  return {
+    kind: 'unavailable',
+    reason: 'unexpected_redirect',
+    ...(status >= 300 && status < 400 ? { httpStatus: status } : {}),
+    ...domains,
+  };
 }
 
 /** One structured log line for a sink to write. Fields are the allowlist below, nothing else. */
