@@ -1,0 +1,71 @@
+import { isEligible, planTenants, spendKey } from './tenants.js';
+import type { AutopilotItemRow, TenantNetwork, TenantPlan } from './tenants.js';
+
+/** Read-only source of tenant data. Implementations never write. */
+export interface TenantStore {
+  /** Watch items with autopilot on and not removed, on this network. */
+  listAutopilotItems(network: TenantNetwork): Promise<readonly AutopilotItemRow[]>;
+  /** Stroops pulled minus refunded in the last 30 days for one (user, network, contract). */
+  spentLast30d(userId: string, network: TenantNetwork, contractId: string): Promise<bigint>;
+}
+
+export async function planTenantsFromStore(
+  store: TenantStore,
+  network: TenantNetwork = 'testnet',
+): Promise<TenantPlan[]> {
+  const rows = await store.listAutopilotItems(network);
+  const spent = new Map<string, bigint>();
+  for (const row of rows) {
+    if (!isEligible(row, network)) continue;
+    spent.set(
+      spendKey(row.userId, row.network, row.contractId),
+      await store.spentLast30d(row.userId, network, row.contractId),
+    );
+  }
+  return planTenants(rows, spent, network);
+}
+
+export interface MemorySpendEntry {
+  readonly userId: string;
+  readonly network: string;
+  readonly contractId: string;
+  /** When the job's pull confirmed; the 30-day window reads this. */
+  readonly pulledAt: Date;
+  readonly pulled: bigint;
+  readonly refunded: bigint;
+}
+
+/** In-memory store for tests and rehearsals. */
+export class MemoryTenantStore implements TenantStore {
+  readonly #rows: readonly AutopilotItemRow[];
+  readonly #spend: readonly MemorySpendEntry[];
+  readonly #now: () => Date;
+
+  constructor(
+    rows: readonly AutopilotItemRow[],
+    spend: readonly MemorySpendEntry[] = [],
+    now: () => Date = () => new Date(),
+  ) {
+    this.#rows = rows;
+    this.#spend = spend;
+    this.#now = now;
+  }
+
+  async listAutopilotItems(network: TenantNetwork): Promise<readonly AutopilotItemRow[]> {
+    return this.#rows.filter((r) => r.network === network && r.autopilotEnabled && !r.removed);
+  }
+
+  async spentLast30d(userId: string, network: TenantNetwork, contractId: string): Promise<bigint> {
+    const since = this.#now().getTime() - 30 * 24 * 60 * 60 * 1000;
+    let total = 0n;
+    for (const e of this.#spend)
+      if (
+        e.userId === userId &&
+        e.network === network &&
+        e.contractId === contractId &&
+        e.pulledAt.getTime() > since
+      )
+        total += e.pulled - e.refunded;
+    return total;
+  }
+}
