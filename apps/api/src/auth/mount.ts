@@ -6,6 +6,13 @@
  */
 import { Keypair } from '@stellar/stellar-sdk';
 import { loadAuthConfig, type AuthConfig } from './config.js';
+import {
+  MailerError,
+  classifyResendFailure,
+  domainOf,
+  readBoundedText,
+  type AuthLogger,
+} from './mailer-error.js';
 import type { AuthDeps } from './routes.js';
 import { PgAuthStore, neonSqlClient } from './pg-store.js';
 import type { AuthStore, Mailer } from './store.js';
@@ -44,9 +51,16 @@ export interface MountOptions {
   readonly createStore?: StoreFactory;
   readonly fetch?: typeof fetch;
   readonly now?: () => number;
+  /** Where `auth.email_send_failed` goes. Defaults to one JSON line on `console.error`; tests inject a recorder. */
+  readonly log?: AuthLogger;
 }
 
-/** Sends the sign-in code through Resend. Never logs or echoes the key, address or body. */
+/**
+ * Sends the sign-in code through Resend. Never logs or echoes the key, the
+ * address or the provider's message. A failure throws a `MailerError` carrying
+ * only a status, a validated error name, our own reason token and two domains
+ * (`mailer-error.ts`).
+ */
 export class ResendMailer implements Mailer {
   constructor(
     private readonly apiKey: string,
@@ -55,19 +69,32 @@ export class ResendMailer implements Mailer {
   ) {}
 
   async sendSigninCode(email: string, code: string): Promise<void> {
-    const response = await this.fetcher('https://api.resend.com/emails', {
-      method: 'POST',
-      redirect: 'error',
-      headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        from: this.from,
-        to: [email],
-        subject: 'Your Evergreen sign-in code',
-        text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
-      }),
-    });
-    await response.body?.cancel();
-    if (!response.ok) throw new Error(`Email provider returned HTTP ${response.status}.`);
+    const domains = { senderDomain: domainOf(this.from), recipientDomain: domainOf(email) };
+    let response: Response;
+    try {
+      response = await this.fetcher('https://api.resend.com/emails', {
+        method: 'POST',
+        redirect: 'error',
+        headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          from: this.from,
+          to: [email],
+          subject: 'Your Evergreen sign-in code',
+          text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
+        }),
+      });
+    } catch {
+      // The thrown error's text can carry the URL or a library message: dropped.
+      throw new MailerError({ kind: 'network', reason: 'network_error', ...domains });
+    }
+    if (response.ok) {
+      await response.body?.cancel();
+      return;
+    }
+    // Only a bounded slice, parsed for the error name and a message prefix.
+    throw new MailerError(
+      classifyResendFailure(response.status, await readBoundedText(response), domains),
+    );
   }
 }
 
