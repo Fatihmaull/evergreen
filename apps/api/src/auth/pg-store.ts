@@ -5,10 +5,10 @@
  * Hashes and MACs travel as hex and are stored as `bytea` (`decode(…,'hex')`).
  * Times are epoch seconds in code and `timestamptz` in the database.
  *
- * Rate counters and wallet challenges have no table in 0001. They read the
- * tables `auth_rate_counters` and `wallet_challenges`, which must come from
- * a numbered `0003_*` migration (Rakha's path, #419). Until it is applied those
- * queries fail, and the router answers 503 `UPSTREAM_UNAVAILABLE`.
+ * Rate counters and wallet challenges have no table in schema.sql. They read
+ * `auth_rate_counters` and `wallet_challenges` from migration
+ * apps/api/db/0003_auth_rate_counters_wallet_challenges.sql (#419). Until it is
+ * applied those queries fail, and the router answers 503 `UPSTREAM_UNAVAILABLE`.
  */
 import { neon } from '@neondatabase/serverless';
 import type { CounterStore } from './rate-limit.js';
