@@ -9,10 +9,13 @@ import { loadAuthConfig, type AuthConfig } from './config.js';
 import {
   MailerError,
   classifyResendFailure,
+  describeKey,
   domainOf,
   readBoundedText,
+  roundElapsedMs,
   safeFetchErrorName,
   type AuthLogger,
+  type FetchStage,
 } from './mailer-error.js';
 import type { AuthDeps } from './routes.js';
 import { PgAuthStore, neonSqlClient } from './pg-store.js';
@@ -67,35 +70,56 @@ export class ResendMailer implements Mailer {
     private readonly apiKey: string,
     private readonly from: string,
     private readonly fetcher: typeof fetch,
+    private readonly hooks: {
+      /**
+       * Builds the request the way `fetch` will, only to see whether that
+       * throws. Defaults to `new Request`; tests swap it to stand in for a
+       * runtime with stricter rules. Its result is discarded.
+       */
+      readonly buildRequest?: (url: string, init: RequestInit) => unknown;
+      /** Milliseconds; defaults to `Date.now`. Tests inject a fake clock. */
+      readonly clock?: () => number;
+    } = {},
   ) {}
 
   async sendSigninCode(email: string, code: string): Promise<void> {
     const domains = { senderDomain: domainOf(this.from), recipientDomain: domainOf(email) };
+    const url = 'https://api.resend.com/emails';
+    const init: RequestInit = {
+      method: 'POST',
+      redirect: 'error',
+      headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        from: this.from,
+        to: [email],
+        subject: 'Your Evergreen sign-in code',
+        text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
+      }),
+    };
+
+    // Stage 'build': constructing the request, as `fetch(url, init)` does first.
+    // A throw here means nothing left the Worker (an invalid header value or
+    // option), which is not an outage. The result is discarded; `fetch` below
+    // builds its own from the same arguments.
+    try {
+      (this.hooks.buildRequest ?? ((u, i) => new Request(u, i)))(url, init);
+    } catch (thrown) {
+      throw this.networkFailure('build', 'request_invalid', thrown, domains);
+    }
+
+    const clock = this.hooks.clock ?? Date.now;
+    const startedAt = clock();
     let response: Response;
     try {
-      response = await this.fetcher('https://api.resend.com/emails', {
-        method: 'POST',
-        redirect: 'error',
-        headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
-        body: JSON.stringify({
-          from: this.from,
-          to: [email],
-          subject: 'Your Evergreen sign-in code',
-          text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
-        }),
-      });
+      response = await this.fetcher(url, init);
     } catch (thrown) {
-      // The thrown error's text can carry the URL or a library message: dropped.
-      // Only its `name` survives, and only as a plain letters token: a
-      // `TypeError` means `fetch` refused the request (e.g. an invalid header
-      // value) before any network use, which is not a network outage.
-      const fetchErrorName = safeFetchErrorName(thrown);
-      throw new MailerError({
-        kind: 'network',
-        reason: 'network_error',
-        ...(fetchErrorName === undefined ? {} : { fetchErrorName }),
-        ...domains,
-      });
+      let elapsedMs: number | undefined;
+      try {
+        elapsedMs = roundElapsedMs(clock() - startedAt);
+      } catch {
+        elapsedMs = undefined; // a clock that throws costs the field, not the answer
+      }
+      throw this.networkFailure('send', 'network_error', thrown, domains, elapsedMs);
     }
     if (response.ok) {
       await response.body?.cancel();
@@ -105,6 +129,30 @@ export class ResendMailer implements Mailer {
     throw new MailerError(
       classifyResendFailure(response.status, await readBoundedText(response), domains),
     );
+  }
+
+  /**
+   * The thrown error's text can carry the URL, a header value or a library
+   * message: dropped. Only its `name` survives, and only as a plain letters
+   * token, plus the stage, the key facts and (send only) a coarse elapsed time.
+   */
+  private networkFailure(
+    fetchStage: FetchStage,
+    reason: 'request_invalid' | 'network_error',
+    thrown: unknown,
+    domains: { readonly senderDomain: string; readonly recipientDomain: string },
+    elapsedMs?: number,
+  ): MailerError {
+    const fetchErrorName = safeFetchErrorName(thrown);
+    return new MailerError({
+      kind: 'network',
+      reason,
+      fetchStage,
+      ...(fetchErrorName === undefined ? {} : { fetchErrorName }),
+      ...(elapsedMs === undefined ? {} : { elapsedMs }),
+      ...describeKey(this.apiKey),
+      ...domains,
+    });
   }
 }
 
