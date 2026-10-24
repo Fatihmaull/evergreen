@@ -31,6 +31,7 @@ export type SessionResult =
 export type StartResult =
   | { readonly kind: 'sent' }
   | { readonly kind: 'rate-limited'; readonly retryAfterSeconds?: number }
+  | { readonly kind: 'not-sent'; readonly detail: string }
   | Undetermined;
 export type VerifyResult =
   { readonly kind: 'verified' } | { readonly kind: 'code-invalid' } | Undetermined;
@@ -98,6 +99,11 @@ export async function startEmail(email: string, f?: FetchLike): Promise<StartRes
     return o.retryAfterSeconds === undefined
       ? { kind: 'rate-limited' }
       : { kind: 'rate-limited', retryAfterSeconds: o.retryAfterSeconds };
+  }
+  // The API answered, in its own envelope, that it could not do the send. That
+  // is an answer, not silence: the page says nothing was sent, and nothing about why.
+  if (o.kind === 'error' && o.code === 'UPSTREAM_UNAVAILABLE') {
+    return { kind: 'not-sent', detail: describe(o) };
   }
   return und(o);
 }
