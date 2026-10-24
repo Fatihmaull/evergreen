@@ -21,6 +21,7 @@ import {
   domainOf,
   handle,
   readBoundedText,
+  safeFetchErrorName,
   type AuthLogEntry,
   type Env,
   type MailerFailure,
@@ -505,6 +506,7 @@ describe('POST /auth/email/start: provider busy, down or silent stays 503 UPSTRE
         provider: 'resend',
         kind: 'network',
         reason: 'network_error',
+        fetchErrorName: 'Error',
         senderDomain: 'resend.dev',
         recipientDomain: 'x.test',
         environment: 'preview',
@@ -649,3 +651,144 @@ const _shape: MailerFailure = {
   recipientDomain: 'b',
 };
 void _shape;
+
+describe('EMAIL_API_KEY is trimmed where it is read, and a fetch failure logs only its name', () => {
+  /** What `fetch` itself does with a header value holding a newline: it refuses before any request. */
+  const strictFetch = ((_url: string, init: RequestInit) => {
+    const value = (init.headers as Record<string, string>)['authorization'] ?? '';
+    if (/[\r\n]/.test(value)) throw new TypeError(`Headers: invalid value ${value} a@x.test`);
+    sent.push({ init });
+    return Promise.resolve(new Response('{"id":"x"}', { status: 200 }));
+  }) as unknown as typeof fetch;
+
+  const authorizationSent = () =>
+    (sent.at(-1)!.init.headers as Record<string, string>)['authorization'];
+
+  it.each([
+    ['a trailing newline', `${API_KEY}\n`],
+    ['a trailing CRLF', `${API_KEY}\r\n`],
+    ['trailing spaces', `${API_KEY}   `],
+    ['leading and trailing whitespace', ` \t${API_KEY}\n `],
+  ])('a key with %s is sent as exactly "Bearer <key>" and answers 202', async (_label, stored) => {
+    env.EMAIL_API_KEY = stored;
+    const res = await start('a@x.test');
+    expect(res.status).toBe(202);
+    expect(sent).toHaveLength(1);
+    expect(authorizationSent()).toBe(`Bearer ${API_KEY}`);
+    expect(logs).toEqual([]);
+  });
+
+  it('with the untrimmed value, a strict fetch would refuse; with the trim the send goes through', async () => {
+    options = { ...options, fetch: strictFetch };
+    env.EMAIL_API_KEY = `${API_KEY}\n`;
+    expect((await start('a@x.test')).status).toBe(202);
+    expect(authorizationSent()).toBe(`Bearer ${API_KEY}`);
+  });
+
+  it.each(['\n', '   ', ' \r\n\t '])(
+    'an all-whitespace key (%j) is unset: 503, no fetch, no email log',
+    async (stored) => {
+      env.EMAIL_API_KEY = stored;
+      const res = await start('a@x.test');
+      expect(res.status).toBe(503);
+      expect((await res.json()) as unknown).toMatchObject({
+        error: { code: 'UPSTREAM_UNAVAILABLE' },
+      });
+      expect(sent).toHaveLength(0);
+      expect(logs).toEqual([]);
+    },
+  );
+
+  it('an unset key is still 503 with no fetch (unchanged)', async () => {
+    delete env.EMAIL_API_KEY;
+    expect((await start('a@x.test')).status).toBe(503);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('a fetch that throws a TypeError logs fetchErrorName=TypeError and no message, key or address', async () => {
+    answer = () => {
+      throw new TypeError(
+        `invalid header value Bearer ${API_KEY} for a@x.test at https://api.resend.com`,
+      );
+    };
+    const res = await start('a@x.test');
+    expect(res.status).toBe(503);
+    expect(logs).toEqual([
+      {
+        event: 'auth.email_send_failed',
+        provider: 'resend',
+        kind: 'network',
+        reason: 'network_error',
+        fetchErrorName: 'TypeError',
+        senderDomain: 'resend.dev',
+        recipientDomain: 'x.test',
+        environment: 'preview',
+      },
+    ]);
+    expect(JSON.stringify(logs)).not.toMatch(
+      /invalid header|Bearer|re_test|a@x\.test|api\.resend\.com|stack/,
+    );
+  });
+
+  it.each([
+    ['spaces', 'Type Error'],
+    ['too long', 'A'.repeat(65)],
+    ['the key', `Bearer ${API_KEY}`],
+    ['an address', 'a@x.test'],
+    ['digits and punctuation', 'Error: 42'],
+    ['a newline', 'Type\nError'],
+    ['empty', ''],
+  ])('a thrown error whose name is hostile (%s) omits the field', async (_label, name) => {
+    answer = () => {
+      const hostile = new Error('boom');
+      hostile.name = name;
+      throw hostile;
+    };
+    const res = await start('a@x.test');
+    expect(res.status).toBe(503);
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatchObject({ kind: 'network', reason: 'network_error' });
+    expect(logs[0]).not.toHaveProperty('fetchErrorName');
+    expect(JSON.stringify(logs)).not.toMatch(/boom|re_test|a@x\.test/);
+  });
+
+  it('a 64-letter name is kept, a 65-letter one is not (the bound)', () => {
+    expect(safeFetchErrorName({ name: 'A'.repeat(64) })).toBe('A'.repeat(64));
+    expect(safeFetchErrorName({ name: 'A'.repeat(65) })).toBeUndefined();
+  });
+
+  it('a thrown string, null, an object with no name, or a name getter that throws omits the field', () => {
+    expect(safeFetchErrorName('TypeError')).toBeUndefined();
+    expect(safeFetchErrorName(null)).toBeUndefined();
+    expect(safeFetchErrorName({})).toBeUndefined();
+    expect(safeFetchErrorName({ name: 7 })).toBeUndefined();
+    expect(
+      safeFetchErrorName({
+        get name(): string {
+          throw new Error('getter');
+        },
+      }),
+    ).toBeUndefined();
+  });
+
+  it('the answer is byte-identical for a registered and an unregistered address when fetch throws', async () => {
+    answer = () => {
+      throw new TypeError('x');
+    };
+    const snap = async (res: Response) => ({
+      status: res.status,
+      headers: [...res.headers.entries()].sort(),
+      body: await res.text(),
+    });
+    const a = await snap(await start('known@x.test'));
+    const b = await snap(await start('unknown@x.test'));
+    expect(a.status).toBe(503);
+    expect(b).toEqual(a);
+  });
+
+  it('a non-network failure carries no fetchErrorName', async () => {
+    answer = refuse(SANDBOX);
+    await start('a@x.test');
+    expect(logs[0]).not.toHaveProperty('fetchErrorName');
+  });
+});
