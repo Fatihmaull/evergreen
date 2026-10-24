@@ -209,6 +209,13 @@ export function tableHtml(items: readonly WatchItem[], now = new Date()): string
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
 
+/** `GET /watchlist` answered `NOT_FOUND` or `METHOD_NOT_ALLOWED` in the §9 envelope. */
+export const ROUTE_NOT_AVAILABLE =
+  'The watchlist route is not available on this API yet. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.';
+
+/** Only shown for a 200 `{ items: [] }`: the API answered an authenticated session. */
+export const SIGNED_IN_EMPTY = 'Signed in. Nothing watched yet.';
+
 const undeterminedBox = (sentence: string): string =>
   `<div class="verdict undetermined"><div class="row"><span class="chip undetermined"><span class="shape"></span>undetermined</span></div><p class="headline">${sentence}</p></div>`;
 
@@ -231,7 +238,11 @@ export function watchlistScreenHtml(
         'The API answered, but not with a watchlist this page can read. We could not establish this.',
       );
     }
-    return tableHtml(items as WatchItem[], now);
+    // A 200 with a list is the API answering an authenticated session, which is
+    // the only thing "signed in" rests on here. It says nothing about contracts.
+    return items.length === 0
+      ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
+      : tableHtml(items as WatchItem[], now);
   }
   if (outcome.kind === 'unavailable') {
     return undeterminedBox(
@@ -242,6 +253,11 @@ export function watchlistScreenHtml(
   }
   if (outcome.code === 'UNAUTHENTICATED') {
     return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+  }
+  if (outcome.code === 'NOT_FOUND' || outcome.code === 'METHOD_NOT_ALLOWED') {
+    // The API answered in its own envelope, but not with this route. That is all
+    // it says: no cause, no date for when the route will exist.
+    return undeterminedBox(ROUTE_NOT_AVAILABLE);
   }
   if (outcome.code === 'UPSTREAM_UNAVAILABLE') {
     return undeterminedBox(

@@ -114,6 +114,57 @@ describe('the screen', () => {
     );
   });
 
+  test('an empty 200 says signed in and nothing watched, and keeps the empty sentence', () => {
+    const html = watchlistScreenHtml({ kind: 'ok', status: 200, data: { items: [] } }, NOW);
+    expect(html).toContain('Signed in. Nothing watched yet.');
+    expect(html).toContain('Your watchlist is empty. Add a contract from');
+    expect(html).not.toContain('<table');
+    expect(html).not.toContain('chip healthy');
+    expect(html).not.toMatch(/verdict/);
+  });
+
+  test('"signed in" appears only for a 200 with a list', () => {
+    const others = [
+      { kind: 'unavailable', reason: 'network' },
+      { kind: 'unavailable', reason: 'no-api' },
+      { kind: 'error', status: 401, code: 'UNAUTHENTICATED' },
+      { kind: 'error', status: 404, code: 'NOT_FOUND' },
+      { kind: 'error', status: 405, code: 'METHOD_NOT_ALLOWED' },
+      { kind: 'error', status: 503, code: 'UPSTREAM_UNAVAILABLE' },
+      { kind: 'error', status: 418, code: 'UNRECOGNISED' },
+      { kind: 'ok', status: 200, data: {} },
+    ] as const;
+    for (const o of others) {
+      expect(watchlistScreenHtml(o, NOW)).not.toMatch(/signed in\. nothing watched/i);
+    }
+    const withRows = watchlistScreenHtml(
+      { kind: 'ok', status: 200, data: { items: [item(A)] } },
+      NOW,
+    );
+    expect(withRows).not.toContain('Nothing watched yet');
+  });
+
+  test.each([
+    [404, 'NOT_FOUND'],
+    [405, 'METHOD_NOT_ALLOWED'],
+  ] as const)('%s %s is "route not available", not "could not establish"', (status, code) => {
+    const html = watchlistScreenHtml({ kind: 'error', status, code }, NOW);
+    expect(html).toContain('The watchlist route is not available on this API yet.');
+    expect(html).toContain('chip undetermined');
+    expect(html).not.toContain('could not establish');
+    expect(html).not.toContain('<table');
+    expect(html).not.toContain('chip healthy');
+    // No cause and no date: it says only what the API answered.
+    expect(html).not.toMatch(/deploy|soon|will be|because|20\d\d/i);
+  });
+
+  test('UNAUTHENTICATED keeps the signed-out card', () => {
+    const html = watchlistScreenHtml({ kind: 'error', status: 401, code: 'UNAUTHENTICATED' }, NOW);
+    expect(html).toContain('card card-pad');
+    expect(html).toContain('this browser has none');
+    expect(html).not.toContain('route is not available');
+  });
+
   test('rendered rows carry no fabricated figures or forbidden copy', () => {
     const html = watchlistScreenHtml(
       {
