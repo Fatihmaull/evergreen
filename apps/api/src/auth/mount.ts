@@ -11,6 +11,7 @@ import {
   classifyResendFailure,
   domainOf,
   readBoundedText,
+  safeFetchErrorName,
   type AuthLogger,
 } from './mailer-error.js';
 import type { AuthDeps } from './routes.js';
@@ -83,9 +84,18 @@ export class ResendMailer implements Mailer {
           text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
         }),
       });
-    } catch {
+    } catch (thrown) {
       // The thrown error's text can carry the URL or a library message: dropped.
-      throw new MailerError({ kind: 'network', reason: 'network_error', ...domains });
+      // Only its `name` survives, and only as a plain letters token: a
+      // `TypeError` means `fetch` refused the request (e.g. an invalid header
+      // value) before any network use, which is not a network outage.
+      const fetchErrorName = safeFetchErrorName(thrown);
+      throw new MailerError({
+        kind: 'network',
+        reason: 'network_error',
+        ...(fetchErrorName === undefined ? {} : { fetchErrorName }),
+        ...domains,
+      });
     }
     if (response.ok) {
       await response.body?.cancel();
@@ -184,15 +194,15 @@ export function authDepsFor(
   } else deps['store'] = unavailable<AuthStore>();
 
   if (needs.includes('email')) {
-    if (
-      !present(env.SIGNIN_CODE_PEPPER) ||
-      !present(env.EMAIL_API_KEY) ||
-      !present(env.EMAIL_FROM)
-    ) {
+    // The one place the key is read. It goes into an `authorization` header, and
+    // a secret stored with a trailing newline or space makes `fetch` throw for an
+    // invalid header value. All-whitespace is unset: 503, no fetch.
+    const emailApiKey = env.EMAIL_API_KEY?.trim();
+    if (!present(env.SIGNIN_CODE_PEPPER) || !present(emailApiKey) || !present(env.EMAIL_FROM)) {
       return undefined;
     }
     deps['pepper'] = env.SIGNIN_CODE_PEPPER;
-    deps['mailer'] = new ResendMailer(env.EMAIL_API_KEY, env.EMAIL_FROM, options.fetch ?? fetch);
+    deps['mailer'] = new ResendMailer(emailApiKey, env.EMAIL_FROM, options.fetch ?? fetch);
   } else {
     lazy('pepper');
     deps['mailer'] = unavailable<Mailer>();

@@ -38,6 +38,12 @@ export interface MailerFailure {
   readonly httpStatus?: number;
   /** Resend's error `name`, only if it is a short `lower_snake` token. */
   readonly providerErrorName?: string;
+  /**
+   * `kind: 'network'` only: the `name` of what `fetch` threw (`TypeError` for an
+   * invalid header value, for one), only if it is 1 to 64 ASCII letters. Never
+   * the message, the stack or the cause.
+   */
+  readonly fetchErrorName?: string;
   /** Domain part only, `unknown` if it did not parse. Never the local part. */
   readonly senderDomain: string;
   readonly recipientDomain: string;
@@ -48,6 +54,7 @@ export class MailerError extends Error implements MailerFailure {
   readonly reason: MailerFailureReason;
   readonly httpStatus?: number;
   readonly providerErrorName?: string;
+  readonly fetchErrorName?: string;
   readonly senderDomain: string;
   readonly recipientDomain: string;
 
@@ -61,6 +68,7 @@ export class MailerError extends Error implements MailerFailure {
     this.recipientDomain = failure.recipientDomain;
     if (failure.httpStatus !== undefined) this.httpStatus = failure.httpStatus;
     if (failure.providerErrorName !== undefined) this.providerErrorName = failure.providerErrorName;
+    if (failure.fetchErrorName !== undefined) this.fetchErrorName = failure.fetchErrorName;
   }
 }
 
@@ -68,7 +76,23 @@ export class MailerError extends Error implements MailerFailure {
 export const MAX_ERROR_BODY_BYTES = 2048;
 
 const ERROR_NAME = /^[a-z_]{1,64}$/;
+const FETCH_ERROR_NAME = /^[A-Za-z]{1,64}$/;
 const DOMAIN = /@([a-z0-9.-]{1,253})>?\s*$/i;
+
+/**
+ * The `name` of a value `fetch` threw, or `undefined` if it is not a plain
+ * 1 to 64 letter token (a hostile or odd name is dropped, not sanitised).
+ * Reads nothing else: not the message, the stack or the cause. Never throws.
+ */
+export function safeFetchErrorName(thrown: unknown): string | undefined {
+  try {
+    if (typeof thrown !== 'object' || thrown === null) return undefined;
+    const name: unknown = (thrown as { name?: unknown }).name;
+    return typeof name === 'string' && FETCH_ERROR_NAME.test(name) ? name : undefined;
+  } catch {
+    return undefined; // a getter that throws
+  }
+}
 
 /** `a@b.example` or `Name <a@b.example>` -> `b.example`; anything else -> `unknown`. */
 export function domainOf(address: string): string {
@@ -177,6 +201,7 @@ export interface EmailSendFailedLog {
   readonly reason: MailerFailureReason;
   readonly httpStatus?: number;
   readonly providerErrorName?: string;
+  readonly fetchErrorName?: string;
   readonly senderDomain: string;
   readonly recipientDomain: string;
   readonly environment: string;
@@ -205,6 +230,7 @@ export function emailSendFailedLog(
     ...(error.providerErrorName === undefined
       ? {}
       : { providerErrorName: error.providerErrorName }),
+    ...(error.fetchErrorName === undefined ? {} : { fetchErrorName: error.fetchErrorName }),
     senderDomain: error.senderDomain,
     recipientDomain: error.recipientDomain,
     environment: context.environment,
