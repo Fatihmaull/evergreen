@@ -167,12 +167,12 @@ type WatchItem = {
 };
 ```
 
-**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), provisional until Rakha answers (#385), not requirements from the spec:
+**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), not requirements from the spec. Rakha confirmed keeping the caps on #385 (2026-10-24); the gaps below are on the pre-launch list in `BACKLOG.md` (`PH2-E2-05`):
 - `label`: 1 to 100 characters after trimming, no control characters.
 - `scope.dataKeys`: 1 to 100 keys, each at most 2048 characters of canonical base64 `LedgerKey` XDR; duplicates are dropped.
-- There is no cap on items per user, no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers`.
-- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops`, and `"0"` is accepted.
-- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined.
+- There is no cap on items per user (pre-launch list), no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers` (it waits for the engine's limit, `PH2-E4-04`).
+- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops` (pre-launch list), and `"0"` is accepted.
+- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined (Rakha, #385, 2026-10-24).
 
 **`thresholdLedgers` is per item** because the core config already allows it per contract (`bumpWhenRemainingLedgersBelow`). That bears on DoD-2's scheduler-gap threshold:
 - The engine's worst scheduler gap has to clear the **lowest** threshold in use.
