@@ -39,3 +39,20 @@ export {
 export type { TelegramChannelOptions, TelegramDeliveryResult } from './telegram-channel.js';
 export { WebhookChannel, WebhookDeliveryError } from './webhook-channel.js';
 export type { WebhookChannelOptions, WebhookDeliveryResult } from './webhook-channel.js';
+export { planTenants, checkBudget, isEligible, spendKey } from './tenants.js';
+export type {
+  AutopilotItemRow,
+  BudgetVerdict,
+  TenantItem,
+  TenantNetwork,
+  TenantPlan,
+} from './tenants.js';
+export { MemoryTenantStore, planTenantsFromStore } from './tenant-store.js';
+export type { MemorySpendEntry, TenantStore } from './tenant-store.js';
+export {
+  PgTenantStore,
+  TenantStoreError,
+  LIST_AUTOPILOT_ITEMS_SQL,
+  SPENT_LAST_30D_SQL,
+} from './pg-tenant-store.js';
+export type { TenantQuery } from './pg-tenant-store.js';
