@@ -207,8 +207,13 @@ describe('classifyResendFailure: Resend documented responses', () => {
     });
   });
 
-  it('a non-error status the provider should not send is unavailable, not a rejection', () => {
+  it('a 3xx is unavailable with its own reason, and an odd non-error status stays unclassified', () => {
     expect(classifyResendFailure(302, '', DOMAINS)).toMatchObject({
+      kind: 'unavailable',
+      reason: 'unexpected_redirect',
+      httpStatus: 302,
+    });
+    expect(classifyResendFailure(204, '', DOMAINS)).toMatchObject({
       kind: 'unavailable',
       reason: 'unclassified',
     });

@@ -203,11 +203,23 @@ describe('ResendMailer stages', () => {
     expect(e).toMatchObject({ reason: 'network_error', fetchStage: 'send' });
   });
 
-  it('SIMULATION of workerd: redirect "error" makes the build step throw, so it is stage build', async () => {
+  it('SIMULATION of workerd: the mailer\'s own init passes the build step (redirect is "manual", not "error")', async () => {
+    const fetcher = vi.fn(okFetch);
+    await expect(
+      new ResendMailer(API_KEY, FROM, fetcher as unknown as typeof fetch, {
+        buildRequest: WORKERS_LIKE,
+      }).sendSigninCode(ADDRESS, '12345678'),
+    ).resolves.toBeUndefined();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('SIMULATION of workerd: a build step that rejects an init still reads as stage build', async () => {
     const fetcher = vi.fn(okFetch);
     const e = await failure(
       new ResendMailer(API_KEY, FROM, fetcher as unknown as typeof fetch, {
-        buildRequest: WORKERS_LIKE,
+        buildRequest: () => {
+          throw new TypeError('Unsupported cache mode: reload');
+        },
       }),
     );
     expect(e).toMatchObject({
