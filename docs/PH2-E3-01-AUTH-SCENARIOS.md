@@ -2,9 +2,27 @@
 
 API-level scenarios for the sign-in journey, with what to watch by hand on preview. The tests are `apps/api/test/auth-e3a-scenarios.test.ts`. They run through the Worker's `handle()` over `MemoryAuthStore`, an injected clock and an injected `fetch`: no network, no database.
 
-**Source of the steps.** The E3 checklist WEBF works from (a group-chat message) is not in the repo, in `BACKLOG.md`, in `phase-2/` or in any issue or PR comment I could search. So the stages A1 to A7 below are **not WEBF's step numbers**. They are built from `docs/API.md` §3 and §4, ADR-008 and `BACKLOG.md` `PH2-E3-01`. Mapping them to WEBF's steps 1 to 5 and 9 is **undetermined** until someone pastes the checklist. A test name begins with its stage.
+**Source of the labels.** The stages A1 to A7 below are **this document's own labels, not WEBF's step numbers**. They were built from `docs/API.md` §3 and §4, ADR-008 and `BACKLOG.md` `PH2-E3-01`, before the manual checklist was in the repo. That checklist is now `docs/PH2-E3-LOGIN-CHECKLIST.md` (steps 1 to 5 and 9 are part A, login and sign-out). The mapping, matched by content, is in the next section. A test name begins with its stage label.
 
 Preview facts (values live in `docs/API.md` §3 and `apps/api/src/auth/config.ts`, and are configuration, so preview may differ): code lives 10 minutes, 8 digits, 5 wrong guesses void it; 3 code requests per address per 15 minutes; 20 per IP per hour; cookie `__Host-evergreen_session`; rotate after 24 h with a 60 s grace window; 30-day absolute limit.
+
+## Mapping to WEBF's checklist steps
+
+Matched by what each step checks, against `docs/PH2-E3-LOGIN-CHECKLIST.md` at `0b36d94`. The checklist's step numbers are the ones to quote to Tih; the A labels are only for finding tests. The two lists do not line up one to one: there are 7 labels and 6 part A steps.
+
+| Stage | WEBF checklist step | Match |
+|---|---|---|
+| **A1 · Request a code** | Step 2, "Ask for a code" | Match. Step 2 expects `POST /auth/email/start` to answer 202 and an 8-digit code by mail. Step 2 also covers the 503 and 429 answers, which are not A1. |
+| **A2 · Verify, cookie set** | Step 5, "Sign in with the right code" | Partial. Step 5 checks the "Signed in as …" note, not the cookie flags. Step 4 only says the page keeps nothing in Local Storage or Session Storage and that the cookie's visibility in devtools is undetermined. So the cookie attributes in A2 (`HttpOnly`, `Secure`, `SameSite`, `Path`) have **no checklist step**. |
+| **A3 · /me** | Step 1 (signed out) and the reload in step 5 (signed in) | Partial. Both steps depend on `GET /me`, but neither names it as a check. The 401 `UNAUTHENTICATED` case is step 1's "You are not signed in." and the 200 case is the reload in step 5. One label maps to two steps. |
+| **A4 · Rotation** | None | **Undetermined.** No checklist step covers rotation, and it needs more than 24 hours. |
+| **A5 · Sign out** | Step 9, "Sign out" | Match for sign-out and the reload. Replaying the old cookie, signing in again to the same account and a second browser are not in step 9. |
+| **A6 · Rate limits** | None as a step | Step 2 lists the 429 note ("Too many codes asked for…") as an "Other answer" and the checklist says not to click repeatedly. No step triggers it, so 429 is **not exercised by hand**. |
+| **A7 · Wrong, expired, reused code** | Step 3, "Enter a wrong code, once" | Partial. Step 3 covers the wrong code only. A reused code is touched once, in step 5 (submitting the same code again). An expired code and the 5-guess limit have **no checklist step**. |
+
+Steps with no A label: **Step 4** (what the page keeps in browser storage) is a page-side check; no stage here has a matching test, because the API tests cannot see browser storage. It is the nearest thing to A2's "token never in the body", but it checks something else.
+
+Steps 6, 7, 8 and 10 are part B (watchlist) and have no A label.
 
 ## Stage → test → what to observe on preview
 
@@ -36,7 +54,7 @@ What this PR adds on top, through the router: the per-IP guard, the IP-before-ad
 
 ## Undetermined: not tested, not invented
 
-- **WEBF's checklist numbering** (see above).
+- **Mapping gaps** (see the mapping section): A4, A6 and the A2 cookie attributes have no checklist step; the expired-code and 5-guess cases of A7 have none either; step 4 has no stage. Whether WEBF will add steps for them is undetermined. The checklist itself says its step titles are inferred, because the original ten-step list is not in the repo.
 - **Account deactivation and reactivation by email** (`docs/API.md` §10). No route on main deactivates an account. Reactivation exists only as SQL in `PgAuthStore.upsertUserByEmail` (`ON CONFLICT … deactivated_at = NULL`), covered by `pg-store.test.ts` against a fake SQL client, not by a journey. That autopilot stays off after reactivation cannot be tested: the watchlist API (`PH2-E2-05`) is not on main.
 - **Mail delivery on preview.** The tests prove the Worker asks Resend for a mail, not that a mail arrives. What the preview sender may reach depends on the Resend account: undetermined.
 - **Real database behaviour.** Rate-limit counters, the `users_email_uq` index and row deletion run against the in-memory store here. `pg-store.test.ts` checks the SQL text with a fake client. Atomic counters on Neon are not exercised offline.
