@@ -167,6 +167,13 @@ type WatchItem = {
 };
 ```
 
+**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), not requirements from the spec. Rakha confirmed keeping the caps on #385 (2026-10-24); the gaps below are on the pre-launch list in `BACKLOG.md` (`PH2-E2-05`):
+- `label`: 1 to 100 characters after trimming, no control characters.
+- `scope.dataKeys`: 1 to 100 keys, each at most 2048 characters of canonical base64 `LedgerKey` XDR; duplicates are dropped.
+- There is no cap on items per user (pre-launch list), no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers` (it waits for the engine's limit, `PH2-E4-04`).
+- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops` (pre-launch list), and `"0"` is accepted.
+- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined (Rakha, #385, 2026-10-24).
+
 **`thresholdLedgers` is per item** because the core config already allows it per contract (`bumpWhenRemainingLedgersBelow`). That bears on DoD-2's scheduler-gap threshold:
 - The engine's worst scheduler gap has to clear the **lowest** threshold in use.
 - So the API refuses a threshold below a floor the engine publishes: `422 THRESHOLD_BELOW_FLOOR`.
@@ -218,7 +225,7 @@ type AllowanceState = {
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
 - **The limit is per (user, contract)** (decided 2026-10-23, §10). It was per contract across all users, which let one watcher use up the quota for everyone else watching the same contract. `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (that user's autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
 - **What counts as a use** (Fatih, 2026-10-22). The window is a **rolling 24 hours**, not a UTC day. **Only a job that actually pulled funds counts.** A job that ends `preflight-failed`, is `cancelled`, or is refused before queuing never consumes quota: a refusal before money moves is not a use.
-- Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
+- **Linking a wallet requires the wallet's signature (§4). Naming a payer does not need a new one on testnet** (Rakha on #385, 2026-10-24; decided by the PM): a wallet that is already linked to the user is enough as `payerWallet`. **A fresh payer signature is required before mainnet**, and until DoD-2 the mainnet payer stays locked, because turning autopilot on for a `mainnet` item is refused (`422 NETWORK_NOT_WRITABLE`, error table below). There is no code change: `PATCH /watchlist` already checks only that the wallet is linked to the caller. This relaxes the earlier sentence ("changing who pays does require the wallet's signature") for testnet only.
 
 ```ts
 type Job = {
@@ -309,7 +316,12 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+
+`INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
+- `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, or a path segment is not a valid network or contract ID.
+- `422`: the request is well-formed but refused on its meaning. Today that is `autopilot.extendToLedgers` not above `thresholdLedgers`, and an `autopilot.payerWallet` that is not linked to the caller.
+- §9a (WEBF) has no user-facing copy for it yet. Until it does, a client treats it as an unrecognised code and renders *undetermined* (§9a rule 2).
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
