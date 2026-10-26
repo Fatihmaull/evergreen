@@ -51,7 +51,7 @@ describe('PgTenantStore', () => {
     expect(SPENT_LAST_30D_SQL).toMatch(
       /j\.user_id = \$1::uuid AND j\.network = \$2 AND j\.contract_id = \$3/,
     );
-    expect(SPENT_LAST_30D_SQL).toMatch(/interval '30 days'/);
+    expect(SPENT_LAST_30D_SQL).toMatch(/interval '720 hours'/);
   });
 
   it('reads the net spend for one (user, network, contract)', async () => {
