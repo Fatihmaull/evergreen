@@ -62,3 +62,56 @@ describe.skipIf(!existsSync(BIN))('the built artifact runs', () => {
     }
   });
 });
+
+// PH2-E1-04: the mainnet refusal depends on bin.ts handing extend the chosen
+// network's name, which only the built entry point shows. Offline: the refusal
+// comes before any RPC is resolved, so no SOROBAN_RPC_URL is needed.
+describe.skipIf(!existsSync(BIN))('the built artifact refuses extend on mainnet', () => {
+  const A = 'CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L';
+  const G = 'GDGAWY723FYFB5TNSHLQFYGRXMPITSP4KDEHTK4IRLKVGSX6QSKZMASE';
+  function runWith(args: string[], env: Record<string, string>) {
+    try {
+      execFileSync('node', [BIN, ...args], {
+        encoding: 'utf8',
+        env: { ...process.env, NO_COLOR: '1', EVERGREEN_NETWORK: '', SOROBAN_RPC_URL: '', ...env },
+        timeout: 20_000,
+      });
+      return { stderr: '', status: 0 };
+    } catch (error) {
+      const e = error as { stderr?: string; status?: number };
+      return { stderr: e.stderr ?? '', status: e.status ?? -1 };
+    }
+  }
+  const EXTEND = ['extend', A, '--ledgers', '20', '--source-account', G];
+
+  it('with --network mainnet', () => {
+    const { stderr, status } = runWith(['--network', 'mainnet', ...EXTEND], {});
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+    expect(stderr).toContain('until DoD-2 is met (PH2-E5-02)');
+  });
+
+  it('with EVERGREEN_NETWORK=mainnet', () => {
+    const { stderr, status } = runWith(EXTEND, { EVERGREEN_NETWORK: 'mainnet' });
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+  });
+
+  it('with --network mainnet even when EVERGREEN_NETWORK=testnet, because the flag wins', () => {
+    const { stderr, status } = runWith(['--network', 'mainnet', ...EXTEND], {
+      EVERGREEN_NETWORK: 'testnet',
+    });
+    expect(status).toBe(2);
+    expect(stderr).toContain('extend is testnet-only');
+  });
+
+  it('not when EVERGREEN_NETWORK is empty and no flag is given: an empty value means testnet', () => {
+    // An invalid payer is checked after the network, so reaching its offline
+    // error proves the network check let the run through.
+    const args = ['extend', A, '--ledgers', '20', '--source-account', 'GBAD'];
+    const { stderr, status } = runWith(args, { EVERGREEN_NETWORK: '' });
+    expect(status).toBe(2);
+    expect(stderr).not.toContain('extend is testnet-only');
+    expect(stderr).toContain('A valid public payer is required');
+  });
+});

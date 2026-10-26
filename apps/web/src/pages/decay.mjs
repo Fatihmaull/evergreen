@@ -7,10 +7,15 @@
  * observation to a known expiry ledger; nothing past an expiry. The build
  * validates every one of those claims and fails when the data breaks them.
  */
+import {
+  DEFAULT_CRITICAL_LEDGERS,
+  DEFAULT_WARN_LEDGERS,
+} from '../../../../packages/core/dist/index.js';
 import { approxDate, CONTRACTS, dateLong, esc, explorerTx, fmt, futureEnd } from './_shared.mjs';
 
-const WARN = 120960;
-const CRIT = 17280;
+const WARN = DEFAULT_WARN_LEDGERS;
+// The 24 h action floor comes from core's pinned constant, not a local copy [B-D31-02].
+const CRIT = DEFAULT_CRITICAL_LEDGERS;
 
 export const meta = {
   title: 'TTL decay — Evergreen',

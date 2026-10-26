@@ -63,3 +63,29 @@ export function esc(value: unknown): string {
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
   );
 }
+
+/**
+ * EXACT, for a signing screen — never `approxXlm` there.
+ *
+ * `approxXlm` rounds on purpose because it formats ESTIMATED rent. An
+ * allowance cap is not an estimate: the user signs an exact number of stroops,
+ * and Freighter shows that number raw and unlabelled (#320). So a signing
+ * screen shows both, unrounded, from the same integer (Fatih, decision 4 on
+ * #327; Rakha agreed there). Two formatters, because they answer two different
+ * questions; folding them into one with a flag is how the rounding would reach
+ * a signature.
+ *
+ * Refuses anything that is not a non-negative whole number of stroops rather
+ * than formatting it: a cap the page cannot state exactly is not one it should
+ * ask anyone to sign.
+ */
+export function exactXlm(stroops: string | bigint): { xlm: string; stroops: string } {
+  const text = typeof stroops === 'bigint' ? stroops.toString() : stroops;
+  if (!/^\d+$/.test(text)) {
+    throw new RangeError(`exactXlm: "${text}" is not a non-negative whole number of stroops`);
+  }
+  return {
+    xlm: `${stroopsToXlm(text as `${bigint}`)} XLM`,
+    stroops: `${formatCount(BigInt(text))} ${text === '1' ? 'stroop' : 'stroops'}`,
+  };
+}

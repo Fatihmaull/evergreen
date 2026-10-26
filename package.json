@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Soroban state-archival autopilot \u2014 monitor TTL, predict archival, extend automatically.",
+  "description": "Soroban state-archival autopilot — monitor TTL, predict archival, extend automatically.",
   "license": "MIT",
   "engines": {
     "node": ">=24",
@@ -11,7 +11,7 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "typecheck": "tsc --build --force && pnpm typecheck:shared-types",
+    "typecheck": "tsc --build --force && pnpm typecheck:shared-types && pnpm typecheck:functions",
     "build": "tsc --build",
     "cli": "pnpm build && node packages/cli/dist/bin.js",
     "lint": "eslint .",
@@ -28,6 +28,7 @@
     "check:conflicts": "node scripts/check-conflict-markers.mjs",
     "check:locale": "node scripts/check-locale-pinning.mjs",
     "typecheck:shared-types": "tsc --project packages/shared-types/tsconfig.test.json",
+    "typecheck:functions": "tsc --project functions/tsconfig.json",
     "email:smoke": "node scripts/send-test-email.mjs",
     "test:email": "node --test --test-isolation=none scripts/send-test-email.test.mjs",
     "persistence:spike": "node --env-file-if-exists=.env scripts/persistence-spike.mjs",
@@ -61,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@stellar/freighter-api": "6.0.1",
     "@stellar/stellar-sdk": "17.0.1",
     "@types/node": "26.4.1",
     "@vitest/coverage-v8": "5.0.0",

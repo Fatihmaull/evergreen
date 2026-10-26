@@ -58,6 +58,9 @@ async function main(): Promise<number> {
         : {}),
       readKeysFile: (path) => readFile(path, 'utf8'),
       preview: (text) => console.error(text),
+      // The name alone, with resolveNetwork's precedence (an empty value counts
+      // as unset), so extend can refuse mainnet without a mainnet RPC (PH2-E1-04).
+      network: () => networkFlag || process.env.EVERGREEN_NETWORK || 'testnet',
       // Writes stay testnet-only whatever --network says (hard rule 1):
       // runExtension compares the RPC against testnet and refuses anything else.
       run: (request, preview) => runExtension(network().rpcUrl, request, preview),

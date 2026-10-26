@@ -150,6 +150,24 @@ const FORBIDDEN = [
   'engine-execution-plan.ts',
 ];
 
+/**
+ * The money half of the wallet may never reach a login or account bundle.
+ *
+ * `lib/wallet.ts` (connect, network guard, `signTransaction`) is what login
+ * imports; `lib/wallet-money.ts` (simulate → submit → read back, WEBR) is not.
+ * ADR-008: an email session never appears able to move money, and a submit path
+ * that nothing calls is still a submit path in the bundle. Agreed on #327 by
+ * Fatih and Rakha; `--commission` proves the guard both ways.
+ *
+ * Matched by file name, not full path, so a copy or a move does not slip past.
+ */
+const LOGIN_FORBIDDEN = ['wallet-money.ts'];
+
+/** A login or account page: flagged, or under those routes whether flagged or not. */
+function isLoginPage(page) {
+  return page.login === true || /^(login|account)\//.test(page.to);
+}
+
 /** Measured 2026-09-10 against the live chain; restating it is not observing it. */
 const CADENCE = { value: '5.000000 s ± 0.000050' };
 
@@ -703,6 +721,13 @@ const PAGES = [
     doc: '/docs/archival/',
   },
   { module: 'src/pages/about.mjs', to: 'about/index.html' },
+  {
+    module: 'src/pages/login.mjs',
+    entry: 'src/pages/login.ts',
+    js: 'assets/login.js',
+    to: 'login/index.html',
+    login: true,
+  },
 ];
 
 for (const page of DOC_PAGES) {
@@ -778,7 +803,19 @@ function reportComposition(metafile, js) {
   );
 }
 
-async function bundle(entry, js) {
+function guardLoginBundle(metafile, label) {
+  const breaches = Object.entries(metafile.outputs)
+    .flatMap(([, o]) => Object.entries(o.inputs))
+    .filter(
+      ([path, info]) => info.bytesInOutput > 0 && LOGIN_FORBIDDEN.includes(path.split('/').pop()),
+    )
+    .map(([path]) => path);
+  if (breaches.length > 0) {
+    throw new Error(`${label}: the money path reached a login bundle: ${breaches.join(', ')}`);
+  }
+}
+
+async function bundle(entry, js, { login = false } = {}) {
   const result = await esbuild.build({
     entryPoints: [join(here, entry)],
     outfile: join(out, js),
@@ -794,6 +831,7 @@ async function bundle(entry, js) {
     logLevel: 'error',
   });
   reportComposition(result.metafile, js);
+  if (login) guardLoginBundle(result.metafile, js);
   return guardBundle(result.metafile, js);
 }
 
@@ -801,7 +839,7 @@ async function buildPage(page) {
   const { meta, render } = await import(join(here, page.module));
   let coreModules = 0;
   if (page.entry) {
-    const included = await bundle(page.entry, page.js);
+    const included = await bundle(page.entry, page.js, { login: isLoginPage(page) });
     coreModules = included.length;
   }
   const isDoc = typeof page.doc === 'string';
@@ -906,8 +944,68 @@ async function commission() {
     // Throwaway. Left behind, it is linted as source.
     rmSync(probe, { force: true });
   }
+  await commissionLoginGuard();
   commissionAssetGuards();
   await commissionFutureEnd();
+}
+
+/**
+ * The login guard, both ways: it refuses a bundle that pulls `wallet-money.ts`
+ * in, AND it passes one that imports only `lib/wallet.ts`. A guard that refused
+ * everything would pass the first half and make login unbuildable.
+ *
+ * `wallet-money.ts` does not exist yet (WEBR writes it), so the refusing half
+ * bundles a throwaway of that name — the guard matches the name, which is the
+ * point.
+ */
+async function commissionLoginGuard() {
+  const dir = join(here, '.commission-probe.login');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'wallet-money.ts'), 'export const submit = () => "submitted";\n');
+  writeFileSync(
+    join(dir, 'refused.ts'),
+    "import { submit } from './wallet-money';\nconsole.log(submit());\n",
+  );
+  writeFileSync(
+    join(dir, 'allowed.ts'),
+    "import { createWallet } from '../src/lib/wallet';\nconsole.log(createWallet);\n",
+  );
+  const probe = (name) =>
+    esbuild.build({
+      entryPoints: [join(dir, name)],
+      bundle: true,
+      format: 'iife',
+      platform: 'browser',
+      metafile: true,
+      write: false,
+      define: NETWORK_DEFINE,
+      nodePaths: [join(repo, 'node_modules')],
+      logLevel: 'error',
+    });
+  try {
+    const refused = await probe('refused.ts');
+    try {
+      guardLoginBundle(refused.metafile, 'login probe');
+      console.error(
+        '✗ the login guard passed a bundle that imports wallet-money.ts — it guards nothing',
+      );
+      process.exitCode = 1;
+    } catch (error) {
+      console.log(`✓ the login guard refuses the money path: ${error.message}`);
+    }
+    const allowed = await probe('allowed.ts');
+    try {
+      guardLoginBundle(allowed.metafile, 'login probe');
+      console.log('✓ the login guard passes a bundle that imports only lib/wallet.ts');
+    } catch (error) {
+      console.error(
+        `✗ the login guard refused lib/wallet.ts, so login cannot build: ${error.message}`,
+      );
+      process.exitCode = 1;
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 /**

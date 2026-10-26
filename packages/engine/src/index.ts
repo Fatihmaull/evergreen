@@ -30,4 +30,29 @@ export type { NotifiedRun, RunJournal, AlertReceipt, AlertDelivery } from './not
 
 export { assessScheduler, schedulerNotification } from './scheduler-watch.js';
 export type { WatchPolicy, JobObservation, SchedulerAssessment } from './scheduler-watch.js';
-export { WebhookChannel, TelegramChannel, ChannelNotImplementedError } from './channel-stubs.js';
+export {
+  TelegramChannel,
+  TelegramDeliveryError,
+  telegramText,
+  TELEGRAM_TEXT_LIMIT,
+} from './telegram-channel.js';
+export type { TelegramChannelOptions, TelegramDeliveryResult } from './telegram-channel.js';
+export { WebhookChannel, WebhookDeliveryError } from './webhook-channel.js';
+export type { WebhookChannelOptions, WebhookDeliveryResult } from './webhook-channel.js';
+export { planTenants, checkBudget, isEligible, spendKey } from './tenants.js';
+export type {
+  AutopilotItemRow,
+  BudgetVerdict,
+  TenantItem,
+  TenantNetwork,
+  TenantPlan,
+} from './tenants.js';
+export { MemoryTenantStore, planTenantsFromStore } from './tenant-store.js';
+export type { MemorySpendEntry, TenantStore } from './tenant-store.js';
+export {
+  PgTenantStore,
+  TenantStoreError,
+  LIST_AUTOPILOT_ITEMS_SQL,
+  SPENT_LAST_30D_SQL,
+} from './pg-tenant-store.js';
+export type { TenantQuery } from './pg-tenant-store.js';

@@ -147,12 +147,19 @@ acceptance is distinct from inbox receipt. D17-04/05 owns actual outcome wiring
 and alerts for events where no BumpRecord exists; do not fabricate one. The W1
 probe is retired to a help-only shim, leaving one provider implementation.
 
-**Notification extension stubs (W3-D17-02):** the engine exports WebhookChannel,
-TelegramChannel and ChannelNotImplementedError. Both classes satisfy the existing
-NotificationChannel interface, but notify always rejects with
-CHANNEL_NOT_IMPLEMENTED and identifies actual delivery as SOW 2 scope. They accept
-no endpoints or credentials and have no network, fallback or successful no-op
-path. They are not new usable config options. EmailChannel, described above, is the one implemented transport.
+**Notification channels:** EmailChannel (above) is the v1 transport. WebhookChannel
+(PH2-BL-02) is a self-host delivery implementation: dry-run by default, explicit
+send mode, injectable fetch, https URL supplied by the caller (conventional env
+name WEBHOOK_URL — the module does not read process.env), optional HMAC via
+readSecret (conventional env name WEBHOOK_SECRET; unset means plain HTTPS POST),
+typed errors, and idempotency keys. It is not a config.notifications.channel
+option and has no dashboard tie-in. TelegramChannel (PH2-BL-02) follows the same
+pattern for self-host: dry-run by default, explicit send mode, injectable fetch,
+chat id supplied by the caller (conventional env name TELEGRAM_CHAT_ID), bot token
+via readBotToken on send only (conventional env name TELEGRAM_BOT_TOKEN), plain-text
+Bot API sendMessage, typed errors that never echo the token, chat id or provider body.
+The Bot API has no idempotency key, so an 'unknown' failure must not be retried blindly.
+It is not a config.notifications.channel option either. Discord is out of scope.
 
 ### `apps/dashboard`
 
@@ -288,5 +295,5 @@ Summaries and uploaded artifacts help inspect a run but have retention limits. F
 - No subsidized rent or hosted multi-tenant service in v1. The N-contracts/M-payers shape supports future evolution without implementing custody or billing.
 - Dry-run defaults for transaction paths; live submission is explicit.
 - P0 dashboard must ship complete and read-only; P1 signing is removable. Automated bumping belongs to the engine.
-- Email is the planned v1 notification transport; webhook/Telegram channels are SOW 2 extensions, not implemented transports today.
+- Email is the planned v1 notification transport; WebhookChannel and TelegramChannel are implemented for self-host operators (not config channels yet).
 - Unit tests use the recorded fixture/mock reader; network integration is explicit and separate from ordinary CI.

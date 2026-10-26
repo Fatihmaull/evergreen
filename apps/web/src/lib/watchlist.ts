@@ -55,6 +55,31 @@ export async function addToWatchlist(req: AddRequest, fetchImpl?: FetchLike): Pr
   return { kind: 'error', status: res.status, code: 'UNRECOGNISED' };
 }
 
+/**
+ * What `POST /watchlist` takes in `scope.dataKeys`: 1 to 100 keys
+ * (`docs/API.md` §6, "Limits the API applies that this spec does not state").
+ * The cap is the server's own choice and the server decides; the client only
+ * uses the number to say what this scan declared, after the API has refused.
+ */
+export const WATCH_DATA_KEYS_MAX = 100;
+
+/** `NETWORK_NOT_WRITABLE`, 422. Names no network and no date (claims-and-copy). */
+export const NETWORK_NOT_WRITABLE_TEXT =
+  'That network cannot be written to from here. Nothing was added.';
+
+/** `INVALID_REQUEST`, 400 or 422. The client branches on the code, never on the message. */
+export const INVALID_REQUEST_TEXT =
+  'The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly.';
+
+/** Appended to `INVALID_REQUEST_TEXT` only when the scan declared more keys than an item takes. */
+export function tooManyKeysText(declared: number): string {
+  return ` This scan declared ${declared} data keys, and a watchlist item takes at most ${WATCH_DATA_KEYS_MAX}.`;
+}
+
+/** `UPSTREAM_UNAVAILABLE`, 503. Says what the API said and no cause (§9). */
+export const ADD_UPSTREAM_UNAVAILABLE_TEXT =
+  'The API answered, but could not complete this. Nothing was confirmed as added.';
+
 export interface OutcomeCopy {
   /** The chip class: only `healthy` for a confirmed write; `undetermined` otherwise. */
   readonly tone: 'healthy' | 'undetermined' | 'warning';
@@ -63,7 +88,12 @@ export interface OutcomeCopy {
 }
 
 /** What a person reads. Only a 201 or 200 from the API says "added". */
-export function addOutcomeCopy(outcome: AddOutcome, contractId: string): OutcomeCopy {
+export function addOutcomeCopy(
+  outcome: AddOutcome,
+  contractId: string,
+  /** How many data keys the request carried. Only used to explain `INVALID_REQUEST`. */
+  declaredDataKeys = 0,
+): OutcomeCopy {
   const id = `<span class="mono">${esc(contractId.slice(0, 6))}…${esc(contractId.slice(-4))}</span>`;
   switch (outcome.kind) {
     case 'added':
@@ -119,7 +149,17 @@ export function addOutcomeCopy(outcome: AddOutcome, contractId: string): Outcome
           return {
             tone: 'undetermined',
             word: 'undetermined',
-            html: 'The API answered, but its own upstream did not. Nothing was confirmed as added.',
+            html: ADD_UPSTREAM_UNAVAILABLE_TEXT,
+          };
+        case 'NETWORK_NOT_WRITABLE':
+          return { tone: 'undetermined', word: 'not added', html: NETWORK_NOT_WRITABLE_TEXT };
+        case 'INVALID_REQUEST':
+          return {
+            tone: 'undetermined',
+            word: 'not added',
+            html:
+              INVALID_REQUEST_TEXT +
+              (declaredDataKeys > WATCH_DATA_KEYS_MAX ? tooManyKeysText(declaredDataKeys) : ''),
           };
         default:
           return {
@@ -132,7 +172,39 @@ export function addOutcomeCopy(outcome: AddOutcome, contractId: string): Outcome
 }
 
 /** The chip plus sentence, as rendered into the scan panel. */
-export function addOutcomeHtml(outcome: AddOutcome, contractId: string): string {
-  const c = addOutcomeCopy(outcome, contractId);
+export function addOutcomeHtml(
+  outcome: AddOutcome,
+  contractId: string,
+  declaredDataKeys = 0,
+): string {
+  const c = addOutcomeCopy(outcome, contractId, declaredDataKeys);
   return `<p class="small"><span class="chip ${c.tone}"><span class="shape"></span>${esc(c.word)}</span> ${c.html}</p>`;
+}
+
+export type RemoveOutcome =
+  { readonly kind: 'removed' } | Exclude<ApiOutcome<unknown>, { kind: 'ok' }>;
+
+/**
+ * `DELETE /watchlist/{network}/{contractId}`, §6: `204`, a soft delete. Only a
+ * 204 reads as removed; anything else is passed on for the screen to say, and
+ * an unexpected success status is `UNRECOGNISED`, not removed.
+ */
+export async function removeFromWatchlist(
+  network: 'testnet',
+  contractId: string,
+  fetchImpl?: FetchLike,
+): Promise<RemoveOutcome> {
+  const me = await apiRequest<Me>('/me', { method: 'GET' }, fetchImpl);
+  if (me.kind !== 'ok') return me;
+  if (typeof me.data?.csrfToken !== 'string' || me.data.csrfToken === '') {
+    return { kind: 'error', status: me.status, code: 'UNRECOGNISED' };
+  }
+  const res = await apiRequest<unknown>(
+    `/watchlist/${encodeURIComponent(network)}/${encodeURIComponent(contractId)}`,
+    { method: 'DELETE', headers: { 'X-Evergreen-CSRF': me.data.csrfToken } },
+    fetchImpl,
+  );
+  if (res.kind !== 'ok') return res;
+  if (res.status === 204) return { kind: 'removed' };
+  return { kind: 'error', status: res.status, code: 'UNRECOGNISED' };
 }

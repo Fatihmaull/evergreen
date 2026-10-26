@@ -111,7 +111,7 @@ Measurable with records still to be built:
 **ADR changes (card PH2-E0-05):**
 - ADR-004 is superseded by a new ADR covering allowance funding and the fee. The invariant *Apex never subsidises rent* survives.
 - ADR-002 is amended: the capped property is achieved at the token layer (#297); the no-go stands.
-- ADR-003 is amended: Cloudflare + Neon.
+- ADR-003 is amended: Cloudflare + Neon. *(2026-10-22: one shared Cloudflare account, superseding the project-owned one from #299; see #310 and ADR-003's update log. Reviewed again at PH2-E5-02.)*
 - New ADR for authentication (§3.1).
 
 ---
@@ -141,6 +141,8 @@ These are recommendations for the ADRs to record. Facts marked **[verified]** we
 **Sessions.**
 - Server-side session rows in Neon, referenced by an `httpOnly; Secure; SameSite=Lax` cookie.
 - Short-lived and rotated. CSRF protection on state-changing routes. Logout invalidates server-side.
+
+**Account deletion is a soft delete** (Fatih, 2026-10-22, from Rakha's review of `PH2-E2-02`). The account is deactivated: the email and personal data stay in the database. So the custody statement (`PH2-E4-06`) and all public copy say accounts are **"deactivated and can be reactivated by email", never "deleted"**. Observation and allowance history are kept forever until the DoD-2 evidence is gathered. Signing in again with the same email **reactivates the old account** (one email never has two accounts), but never re-enables autopilot or allowance use by itself: the user re-signs with their wallet first, because an email session never authorises XLM movement (ADR-008). All of this is recorded in `docs/API.md` §10.
 
 **Recovery.** Email recovers the account, never funds. Funds were never ours to recover, which is the point of Q8.
 
@@ -216,7 +218,7 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 
 **Manual extend with a fee (§4.2):**
 - **Allowance users: one click, zero wallet prompts.** "Extend now" is just an on-demand engine job, running the same flow as above.
-  - **It has a daily limit per user, and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
+  - **It has a daily limit per (user, contract)** (3 per rolling 24 hours; only a job that pulled funds counts; amended 2026-10-22 from "per user" to per contract, then 2026-10-23 to per (user, contract), Fatih's decisions recorded in `docs/API.md` §7 and §10) **and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
 - **Users without an allowance:** card PH2-E4-07 researches an Evergreen **router contract** that takes the fee and extends in **one invocation, one signature**.
   - **[to verify]**: whether a contract can extend another contract's instance and code (believed yes), and whether it can extend another contract's *persistent data* (believed no).
   - If it can cover only instance and code, say so and measure how much of a typical contract's rent that is. In #296, the code entry was 99% of the bill.
@@ -336,7 +338,7 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
-| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per user and send an **email notice** | CER | L | PH2-E4-01 |
+| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per (user, contract) and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
 | PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
