@@ -7,6 +7,8 @@
  * independent items, each with its own payer and budget.
  */
 
+import type { Stroops } from '@evergreen-stellar/shared-types';
+
 /** Writes stay testnet-only until DoD-2 (PH2-E5-02). */
 export type TenantNetwork = 'testnet';
 
@@ -139,4 +141,45 @@ export function checkBudget(item: TenantItem, estimatedStroops: bigint | undefin
   if (estimatedStroops > item.budget.perJobMax) return 'over-per-job';
   if (estimatedStroops > item.budget.per30dRemaining) return 'over-30d';
   return 'ok';
+}
+
+/** JSON-safe form of a TenantItem: bigints as decimal strings (docs/API.md Stroops convention). */
+export interface TenantItemWire {
+  readonly userId: string;
+  readonly contractId: string;
+  readonly scope: unknown;
+  readonly thresholdLedgers: string;
+  readonly extendToLedgers: string;
+  readonly budget: { readonly perJobMax: Stroops; readonly per30dRemaining: Stroops };
+}
+
+export interface TenantPlanWire {
+  readonly network: TenantNetwork;
+  readonly payerAccount: string;
+  readonly items: readonly TenantItemWire[];
+}
+
+const dec = (v: bigint): Stroops => v.toString(10) as Stroops;
+
+export function tenantItemToWire(item: TenantItem): TenantItemWire {
+  return {
+    userId: item.userId,
+    contractId: item.contractId,
+    scope: item.scope,
+    thresholdLedgers: dec(item.thresholdLedgers),
+    extendToLedgers: dec(item.extendToLedgers),
+    budget: {
+      perJobMax: dec(item.budget.perJobMax),
+      per30dRemaining: dec(item.budget.per30dRemaining),
+    },
+  };
+}
+
+/** For queues, logs and routes: `JSON.stringify(plan)` throws on bigint, this never does. */
+export function tenantPlanToWire(plan: TenantPlan): TenantPlanWire {
+  return {
+    network: plan.network,
+    payerAccount: plan.payerAccount,
+    items: plan.items.map(tenantItemToWire),
+  };
 }
