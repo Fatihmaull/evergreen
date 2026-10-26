@@ -30,7 +30,11 @@ S1 and S2 are throwaway Friendbot identities made for this spike; their secrets 
    - #10, persistent control: charged 21.9% below;
    - #4, simulated 20+ ledgers earlier and declared at 1.25x: charged 35,299 of the 56,500 declared.
 
-## Implication for ADR-007's x1.25 margin (to decide, not decided here)
+## Implication for ADR-007's x1.25 margin (decided 2026-10-26)
+
+**Decision (Fatih, #385, 2026-10-26):** the recommendation below is accepted. Keep a small retry-only margin, sized
+from measurements across several days, and reconcile records what was charged, not what was declared. The margin's
+size stays undetermined until those measurements exist.
 
 - Pulling the **declared maximum** (simulated resource fee + inclusion fee) covers the extend. The protocol returns the
   unused part to the engine account, and reconcile passes it back to the user. So the margin protects only against a
