@@ -7,6 +7,8 @@
  * independent items, each with its own payer and budget.
  */
 
+import { isValidBumpWindow } from '@evergreen-stellar/core';
+
 /** Writes stay testnet-only until DoD-2 (PH2-E5-02). */
 export type TenantNetwork = 'testnet';
 
@@ -62,10 +64,9 @@ export function spendKey(userId: string, network: string, contractId: string): s
 
 /**
  * Whether a row may run autopilot on this network: testnet, autopilot on, not removed, a payer on
- * this network owned by the item's user, and non-negative budgets present. It does NOT re-check
- * threshold_ledgers > 0 or extend_to_ledgers > threshold_ledgers; those are guarded only by the
- * schema CHECK (TTL comparisons belong to core, see issue #442), so a memory rehearsal can hold
- * rows the database would refuse.
+ * this network owned by the item's user, a valid bump window (core `isValidBumpWindow`, the same
+ * rule as the schema CHECK: threshold_ledgers >= 1 and extend_to_ledgers > threshold_ledgers), and
+ * non-negative budgets present.
  */
 export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boolean {
   return (
@@ -79,6 +80,7 @@ export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boole
     row.payerOwnerUserId === row.userId &&
     typeof row.thresholdLedgers === 'bigint' &&
     typeof row.extendToLedgers === 'bigint' &&
+    isValidBumpWindow(Number(row.thresholdLedgers), Number(row.extendToLedgers)) &&
     typeof row.budgetPerJobMax === 'bigint' &&
     typeof row.budgetPer30dMax === 'bigint' &&
     row.budgetPerJobMax >= 0n &&
