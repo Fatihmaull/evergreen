@@ -42,7 +42,7 @@ FROM (
     coalesce(bool_or(f.kind = 'pull'), false) AS has_pull
   FROM jobs j LEFT JOIN fee_ledger f ON f.job_id = j.id AND f.kind IN ('pull', 'refund')
   WHERE j.user_id = $1::uuid AND j.network = $2 AND j.contract_id = $3
-    AND j.pulled_at > now() - interval '30 days'
+    AND j.pulled_at > now() - interval '720 hours'
   GROUP BY j.id
 ) s`;
 
