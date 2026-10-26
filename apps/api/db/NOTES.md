@@ -135,5 +135,17 @@ Recorded on PR #391 after Rakha accepted the local proposal. Preview apply is **
 7. **D7 — `difference` ledger kind:** **add** `'difference'` so reconcile can close with rows only. **Already in `schema.sql`** (`ledger_kind` includes `'difference'`).
 8. **D8 — `evergreen-fee`:** **derived** row, `tx_hash` null (like rent). **Already in `schema.sql`** (CHECK ties `evergreen-fee` / `rent` / `difference` to null `tx_hash`).
 
+## 30-day budget window (PH2-E4-01, 2026-10-26)
+
+How `budget_per_30d_max` is counted by the tenant plan (`packages/engine/src/pg-tenant-store.ts`, `SPENT_LAST_30D_SQL`; the batched variant on the local tenant-run branch uses the same rules). Nothing enforces the cap until `PH2-E4-02` calls `checkBudget`.
+
+- **Window:** rolling, from `now()` back 30 days, on **`jobs.pulled_at`** (when the pull confirmed; same basis as D2). Strict: a job pulled exactly 30 days ago is out. Jobs with `pulled_at` null (never pulled) are not counted.
+- **Scope:** per `(user_id, network, contract_id)`.
+- **Job kinds:** all of them (`extend-now` and `autopilot`); there is no `jobs.kind` filter.
+- **Amount:** net of refunds, i.e. the sum of the job's `pull` ledger rows minus its `refund` ledger rows. The other ledger kinds (`rent`, `network-fee`, `evergreen-fee`, `difference`) are splits of the pull made by reconcile and are not counted, so nothing is counted twice.
+- **Refund timing:** a refund counts when the job it refunds pulled inside the window, whatever its own `recorded_at`.
+- **Fail closed:** if any job in the window has `pulled_at` set but no `pull` ledger row, the spend is undetermined and the item gets no budget left (not spend 0). Whether `PH2-E4-02` writes the pull row in the same transaction as `pulled_at` is undetermined.
+- **Undetermined, 30 days vs 720 hours:** the SQL uses `interval '30 days'`, which Postgres applies in calendar days in the session time zone; the memory store uses exactly 30 × 24 h. They agree when the session time zone has no DST shift in the window (UTC, Neon's default). Whether every production connection runs in UTC is not verified. `interval '720 hours'` would make it exact.
+
 Still undetermined (not in D1–D8): autopilot scheduler window (`PH2-E4-04`); app role / append-only grants (pre-prod); router extends needing `fee_ledger.job_id` (`PH2-E4-07`).
 
