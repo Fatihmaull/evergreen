@@ -21,10 +21,10 @@ describe('remove button', () => {
     expect(t).toMatch(/nothing was removed/i);
   });
 
-  test('any other error names its code and says the contract stays', () => {
-    const t = removeOutcomeText({ kind: 'error', status: 404, code: 'NOT_FOUND' as never });
-    expect(t).toContain('NOT_FOUND');
-    expect(t).toContain('still on your watchlist');
+  test('any other error names its code and claims nothing about whether the row is still listed', () => {
+    const t = removeOutcomeText({ kind: 'error', status: 503, code: 'UPSTREAM_UNAVAILABLE' });
+    expect(t).toContain('UPSTREAM_UNAVAILABLE');
+    expect(t).not.toContain('still on your watchlist');
   });
 
   test('no API is not success', () => {

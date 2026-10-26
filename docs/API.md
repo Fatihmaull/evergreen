@@ -167,6 +167,13 @@ type WatchItem = {
 };
 ```
 
+**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), not requirements from the spec. Rakha confirmed keeping the caps on #385 (2026-10-24); the gaps below are on the pre-launch list in `BACKLOG.md` (`PH2-E2-05`):
+- `label`: 1 to 100 characters after trimming, no control characters.
+- `scope.dataKeys`: 1 to 100 keys, each at most 2048 characters of canonical base64 `LedgerKey` XDR; duplicates are dropped.
+- There is no cap on items per user (pre-launch list), no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers` (it waits for the engine's limit, `PH2-E4-04`).
+- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops` (pre-launch list), and `"0"` is accepted.
+- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined (Rakha, #385, 2026-10-24).
+
 **`thresholdLedgers` is per item** because the core config already allows it per contract (`bumpWhenRemainingLedgersBelow`). That bears on DoD-2's scheduler-gap threshold:
 - The engine's worst scheduler gap has to clear the **lowest** threshold in use.
 - So the API refuses a threshold below a floor the engine publishes: `422 THRESHOLD_BELOW_FLOOR`.
@@ -218,7 +225,7 @@ type AllowanceState = {
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
 - **The limit is per (user, contract)** (decided 2026-10-23, §10). It was per contract across all users, which let one watcher use up the quota for everyone else watching the same contract. `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (that user's autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
 - **What counts as a use** (Fatih, 2026-10-22). The window is a **rolling 24 hours**, not a UTC day. **Only a job that actually pulled funds counts.** A job that ends `preflight-failed`, is `cancelled`, or is refused before queuing never consumes quota: a refusal before money moves is not a use.
-- Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
+- **Linking a wallet requires the wallet's signature (§4). Naming a payer does not need a new one on testnet** (Rakha on #385, 2026-10-24; decided by the PM): a wallet that is already linked to the user is enough as `payerWallet`. **A fresh payer signature is required before mainnet**, and until DoD-2 the mainnet payer stays locked, because turning autopilot on for a `mainnet` item is refused (`422 NETWORK_NOT_WRITABLE`, error table below). There is no code change: `PATCH /watchlist` already checks only that the wallet is linked to the caller. This relaxes the earlier sentence ("changing who pays does require the wallet's signature") for testnet only.
 
 ```ts
 type Job = {
@@ -309,7 +316,14 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+
+`INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
+- `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, or a path segment is not a valid network or contract ID.
+- `422`: the request is well-formed but refused on its meaning. Today that is `autopilot.extendToLedgers` not above `thresholdLedgers`, and an `autopilot.payerWallet` that is not linked to the caller.
+- **The web client has copy for it** (WEBF's, in `apps/web/src/lib/watchlist.ts`, #444; the copy belongs to the web client, not to the API contract). When `POST /watchlist` answers `INVALID_REQUEST` (`400` or `422`, the code decides, not the status), the dashboard says: "The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly." If the scan declared more data keys than a watchlist item takes, it appends: "This scan declared N data keys, and a watchlist item takes at most 100." (N is the number declared). It branches on the code, never on `message`.
+
+**Known limitation: an absent item and an unknown route look the same.** `DELETE /watchlist/{network}/{contractId}` (and `PATCH`) for an item the caller does not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all, such as `/watchlist/a/b/c`. The two differ only in `message` ("No such watch item." and "No such route."), which is not part of the contract, so a client that branches on the code and status cannot tell them apart. This is documented, not a planned code change. A malformed `network` or `contractId` segment is not part of it: that is `400 INVALID_REQUEST`. The web client shows "Nothing to remove for this account." for the `DELETE` case (its copy, see §9a).
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
@@ -383,7 +397,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
   copy, reported as a result with its observation. *(CEF, folding: on the wire
   it is never the `NOT_FOUND` error code. `POST /scans` answers `200` with an
   `entry-not-found` issue in the `ScanResult`, exactly as `scan --json` does.
-  `NOT_FOUND` is for a missing route resource, such as an unknown job ID.)*
+  `NOT_FOUND` is for a missing route resource, such as an unknown job ID, or a watch item the caller does not have, §9.)*
 - **A health state without `observedAtLedger` is a client-side error, not a
   state to render.** §2 says the API never returns one; if it does, the
   dashboard shows undetermined and that is a P0 against the Definitions of
@@ -398,16 +412,25 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
 | `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it. **The screen states the limit before it is reached** (Fatih, 2026-10-21) — a limit a user discovers by hitting it reads as a fault, so the count is shown beside the control from the first use, not only on refusal |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
-| `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
+| `NETWORK_NOT_WRITABLE` | "That network cannot be written to from here. Nothing was added." (the web client's copy, `apps/web/src/lib/watchlist.ts`; names no network and gives no date) | Nothing. **Should be unreachable from this UI** — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
 | `IDEMPOTENCY_KEY_REUSED` | "That action was already taken." and then the existing job | **Nothing to retry** — this is the protection working, so it reads as information, not failure |
 
 **`NETWORK_NOT_WRITABLE` should be unreachable from the dashboard** and is
 listed so it is handled rather than assumed away. The site refuses to be
 *built* for anything but testnet (`PH2-E1-03`), so a client that could send a
-mainnet write would be a second defect. If it ever arrives, it renders as
-undetermined with the generic sentence — which is the closed-set default doing
-its job.
+mainnet write would be a second defect. If it ever arrives, the client
+shows the sentence in the table above, in the *undetermined* tone with the word
+"not added" (`POST /watchlist`, #444). That wording is the web client's copy
+(WEBF's path), not part of the API contract.
+
+Also in the web client's copy (WEBF's path, not part of the API contract):
+`INVALID_REQUEST` is in the client's known-code list and has its own sentence
+(§9); a `DELETE` that answers `NOT_FOUND` shows "Nothing to remove for this
+account."; and `UPSTREAM_UNAVAILABLE` on the watchlist no longer names a cause:
+"The API answered, but could not complete this, so the watchlist could not be
+read. This is about us, not your contracts." for `GET`, and "The API answered,
+but could not complete this. Nothing was confirmed as added." for `POST`.
 
 **One thing the client needs that §7 does not provide.** `ALLOWANCE_EXPIRED`
 and `GET /allowance` give a status, and the copy above needs *how long it has

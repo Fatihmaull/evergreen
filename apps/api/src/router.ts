@@ -1,6 +1,7 @@
 /**
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
- * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4) and a JSON 404.
+ * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), the watchlist
+ * group (`PH2-E2-05`, §6) and a JSON 404.
  */
 import {
   authDepsFor,
@@ -11,6 +12,8 @@ import {
 } from './auth/mount.js';
 import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
+import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
+import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
 
 export const API_BASE = '/api/v1';
 export const API_VERSION = 'v1';
@@ -78,7 +81,7 @@ function logSendFailure(
 export async function handle(
   request: Request,
   env: Env = {},
-  options: MountOptions = {},
+  options: WatchlistMountOptions = {},
 ): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname.startsWith(`${API_BASE}/`)) {
@@ -103,6 +106,28 @@ export async function handle(
           }
         }
         return unavailable();
+      }
+    }
+  }
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
+    const allowed = watchlistMethods(path);
+    if (allowed !== undefined) {
+      const method = request.method.toUpperCase();
+      if (!allowed.includes(method)) {
+        return apiError('METHOD_NOT_ALLOWED', `Use ${allowed.join(' or ')}.`, 405, {
+          headers: { allow: allowed.join(', ') },
+        });
+      }
+      const deps = watchlistDepsFor(env, options);
+      if (deps === undefined) {
+        return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
+      }
+      try {
+        return (await handleWatchlist(request, path, deps)) ?? notFound();
+      } catch {
+        // The database did not answer: absence is not health, and the error names nothing (§9).
+        return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
       }
     }
   }

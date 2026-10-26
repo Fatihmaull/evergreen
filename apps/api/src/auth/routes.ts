@@ -97,7 +97,7 @@ const walletJson = (w: WalletLink) => ({
   linkedAt: iso(w.linkedAt),
 });
 
-interface Authed {
+export interface Authed {
   readonly row: SessionRow;
   readonly user: User;
 }
@@ -109,7 +109,7 @@ interface Authed {
 const rotatedCookies = new WeakMap<Request, string>();
 
 /** Session, then CSRF for unsafe methods. Returns a refusal Response or the session. */
-async function requireSession(request: Request, deps: AuthDeps): Promise<Authed | Response> {
+export async function requireSession(request: Request, deps: AuthDeps): Promise<Authed | Response> {
   const token = readSessionToken(request.headers.get('cookie'));
   const unauth = () => authError(401, 'UNAUTHENTICATED', 'Sign in first.');
   if (token === undefined) return unauth();
@@ -324,8 +324,18 @@ export async function handleAuth(
   deps: AuthDeps,
 ): Promise<Response | undefined> {
   const res = await route(request, path, deps);
+  return res === undefined ? undefined : withRotatedCookie(request, res);
+}
+
+/**
+ * Adds the cookie a request earned from `requireSession` (session rotation) to
+ * the response, success or refusal. Every route group that calls
+ * `requireSession` must pass its answer through here, or a rotated token is
+ * never delivered.
+ */
+export function withRotatedCookie(request: Request, res: Response): Response {
   const cookie = rotatedCookies.get(request);
-  if (res !== undefined && cookie !== undefined) res.headers.append('set-cookie', cookie);
+  if (cookie !== undefined) res.headers.append('set-cookie', cookie);
   return res;
 }
 
