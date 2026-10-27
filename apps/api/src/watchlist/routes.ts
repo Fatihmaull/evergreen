@@ -268,6 +268,19 @@ async function patch(
       422,
     );
   }
+  if (result === 'payer-relink-required') {
+    // The user's own wallet, so naming the reason leaks nothing. Without it the
+    // answer would say "not linked" about a wallet their own list shows as linked.
+    return invalid(
+      {
+        ok: false,
+        field: 'autopilot.payerWallet',
+        message:
+          'Your account was reactivated. Sign with this wallet again before using it as a payer.',
+      },
+      422,
+    );
+  }
   const record = await deps.store.get(userId, key.network, key.contractId, now);
   if (record === undefined) return notFound();
   return json(200, { item: itemJson(record, deps.extendNowLimitPerDay, now) });

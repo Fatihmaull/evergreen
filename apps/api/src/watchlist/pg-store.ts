@@ -27,6 +27,20 @@ import type {
 
 const num = (v: unknown): number => Number(v);
 
+/**
+ * The one definition, in this file, of when a wallet may be an item's autopilot
+ * payer: it is the caller's own, **and** the account was never reactivated or the
+ * wallet was linked strictly after the last reactivation (#385 option 2, migration
+ * 0004). A reactivated user signs the wallet challenge again to use a wallet. The
+ * condition is the same text as the engine planner's join
+ * (`LIST_AUTOPILOT_ITEMS_SQL`), so the API and the engine cannot disagree. `$1`
+ * is the user id.
+ */
+const PAYER_COUNTS_AS_LINKED_SQL = (payerParam: string): string =>
+  `SELECT 1 FROM wallets x JOIN users u ON u.id = x.user_id
+ WHERE x.network = 'testnet' AND x.account = ${payerParam} AND x.user_id = $1::uuid
+ AND (u.reactivated_at IS NULL OR x.linked_at > u.reactivated_at)`;
+
 const SELECT_ITEMS = `SELECT w.network::text AS network, w.contract_id::text AS contract_id, w.label,
   extract(epoch from w.added_at)::int8 AS added_at, w.scope, w.autopilot_enabled,
   w.payer_account::text AS payer_account, w.threshold_ledgers::text AS threshold_ledgers,
@@ -169,9 +183,7 @@ SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM prior) THEN 'created'
         `budget_per_job_max = ${p(autopilot.perJobMaxStroops)}::stroops`,
         `budget_per_30d_max = ${p(autopilot.per30DaysMaxStroops)}::stroops`,
       );
-      where.push(
-        `EXISTS (SELECT 1 FROM wallets x WHERE x.network = 'testnet' AND x.account = ${payer} AND x.user_id = $1::uuid)`,
-      );
+      where.push(`EXISTS (${PAYER_COUNTS_AS_LINKED_SQL(payer)})`);
     } else if (autopilot?.enabled === false) {
       set.push('autopilot_enabled = false', 'payer_network = NULL', 'payer_account = NULL');
     }
@@ -187,7 +199,17 @@ SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM prior) THEN 'created'
       `SELECT 1 AS found FROM watch_items WHERE user_id = $1::uuid AND network = $2 AND contract_id = $3 AND removed_at IS NULL`,
       [userId, network, contractId],
     );
-    return found.length > 0 ? 'payer-not-linked' : 'not-found';
+    if (found.length === 0) return 'not-found';
+    // The item is the user's, so the payer failed the rule. Say which way, since
+    // the user's own wallet list shows the wallet as linked in one of them.
+    if (autopilot?.enabled === true) {
+      const stale = await this.sql.query(
+        `SELECT 1 AS found FROM wallets x WHERE x.network = 'testnet' AND x.account = $1 AND x.user_id = $2::uuid`,
+        [autopilot.payerWallet, userId],
+      );
+      if (stale.length > 0) return 'payer-relink-required';
+    }
+    return 'payer-not-linked';
   }
 
   /** Atomic: cancel the still-queued jobs, then mark the item removed. */

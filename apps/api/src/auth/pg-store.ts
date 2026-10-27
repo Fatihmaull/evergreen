@@ -179,6 +179,12 @@ VALUES ($1, decode($2, 'hex'), to_timestamp($3), $4, CASE WHEN $5::boolean THEN 
    * is no moment where the account is active with autopilot still on. It runs
    * **only** when the row was deactivated: `prior` reads the row as it was before
    * this statement, so an ordinary sign-in leaves autopilot alone.
+   *
+   * **It also stamps `users.reactivated_at`** (migration 0004, #385 option 2),
+   * again only on a real reactivation. A wallet then counts as linked for
+   * autopilot only if it was linked strictly after that instant: the user has to
+   * sign the §4 challenge again. The clock is the same `now` that stamps
+   * `wallets.linked_at`, so the two are comparable.
    */
   async upsertUserByEmail(email: string, now: number): Promise<User> {
     const rows = await this.sql.query(
@@ -189,7 +195,9 @@ VALUES ($1, decode($2, 'hex'), to_timestamp($3), $4, CASE WHEN $5::boolean THEN 
   WHERE user_id IN (SELECT id FROM prior) AND autopilot_enabled
 )
 INSERT INTO users (email, created_at) VALUES ($1, to_timestamp($2))
-ON CONFLICT ((lower(email))) DO UPDATE SET deactivated_at = NULL
+ON CONFLICT ((lower(email))) DO UPDATE SET
+  reactivated_at = CASE WHEN users.deactivated_at IS NOT NULL THEN to_timestamp($2) ELSE users.reactivated_at END,
+  deactivated_at = NULL
 RETURNING id::text AS id, email, ${epoch('created_at')}`,
       [email, now],
     );
@@ -256,12 +264,24 @@ RETURNING id::text AS id, email, ${epoch('created_at')}`,
     }));
   }
 
-  /** Atomic: the (network, account) primary key decides; a wallet belongs to one user. */
+  /**
+   * Atomic: the (network, account) primary key decides; a wallet belongs to one user.
+   *
+   * **Signing again refreshes `linked_at`** when the wallet is already this
+   * user's. That is what lets a reactivated user's wallet count as linked
+   * again: the autopilot rule compares `linked_at` with `users.reactivated_at`
+   * (#385 option 2), so a re-sign that left the old `linked_at` in place could
+   * never satisfy it. The refresh is limited to the same user: another user's
+   * wallet is never touched, and still answers `linked-elsewhere`.
+   */
   async linkWallet(userId: string, account: string, now: number): Promise<LinkResult> {
     const rows = await this.sql.query(
       `WITH ins AS (
   INSERT INTO wallets (network, account, user_id, linked_at) VALUES ('testnet', $2, $1::uuid, to_timestamp($3))
   ON CONFLICT (network, account) DO NOTHING RETURNING 1
+), refresh AS (
+  UPDATE wallets SET linked_at = to_timestamp($3)
+  WHERE network = 'testnet' AND account = $2 AND user_id = $1::uuid AND NOT EXISTS (SELECT 1 FROM ins)
 )
 SELECT EXISTS (SELECT 1 FROM ins) AS created,
   (SELECT user_id::text FROM wallets WHERE network = 'testnet' AND account = $2) AS owner`,

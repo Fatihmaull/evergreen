@@ -91,7 +91,10 @@ export class MemoryAuthStore implements AuthStore {
   linkWallet(userId: string, account: string, now: number): Promise<LinkResult> {
     const existing = this.wallets.get(account);
     if (existing !== undefined) {
-      return Promise.resolve(existing.userId === userId ? 'already-linked' : 'linked-elsewhere');
+      if (existing.userId !== userId) return Promise.resolve('linked-elsewhere');
+      // Signing again refreshes the link time, as the Postgres store does (#385 option 2).
+      existing.link = { ...existing.link, linkedAt: now };
+      return Promise.resolve('already-linked');
     }
     this.wallets.set(account, { userId, link: { account, network: 'testnet', linkedAt: now } });
     return Promise.resolve('created');

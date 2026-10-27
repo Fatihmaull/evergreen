@@ -53,6 +53,10 @@ importers:
       '@stellar/stellar-sdk':
         specifier: 17.0.1
         version: 17.0.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.11
+        version: 0.5.11
 
   apps/dashboard:
     dependencies:

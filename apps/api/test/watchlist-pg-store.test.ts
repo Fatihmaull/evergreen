@@ -204,9 +204,10 @@ describe('update', () => {
     sql.answers.push([{ ok: 1 }]);
     await store.update(UID, 'testnet', C, { autopilot: on });
     const q = sql.queries[0]!;
-    expect(q.text).toContain(
-      "EXISTS (SELECT 1 FROM wallets x WHERE x.network = 'testnet' AND x.account = $4 AND x.user_id = $1::uuid)",
-    );
+    // The wallet must be the caller's own AND count as linked under the reactivation rule
+    // (#385 option 2). The rule's behaviour is proven on Postgres in reactivation.pglite.test.ts.
+    expect(q.text).toContain("x.network = 'testnet' AND x.account = $4 AND x.user_id = $1::uuid");
+    expect(q.text).toContain('(u.reactivated_at IS NULL OR x.linked_at > u.reactivated_at)');
     expect(q.text).toContain("payer_network = 'testnet', payer_account = $4");
     expect(q.params).toEqual([UID, 'testnet', C, G, 15_888, 63_552, '50000000', '200000000']);
   });

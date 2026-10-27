@@ -69,8 +69,13 @@ export interface WatchPatch {
  * `payer-not-linked`: the payer wallet is not linked to this user. The real
  * store enforces it in the UPDATE itself, so a route that forgot to check
  * still cannot name another user's wallet.
+ *
+ * `payer-relink-required`: the wallet is the user's, but was linked at or before
+ * the account's last reactivation, so it does not count until the user signs the
+ * wallet challenge again (docs/API.md §10, #385 option 2). Only the real store
+ * knows reactivation; the in-memory one never returns it.
  */
-export type UpdateResult = 'updated' | 'not-found' | 'payer-not-linked';
+export type UpdateResult = 'updated' | 'not-found' | 'payer-not-linked' | 'payer-relink-required';
 
 export interface WatchlistStore {
   /** The caller's items that are not removed. */
