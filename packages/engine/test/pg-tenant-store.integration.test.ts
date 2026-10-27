@@ -1,5 +1,5 @@
 /**
- * PgTenantStore against a real throwaway Postgres 17, with schema.sql → 0002 → 0003 applied.
+ * PgTenantStore against a real throwaway Postgres 17, with schema.sql → 0002 → 0003 → 0004 applied.
  * Opt-in: set EVERGREEN_PG_PODMAN_CONTAINER to the name of a running, disposable podman container
  * from docker.io/library/postgres:17 (user postgres). The test resets the public schema in it.
  *
