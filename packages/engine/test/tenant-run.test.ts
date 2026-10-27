@@ -109,6 +109,20 @@ describe('runTenantPlan', () => {
     expect(JSON.stringify(report)).not.toMatch(/SECRET123|rpc\.example|boom/);
   });
 
+  it.each([
+    ['TypeError', () => new TypeError('x is not a function at https://rpc.example/?key=SECRET123')],
+    ['ReferenceError', () => new ReferenceError('fetch is not defined SECRET123')],
+  ])('reports a thrown %s as TENANT_INTERNAL, not a scan failure', async (_n, make) => {
+    const engine: Engine = async (r, config) => {
+      if (config.contracts[0]!.id === C('B')) throw make();
+      return okEngine(r, config);
+    };
+    const report = await runTenantPlan(plans(), deps({ engine }));
+    expect(report.tenants.map((t) => t.status)).toEqual(['ok', 'failed', 'ok']);
+    expect(report.tenants[1]!.errorCode).toBe('TENANT_INTERNAL');
+    expect(JSON.stringify(report)).not.toMatch(/SECRET123|rpc\.example|not a function|not defined/);
+  });
+
   it('times out a hung tenant at the per-tenant deadline and continues', async () => {
     const engine: Engine = async (r, config) => {
       if (config.contracts[0]!.id === C('A')) return new Promise(() => undefined);

@@ -18,7 +18,19 @@ export const DEFAULT_TENANT_DEADLINE_MS = 20_000;
 const PAYER_ALIAS = 'tenant';
 
 export type TenantRunStatus = 'ok' | 'failed' | 'skipped';
-export type TenantErrorCode = 'TENANT_SCAN_FAILED' | 'TENANT_TIMEOUT' | 'TENANT_CONFIG_INVALID';
+export type TenantErrorCode =
+  'TENANT_SCAN_FAILED' | 'TENANT_TIMEOUT' | 'TENANT_CONFIG_INVALID' | 'TENANT_INTERNAL';
+
+/**
+ * A ReferenceError or TypeError is a fault in our own code, not an RPC or scan failure, so it gets
+ * its own code (TENANT_INTERNAL) and an operator can tell "RPC down" from "our bug". Like every
+ * other code, no message text is carried through.
+ */
+function errorCodeFor(err: unknown): TenantErrorCode {
+  if (err instanceof TenantError) return err.code;
+  if (err instanceof ReferenceError || err instanceof TypeError) return 'TENANT_INTERNAL';
+  return 'TENANT_SCAN_FAILED';
+}
 
 export interface TenantItemResult {
   readonly userId: string;
@@ -149,7 +161,7 @@ async function runOne(plan: TenantPlan, deps: TenantRunDeps): Promise<TenantRunR
     }));
     return { payerAccount: plan.payerAccount, status: 'ok', decisions, items };
   } catch (err) {
-    const errorCode = err instanceof TenantError ? err.code : 'TENANT_SCAN_FAILED';
+    const errorCode = errorCodeFor(err);
     return {
       payerAccount: plan.payerAccount,
       status: 'failed',
