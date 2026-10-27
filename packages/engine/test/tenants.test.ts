@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkBudget, planTenants, spendKey } from '../src/tenants.js';
+import { checkBudget, isEligible, planTenants, spendKey } from '../src/tenants.js';
 import { MemoryTenantStore, planTenantsFromStore } from '../src/tenant-store.js';
 import type { TenantStore } from '../src/tenant-store.js';
 import { C, G, U1, U2, row } from './tenant-fixtures.js';
@@ -208,7 +208,7 @@ describe('missing pull ledger row (fail closed)', () => {
   });
 });
 
-describe('ledger value validation (core isValidThreshold)', () => {
+describe('ledger value validation (safe integers, core isValidBumpWindow)', () => {
   it.each([
     ['negative threshold', { thresholdLedgers: -1n }],
     ['negative extend-to', { extendToLedgers: -5n }],
@@ -267,5 +267,35 @@ describe('planTenantsFromStore uses one batched spend read', () => {
       [`${U2}/${C('A')}`]: 300n,
       [`${U1}/${C('B')}`]: 300n,
     });
+  });
+});
+
+describe('isEligible bump window (core isValidBumpWindow)', () => {
+  it('accepts a valid window', () => {
+    expect(isEligible(row({ thresholdLedgers: 1000n, extendToLedgers: 5000n }), 'testnet')).toBe(
+      true,
+    );
+    expect(isEligible(row({ thresholdLedgers: 1n, extendToLedgers: 2n }), 'testnet')).toBe(true);
+  });
+  it('rejects threshold 0', () => {
+    expect(isEligible(row({ thresholdLedgers: 0n, extendToLedgers: 5000n }), 'testnet')).toBe(
+      false,
+    );
+  });
+  it('rejects extend equal to threshold', () => {
+    expect(isEligible(row({ thresholdLedgers: 1000n, extendToLedgers: 1000n }), 'testnet')).toBe(
+      false,
+    );
+  });
+  it('rejects extend below threshold', () => {
+    expect(isEligible(row({ thresholdLedgers: 5000n, extendToLedgers: 1000n }), 'testnet')).toBe(
+      false,
+    );
+  });
+  it('drops an invalid window from the plan', () => {
+    const r = row({ thresholdLedgers: 0n });
+    expect(planTenants([r], new Map([[spendKey(r.userId, r.network, r.contractId), 0n]]))).toEqual(
+      [],
+    );
   });
 });

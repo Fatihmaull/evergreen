@@ -96,6 +96,10 @@ importers:
       '@evergreen-stellar/shared-types':
         specifier: workspace:*
         version: link:../shared-types
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.11
+        version: 0.5.11
 
   packages/mcp:
     dependencies:
@@ -149,6 +153,9 @@ packages:
 
   '@cacheable/utils@2.5.0':
     resolution: {integrity: sha512-buipgOVDkkPXNR5+xBpDw7Zk2n1EvU7qBJCNUcL7rhQ//kfpOXPAvQ511Os0vpLYJ1pZnvudNytkQt2hst3wqA==}
+
+  '@electric-sql/pglite@0.5.11':
+    resolution: {integrity: sha512-SWuqsTjA4DDWqgZ05PC1RJaq8e00p5KACxbqaikDFQ8dIGA0SLRzuPniky7IW+q/c5RDNMdEXwv7mFBWIx9Hxw==}
 
   '@esbuild/aix-ppc64@0.25.0':
     resolution: {integrity: sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ==}
@@ -1802,6 +1809,8 @@ snapshots:
     dependencies:
       hashery: 1.5.1
       keyv: 5.6.0
+
+  '@electric-sql/pglite@0.5.11': {}
 
   '@esbuild/aix-ppc64@0.25.0':
     optional: true

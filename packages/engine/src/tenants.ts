@@ -7,7 +7,8 @@
  * independent items, each with its own payer and budget.
  */
 
-import { isValidThreshold } from '@evergreen-stellar/core';
+import { isValidBumpWindow } from '@evergreen-stellar/core';
+import type { Stroops } from '@evergreen-stellar/shared-types';
 
 /** Writes stay testnet-only until DoD-2 (PH2-E5-02). */
 export type TenantNetwork = 'testnet';
@@ -62,19 +63,16 @@ export function spendKey(userId: string, network: string, contractId: string): s
   return JSON.stringify([userId, network, contractId]);
 }
 
-/** Safe-integer conversion first, so a huge bigint never reaches core as a rounded number. */
-function isValidLedgerCount(v: bigint): boolean {
-  const n = Number(v);
-  return Number.isSafeInteger(n) && isValidThreshold(n);
+/** Safe-integer check first, so a huge bigint never reaches core as a rounded number. */
+function isSafeLedgerCount(v: bigint): boolean {
+  return Number.isSafeInteger(Number(v));
 }
 
 /**
  * Whether a row may run autopilot on this network: testnet, autopilot on, not removed, a payer on
- * this network owned by the item's user, non-negative budgets present, and both ledger values safe
- * integers that core's isValidThreshold() accepts (>= 0). It does NOT re-check
- * threshold_ledgers > 0 or extend_to_ledgers > threshold_ledgers; those are guarded only by the
- * schema CHECK (TTL comparisons belong to core, see issue #442), so a memory rehearsal can hold
- * rows the database would refuse.
+ * this network owned by the item's user, both ledger values safe integers and a valid bump window
+ * (core `isValidBumpWindow`, the same rule as the schema CHECK: threshold_ledgers >= 1 and
+ * extend_to_ledgers > threshold_ledgers), and non-negative budgets present.
  */
 export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boolean {
   return (
@@ -88,8 +86,9 @@ export function isEligible(row: AutopilotItemRow, network: TenantNetwork): boole
     row.payerOwnerUserId === row.userId &&
     typeof row.thresholdLedgers === 'bigint' &&
     typeof row.extendToLedgers === 'bigint' &&
-    isValidLedgerCount(row.thresholdLedgers) &&
-    isValidLedgerCount(row.extendToLedgers) &&
+    isSafeLedgerCount(row.thresholdLedgers) &&
+    isSafeLedgerCount(row.extendToLedgers) &&
+    isValidBumpWindow(Number(row.thresholdLedgers), Number(row.extendToLedgers)) &&
     typeof row.budgetPerJobMax === 'bigint' &&
     typeof row.budgetPer30dMax === 'bigint' &&
     row.budgetPerJobMax >= 0n &&
@@ -150,4 +149,45 @@ export function checkBudget(item: TenantItem, estimatedStroops: bigint | undefin
   if (estimatedStroops > item.budget.perJobMax) return 'over-per-job';
   if (estimatedStroops > item.budget.per30dRemaining) return 'over-30d';
   return 'ok';
+}
+
+/** JSON-safe form of a TenantItem: bigints as decimal strings (docs/API.md Stroops convention). */
+export interface TenantItemWire {
+  readonly userId: string;
+  readonly contractId: string;
+  readonly scope: unknown;
+  readonly thresholdLedgers: string;
+  readonly extendToLedgers: string;
+  readonly budget: { readonly perJobMax: Stroops; readonly per30dRemaining: Stroops };
+}
+
+export interface TenantPlanWire {
+  readonly network: TenantNetwork;
+  readonly payerAccount: string;
+  readonly items: readonly TenantItemWire[];
+}
+
+const dec = (v: bigint): Stroops => v.toString(10) as Stroops;
+
+export function tenantItemToWire(item: TenantItem): TenantItemWire {
+  return {
+    userId: item.userId,
+    contractId: item.contractId,
+    scope: item.scope,
+    thresholdLedgers: dec(item.thresholdLedgers),
+    extendToLedgers: dec(item.extendToLedgers),
+    budget: {
+      perJobMax: dec(item.budget.perJobMax),
+      per30dRemaining: dec(item.budget.per30dRemaining),
+    },
+  };
+}
+
+/** For queues, logs and routes: `JSON.stringify(plan)` throws on bigint, this never does. */
+export function tenantPlanToWire(plan: TenantPlan): TenantPlanWire {
+  return {
+    network: plan.network,
+    payerAccount: plan.payerAccount,
+    items: plan.items.map(tenantItemToWire),
+  };
 }
