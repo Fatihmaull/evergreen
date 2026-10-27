@@ -52,7 +52,7 @@ Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 d
 - engine and treasury keys are separate and the float never exceeded its cap;
 - a cold reader can onboard from the docs alone (`B-D31-03`). The cold reader is an external beta user.
 
-**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2.** `PH2-E5-02`'s core criterion is "DoD-2 met".
+**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2, and no immutable contract goes to mainnet before a written router audit** (a precondition of `PH2-E5-02`; Fatih, 2026-10-26, #414). `PH2-E5-02`'s core criterion is "DoD-2 met".
 
 ### Measurability: what these need that nothing yet provides
 
@@ -318,7 +318,7 @@ PH2-E0-03 contents:
 | PH2-E2-03 | Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger | CER | M | PH2-E2-02 |
 | PH2-E2-04 | Auth (§3.1): passwordless email plus SEP-10-style wallet linking, sessions | CEF | L | PH2-E2-03 |
 | PH2-E2-05 | Watchlist API (Q14) | CER | M | PH2-E2-04 |
-| PH2-E2-06 | Per-user alerts via Resend | CER | M | PH2-E2-05 |
+| PH2-E2-06 | Per-user alerts via Resend. *Moved CER → CEF 2026-10-26 (Fatih's offer, accepted by Rakha on #385); Rakha reviews* | CEF | M | PH2-E2-05 |
 
 ### E3 — Dashboard usable by anyone
 
@@ -340,8 +340,8 @@ PH2-E0-03 contents:
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
 | PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per (user, contract) and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
-| PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
-| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
+| PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict. Built against `planTenants`/`checkBudget` (#440). *Moved CER → CEF, with Fatih's DevOps agent, 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E2-01, PH2-E4-02 |
+| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator). *Moved CER → CEF 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
 | PH2-E4-08 | Production router (ADR-009): audit, Rust CI (DevOps Assistant), final fee address = treasury | CEF | L | PH2-E4-03, PH2-E4-07 |
@@ -351,8 +351,8 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
-| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done) | F + R | S | PH2-E5-01 |
-| PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-03 data (mainnet scan) |
+| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done). **Precondition: a written router audit**, before any immutable contract goes to mainnet (Fatih, 2026-10-26). Measuring fees with real mainnet transactions happens here, after the audit (moved from PH2-E5-03) | F + R | S | PH2-E5-01 |
+| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
 ### BL — Backlog (unscheduled, same scheme)
@@ -375,6 +375,8 @@ PH2-E0-03 contents:
 | **Fatih** (F 8.5 + CEF 24 + WEBF 6) | 38.5 | 5 | 43.5 |
 | **Rakha** (R 2.5 + CER 22 + WEBR 6) | 30.5 | 7 | 37.5 |
 
+**Recomputed 2026-10-26 from `BACKLOG.md`**, E0–E5 only, 73 points. Shared cards are split half each, and `PH2-E0-01`'s row has no weight tag, so its S comes from this plan's table. The table above dates from 2026-10-15 and predates cards added since, such as `PH2-E4-08`. **Before today's move: Fatih 42.5, Rakha 30.5. After it: Fatih 48.5, Rakha 24.5.** The move is `PH2-E2-06`, `PH2-E4-04` and `PH2-E4-05`, each M, from CER to CEF: Fatih's offer on #385, accepted by Rakha the same day. The money path (`PH2-E4-01`..`03`) stays Rakha's.
+
 **Rebalanced 2026-10-15** after the ownership moves accepted on #299. Before the moves it was Fatih 34.5 and Rakha 32.5 scheduled, recomputed from the tables above.
 - PH2-E0-06 moved CER → CEF (S, 1 point).
 - PH2-E1-03 grew M → L when it took the mainnet scan path (+1).
@@ -384,7 +386,7 @@ PH2-E0-03 contents:
 
 Shared cards are split half each. **Equal by weight, not by hours** — Rakha's available hours are his to confirm.
 
-**The concentration risk to know about:** the entire hosted autopilot (PH2-E4-01 to PH2-E4-05) is Rakha's critical path. If he slips, revenue slips. That fits his history, but you should see it before confirming.
+**The concentration risk to know about** *(eased 2026-10-26: PH2-E4-04 and PH2-E4-05 moved to CEF)*: the entire hosted autopilot (PH2-E4-01 to PH2-E4-05) is Rakha's critical path. If he slips, revenue slips. That fits his history, but you should see it before confirming.
 
 ---
 
