@@ -6,7 +6,7 @@ export interface TenantStore {
   /** Watch items with autopilot on and not removed, on this network. */
   listAutopilotItems(network: TenantNetwork): Promise<readonly AutopilotItemRow[]>;
   /**
-   * Stroops pulled minus refunded in the last 30 days for one (user, network, contract).
+   * Stroops pulled minus refunded in the last 720 hours for one (user, network, contract).
    * `undefined` when undetermined (a pulled job in the window has no pull ledger row); the plan
    * then treats the item as having nothing left.
    */
@@ -35,7 +35,7 @@ export interface MemorySpendEntry {
   readonly userId: string;
   readonly network: string;
   readonly contractId: string;
-  /** When the job's pull confirmed; the 30-day window reads this. */
+  /** When the job's pull confirmed; the 720-hour window reads this. */
   readonly pulledAt: Date;
   readonly pulled: bigint;
   readonly refunded: bigint;
