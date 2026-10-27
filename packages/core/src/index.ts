@@ -10,6 +10,7 @@ export {
   estimateEndsAt,
   hasExpired,
   isLive,
+  isValidBumpWindow,
   isValidThreshold,
   measureCadence,
   needsAction,
