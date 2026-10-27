@@ -1,0 +1,382 @@
+[
+  {
+    "label": "1",
+    "op": "ExtendFootprintTTL instance+code extendTo=2500000",
+    "simulatedResourceFee": "344175698",
+    "simulatedAtLedger": 5307989,
+    "declaredResourceFee": "344175698",
+    "multiplier": "1",
+    "envelopeFee": "344175798",
+    "inclusionFee": 100,
+    "balanceBefore": "99984678383",
+    "sendStatus": "PENDING",
+    "hash": "efd0e68b3ee4631338edb1282c9c3eaa88aa16670d1146504f639665f0fc0903",
+    "status": "SUCCESS",
+    "ledger": 5307990,
+    "feeInfo": {
+      "proposed": {
+        "fee": 344175798,
+        "resource_fee": 344175698,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 299279425,
+        "resource_fee": 299279325,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1232,
+        "refundable_resource_fee": 299278093
+      }
+    },
+    "feeCharged": "299279425",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1232",
+      "totalRefundableResourceFeeCharged": "299278093",
+      "rentFeeCharged": "299278093"
+    },
+    "balanceAfter": "99685398958",
+    "balanceDelta": "-299279425",
+    "notCharged": "44896373"
+  },
+  {
+    "label": "2",
+    "op": "ExtendFootprintTTL persistent extendTo=2500000",
+    "simulatedResourceFee": "1802088",
+    "simulatedAtLedger": 5307991,
+    "declaredResourceFee": "3604176",
+    "multiplier": "2",
+    "envelopeFee": "3604276",
+    "inclusionFee": 100,
+    "balanceBefore": "99685398958",
+    "sendStatus": "PENDING",
+    "hash": "9fdc602c8aef37065eac5d83a8bfcee196eaf7c1938f10835388ff99601932b2",
+    "status": "SUCCESS",
+    "ledger": 5307992,
+    "feeInfo": {
+      "proposed": {
+        "fee": 3604276,
+        "resource_fee": 3604176,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 1563116,
+        "resource_fee": 1563016,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1215,
+        "refundable_resource_fee": 1561801
+      }
+    },
+    "feeCharged": "1563116",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1215",
+      "totalRefundableResourceFeeCharged": "1561801",
+      "rentFeeCharged": "1561801"
+    },
+    "balanceAfter": "99683835842",
+    "balanceDelta": "-1563116",
+    "notCharged": "2041160"
+  },
+  {
+    "label": "3",
+    "op": "ExtendFootprintTTL persistent extendTo=2500000",
+    "simulatedResourceFee": "7481",
+    "simulatedAtLedger": 5307993,
+    "declaredResourceFee": "1802088",
+    "multiplier": "declared = #2 simulated",
+    "envelopeFee": "1802188",
+    "inclusionFee": 100,
+    "balanceBefore": "99683835842",
+    "sendStatus": "PENDING",
+    "hash": "3d2fc888fe9971e22f3f01bd93ee0d9a22f49c5bc07445fb020fa3d1361d6da1",
+    "status": "SUCCESS",
+    "ledger": 5307994,
+    "feeInfo": {
+      "proposed": {
+        "fee": 1802188,
+        "resource_fee": 1802088,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 2588,
+        "resource_fee": 2488,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1215,
+        "refundable_resource_fee": 1273
+      }
+    },
+    "feeCharged": "2588",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1215",
+      "totalRefundableResourceFeeCharged": "1273",
+      "rentFeeCharged": "1273"
+    },
+    "balanceAfter": "99683833254",
+    "balanceDelta": "-2588",
+    "notCharged": "1799600"
+  },
+  {
+    "label": "4",
+    "op": "ExtendFootprintTTL persistent extendTo=2550000",
+    "simulatedResourceFee": "45200",
+    "simulatedAtLedger": 5307997,
+    "declaredResourceFee": "56500",
+    "multiplier": "1.25",
+    "envelopeFee": "56600",
+    "inclusionFee": 100,
+    "balanceBefore": "99683833254",
+    "sendStatus": "PENDING",
+    "hash": "6792676b60df0042c1990ebf9013647017f7c7fa6f0c97a7a2a72b843fd0edd2",
+    "status": "SUCCESS",
+    "ledger": 5308018,
+    "feeInfo": {
+      "proposed": {
+        "fee": 56600,
+        "resource_fee": 56500,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 35399,
+        "resource_fee": 35299,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1215,
+        "refundable_resource_fee": 34084
+      }
+    },
+    "feeCharged": "35399",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1215",
+      "totalRefundableResourceFeeCharged": "34084",
+      "rentFeeCharged": "34084"
+    },
+    "balanceAfter": "99683797855",
+    "balanceDelta": "-35399",
+    "notCharged": "21201"
+  },
+  {
+    "label": "5",
+    "op": "ExtendFootprintTTL persistent extendTo=2600000",
+    "simulatedResourceFee": "45198",
+    "simulatedAtLedger": 5308019,
+    "declaredResourceFee": "22599",
+    "multiplier": "0.5",
+    "envelopeFee": "22699",
+    "inclusionFee": 100,
+    "balanceBefore": "99683797855",
+    "sendStatus": "PENDING",
+    "hash": "ebcb2eb50ef6655baaa1c7a536ff1c448371dfb5f73c60e9c0824b7148d85cb2",
+    "status": "FAILED",
+    "ledger": 5308021,
+    "feeInfo": {
+      "proposed": {
+        "fee": 22699,
+        "resource_fee": 22599,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 1315,
+        "resource_fee": 1215,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1215,
+        "refundable_resource_fee": 0
+      }
+    },
+    "feeCharged": "1315",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1215",
+      "totalRefundableResourceFeeCharged": "0",
+      "rentFeeCharged": "0"
+    },
+    "result": "{\"fee_charged\":\"1315\",\"result\":{\"tx_failed\":[{\"op_inner\":{\"extend_footprint_ttl\":\"insufficient_refundable_fee\"}}]},\"ext\":\"v0\"}",
+    "balanceAfter": "99683796540",
+    "balanceDelta": "-1315",
+    "notCharged": "21384"
+  },
+  {
+    "label": "10",
+    "op": "ExtendFootprintTTL persistent extendTo=2600000",
+    "simulatedResourceFee": "45202",
+    "simulatedAtLedger": 5308025,
+    "declaredResourceFee": "45202",
+    "multiplier": "1",
+    "envelopeFee": "45302",
+    "inclusionFee": 100,
+    "balanceBefore": "99683796540",
+    "sendStatus": "PENDING",
+    "hash": "0fb0f4a554e57889751cd43dea10c7b0512572dab54fa0b7bb0a9ba540b168b9",
+    "status": "SUCCESS",
+    "ledger": 5308026,
+    "feeInfo": {
+      "proposed": {
+        "fee": 45302,
+        "resource_fee": 45202,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 35389,
+        "resource_fee": 35289,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 1215,
+        "refundable_resource_fee": 34074
+      }
+    },
+    "feeCharged": "35389",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "1215",
+      "totalRefundableResourceFeeCharged": "34074",
+      "rentFeeCharged": "34074"
+    },
+    "balanceAfter": "99683761151",
+    "balanceDelta": "-35389",
+    "notCharged": "9913"
+  },
+  {
+    "label": "6",
+    "op": "approve(from S2, spender S1, 100 XLM)",
+    "simulatedResourceFee": "34253",
+    "declaredResourceFee": "34253",
+    "multiplier": "1",
+    "envelopeFee": "34353",
+    "inclusionFee": 100,
+    "balanceBefore": "100000000000",
+    "sendStatus": "PENDING",
+    "hash": "27b2964a03c23b9ba6ff87b5048299618b1136b9c0a6a8213a1057d40439f1f8",
+    "status": "SUCCESS",
+    "ledger": 5308032,
+    "feeInfo": {
+      "proposed": {
+        "fee": 34353,
+        "resource_fee": 34253,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 26204,
+        "resource_fee": 26104,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 3807,
+        "refundable_resource_fee": 22297
+      }
+    },
+    "feeCharged": "26204",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "3807",
+      "totalRefundableResourceFeeCharged": "22297",
+      "rentFeeCharged": "21769"
+    },
+    "balanceAfter": "99999973796",
+    "balanceDelta": "-26204",
+    "notCharged": "8149"
+  },
+  {
+    "label": "7",
+    "op": "transfer_from(spender S1, from S2, to S1, 1 XLM)",
+    "simulatedResourceFee": "13807",
+    "declaredResourceFee": "27614",
+    "multiplier": "2",
+    "note": "payer also receives 1 XLM (10000000 stroops)",
+    "envelopeFee": "27714",
+    "inclusionFee": 100,
+    "balanceBefore": "99683761151",
+    "sendStatus": "PENDING",
+    "hash": "793d12159057717c440378b95f3e663b63433256722633b30d338958da8ec35b",
+    "status": "SUCCESS",
+    "ledger": 5308034,
+    "feeInfo": {
+      "proposed": {
+        "fee": 27714,
+        "resource_fee": 27614,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 9032,
+        "resource_fee": 8932,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 8453,
+        "refundable_resource_fee": 479
+      }
+    },
+    "feeCharged": "9032",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "8453",
+      "totalRefundableResourceFeeCharged": "479",
+      "rentFeeCharged": "0"
+    },
+    "balanceAfter": "99693752119",
+    "balanceDelta": "9990968",
+    "notCharged": "18682"
+  },
+  {
+    "label": "8",
+    "op": "transfer_from 200 XLM, over the 99 XLM left on the allowance",
+    "footprint": "from a 1 XLM transfer_from simulation",
+    "simulatedResourceFee": "13807",
+    "declaredResourceFee": "27614",
+    "multiplier": "2",
+    "envelopeFee": "27714",
+    "inclusionFee": 100,
+    "balanceBefore": "99693752119",
+    "sendStatus": "PENDING",
+    "hash": "4b1ad59d9c0279c71a2f8bda608297cb7bc9deccd0ad66cc491dda2f9ba8e04a",
+    "status": "FAILED",
+    "ledger": 5308036,
+    "feeInfo": {
+      "proposed": {
+        "fee": 27714,
+        "resource_fee": 27614,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 8553,
+        "resource_fee": 8453,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 8453,
+        "refundable_resource_fee": 0
+      }
+    },
+    "feeCharged": "8553",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "8453",
+      "totalRefundableResourceFeeCharged": "0",
+      "rentFeeCharged": "0"
+    },
+    "result": "{\"fee_charged\":\"8553\",\"result\":{\"tx_failed\":[{\"op_inner\":{\"invoke_host_function\":\"trapped\"}}]},\"ext\":\"v0\"}",
+    "balanceAfter": "99693743566",
+    "balanceDelta": "-8553",
+    "notCharged": "19161"
+  },
+  {
+    "label": "9",
+    "op": "approve(from S2, spender S1, 0) revoke",
+    "simulatedResourceFee": "9224",
+    "declaredResourceFee": "9224",
+    "multiplier": "1",
+    "envelopeFee": "9324",
+    "inclusionFee": 100,
+    "balanceBefore": "99989973796",
+    "sendStatus": "PENDING",
+    "hash": "833bf08c910c098035fb894da1e62527f64fe081cab9d6aa97932d2bad054170",
+    "status": "SUCCESS",
+    "ledger": 5308038,
+    "feeInfo": {
+      "proposed": {
+        "fee": 9324,
+        "resource_fee": 9224,
+        "inclusion_fee": 100
+      },
+      "charged": {
+        "fee": 4441,
+        "resource_fee": 4341,
+        "inclusion_fee": 100,
+        "non_refundable_resource_fee": 3813,
+        "refundable_resource_fee": 528
+      }
+    },
+    "feeCharged": "4441",
+    "meta": {
+      "totalNonRefundableResourceFeeCharged": "3813",
+      "totalRefundableResourceFeeCharged": "528",
+      "rentFeeCharged": "0"
+    },
+    "balanceAfter": "99989969355",
+    "balanceDelta": "-4441",
+    "notCharged": "4883"
+  }
+]

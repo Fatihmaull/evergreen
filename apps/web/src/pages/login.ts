@@ -28,7 +28,6 @@
  * NO MONEY. This page imports `lib/wallet.ts` only; `build.mjs` refuses the
  * build if `wallet-money.ts` reaches this bundle (`LOGIN_FORBIDDEN`).
  */
-import { API_BASE } from '../lib/api';
 import { esc, short } from '../lib/format';
 import {
   linkWallet as postWallet,
@@ -39,6 +38,18 @@ import {
   verifyEmail as postEmailVerify,
   type Me,
 } from '../lib/login';
+import {
+  CANNOT_TELL_TEXT,
+  EMAIL_NOT_SENT_TEXT,
+  NOT_SENT_TEXT,
+  WRONG_CODE_TEXT,
+  createCountdown,
+  isCountdownSeconds,
+  minutesLeft,
+  rateLimitText,
+  sentText,
+  setCodeFormVisible,
+} from '../lib/login-view';
 import { NETWORK } from '../lib/network';
 import { createWallet, isWalletFailure, type WalletFailure } from '../lib/wallet';
 import { freighterPort } from '../lib/wallet-freighter';
@@ -49,13 +60,13 @@ const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) 
 let me: Me | undefined;
 let pendingEmail: string | undefined;
 let connected: string | undefined;
+/** Cancels the running "too many codes" countdown. Set only while the button is locked by one. */
+let cancelCooldown: (() => void) | undefined;
 
 function undetermined(what: string, detail: string): string {
   return `<div class="panel undetermined"><p><span class="chip undetermined"><span class="shape"></span>undetermined</span> ${esc(
     what,
-  )}</p><p class="small muted">${esc(detail)}. The account service (<span class="mono">${esc(
-    API_BASE,
-  )}</span>) answers these when it is deployed; until then this page cannot tell.</p></div>`;
+  )}</p><p class="small muted">${esc(detail)}. ${esc(CANNOT_TELL_TEXT)}</p></div>`;
 }
 
 function note(html: string): string {
@@ -77,6 +88,10 @@ function renderSession(): void {
       }</p><p><button id="logout-button" class="secondary" type="button">Sign out</button>`,
     );
     $('logout-button').addEventListener('click', () => void signOut());
+    // Signed in: the code was used. Its form goes, and so does what was typed in it.
+    setCodeFormVisible($('code-form'), false);
+    $<HTMLInputElement>('code').value = '';
+    pendingEmail = undefined;
   }
 }
 
@@ -113,6 +128,8 @@ async function loadMe(): Promise<void> {
 
 async function startEmail(event: Event): Promise<void> {
   event.preventDefault();
+  // A locked button blocks the click; this also blocks Enter in the field.
+  if (cancelCooldown !== undefined) return;
   const email = $<HTMLInputElement>('email').value.trim();
   const out = $('email-result');
   const button = $<HTMLButtonElement>('email-button');
@@ -121,25 +138,44 @@ async function startEmail(event: Event): Promise<void> {
     const r = await postEmailStart(email);
     if (r.kind === 'sent') {
       pendingEmail = email;
-      const codeForm = $('code-form');
-      codeForm.hidden = false;
-      // `.stack > *` sets display, which beats the `hidden` attribute.
-      codeForm.style.display = '';
-      out.innerHTML = note(
-        `If <strong>${esc(email)}</strong> can receive mail, a code is on its way. The answer is the same whether or not an account exists.`,
-      );
+      setCodeFormVisible($('code-form'), true);
+      out.innerHTML = note(sentText(esc(email)));
     } else if (r.kind === 'rate-limited') {
-      out.innerHTML = note(
-        r.retryAfterSeconds === undefined
-          ? 'Too many codes asked for. Wait, then try again.'
-          : `Too many codes asked for. Try again in ${Math.ceil(r.retryAfterSeconds / 60)} min.`,
-      );
+      out.innerHTML = note(rateLimitText(r.retryAfterSeconds));
+      // Only a server-given number drives a countdown. Without one the button stays usable.
+      if (isCountdownSeconds(r.retryAfterSeconds)) lockUntilRetryAfter(r.retryAfterSeconds);
+    } else if (r.kind === 'not-sent') {
+      out.innerHTML = note(`${NOT_SENT_TEXT}</p><p class="small muted">${esc(r.detail)}.`);
+    } else if (r.kind === 'email-not-sent') {
+      out.innerHTML = note(EMAIL_NOT_SENT_TEXT);
     } else {
       out.innerHTML = undetermined('Whether a code was sent.', r.detail);
     }
   } finally {
-    button.disabled = false;
+    if (cancelCooldown === undefined) button.disabled = false;
   }
+}
+
+/** Keeps "Email me a code" disabled for the server's `Retry-After`, then frees it at 0. */
+function lockUntilRetryAfter(seconds: number): void {
+  const out = $('email-result');
+  const button = $<HTMLButtonElement>('email-button');
+  let shownMinutes = minutesLeft(seconds);
+  button.disabled = true;
+  cancelCooldown = createCountdown(seconds, {
+    onTick: (left) => {
+      // The sentence counts whole minutes; rewrite it only when that number changes,
+      // so a screen reader is not told something new every second.
+      if (minutesLeft(left) === shownMinutes) return;
+      shownMinutes = minutesLeft(left);
+      out.innerHTML = note(rateLimitText(left));
+    },
+    onDone: () => {
+      cancelCooldown = undefined;
+      out.innerHTML = '';
+      button.disabled = false;
+    },
+  });
 }
 
 async function verifyEmail(event: Event): Promise<void> {
@@ -150,9 +186,7 @@ async function verifyEmail(event: Event): Promise<void> {
     out.innerHTML = '';
     await loadMe();
   } else if (r.kind === 'code-invalid') {
-    out.innerHTML = note(
-      'That code did not work. It may be wrong, used or expired. Ask for a new one.',
-    );
+    out.innerHTML = note(WRONG_CODE_TEXT);
   } else {
     out.innerHTML = undetermined('Whether you are signed in.', r.detail);
   }

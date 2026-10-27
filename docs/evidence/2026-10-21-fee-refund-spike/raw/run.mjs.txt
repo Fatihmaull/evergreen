@@ -1,0 +1,107 @@
+// PH2-E4-02 fee-refund spike, txs 1-10. TESTNET ONLY. Secrets read from `stellar keys secret` via a pipe; never printed or stored.
+import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+const require = createRequire('/home/rakhargo/tmp-eg-e402/packages/core/package.json');
+const s = require('@stellar/stellar-sdk');
+const PASS = s.Networks.TESTNET; if (PASS !== 'Test SDF Network ; September 2015') throw new Error('not testnet');
+const server = new s.rpc.Server('https://soroban-testnet.stellar.org');
+const HORIZON = 'https://horizon-testnet.stellar.org';
+const OUT = '/home/rakhargo/tmp-eg-e402-work/results.json';
+const results = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : [];
+const save = () => writeFileSync(OUT, JSON.stringify(results, null, 2));
+const done = (l) => results.some((r) => r.label === l);
+const kp = (id) => s.Keypair.fromSecret(execFileSync('stellar', ['keys', 'secret', id], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim());
+const K1 = kp('eg-e402-s1'), K2 = kp('eg-e402-s2');
+const C = 'CDILMZ7SDADARYNX2TMGTRLUE5VQW6ODYC6E6AZ44XV4WSWZMUT2EGCN';
+const SAC = s.Asset.native().contractId(PASS);
+const N = 2_500_000, D = 50_000, INCL = 100;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const cli = (args) => JSON.parse(execFileSync('stellar', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+async function bal(pub) { const r = await (await fetch(`${HORIZON}/accounts/${pub}`)).json(); const b = r.balances.find((x) => x.asset_type === 'native').balance; const [w, f = ''] = b.split('.'); return (BigInt(w) * 10_000_000n + BigInt((f + '0000000').slice(0, 7))).toString(); }
+async function horizonHas(hash) { for (let i = 0; i < 30; i++) { const r = await fetch(`${HORIZON}/transactions/${hash}`); if (r.status === 200) return true; await sleep(2000); } return false; }
+const builder = async (k) => new s.TransactionBuilder(await server.getAccount(k.publicKey()), { fee: String(INCL), networkPassphrase: PASS }).setTimeout(900);
+async function sim(k, op, data) { const b = (await builder(k)).addOperation(op); if (data) b.setSorobanData(data); const tx = b.build(); const r = await server.simulateTransaction(tx); if (s.rpc.Api.isSimulationError(r)) throw new Error('simulation error: ' + r.error); return { tx, r }; }
+const withRF = (tx, r, rf) => s.TransactionBuilder.cloneFrom(s.rpc.assembleTransaction(tx, r).build(), { fee: String(INCL), sorobanData: r.transactionData.setResourceFee(BigInt(rf)).build() }).build();
+
+async function submit(label, tx, k, expect, extra) {
+  tx.sign(k);
+  const row = { label, ...extra, envelopeFee: tx.fee, inclusionFee: INCL };
+  row.balanceBefore = await bal(k.publicKey());
+  const send = await server.sendTransaction(tx);
+  row.sendStatus = send.status;
+  if (send.status !== 'PENDING') {
+    row.hash = null; row.refusedAtSubmission = true;
+    try { row.errorResult = JSON.stringify(send.errorResult, (x, v) => (typeof v === 'bigint' ? v.toString() : v)).slice(0, 400); } catch { row.errorResult = 'undetermined'; }
+    await sleep(6000); row.balanceAfter = await bal(k.publicKey()); row.balanceDelta = (BigInt(row.balanceAfter) - BigInt(row.balanceBefore)).toString();
+    results.push(row); save(); console.log(label, 'REFUSED at submission', send.status, row.errorResult);
+    if (expect !== 'refused-or-failed') throw new Error('unexpected refusal at ' + label);
+    return row;
+  }
+  row.hash = send.hash;
+  let g; for (let i = 0; i < 60; i++) { await sleep(2000); g = await server.getTransaction(send.hash); if (g.status !== 'NOT_FOUND') break; }
+  row.status = g.status; row.ledger = g.ledger;
+  const fee = cli(['tx', 'fetch', 'fee', '--hash', send.hash, '--network', 'testnet', '--output', 'json']);
+  row.feeInfo = fee; row.feeCharged = String(fee.charged.fee);
+  const meta = execFileSync('stellar', ['tx', 'fetch', 'meta', '--hash', send.hash, '--network', 'testnet', '--output', 'json'], { encoding: 'utf8' });
+  const m = meta.match(/\{"ext":"v0","total_non_refundable_resource_fee_charged":"(\d+)","total_refundable_resource_fee_charged":"(\d+)","rent_fee_charged":"(\d+)"\}/);
+  row.meta = m ? { totalNonRefundableResourceFeeCharged: m[1], totalRefundableResourceFeeCharged: m[2], rentFeeCharged: m[3] } : 'undetermined';
+  if (g.status === 'FAILED') { const r = cli(['tx', 'fetch', 'result', '--hash', send.hash, '--network', 'testnet', '--output', 'json']); row.result = JSON.stringify(r).slice(0, 600); }
+  await horizonHas(send.hash); row.balanceAfter = await bal(k.publicKey());
+  row.balanceDelta = (BigInt(row.balanceAfter) - BigInt(row.balanceBefore)).toString();
+  row.notCharged = (BigInt(tx.fee) - BigInt(row.feeCharged)).toString();
+  results.push(row); save();
+  console.log(label, row.status, row.hash, 'env', tx.fee, 'declRF', extra.declaredResourceFee, 'charged', row.feeCharged, 'delta', row.balanceDelta, 'meta', JSON.stringify(row.meta));
+  if (expect === 'success' && g.status !== 'SUCCESS') throw new Error('unexpected failure at ' + label);
+  if (expect === 'failed' && g.status !== 'FAILED') throw new Error(`expected failure at ${label}, got ${g.status}`);
+  return row;
+}
+// footprint keys from a read simulation
+const fp = (await sim(K1, new s.Contract(C).call('get_persistent'))).r.transactionData.getReadOnly();
+const key = (pred) => fp.find((k) => pred(JSON.stringify(k, (x, v) => (typeof v === 'bigint' ? v.toString() : v instanceof Uint8Array ? 'b' : v))));
+const kPers = key((t) => t.includes('Persistent')), kInst = key((t) => t.includes('ledger_key_contract_instance')), kCode = key((t) => t.includes('contract_code'));
+if (!kPers || !kInst || !kCode) throw new Error('footprint keys not found');
+const extOp = (to) => s.Operation.extendFootprintTtl({ extendTo: to });
+const ro = (keys) => new s.SorobanDataBuilder().setReadOnly(keys).build();
+async function ext(label, keys, keysName, to, mult, expect, opts = {}) {
+  const { tx, r } = await sim(K1, extOp(to), ro(keys));
+  const simRF = BigInt(r.minResourceFee); let simAt = r.latestLedger;
+  if (opts.wait) { while ((await server.getLatestLedger()).sequence < simAt + opts.wait) await sleep(5000); }
+  const rf = opts.declared !== undefined ? BigInt(opts.declared) : (simRF * BigInt(Math.round(mult * 100))) / 100n;
+  const t = withRF(tx, r, rf);
+  return submit(label, t, K1, expect, { op: `ExtendFootprintTTL ${keysName} extendTo=${to}`, simulatedResourceFee: simRF.toString(), simulatedAtLedger: simAt, declaredResourceFee: rf.toString(), multiplier: opts.declared !== undefined ? 'declared = #2 simulated' : String(mult) });
+}
+const step = process.argv[2];
+if (step === 'a') {
+  if (!done('1')) await ext('1', [kInst, kCode], 'instance+code', N, 1, 'success');
+  if (!done('2')) await ext('2', [kPers], 'persistent', N, 2, 'success');
+  const r2 = results.find((x) => x.label === '2');
+  const refunded = BigInt(r2.notCharged) > 0n && BigInt(r2.balanceDelta) === -BigInt(r2.feeCharged);
+  console.log('tx2 refund observed:', refunded);
+  if (!done('3')) await ext('3', [kPers], 'persistent', N, 1, 'success', { declared: r2.simulatedResourceFee });
+  if (!refunded) { console.log('STOP-EARLY'); process.exit(3); }
+}
+if (step === 'b') {
+  if (!done('4')) await ext('4', [kPers], 'persistent', N + D, 1.25, 'success', { wait: 20 });
+  if (!done('5')) { const r5 = await ext('5', [kPers], 'persistent', N + 2 * D, 0.5, 'refused-or-failed'); if (r5.status === 'SUCCESS') throw new Error('tx5 unexpectedly succeeded'); }
+  if (!done('10')) await ext('10', [kPers], 'persistent', N + 2 * D, 1, 'success');
+}
+const A = (x) => new s.Address(x).toScVal(), I = (n) => s.nativeToScVal(BigInt(n), { type: 'i128' }), U = (n) => s.nativeToScVal(n, { type: 'u32' });
+const S1 = K1.publicKey(), S2 = K2.publicKey();
+if (step === 'c') {
+  if (!done('6')) { const cur = (await server.getLatestLedger()).sequence; const { tx, r } = await sim(K2, new s.Contract(SAC).call('approve', A(S2), A(S1), I(1_000_000_000), U(cur + 20000))); await submit('6', withRF(tx, r, r.minResourceFee), K2, 'success', { op: 'approve(from S2, spender S1, 100 XLM)', simulatedResourceFee: String(r.minResourceFee), declaredResourceFee: String(r.minResourceFee), multiplier: '1' }); }
+  let r7sim;
+  if (!done('7')) { const { tx, r } = await sim(K1, new s.Contract(SAC).call('transfer_from', A(S1), A(S2), A(S1), I(10_000_000))); r7sim = r; const rf = BigInt(r.minResourceFee) * 2n; await submit('7', withRF(tx, r, rf), K1, 'success', { op: 'transfer_from(spender S1, from S2, to S1, 1 XLM)', simulatedResourceFee: String(r.minResourceFee), declaredResourceFee: rf.toString(), multiplier: '2', note: 'payer also receives 1 XLM (10000000 stroops)' }); }
+  if (!done('8')) {
+    // Same footprint and auth shape as a valid 1 XLM transfer_from (simulated now), with the amount raised over the allowance.
+    const { r } = await sim(K1, new s.Contract(SAC).call('transfer_from', A(S1), A(S2), A(S1), I(10_000_000)));
+    const big = I(2_000_000_000);
+    const auth = r.result.auth;
+    const walk = (o) => { if (o && typeof o === 'object') { for (const [kk, v] of Object.entries(o)) { if (kk === 'args' && Array.isArray(v) && v.length === 4) v[3] = big; else walk(v); } } };
+    auth.forEach(walk);
+    const rf = BigInt(r.minResourceFee) * 2n;
+    const tx = (await builder(K1)).addOperation(s.Operation.invokeContractFunction({ contract: SAC, function: 'transfer_from', args: [A(S1), A(S2), A(S1), big], auth })).setSorobanData(r.transactionData.setResourceFee(rf).build()).build();
+    await submit('8', tx, K1, 'failed', { op: 'transfer_from 200 XLM, over the 99 XLM left on the allowance', footprint: 'from a 1 XLM transfer_from simulation', simulatedResourceFee: String(r.minResourceFee), declaredResourceFee: rf.toString(), multiplier: '2' });
+  }
+  if (!done('9')) { const cur = (await server.getLatestLedger()).sequence; const { tx, r } = await sim(K2, new s.Contract(SAC).call('approve', A(S2), A(S1), I(0), U(cur + 100))); await submit('9', withRF(tx, r, r.minResourceFee), K2, 'success', { op: 'approve(from S2, spender S1, 0) revoke', simulatedResourceFee: String(r.minResourceFee), declaredResourceFee: String(r.minResourceFee), multiplier: '1' }); }
+}

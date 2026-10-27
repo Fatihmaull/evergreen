@@ -102,7 +102,7 @@ async function runAdd(): Promise<void> {
       contractId: lastScan.id,
       scope: scopeFor(lastScan.dataKeys),
     });
-    target.innerHTML = addOutcomeHtml(outcome, lastScan.id);
+    target.innerHTML = addOutcomeHtml(outcome, lastScan.id, lastScan.dataKeys.length);
   } finally {
     button.disabled = false;
     button.textContent = 'Add to watchlist';

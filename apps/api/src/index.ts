@@ -51,6 +51,24 @@ export { AUTH_WRITE_ROUTES, handleAuth } from './auth/routes.js';
 export type { AuthDeps } from './auth/routes.js';
 export type { AuthStore, LinkResult, Mailer, User, WalletLink } from './auth/store.js';
 export {
+  MAX_ERROR_BODY_BYTES,
+  MailerError,
+  classifyResendFailure,
+  consoleLogger,
+  domainOf,
+  emailSendFailedLog,
+  readBoundedText,
+  safeFetchErrorName,
+} from './auth/mailer-error.js';
+export type {
+  AuthLogEntry,
+  AuthLogger,
+  EmailSendFailedLog,
+  MailerFailure,
+  MailerFailureKind,
+  MailerFailureReason,
+} from './auth/mailer-error.js';
+export {
   AUTH_SECRET_NAMES,
   CHALLENGE_TIMEOUT_SECONDS,
   AuthUnavailableError,
@@ -69,3 +87,24 @@ export {
   upsertSessionQuery,
 } from './auth/pg-store.js';
 export type { SqlClient, SqlQuery, SqlRow } from './auth/pg-store.js';
+
+// Watchlist (PH2-E2-05).
+export { WATCHLIST_WRITE_ROUTES, handleWatchlist, isWatchlistPath } from './watchlist/routes.js';
+export type { WatchlistDeps } from './watchlist/routes.js';
+export { WATCHLIST_DEFAULTS, WATCHLIST_NEEDS, watchlistDepsFor } from './watchlist/mount.js';
+export type { WatchlistMountOptions, WatchlistStoreFactory } from './watchlist/mount.js';
+export { MemoryWatchlistStore } from './watchlist/memory-store.js';
+export { PgWatchlistStore } from './watchlist/pg-store.js';
+export { DAY_SECONDS } from './watchlist/store.js';
+export type {
+  AddOutcome,
+  AutopilotPatch,
+  AutopilotSettings,
+  NewWatchItem,
+  UpdateResult,
+  WatchNetwork,
+  WatchPatch,
+  WatchRecord,
+  WatchScope,
+  WatchlistStore,
+} from './watchlist/store.js';
