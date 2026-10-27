@@ -149,6 +149,7 @@ If keeping the mirror current starts costing meaningful time in a 24-effective-d
 8. **Don't silently expand scope.** If a task needs something not in the backlog, add it to the backlog and note it in STATUS.md rather than quietly building it. See the cut order at the bottom of BACKLOG.md.
 9. **Tests don't hit the network.** Unit tests use fixtures and the mock RPC client in `packages/core/test/fixtures`. Integration tests that touch testnet are separate, explicitly marked, and never run in CI by default.
 10. **The site's build output is not committed.** `apps/dashboard/public/` is gitignored (PH2-BL-08). Cloudflare Pages builds it on every deploy with **Node 24**, using `corepack enable && pnpm install --frozen-lockfile && pnpm build && node apps/web/build.mjs`, and CI runs `pnpm build && node apps/web/build.mjs` before `pnpm check`. Never commit files under `apps/dashboard/public/`, and never "rebuild and commit" to fix the site: change the source in `apps/web/`. Run `pnpm build && node apps/web/build.mjs` before `pnpm test` or `pnpm check` locally (a clean checkout fails with ENOENT otherwise: five tests read `apps/dashboard/public/`), and run local checks on Node 24 (`node -v`); older Node silently skips `import.meta.main` gates.
+11. **Agents never approve a deployment and never modify a workflow to bypass the production gate.** See [`docs/ops/deploy.md`](docs/ops/deploy.md).
 
 ## Repo map
 
