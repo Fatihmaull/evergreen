@@ -30,7 +30,7 @@ describe('PgTenantStore SQL on PGlite', () => {
     await pg?.close();
   });
 
-  it('nets refunds (pull minus refund), ignores other ledger kinds and jobs older than 30 days', async () => {
+  it('nets refunds (pull minus refund), ignores other ledger kinds and jobs older than 720 hours', async () => {
     const store = new PgTenantStore(query);
     // job 1: pull 100, refund 40, rent 50 → 60; job 2 is 31 days old.
     expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBe(60n);
@@ -77,13 +77,13 @@ describe('PgTenantStore SQL on PGlite', () => {
     ]);
   });
 
-  it('the window edge is 30 days: an hour inside counts, an hour outside does not', async () => {
+  it('the window edge is 720 hours: an hour inside counts, an hour outside does not', async () => {
     // C('E') is a manual (autopilot off) item, so the list and plan above are unaffected.
     await pg.exec(`
       INSERT INTO watch_items (user_id, network, contract_id, scope) VALUES ('${U1}', 'testnet', '${C('E')}', '{"noDataKeys":true}');
       INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, status, autopilot_window, pull_tx_hash, pulled_at, pull_amount) VALUES
-        ('10000000-0000-4000-8000-000000000005', '${U1}', 'testnet', '${C('E')}', 'autopilot', '${G('A')}', 'extended', 5, 'p5', now() - interval '30 days' + interval '1 hour', 5),
-        ('10000000-0000-4000-8000-000000000006', '${U1}', 'testnet', '${C('E')}', 'autopilot', '${G('A')}', 'extended', 6, 'p6', now() - interval '30 days' - interval '1 hour', 7);
+        ('10000000-0000-4000-8000-000000000005', '${U1}', 'testnet', '${C('E')}', 'autopilot', '${G('A')}', 'extended', 5, 'p5', now() - interval '720 hours' + interval '1 hour', 5),
+        ('10000000-0000-4000-8000-000000000006', '${U1}', 'testnet', '${C('E')}', 'autopilot', '${G('A')}', 'extended', 6, 'p6', now() - interval '720 hours' - interval '1 hour', 7);
       INSERT INTO fee_ledger (job_id, network, wallet, contract_id, kind, amount, tx_hash) VALUES
         ('10000000-0000-4000-8000-000000000005', 'testnet', '${G('A')}', '${C('E')}', 'pull', 5, 'p5'),
         ('10000000-0000-4000-8000-000000000006', 'testnet', '${G('A')}', '${C('E')}', 'pull', 7, 'p6');

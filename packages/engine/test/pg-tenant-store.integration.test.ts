@@ -48,7 +48,7 @@ describe.skipIf(!container)('PgTenantStore on Postgres 17', () => {
     psql(TENANT_FIXTURE_SQL);
   });
 
-  it('nets refunds within 30 days per (user, network, contract)', async () => {
+  it('nets refunds within 720 hours per (user, network, contract)', async () => {
     const store = new PgTenantStore(query);
     expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBe(60n);
     expect(await store.spentLast30d(U2, 'testnet', C('A'))).toBe(250n);
