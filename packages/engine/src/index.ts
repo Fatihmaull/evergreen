@@ -46,7 +46,10 @@ export type {
   TenantItem,
   TenantNetwork,
   TenantPlan,
+  TenantItemWire,
+  TenantPlanWire,
 } from './tenants.js';
+export { tenantItemToWire, tenantPlanToWire } from './tenants.js';
 export { MemoryTenantStore, planTenantsFromStore } from './tenant-store.js';
 export type { MemorySpendEntry, TenantStore } from './tenant-store.js';
 export {
