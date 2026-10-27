@@ -16,5 +16,8 @@
   "dependencies": {
     "@evergreen-stellar/core": "workspace:*",
     "@evergreen-stellar/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11"
   }
 }
