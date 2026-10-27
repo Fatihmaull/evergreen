@@ -94,7 +94,7 @@ export function verdict(report: ScanReport, now = new Date()): string {
       headline = many
         ? `The earliest entry in this scan is a ${kind} entry, expiring <strong>${when}</strong> at ledger ${at}. ` +
           `It binds the contract it belongs to, not all of them — each contract's own binding entry is in the table.`
-        : `This contract stops working on <strong>${when}</strong>, at ledger ${at} — its ${kind} entry expires first.`;
+        : `This contract’s ${kind} entry expires first, on <strong>${when}</strong>, at ledger ${at}.`;
     }
   }
 

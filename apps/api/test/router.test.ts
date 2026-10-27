@@ -14,7 +14,41 @@ describe('@evergreen/api router', () => {
       service: 'evergreen-api',
       version: 'v1',
       environment: 'preview',
+      commit: 'undetermined',
     });
+  });
+
+  const SHA = '0123456789abcdef0123456789abcdef01234567';
+  const commitOf = async (DEPLOY_COMMIT?: string): Promise<unknown> =>
+    (
+      (await (
+        await handle(req(`${API_BASE}/health`), {
+          ENVIRONMENT: 'preview',
+          ...(DEPLOY_COMMIT === undefined ? {} : { DEPLOY_COMMIT }),
+        })
+      ).json()) as { commit: unknown }
+    ).commit;
+
+  it('🔴 reports the injected commit, exactly', async () => {
+    expect(await commitOf(SHA)).toBe(SHA);
+  });
+
+  it('🔴 says undetermined when no commit was injected, never a plausible value', async () => {
+    expect(await commitOf()).toBe('undetermined');
+    expect(await commitOf('')).toBe('undetermined');
+  });
+
+  it.each([
+    ['a branch name', 'main'],
+    ['an abbreviated SHA', '0123456'],
+    ['an upper-case SHA', SHA.toUpperCase()],
+    ['a SHA one character short', SHA.slice(1)],
+    ['a SHA one character long', `${SHA}0`],
+    ['a SHA with a trailing newline', `${SHA}\n`],
+    ['a SHA with a prefix', `sha:${SHA}`],
+    ['markup', '<script>alert(1)</script>'],
+  ])('🔴 refuses %s rather than echoing it', async (_, value) => {
+    expect(await commitOf(value)).toBe('undetermined');
   });
 
   it('says undetermined when no environment is configured', async () => {
