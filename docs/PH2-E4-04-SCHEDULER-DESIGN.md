@@ -2,6 +2,8 @@
 
 **Status: PROPOSAL, 2026-10-27 (CEF).** No code, no Worker config and no migration exists for this yet. It is to be agreed with DevOps (deploy, queues, secrets) and Rakha (money path, schema) on #385 before anything is built. Fatih decided on 2026-10-27 to start with the design.
 
+**Decided by Fatih, 2026-10-28:** (1) **15-minute ticks** are accepted. (2) **DoD-2's scheduler check is "4 × the worst observed gap, in ledgers, is below the lowest act threshold in use"** (§4). (3) **No scheduler code until DevOps has answered whether Neon Free's compute hours fit 96 wake-ups a day** (§6). If they do not fit, **the design changes, not the measurement:** the heartbeat is what DoD-2 and `THRESHOLD_FLOOR_LEDGERS` rest on, so it is never thinned out to save compute.
+
 **The three questions Fatih set:** cron or Queues; how the scheduler gap DoD-2 needs is measured; and cancellation that is safe once money moves (the #446 review note: a timeout must stop the work it times out).
 
 ## 1. Recommendation in five lines
@@ -87,6 +89,13 @@ Every tick touches Postgres, which wakes the compute; it then idles 5 minutes be
 
 User traffic to the API wakes the same database on top of this. **Proposal: a 15-minute tick**, which is also the cadence the project has always declared. The alternative is Neon Launch ($0.106 per CU-hour; always-on at 0.25 CU is about $19 a month), which would allow a 5-minute tick. Whether that buys anything is only knowable from the measured gap.
 
+**Gate before any code (Fatih, 2026-10-28): is this a measured answer or an estimate?** Everything in the table above is arithmetic from list prices, and DevOps' restore-drill proposal (`docs/ops/backup-and-restore.md`) says so itself: "estimates from list prices; ... checkout is the only proof". What is known: the project's compute autoscales from 0.25 to 2 CU and suspends after 5 idle minutes (`docs/ops/neon-migrations.md`, `docs/STATUS.md`). What is **not** known: the CU-hours one wake-up actually bills (the cold start counts), and how much the API's own traffic already uses. The ask to DevOps is a **measurement**: the project's CU-hours used this month so far, then 96 timed wake-ups on the preview branch (one `SELECT 1` every 15 minutes for 24 hours) with the CU-hours read before and after. The console's usage figures can lag by an hour.
+
+**If it does not fit, the design changes, in this order:**
+1. **30-minute ticks.** About 30 CU-hours a month at 0.25 CU. The cost is a coarser gap measurement and a higher `THRESHOLD_FLOOR_LEDGERS` (four times the worst gap).
+2. **Neon Launch.** Pay-as-you-go at $0.106 per CU-hour, no 100-hour cap; about $6 a month at 15-minute ticks. **This may already be on the table for another reason:** DevOps' restore-drill proposal recommends Launch for scheduled snapshots and a longer history window. If that is taken, the Free cap stops being a constraint and cadence becomes a cost line.
+3. Moving the heartbeat off Postgres is **not** on the list. It would break the single place the measurement is read from.
+
 ## 7. Open for decision
 
 - **The autopilot window** (`jobs.autopilot_window`, "undetermined, PH2-E4-04"). Proposal: the window is `floor(observed ledger / W)` with `W` equal to the tick interval in ledgers (180 at 15 minutes), so each item has at most one live job per tick. Rakha's call on whether the schema wants anything else.
@@ -106,9 +115,9 @@ User traffic to the API wakes the same database on top of this. **Proposal: a 15
 2. ~~For `PH2-E4-02`: columns for a submitted-but-unconfirmed hash per money step~~ (#466, approved, awaiting his merge). **Still open:** the envelope's expiry per step (§5).
 3. Confirm the autopilot window rule (§7).
 
-**Fatih:**
-1. The tick cadence, given the Neon Free arithmetic: 15 minutes on Free, or Neon Launch for a shorter one.
-2. Whether DoD-2's scheduler check becomes "4 × the worst gap is below the lowest threshold in use" (§4).
+**Fatih:** both decided on 2026-10-28 (see the top of this document): 15-minute ticks, and the DoD-2 check as "4 × the worst observed gap is below the lowest threshold in use".
+
+**DevOps, before any code:** the measured Neon answer in §6.
 
 ## 9. Undetermined
 
