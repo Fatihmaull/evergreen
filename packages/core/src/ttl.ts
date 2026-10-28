@@ -114,6 +114,31 @@ export function isValidThreshold(thresholdLedgers: number): boolean {
 }
 
 /**
+ * Is this a usable bump window: act once remaining reaches `thresholdLedgers`,
+ * extend to `extendToLedgers`? Validation, not policy, like `isValidThreshold`.
+ * It exists so the tenant planner (#442) can re-check what the `watch_items`
+ * schema CHECK guards, without hand-writing the comparison outside this file.
+ * It matches that CHECK exactly: `threshold_ledgers > 0 AND extend_to_ledgers
+ * > threshold_ledgers`.
+ *
+ * - **The threshold must be at least 1, stricter than `isValidThreshold`.** A
+ *   window of 0 means "act on the final live ledger", where any scheduler gap
+ *   at all is a missed protection. A one-off scan may ask about 0; an
+ *   autopilot may not run on it.
+ * - **The target must be strictly above the threshold.** An extend to the
+ *   threshold itself leaves the entry due again on the next run: a bump that
+ *   buys nothing and fires every cycle.
+ */
+export function isValidBumpWindow(thresholdLedgers: number, extendToLedgers: number): boolean {
+  return (
+    Number.isInteger(thresholdLedgers) &&
+    thresholdLedgers >= 1 &&
+    Number.isInteger(extendToLedgers) &&
+    extendToLedgers > thresholdLedgers
+  );
+}
+
+/**
  * Should we act now? True once remaining *reaches* the threshold, not after it
  * drops past. Read the threshold as **"act once remaining reaches this
  * number"** — it is the floor we refuse to touch, not a line we tolerate

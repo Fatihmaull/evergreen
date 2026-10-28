@@ -209,6 +209,20 @@ export function tableHtml(items: readonly WatchItem[], now = new Date()): string
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
 
+/** `GET /watchlist` answered `NOT_FOUND` or `METHOD_NOT_ALLOWED` in the §9 envelope. */
+export const ROUTE_NOT_AVAILABLE =
+  'The watchlist route is not available on this API yet. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.';
+
+/** `UPSTREAM_UNAVAILABLE` on `GET /watchlist`: what the API said, and no cause (§9). */
+export const GET_UPSTREAM_UNAVAILABLE_TEXT =
+  'The API answered, but could not complete this, so the watchlist could not be read. This is about us, not your contracts.';
+
+/** `DELETE` answered `NOT_FOUND`: no such live item for this account. Claims no cause. */
+export const REMOVE_NOTHING_TO_REMOVE_TEXT = 'Nothing to remove for this account.';
+
+/** Only shown for a 200 `{ items: [] }`: the API answered an authenticated session. */
+export const SIGNED_IN_EMPTY = 'Signed in. Nothing watched yet.';
+
 const undeterminedBox = (sentence: string): string =>
   `<div class="verdict undetermined"><div class="row"><span class="chip undetermined"><span class="shape"></span>undetermined</span></div><p class="headline">${sentence}</p></div>`;
 
@@ -231,7 +245,11 @@ export function watchlistScreenHtml(
         'The API answered, but not with a watchlist this page can read. We could not establish this.',
       );
     }
-    return tableHtml(items as WatchItem[], now);
+    // A 200 with a list is the API answering an authenticated session, which is
+    // the only thing "signed in" rests on here. It says nothing about contracts.
+    return items.length === 0
+      ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
+      : tableHtml(items as WatchItem[], now);
   }
   if (outcome.kind === 'unavailable') {
     return undeterminedBox(
@@ -243,10 +261,13 @@ export function watchlistScreenHtml(
   if (outcome.code === 'UNAUTHENTICATED') {
     return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
   }
+  if (outcome.code === 'NOT_FOUND' || outcome.code === 'METHOD_NOT_ALLOWED') {
+    // The API answered in its own envelope, but not with this route. That is all
+    // it says: no cause, no date for when the route will exist.
+    return undeterminedBox(ROUTE_NOT_AVAILABLE);
+  }
   if (outcome.code === 'UPSTREAM_UNAVAILABLE') {
-    return undeterminedBox(
-      'The API answered, but its database or RPC did not, so the watchlist could not be read. This is about us, not your contracts.',
-    );
+    return undeterminedBox(GET_UPSTREAM_UNAVAILABLE_TEXT);
   }
   if (outcome.code === 'RATE_LIMITED') {
     const s = outcome.retryAfterSeconds;
@@ -261,7 +282,8 @@ export function watchlistScreenHtml(
 
 /**
  * What a row says after `DELETE /watchlist/...` answers. Only `removed` (a 204)
- * takes the row away; every other answer says the contract is still listed.
+ * takes the row away; every other answer leaves the row and says what the API
+ * did and did not confirm.
  * Returns `undefined` for `removed`, because the row is simply gone.
  */
 export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
@@ -280,5 +302,7 @@ export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
       ? 'Too many attempts. Nothing was removed. Try again later.'
       : `Too many attempts. Nothing was removed. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
   }
-  return `The API did not remove this (${outcome.code}, HTTP ${outcome.status}). It is still on your watchlist.`;
+  if (outcome.code === 'NOT_FOUND') return REMOVE_NOTHING_TO_REMOVE_TEXT;
+  // Not "it is still listed": a failed call does not establish that either way.
+  return `The API did not confirm this removal (${outcome.code}, HTTP ${outcome.status}).`;
 }

@@ -5,10 +5,10 @@
  * Hashes and MACs travel as hex and are stored as `bytea` (`decode(…,'hex')`).
  * Times are epoch seconds in code and `timestamptz` in the database.
  *
- * Rate counters and wallet challenges have no table in 0001. They read the
- * tables `auth_rate_counters` and `wallet_challenges`, which must come from
- * a numbered `0003_*` migration (Rakha's path, #419). Until it is applied those
- * queries fail, and the router answers 503 `UPSTREAM_UNAVAILABLE`.
+ * Rate counters and wallet challenges have no table in schema.sql. They read
+ * `auth_rate_counters` and `wallet_challenges` from migration
+ * apps/api/db/0003_auth_rate_counters_wallet_challenges.sql (#419). Until it is
+ * applied those queries fail, and the router answers 503 `UPSTREAM_UNAVAILABLE`.
  */
 import { neon } from '@neondatabase/serverless';
 import type { CounterStore } from './rate-limit.js';
@@ -169,10 +169,26 @@ VALUES ($1, decode($2, 'hex'), to_timestamp($3), $4, CASE WHEN $5::boolean THEN 
     ]);
   }
 
-  /** Creates the account, or reactivates it: one email, one row, ever (users_email_uq). */
+  /**
+   * Creates the account, or reactivates it: one email, one row, ever (users_email_uq).
+   *
+   * **Reactivation turns autopilot off on every watch item** (docs/API.md §10,
+   * ADR-008 2026-10-22, NOTES D5): an email session never authorises XLM
+   * movement, so coming back by email must not resume the engine drawing on an
+   * allowance. It happens in the same statement as the reactivation, so there
+   * is no moment where the account is active with autopilot still on. It runs
+   * **only** when the row was deactivated: `prior` reads the row as it was before
+   * this statement, so an ordinary sign-in leaves autopilot alone.
+   */
   async upsertUserByEmail(email: string, now: number): Promise<User> {
     const rows = await this.sql.query(
-      `INSERT INTO users (email, created_at) VALUES ($1, to_timestamp($2))
+      `WITH prior AS (
+  SELECT id FROM users WHERE lower(email) = lower($1) AND deactivated_at IS NOT NULL
+), autopilot_off AS (
+  UPDATE watch_items SET autopilot_enabled = false
+  WHERE user_id IN (SELECT id FROM prior) AND autopilot_enabled
+)
+INSERT INTO users (email, created_at) VALUES ($1, to_timestamp($2))
 ON CONFLICT ((lower(email))) DO UPDATE SET deactivated_at = NULL
 RETURNING id::text AS id, email, ${epoch('created_at')}`,
       [email, now],

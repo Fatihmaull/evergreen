@@ -9,9 +9,15 @@ import { loadAuthConfig, type AuthConfig } from './config.js';
 import {
   MailerError,
   classifyResendFailure,
+  describeKey,
   domainOf,
+  isRedirectResponse,
   readBoundedText,
+  redirectFailure,
+  roundElapsedMs,
+  safeFetchErrorName,
   type AuthLogger,
+  type FetchStage,
 } from './mailer-error.js';
 import type { AuthDeps } from './routes.js';
 import { PgAuthStore, neonSqlClient } from './pg-store.js';
@@ -66,26 +72,73 @@ export class ResendMailer implements Mailer {
     private readonly apiKey: string,
     private readonly from: string,
     private readonly fetcher: typeof fetch,
+    private readonly hooks: {
+      /**
+       * Builds the request the way `fetch` will, only to see whether that
+       * throws. Defaults to `new Request`; tests swap it to stand in for a
+       * runtime with stricter rules. Its result is discarded.
+       */
+      readonly buildRequest?: (url: string, init: RequestInit) => unknown;
+      /** Milliseconds; defaults to `Date.now`. Tests inject a fake clock. */
+      readonly clock?: () => number;
+    } = {},
   ) {}
 
   async sendSigninCode(email: string, code: string): Promise<void> {
     const domains = { senderDomain: domainOf(this.from), recipientDomain: domainOf(email) };
+    const url = 'https://api.resend.com/emails';
+    const init: RequestInit = {
+      method: 'POST',
+      // Workers does not implement `redirect: 'error'`: it throws a TypeError when
+      // the Request is built, before anything is sent (Workers docs, Request). So
+      // `manual`, and any 3xx answer below is a failed send, never followed. The
+      // Authorization header therefore never goes to any other URL.
+      redirect: 'manual',
+      headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        from: this.from,
+        to: [email],
+        subject: 'Your Evergreen sign-in code',
+        text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
+      }),
+    };
+
+    // Stage 'build': constructing the request, as `fetch(url, init)` does first.
+    // A throw here means nothing left the Worker (an invalid header value or
+    // option), which is not an outage. The result is discarded; `fetch` below
+    // builds its own from the same arguments.
+    try {
+      (this.hooks.buildRequest ?? ((u, i) => new Request(u, i)))(url, init);
+    } catch (thrown) {
+      throw this.networkFailure('build', 'request_invalid', thrown, domains);
+    }
+
+    const clock = this.hooks.clock ?? Date.now;
+    const startedAt = clock();
     let response: Response;
     try {
-      response = await this.fetcher('https://api.resend.com/emails', {
-        method: 'POST',
-        redirect: 'error',
-        headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
-        body: JSON.stringify({
-          from: this.from,
-          to: [email],
-          subject: 'Your Evergreen sign-in code',
-          text: `Your Evergreen sign-in code is ${code}. It expires in 10 minutes. If you did not ask for it, ignore this email.`,
-        }),
-      });
-    } catch {
-      // The thrown error's text can carry the URL or a library message: dropped.
-      throw new MailerError({ kind: 'network', reason: 'network_error', ...domains });
+      // A local, so `fetch` is called with no `this`. `this.fetcher(...)` would
+      // call it with the mailer as `this`, and Workers' global `fetch` throws
+      // `TypeError: Illegal invocation` for that, instantly, before any send.
+      const fetcher = this.fetcher;
+      response = await fetcher(url, init);
+    } catch (thrown) {
+      let elapsedMs: number | undefined;
+      try {
+        elapsedMs = roundElapsedMs(clock() - startedAt);
+      } catch {
+        elapsedMs = undefined; // a clock that throws costs the field, not the answer
+      }
+      throw this.networkFailure('send', 'network_error', thrown, domains, elapsedMs);
+    }
+    if (isRedirectResponse(response)) {
+      // Not followed, `Location` not read, body dropped unread.
+      try {
+        await response.body?.cancel();
+      } catch {
+        // an unreadable body costs nothing here
+      }
+      throw new MailerError(redirectFailure(response.status, domains));
     }
     if (response.ok) {
       await response.body?.cancel();
@@ -95,6 +148,30 @@ export class ResendMailer implements Mailer {
     throw new MailerError(
       classifyResendFailure(response.status, await readBoundedText(response), domains),
     );
+  }
+
+  /**
+   * The thrown error's text can carry the URL, a header value or a library
+   * message: dropped. Only its `name` survives, and only as a plain letters
+   * token, plus the stage, the key facts and (send only) a coarse elapsed time.
+   */
+  private networkFailure(
+    fetchStage: FetchStage,
+    reason: 'request_invalid' | 'network_error',
+    thrown: unknown,
+    domains: { readonly senderDomain: string; readonly recipientDomain: string },
+    elapsedMs?: number,
+  ): MailerError {
+    const fetchErrorName = safeFetchErrorName(thrown);
+    return new MailerError({
+      kind: 'network',
+      reason,
+      fetchStage,
+      ...(fetchErrorName === undefined ? {} : { fetchErrorName }),
+      ...(elapsedMs === undefined ? {} : { elapsedMs }),
+      ...describeKey(this.apiKey),
+      ...domains,
+    });
   }
 }
 
@@ -184,15 +261,15 @@ export function authDepsFor(
   } else deps['store'] = unavailable<AuthStore>();
 
   if (needs.includes('email')) {
-    if (
-      !present(env.SIGNIN_CODE_PEPPER) ||
-      !present(env.EMAIL_API_KEY) ||
-      !present(env.EMAIL_FROM)
-    ) {
+    // The one place the key is read. It goes into an `authorization` header, and
+    // a secret stored with a trailing newline or space makes `fetch` throw for an
+    // invalid header value. All-whitespace is unset: 503, no fetch.
+    const emailApiKey = env.EMAIL_API_KEY?.trim();
+    if (!present(env.SIGNIN_CODE_PEPPER) || !present(emailApiKey) || !present(env.EMAIL_FROM)) {
       return undefined;
     }
     deps['pepper'] = env.SIGNIN_CODE_PEPPER;
-    deps['mailer'] = new ResendMailer(env.EMAIL_API_KEY, env.EMAIL_FROM, options.fetch ?? fetch);
+    deps['mailer'] = new ResendMailer(emailApiKey, env.EMAIL_FROM, options.fetch ?? fetch);
   } else {
     lazy('pepper');
     deps['mailer'] = unavailable<Mailer>();

@@ -30,7 +30,37 @@ export type MailerFailureReason =
   | 'quota_or_rate_limited'
   | 'provider_5xx'
   | 'network_error'
+  | 'request_invalid'
+  | 'unexpected_redirect'
   | 'unclassified';
+
+/**
+ * Where a `kind: network` failure happened. `build`: constructing the request
+ * threw, so nothing left the Worker (`reason: request_invalid`). `send`:
+ * `fetch` itself threw (`reason: network_error`). Closed list: anything else
+ * is dropped from the log line.
+ */
+export type FetchStage = 'build' | 'send';
+export const FETCH_STAGES: ReadonlySet<string> = new Set<FetchStage>(['build', 'send']);
+
+/** Length of the (trimmed) API key in coarse buckets. Never the exact length. */
+export type KeyLengthBucket = '0' | '1-31' | '32-63' | '64-127' | '128+';
+export const KEY_LENGTH_BUCKETS: ReadonlySet<string> = new Set<KeyLengthBucket>([
+  '0',
+  '1-31',
+  '32-63',
+  '64-127',
+  '128+',
+]);
+
+/** Facts about the key, never the key. */
+export interface KeyFacts {
+  readonly keyLength: KeyLengthBucket;
+  /** Any character outside 0x21-0x7e: a space, a control character, or non-ASCII. */
+  readonly keyHasNonPrintableAscii: boolean;
+  /** Any whitespace between the first and the last character (the ends are trimmed). */
+  readonly keyHasInnerWhitespace: boolean;
+}
 
 export interface MailerFailure {
   readonly kind: MailerFailureKind;
@@ -38,6 +68,20 @@ export interface MailerFailure {
   readonly httpStatus?: number;
   /** Resend's error `name`, only if it is a short `lower_snake` token. */
   readonly providerErrorName?: string;
+  /**
+   * `kind: 'network'` only: the `name` of what `fetch` threw (`TypeError` for an
+   * invalid header value, for one), only if it is 1 to 64 ASCII letters. Never
+   * the message, the stack or the cause.
+   */
+  readonly fetchErrorName?: string;
+  /** `kind: 'network'` only: whether building the request or `fetch` threw. */
+  readonly fetchStage?: FetchStage;
+  /** `kind: 'network'` only: `fetchStage: 'send'`, whole milliseconds rounded to 100. */
+  readonly elapsedMs?: number;
+  /** `kind: 'network'` only: facts about the trimmed key. */
+  readonly keyLength?: KeyLengthBucket;
+  readonly keyHasNonPrintableAscii?: boolean;
+  readonly keyHasInnerWhitespace?: boolean;
   /** Domain part only, `unknown` if it did not parse. Never the local part. */
   readonly senderDomain: string;
   readonly recipientDomain: string;
@@ -48,6 +92,12 @@ export class MailerError extends Error implements MailerFailure {
   readonly reason: MailerFailureReason;
   readonly httpStatus?: number;
   readonly providerErrorName?: string;
+  readonly fetchErrorName?: string;
+  readonly fetchStage?: FetchStage;
+  readonly elapsedMs?: number;
+  readonly keyLength?: KeyLengthBucket;
+  readonly keyHasNonPrintableAscii?: boolean;
+  readonly keyHasInnerWhitespace?: boolean;
   readonly senderDomain: string;
   readonly recipientDomain: string;
 
@@ -61,6 +111,16 @@ export class MailerError extends Error implements MailerFailure {
     this.recipientDomain = failure.recipientDomain;
     if (failure.httpStatus !== undefined) this.httpStatus = failure.httpStatus;
     if (failure.providerErrorName !== undefined) this.providerErrorName = failure.providerErrorName;
+    if (failure.fetchErrorName !== undefined) this.fetchErrorName = failure.fetchErrorName;
+    if (failure.fetchStage !== undefined) this.fetchStage = failure.fetchStage;
+    if (failure.elapsedMs !== undefined) this.elapsedMs = failure.elapsedMs;
+    if (failure.keyLength !== undefined) this.keyLength = failure.keyLength;
+    if (failure.keyHasNonPrintableAscii !== undefined) {
+      this.keyHasNonPrintableAscii = failure.keyHasNonPrintableAscii;
+    }
+    if (failure.keyHasInnerWhitespace !== undefined) {
+      this.keyHasInnerWhitespace = failure.keyHasInnerWhitespace;
+    }
   }
 }
 
@@ -68,7 +128,55 @@ export class MailerError extends Error implements MailerFailure {
 export const MAX_ERROR_BODY_BYTES = 2048;
 
 const ERROR_NAME = /^[a-z_]{1,64}$/;
+const FETCH_ERROR_NAME = /^[A-Za-z]{1,64}$/;
 const DOMAIN = /@([a-z0-9.-]{1,253})>?\s*$/i;
+
+/**
+ * The `name` of a value `fetch` threw, or `undefined` if it is not a plain
+ * 1 to 64 letter token (a hostile or odd name is dropped, not sanitised).
+ * Reads nothing else: not the message, the stack or the cause. Never throws.
+ */
+export function safeFetchErrorName(thrown: unknown): string | undefined {
+  try {
+    if (typeof thrown !== 'object' || thrown === null) return undefined;
+    const name: unknown = (thrown as { name?: unknown }).name;
+    return typeof name === 'string' && FETCH_ERROR_NAME.test(name) ? name : undefined;
+  } catch {
+    return undefined; // a getter that throws
+  }
+}
+
+/**
+ * Coarse facts about an API key, computed from the trimmed value. Returns a
+ * bucket and two booleans, never any part of the key. The bucket is safe to
+ * log: Resend keys are one fixed-looking shape, so four wide buckets say
+ * nothing a reader could not already guess, and they do not shorten a search.
+ * Never throws.
+ */
+export function describeKey(key: string): KeyFacts {
+  const trimmed = key.trim();
+  const n = trimmed.length;
+  const keyLength: KeyLengthBucket =
+    n === 0 ? '0' : n < 32 ? '1-31' : n < 64 ? '32-63' : n < 128 ? '64-127' : '128+';
+  let nonPrintable = false;
+  for (let i = 0; i < n; i++) {
+    const unit = trimmed.charCodeAt(i);
+    if (unit < 0x21 || unit > 0x7e) {
+      nonPrintable = true;
+      break;
+    }
+  }
+  return {
+    keyLength,
+    keyHasNonPrintableAscii: nonPrintable,
+    keyHasInnerWhitespace: /\s/.test(trimmed),
+  };
+}
+
+/** Whole milliseconds, rounded to the nearest 100, never negative. */
+export function roundElapsedMs(ms: number): number {
+  return Number.isFinite(ms) && ms > 0 ? Math.round(ms / 100) * 100 : 0;
+}
 
 /** `a@b.example` or `Name <a@b.example>` -> `b.example`; anything else -> `unknown`. */
 export function domainOf(address: string): string {
@@ -158,6 +266,7 @@ export function classifyResendFailure(
   } catch {
     // Not JSON: status only.
   }
+  if (status >= 300 && status < 400) return redirectFailure(status, domains);
   const base = {
     httpStatus: status,
     ...(name === undefined ? {} : { providerErrorName: name }),
@@ -169,6 +278,43 @@ export function classifyResendFailure(
   return { kind: 'unavailable', reason: 'unclassified', ...base };
 }
 
+/**
+ * True for an answer the mailer must not act on as a send result: any 3xx, or
+ * the opaque redirect a runtime may return under `redirect: 'manual'` (type
+ * `opaqueredirect`, status 0). Reads only `status` and `type`, never `Location`
+ * or any other header, and never throws.
+ */
+export function isRedirectResponse(response: {
+  readonly status: number;
+  readonly type?: string;
+}): boolean {
+  try {
+    return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
+  } catch {
+    return false; // a getter that throws is not a redirect we can name
+  }
+}
+
+/**
+ * The failure for a redirect answer. `unavailable`, not `rejected`: `rejected`
+ * becomes `502 EMAIL_NOT_SENT`, whose page text tells the person to use a
+ * different address, and a redirect from Resend's API has nothing to do with the
+ * address; it is our setup or the provider. Retrying will not fix it, but the
+ * person cannot either, so the plain `503` is the honest answer. `httpStatus` is
+ * kept only for a real 3xx (an opaque redirect has status 0).
+ */
+export function redirectFailure(
+  status: number,
+  domains: { readonly senderDomain: string; readonly recipientDomain: string },
+): MailerFailure {
+  return {
+    kind: 'unavailable',
+    reason: 'unexpected_redirect',
+    ...(status >= 300 && status < 400 ? { httpStatus: status } : {}),
+    ...domains,
+  };
+}
+
 /** One structured log line for a sink to write. Fields are the allowlist below, nothing else. */
 export interface EmailSendFailedLog {
   readonly event: 'auth.email_send_failed';
@@ -177,6 +323,12 @@ export interface EmailSendFailedLog {
   readonly reason: MailerFailureReason;
   readonly httpStatus?: number;
   readonly providerErrorName?: string;
+  readonly fetchErrorName?: string;
+  readonly fetchStage?: FetchStage;
+  readonly elapsedMs?: number;
+  readonly keyLength?: KeyLengthBucket;
+  readonly keyHasNonPrintableAscii?: boolean;
+  readonly keyHasInnerWhitespace?: boolean;
   readonly senderDomain: string;
   readonly recipientDomain: string;
   readonly environment: string;
@@ -205,6 +357,24 @@ export function emailSendFailedLog(
     ...(error.providerErrorName === undefined
       ? {}
       : { providerErrorName: error.providerErrorName }),
+    ...(error.fetchErrorName === undefined ? {} : { fetchErrorName: error.fetchErrorName }),
+    // Each of these is re-checked against its closed set here, so a value that
+    // is not one of the tokens (or not a boolean or a whole number) is dropped.
+    ...(error.fetchStage !== undefined && FETCH_STAGES.has(error.fetchStage)
+      ? { fetchStage: error.fetchStage }
+      : {}),
+    ...(Number.isInteger(error.elapsedMs) && error.elapsedMs! >= 0 && error.elapsedMs! % 100 === 0
+      ? { elapsedMs: error.elapsedMs }
+      : {}),
+    ...(error.keyLength !== undefined && KEY_LENGTH_BUCKETS.has(error.keyLength)
+      ? { keyLength: error.keyLength }
+      : {}),
+    ...(typeof error.keyHasNonPrintableAscii === 'boolean'
+      ? { keyHasNonPrintableAscii: error.keyHasNonPrintableAscii }
+      : {}),
+    ...(typeof error.keyHasInnerWhitespace === 'boolean'
+      ? { keyHasInnerWhitespace: error.keyHasInnerWhitespace }
+      : {}),
     senderDomain: error.senderDomain,
     recipientDomain: error.recipientDomain,
     environment: context.environment,
