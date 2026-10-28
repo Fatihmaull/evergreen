@@ -89,7 +89,7 @@ Measurable with records still to be built:
 | Q6 | Lighter process. Keep mutation proof on write paths and `origin/main` verification. | Gate inventory needs sign-off |
 | Q7 | Docs hygiene now. | — |
 | Q8 | **Allowance, not custody** (spike #297: viable with four limits). | Re-sign about every 180 days; per-contract caps are off-chain |
-| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. | — |
+| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. **Amended 2026-10-27 (Fatih, #414):** a percentage **with a per-action minimum of 25,000 stroops**, because a pure percentage subsidises small jobs; the percentage is still unset. See `PH2-E5-03` | A fee below the fixed cost of an action is a subsidy (ADR-007) |
 | Q10 | Open-core: CLI and self-hosted engine are MIT; hosted is paid. | — |
 | Q11 | One revenue destination, no profit split; all of it funds development. | — |
 | Q12 | Cloudflare: Free, then Workers Paid if PH2-E2-01 measures the engine over the free limits. Render was evaluated and rejected (§3.2). | At most about $5/month, on one platform |
@@ -352,7 +352,7 @@ PH2-E0-03 contents:
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
 | PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done). **Precondition: a written router audit**, before any immutable contract goes to mainnet (Fatih, 2026-10-26). Measuring fees with real mainnet transactions happens here, after the audit (moved from PH2-E5-03) | F + R | S | PH2-E5-01 |
-| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action | F | S | PH2-E1-03 data (mainnet scan) |
+| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action. **Fee form: percentage with a 25,000-stroop minimum per action** (Fatih, 2026-10-27; departs from Q9, see the Q9 row) | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
 ### BL — Backlog (unscheduled, same scheme)
