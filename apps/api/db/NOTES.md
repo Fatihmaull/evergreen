@@ -6,7 +6,7 @@ Preview may connect as the database owner. A least-privilege application role, a
 
 ## Migrations
 
-No migration tool. Each file is applied with `psql --single-transaction`.
+No migration tool. Each file is applied with `psql -v ON_ERROR_STOP=1 --single-transaction`. Without `ON_ERROR_STOP`, psql keeps going after a failed statement and still exits 0, so a half-failed apply can look like success. `DATABASE_URL` is the connection string from the environment; never paste it into a command or a doc.
 
 Numbered SQL files live under `apps/api/db/`:
 
@@ -15,7 +15,7 @@ Numbered SQL files live under `apps/api/db/`:
 - Do not edit a file after it has been applied. Add the next number instead.
 
 ```
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/schema.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/schema.sql
 ```
 
 Applied in order:
@@ -28,9 +28,9 @@ Applied in order:
 | `0004_users_reactivated_at.sql` | Adds nullable `users.reactivated_at` (NULL = never reactivated). After a reactivation, only wallets linked later count as linked for autopilot ([#385](https://github.com/Fatihmaull/evergreen/issues/385), option 2). Setting it on reactivation is the API's job. PH2-E2-04. |
 
 ```
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0003_auth_rate_counters_wallet_challenges.sql
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0004_users_reactivated_at.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0003_auth_rate_counters_wallet_challenges.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0004_users_reactivated_at.sql
 ```
 
 `schema.sql` still shows the cross-user index; it is not edited after apply. The live index is the one from `0002`.
