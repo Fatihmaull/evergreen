@@ -6,8 +6,8 @@ Source of truth for the triggers is [`.github/workflows/api-deploy.yml`](../../.
 
 | Surface | Trigger | Where it lands | Approval |
 |---|---|---|---|
-| **API Worker, preview** | `pull_request` from a branch **in this repo** (never a fork) that touches `apps/api/**` or the workflow file, **including drafts**; or `workflow_dispatch` on **any** ref | `evergreen-api-preview` | none |
-| **API Worker, production** | `push` to `main` that touches `apps/api/**` or the workflow file; or `workflow_dispatch` on `main` | `evergreen-api` | **required: Fatih, in the GitHub Environment `production`** |
+| **API Worker, preview** | **`push` to `main`** that touches `apps/api/**` or the workflow file (restores `main` as the baseline); a `pull_request` from a branch **in this repo** (never a fork) that is **not a draft**, touches those paths, **and carries the label `deploy-preview`**; or `workflow_dispatch` on **any** ref | `evergreen-api-preview` | none |
+| **API Worker, production** | `push` to `main` that touches `apps/api/**` or the workflow file; or `workflow_dispatch` on `main`. Runs only after the preview job succeeds (`needs: preview`) | `evergreen-api` | **required: Fatih, in the GitHub Environment `production`** |
 | **Dashboard (Pages)** | Cloudflare's Git integration, not a GitHub workflow. Push to `main` = a production deployment. A push to **any other branch** = a preview deployment | project `evergreen-stellar` | none |
 | **Pages Function proxy** | Part of the Pages build (`functions/` at the repo root) | with the dashboard | none |
 | Router Rust CI, engine cron, flake hunt | Other workflows; they test or run, they do not deploy | n/a | n/a |
@@ -39,15 +39,17 @@ gh api repos/Fatihmaull/evergreen/environments/production \
 ### How to approve
 
 1. Open the waiting run (Actions, then **API deploy**, then the run marked *Waiting*).
-2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main` (see below).
-3. Approve only the **newest** waiting run.
+2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main`; the guard below refuses it if `main` has moved past it for `apps/api`.
+3. Approve the run you mean to ship, normally the newest.
 4. Watch the smoke step. It now fails if the commit served is not the commit deployed ([#462](https://github.com/Fatihmaull/evergreen/pull/462), merged `0d7c78d`).
 
-### Stale approvals deploy old code
+### Stale approvals are refused
 
-`workflow_dispatch` and `push` runs check out the SHA the run was created at. A run created 36 hours ago and approved today **deploys the 36-hour-old commit**. That is how production is rolled back by accident. Observed in the commissioning run below: it was dispatched 2026-10-26 on `ab74675` and approved 2026-10-27, so it redeployed `ab74675`, which happened to be what production already ran.
+`push` and `workflow_dispatch` runs check out the SHA the run was created at, so approving a run created 36 hours ago would deploy the 36-hour-old commit. That is how production gets rolled back by accident. The production job therefore starts with a step, **after** the approval, that compares the run's commit with `main` for `apps/api/**` and the workflow file and **fails the job if they differ** ("main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."). A commit that `main` has passed only in docs, web or engine code still deploys.
 
-Whether to make the workflow refuse a run whose SHA is behind `main` for `apps/api` is a decision for Fatih, not yet made: see **Decisions** in [`preview-vs-production.md`](preview-vs-production.md#decisions-for-fatih). Until then the rule is: approve the newest run, and read its SHA first.
+How runs queue (observed 2026-10-27 and 2026-10-28): a run **waiting for approval** holds the group `api-deploy-refs/heads/main`; the next run waits behind it, and a still-newer run **replaces** that pending one (the replaced run shows `cancelled`). So approve or reject the **oldest** waiting run first; with the guard, an old one fails at once instead of deploying, and the next run then starts.
+
+Observed before the guard existed: [run 40266644991](https://github.com/Fatihmaull/evergreen/actions/runs/40266644991) was dispatched on `ab74675` and approved 36 hours later, so it redeployed `ab74675`, which happened to be what production already ran.
 
 ### Commissioning record (2026-10-26 to 2026-10-27)
 
@@ -73,12 +75,26 @@ The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEP
 
 > **A deploy deletes dashboard-set plain vars.** `wrangler deploy` without `--keep-vars` removes every var not in the config or on the command line before applying. Put plain vars in `wrangler.jsonc` or `--var`; never in the dashboard. Secrets are separate and survive deploys.
 
+## Deploying a PR to preview: the `deploy-preview` label
+
+Preview is `main` unless somebody says otherwise. To test a PR's `apps/api` code on the real preview Worker:
+
+```bash
+gh pr edit <number> --add-label deploy-preview      # deploys now, and on every later push to that PR
+gh pr edit <number> --remove-label deploy-preview   # stop deploying on pushes
+```
+
+- **Drafts never deploy**, even with the label; mark the PR ready first. Adding any other label does nothing.
+- **It is still one Worker.** Last writer wins, so before you claim "verified on preview", read `GET /api/v1/health` and quote `commit`: it is your PR's **head** SHA if you were the last to deploy, someone else's, or `main`'s.
+- **To put preview back on `main`:** `gh workflow run api-deploy.yml -R Fatihmaull/evergreen --ref preview` (the `preview` branch equals `main`, and a dispatch from it can never queue a production run). A merge to `main` does it automatically.
+- The label is created in the repo (`deploy-preview`, green).
+
 ## Pages
 
 - The project is Git-connected, so a GitHub workflow is not involved. Production deploys from `main`. The build command is documented in [`AGENTS.md`](../../AGENTS.md) rule 10 (Node 24, `corepack enable && pnpm install --frozen-lockfile && pnpm build && node apps/web/build.mjs`); the dashboard's actual setting was not read (`undetermined`).
 - `apps/dashboard/public/` is never committed. To change the site, change `apps/web/`.
 - Every pushed branch builds a preview at `<branch>.evergreen-stellar.pages.dev`. Those previews talk to the **preview** Worker. The API's CSRF check accepts exactly one origin per environment (`DASHBOARD_ORIGIN`), and for preview that is `https://preview.evergreen-stellar.pages.dev`, so **signed-in flows only work on that alias**, not on a branch preview.
-- The git branch `preview` is not deployed by any workflow. It was fast-forwarded to `main` by hand. As of 2026-10-27 it is **9 commits behind `main`** (`51320ef` vs `0da486a`). See [`preview-vs-production.md`](preview-vs-production.md).
+- The git branch `preview` is kept equal to `main` by [`preview-branch-sync.yml`](../../.github/workflows/preview-branch-sync.yml): on every push to `main` it fast-forwards `preview` (never forced; a diverged `preview` fails the job loudly). Before that it was moved by hand and was 9 commits behind on 2026-10-27. Cloudflare's Git integration then rebuilds the `preview` alias. See [`preview-vs-production.md`](preview-vs-production.md).
 
 ## Manual deploys
 
