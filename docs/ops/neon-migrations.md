@@ -16,16 +16,17 @@ Rakha's agent (CER) owns the schema and writes the SQL under [`apps/api/db/`](..
 
 Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`, `neonctl branches list --project-id icy-sun-89705623 --org-id <org>`, `neonctl roles list ...`. (`--org-id` is required once the account has an organization; `neonctl projects list` without it opens an interactive prompt.)
 
-## Applied state of `preview` (verified 2026-10-27)
+## Applied state of `preview` (verified 2026-10-28)
 
-`schema.sql`, `0002` and `0003` are applied, and the result is **structurally identical to a clean build of those three files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
+`schema.sql`, `0002`, `0003` and `0004` are applied, and the result is **structurally identical to a clean build of those four files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
 
 | File | Applied to `preview` | Evidence |
 |---|---|---|
 | `schema.sql` | yes | 11 tables present, matching the reference build |
 | `0002_jobs_daily_limit_per_user.sql` | yes | `jobs_daily_limit_idx` is `(user_id, network, contract_id, pulled_at) WHERE kind = 'extend-now' AND pull_tx_hash IS NOT NULL`, the file's definition, not the cross-user one from `schema.sql` |
 | `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
-| `0004` (#456, `users.reactivated_at`) | **not yet**, the PR is open | apply after it merges |
+| `0004_users_reactivated_at.sql` (#456) | yes, **2026-10-28**, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`ALTER TABLE`, `COMMENT`) | `users.reactivated_at` is `timestamptz`, nullable, no default, with the file's column comment; the one preview user row is `NULL`; the whole-schema diff above was repeated with 0004 in the reference build and still differs only by `fips_mode` |
+| `0005` (#465, `scheduler_ticks`), `0006` (#466, submitted hashes) | **not yet**, the PRs are open | apply each after it merges, the same way, and record it in the migration ledger once #464 lands |
 
 The `production` branch has **nothing applied**. That is deliberate: production has no `DATABASE_URL`.
 
@@ -126,3 +127,25 @@ Expected diff on 2026-10-27: one line, `fn   fips_mode ...`, from `pgcrypto`. An
 - **No migration ledger.** There is no table recording which files ran, so the answer comes from the diff above, not from a lookup. Adding one is a schema decision for Rakha (CER); DevOps recommends it before production.
 - **CI does not lock the SQL.** It does not apply `apps/api/db` to anything, so a file that does not apply is discovered at the Neon apply (flagged as a follow-up on #440).
 - **No rollback script.** Migrations are forward-only; see [`rollback.md`](rollback.md).
+
+## Compute budget on the Free plan
+
+Neon Free allows **100 CU-hours per project per month**, shared by every branch's compute (`neon.com/docs/introduction/plans`, read 2026-10-28). The compute here is 0.25 CU (the endpoint minimum; observed average 0.256 while active) and suspends after **5 idle minutes, which cannot be changed on Free**. The billing period ran 2026-10-22 to 2026-11-01 and had used **0.57 CU-hours** on 2026-10-28.
+
+A scheduler that touches the database every N minutes wakes it every N minutes. Whether the 5 idle minutes before suspension count as active time is **not stated in Neon's docs and not yet measured here**, so both readings are shown (30.4 days, 0.25 CU, 10 s of work per tick):
+
+| Tick every | CU-h per month, idle window **billed** | idle window **not billed** |
+|---|---|---|
+| 60 min | 15.7 | 0.5 |
+| 30 min | 31.4 | 1.0 |
+| **15 min (96 wake-ups a day)** | **62.8** (73.0 with 60 s of work) | 2.0 |
+| 10 min | 94.2 | 3.0 |
+| 5 min | 182.4 (always on) | 6.1 |
+
+- **Only one branch may tick at 15 minutes.** Two is about 146 CU-h. A preview scheduler runs on manual dispatch or every 6 hours (about 3 more).
+- **Keep-alive pings cannot work on Free:** staying awake is 182.4 CU-h.
+- Paid alternative: Launch at $0.106 per CU-hour is about $7 to $8 a month for the same 15-minute hours, and about **$19.3** a month with scale-to-zero disabled (always on), which allows any cadence.
+- **The measurement** that settles the billed/not-billed question: wake the `production` branch (no other traffic) with one query and read the change in `active_time_seconds` from `neonctl branches list --project-id <id> --org-id <org> --output json`. A wake that adds about 300 s means the idle window is billed. Neon's per-branch counters lag by more than 10 minutes, so read it later. **Result: pending** (woken 2026-10-28 11:43 UTC from a baseline of 600 s active, 152 compute-seconds).
+- Read consumption daily once a scheduler runs; flag at 70 CU-h.
+
+The numbers and options were posted for CEF on [#461](https://github.com/Fatihmaull/evergreen/pull/461).
