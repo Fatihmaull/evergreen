@@ -123,6 +123,26 @@ describe('users and sign-in codes', () => {
     );
   });
 
+  it('🔴 reactivation turns autopilot off on every watch item, in the same statement', async () => {
+    // docs/API.md §10, ADR-008 2026-10-22, NOTES D5: coming back by email must
+    // not resume the engine drawing on an allowance. Proven against Postgres 16
+    // in the PR; this pins the statement's shape.
+    sql.answers.push([{ id: UID, email: 'a@example.test', created_at: '5' }]);
+    await store.upsertUserByEmail('a@example.test', 5);
+    expect(sql.queries).toHaveLength(1);
+    const { text } = sql.queries[0]!;
+    expect(text).toMatch(/UPDATE watch_items SET autopilot_enabled = false/);
+    expect(text).toMatch(/WHERE user_id IN \(SELECT id FROM prior\)/);
+  });
+
+  it('🔴 only a deactivated row counts as a reactivation, so an ordinary sign-in leaves autopilot alone', async () => {
+    sql.answers.push([{ id: UID, email: 'a@example.test', created_at: '5' }]);
+    await store.upsertUserByEmail('a@example.test', 5);
+    expect(sql.queries[0]!.text).toMatch(
+      /SELECT id FROM users WHERE lower\(email\) = lower\(\$1\) AND deactivated_at IS NOT NULL/,
+    );
+  });
+
   it('getUser ignores a deactivated account', async () => {
     await store.getUser(UID);
     expect(sql.queries[0]!.text).toContain('deactivated_at IS NULL');

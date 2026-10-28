@@ -140,8 +140,9 @@ export function render(ctx) {
     body: `<p>
               Soroban keeps a contract's compiled code in a ledger entry of its own, and every
               contract deployed from that same code points at that one entry. So a contract's own
-              state can be healthy until December while the code it runs expires in October — and
-              without its code a contract cannot execute at all.
+              state can be healthy until December while the code it runs expires in October — and an
+              archived code entry stops every contract built from it until something pays to
+              restore it.
             </p>
             <p>
               The real expiry is therefore the earliest entry, which is rarely the obvious one, and

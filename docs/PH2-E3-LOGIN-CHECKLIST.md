@@ -1,6 +1,8 @@
 # PH2-E3-01 / PH2-E3-02 — manual test checklist for Tih
 
-**Status: ready for Tih's run. Part A (steps 1 to 5 and 9) is runnable now; part B (steps 6 to 8 and 10) is blocked until `PH2-E2-05`.** First written from `origin/main` at `f3b5701`; `main` has moved since. The login page text was re-verified against the head of the pull request that last changed this file (the login follow-up, `PH2-E3-01`), by reading `apps/web/src/lib/login-view.ts`, `lib/login.ts` and `pages/login.ts`. The part B rows were re-read against `apps/web/src/lib/watchlist-view.ts` on `origin/main` at `1fc037a` (#430). Every on-screen string below is quoted from that code; where the code does not say, the step says `undetermined`. The preview site may be running an older build than that head: which build it runs is undetermined.
+**Status: ready for Tih's run. Part A is done (2026-10-26 10:04 WIB); part B (steps 6 to 8 and 10) is runnable now — `PH2-E2-05`'s routes are deployed.** First written from `origin/main` at `f3b5701`; `main` has moved since. The login page text was re-verified against the head of the pull request that last changed this file (the login follow-up, `PH2-E3-01`), by reading `apps/web/src/lib/login-view.ts`, `lib/login.ts` and `pages/login.ts`. Part B was rewritten on 2026-10-26 against `origin/main` at `ab74675` and **against the deployed preview API**, not only the code. Every on-screen string below is quoted from `apps/web/src/lib/watchlist-view.ts` and `lib/watchlist.ts`; where the code does not say, the step says `undetermined`.
+
+**Which build preview runs: cite the commit from the endpoint, before and after.** Fatih decided on 2026-10-27 that `/api/v1/health` will carry the deployed commit (CEF with DevOps). **Once it does, every claim from a run of this checklist names the commit read from `GET /api/v1/health` immediately before the first step and again after the last, and a run where the two differ is not evidence about either.** Until it lands there is no marker, so as of 2026-10-26 this was derived rather than read: the last `API deploy` run that targeted preview was from branch `docs/PH2-E2-04-migration-refs` at `746d6908`, and `git diff 746d6908 ab74675` is **empty across the whole tree**. So preview runs code whose tree is identical to `main`. Merging to `main` deploys **production**, not preview (`.github/workflows/api-deploy.yml`: preview on every same-repo pull request, production on merge to `main`), so **a new pull request from anyone can replace the preview build at any time**. Re-check the deploy list immediately before and after a run before calling any result evidence about `main`.
 
 Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, in a normal browser window. This checklist does not touch the production site. Stellar testnet only.
 
@@ -8,7 +10,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 
 - **Which email works.** On preview the sign-in code is sent from `onboarding@resend.dev`, which Resend documents as delivering only to the account owner's own email (`docs/API.md` §1; documented by Resend, not yet observed by us). Use **the email of your own Resend account**. For any other email, step 2 is expected to show one of two notes: the "could not be sent to that address" note (the API answered `502 EMAIL_NOT_SENT`) or the "could not send the code" note (`503 UPSTREAM_UNAVAILABLE`). Which one you get is undetermined until someone observes it; the page claims no cause for either, and neither should you. This is a limit of the preview, not a defect to file.
 - **Rate limits.** `POST /auth/email/start` allows 3 sends per address per 15 minutes and 20 per IP per hour (`docs/API.md` §3). A code lives 10 minutes, works once, and is void after 5 failed attempts. Do not click "Email me a code" repeatedly.
-- **Numbering.** The steps keep the numbers of the ten-step list: 1, 2, 3, 4, 5, 9 are **part A** (login and sign-out) and are runnable now. 6, 7, 8, 10 are **part B** (watchlist) and are blocked (see the end). The text of the original ten-step list is not in the repo, so the step titles below are this document's own; the numbers are the ones to quote back.
+- **Numbering.** The steps keep the numbers of the ten-step list: 1, 2, 3, 4, 5, 9 are **part A** (login and sign-out), run on 2026-10-26. 6, 7, 8, 10 are **part B** (watchlist) and are runnable. The text of the original ten-step list is not in the repo, so the step titles below are this document's own; the numbers are the ones to quote back.
 - **There is no link to `/login/` in the site's navigation** (checked in `apps/web/src/chrome.mjs`). Type or paste the URL.
 - **Screenshots.** Send a screenshot of the whole browser window, with the address bar, for steps **3, 5 and 9**.
 - **Times.** For any step that shows `undetermined` or an error, send the time in WIB (UTC+7) when it happened, to the minute, so it can be matched to logs. Send the exact text on screen too.
@@ -115,16 +117,33 @@ Neither note says why, and neither says a code was sent. This is the known previ
 
 ## Part B — watchlist (steps 6, 7, 8, 10)
 
-**Blocked until `PH2-E2-05`.** The API's `/watchlist` routes are not on `origin/main` (`apps/api/src/router.ts` serves the health route, the auth group and a JSON 404 only). Do not run these steps yet, and do not report results from them. What the pages say today is described so that the block can be recognised.
+**Runnable.** `PH2-E2-05`'s routes merged on 2026-10-24 (#427) and are deployed. Verified without a session on 2026-10-26, which is safe and costs no email quota:
 
-| Step | What it will test | What it shows today, from the code | Runnable |
+```
+GET https://preview.evergreen-stellar.pages.dev/api/v1/watchlist
+→ 401 {"error":{"code":"UNAUTHENTICATED","message":"Sign in first.", …}}
+```
+
+That is the answer step 10 needs, and it is no longer a 404.
+
+**Sign in first (part A, steps 2 and 5).** Steps 6 to 8 need the session; step 10 needs step 9's sign-out. **Do not ask for a second code if the first still works** — the limit is 3 sends per address per 15 minutes, and a 429 spends email quota for nothing (§7.7 of the handoff). Nobody tests the countdown by triggering it.
+
+**Which contract to scan, for step 6:** `CANZNTAW7DYMCZ6EAY5BP672H4AL2O2HVRBP4O4HRUEZRATHQRRLXL6L` — guinea-pig A, the project's own working subject. Checked on 2026-10-26: its shared code entry is live until ledger 8,297,162 against a latest ledger of 5,392,724, so the scan returns a healthy contract rather than an archived one. The scanner prefills it, so you can leave the field alone.
+
+**Scope: login, scan, add, watchlist, remove, sign-out. No wallet linking.** The lead sentence on `/login/` mentions linking a wallet and the page offers it, but no step here covers it. If a later step needs wallet linking it depends on `CHALLENGE_SIGNING_KEY` being set on the preview Worker, which DevOps is checking — **mark such a step `undetermined` until DevOps confirms**, rather than running it and reading a failure as a defect.
+
+**Autopilot is not part of any step.** `THRESHOLD_FLOOR_LEDGERS` has no default and the engine has not published one (`apps/api/src/watchlist/mount.ts`), so autopilot cannot be turned on. If a control for it is visible and does anything, that is a finding — report it rather than using it.
+
+| Step | What to do | Pass | Fail |
 |---|---|---|---|
-| 6 | On `/dashboard/scanner/`, scan a contract and click "Add to watchlist" | The API answers `404 NOT_FOUND` and the page shows an `undetermined` chip with **"We could not establish whether this was added."** Which contract to use is undetermined here. | After `PH2-E2-05` |
-| 7 | `/dashboard/watchlist/` lists it, binding expiry first | While the route answers `404 NOT_FOUND` the page shows an `undetermined` box with **"The watchlist route is not available on this API yet. This says nothing about any contract."** and a link to the scanner. | After `PH2-E2-05` |
-| 8 | Click "Remove" on the row | Nothing to remove. A failed removal shows **"The API did not remove this (`<code>`, HTTP `<status>`). It is still on your watchlist."** | After `PH2-E2-05` |
-| 10 | While signed out, open `/dashboard/watchlist/` | Expected once the route exists: **"A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown."** This needs `GET /watchlist` to answer `UNAUTHENTICATED`, which the router does not do yet. Until then the page shows the same "route is not available on this API yet" box as step 7. | After `PH2-E2-05` |
+| 6 | On `/dashboard/scanner/`, scan, then click **"Add to watchlist"** | A **healthy** chip reading **added**, with "`CANZNT…XL6L` is on your watchlist." Clicking it a second time is also a pass: **already there**, "…was already on your watchlist. Nothing changed." | An `undetermined` chip reading **"We could not establish whether this was added."** — which means the API answered something the page did not recognise. Also fail: **"Not added. A watchlist belongs to a signed-in session, and this browser has none."** while you are signed in |
+| 7 | Open `/dashboard/watchlist/` | The contract listed, and **the binding expiry leading** — the earliest entry, which for guinea-pig A is the shared **code** entry, not the instance. Its observation (the ledger it was read at) is shown beside the state | **"Signed in. Nothing watched yet."** after a successful step 6. Or a state shown with no observation beside it: §9a makes that a P0, not a display bug. Or the binding naming the instance when the code entry ends sooner |
+| 8 | Click **"Remove"** on the row | The row goes. A second removal of the same row shows **"Nothing to remove for this account."** — that is the API's `404 NOT_FOUND`, and it is correct, not a fault | **"The API did not remove this (`<code>`, HTTP `<status>`). It is still on your watchlist."** with the row still there |
+| 10 | Sign out (step 9), then open `/dashboard/watchlist/` | **"A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown."** and a link saying the scanner needs no session | Any contract still listed, or the "route is not available on this API yet" box — that box belongs to the old build and seeing it means preview is not running `main`'s tree |
 
-Steps 6 to 8 also need the sign-in from part A, and step 10 needs step 9 first.
+**One documented limitation, so it is not filed as a bug** (#445, `docs/API.md` §6). `DELETE` for an item you do not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all; they differ only in `message`, which is not part of the contract. A client branching on code and status cannot tell them apart. The page says "Nothing to remove for this account." for both. That is known and deliberate.
+
+**Send back.** For steps 6, 7 and 8: a screenshot of the whole browser window including the address bar. For step 10: the same. For anything reading `undetermined`, or any error: the exact text on screen and the WIB time to the minute.
 
 ## Findings from the first read, and where they stand
 
@@ -141,9 +160,8 @@ These were findings, not test failures. Do not mark a step failed because of the
 ## What this checklist could not ground
 
 - The text of the original ten-step list (steps 1 to 10 as Tih or the PM wrote them). The step titles here are inferred from the numbers and the scope given; map them back before running.
-- Whether the email lands in the inbox or in spam.
-- The cookie's visibility in the browser tools (step 4).
-- Which contract to scan for step 6.
-- Anything about how the live API behaves: nothing here was run against the live site. Expected texts come from the code on the follow-up pull request's head, and the preview may be running an older build, one that still shows the old texts.
+- Whether the email lands in the inbox or in spam, and the cookie's visibility in the browser tools (step 4).
+- **Part A's expected texts** come from the code, not from a run against the live site. Part B's were checked against the deployed preview API for the one thing that can be read without a session (`GET /watchlist` → `401 UNAUTHENTICATED`); the on-screen strings are still quoted from code.
+- **The 429 countdown stays `undetermined` on purpose.** Triggering it spends email quota, so nobody tests it (§7.7).
 - Which of the two "could not be sent" notes a non-owner email gets on preview, and whether the preview API answers `502 EMAIL_NOT_SENT` at all yet.
 - Whether production's auth routes answer `503 UPSTREAM_UNAVAILABLE`. This checklist is for the preview site only.

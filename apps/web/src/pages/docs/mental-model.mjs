@@ -67,7 +67,8 @@ export function render(ctx) {
     <h2 id="shared-code">The entry that is shared</h2>
     <p>
       A contract’s instance can be healthy until December while the code it runs expires in
-      October, and without its code the contract cannot execute at all. So the real expiry is the
+      October, and an archived code entry stops the contract until it is restored — see
+      <a href="#archived-vs-deleted">above</a> for who pays and when. So the real expiry is the
       earliest entry — which is rarely the obvious one, and is shared by every contract deployed
       from the same Wasm.
     </p>
