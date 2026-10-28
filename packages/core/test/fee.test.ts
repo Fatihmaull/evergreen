@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { PROVISIONAL_HOSTED_FEE, hostedFeeStroops } from '../src/index.js';
+import {
+  PROVISIONAL_HOSTED_FEE,
+  PROVISIONAL_ROUTER_FEE,
+  hostedFeeStroops,
+  routerFeeStroops,
+} from '../src/index.js';
 
 const XLM = 10_000_000n;
 
@@ -53,5 +59,47 @@ describe('the provisional hosted fee', () => {
     expect(hostedFeeStroops(0n, higher)).toBe(30_000n);
     expect(hostedFeeStroops(10n * XLM, higher)).toBe(5_000_000n);
     expect(hostedFeeStroops(10n * XLM)).toBe(2_000_000n); // the default is untouched
+  });
+});
+
+// The router path (one signature, no allowance): 2% of rent, NO minimum. Fatih, 2026-10-28, #414.
+describe('the provisional router-path fee', () => {
+  it('🔴 is the hosted percentage with no minimum, and reads that percentage rather than repeating it', () => {
+    expect(PROVISIONAL_ROUTER_FEE.minimumStroops).toBe(0n);
+    expect(PROVISIONAL_ROUTER_FEE.basisPoints).toBe(PROVISIONAL_HOSTED_FEE.basisPoints);
+  });
+
+  it('🔴 holds the percentage in one place: the only literal in fee.ts is the hosted one', () => {
+    // Equal values cannot prove this: a second `200n` would equal the hosted one today and
+    // drift the day someone changes only one. So read the source.
+    const src = readFileSync(new URL('../src/fee.ts', import.meta.url), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    );
+    expect(src.match(/\b200n\b/g)).toHaveLength(1);
+    expect(src).toMatch(
+      /PROVISIONAL_ROUTER_FEE[^;]*basisPoints: PROVISIONAL_HOSTED_FEE\.basisPoints/,
+    );
+  });
+
+  it('🔴 charges nothing on nothing, and no floor on a small job', () => {
+    expect(routerFeeStroops(0n)).toBe(0n);
+    expect(routerFeeStroops(1_000_000n)).toBe(20_000n); // 0.1 XLM of rent: below the hosted minimum
+    expect(hostedFeeStroops(1_000_000n)).toBe(25_000n); // and the hosted path would charge more
+  });
+
+  it('is 2% of rent, rounded up', () => {
+    expect(routerFeeStroops((127n * XLM) / 100n)).toBe(254_000n);
+    expect(routerFeeStroops(1_000_001n)).toBe(20_001n); // a floor would give 20,000
+    expect(routerFeeStroops(1n)).toBe(1n); // a stroop of rent still rounds up to a stroop
+  });
+
+  it('takes its numbers from the configuration it is given', () => {
+    expect(routerFeeStroops(10n * XLM, { basisPoints: 500n, minimumStroops: 0n })).toBe(5_000_000n);
+    expect(routerFeeStroops(10n * XLM)).toBe(2_000_000n); // the default is untouched
+  });
+
+  it('refuses negative rent', () => {
+    expect(() => routerFeeStroops(-1n)).toThrow(RangeError);
   });
 });

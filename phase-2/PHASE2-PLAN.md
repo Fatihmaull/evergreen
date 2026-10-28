@@ -209,7 +209,10 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 - **Provisional.** It is used now for the allowance-cap estimate (`PH2-E3-05`) and for the hosted-tier copy (`PH2-BL-05`), once `claims-and-copy.md` allows a fee number. It is re-measured with real transactions in `PH2-E5-02`, after the router audit, and `PH2-E5-03` stays open until Fatih confirms the value is final.
 - **One home in code:** `PROVISIONAL_HOSTED_FEE` and `hostedFeeStroops()` in `packages/core/src/fee.ts`: integer stroops, the percentage as basis points (200), the minimum 25,000. The engine, reconcile and the cap estimate all call it; none carries its own number.
 - **Why a minimum:** a hosted action's network fees are about 18,400 stroops (about 24,500 with one failed retry), simulated on mainnet. The minimum is what keeps DoD-2's zero subsidy, and it binds only below 0.125 XLM of rent.
-- **Rounding** is up, so rounding never goes against Evergreen (the engine's proposal, #414; at most one stroop; not yet confirmed by Fatih).
+- **Rounding** is up, so rounding never goes against Evergreen (at most one stroop; confirmed by Fatih, 2026-10-28).
+- **The router path** (one signature, no allowance) charges **2% of rent with no minimum** (Fatih, 2026-10-28, #414). The minimum exists to cover the engine's network costs, and on that path the user pays them as the transaction's source. It replaces the fixed 0.1 XLM used on testnet. In code: `PROVISIONAL_ROUTER_FEE` and `routerFeeStroops()` in the same file, **reading the percentage from `PROVISIONAL_HOSTED_FEE`**, so there is no second literal. On-chain it stays voluntary (ADR-009 §3): the dashboard sets it, the contract doesn't enforce it.
+- **Network fees are evidence, never billed** (Fatih, 2026-10-28). The user pays rent plus the Evergreen fee, and the fee covers the engine's network costs. Zero subsidy per job is `evergreen-fee` ≥ the sum of `network-fee` rows (`docs/API.md` §7).
+- **If the pull succeeds and the extend finally fails, the user is refunded in full, fee included** (Fatih, 2026-10-28). Evergreen absorbs its network cost (about 8,000 to 12,400 stroops) as operating cost; that is not a rent subsidy. A per-user failure-rate signal is part of `PH2-E4-05`'s failure-mode list.
 
 **Sizing the user's cap:**
 - Shown to the user as: estimated rent for the watched contracts × chosen horizon, plus the fee on that rent (`hostedFeeStroops`, not a bare percentage, because of the minimum), × a safety margin. An item whose per-job budget is below the minimum plus its rent can never run, so the screen shows the minimum.
@@ -344,10 +347,10 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
-| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per (user, contract) and send an **email notice** | CER | L | PH2-E4-01 |
+| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. **A pull whose extend finally fails is refunded in full, fee included** (Fatih, 2026-10-28). On-demand "Extend now" jobs are capped by a **daily limit** per (user, contract) and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
 | PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict. Built against `planTenants`/`checkBudget` (#440). *Moved CER → CEF, with Fatih's DevOps agent, 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E2-01, PH2-E4-02 |
-| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator). *Moved CER → CEF 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E4-04 |
+| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator), **including a per-user failure rate** so abuse of the full-refund rule is visible (Fatih, 2026-10-28). *Moved CER → CEF 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
 | PH2-E4-08 | Production router (ADR-009): audit, Rust CI (DevOps Assistant), final fee address = treasury | CEF | L | PH2-E4-03, PH2-E4-07 |
