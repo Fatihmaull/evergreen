@@ -1,0 +1,128 @@
+# Neon migrations
+
+Rakha's agent (CER) owns the schema and writes the SQL under [`apps/api/db/`](../../apps/api/db/). **DevOps applies it to Neon** and verifies it. When a PR adds a file under `apps/api/db/`, DevOps applies it to the **preview** branch and checks it; production is a separate, gated step (below).
+
+## Where things are (read 2026-10-27)
+
+| | |
+|---|---|
+| Project | `evergreen`, id `icy-sun-89705623`, AWS `ap-southeast-1`, Postgres 18.6, **Free plan** |
+| Branches | `preview` and `production` (the default). **`production` has no tables.** |
+| Roles | only `neondb_owner`, on both branches. No least-privilege app role exists yet. |
+| Database | `neondb` on both |
+| History retention | **21600 s (6 hours)**. A restore can only reach back that far. |
+| Compute | autoscaling 0.25 to 2 CU (project default) |
+| Migration tracking | **none.** There is no migrations table; "which migrations are applied" can only be inferred from the structure. |
+
+Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`, `neonctl branches list --project-id icy-sun-89705623 --org-id <org>`, `neonctl roles list ...`. (`--org-id` is required once the account has an organization; `neonctl projects list` without it opens an interactive prompt.)
+
+## Applied state of `preview` (verified 2026-10-27)
+
+`schema.sql`, `0002` and `0003` are applied, and the result is **structurally identical to a clean build of those three files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
+
+| File | Applied to `preview` | Evidence |
+|---|---|---|
+| `schema.sql` | yes | 11 tables present, matching the reference build |
+| `0002_jobs_daily_limit_per_user.sql` | yes | `jobs_daily_limit_idx` is `(user_id, network, contract_id, pulled_at) WHERE kind = 'extend-now' AND pull_tx_hash IS NOT NULL`, the file's definition, not the cross-user one from `schema.sql` |
+| `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
+| `0004` (#456, `users.reactivated_at`) | **not yet**, the PR is open | apply after it merges |
+
+The `production` branch has **nothing applied**. That is deliberate: production has no `DATABASE_URL`.
+
+Preview holds a little test data (a user, a session, sign-in codes and rate counters from login tests). Counts only were read.
+
+## The `psql` trap: always `-v ON_ERROR_STOP=1`
+
+```text
+$ psql --single-transaction -f bad.sql          # CREATE a; SELECT nope(); CREATE b;
+exit=0   tables created=0                       # failed and rolled back, and exited 0
+$ psql --single-transaction -v ON_ERROR_STOP=1 -f bad.sql
+exit=3   tables created=0
+```
+
+Reproduced 2026-10-27 on Postgres 16.15. Without `ON_ERROR_STOP`, psql keeps going after an error, the final `COMMIT` becomes a `ROLLBACK`, and the exit code is **0**, so a migration that applied nothing reads as success. [`apps/api/db/NOTES.md`](../../apps/api/db/NOTES.md) shows the command without the flag; this page is the correct one. Do not trust the exit code of a migration that ran without it. (Whether the earlier applications of 0002 and 0003 hit this was checked: they did not, see the table above.)
+
+## Procedure: apply a file to `preview`
+
+1. **Read the SQL.** Numbering is strict (`0004_<name>.sql` after `0003`), and a file is never edited after it is applied; the next change is a new number.
+2. **Connect without putting the connection string in argv or on screen.** Define this once in your shell. It asks `neonctl` for the string and turns it into `PG*` environment variables inside one command:
+
+   ```bash
+   neon_env() {  # usage: neon_env preview
+     local uri; uri="$(neonctl connection-string --project-id icy-sun-89705623 \
+       --org-id org-delicate-violet-65283800 --branch "$1" \
+       --database-name neondb --role-name neondb_owner 2>/dev/null)" || return 1
+     eval "$(NEON_URI="$uri" python3 -I -c '
+   import os, shlex
+   from urllib.parse import urlparse, parse_qs, unquote
+   u = urlparse(os.environ["NEON_URI"]); q = parse_qs(u.query)
+   out = {"PGHOST": u.hostname, "PGPORT": str(u.port or 5432), "PGUSER": unquote(u.username or ""),
+          "PGPASSWORD": unquote(u.password or ""), "PGDATABASE": u.path.lstrip("/"),
+          "PGSSLMODE": q.get("sslmode", ["require"])[0]}
+   if "channel_binding" in q: out["PGCHANNELBINDING"] = q["channel_binding"][0]
+   for k, v in out.items(): print("export %s=%s" % (k, shlex.quote(v)))')"
+   }
+   ```
+
+3. **Check the target before you write.** Read-only first:
+
+   ```bash
+   neon_env preview && PGOPTIONS='-c default_transaction_read_only=on' \
+     psql -X -tA -c "select current_database(), version()" \
+                 -c "select string_agg(tablename, ', ' order by tablename) from pg_tables where schemaname = 'public'"
+   ```
+
+4. **Apply, with the flag, and look at the exit code:**
+
+   ```bash
+   neon_env preview && psql -X -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0004_<name>.sql; echo "exit=$?"
+   ```
+
+   `exit=0` is required, but **not sufficient**: go on to Verify.
+5. **Verify** (below), then record it in the PR that added the file: file name, branch, the object-level evidence.
+
+Never run a migration against `production` without Fatih's explicit "ya". Production waits on a least-privilege app role, append-only grants on `fee_ledger`, and the production approval gate ([`deploy.md`](deploy.md)).
+
+## Verify
+
+**1. Object-level:** query the objects the file creates and compare to the SQL (an index's `indexdef`, a table's columns, constraints and foreign keys), as the table above does.
+
+**2. Whole-schema drift:** build the files into a throwaway local Postgres and diff the structure against Neon. This catches an object the file did not create and a file that never applied.
+
+```bash
+export LC_ALL=en_US.UTF-8                      # macOS: without a valid locale, postmaster aborts at startup
+# Pick a free port FIRST. 54329 was already held by another project's Postgres on 2026-10-27.
+PORT=55871; lsof -nP -iTCP:$PORT -sTCP:LISTEN && echo "port busy: set PORT to a free one before continuing"
+D=$(mktemp -d); initdb -D "$D" -U t -A trust >/dev/null
+pg_ctl -D "$D" -o "-p $PORT -c unix_socket_directories='' -c listen_addresses=127.0.0.1" -l "$D.log" -w start
+psql "host=127.0.0.1 port=$PORT user=t dbname=postgres" -c "create database ref"
+for f in schema.sql 0002_*.sql 0003_*.sql; do   # every file, in order
+  psql "host=127.0.0.1 port=$PORT user=t dbname=ref" -q -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/$f
+done
+```
+
+Save this as `shape.sql`:
+
+```sql
+select 'col  '||table_name||'.'||column_name||' '||data_type||' null='||is_nullable||' def='||coalesce(column_default,'-') from information_schema.columns where table_schema='public' order by table_name, column_name;
+select 'con  '||conrelid::regclass||' '||conname||' '||pg_get_constraintdef(oid) from pg_constraint where connamespace='public'::regnamespace and contype<>'n' order by 1;
+select 'idx  '||indexdef from pg_indexes where schemaname='public' order by indexname;
+select 'enum '||t.typname||': '||string_agg(e.enumlabel, ',' order by e.enumsortorder) from pg_type t join pg_enum e on e.enumtypid=t.oid group by t.typname order by 1;
+select 'trg  '||tgrelid::regclass||' '||tgname from pg_trigger where not tgisinternal order by 1;
+select 'fn   '||proname||' md5='||md5(prosrc) from pg_proc where pronamespace='public'::regnamespace order by 1;
+```
+
+```bash
+psql "host=127.0.0.1 port=$PORT user=t dbname=ref" -tA -f shape.sql > shape.ref
+neon_env preview && PGOPTIONS='-c default_transaction_read_only=on' psql -X -tA -f shape.sql > shape.preview
+diff shape.ref shape.preview && echo identical
+pg_ctl -D "$D" stop -m fast && rm -rf "$D" "$D.log"
+```
+
+Expected diff on 2026-10-27: one line, `fn   fips_mode ...`, from `pgcrypto`. Anything else is drift: stop and report it. (`contype<>'n'` skips Postgres 18's named NOT NULL constraints, which older Postgres does not list.)
+
+## What this procedure does not give you
+
+- **No migration ledger.** There is no table recording which files ran, so the answer comes from the diff above, not from a lookup. Adding one is a schema decision for Rakha (CER); DevOps recommends it before production.
+- **CI does not lock the SQL.** It does not apply `apps/api/db` to anything, so a file that does not apply is discovered at the Neon apply (flagged as a follow-up on #440).
+- **No rollback script.** Migrations are forward-only; see [`rollback.md`](rollback.md).

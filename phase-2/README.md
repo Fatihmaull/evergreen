@@ -1,6 +1,6 @@
 # phase-2/
 
-Evergreen's second phase, which is self-directed and comes after the SOW 1 submission on 2026-10-01. This folder is the starting point for everyone: Fatih, Rakha, and the four agents.
+Evergreen's second phase, which is self-directed and comes after the SOW 1 submission on 2026-10-01. This folder is the starting point for everyone: Fatih, Rakha, and the five agents.
 
 | File | For whom |
 |---|---|
@@ -10,6 +10,7 @@ Evergreen's second phase, which is self-directed and comes after the SOW 1 submi
 | [`kickoff/WEBF.md`](kickoff/WEBF.md) | Fatih's web agent |
 | [`kickoff/CER.md`](kickoff/CER.md) | Rakha's CLI/engine agent |
 | [`kickoff/WEBR.md`](kickoff/WEBR.md) | Rakha's web agent |
+| [`kickoff/DEVOPS.md`](kickoff/DEVOPS.md) | Fatih's infrastructure agent: deploy, CI deploy jobs, Cloudflare, Neon, secrets. Its runbooks are in [`../docs/ops/`](../docs/ops/README.md) |
 
 ## Definitions of Done
 
@@ -25,8 +26,9 @@ Phase 2 has two official gates (Fatih, 2026-10-20), defined in [`PHASE2-PLAN.md`
 | **R** | Rakha in person |
 | **CER** | Rakha's CLI/engine agent |
 | **WEBR** | Rakha's web agent |
+| **OPS** | Fatih's infrastructure agent (DEVOPS): deploy, CI deploy jobs, Cloudflare, Neon, secrets by name |
 
-In `BACKLOG.md`, write owners as **`(F · CEF)`** or **`(R · CER)`**, with the person first. The parser reads only the first character (`scripts/task-id.mjs:49`), and the Notion sync maps only `F/R/S` (`scripts/sync-notion.mjs:48`). A bare `(CEF)` would sync with no owner.
+In `BACKLOG.md`, write owners as **`(F · CEF)`**, **`(R · CER)`** or **`(F · OPS)`**, with the person first. The parser reads only the first character (`scripts/task-id.mjs:49`), and the Notion sync maps only `F/R/S` (`scripts/sync-notion.mjs:48`). A bare `(CEF)` would sync with no owner.
 
 ## Task IDs
 

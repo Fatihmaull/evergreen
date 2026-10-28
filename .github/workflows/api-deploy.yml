@@ -48,7 +48,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview
+          # On pull_request, github.sha is GitHub's synthetic MERGE commit, which
+          # exists on no branch. The commit under test is the PR head.
+          DEPLOY_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
 
   production:
     name: deploy evergreen-api (production)
@@ -72,15 +75,28 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy
-      - name: smoke /api/v1/health (200 + application/json)
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+      # Reads what is SERVING, not what was sent: an injected var proves nothing
+      # about what shipped. The `commit` field comes from #460; a response
+      # without it (a version older than that) passes with a notice, and
+      # "undetermined" (code reads the var, the workflow did not inject it) fails.
+      - name: smoke /api/v1/health (200 + application/json + the commit just deployed)
+        env:
+          WANT: ${{ github.sha }}
         run: |
           url=https://evergreen-stellar.pages.dev/api/v1/health
+          body=$(mktemp)
           for i in 1 2 3 4 5; do
-            out=$(curl -sS -o /dev/null -w '%{http_code} %{content_type}' "$url" || true)
+            out=$(curl -sS -o "$body" -w '%{http_code} %{content_type}' "$url" || true)
             echo "attempt $i: $out"
             code=${out%% *}; ctype=${out#* }
-            if [ "$code" = "200" ] && [[ "$ctype" == application/json* ]]; then exit 0; fi
+            if [ "$code" = "200" ] && [[ "$ctype" == application/json* ]]; then
+              got=$(jq -r 'if has("commit") then .commit else "absent" end' "$body" 2>/dev/null || echo unreadable)
+              if [ "$got" = "$WANT" ]; then echo "serving $got"; exit 0; fi
+              if [ "$got" = "absent" ]; then echo "::notice::health reports no commit field yet (pre-#460 code); not checked"; exit 0; fi
+              echo "serving commit: $got (want $WANT)"
+            fi
             sleep 10
           done
-          echo "::error::health check failed: $out"; exit 1
+          echo "::error::health check failed: $out; commit served: ${got:-none}, want $WANT"; exit 1

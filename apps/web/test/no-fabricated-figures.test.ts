@@ -124,6 +124,24 @@ describe('no renderer prints a figure derived from an archived entry', () => {
     }
   });
 
+  /**
+   * Wording, not figures — and read off PRODUCTION after the #334 copy fix, not
+   * off this fixture, which is how it was missed. `KIND_WORD.code` is "contract
+   * code", so "This contract’s ${kind} entry" rendered **"This contract’s
+   * contract code entry"** on every single-contract scan. CI was green because
+   * nothing asserted on the sentence; it took a headless browser pointed at the
+   * live site to read it. "stops working" is the other half: a prediction that
+   * is wrong for three of the four entry kinds, removed in the same fix.
+   */
+  test('verdict wording: no stutter, and no prediction of what an expiry does', () => {
+    for (const contract of full.result.contracts) {
+      const text = verdict(sub(contract.id)).replace(/<[^>]*>/g, ' ');
+      expect(text, contract.id.slice(0, 8)).not.toMatch(/\b(\w+)\s+\1\b/i);
+      expect(text).not.toMatch(/contract’s contract/);
+      expect(text).not.toMatch(/stops working|stop working|cannot execute/);
+    }
+  });
+
   test('verdict, for the whole multi-contract scan', () => {
     assertClean(verdict(full), 'verdict(all)');
   });

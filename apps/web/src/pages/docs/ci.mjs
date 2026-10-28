@@ -17,7 +17,7 @@ export function render(ctx) {
     <p>
       A contract’s TTL does not change because you opened a pull request — it changes because time
       passed. The Action exists so that the passage of time becomes visible at the moment somebody
-      is already looking at the repository, rather than at the moment the contract stops working.
+      is already looking at the repository, rather than at the moment its earliest entry expires.
     </p>
 
     <h2 id="workflow">A workflow</h2>
@@ -63,7 +63,7 @@ jobs:
     <h2 id="threshold">Choosing the threshold</h2>
     <p>
       The default is the act-now tier — about one day. That is almost certainly too late for CI: a
-      pull request that fails the day before a contract stops working has not given anyone time to
+      pull request that fails the day before its earliest entry expires has not given anyone time to
       do anything. Set it to the warning tier, ${ctx.thresholds.warn.toLocaleString('en-US')}
       ledgers or about a week, and treat a failure as a task rather than an incident.
     </p>

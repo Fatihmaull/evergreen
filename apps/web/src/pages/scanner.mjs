@@ -37,8 +37,8 @@ export function render() {
     <section>
       <h2 class="section">Reading the result</h2>
       <p class="muted">
-        The verdict names the entry that expires first — a contract stops working when its earliest entry does,
-        and that is rarely the instance. A clean scan means everything asked-for is healthy, never that the
+        The verdict names the entry that expires first — that entry sets the contract’s real deadline,
+        and it is rarely the instance. A clean scan means everything asked-for is healthy, never that the
         contract is fully healthy: coverage travels with the verdict. Exit codes and flags are on
         <a href="/docs/">the CLI reference</a>.
       </p>
