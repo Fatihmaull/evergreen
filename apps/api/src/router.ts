@@ -22,6 +22,23 @@ export const SERVICE = 'evergreen-api';
 export interface Env extends AuthEnv {
   /** `production` or `preview`, set per environment in wrangler.jsonc. */
   ENVIRONMENT?: string;
+  /**
+   * The git commit this Worker was built from, injected at deploy time by the
+   * deploy workflow (`wrangler deploy --var DEPLOY_COMMIT:<sha>`). Not set in
+   * wrangler.jsonc: a value committed there is a guess that goes stale.
+   */
+  DEPLOY_COMMIT?: string;
+}
+
+/**
+ * The deployed commit for `GET /health`, or `'undetermined'`. Only a full
+ * 40-character lowercase git SHA passes. Anything else (unset, a branch name,
+ * an abbreviated or upper-case SHA) reads `undetermined`: this endpoint is what
+ * says which code answered, so it must never show a value nobody injected.
+ */
+export function deployedCommit(env: Env): string {
+  const value = env.DEPLOY_COMMIT;
+  return typeof value === 'string' && /^[0-9a-f]{40}$/.test(value) ? value : 'undetermined';
 }
 
 export function json(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
@@ -140,6 +157,7 @@ export async function handle(
       service: SERVICE,
       version: API_VERSION,
       environment: env.ENVIRONMENT ?? 'undetermined',
+      commit: deployedCommit(env),
     });
   }
   return notFound();

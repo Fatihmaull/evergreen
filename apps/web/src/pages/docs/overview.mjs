@@ -22,7 +22,10 @@ export function render(ctx) {
     <p>
       Soroban keeps a contract’s state in ledger entries, and each one carries a time to live
       measured in ledgers. When it runs out the entry is archived — or, for temporary entries,
-      deleted. A contract whose code entry has been archived cannot execute at all.
+      deleted. An archived code entry stops the contract until something pays to restore it: the
+      next invocation that lists it does so and is charged for it, and simulation is what puts it
+      on that list. A <a class="site-more" href="/docs/mental-model/">deleted temporary entry is
+      a loss</a>, and no amount of XLM brings it back.
     </p>
     <p>
       Evergreen is three things over that fact. A <a class="site-more" href="/docs/cli/">command
