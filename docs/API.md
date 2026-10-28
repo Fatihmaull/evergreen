@@ -209,7 +209,7 @@ type AllowanceState = {
 - **The chain cannot tell expired from revoked from never.** The #297 spike measured `allowance()` reading `"0"` after expiry **and** after revocation ([evidence](evidence/2026-10-14-sac-allowance-spike/README.md)); the allowance is a temporary entry, so expiry deletes it. So `expired` and `revoked` come from `lastKnown`, the engine's stored history (`PH2-E2-03`): an allowance last seen live whose `liveUntilLedger` has passed is `expired`, and one that reads zero before then is `revoked`. With no history, zero is `none`. §9a's `ALLOWANCE_EXPIRED` copy ("the ledger it expired at") reads `lastKnown.liveUntilLedger`.
 - **The engine stores the allowance's expiry in its history** (amount, `liveUntilLedger`, the ledger it was observed at), append-only. An expired allowance reads `"0"` on chain exactly like a revoked one, so without the stored expiry the two cannot be told apart. One limit, stated: a revoke that happens after the last observation reads as `expired` once `liveUntilLedger` passes (Rakha's point 10). This history is kept forever until DoD-2's evidence is gathered (Fatih, 2026-10-22; §10).
 - **The API never builds, signs or submits an `approve` or a revoke.** The dashboard builds it and the user's wallet signs it (`PH2-E3-05`, WEBR). The API reads the result.
-- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate waits for the fee percentage** (Fatih, 2026-10-20): no estimate route until `PH2-E5-03` sets the fee.
+- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate** was waiting for a fee (Fatih, 2026-10-20). The fee is now set **provisionally** (2% of charged rent, minimum 25,000 stroops, Fatih, 2026-10-27; `PH2-E5-03` stays open until it is confirmed final at `PH2-E5-02`), so the estimate can use `hostedFeeStroops()` from core (`packages/core/src/fee.ts`). There is still no estimate *route*: the allowance screen computes it in the browser from core, and an item whose per-job budget is below the minimum plus its rent can never run, so the screen shows the minimum (`PH2-E3-05`).
 
 ### Jobs: one hosted action
 
@@ -291,8 +291,9 @@ type LedgerRow = {
 ```
 
 This is what DoD-2's **zero subsidy** is measured from. Every XLM the engine moves for a user has a row, and the rows reconcile against the transactions:
-- per job, `pull` = `rent` + `network-fee` + `evergreen-fee` + `refund` + `difference`;
-- **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the extend transaction's fee). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
+- per job, `pull` = `rent` + `evergreen-fee` + `refund` + `difference`. **`network-fee` is not in this sum** (Fatih, 2026-10-28, #414, which changes what an earlier draft of this section said): a `network-fee` row records what one of the job's transactions (the pull, the extend, a refund) cost the engine. It is **evidence of the engine's cost and is never billed to the user**. The user pays the rent plus the Evergreen fee, and the fee is what covers the engine's network costs;
+- **zero subsidy per job** is `evergreen-fee` ≥ the sum of that job's `network-fee` rows. This applies to a job that charges a fee. **A job that pulled and whose extend finally failed is refunded in full, fee included** (Fatih, 2026-10-28): it has no `evergreen-fee`, its `pull` is returned by `refund` (plus any `difference`), and Evergreen absorbs its network cost (about 8,000 to 12,400 stroops) as an operating cost, which is not a rent subsidy. That is counted separately, as a per-user failure rate (`PH2-E4-05`), so abuse would be visible;
+- **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the fee charged on one of the job's transactions). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
 - how declared vs charged resource fee are stored stays a placeholder until the `PH2-E4-02` spike (Rakha's point 8);
 - an unexplained difference is a P0 or P1 by definition.
 
@@ -507,7 +508,7 @@ that was recorded says when.** This maps it onto the API.
 2. **A wallet that pays for a watched contract cannot be unlinked.** The revoke button is shown next to unlink (§4).
 3. **Session lifetimes, sign-in codes and rate limits:** the starting values in §3, as configuration.
 4. **"Extend now"** is limited per contract, at 3 a day. **Amended 2026-10-23 (PM decision, on Rakha's proposal in #350): per (user, contract), still 3 per rolling 24 hours, still only jobs that pulled funds; the counting index change is Rakha's `0002_*` migration.** The original text follows. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
-5. **The cap-sizing estimate** waits for the fee percentage (`PH2-E5-03`).
+5. **The cap-sizing estimate** can now use the provisional fee (`PH2-E5-03`, 2% of charged rent, minimum 25,000 stroops), computed from core's `hostedFeeStroops()`; the value is re-measured in `PH2-E5-02`.
 
 **Decided by Fatih, 2026-10-22** (after Rakha's review of #350):
 - **Account:** Pages and the API Worker share one Cloudflare account (§1; decided on #310 on 2026-10-18, confirmed for the spec today).
