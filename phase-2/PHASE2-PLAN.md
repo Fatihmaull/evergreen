@@ -89,7 +89,7 @@ Measurable with records still to be built:
 | Q6 | Lighter process. Keep mutation proof on write paths and `origin/main` verification. | Gate inventory needs sign-off |
 | Q7 | Docs hygiene now. | — |
 | Q8 | **Allowance, not custody** (spike #297: viable with four limits). | Re-sign about every 180 days; per-contract caps are off-chain |
-| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. **Amended 2026-10-27 (Fatih, #414):** a percentage **with a per-action minimum of 25,000 stroops**, because a pure percentage subsidises small jobs; the percentage is still unset. See `PH2-E5-03` | A fee below the fixed cost of an action is a subsidy (ADR-007) |
+| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. **Amended 2026-10-27 (Fatih, #414):** a percentage **with a per-action minimum of 25,000 stroops**, because a pure percentage subsidises small jobs. **Set the same day, PROVISIONALLY: 2% of the rent actually charged, `fee = max(2% × charged rent, 25,000 stroops)`.** Re-measured with real transactions in `PH2-E5-02`; not final until Fatih confirms it there. See §3.3 and `PH2-E5-03` | A fee below the fixed cost of an action is a subsidy (ADR-007) |
 | Q10 | Open-core: CLI and self-hosted engine are MIT; hosted is paid. | — |
 | Q11 | One revenue destination, no profit split; all of it funds development. | — |
 | Q12 | Cloudflare: Free, then Workers Paid if PH2-E2-01 measures the engine over the free limits. Render was evaluated and rejected (§3.2). | At most about $5/month, on one platform |
@@ -205,8 +205,14 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
    - **Router fees skip this step** (ADR-009, Fatih 2026-10-22): the router pays its fee straight to the treasury address. Spike `PH2-E4-07`: instance 5,443,860 → 6,322,913, code 5,443,859 → 6,322,913, persistent unchanged at 5,443,867; instance + code = 99.21% of simulated rent; fee 0.1 XLM; user paid ~6.1 XLM rent (tx `3c112235…de24a`).
    - **Wording rule:** for a user without an allowance, no UI or custody copy (`PH2-E4-06`) may call a contract "fully safe"; the router does not extend persistent data.
 
+**The fee (PROVISIONAL, `PH2-E5-03`; Fatih, 2026-10-27, #414):** `fee = max(2% × charged rent, 25,000 stroops)` per hosted action. A hosted action is one job (one pull), not one entry.
+- **Provisional.** It is used now for the allowance-cap estimate (`PH2-E3-05`) and for the hosted-tier copy (`PH2-BL-05`), once `claims-and-copy.md` allows a fee number. It is re-measured with real transactions in `PH2-E5-02`, after the router audit, and `PH2-E5-03` stays open until Fatih confirms the value is final.
+- **One home in code:** `PROVISIONAL_HOSTED_FEE` and `hostedFeeStroops()` in `packages/core/src/fee.ts`: integer stroops, the percentage as basis points (200), the minimum 25,000. The engine, reconcile and the cap estimate all call it; none carries its own number.
+- **Why a minimum:** a hosted action's network fees are about 18,400 stroops (about 24,500 with one failed retry), simulated on mainnet. The minimum is what keeps DoD-2's zero subsidy, and it binds only below 0.125 XLM of rent.
+- **Rounding** is up, so rounding never goes against Evergreen (the engine's proposal, #414; at most one stroop; not yet confirmed by Fatih).
+
 **Sizing the user's cap:**
-- Shown to the user as: estimated rent for the watched contracts × chosen horizon × (1 + fee) × a safety margin.
+- Shown to the user as: estimated rent for the watched contracts × chosen horizon, plus the fee on that rent (`hostedFeeStroops`, not a bare percentage, because of the minimum), × a safety margin. An item whose per-job budget is below the minimum plus its rent can never run, so the screen shows the minimum.
 - The margin exists because the CLI already measured rent varying about 18% between days.
 - The UI must say plainly that a new approve **replaces** the cap rather than adding to it.
 
@@ -352,7 +358,7 @@ PH2-E0-03 contents:
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
 | PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done). **Precondition: a written router audit**, before any immutable contract goes to mainnet (Fatih, 2026-10-26). Measuring fees with real mainnet transactions happens here, after the audit (moved from PH2-E5-03) | F + R | S | PH2-E5-01 |
-| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action. **Fee form: percentage with a 25,000-stroop minimum per action** (Fatih, 2026-10-27; departs from Q9, see the Q9 row) | F | S | PH2-E1-03 data (mainnet scan) |
+| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action. **Fee form: percentage with a 25,000-stroop minimum per action** (Fatih, 2026-10-27; departs from Q9, see the Q9 row). **Value set PROVISIONALLY: 2% of charged rent, minimum 25,000 stroops** (Fatih, 2026-10-27, #414); not done until Fatih confirms it final at `PH2-E5-02` | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
 ### BL — Backlog (unscheduled, same scheme)

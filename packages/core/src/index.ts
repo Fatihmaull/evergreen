@@ -40,6 +40,8 @@ export {
 } from './config.js';
 export { SHARED_CODE_ENTRY_KEY } from './shared-code.js';
 export { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
+export { PROVISIONAL_HOSTED_FEE, hostedFeeStroops } from './fee.js';
+export type { HostedFeeConfig } from './fee.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
