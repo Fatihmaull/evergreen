@@ -41,7 +41,7 @@ gh api repos/Fatihmaull/evergreen/environments/production \
 1. Open the waiting run (Actions, then **API deploy**, then the run marked *Waiting*).
 2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main` (see below).
 3. Approve only the **newest** waiting run.
-4. Watch the smoke step. It now fails if the commit served is not the commit deployed (needs [#462](https://github.com/Fatihmaull/evergreen/pull/462) merged).
+4. Watch the smoke step. It now fails if the commit served is not the commit deployed ([#462](https://github.com/Fatihmaull/evergreen/pull/462), merged `0d7c78d`).
 
 ### Stale approvals deploy old code
 
@@ -65,7 +65,7 @@ So the hold holds, the approval path works, and the preview deploy is unaffected
 
 ## The deployed commit
 
-The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEPLOY_COMMIT:<sha>`) and `GET /api/v1/health` reports it as `commit` (landing with #460 and #462):
+The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEPLOY_COMMIT:<sha>`) and `GET /api/v1/health` reports it as `commit` (#460 and #462, merged 2026-10-28):
 
 - **Preview** injects the **PR head** SHA. On `pull_request`, `github.sha` is GitHub's synthetic merge commit, which exists on no branch.
 - **Production** injects `github.sha`, and the smoke step requires the served commit to equal it.

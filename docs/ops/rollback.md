@@ -24,7 +24,7 @@ curl -sS https://evergreen-stellar.pages.dev/api/v1/health      # production
 curl -sS https://preview.evergreen-stellar.pages.dev/api/v1/health
 ```
 
-After #462, `commit` shows the SHA of the code answering. If the rolled-back version predates #460 the field is absent.
+Since #462, `commit` shows the SHA of the code answering. If the rolled-back version predates #460 the field is absent.
 
 Things to know before you do it:
 

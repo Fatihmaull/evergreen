@@ -23,7 +23,7 @@ Owner: **DevOps** (`F · OPS`, [`phase-2/kickoff/DEVOPS.md`](../../phase-2/kicko
 | Thing | State | How it was read |
 |---|---|---|
 | Cloudflare | One account, shared with three unrelated Pages projects (`focu-studio-launchpad`, `eco-route-finder`, `ecoroute`). Do not touch those. | `wrangler pages project list` |
-| Worker `evergreen-api` (production) | No secrets. Plain vars: `ENVIRONMENT`, `DASHBOARD_ORIGIN`, `DEPLOY_COMMIT` (once [#462](https://github.com/Fatihmaull/evergreen/pull/462) merges). | `wrangler secret list`, `wrangler versions view` |
+| Worker `evergreen-api` (production) | No secrets. Plain vars: `ENVIRONMENT`, `DASHBOARD_ORIGIN`, `DEPLOY_COMMIT` (injected since [#462](https://github.com/Fatihmaull/evergreen/pull/462), merged `0d7c78d`; reaches production with the first approved deploy after it). | `wrangler secret list`, `wrangler versions view` |
 | Worker `evergreen-api-preview` | Secrets: `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER`. Plain vars: `ENVIRONMENT`, `DASHBOARD_ORIGIN`, `EMAIL_FROM`. | same |
 | Pages project `evergreen-stellar` | Git-connected. Production = branch `main`. Every pushed branch also builds a preview. | `wrangler pages deployment list` |
 | Pages Function proxy | [`functions/api/[[path]].ts`](../../functions/api/%5B%5Bpath%5D%5D.ts): `/api/*` to service binding `API`. Binding targets verified by behaviour: production `/api/v1/health` answers `environment: production`, preview answers `preview`. The binding configuration itself is dashboard-only: `undetermined`. | `curl` on both hosts |
