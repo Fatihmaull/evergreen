@@ -70,6 +70,10 @@ Queue consumer (max_concurrency = 1)
 
 **A schema gap this exposes, for Rakha (PH2-E4-02).** `jobs` has `CHECK ((pull_tx_hash IS NULL) = (pulled_at IS NULL))`, and `pulled_at` means *when the pull confirmed*. So a pull's hash **cannot be written before it confirms**, and "intent before effect" has nowhere to put it. A worker killed between submit and write would leave a pull on chain with no record: the user charged, no extend, no refund, and reconcile cannot find it. It needs a column for a submitted-but-unconfirmed hash per step (for example `pull_submitted_hash`, and one for the extend and the refund). This is a requirement of safe cancellation, not an optimisation.
 
+**Status, 2026-10-28:** Rakha added the three columns in migration 0006 (#466) and `scheduler_ticks` in 0005 (#465). Both are approved and waiting for him to merge; DevOps applies them to Neon preview afterwards.
+
+**A gap in this design's own rule, found while reviewing #466.** The table above says a new envelope may be built only once the first is "proven dead (its time bounds passed and `getTransaction` says not found)". A stored *hash* lets a recovering worker call `getTransaction`, but not decide **when "not found" becomes final**: `NOT_FOUND` is also what an envelope that may still land looks like. To know it can no longer land, the worker needs the bound the envelope was built with. So each money step also has to persist **when that envelope expires**, either as a column per step (for example `*_submitted_expires_at`, my recommendation: smaller, and it stores nothing extra) or by storing the signed envelope itself, which carries its own bounds and can be re-sent (the RPC answers `DUPLICATE` with the same hash for a copy; its documentation doesn't say blind resubmission is side-effect free, so the design never relies on it). Raised on #466; 0006 is additive, so this is either folded in before it is applied to Neon or follows as 0007.
+
 ## 6. Cadence is bounded by Neon Free
 
 Every tick touches Postgres, which wakes the compute; it then idles 5 minutes before suspending. If the minimum compute is 0.25 CU (the assumption ADR-003 made; Neon's page doesn't state a minimum, so **undetermined**), a tick every N minutes keeps the database up `min(24, ticks per day × 5 min)` hours a day:
@@ -98,8 +102,8 @@ User traffic to the API wakes the same database on top of this. **Proposal: a 15
 4. Production stays behind the environment approval. **Agents never approve a deployment and never edit a workflow to get around that gate** (Fatih, 2026-10-27).
 
 **Rakha** (schema, money path):
-1. Migration 0005: `scheduler_ticks`.
-2. For `PH2-E4-02`: columns for a submitted-but-unconfirmed hash per money step (§5).
+1. ~~Migration 0005: `scheduler_ticks`~~ (#465, approved, awaiting his merge).
+2. ~~For `PH2-E4-02`: columns for a submitted-but-unconfirmed hash per money step~~ (#466, approved, awaiting his merge). **Still open:** the envelope's expiry per step (§5).
 3. Confirm the autopilot window rule (§7).
 
 **Fatih:**
