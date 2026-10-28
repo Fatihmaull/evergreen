@@ -115,7 +115,7 @@ describe('MemoryTenantStore + planTenantsFromStore', () => {
   const now = new Date('2026-10-24T00:00:00Z');
   const day = 24 * 60 * 60 * 1000;
 
-  it('nets refunds, keeps the window to 30 days and scopes spend to (user, contract)', async () => {
+  it('nets refunds, keeps the window to 720 hours and scopes spend to (user, contract)', async () => {
     const store = new MemoryTenantStore(
       [
         row({ userId: U1 }),
