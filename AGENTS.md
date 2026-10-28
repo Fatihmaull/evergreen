@@ -284,7 +284,8 @@ message is a split the next session cannot read.
 | owner | paths |
 |---|---|
 | **web agent** | `apps/`, `web-reference/` |
-| **CLI / engine agent** | `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `scripts/`, `.github/workflows/`, `ops/` |
+| **CLI / engine agent** | `packages/core`, `packages/cli`, `packages/engine`, `packages/shared-types`, `scripts/`, `.github/workflows/` **except the deploy jobs**, `ops/` |
+| **DevOps agent** (phase 2, 2026-10-26) | the **deploy jobs** in `.github/workflows/` (`api-deploy.yml`, and any workflow that deploys or moves a branch), `apps/api/wrangler.jsonc`, `functions/`, `docs/ops/`, and the Cloudflare, Neon and GitHub Environment configuration. See [`phase-2/kickoff/DEVOPS.md`](phase-2/kickoff/DEVOPS.md) |
 | **nobody** | `docs/evidence/` — append only, never edit another operator's capture |
 
 Shared and therefore the usual conflict source: `BACKLOG.md`, `docs/STATUS.md`,

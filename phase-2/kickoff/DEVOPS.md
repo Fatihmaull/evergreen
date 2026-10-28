@@ -26,7 +26,7 @@ You are the infrastructure agent working for **Fatih**. You own **deployment, th
 - the auth design and the API spec: CEF.
 - `packages/`, `scripts/`: CEF and CER. The Rust router CI (`router-rust.yml`) and the other test workflows stay where they are; ask before editing one.
 
-Need a change in someone else's path? Open an issue mentioning that owner. [`AGENTS.md`](../../AGENTS.md)'s older path table still lists `.github/workflows/` under the CLI/engine agent; for **deploy jobs and wrangler/Pages config** this file supersedes it (Fatih, 2026-10-26). CEF and WEBF were told in [#462](https://github.com/Fatihmaull/evergreen/pull/462).
+Need a change in someone else's path? Open an issue mentioning that owner. [`AGENTS.md`](../../AGENTS.md)'s path table now lists the deploy jobs and wrangler/Pages config under DevOps (Fatih, 2026-10-26). CEF and WEBF were told in [#462](https://github.com/Fatihmaull/evergreen/pull/462).
 
 ## Rules specific to this role
 
