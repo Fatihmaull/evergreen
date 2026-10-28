@@ -8,6 +8,7 @@ Owner: **DevOps** (`F · OPS`, [`phase-2/kickoff/DEVOPS.md`](../../phase-2/kicko
 | [`neon-migrations.md`](neon-migrations.md) | Applying a `apps/api/db` file to Neon, the `psql` exit-code trap, how to verify |
 | [`secrets.md`](secrets.md) | Every secret by **name**, where it lives, who may set it, and the accepted token risk |
 | [`rollback.md`](rollback.md) | Undoing a bad API Worker deploy or a bad Pages build |
+| [`backup-and-restore.md`](backup-and-restore.md) | Proposal: how DoD-2's "a backup restore has been exercised" can be met, with costs and the drill |
 | [`preview-vs-production.md`](preview-vs-production.md) | Why "verified on preview" may not mean "verified on `main`", and the options to fix it |
 
 ## Rules that apply to every page
