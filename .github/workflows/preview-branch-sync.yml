@@ -1,0 +1,40 @@
+name: Preview branch sync
+
+# Keeps the git branch `preview` equal to `main`. The Pages preview at
+# preview.evergreen-stellar.pages.dev is built from that branch, and until now
+# someone fast-forwarded it by hand (it was 9 commits behind on 2026-10-27).
+# Fast-forward only, never forced: if `preview` has diverged the push is rejected
+# and this job fails loudly. See docs/ops/preview-vs-production.md.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: preview-branch-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fast-forward:
+    name: fast-forward preview to main
+    # A dispatch from any other ref must not push that ref's commit to `preview`.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: push this commit to preview (fast-forward only)
+        env:
+          RUN_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags origin preview
+          if git merge-base --is-ancestor "$RUN_SHA" FETCH_HEAD; then
+            echo "::notice::preview already contains $RUN_SHA"
+            exit 0
+          fi
+          git push origin "$RUN_SHA:refs/heads/preview"

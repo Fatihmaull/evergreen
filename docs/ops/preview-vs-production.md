@@ -1,6 +1,6 @@
 # The preview trap
 
-**Status: options proposed, Fatih decides.** Nothing on this page has been changed in the workflows yet, except making the problem visible ([#462](https://github.com/Fatihmaull/evergreen/pull/462), `PH2-E0-09`).
+**Status: decided by Fatih 2026-10-28 and built (`PH2-E0-11`): W1 + W2 + P2, plus the stale-approval guard. P3 waits on the Pages usage read.** The sections below keep the reasoning; what is live is described in [`deploy.md`](deploy.md).
 
 "Verified on preview" does not mean "verified on `main`". It can mean *verified on whichever pull request deployed last*. On 2026-10-26 it did: the login test ran on a Worker built from #440/#441's branches, not `main`, and the evidence had to be written that way (handoff §7.5). There are **two** gaps, in two different layers.
 
@@ -62,8 +62,22 @@ Anyone testing between two of those rows tested someone else's code.
 
 W2 and P2 each change a deploy path, so each is its own PR and is commissioned before it is trusted (a deploy from a labelled PR, from an unlabelled PR, from a draft, and from a merge to `main`, each read back through `/health`).
 
-## Decisions for Fatih
+## Decisions (Fatih, 2026-10-28)
 
-1. **Preview trap:** W1 + W2 + P2 (recommended), W1 + W3 + P2, or W1 only.
-2. **Stale approvals** ([`deploy.md`](deploy.md#stale-approvals-deploy-old-code)): approving a waiting run deploys *that run's* SHA, so a late approval can roll production back. Option **(a)** make the production job fail if `apps/api` or the workflow changed on `main` after the run's SHA (a `git diff --quiet "$GITHUB_SHA" origin/main -- apps/api .github/workflows/api-deploy.yml` step; the message says "approve the newest run"); option **(b)** rely on the rule "read the SHA, approve the newest". **(a)** costs one step and stops the mistake mechanically; **(b)** costs nothing and relies on attention. Recommendation: **(a)**.
-3. **Pages previews (P3):** check the Pages usage and build limit in the dashboard, then decide. Recommendation: do P3 if builds are anywhere near the limit.
+1. **Preview trap: W1 + W2 + P2. Done.**
+   - W1: `/health` reports the deployed commit (#460, #462).
+   - W2: preview is `main` by default (every push to `main` redeploys it); a PR deploys only with the label `deploy-preview`, never as a draft ([`deploy.md`](deploy.md#deploying-a-pr-to-preview-the-deploy-preview-label)).
+   - P2: [`preview-branch-sync.yml`](../../.github/workflows/preview-branch-sync.yml) fast-forwards the git branch `preview` to `main`.
+2. **Stale approvals: option (a). Done.** The production job fails if `main` changed `apps/api` or the workflow after the run's commit ([`deploy.md`](deploy.md#stale-approvals-are-refused)).
+3. **Pages previews (P3): open.** Fatih reads the Pages usage page; **if usage is above 50% of the build limit, restrict Pages previews to the `preview` branch** (a dashboard setting). Until then nothing changes.
+
+### How each was commissioned
+
+A check nobody watched fail is a decoration, so each script was extracted from its workflow and run in throwaway git repos, in the failing direction and with a mutant:
+
+| Script | Must pass | Must refuse | Mutant |
+|---|---|---|---|
+| Stale-approval guard | run at the tip of `main`; run behind `main` only in `docs/` | run behind `main` in `apps/api` | diff removed: the stale run would deploy |
+| Preview sync | `preview` behind `main` (fast-forwards); `preview` already equal; an older run while `preview` is already ahead | `preview` diverged (fails, branch untouched) | `push -f`: a diverged `preview` would be overwritten |
+
+The `if:` conditions on the preview job and the live behaviour (label, draft, merge to `main`) were observed on the PR and after the merge; the results are in the PR description.

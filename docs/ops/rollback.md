@@ -30,7 +30,7 @@ Things to know before you do it:
 
 - **The next merge to `main` that touches `apps/api` deploys forward again**, after Fatih approves. A rollback is not a revert. Revert the bad commit on `main` too, or the next approval redeploys it.
 - **Whether a rollback also reverts secrets and plain vars is `undetermined`.** Not exercised on this account. Do not rely on a rollback to undo a bad secret change; fix the secret.
-- **Do not roll production back by approving an old run.** An old waiting run redeploys its own old SHA ([`deploy.md`](deploy.md#stale-approvals-deploy-old-code)).
+- **Do not roll production back by approving an old run.** An old waiting run redeploys its own old SHA ([`deploy.md`](deploy.md#stale-approvals-are-refused)).
 - Production has no database, so a rollback never has a data component today.
 
 ## Database
