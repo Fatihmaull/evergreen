@@ -46,7 +46,7 @@ Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 d
 - zero missed protections (no watched entry archived while its allowance was valid and funded);
 - ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;
 - zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
-- the worst scheduler gap is measured, dated, and below the 17,280-ledger act threshold;
+- the scheduler gap is measured and dated, and **4 × the worst observed gap, in ledgers, is below the lowest act threshold in use** (Fatih, 2026-10-28; this is core's own rule that a threshold needs four scheduler runs of margin, `MIN_ACTION_RUNS_IN_WINDOW`, and it replaces "below the 17,280-ledger act threshold", which would have passed a gap of 17,000 ledgers);
 - no open P0/P1, every incident has a postmortem;
 - every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator, and a Neon backup restore has been exercised;
 - engine and treasury keys are separate and the float never exceeded its cap;
@@ -64,10 +64,11 @@ Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from
 - **The refund threshold now counts pulls whose extend finally failed.** That matches §3.3 step 5 and §4.3. A failed pull moves no XLM, so the first wording was vacuous.
 - **A testnet reset restarts the 30-day window.**
 - **The cold reader is an external beta user.** `B-D31-03`'s own row says Fatih no longer qualifies.
+- **The scheduler check is against the lowest threshold in use**, with four runs of margin (Fatih, 2026-10-28). It replaces "below the 17,280-ledger act threshold", and the gap is measured in ledgers from the scheduler heartbeat (`docs/PH2-E4-04-SCHEDULER-DESIGN.md` §4).
 
 **Still open:**
 1. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
-2. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
+2. ~~**"Below the 17,280-ledger act threshold" assumes one threshold.**~~ *Resolved 2026-10-28, above.*  Kept for the record: 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
 
 Measurable with records still to be built:
 - *zero missed protections*: §3.3's pre-flight reads the allowance and the user's balance before every job. It is measurable only for entries the scan can see (instance, code, and declared data keys).
