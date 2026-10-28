@@ -30,6 +30,26 @@ export const PROVISIONAL_HOSTED_FEE: HostedFeeConfig = {
   minimumStroops: 25_000n,
 };
 
+/**
+ * The router path's fee (one signature, no allowance): **2% of rent with no
+ * minimum** (Fatih, 2026-10-28, #414). The minimum exists to cover the engine's
+ * network costs, and on this path the user pays those as the transaction's source,
+ * so there is nothing for a minimum to cover. It replaces the fixed 0.1 XLM used on
+ * testnet.
+ *
+ * The percentage is **read from `PROVISIONAL_HOSTED_FEE`, not repeated**, so the two
+ * paths cannot drift apart: changing the percentage at PH2-E5-02 changes both.
+ * Provisional for the same reason.
+ *
+ * The router charges this on-chain only if the caller sends it: the fee is
+ * voluntary there and the dashboard sets it (ADR-009 §3), so this is the amount the
+ * dashboard and CLI *propose*, not one the contract enforces.
+ */
+export const PROVISIONAL_ROUTER_FEE: HostedFeeConfig = {
+  basisPoints: PROVISIONAL_HOSTED_FEE.basisPoints,
+  minimumStroops: 0n,
+};
+
 const BASIS_POINTS_PER_UNIT = 10_000n;
 
 /**
@@ -57,4 +77,17 @@ export function hostedFeeStroops(
   const percentage =
     (rentStroops * config.basisPoints + BASIS_POINTS_PER_UNIT - 1n) / BASIS_POINTS_PER_UNIT;
   return percentage > config.minimumStroops ? percentage : config.minimumStroops;
+}
+
+/**
+ * The fee the dashboard proposes for a router-path extend, in stroops: the same
+ * percentage as the hosted fee and no minimum. Rent of zero gives zero. Rounds up,
+ * like `hostedFeeStroops`. Pass the simulated rent of the instance and code entries
+ * the router extends: there is no reconcile step on this path to correct it.
+ */
+export function routerFeeStroops(
+  rentStroops: bigint,
+  config: HostedFeeConfig = PROVISIONAL_ROUTER_FEE,
+): bigint {
+  return hostedFeeStroops(rentStroops, config);
 }

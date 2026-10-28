@@ -1,10 +1,18 @@
 name: API deploy
 
-# Auto-deploys the apps/api Worker: evergreen-api-preview on every same-repo PR,
-# evergreen-api (production) on merge to main. Needs repo secret
-# CLOUDFLARE_API_TOKEN and repo variable CLOUDFLARE_ACCOUNT_ID.
+# Deploys the apps/api Worker. Needs repo secret CLOUDFLARE_API_TOKEN and repo
+# variable CLOUDFLARE_ACCOUNT_ID. See docs/ops/deploy.md.
+#
+#   evergreen-api-preview   = `main` by default: every push to main redeploys it.
+#                             A pull request deploys to it ONLY when it is not a draft,
+#                             comes from this repo, and carries the label `deploy-preview`
+#                             (adding the label deploys). Last writer wins on that one
+#                             Worker, and GET /api/v1/health says which commit it runs.
+#   evergreen-api           = production: a push to main, after preview, and only once
+#                             the `production` Environment's reviewer approves.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - 'apps/api/**'
       - '.github/workflows/api-deploy.yml'
@@ -30,8 +38,13 @@ jobs:
   preview:
     name: deploy evergreen-api-preview
     if: >-
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name == 'push'
       || github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+          && github.event.pull_request.draft == false
+          && contains(github.event.pull_request.labels.*.name, 'deploy-preview')
+          && (github.event.action != 'labeled' || github.event.label.name == 'deploy-preview'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -59,9 +72,25 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    needs: preview
     environment: production
     steps:
       - uses: actions/checkout@v5
+      # Approving a waiting run deploys THAT run's commit, however old. This step
+      # runs after the approval, so it catches the stale click: if main has changed
+      # the Worker's inputs since this run's commit, fail and let the newer run deploy.
+      - name: refuse a commit that main has moved past
+        env:
+          RUN_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          if git diff --quiet "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml; then
+            echo "apps/api at $RUN_SHA matches main"
+            exit 0
+          fi
+          git diff --stat "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml
+          echo "::error::main changed apps/api or this workflow after $RUN_SHA. Reject this run and approve the newest one."
+          exit 1
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
