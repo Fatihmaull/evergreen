@@ -27,7 +27,7 @@
 
 **Evergreen never pays another party's rent.** The user pays their own rent (`AGENTS.md` hard rule 5; ADR-007 *The invariant that survives from ADR-004*). The shortfall rule exists to keep it true: the pull carries a margin, so the engine never pays part of a user's rent (`docs/adr/ADR-007` *Shortfall*). The router never pays rent either: rent is charged to the transaction's source account, the user (`router/contract/src/lib.rs`). That the zero-subsidy property holds in the real flow is what DoD-2 measures from the fee ledger (`docs/API.md` §7). **It is not verified for the hosted flow yet: `undetermined`** until the hosted flow (`PH2-E4-01`, `PH2-E4-02`, both unticked in `BACKLOG.md`) is built and measured.
 
-**Network fees are a different matter, stated plainly.** The engine account is the source of the pull, the extend and any refund, so it pays each transaction's network fee up front. A **failed** attempt keeps its non-refundable fee: 1,315 stroops for a failed extend on testnet (#382, transaction #5). That cost is Evergreen's, from the float, and the fee percentage is meant to recover it (`PH2-E5-03`; the cost floor proposed on #414 is about 18,400 stroops per action, simulated on mainnet, **not approved**). It is not rent, and no user pays for another user's.
+**Network fees are a different matter, stated plainly.** The engine account is the source of the pull, the extend and any refund, so it pays each transaction's network fee up front. A **failed** attempt keeps its non-refundable fee: 1,315 stroops for a failed extend on testnet (#382, transaction #5). That cost is Evergreen's, from the float, and the fee is meant to recover it (`PH2-E5-03`: the fixed network cost is about 18,400 stroops per action, simulated on mainnet, which is why the provisional fee has a 25,000-stroop minimum). It is not rent, and no user pays for another user's.
 
 **Status of the hosted flow.** Designed (ADR-007), not shipped. `PH2-E4-01` has a read-only multi-tenant plan with per-contract budgets merged (#440); it signs and moves nothing. `PH2-E4-02`, the money path, is open in `BACKLOG.md`. The only fee path with an on-chain test is the router, on testnet (§4).
 
@@ -66,7 +66,7 @@ They **cannot**, each tested on testnet (spike §3 and §6, evidence tx `41fd627
 - **The daily limit is not an account-level brake.** One-click "Extend now" is limited to `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY = 3` per (user, contract) in a rolling 24 hours. A session takeover's ceiling per 24 hours is `3 × (that user's autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance (`docs/API.md` §7). Each item's `per30DaysMaxStroops` is **computed** by the tenant plan (#440: a rolling 30-day window on `jobs.pulled_at`, net of refunds) **but not yet enforced**: nothing refuses a job over it until `PH2-E4-02` calls `checkBudget`. On `origin/main`, `checkBudget` (`packages/engine/src/tenants.ts`) is exported and has no caller. **The allowance is the real ceiling, and today it is the only enforced one.** Every use sends an email notice (`docs/API.md` §7). Do not describe "the daily limit" as a per-account limit.
 - **Reactivating an account by email does not re-enable autopilot** (`docs/API.md` §10; ADR-008). **What the code does, as of this draft:** reactivation turning autopilot off on every watch item is in review (#454), not merged. Requiring a fresh wallet signature before autopilot can be turned back on is **not built**: deactivation keeps the wallet links, and the fix needs a schema decision (asked on #385). Until both land, this sentence describes the rule, not the code.
 - A new `approve` **replaces** the cap rather than adding to it (ADR-007 *Consequences*).
-- **Default allowance cap and expiry the dashboard proposes: `undetermined`.** The cap-sizing estimate waits for the fee percentage, `PH2-E5-03` (`docs/API.md` §7).
+- **Default allowance cap and expiry the dashboard proposes: `undetermined`.** The cap-sizing estimate can use the provisional fee (`PH2-E5-03`, below), so the proposed cap is itself provisional (`docs/API.md` §7).
 
 ### 3.2 Router path (no allowance)
 
@@ -89,7 +89,7 @@ One transaction, one signature (`docs/adr/ADR-009-router-scope-and-fee-destinati
 - **Testnet treasury:** `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ` (`BACKLOG.md` `PH2-E4-03`; ADR-007 flow step 6).
 - **Testnet router:** `CAADZRZBFZ4BQQYWID6LTPRVQCWR4R7L4EGJ6CBXEBPF2BJGGRUU6YM3`, constructed with that treasury (`docs/EVIDENCE.md` § PH2-E4-08). The testnet router is **not** the production router.
 - **Mainnet treasury: `undetermined`.** **Mainnet router: `undetermined`** (`docs/EVIDENCE.md`; ADR-009 *Consequences*: the production router cannot ship before `PH2-E4-03` fixes the treasury address). Phase 2 is testnet only until DoD-2 (`AGENTS.md` hard rule 1; `docs/API.md` §2 and §8).
-- **Fee percentage: `undetermined`** until `PH2-E5-03` (ADR-007 *The fee rule*). It is set from read-only mainnet simulation plus #382's measured ratios, with no mainnet transactions (Fatih, 2026-10-26). A proposal is on #414; Fatih sets the number. Clients use 0.1 XLM (`1000000` stroops) on testnet for now (ADR-009 decision 3).
+- **Fee: PROVISIONAL, not final, not quotable.** `max(2% × the rent actually charged, 25,000 stroops)` per hosted action (Fatih, 2026-10-27, #414). It was set from read-only mainnet simulation plus #382's measured ratios, with no mainnet transactions (Fatih, 2026-10-26), and is re-measured with real transactions in `PH2-E5-02`, after the router audit. `PH2-E5-03` stays open until Fatih confirms it final. **Whether router-path extends use it is `undetermined`:** clients use 0.1 XLM (`1000000` stroops) on testnet for now (ADR-009 decision 3).
 - **The "one revenue destination" claim** (ADR-007: all fees fund development, no profit split) is a decision record, not something the chain enforces.
 
 ## 5. Open items
@@ -105,6 +105,6 @@ One transaction, one signature (`docs/adr/ADR-009-router-scope-and-fee-destinati
 | Final router deployment, its audit, the mainnet router | `PH2-E4-08`, `PH2-E4-03` |
 | Zero-subsidy verified on the real hosted flow | `PH2-E4-01`, `PH2-E4-02`, DoD-2 |
 | Default allowance cap and expiry | `PH2-E3-05`, `PH2-E5-03` |
-| Fee percentage | `PH2-E5-03` |
+| Fee: provisional value is set; final value | Fatih's confirmation at `PH2-E5-02` |
 | Privacy statement for stored email, wallets and history | not assigned in `BACKLOG.md`: `undetermined` |
 | Publication path and the exact quotable wording | Fatih's approval |
