@@ -20,6 +20,8 @@
   // only: invocation logs are OFF because they record the whole request, and the
   // platform redacts Cookie and Authorization but NOT X-Evergreen-CSRF, the client IP
   // or the user agent (observed with `wrangler tail`, docs/ops/observability.md).
+  // No cron on production; kept explicit because env.preview sets one.
+  "triggers": { "crons": [] },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -36,6 +38,8 @@
     "preview": {
       "name": "evergreen-api-preview",
       "workers_dev": false,
+      // Preview only: the heartbeat check (src/alerts/heartbeat.ts) every 5 minutes.
+      "triggers": { "crons": ["*/5 * * * *"] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
@@ -45,6 +49,7 @@
       },
       "vars": {
         "ENVIRONMENT": "preview",
+        "HEARTBEAT_STALE_SECONDS": "900",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
