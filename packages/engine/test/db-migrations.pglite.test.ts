@@ -1,7 +1,7 @@
 /**
- * apps/api/db applied in order on PGlite: schema.sql → 0002 → 0003 → 0004 → 0006 (0005 is independent
- * of 0006 and not chained here). Checks 0004's users.reactivated_at, 0006's submitted-hash and expiry columns,
- * and that rows from before a migration survive it.
+ * apps/api/db applied in order on PGlite: schema.sql → 0002 → 0003 → 0004 → 0005 → 0006. Checks 0004's
+ * users.reactivated_at shape, 0005's scheduler_ticks, 0006's submitted-hash and expiry columns, and that
+ * rows from before a migration survive it.
  */
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
@@ -31,6 +31,7 @@ describe('apps/api/db migrations on PGlite', () => {
       await pg.exec(db(f));
     await pg.exec(`INSERT INTO users (id, email) VALUES ('${U}', 'before@example.invalid')`);
     await pg.exec(db('0004_users_reactivated_at.sql'));
+    await pg.exec(db('0005_scheduler_ticks.sql'));
     await pg.exec(`INSERT INTO watch_items (user_id, network, contract_id, scope)
       VALUES ('${U}', 'testnet', '${C}', '{"noDataKeys":true}')`);
     await pg.exec(
@@ -76,9 +77,65 @@ describe('apps/api/db migrations on PGlite', () => {
     expect(rows[0]!.reactivated_at.toISOString()).toBe('2026-10-27T00:00:00.000Z');
   });
 
+  describe('0005 scheduler_ticks', () => {
+    it('has exactly id, ticked_at, observed_ledger with the expected types and nullability', async () => {
+      const { rows } = await pg.query<{
+        column_name: string;
+        data_type: string;
+        is_nullable: string;
+      }>(
+        `SELECT column_name, data_type, is_nullable FROM information_schema.columns
+         WHERE table_name = 'scheduler_ticks' ORDER BY ordinal_position`,
+      );
+      expect(rows).toEqual([
+        { column_name: 'id', data_type: 'bigint', is_nullable: 'NO' },
+        { column_name: 'ticked_at', data_type: 'timestamp with time zone', is_nullable: 'NO' },
+        { column_name: 'observed_ledger', data_type: 'bigint', is_nullable: 'NO' },
+      ]);
+    });
+
+    it('records a tick with ticked_at defaulting to now() and an identity id', async () => {
+      const { rows } = await pg.query<{ id: number; fresh: boolean }>(
+        `INSERT INTO scheduler_ticks (observed_ledger) VALUES (123456)
+         RETURNING id, ticked_at > now() - interval '1 minute' AS fresh`,
+      );
+      expect(rows[0]!.fresh).toBe(true);
+      expect(Number(rows[0]!.id)).toBeGreaterThan(0);
+    });
+
+    it.each([
+      ['observed_ledger missing', 'INSERT INTO scheduler_ticks (ticked_at) VALUES (now())'],
+      ['observed_ledger 0', 'INSERT INTO scheduler_ticks (observed_ledger) VALUES (0)'],
+      ['observed_ledger negative', 'INSERT INTO scheduler_ticks (observed_ledger) VALUES (-1)'],
+      [
+        'ticked_at NULL',
+        'INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES (NULL, 5)',
+      ],
+      ['a hand-written id', 'INSERT INTO scheduler_ticks (id, observed_ledger) VALUES (999, 5)'],
+    ])('rejects %s', async (_n, sql) => {
+      await expect(pg.exec(sql)).rejects.toThrow();
+    });
+
+    it('is idempotent: re-applying 0005 keeps existing ticks', async () => {
+      const before = (
+        await pg.query<{ n: number }>('SELECT count(*)::int AS n FROM scheduler_ticks')
+      ).rows[0]!.n;
+      await pg.exec(db('0005_scheduler_ticks.sql'));
+      const after = (
+        await pg.query<{ n: number }>('SELECT count(*)::int AS n FROM scheduler_ticks')
+      ).rows[0]!.n;
+      expect(after).toBe(before);
+      expect(after).toBeGreaterThan(0);
+    });
+  });
+
   describe('0006 submitted hashes on jobs', () => {
     const HASHES = ['pull_submitted_hash', 'extend_submitted_hash', 'refund_submitted_hash'];
-    const EXPIRIES = ['pull_submitted_expires_at', 'extend_submitted_expires_at', 'refund_submitted_expires_at'];
+    const EXPIRIES = [
+      'pull_submitted_expires_at',
+      'extend_submitted_expires_at',
+      'refund_submitted_expires_at',
+    ];
 
     it('adds three nullable text columns with no default', async () => {
       const { rows } = await pg.query<Record<string, unknown>>(
