@@ -2,7 +2,7 @@
 
 **Status: PROPOSAL, 2026-10-27 (CEF).** No code, no Worker config and no migration exists for this yet. It is to be agreed with DevOps (deploy, queues, secrets) and Rakha (money path, schema) on #385 before anything is built. Fatih decided on 2026-10-27 to start with the design.
 
-**Decided by Fatih, 2026-10-28:** (1) **15-minute ticks** are accepted. (2) **DoD-2's scheduler check is "4 × the worst observed gap, in ledgers, is below the lowest act threshold in use"** (§4). (3) **No scheduler code until DevOps has answered whether Neon Free's compute hours fit 96 wake-ups a day** (§6). If they do not fit, **the design changes, not the measurement:** the heartbeat is what DoD-2 and `THRESHOLD_FLOOR_LEDGERS` rest on, so it is never thinned out to save compute.
+**Decided by Fatih, 2026-10-28:** (1) **15-minute ticks** are accepted. (2) **DoD-2's scheduler check is "4 × the worst observed gap, in ledgers, is below the lowest act threshold in use"** (§4). (3) **The Neon gate is lifted on DevOps' worst-case bound (§6), so scheduler code may start.** If DevOps' continuing measurement exceeds that bound, **the design changes, not the measurement:** the heartbeat is what DoD-2 and `THRESHOLD_FLOOR_LEDGERS` rest on, so it is never thinned out to save compute.
 
 **The three questions Fatih set:** cron or Queues; how the scheduler gap DoD-2 needs is measured; and cancellation that is safe once money moves (the #446 review note: a timeout must stop the work it times out).
 
@@ -76,7 +76,7 @@ Queue consumer (max_concurrency = 1)
 
 **A gap in this design's own rule, found while reviewing #466.** The table above says a new envelope may be built only once the first is "proven dead (its time bounds passed and `getTransaction` says not found)". A stored *hash* lets a recovering worker call `getTransaction`, but not decide **when "not found" becomes final**: `NOT_FOUND` is also what an envelope that may still land looks like. To know it can no longer land, the worker needs the bound the envelope was built with. So each money step also has to persist **when that envelope expires**, either as a column per step (for example `*_submitted_expires_at`, my recommendation: smaller, and it stores nothing extra) or by storing the signed envelope itself, which carries its own bounds and can be re-sent (the RPC answers `DUPLICATE` with the same hash for a copy; its documentation doesn't say blind resubmission is side-effect free, so the design never relies on it). Raised on #466; 0006 is additive, so this is either folded in before it is applied to Neon or follows as 0007.
 
-## 6. Cadence is bounded by Neon Free
+## 6. Cadence is bounded by Neon Free (and the gate is lifted)
 
 Every tick touches Postgres, which wakes the compute; it then idles 5 minutes before suspending. If the minimum compute is 0.25 CU (the assumption ADR-003 made; Neon's page doesn't state a minimum, so **undetermined**), a tick every N minutes keeps the database up `min(24, ticks per day × 5 min)` hours a day:
 
@@ -89,12 +89,14 @@ Every tick touches Postgres, which wakes the compute; it then idles 5 minutes be
 
 User traffic to the API wakes the same database on top of this. **Proposal: a 15-minute tick**, which is also the cadence the project has always declared. The alternative is Neon Launch ($0.106 per CU-hour; always-on at 0.25 CU is about $19 a month), which would allow a 5-minute tick. Whether that buys anything is only knowable from the measured gap.
 
-**Gate before any code (Fatih, 2026-10-28): is this a measured answer or an estimate?** Everything in the table above is arithmetic from list prices, and DevOps' restore-drill proposal (`docs/ops/backup-and-restore.md`) says so itself: "estimates from list prices; ... checkout is the only proof". What is known: the project's compute autoscales from 0.25 to 2 CU and suspends after 5 idle minutes (`docs/ops/neon-migrations.md`, `docs/STATUS.md`). What is **not** known: the CU-hours one wake-up actually bills (the cold start counts), and how much the API's own traffic already uses. The ask to DevOps is a **measurement**: the project's CU-hours used this month so far, then 96 timed wake-ups on the preview branch (one `SELECT 1` every 15 minutes for 24 hours) with the CU-hours read before and after. The console's usage figures can lag by an hour.
+**Outcome (Fatih, 2026-10-28, round 2): stay on Neon Free, and the gate is lifted.**
 
-**If it does not fit, the design changes, in this order:**
-1. **30-minute ticks.** About 30 CU-hours a month at 0.25 CU. The cost is a coarser gap measurement and a higher `THRESHOLD_FLOOR_LEDGERS` (four times the worst gap).
-2. **Neon Launch.** Pay-as-you-go at $0.106 per CU-hour, no 100-hour cap; about $6 a month at 15-minute ticks. **This may already be on the table for another reason:** DevOps' restore-drill proposal recommends Launch for scheduled snapshots and a longer history window. If that is taken, the Free cap stops being a constraint and cadence becomes a cost line.
-3. Moving the heartbeat off Postgres is **not** on the list. It would break the single place the measurement is read from.
+- **The cron runs on production only, every 15 minutes.** The preview scheduler runs on `workflow_dispatch` (manual) with **no cron**. Neon's allowance is **per project, not per branch** (100 CU-hours), so two branches ticking every 15 minutes would be 146 and not fit.
+- **DevOps' worst-case bound** (read 2026-10-28 on #461; compute 0.25 CU, observed average 0.256 while active; billing period 2026-10-22 to 2026-11-01, **0.57 CU-hours used so far**): at a 15-minute tick, **73.0 CU-hours a month** if the 5-minute idle window is billed as active time and each tick does 60 seconds of work (62.8 at 10 seconds), and **2.0 to 12.2** if the idle window is not billed. So **73 of 100 in the worst case**, and the table above (about 60) was the conservative reading all along.
+- **The API's beta traffic draws on the same 100 CU-hours.** That, not the scheduler alone, is the real pressure, and it is why **Neon Launch is scheduled for the moment production secrets get Fatih's "ya"** (the restore-drill proposal's option A, `docs/ops/backup-and-restore.md`; Fatih's decision K3). On Launch the cap disappears and cadence becomes a cost line (about $7 to $8 a month at 15-minute ticks on DevOps' figures).
+- **DevOps keeps measuring** whether the idle window is billed, and reports on #461. The measurement decides which column of its table is true; it does not change the cadence unless it **exceeds the bound**.
+- **If it does exceed the bound, the fallback order stands:** (1) 30-minute ticks, about 31 to 37 CU-hours a month, at the cost of a coarser gap measurement and a higher `THRESHOLD_FLOOR_LEDGERS` (four times the worst gap); (2) Neon Launch. Moving the heartbeat off Postgres is **not** on the list, because it would break the single place the measurement is read from.
+- **Not decided, proposed by DevOps:** a daily read of the project's consumption (`neonctl projects get`) from Stage 0 on, flagging at 70 CU-hours. It is an operator signal, so it belongs with `PH2-E4-05`.
 
 ## 7. Open for decision
 
