@@ -46,7 +46,7 @@ Fatih reviews the copy before it merges anywhere that publishes, and
 > re-measured before it is final.
 >
 > **A real example.** Extending a large contract entry for the first time cost
-> 28.9 XLM of rent. The hosted fee on that extension would be
+> 28.9 XLM of rent on testnet. The hosted fee on that extension would be
 > 0.578 XLM.
 >
 > **If an extension fails.** When Evergreen has drawn your funds and the
