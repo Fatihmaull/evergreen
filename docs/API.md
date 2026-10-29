@@ -26,7 +26,13 @@ Nothing is built against this until it merges. "Written before either side build
 | **B. Its own Worker, reached through a Pages Function proxy** (recommended) | API code in `apps/api` as its own Worker. The dashboard's `/api/*` is a few-line Pages Function forwarding over a **service binding** (Cloudflare: *"Service bindings enable you to call a Worker from within your Pages Function"*) | Same origin to the browser, so the cookie works. Secrets stay in the API Worker. The two deploy independently. One extra in-datacenter hop |
 | **C. A custom domain** for both | Site and API as routes on one registered domain | Cleanest URLs. Needs a domain bought and owned. Not decided anywhere; that is Fatih's call |
 
-**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker:** the challenge-signing key, the Resend key, `DATABASE_URL`, and `SIGNIN_CODE_PEPPER`, the HMAC key that sign-in codes are stored under (`PH2-E2-04`). The Pages project holds the proxy and the service binding, nothing secret.
+**Decided: B** (Fatih, 2026-10-20; recorded in ADR-003's amendment). It moves to C unchanged if a domain is bought later, because only the proxy goes away. **Secrets live only in the API Worker** (`wrangler secret put`, per environment; names fixed by `PH2-E2-04`):
+- `DATABASE_URL`: the Neon connection string.
+- `SIGNIN_CODE_PEPPER`: the HMAC key that sign-in codes are stored under.
+- `EMAIL_API_KEY`: the Resend key. Same name the engine's EmailChannel already uses (CONVENTIONS.md).
+- `CHALLENGE_SIGNING_KEY`: the `S…` seed of the challenge-signing key (§4).
+
+Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). `DASHBOARD_ORIGIN` is one exact origin per environment, set in `apps/api/wrangler.jsonc`: production `https://evergreen-stellar.pages.dev`, preview `https://preview.evergreen-stellar.pages.dev`. `EMAIL_FROM` is `onboarding@resend.dev` on preview (set in `env.preview` vars), which Resend documents as delivering only to the account owner's own email (the sandbox rule; documented by Resend, not yet observed by us). A send to any other address is refused by Resend and surfaces as `502 EMAIL_NOT_SENT` (§4, §9); production is undetermined until a sender domain is verified. Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
 - **Worker names:** production `evergreen-api`; preview `evergreen-api-preview`.
 - **Service binding:** the Pages project binds the API Worker as `API`. The dashboard's `/api/*` is a Pages Function that forwards each request over `API` to the Worker; the Worker serves base path `/api/v1`.
@@ -59,8 +65,13 @@ Nothing is built against this until it merges. "Written before either side build
 **The session cookie** (ADR-008):
 - `__Host-evergreen_session`, `HttpOnly; Secure; SameSite=Lax; Path=/`, an opaque random ID.
 - Its row is server-side (`PH2-E2-03`).
-- Rotated on use. Lifetimes are **configuration, not constants** (Fatih's starting values, 2026-10-20; he may tune them): `SESSION_IDLE_TIMEOUT` **7 days**, `SESSION_ABSOLUTE_TIMEOUT` **30 days**.
-- Logout deletes the row.
+- Lifetimes are **configuration, not constants** (Fatih's starting values, 2026-10-20; he may tune them): `SESSION_IDLE_TIMEOUT` **7 days**, `SESSION_ABSOLUTE_TIMEOUT` **30 days**.
+- **Rotation** (Fatih's option 2, `PH2-E2-04`; fixed policy in `apps/api/src/auth/sessions.ts`):
+  - A token older than `SESSION_ROTATE_AFTER_SECONDS` (**24 hours**) is replaced on its next authenticated request; the new cookie rides on that response.
+  - The old token keeps working for `SESSION_ROTATION_GRACE_SECONDS` (**60 seconds**) so in-flight requests do not fail, and is never rotated again.
+  - The new token keeps the session's absolute expiry and CSRF token, so rotation never extends a session past 30 days from login.
+  - Every sign-in issues a fresh token and revokes any session cookie the browser already sent.
+- Logout deletes the row, together with its rotation predecessor or successor, so no grace token survives.
 
 **CSRF:** every state-changing request (`POST`, `PATCH`, `DELETE`) must pass both checks, or it is refused with `403 CSRF_FAILED`:
 - **an `Origin` check:** it must equal the dashboard's origin;
@@ -74,17 +85,17 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 | Route | Setting | Starting value |
 |---|---|---|
-| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes** |
+| `POST /auth/email/start` | `EMAIL_SENDS_PER_ADDRESS`, `EMAIL_SENDS_PER_ADDRESS_WINDOW` | **3 per address per 15 minutes.** A fixed window aligned to the clock (to Unix time, so a 15-minute window starts at :00, :15, :30 or :45), not a rolling one. `Retry-After` is the seconds until the end of the current window. A refused request still counts, but it does not extend the window (`apps/api/src/auth/rate-limit.ts`, `hitLimit`) |
 | `POST /auth/email/start` | `EMAIL_SENDS_PER_IP`, `EMAIL_SENDS_PER_IP_WINDOW` | **20 per IP per hour** |
 | `POST /auth/email/verify` | `SIGNIN_CODE_TTL`, `SIGNIN_CODE_MAX_FAILURES`, `SIGNIN_CODE_DIGITS` | a code lives **10 minutes**, is **single use**, and is void after **5 failed attempts**. **8 digits** by default; Fatih set the limits, not the length, and the arithmetic for 8 is in `apps/api/src/auth/config.ts` |
-| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_CONTRACT_PER_DAY` | **3 per contract per rolling 24 hours** (plan §3.3's daily limit). Only a job that pulled funds counts (§7) |
+| `POST /jobs` (`extend-now`) | `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` | **3 per (user, contract) per rolling 24 hours** (plan §3.3's daily limit; per-user since 2026-10-23, §10). Only a job that pulled funds counts (§7) |
 | `POST /scans` | `SCANS_PER_IP`, `SCANS_PER_USER` | per IP for anonymous callers, per user when signed in. **No value set yet**, so it is set before launch |
 
 ## 4 · Auth (ADR-008; built by `PH2-E2-04`)
 
 | Route | Auth | Does |
 |---|---|---|
-| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **Always `202`, whether or not an account exists**, so the route cannot enumerate users. The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed |
+| `POST /auth/email/start` `{ email }` | none | Sends a one-time code through the Resend channel. **`202` whether or not an account exists**, so the route cannot enumerate users, and `202` for a malformed address too (nothing is sent). The code: `SIGNIN_CODE_TTL` (10 min), single use, stored hashed. If the mail provider **refuses** the send (a sender or key setting, or the sandbox rule in §1), the answer is `502 EMAIL_NOT_SENT`; if it is busy (`429`), down (`5xx`), unreachable, or a setting or the database is unavailable, it is `503 UPSTREAM_UNAVAILABLE`. The send can also be refused with `429 RATE_LIMITED` (§3). **None of these depends on whether an account exists.** A refusal writes one log line, `auth.email_send_failed` (§9) |
 | `POST /auth/email/verify` `{ email, code }` | none | On success, creates the account if new, **or reactivates a deactivated one** (§10), sets the session cookie, and returns `200 { user }`. Otherwise `401 CODE_INVALID`. An expired, used or wrong code gets the same answer |
 | `POST /auth/logout` | session | Deletes the session row. Returns `204` |
 | `GET /me` | session | `{ user: { id, email, createdAt }, wallets: Wallet[], csrfToken }` |
@@ -101,7 +112,7 @@ Every number below is **configuration** (named, read at startup), not a constant
 
 `Wallet = { account: string /* G… */, network: 'testnet', linkedAt: string }`
 
-**The challenge-signing key** is distinct from the engine and treasury keys and unfunded (ADR-008). It is passed by naming an environment variable: a Worker secret in the API Worker, which is one reason for option B.
+**The challenge-signing key** is distinct from the engine and treasury keys and unfunded (ADR-008). It is the Worker secret `CHALLENGE_SIGNING_KEY` in the API Worker (§1), which is one reason for option B.
 
 **Email never authorises anything that moves XLM.** §7 says exactly how "Extend now" stays inside that rule.
 
@@ -145,7 +156,7 @@ type WatchItem = {
    * "Extend now" use for this contract today, so the client can say "N of N"
    * without a second call (§9b: one watch item renders from the list).
    */
-  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string }; // rolling 24h: resetsAt is when the oldest counted use leaves the window
+  extendNow: { limitPerDay: number; usedToday: number; resetsAt: string }; // rolling 24h, counted for the caller on this contract: resetsAt is when the caller's oldest counted use leaves the window
   /** The engine's most recent scan of this item, or null before the first one. */
   lastObservation: {
     observedAtLedger: number;
@@ -155,6 +166,13 @@ type WatchItem = {
   } | null;
 };
 ```
+
+**Limits the API applies that this spec does not state.** These are our own choices (`PH2-E2-05`), not requirements from the spec. Rakha confirmed keeping the caps on #385 (2026-10-24); the gaps below are on the pre-launch list in `BACKLOG.md` (`PH2-E2-05`):
+- `label`: 1 to 100 characters after trimming, no control characters.
+- `scope.dataKeys`: 1 to 100 keys, each at most 2048 characters of canonical base64 `LedgerKey` XDR; duplicates are dropped.
+- There is no cap on items per user (pre-launch list), no pagination on `GET /watchlist`, and no upper bound on `extendToLedgers` (it waits for the engine's limit, `PH2-E4-04`).
+- A `budget` is not checked for `perJobMaxStroops <= per30DaysMaxStroops` (pre-launch list), and `"0"` is accepted.
+- Turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` until `THRESHOLD_FLOOR_LEDGERS` is configured on the API. There is no default floor: the number is the engine's to publish (`PH2-E4-04`, `B-D31-01`) and is undetermined (Rakha, #385, 2026-10-24).
 
 **`thresholdLedgers` is per item** because the core config already allows it per contract (`bumpWhenRemainingLedgersBelow`). That bears on DoD-2's scheduler-gap threshold:
 - The engine's worst scheduler gap has to clear the **lowest** threshold in use.
@@ -191,7 +209,7 @@ type AllowanceState = {
 - **The chain cannot tell expired from revoked from never.** The #297 spike measured `allowance()` reading `"0"` after expiry **and** after revocation ([evidence](evidence/2026-10-14-sac-allowance-spike/README.md)); the allowance is a temporary entry, so expiry deletes it. So `expired` and `revoked` come from `lastKnown`, the engine's stored history (`PH2-E2-03`): an allowance last seen live whose `liveUntilLedger` has passed is `expired`, and one that reads zero before then is `revoked`. With no history, zero is `none`. §9a's `ALLOWANCE_EXPIRED` copy ("the ledger it expired at") reads `lastKnown.liveUntilLedger`.
 - **The engine stores the allowance's expiry in its history** (amount, `liveUntilLedger`, the ledger it was observed at), append-only. An expired allowance reads `"0"` on chain exactly like a revoked one, so without the stored expiry the two cannot be told apart. One limit, stated: a revoke that happens after the last observation reads as `expired` once `liveUntilLedger` passes (Rakha's point 10). This history is kept forever until DoD-2's evidence is gathered (Fatih, 2026-10-22; §10).
 - **The API never builds, signs or submits an `approve` or a revoke.** The dashboard builds it and the user's wallet signs it (`PH2-E3-05`, WEBR). The API reads the result.
-- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate waits for the fee percentage** (Fatih, 2026-10-20): no estimate route until `PH2-E5-03` sets the fee.
+- **"A new approve replaces the cap rather than adding to it"** (ADR-007) is UI copy. **The cap-sizing estimate** was waiting for a fee (Fatih, 2026-10-20). The fee is now set **provisionally** (2% of charged rent, minimum 25,000 stroops, Fatih, 2026-10-27; `PH2-E5-03` stays open until it is confirmed final at `PH2-E5-02`), so the estimate can use `hostedFeeStroops()` from core (`packages/core/src/fee.ts`). There is still no estimate *route*: the allowance screen computes it in the browser from core, and an item whose per-job budget is below the minimum plus its rent can never run, so the screen shows the minimum (`PH2-E3-05`).
 
 ### Jobs: one hosted action
 
@@ -205,9 +223,9 @@ type AllowanceState = {
 - The XLM it moves is authorised by the user's **on-chain allowance**: their own wallet signature, capped and expiring (ADR-007).
 - The session only asks the engine to use an authority the user already granted, within the item's `budget`.
 - It is bounded by the **daily limit** and announced by an **email notice** on every use (plan §3.3, Rakha's proposal on #299). A takeover of the email session can therefore spend at most the remaining allowance, within the budget and the daily limit, and the user is told each time.
-- **The limit is per contract, and that bound reads smaller than it is.** `EXTEND_NOW_PER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
+- **The limit is per (user, contract)** (decided 2026-10-23, §10). It was per contract across all users, which let one watcher use up the quota for everyone else watching the same contract. `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` is 3, so a session takeover's ceiling per rolling 24 hours is `3 × (that user's autopilot-enabled contracts) × perJobMaxStroops`, capped by the allowance and by each item's `per30DaysMaxStroops`. For one contract that is three extends; for twenty it is sixty. **The allowance remains the real ceiling** — it is the user's own signature, capped and expiring — but the daily limit is not a per-account brake, and the custody statement (`PH2-E4-06`) should say so in those terms rather than naming "the daily limit" as though it were one.
 - **What counts as a use** (Fatih, 2026-10-22). The window is a **rolling 24 hours**, not a UTC day. **Only a job that actually pulled funds counts.** A job that ends `preflight-failed`, is `cancelled`, or is refused before queuing never consumes quota: a refusal before money moves is not a use.
-- Linking a wallet or changing who pays (`payerWallet`) **does** require the wallet's signature (§4).
+- **Linking a wallet requires the wallet's signature (§4). Naming a payer does not need a new one on testnet** (Rakha on #385, 2026-10-24; decided by the PM; **accepted as merged by Fatih, 2026-10-26**, and any future change to security wording in this spec goes through Fatih): a wallet that is already linked to the user is enough as `payerWallet`. **A fresh payer signature is required before mainnet**, and until DoD-2 the mainnet payer stays locked, because turning autopilot on for a `mainnet` item is refused (`422 NETWORK_NOT_WRITABLE`, error table below). There is no code change: `PATCH /watchlist` already checks only that the wallet is linked to the caller. This relaxes the earlier sentence ("changing who pays does require the wallet's signature") for testnet only.
 
 ```ts
 type Job = {
@@ -246,7 +264,7 @@ type Job = {
 |---|---|
 | `422 AUTOPILOT_OFF` | the item has no autopilot |
 | `422 ALLOWANCE_MISSING` / `ALLOWANCE_EXPIRED` | the payer wallet has no live allowance |
-| `429 DAILY_LIMIT_REACHED` | this contract's "Extend now" uses today have reached `EXTEND_NOW_PER_CONTRACT_PER_DAY`. `details: { limit, used, resetsAt }` |
+| `429 DAILY_LIMIT_REACHED` | the caller's "Extend now" uses of this contract in the rolling 24 hours have reached `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`; other users watching the same contract are unaffected. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
 
 Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1). It does not count against the daily limit.
@@ -273,8 +291,9 @@ type LedgerRow = {
 ```
 
 This is what DoD-2's **zero subsidy** is measured from. Every XLM the engine moves for a user has a row, and the rows reconcile against the transactions:
-- per job, `pull` = `rent` + `network-fee` + `evergreen-fee` + `refund` + `difference`;
-- **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the extend transaction's fee). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
+- per job, `pull` = `rent` + `evergreen-fee` + `refund` + `difference`. **`network-fee` is not in this sum** (Fatih, 2026-10-28, #414, which changes what an earlier draft of this section said): a `network-fee` row records what one of the job's transactions (the pull, the extend, a refund) cost the engine. It is **evidence of the engine's cost and is never billed to the user**. The user pays the rent plus the Evergreen fee, and the fee is what covers the engine's network costs;
+- **zero subsidy per job** is `evergreen-fee` ≥ the sum of that job's `network-fee` rows. This applies to a job that charges a fee. **A job that pulled and whose extend finally failed is refunded in full, fee included** (Fatih, 2026-10-28): it has no `evergreen-fee`, its `pull` is returned by `refund` (plus any `difference`), and Evergreen absorbs its network cost (about 8,000 to 12,400 stroops) as an operating cost, which is not a rent subsidy. That is counted separately, as a per-user failure rate (`PH2-E4-05`), so abuse would be visible. **So this is a check on the jobs that charge a fee, not an invariant every job must satisfy, and a fully refunded job is not a violation of it** (Fatih, 2026-10-28);
+- **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the fee charged on one of the job's transactions). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
 - how declared vs charged resource fee are stored stays a placeholder until the `PH2-E4-02` spike (Rakha's point 8);
 - an unexplained difference is a P0 or P1 by definition.
 
@@ -298,11 +317,22 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+
+`INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
+- `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, or a path segment is not a valid network or contract ID.
+- `422`: the request is well-formed but refused on its meaning. Today that is `autopilot.extendToLedgers` not above `thresholdLedgers`, and an `autopilot.payerWallet` that is not linked to the caller.
+- **The web client has copy for it** (WEBF's, in `apps/web/src/lib/watchlist.ts`, #444; the copy belongs to the web client, not to the API contract). When `POST /watchlist` answers `INVALID_REQUEST` (`400` or `422`, the code decides, not the status), the dashboard says: "The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly." If the scan declared more data keys than a watchlist item takes, it appends: "This scan declared N data keys, and a watchlist item takes at most 100." (N is the number declared). It branches on the code, never on `message`.
+
+**Known limitation: an absent item and an unknown route look the same.** `DELETE /watchlist/{network}/{contractId}` (and `PATCH`) for an item the caller does not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all, such as `/watchlist/a/b/c`. The two differ only in `message` ("No such watch item." and "No such route."), which is not part of the contract, so a client that branches on the code and status cannot tell them apart. This is documented, not a planned code change. A malformed `network` or `contractId` segment is not part of it: that is `400 INVALID_REQUEST`. The web client shows "Nothing to remove for this account." for the `DELETE` case (its copy, see §9a).
 
 `METHOD_NOT_ALLOWED` is `405` with `retryable: false`: the path exists but not for that method (live in `apps/api` since #387).
 
-**`UPSTREAM_UNAVAILABLE` means the RPC or the database did not answer.** It is never reported as "unhealthy" or "not found": absence is not health.
+**`UPSTREAM_UNAVAILABLE` means something the API depends on did not answer, or is not set up:** the RPC, the database, the mail provider (busy, down or unreachable), or a required setting that is unset. It is never reported as "unhealthy" or "not found": absence is not health.
+
+**`EMAIL_NOT_SENT` (`502`, `retryable: false`) means the mail provider refused this sign-in send.** Retrying the same request will not help; it needs a setting changed or a different address. Only `POST /auth/email/start` returns it. It tells the caller the cause class (provider refusal rather than we are down), never which setting, and never whether an account exists.
+
+**Diagnosing a refused send.** The Worker writes one JSON line to `console.error`, event `auth.email_send_failed`, with only these fields: `provider` (`resend`), `kind` (`rejected` or `unavailable` or `network`), `reason` (our own token, e.g. `testing_recipient_restricted`, `sender_domain_not_verified`, `api_key_rejected`, `recipient_invalid`, `sender_invalid`, `quota_or_rate_limited`, `provider_5xx`, `network_error`, `request_invalid`, `unexpected_redirect`, `unclassified`), `httpStatus` and `providerErrorName` when the provider answered, `fetchErrorName` when building the request or `fetch` itself threw (`kind: network`; only the thrown error's `name`, kept only if it is 1 to 64 letters, e.g. `TypeError`; never its message), and, for `kind: network` only, `fetchStage`, `keyLength`, `keyHasNonPrintableAscii`, `keyHasInnerWhitespace` and, for the `send` stage, `elapsedMs` (below), `senderDomain`, `recipientDomain`, `environment`, and `rayId` when `cf-ray` is present. **Telling a refused request from a failed connection.** A `TypeError` from `fetch` can mean either. The mailer therefore builds the request first and calls `fetch` second, and logs which step threw. `fetchStage` is a closed list: `build` (constructing the request threw, so nothing was sent; `reason: request_invalid`) or `send` (`fetch` itself threw; `reason: network_error`). Either way `kind` stays `network` and the answer is the same `503`, byte for byte, whether or not the address has an account. `keyLength` is the trimmed key's length in a bucket, `0`, `1-31`, `32-63`, `64-127` or `128+`, never the exact length (a Resend key has one fixed-looking shape, so four wide buckets tell a reader nothing it could not guess). `keyHasNonPrintableAscii` is true if any character of the trimmed key falls outside `0x21` to `0x7e` (a space, a control character or a non-ASCII character), and `keyHasInnerWhitespace` is true if the trimmed key has whitespace in the middle. Both are booleans computed from the key and never carry any of it. `elapsedMs` (`send` only) is the whole milliseconds from just before `fetch` to the throw, rounded to 100, so a refused or unresolvable connection reads near `0` and a timeout reads large; **whether the Workers clock advances faithfully across that wait is undetermined here**, so read a `0` as "quick", not as proof. A `TypeError` at `fetchStage: send` with `elapsedMs` near `0` can also be a wrong `this` binding (Workers' `fetch` throws `Illegal invocation` when called as a method of another object); the mailer now calls `fetch` with no `this`, and whether that was the cause of the preview `503` is undetermined until the first send after this change is read in the log. **A redirect from the provider.** The send request uses `redirect: "manual"`. Workers does not implement `redirect: "error"`; per the Workers docs (Request, read 2026-10-24) it throws a `TypeError` when the request is built, before anything is sent, which would show here as `fetchStage: build`, `reason: request_invalid`, `fetchErrorName: TypeError`. The mailer no longer sets it. With `manual`, any `3xx` answer (or an opaque redirect, status 0) is never followed and its `Location` is never read, so the `Authorization` header goes only to `https://api.resend.com/emails`; it is a failed send logged as `kind: unavailable`, `reason: unexpected_redirect`, with `httpStatus` for a real `3xx` and none for an opaque one. `unavailable`, not `rejected`, because `rejected` answers `502 EMAIL_NOT_SENT` and the page then tells the person to use a different address, which a redirect from Resend's API has nothing to do with; the person gets the plain `503`, byte for byte the same whether or not the address has an account. Retrying will not fix a redirect; it needs an operator to look at the log. Whether `redirect: "error"` was the cause of the preview `503` is undetermined until the first send after this change is read in the log. **What this split does and does not prove.** The `build` step runs `new Request(url, init)`, and workerd's own `fetch(url, init)` begins by running the same constructor on the same arguments (workerd `http.c++`, `fetchImpl`, read 2026-10-24; Workers docs, Request), so a constructor throw is reported as `build` and a later throw as `send`. Verified here only on Node 24 (undici), where a header value with a newline, a carriage return, a NUL, a non-Latin-1 character or a lone surrogate makes the constructor throw, and a space, a tab or BEL does not. **Not verified: the Workers runtime itself** (what it rejects in a header value, and that a `build`-stage throw there is always raised before any connection). The sender, the recipient and the sign-in code go into the JSON body only, never a header, so they cannot make the request invalid. The Worker trims whitespace around `EMAIL_API_KEY` before using it, and an all-whitespace value counts as unset (`503`, nothing sent). **Never logged: the full recipient address (the domain only), the API key, the sign-in code, or the provider's message text** (Resend's sandbox message contains the account owner's address). Where the line can be read depends on Workers Logs or `wrangler tail`; whether Workers Logs is enabled is undetermined here.
 
 ## 9a · The error taxonomy, user-facing (WEBF)
 
@@ -329,10 +359,11 @@ the dashboard branches on and what it says to a person.
 
 | Code | The UI shows | Next step |
 |---|---|---|
-| `CODE_INVALID` | "That code did not work. Request a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
+| `CODE_INVALID` | "That code did not work. It may be wrong, used or expired. Ask for a new one." | Re-send. **One message for expired, used and wrong, because the server deliberately answers all three identically** (§4) — copy that distinguished them would leak what the server refuses to |
 | `UNAUTHENTICATED` | the signed-out state for the whole screen, not an error toast | Sign in. The screen's own data is cleared first: a stale watchlist under a sign-in prompt is another user's data as far as the next person at that keyboard knows |
+| `EMAIL_NOT_SENT` | "The code could not be sent to that address. Nothing was sent. Trying again will not help; use a different address." (proposed; WEBF owns the copy) | Use a different address. Nothing else the user can do. Not retried automatically |
 | `CSRF_FAILED` | "This page was open too long. Reload and try again." | Reload. Never retried automatically — a silent retry of a state-changing request is the thing CSRF protection exists to stop |
-| `RATE_LIMITED` | "Too many attempts. Try again in N minutes." from `Retry-After` | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
+| `RATE_LIMITED` | "Too many codes asked for. Try again in N min." from `Retry-After` (the login screen: there `RATE_LIMITED` comes only from `POST /auth/email/start`, and wrong guesses are `CODE_INVALID`, never `429`; the watchlist uses generic wording) | Wait. The control is disabled for that long rather than left clickable, and the countdown is shown |
 | `WALLET_LINKED_ELSEWHERE` | "That wallet is already linked to another account." | **Nothing they can do here.** No "contact support" — there is no support channel, and offering one is a promise with a date on it |
 | `CHALLENGE_INVALID` | "The signing request expired. Try linking again." | Retry from the start. Never reuse a challenge |
 | `WALLET_PAYS_FOR_WATCHED_CONTRACT` | which watched contracts this wallet pays for, and that unlinking does not stop the allowance on chain | Move those contracts to another wallet or turn their autopilot off, **and** the revoke button beside unlink. *(Row added by CEF when folding #351, for Fatih's unlink decision; copy for WEBF to confirm.)* |
@@ -367,7 +398,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
   copy, reported as a result with its observation. *(CEF, folding: on the wire
   it is never the `NOT_FOUND` error code. `POST /scans` answers `200` with an
   `entry-not-found` issue in the `ScanResult`, exactly as `scan --json` does.
-  `NOT_FOUND` is for a missing route resource, such as an unknown job ID.)*
+  `NOT_FOUND` is for a missing route resource, such as an unknown job ID, or a watch item the caller does not have, §9.)*
 - **A health state without `observedAtLedger` is a client-side error, not a
   state to render.** §2 says the API never returns one; if it does, the
   dashboard shows undetermined and that is a P0 against the Definitions of
@@ -382,16 +413,25 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
 | `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it. **The screen states the limit before it is reached** (Fatih, 2026-10-21) — a limit a user discovers by hitting it reads as a fault, so the count is shown beside the control from the first use, not only on refusal |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
-| `NETWORK_NOT_WRITABLE` | nothing. **Unreachable from this UI** | — see below |
+| `NETWORK_NOT_WRITABLE` | "That network cannot be written to from here. Nothing was added." (the web client's copy, `apps/web/src/lib/watchlist.ts`; names no network and gives no date) | Nothing. **Should be unreachable from this UI** — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
 | `IDEMPOTENCY_KEY_REUSED` | "That action was already taken." and then the existing job | **Nothing to retry** — this is the protection working, so it reads as information, not failure |
 
 **`NETWORK_NOT_WRITABLE` should be unreachable from the dashboard** and is
 listed so it is handled rather than assumed away. The site refuses to be
 *built* for anything but testnet (`PH2-E1-03`), so a client that could send a
-mainnet write would be a second defect. If it ever arrives, it renders as
-undetermined with the generic sentence — which is the closed-set default doing
-its job.
+mainnet write would be a second defect. If it ever arrives, the client
+shows the sentence in the table above, in the *undetermined* tone with the word
+"not added" (`POST /watchlist`, #444). That wording is the web client's copy
+(WEBF's path), not part of the API contract.
+
+Also in the web client's copy (WEBF's path, not part of the API contract):
+`INVALID_REQUEST` is in the client's known-code list and has its own sentence
+(§9); a `DELETE` that answers `NOT_FOUND` shows "Nothing to remove for this
+account."; and `UPSTREAM_UNAVAILABLE` on the watchlist no longer names a cause:
+"The API answered, but could not complete this, so the watchlist could not be
+read. This is about us, not your contracts." for `GET`, and "The API answered,
+but could not complete this. Nothing was confirmed as added." for `POST`.
 
 **One thing the client needs that §7 does not provide.** `ALLOWANCE_EXPIRED`
 and `GET /allowance` give a status, and the copy above needs *how long it has
@@ -467,8 +507,8 @@ that was recorded says when.** This maps it onto the API.
 1. **Location:** option B (§1).
 2. **A wallet that pays for a watched contract cannot be unlinked.** The revoke button is shown next to unlink (§4).
 3. **Session lifetimes, sign-in codes and rate limits:** the starting values in §3, as configuration.
-4. **"Extend now"** is limited per contract, at 3 a day. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
-5. **The cap-sizing estimate** waits for the fee percentage (`PH2-E5-03`).
+4. **"Extend now"** is limited per contract, at 3 a day. **Amended 2026-10-23 (PM decision, on Rakha's proposal in #350): per (user, contract), still 3 per rolling 24 hours, still only jobs that pulled funds; the counting index change is Rakha's `0002_*` migration.** The original text follows. The count travels on each `WatchItem` (`extendNow`), not on `GET /me`. That answers WEBF's question 6 the other way, because the limit is per contract and §9b renders one item from the list without a second call.
+5. **The cap-sizing estimate** can now use the provisional fee (`PH2-E5-03`, 2% of charged rent, minimum 25,000 stroops), computed from core's `hostedFeeStroops()`; the value is re-measured in `PH2-E5-02`.
 
 **Decided by Fatih, 2026-10-22** (after Rakha's review of #350):
 - **Account:** Pages and the API Worker share one Cloudflare account (§1; decided on #310 on 2026-10-18, confirmed for the spec today).

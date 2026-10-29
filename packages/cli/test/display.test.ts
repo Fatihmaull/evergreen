@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
-import { EXIT_BELOW_THRESHOLD, exitCodeFor, formatHuman, healthReport } from '../src/scan.js';
+import {
+  DEFAULT_THRESHOLD_LEDGERS,
+  EXIT_BELOW_THRESHOLD,
+  exitCodeFor,
+  formatHuman,
+  healthReport,
+} from '../src/scan.js';
 import { ARCHIVED_ENTRY_ADVICE } from '@evergreen-stellar/core';
 
 const NOW = new Date('2026-09-10T00:00:00Z');
-const THRESHOLD = 17_280;
+const THRESHOLD = DEFAULT_THRESHOLD_LEDGERS;
 /** ANSI SGR sequences, written as escapes so this file stays free of control bytes. */
 const SGR = new RegExp(String.fromCharCode(27) + '\\[\\d+m', 'g');
 

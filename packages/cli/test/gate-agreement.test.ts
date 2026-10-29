@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LedgerEntryTTL, ScanResult } from '@evergreen-stellar/shared-types';
 import { assertLiveness, needsAction } from '@evergreen-stellar/core';
-import { exitCodeFor } from '../src/scan.js';
+import { DEFAULT_THRESHOLD_LEDGERS, exitCodeFor } from '../src/scan.js';
 
 /**
  * The CLI health gate and the engine's liveness assertion are two consumers of
@@ -16,7 +16,7 @@ import { exitCodeFor } from '../src/scan.js';
  */
 
 const KEY = 'AAAAB0NvZGVLZXk=';
-const THRESHOLD = 17_280;
+const THRESHOLD = DEFAULT_THRESHOLD_LEDGERS;
 
 function scanAt(remainingLedgers: number): ScanResult {
   const entry: LedgerEntryTTL = {

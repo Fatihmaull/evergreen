@@ -1,10 +1,15 @@
 /**
  * /login/ — email sign-in and wallet linking (PH2-E3-01).
  *
- * The API this page calls (`PH2-E2-04`) does not exist yet. The page calls it
- * anyway and says what it got: a missing service renders `undetermined`, never
- * a mocked success and never a disabled control standing in for one
- * (`claims-and-copy.md`, "Wallet connect, sign-in, accounts").
+ * The API this page calls (`PH2-E2-04`) is implemented in `apps/api/src/auth`.
+ * Where it is not fully configured its auth routes answer
+ * `503 UPSTREAM_UNAVAILABLE` (`docs/API.md` §1), and the page says nothing was
+ * sent. When the page cannot read an answer from the API at all (a 404, an HTML
+ * page, a network error, an unknown code), it renders `undetermined`, never a
+ * mocked success and never a disabled control standing in for one
+ * (`claims-and-copy.md`, "Wallet connect, sign-in, accounts"). The one disabled
+ * control is the "Email me a code" button during a `Retry-After` countdown the
+ * server asked for.
  */
 export const meta = {
   title: 'Sign in — Evergreen',

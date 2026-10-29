@@ -7,7 +7,7 @@
  * code or a network error is undetermined, never signed out and never sent.
  */
 import { describe, expect, test } from 'vitest';
-import type { FetchLike } from '../src/lib/api';
+import { apiRequest, type FetchLike } from '../src/lib/api';
 import {
   linkWallet,
   logout,
@@ -142,6 +142,74 @@ describe('startEmail (POST /auth/email/start)', () => {
   test('a Pages 404 is undetermined, not sent', async () => {
     const { f } = fake(html(404));
     expect((await startEmail('a@example.com', f)).kind).toBe('undetermined');
+  });
+
+  test('UPSTREAM_UNAVAILABLE is the API’s own answer: not-sent, with what was received and no server message', async () => {
+    const { f } = fake(
+      json(503, {
+        error: { code: 'UPSTREAM_UNAVAILABLE', message: 'secret-ish', retryable: true },
+      }),
+    );
+    expect(await startEmail('a@example.com', f)).toEqual({
+      kind: 'not-sent',
+      detail: 'HTTP 503 UPSTREAM_UNAVAILABLE',
+    });
+  });
+
+  test('EMAIL_NOT_SENT (502, not retryable) is email-not-sent, carries no detail and no server message', async () => {
+    const { f } = fake(
+      json(502, {
+        error: { code: 'EMAIL_NOT_SENT', message: 'secret-ish', retryable: false },
+      }),
+    );
+    expect(await startEmail('a@example.com', f)).toEqual({ kind: 'email-not-sent' });
+  });
+
+  test('EMAIL_NOT_SENT is read from the code, not the status, and is not UPSTREAM_UNAVAILABLE', async () => {
+    const { f } = fake(envelope(503, 'EMAIL_NOT_SENT'));
+    expect(await startEmail('a@example.com', f)).toEqual({ kind: 'email-not-sent' });
+  });
+
+  test('an HTML 502 is undetermined, never email-not-sent', async () => {
+    const { f } = fake(html(502));
+    expect((await startEmail('a@example.com', f)).kind).toBe('undetermined');
+  });
+
+  test('EMAIL_NOT_SENT is a known code to the shared client, not UNRECOGNISED', async () => {
+    const { f } = fake(envelope(502, 'EMAIL_NOT_SENT'));
+    const o = await apiRequest('/auth/email/start', { method: 'POST' }, f);
+    expect(o).toMatchObject({
+      kind: 'error',
+      status: 502,
+      code: 'EMAIL_NOT_SENT',
+      retryable: false,
+    });
+  });
+
+  test('the branch is on the code, not the status', async () => {
+    const { f } = fake(envelope(500, 'UPSTREAM_UNAVAILABLE'));
+    expect(await startEmail('a@example.com', f)).toEqual({
+      kind: 'not-sent',
+      detail: 'HTTP 500 UPSTREAM_UNAVAILABLE',
+    });
+  });
+
+  test.each([
+    ['a bare 503 with an HTML body', () => html(503)],
+    ['a 503 JSON without the envelope', () => json(503, { message: 'down' })],
+    ['a 503 with a code this client does not know', () => envelope(503, 'MAIL_DOWN')],
+    ['a 500 with a known code that is not this one', () => envelope(500, 'NOT_FOUND')],
+  ])('%s stays undetermined, never not-sent and never sent', async (_n, make) => {
+    const { f } = fake(make());
+    expect((await startEmail('a@example.com', f)).kind).toBe('undetermined');
+  });
+
+  test('a network error stays undetermined', async () => {
+    const { f } = fake(new TypeError('Failed to fetch'));
+    expect(await startEmail('a@example.com', f)).toEqual({
+      kind: 'undetermined',
+      detail: 'no response from the account service',
+    });
   });
 });
 

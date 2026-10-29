@@ -46,13 +46,13 @@ Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 d
 - zero missed protections (no watched entry archived while its allowance was valid and funded);
 - ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;
 - zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
-- the worst scheduler gap is measured, dated, and below the 17,280-ledger act threshold;
+- the scheduler gap is measured and dated, and **4 × the worst observed gap, in ledgers, is below the lowest act threshold in use** (Fatih, 2026-10-28; this is core's own rule that a threshold needs four scheduler runs of margin, `MIN_ACTION_RUNS_IN_WINDOW`, and it replaces "below the 17,280-ledger act threshold", which would have passed a gap of 17,000 ledgers);
 - no open P0/P1, every incident has a postmortem;
 - every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator, and a Neon backup restore has been exercised;
 - engine and treasury keys are separate and the float never exceeded its cap;
 - a cold reader can onboard from the docs alone (`B-D31-03`). The cold reader is an external beta user.
 
-**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2.** `PH2-E5-02`'s core criterion is "DoD-2 met".
+**Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2, and no immutable contract goes to mainnet before a written router audit** (a precondition of `PH2-E5-02`; Fatih, 2026-10-26, #414). `PH2-E5-02`'s core criterion is "DoD-2 met".
 
 ### Measurability: what these need that nothing yet provides
 
@@ -64,10 +64,11 @@ Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from
 - **The refund threshold now counts pulls whose extend finally failed.** That matches §3.3 step 5 and §4.3. A failed pull moves no XLM, so the first wording was vacuous.
 - **A testnet reset restarts the 30-day window.**
 - **The cold reader is an external beta user.** `B-D31-03`'s own row says Fatih no longer qualifies.
+- **The scheduler check is against the lowest threshold in use**, with four runs of margin (Fatih, 2026-10-28). It replaces "below the 17,280-ledger act threshold", and the gap is measured in ledgers from the scheduler heartbeat (`docs/PH2-E4-04-SCHEDULER-DESIGN.md` §4).
 
 **Still open:**
 1. **"Run ≥1 extend (manual) recorded in the fee ledger" is measurable only for allowance users.** Their one-click extend is an engine job, so reconcile writes the ledger (§3.3 step 4). A user without an allowance extends through `PH2-E4-07`'s router contract, a transaction they sign themselves. No card says that transaction reaches the fee ledger. If the router is not viable, dashboard extend requires an allowance (§3.3), and the gap closes by itself.
-2. **"Below the 17,280-ledger act threshold" assumes one threshold.** 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
+2. ~~**"Below the 17,280-ledger act threshold" assumes one threshold.**~~ *Resolved 2026-10-28, above.*  Kept for the record: 17,280 is the CLI's default (`packages/cli/src/command.ts`, `--threshold`). The engine's action threshold is configurable (`bumpWhenRemainingLedgersBelow`, `packages/core/src/config.ts`), and the hosted engine's is not decided yet (`PH2-E4-01`). If users can lower it, the worst gap has to clear the lowest one in use.
 
 Measurable with records still to be built:
 - *zero missed protections*: §3.3's pre-flight reads the allowance and the user's balance before every job. It is measurable only for entries the scan can see (instance, code, and declared data keys).
@@ -89,7 +90,7 @@ Measurable with records still to be built:
 | Q6 | Lighter process. Keep mutation proof on write paths and `origin/main` verification. | Gate inventory needs sign-off |
 | Q7 | Docs hygiene now. | — |
 | Q8 | **Allowance, not custody** (spike #297: viable with four limits). | Re-sign about every 180 days; per-contract caps are off-chain |
-| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. | — |
+| Q9 | Fee is a percentage per transaction. The percentage is set from mainnet data. **Amended 2026-10-27 (Fatih, #414):** a percentage **with a per-action minimum of 25,000 stroops**, because a pure percentage subsidises small jobs. **Set the same day, PROVISIONALLY: 2% of the rent actually charged, `fee = max(2% × charged rent, 25,000 stroops)`.** Re-measured with real transactions in `PH2-E5-02`; not final until Fatih confirms it there. See §3.3 and `PH2-E5-03` | A fee below the fixed cost of an action is a subsidy (ADR-007) |
 | Q10 | Open-core: CLI and self-hosted engine are MIT; hosted is paid. | — |
 | Q11 | One revenue destination, no profit split; all of it funds development. | — |
 | Q12 | Cloudflare: Free, then Workers Paid if PH2-E2-01 measures the engine over the free limits. Render was evaluated and rejected (§3.2). | At most about $5/month, on one platform |
@@ -205,8 +206,17 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
    - **Router fees skip this step** (ADR-009, Fatih 2026-10-22): the router pays its fee straight to the treasury address. Spike `PH2-E4-07`: instance 5,443,860 → 6,322,913, code 5,443,859 → 6,322,913, persistent unchanged at 5,443,867; instance + code = 99.21% of simulated rent; fee 0.1 XLM; user paid ~6.1 XLM rent (tx `3c112235…de24a`).
    - **Wording rule:** for a user without an allowance, no UI or custody copy (`PH2-E4-06`) may call a contract "fully safe"; the router does not extend persistent data.
 
+**The fee (PROVISIONAL, `PH2-E5-03`; Fatih, 2026-10-27, #414):** `fee = max(2% × charged rent, 25,000 stroops)` per hosted action. A hosted action is one job (one pull), not one entry.
+- **Provisional.** It is used now for the allowance-cap estimate (`PH2-E3-05`) and for the hosted-tier copy (`PH2-BL-05`), once `claims-and-copy.md` allows a fee number. It is re-measured with real transactions in `PH2-E5-02`, after the router audit, and `PH2-E5-03` stays open until Fatih confirms the value is final.
+- **One home in code:** `PROVISIONAL_HOSTED_FEE` and `hostedFeeStroops()` in `packages/core/src/fee.ts`: integer stroops, the percentage as basis points (200), the minimum 25,000. The engine, reconcile and the cap estimate all call it; none carries its own number.
+- **Why a minimum:** a hosted action's network fees are about 18,400 stroops (about 24,500 with one failed retry), simulated on mainnet. The minimum is what keeps DoD-2's zero subsidy, and it binds only below 0.125 XLM of rent.
+- **Rounding** is up, so rounding never goes against Evergreen (at most one stroop; confirmed by Fatih, 2026-10-28).
+- **The router path** (one signature, no allowance) charges **2% of rent with no minimum** (Fatih, 2026-10-28, #414). The minimum exists to cover the engine's network costs, and on that path the user pays them as the transaction's source. It replaces the fixed 0.1 XLM used on testnet. In code: `PROVISIONAL_ROUTER_FEE` and `routerFeeStroops()` in the same file, **reading the percentage from `PROVISIONAL_HOSTED_FEE`**, so there is no second literal. On-chain it stays voluntary (ADR-009 §3): the dashboard sets it, the contract doesn't enforce it.
+- **Network fees are evidence, never billed** (Fatih, 2026-10-28). The user pays rent plus the Evergreen fee, and the fee covers the engine's network costs. Zero subsidy per job is `evergreen-fee` ≥ the sum of `network-fee` rows (`docs/API.md` §7).
+- **If the pull succeeds and the extend finally fails, the user is refunded in full, fee included** (Fatih, 2026-10-28). Evergreen absorbs its network cost (about 8,000 to 12,400 stroops) as operating cost; that is not a rent subsidy. A per-user failure-rate signal is part of `PH2-E4-05`'s failure-mode list.
+
 **Sizing the user's cap:**
-- Shown to the user as: estimated rent for the watched contracts × chosen horizon × (1 + fee) × a safety margin.
+- Shown to the user as: estimated rent for the watched contracts × chosen horizon, plus the fee on that rent (`hostedFeeStroops`, not a bare percentage, because of the minimum), × a safety margin. An item whose per-job budget is below the minimum plus its rent can never run, so the screen shows the minimum.
 - The margin exists because the CLI already measured rent varying about 18% between days.
 - The UI must say plainly that a new approve **replaces** the cap rather than adding to it.
 
@@ -218,7 +228,7 @@ An autopilot users pay for cannot run on a host that sleeps, and keeping it awak
 
 **Manual extend with a fee (§4.2):**
 - **Allowance users: one click, zero wallet prompts.** "Extend now" is just an on-demand engine job, running the same flow as above.
-  - **It has a daily limit per contract** (3 per rolling 24 hours; only a job that pulled funds counts; amended 2026-10-22 from "per user", Fatih's decisions recorded in `docs/API.md` §7 and §10) **and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
+  - **It has a daily limit per (user, contract)** (3 per rolling 24 hours; only a job that pulled funds counts; amended 2026-10-22 from "per user" to per contract, then 2026-10-23 to per (user, contract), Fatih's decisions recorded in `docs/API.md` §7 and §10) **and every one-click extend sends the user an email notice** (Rakha's proposal on #299, accepted 2026-10-15). A one-click money path with no ceiling and no receipt is the shape an account takeover would use.
 - **Users without an allowance:** card PH2-E4-07 researches an Evergreen **router contract** that takes the fee and extends in **one invocation, one signature**.
   - **[to verify]**: whether a contract can extend another contract's instance and code (believed yes), and whether it can extend another contract's *persistent data* (believed no).
   - If it can cover only instance and code, say so and measure how much of a typical contract's rent that is. In #296, the code entry was 99% of the bill.
@@ -318,7 +328,7 @@ PH2-E0-03 contents:
 | PH2-E2-03 | Neon schema: users, sessions, wallets, watchlist, allowances, jobs, fee ledger | CER | M | PH2-E2-02 |
 | PH2-E2-04 | Auth (§3.1): passwordless email plus SEP-10-style wallet linking, sessions | CEF | L | PH2-E2-03 |
 | PH2-E2-05 | Watchlist API (Q14) | CER | M | PH2-E2-04 |
-| PH2-E2-06 | Per-user alerts via Resend | CER | M | PH2-E2-05 |
+| PH2-E2-06 | Per-user alerts via Resend. *Moved CER → CEF 2026-10-26 (Fatih's offer, accepted by Rakha on #385); Rakha reviews* | CEF | M | PH2-E2-05 |
 
 ### E3 — Dashboard usable by anyone
 
@@ -338,10 +348,10 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E4-01 | Multi-tenant engine (N contracts × M payers); per-contract budgets in the DB | CER | L | PH2-E2-03 |
-| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. On-demand "Extend now" jobs are capped by a **daily limit** per contract and send an **email notice** | CER | L | PH2-E4-01 |
+| PH2-E4-02 | The §3.3 flow: pre-flight, idempotent pull, extend, reconcile, refund from pool. **A pull whose extend finally fails is refunded in full, fee included** (Fatih, 2026-10-28). On-demand "Extend now" jobs are capped by a **daily limit** per (user, contract) and send an **email notice** | CER | L | PH2-E4-01 |
 | PH2-E4-03 | Key separation: float limit, refund headroom, sweep to treasury. Testnet treasury key in F's OS secure store (#299); mainnet treasury key generated offline before PH2-E5-02 | CER + F | M | PH2-E4-02 |
-| PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict | CER | M | PH2-E2-01, PH2-E4-02 |
-| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator) | CER | M | PH2-E4-04 |
+| PH2-E4-04 | Scheduler: Workers cron with enqueue fan-out, or per PH2-E2-01's verdict. Built against `planTenants`/`checkBudget` (#440). *Moved CER → CEF, with Fatih's DevOps agent, 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E2-01, PH2-E4-02 |
+| PH2-E4-05 | Operator monitoring: failed pulls or extends, float low, allowance expiries. **Deliverable: the failure-mode list** DoD-2 checks (every mode alerts both user and operator), **including a per-user failure rate** so abuse of the full-refund rule is visible (Fatih, 2026-10-28). *Moved CER → CEF 2026-10-26 (accepted on #385); Rakha reviews* | CEF | M | PH2-E4-04 |
 | PH2-E4-06 | Public custody statement: exact exposure (#297 §6) | CEF → F | S | PH2-E4-02 |
 | PH2-E4-07 | Spike: router contract for one-signature fee + extend (§3.3). Verdict: covers all entries / instance+code only / not viable. If not viable, PH2-E3-04 requires an allowance | CEF | M | — |
 | PH2-E4-08 | Production router (ADR-009): audit, Rust CI (DevOps Assistant), final fee address = treasury | CEF | L | PH2-E4-03, PH2-E4-07 |
@@ -351,8 +361,8 @@ PH2-E0-03 contents:
 | Card | What | Owner | Wt | Depends on |
 |---|---|---|---|---|
 | PH2-E5-01 | Initial release on testnet; recruit 10–20 users; feedback loop and adoption metrics | F | M | E3, E4 |
-| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done) | F + R | S | PH2-E5-01 |
-| PH2-E5-03 | Set the fee percentage from measured mainnet costs | F | S | PH2-E1-03 data (mainnet scan) |
+| PH2-E5-02 | Mainnet readiness checklist. Core criterion: **DoD-2 met** (see Definitions of Done). **Precondition: a written router audit**, before any immutable contract goes to mainnet (Fatih, 2026-10-26). Measuring fees with real mainnet transactions happens here, after the audit (moved from PH2-E5-03) | F + R | S | PH2-E5-01 |
+| PH2-E5-03 | Set the fee percentage from **read-only mainnet simulation** plus #382's measured charged/declared ratio. **No mainnet transactions, no rule-5 override, no mainnet router deploy** (Fatih, 2026-10-26, #414). The fee must cover the two or three network transactions per hosted action. **Fee form: percentage with a 25,000-stroop minimum per action** (Fatih, 2026-10-27; departs from Q9, see the Q9 row). **Value set PROVISIONALLY: 2% of charged rent, minimum 25,000 stroops** (Fatih, 2026-10-27, #414); not done until Fatih confirms it final at `PH2-E5-02` | F | S | PH2-E1-03 data (mainnet scan) |
 | PH2-E5-04 | Mainnet launch with small caps (release owner: R) | R + F | M | PH2-E5-02, PH2-E5-03 |
 
 ### BL — Backlog (unscheduled, same scheme)
@@ -375,6 +385,8 @@ PH2-E0-03 contents:
 | **Fatih** (F 8.5 + CEF 24 + WEBF 6) | 38.5 | 5 | 43.5 |
 | **Rakha** (R 2.5 + CER 22 + WEBR 6) | 30.5 | 7 | 37.5 |
 
+**Recomputed 2026-10-26 from `BACKLOG.md`**, E0–E5 only, 73 points. Shared cards are split half each, and `PH2-E0-01`'s row has no weight tag, so its S comes from this plan's table. The table above dates from 2026-10-15 and predates cards added since, such as `PH2-E4-08`. **Before today's move: Fatih 42.5, Rakha 30.5. After it: Fatih 48.5, Rakha 24.5.** The move is `PH2-E2-06`, `PH2-E4-04` and `PH2-E4-05`, each M, from CER to CEF: Fatih's offer on #385, accepted by Rakha the same day. The money path (`PH2-E4-01`..`03`) stays Rakha's.
+
 **Rebalanced 2026-10-15** after the ownership moves accepted on #299. Before the moves it was Fatih 34.5 and Rakha 32.5 scheduled, recomputed from the tables above.
 - PH2-E0-06 moved CER → CEF (S, 1 point).
 - PH2-E1-03 grew M → L when it took the mainnet scan path (+1).
@@ -384,7 +396,7 @@ PH2-E0-03 contents:
 
 Shared cards are split half each. **Equal by weight, not by hours** — Rakha's available hours are his to confirm.
 
-**The concentration risk to know about:** the entire hosted autopilot (PH2-E4-01 to PH2-E4-05) is Rakha's critical path. If he slips, revenue slips. That fits his history, but you should see it before confirming.
+**The concentration risk to know about** *(eased 2026-10-26: PH2-E4-04 and PH2-E4-05 moved to CEF)*: the entire hosted autopilot (PH2-E4-01 to PH2-E4-05) is Rakha's critical path. If he slips, revenue slips. That fits his history, but you should see it before confirming.
 
 ---
 
