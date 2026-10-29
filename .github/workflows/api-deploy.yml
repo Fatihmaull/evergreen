@@ -54,6 +54,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # apps/api imports @evergreen-stellar/core helpers (#497); its package
+      # `main` is dist/, so build core and its workspace deps first.
+      - name: build packages/core (and its workspace deps)
+        run: pnpm --filter "@evergreen-stellar/core..." run build
       - name: test apps/api (if a test script exists)
         run: pnpm --filter @evergreen/api run --if-present test
       - name: wrangler deploy --env preview
@@ -97,6 +101,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # apps/api imports @evergreen-stellar/core helpers (#497); its package
+      # `main` is dist/, so build core and its workspace deps first.
+      - name: build packages/core (and its workspace deps)
+        run: pnpm --filter "@evergreen-stellar/core..." run build
       - name: test apps/api (if a test script exists)
         run: pnpm --filter @evergreen/api run --if-present test
       - name: wrangler deploy
