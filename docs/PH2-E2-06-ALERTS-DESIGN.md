@@ -69,7 +69,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 - **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. A one-click unsubscribe header (RFC 8058) is **undetermined**: it needs a signed, unauthenticated route on the API, and that is a security decision for Fatih. Required alerts say why they can't be turned off.
 - **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF (`docs/API.md`). The shape will be written into `docs/API.md` when it is built.
 - **Deactivated users** (`users.deactivated_at`) get nothing. That matches the planner rule from #477.
-- **Kill switch:** `ALERTS_SEND` on the scheduler Worker. Unset means `dry-run` (render and record, never send), and it is never set in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. Both are DevOps settings, not secrets.
+- **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. Both are DevOps settings, not secrets.
 
 ## 7. Asks
 
@@ -87,7 +87,10 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 
 All of these run in Vitest with an injected `fetch` and PGlite. None of them calls Resend.
 1. Each §3 event renders a `Notification` that passes `EmailChannel.deliver()`'s validation. Snapshot the subject and body, check there is no CR/LF in the subject, and check the severity matches the table.
-2. Dry-run (`ALERTS_SEND` unset) records the outbox row and makes **zero** `fetch` calls.
+2. Dry-run, with `ALERTS_SEND` unset, records the outbox row and makes **zero** `fetch` calls.
+   - 2a. `ALERTS_SEND` set to `""` (empty) or to `dry-run`: dry-run, with the same result.
+   - 2b. `ALERTS_SEND` set to `SEND`, ` send`, `send ` or `Send`: dry-run, with the same result. None of these enables sending.
+   - 2c. `ALERTS_SEND` set to exactly `send`, and the recipient in `ALERTS_ALLOWLIST`: one `fetch` to the fake Resend, and the row becomes `sent`. The same value with the recipient outside the allowlist: dry-run, with zero `fetch` calls (see test 8).
 3. Dedupe: the same event delivered twice gives one outbox row and one `fetch`. A crash between "row written" and "sent", followed by a retry, gives the same idempotency key.
 4. Opt-out: an optional event with its preference off gives no row and no `fetch`. A required event with every preference off is still sent.
 5. Rate limit: required alerts go past the cap, and optional ones are held back.
