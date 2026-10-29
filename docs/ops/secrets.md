@@ -23,7 +23,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 |---|---|---|---|
 | `ENVIRONMENT` | `production` | `preview` | `apps/api/wrangler.jsonc` |
 | `DASHBOARD_ORIGIN` | `https://evergreen-stellar.pages.dev` | `https://preview.evergreen-stellar.pages.dev` | same; one exact origin, no wildcard |
-| `EMAIL_FROM` | **undetermined** until a sender domain is verified | `onboarding@resend.dev` (delivers only to the Resend account owner's address) | `env.preview.vars` |
+| `EMAIL_FROM` | `alerts@mail.evergreenstellar.biz.id` | `alerts@mail.evergreenstellar.biz.id` | top-level `vars` / `env.preview.vars` |
 | `DEPLOY_COMMIT` | the deployed SHA | the PR head SHA | injected by the workflow, not committed |
 
 ### GitHub
