@@ -31,8 +31,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: build packages/core (and its workspace deps)
-        run: pnpm --filter "@evergreen-stellar/core..." run build
+      # Build every workspace package the scheduler imports from dist/ (core, engine, ...).
+      - name: build the scheduler's workspace deps
+        run: pnpm --filter "@evergreen/scheduler^..." run build
       - name: wrangler deploy --env preview
         working-directory: apps/scheduler
         env:
