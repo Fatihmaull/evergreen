@@ -294,6 +294,22 @@ describe('a user sees and changes only their own items (guard-removal tests)', (
     expect((await listOf(a))[0]!.autopilot).toEqual({ enabled: false });
   });
 
+  it('🔴 tells a user whose wallet predates their reactivation to sign again, not that it is unlinked', async () => {
+    // The store (Postgres, proven in reactivation.pglite.test.ts) knows reactivation; the route
+    // must turn its answer into a message the user can act on. Their own wallet list shows this
+    // wallet as linked, so "not linked to your account" would contradict it.
+    const a = await signIn();
+    await add(a);
+    const payer = linkWallet(a);
+    vi.spyOn(watch, 'update').mockResolvedValueOnce('payer-relink-required');
+    const res = await write('PATCH', itemPath(), a, { autopilot: autopilot(payer) });
+    expect(res.status).toBe(422);
+    const error = await errorOf(res);
+    expect(error.code).toBe('INVALID_REQUEST');
+    expect(JSON.stringify(error)).toContain('Sign with this wallet again');
+    expect(JSON.stringify(error)).not.toContain('not linked');
+  });
+
   it('a user can add a contract another user already watches', async () => {
     const a = await signIn('a@example.test');
     const b = await signIn('b@example.test');

@@ -23,7 +23,8 @@ export class TenantStoreError extends Error {
  * Read-only. Numeric columns are cast to text so stroops never pass through a float.
  * A payer wallet counts as linked only if the user was never reactivated or the wallet was linked
  * strictly after the last reactivation (#385 option 2, migration 0004). A wallet linked at or before
- * reactivation drops the item from the plan (fails closed) until the wallet is re-linked.
+ * reactivation drops the item from the plan (fails closed) until the wallet is re-linked. A
+ * deactivated user (users.deactivated_at set) has no linked wallets at all.
  */
 export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT i.user_id::text AS user_id, i.network, i.contract_id, i.scope,
   i.autopilot_enabled, (i.removed_at IS NOT NULL) AS removed, i.payer_network, i.payer_account,
@@ -32,7 +33,8 @@ export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT i.user_id::text AS user_id, i.ne
   i.budget_per_job_max::text AS budget_per_job_max, i.budget_per_30d_max::text AS budget_per_30d_max
 FROM watch_items i
 JOIN wallets w ON w.network = i.payer_network AND w.account = i.payer_account AND w.user_id = i.user_id
-JOIN users u ON u.id = i.user_id AND (u.reactivated_at IS NULL OR w.linked_at > u.reactivated_at)
+JOIN users u ON u.id = i.user_id AND u.deactivated_at IS NULL
+  AND (u.reactivated_at IS NULL OR w.linked_at > u.reactivated_at)
 WHERE i.network = $1 AND i.autopilot_enabled AND i.removed_at IS NULL
 ORDER BY i.payer_account, i.contract_id, i.user_id`;
 

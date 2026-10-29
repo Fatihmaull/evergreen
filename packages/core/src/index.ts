@@ -126,3 +126,5 @@ export {
 export type { NetworkChoice } from './network.js';
 export { priceExtend } from './price-extend.js';
 export type { ExtendPrice } from './price-extend.js';
+export { MIN_ACTION_RUNS_IN_WINDOW } from './config.js';
+export { gapMarginLedgers, gapMarginHolds, belowGapMargin } from './gap-margin.js';

@@ -1,6 +1,6 @@
 # Backup and restore for DoD-2: proposal
 
-**Status: proposal only (Fatih, 2026-10-28). Nothing changes before the beta.** Production has no database today and Neon `production` has no tables, so there is nothing to lose yet.
+**Status: decided by Fatih 2026-10-28.** Option **A** (Neon Launch with scheduled snapshots) happens **together with his "ya" for the production secrets, not before**. Until then option **C**: one manual snapshot on `production` before each production migration, logged in [`neon-migrations.md`](neon-migrations.md#before-each-production-migration-one-manual-snapshot-fatih-2026-10-28). Nothing else changes before the beta. Production has no database today and Neon `production` has no tables, so there is nothing to lose yet.
 
 The requirement ([`PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) DoD-2): *"a Neon backup restore has been exercised"*, alongside the failure-mode list of `PH2-E4-05`. The problem: the Free plan keeps **6 hours** of history (21600 s, read from the project 2026-10-27), which is a recovery window for a bad deploy, not a backup.
 
@@ -70,8 +70,22 @@ Run on `production` data only once production holds data, **never in place** (`-
 
 Also exercise the **history-window** path once on a throwaway root branch: `neonctl branches restore <target> <source>@<timestamp>` (add `--preserve-under-name`, which Neon requires when restoring a branch onto its own history). Whether a throwaway root branch can be created cheaply is `undetermined` until tried.
 
-## Decisions for Fatih
+## Drill run 2026-10-29 (DevOps, Neon API)
 
-1. **Backup:** A (recommended), A + B, or C only until beta.
-2. **When to upgrade:** with the production-secrets "ya" (recommended), or earlier.
-3. **Protect the `production` Neon branch** if the plan allows it (`undetermined` on Free).
+Plan: the org (`org-delicate-violet-65283800`) is on **Launch** (billing page, 2026-10-29). Project `icy-sun-89705623` (Postgres 18, `aws-ap-southeast-1`), history window `history_retention_seconds: 21600` (6 hours). One manual snapshot exists: `snap-fancy-bar-aonzvey1` (`pre-schema-0001-0005`, from `production`, 2026-10-29 10:00:21 UTC, taken **before** the schema was applied). Neither restore touched `production` or `preview`; both drill branches were new branches, never finalized onto `production`.
+
+| Step | What | Result |
+|---|---|---|
+| Point-in-time | `POST /branches` with `parent_id` = `production`, `parent_timestamp` 10:48:33 UTC, one read-write endpoint → `br-delicate-wave-ao33tub1` (`drill-e0-12-pitr`) | created 10:50:33 UTC, ready **about 12 s** later (polled 17:50:45 WIB). Neon resolved the parent point to 10:06:18 UTC, the last write (no writes since the migrations) |
+| Verify | the read-only shape query from [`neon-migrations.md`](neon-migrations.md) (columns, constraints, indexes, enums, triggers, function md5, tables, extensions) on the drill branch and on `production` | **12 tables, whole shape identical** to `production` and to the post-migration record. Query took 4 s |
+| Snapshot | `POST /snapshots/snap-fancy-bar-aonzvey1/restore` `{name: drill-e0-12-snapshot}` → `br-round-bread-ao31oi6p` | created 10:51:01 UTC, ready **about 7 s** later (17:51:08 WIB), `restored_from: snap-fancy-bar-aonzvey1` |
+| Verify | shape query | **0 tables**, extensions equal the pre-migration record: the snapshot restores the state it was taken from |
+| Clean up | `DELETE /branches/<id>` for both | both 404 afterwards; branch list is back to `preview`, `production` (17:51:28 WIB) |
+
+**Measured RTO** (create to a verified shape): under 30 s each, on an almost empty database. **RPO** for point-in-time: the last commit inside the 6-hour window. Not yet exercised: row-count/fee-ledger comparison (production holds no rows yet) and connecting with an app-grants role (no least-privilege role yet, #385). **Next:** take a post-migration snapshot or turn on the Launch snapshot schedule, since the only snapshot predates the schema.
+
+## Decisions (Fatih, 2026-10-28)
+
+1. **Backup: option A**, executed with the production-secrets "ya". **Option C until then.**
+2. **When to upgrade:** with the production-secrets "ya".
+3. **Protect the `production` Neon branch on Free: `undetermined`, probably not available.** Neon's protected-branches page says the feature is for "paid plans" (Launch: up to 2 protected branches, Scale: up to 5), does not list Free, and documents no CLI or API way to set it (`neonctl branches` has no such subcommand, verified 2026-10-29). It is set in the console (Branches, select the branch, **Protect**). Fatih can settle Free by looking for the Protect button; if it is absent, the Launch upgrade brings it. What protection stops: deletion, reset from the parent, archiving for inactivity. The page does not say it blocks restore or role changes. `production` is not protected today (`protected: false`).
