@@ -4,6 +4,13 @@
  * forwards `/api/*` over the service binding `API`.
  */
 import { handle, type Env } from './router.js';
+import { neonSqlClient } from './auth/pg-store.js';
+import {
+  LATEST_TICK_SQL,
+  resendOperatorTransport,
+  runHeartbeatCheck,
+  type HeartbeatEnv,
+} from './alerts/heartbeat.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
 export type { Env } from './router.js';
@@ -14,6 +21,25 @@ export type { Env } from './router.js';
 export default {
   fetch(request: Request, env: Env): Promise<Response> {
     return handle(request, env);
+  },
+  // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
+  // for this Worker; logs the outcome, never an address or a key.
+  async scheduled(_event: unknown, env: Env & HeartbeatEnv): Promise<void> {
+    const databaseUrl = env.DATABASE_URL;
+    const outcome = await runHeartbeatCheck(env, {
+      latestTickedAt: async () => {
+        if (!databaseUrl) throw new Error('DATABASE_URL unset');
+        const rows = await neonSqlClient(databaseUrl).query(LATEST_TICK_SQL, []);
+        const t = rows[0]?.['t'];
+        return t === null || t === undefined ? undefined : Number(t);
+      },
+      nowSeconds: () => Math.floor(Date.now() / 1000),
+      transportFor: (to) =>
+        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
+          fetch(u, i),
+        ),
+    });
+    console.log(JSON.stringify({ event: 'alerts.f11_heartbeat', ...outcome }));
   },
 };
 
@@ -121,6 +147,20 @@ export {
 } from './alerts/policy.js';
 export type { AlertClass, AlertKind, AlertSpec, AlertsMode } from './alerts/policy.js';
 export { decideAlert, sendAlert } from './alerts/sender.js';
+export {
+  LATEST_TICK_SQL,
+  heartbeatNotification,
+  heartbeatState,
+  resendOperatorTransport,
+  runHeartbeatCheck,
+  staleThresholdSeconds,
+} from './alerts/heartbeat.js';
+export type {
+  HeartbeatDeps,
+  HeartbeatEnv,
+  HeartbeatOutcome,
+  HeartbeatState,
+} from './alerts/heartbeat.js';
 export type {
   AlertEnv,
   AlertNotification,
