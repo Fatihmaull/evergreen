@@ -214,3 +214,12 @@ export type {
   FloatCheck,
   EmailFailureFacts,
 } from './alerts/failure-modes.js';
+export { dispatchUserAlert, memoryOutboxStore, testnetResetUserEvents } from './alerts/dispatch.js';
+export type {
+  AlertOutboxStore,
+  DispatchDeps,
+  DispatchOutcome,
+  DispatchRequest,
+  OutboxRow,
+  OutboxStatus,
+} from './alerts/dispatch.js';
