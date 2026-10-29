@@ -45,8 +45,15 @@ Fatih reviews the copy before it merges anywhere that publishes, and
 > only applies below 0.125 XLM of rent. **This figure is provisional.** It is
 > re-measured before it is final.
 >
+> **A real example.** Extending a large contract entry for the first time cost
+> 28.9 XLM of rent. The hosted fee on that extension would be
+> 0.578 XLM.
+>
 > **If an extension fails.** When Evergreen has drawn your funds and the
 > extension still fails, the whole amount is refunded, fee included.
+>
+> Evergreen pays the network fee of a refunded failed attempt itself, as
+> ADR-007 sets out (`docs/adr/ADR-007-allowance-funded-hosted-engine.md`).
 >
 > The fee pays for the convenience of having it done on a schedule. It is not a
 > toll on the chain.
@@ -112,25 +119,17 @@ contract is unaudited, the fee on that path is proposed by the dashboard and not
 enforced by the contract (`fee.ts`, ADR-009 §3), and the claims gate has no row
 that lets it be described.
 
-## For Fatih
+## Decided (Fatih, K2, 2026-10-29)
 
-1. **Whether the 2% example in the notes belongs in front of you before this
-   goes anywhere.** The shared code entry extension in `docs/evidence/
-   2026-10-14-shared-code-extend/` cost 28.9113 XLM; at the hosted fee that is
-   **0.5782 XLM**, rounded up. That is the real size of a first, large
-   extension for a contract like ours, and the copy's "2%" is accurate but does
-   not show it. Options: (a) leave the percentage alone, which is accurate and
-   short; (b) add a worked example from a real extension, which is honest and
-   alarming; (c) show only the small-rent rows above. I recommend (b) with the
-   measured figure, because a fee understated by its example is the kind of
-   thing that is quoted back.
-2. **Whether this can say "testnet only" at all** while the hosted tier is not
-   live. A page that offers a paid tier nobody can use is the "disabled control
-   standing in for an unshipped feature" the gate forbids. Recommendation:
-   **hold the section out of the landing page until `PH2-E4-02` ships**, and
-   keep this file as the reviewed text.
-3. **Whether "Evergreen absorbs the failed-extension cost" should appear.** ADR
-   -007 says the engine absorbs about 8,000 to 12,400 stroops on a refunded job
-   as an operating cost. The copy says only that the whole pull is refunded. It
-   is true and complete for the user. It leaves the operating cost unmentioned,
-   which is fine unless you want it said.
+1. **The worked example uses the real extension.** The shared code entry
+   extension in `docs/evidence/2026-10-14-shared-code-extend/` cost 28.9113 XLM,
+   shown as 28.9 XLM. At 2% the hosted fee is 0.578 XLM (0.5782 XLM rounded up
+   in stroops by `hostedFeeStroops`).
+2. **The section stays off the landing page until `PH2-E4-02` ships.** This file
+   is the reviewed text. The fee numbers in it (2%, 25,000 stroops, 28.9 XLM,
+   0.578 XLM) are also held back: the "Fees, prices, percentages, billing" row
+   in `claims-and-copy.md` allows a fee number only after `PH2-E5-03` is set
+   and it ships. They live in this draft only.
+3. **The failed-attempt network fee is said, in one sentence and without a
+   stroop figure.** It cites ADR-007 step 5. The 8,000 to 12,400 stroop range
+   stays in the ADR and is not copy.
