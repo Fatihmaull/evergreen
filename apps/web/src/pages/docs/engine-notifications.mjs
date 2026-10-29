@@ -48,7 +48,8 @@ export function render() {
     <p>
       No notification can mean nothing crossed a threshold — or it can mean the scheduled run did
       not fire. Those are different situations that look identical from an inbox, which is why a
-      missed run is alerted on separately rather than inferred from quiet.
+      missed run is meant to be alerted on separately rather than inferred from quiet. That
+      separate alert is written but not switched on yet, so for now quiet proves nothing.
       <a class="site-more" href="/docs/engine/">What the engine is</a>
     </p>
   `;
