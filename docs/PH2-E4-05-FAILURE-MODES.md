@@ -140,7 +140,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F11. Cron missed, or the gap too large.**
 - Detection: `scheduler_ticks` (migration 0005, `apps/api/db/0005_scheduler_ticks.sql:7`, applied to preview per #481) shows a gap in ledgers. DoD-2 passes only if **4 × the worst gap is below the lowest act threshold in use** (`phase-2/PHASE2-PLAN.md:49`). Cloudflare's cron has no delivery guarantee (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:22`) and has never been measured here.
 - User: when the gap puts one of their entries at risk: **ledgers left below 4 × the worst gap** (Fatih, 2026-10-29, option 1). The user channel is **undetermined**.
-- Operator: required, from a trigger **independent of the scheduler** (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:61`); which one is open. Alert threshold in ledgers **undetermined**.
+- Operator: required, from a trigger **independent of the scheduler** (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:61`). **Decided (PM, 2026-10-29):** a `scheduled` handler in the API Worker (`apps/api/src/alerts/heartbeat.ts`) reads the newest `scheduler_ticks` row and emails every `ALERTS_ALLOWLIST` operator through Resend when it is older than `HEARTBEAT_STALE_SECONDS`; it sends only when `ALERTS_SEND` is exactly `send`. Not live yet: the API Worker has no cron trigger (DevOps), the `eg_api` role has no SELECT on `scheduler_ticks` in 0008 (Rakha), and the staleness value is **undetermined** (unset means no check). Alert threshold in ledgers **undetermined**.
 - Money: none; protection may be missed.
 - Retry: the next tick. Ticks are never thinned to save compute (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:5`).
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
