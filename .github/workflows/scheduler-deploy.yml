@@ -1,0 +1,42 @@
+# Deploys the scheduler Worker to PREVIEW only (evergreen-scheduler-preview).
+# Manual on purpose: the first run CREATES the Worker on Cloudflare, so it runs only
+# when DevOps dispatches it after the secrets below exist. There is no production job
+# and no cron; production lands in a later PR behind the `production` environment.
+# Needs on the Worker (set by DevOps, never in this file): DATABASE_URL (eg_scheduler role),
+# TICK_TOKEN. Without them /health answers and /tick does not exist.
+name: Scheduler deploy (preview)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: scheduler-deploy-preview
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_VERSION: '4'
+
+jobs:
+  preview:
+    name: deploy evergreen-scheduler-preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: build packages/core (and its workspace deps)
+        run: pnpm --filter "@evergreen-stellar/core..." run build
+      - name: wrangler deploy --env preview
+        working-directory: apps/scheduler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
