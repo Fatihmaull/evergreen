@@ -27,11 +27,11 @@ Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`,
 | `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
 | `0004_users_reactivated_at.sql` (#456) | yes, **2026-10-28**, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`ALTER TABLE`, `COMMENT`) | `users.reactivated_at` is `timestamptz`, nullable, no default, with the file's column comment; the one preview user row is `NULL`; the whole-schema diff above was repeated with 0004 in the reference build and still differs only by `fips_mode` |
 | `0005_scheduler_ticks.sql` (#465) | yes, **2026-10-28**, from `main` at `6c9478c`, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`CREATE TABLE`, `CREATE INDEX`) | `scheduler_ticks`: `id bigint GENERATED ALWAYS AS IDENTITY` PK, `ticked_at timestamptz NOT NULL DEFAULT now()`, `observed_ledger bigint NOT NULL CHECK (> 0)`, index on `(ticked_at)`; zero rows; whole-schema diff with 0005 in the reference build differs only by `fips_mode` |
-| `0006` (#466, submitted hashes) | **not yet**, the PR is open | apply after it merges, the same way |
+| `0006` (#466, submitted hashes) | **applied 2026-10-29**: preview 19:58 WIB, production 19:59 WIB (from `04a7328`, blob `48472ae`), one transaction each, Neon WS driver | 6 nullable columns on `jobs` (`{pull,extend,refund}_submitted_hash` text, `{pull,extend,refund}_submitted_expires_at` timestamptz) present on both branches, still 12 tables |
 
 **The migration ledger does not exist yet.** #464 added only its card (`PH2-E2-07`, a `schema_migrations` table written by each file); until that table is built, this table is the record of what ran where.
 
-**Production** (`br-proud-mountain-aon0gpyl`) got `schema.sql` + `0002`-`0005` on **2026-10-29 at about 17:01 WIB**, applied from `main` at `211ff128`, on Fatih's yes. Each file ran as a single transaction with stop-on-error (Neon WS driver). Result: **12 tables**, and the full shape is identical to `preview`. `0006`-`0008` are not on production.
+**Production** (`br-proud-mountain-aon0gpyl`) got `schema.sql` + `0002`-`0005` on **2026-10-29 at about 17:01 WIB**, applied from `main` at `211ff128`, on Fatih's yes. Each file ran as a single transaction with stop-on-error (Neon WS driver). Result: **12 tables**, and the full shape is identical to `preview`. `0006` followed at 19:59 WIB (row above); `0007`-`0008` are not on production.
 
 Preview holds a little test data (a user, a session, sign-in codes and rate counters from login tests). Counts only were read.
 
@@ -148,6 +148,7 @@ The delete-then-create gap leaves **no snapshot for a moment**, so create the ne
 | Date (UTC) | Migration applied next | Snapshot name | Created by |
 |---|---|---|---|
 | 2026-10-29 10:00 | schema.sql + 0002-0005 | `pre-schema-0001-0005` (`snap-fancy-bar-aonzvey1`), kept until 0006-0008 are safely on production | DevOps |
+| 2026-10-29 12:58 | 0006 | `pre-0006-20261029` (`snap-sweet-tree-ao8i2oue`); preview has none (Neon refuses snapshots of non-root branches) | DevOps |
 | 2026-10-29 11:07 | (post-schema baseline) | `post-schema-0001-0005-20261029` (`snap-bold-brook-ao0wyvhr`) | DevOps |
 
 **Schedule (2026-10-29):** daily at 19:00 UTC (02:00 WIB), each snapshot kept 7 days (`backup_schedule` on `br-proud-mountain-aon0gpyl`).

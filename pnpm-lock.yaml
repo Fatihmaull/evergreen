@@ -70,6 +70,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared-types
 
+  apps/scheduler:
+    dependencies:
+      '@evergreen-stellar/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@neondatabase/serverless':
+        specifier: 1.2.0
+        version: 1.2.0
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.11
+        version: 0.5.11
+
   packages/cli:
     dependencies:
       '@stellar/stellar-sdk':

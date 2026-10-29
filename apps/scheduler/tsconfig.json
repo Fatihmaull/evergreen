@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // A Worker, not Node: fetch, Web Crypto, no Node globals. No `node` types on
+    // purpose, so a stray `Buffer` or `process` fails typecheck here instead of
+    // misbehaving at the edge (as core's extend path did, PH2-E1-09).
+    "lib": ["ES2023", "WebWorker"],
+    "types": []
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../../packages/core" }, { "path": "../../packages/shared-types" }]
+}
