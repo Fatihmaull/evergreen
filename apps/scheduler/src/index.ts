@@ -74,7 +74,29 @@ export {
   readOnlyQuery,
   summarise,
 } from './evaluate.js';
-export { countDue, createFetchReader, scanRequest, verdict } from './due.js';
+export {
+  countDue,
+  countVerdicts,
+  createFetchReader,
+  dueVerdicts,
+  scanRequest,
+  verdict,
+} from './due.js';
+export {
+  dryRunSubmitter,
+  planExtendRequests,
+  submitPlan,
+  summariseWouldSubmit,
+} from './extend-plan.js';
+export type {
+  ExtendItem,
+  ExtendPlan,
+  ExtendRequest,
+  ExtendSubmitter,
+  SkipReason,
+  SubmitOutcome,
+  WouldSubmitSummary,
+} from './extend-plan.js';
 export type { DueCounts, DueVerdict, FetchReaderOptions } from './due.js';
 export type { EvaluationErrorCode, EvaluationSummary } from './evaluate.js';
 export { INSERT_TICK_SQL, TickError, runTick } from './tick.js';

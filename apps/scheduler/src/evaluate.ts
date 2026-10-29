@@ -19,7 +19,12 @@ import { PgTenantStore, type TenantQuery } from '@evergreen/engine/dist/pg-tenan
 import { planTenantsFromStore } from '@evergreen/engine/dist/tenant-store.js';
 import type { TenantPlan } from '@evergreen/engine/dist/tenants.js';
 import type { LedgerEntryReader } from '@evergreen-stellar/core';
-import { countDue, timedReader, type DueCounts, type RpcTiming } from './due.js';
+import { countVerdicts, dueVerdicts, timedReader, type DueCounts, type RpcTiming } from './due.js';
+import {
+  planExtendRequests,
+  summariseWouldSubmit,
+  type WouldSubmitSummary,
+} from './extend-plan.js';
 
 export type EvaluationErrorCode = 'EVAL_WRITE_REFUSED' | 'EVAL_DB_FAILED';
 
@@ -66,6 +71,8 @@ export interface EvaluationSummary {
   readonly due?: DueCounts;
   /** Stage 1b: how long the chain reads took this tick. Absent when no reader was given. */
   readonly rpc?: RpcTiming;
+  /** Stage 2 prep: what would be handed to PH2-E4-02, counts only. Absent with no reader. */
+  readonly wouldSubmit?: WouldSubmitSummary;
 }
 
 export function summarise(plans: readonly TenantPlan[]): EvaluationSummary {
@@ -100,6 +107,10 @@ export async function evaluate(
   if (reader === undefined) return { plans, summary };
   // core's scan turns a failed read into an issue (so the item is undetermined), never a throw.
   const timed = timedReader(reader, now);
-  const due = await countDue(plans, timed.reader);
-  return { plans, summary: { ...summary, due, rpc: timed.timing() } };
+  const verdicts = await dueVerdicts(plans, timed.reader);
+  const wouldSubmit = summariseWouldSubmit(planExtendRequests(plans, verdicts));
+  return {
+    plans,
+    summary: { ...summary, due: countVerdicts(verdicts), rpc: timed.timing(), wouldSubmit },
+  };
 }

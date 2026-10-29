@@ -166,32 +166,44 @@ export function verdict(item: TenantItem, scan: ScanResult): DueVerdict {
   return needsAction(min, Number(item.thresholdLedgers)) ? 'due' : 'not-due';
 }
 
-/** Scans every planned item's scope once (core dedupes keys) and counts verdicts. */
-export async function countDue(
+/** Scans every planned item's scope once (core dedupes keys) and returns each item's verdict. */
+export async function dueVerdicts(
   plans: readonly TenantPlan[],
   reader: LedgerEntryReader,
-): Promise<DueCounts> {
-  const items = plans.flatMap((p) => p.items);
+): Promise<Map<TenantItem, DueVerdict>> {
+  const out = new Map<TenantItem, DueVerdict>();
   const requests: ContractScanRequest[] = [];
   const readable: TenantItem[] = [];
-  let undetermined = 0;
-  for (const item of items) {
+  for (const item of plans.flatMap((p) => p.items)) {
     const request = scanRequest(item);
-    if (request === null) undetermined += 1;
+    if (request === null) out.set(item, 'undetermined');
     else {
       requests.push(request);
       readable.push(item);
     }
   }
-  const counts = { due: 0, notDue: 0, expired: 0, undetermined };
-  if (requests.length === 0) return counts;
+  if (requests.length === 0) return out;
   const scan = await scanContracts(reader, requests);
-  for (const item of readable) {
-    const v = verdict(item, scan);
+  for (const item of readable) out.set(item, verdict(item, scan));
+  return out;
+}
+
+/** Counts verdicts from `dueVerdicts`. */
+export function countVerdicts(verdicts: ReadonlyMap<TenantItem, DueVerdict>): DueCounts {
+  const counts = { due: 0, notDue: 0, expired: 0, undetermined: 0 };
+  for (const v of verdicts.values()) {
     if (v === 'due') counts.due += 1;
     else if (v === 'not-due') counts.notDue += 1;
     else if (v === 'expired') counts.expired += 1;
     else counts.undetermined += 1;
   }
   return counts;
+}
+
+/** Scans every planned item's scope once and counts verdicts. */
+export async function countDue(
+  plans: readonly TenantPlan[],
+  reader: LedgerEntryReader,
+): Promise<DueCounts> {
+  return countVerdicts(await dueVerdicts(plans, reader));
 }
