@@ -29,6 +29,7 @@ Applied in order:
 | `0005_scheduler_ticks.sql` | Adds `scheduler_ticks` (tick time, observed ledger): one heartbeat per cron tick, so the scheduler gap DoD-2 needs can be measured in ledgers ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §4). PH2-E4-04. |
 | `0006_jobs_submitted_hashes.sql` | Adds nullable `jobs.pull_submitted_hash`, `extend_submitted_hash`, `refund_submitted_hash` (each step's signed-envelope hash, written before the send) and `pull_submitted_expires_at`, `extend_submitted_expires_at`, `refund_submitted_expires_at` (that envelope's expiry) ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §5). `*_tx_hash` still means confirmed. PH2-E4-02. |
 | `0007_fee_ledger_network_fee_evidence.sql` | Replaces `fee_ledger_job_balance` (same columns) so `unexplained` = pull − (rent + evergreen-fee + refund + difference): `network-fee` rows are evidence only, never billed ([#414](https://github.com/Fatihmaull/evergreen/issues/414), Fatih's decision 1). Adds `fee_ledger_job_subsidy`: per job `margin` = evergreen-fee − network-fee, must be ≥ 0; a fully refunded job (extend failed after the pull) has `fully_refunded` and is never `subsidised`. Apply **after 0006**; 0007 uses no 0006 column. PH2-E4-02. |
+| `0008_roles_grants.sql` | Least-privilege grants for the two login roles `eg_api` and `eg_scheduler` (placeholder names) and append-only triggers on `fee_ledger` (UPDATE, DELETE and TRUNCATE refused for every role, owner included). Refuses to run if a role is missing or is a member of `neon_superuser` / `pg_*_all_data`. Apply after 0007, once DevOps has created both roles with SQL `CREATE ROLE ... LOGIN` (not the Neon console). Grants matrix: [#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6486873101). PH2-E4-04. |
 
 ```
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
@@ -37,7 +38,13 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0004
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0005_scheduler_ticks.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0006_jobs_submitted_hashes.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0007_fee_ledger_network_fee_evidence.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0008_roles_grants.sql
 ```
+
+### Checklist for every new migration
+
+- Apply line uses `-v ON_ERROR_STOP=1 --single-transaction`.
+- Every migration carries its own GRANTs: a new table, view, sequence, or a column a role must read or write gets its GRANT to `eg_api` / `eg_scheduler` in the same file. 0008 sets no default privileges, and column-level grants never extend to new columns.
 
 `schema.sql` still shows the cross-user index; it is not edited after apply. The live index is the one from `0002`.
 
