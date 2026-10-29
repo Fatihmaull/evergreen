@@ -1,6 +1,6 @@
 # PH2-E4-04 scheduler: design for agreement before code
 
-**Status: PROPOSAL, 2026-10-27 (CEF).** No code, no Worker config and no migration exists for this yet. It is to be agreed with DevOps (deploy, queues, secrets) and Rakha (money path, schema) on #385 before anything is built. Fatih decided on 2026-10-27 to start with the design.
+**Status, 2026-10-29: agreed to build, in stages.** Fatih decided on 2026-10-28 to start (cadence, the DoD-2 check and the Neon outcome are in the next paragraph and §6). **Stage 0 (the heartbeat) is built in #482.** Stages 1 (evaluation) and 2 (the money path, after `PH2-E4-02`) are not. The asks to DevOps in §8 keep the defaults stated there unless DevOps objects on #461 (Fatih, 2026-10-28). Nothing in this document is deployed.
 
 **Decided by Fatih, 2026-10-28:** (1) **15-minute ticks** are accepted. (2) **DoD-2's scheduler check is "4 × the worst observed gap, in ledgers, is below the lowest act threshold in use"** (§4). (3) **The Neon gate is lifted on DevOps' worst-case bound (§6), so scheduler code may start.** If DevOps' continuing measurement exceeds that bound, **the design changes, not the measurement:** the heartbeat is what DoD-2 and `THRESHOLD_FLOOR_LEDGERS` rest on, so it is never thinned out to save compute.
 
