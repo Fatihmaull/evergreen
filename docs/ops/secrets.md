@@ -67,6 +67,23 @@ wrangler secret put <NAME>                    # production; Fatih's go first
 
 Rotating `SIGNIN_CODE_PEPPER` makes every outstanding sign-in code unverifiable (they are stored under the HMAC key, so they expire within their 10 minutes anyway). Rotating `CHALLENGE_SIGNING_KEY` invalidates outstanding wallet challenges. Neither moves money.
 
+## Alert sending: `ALERTS_SEND` (PH2-E2-06; Fatih, relayed 2026-10-29 16:25 WIB)
+
+The kill switch from [`docs/PH2-E2-06-ALERTS-DESIGN.md`](../PH2-E2-06-ALERTS-DESIGN.md) (#485, `e5347cb`): sending is on **only when `ALERTS_SEND` is exactly `send`**. Any other value, including unset, empty, `SEND` or added whitespace, is dry-run.
+
+| Worker | `ALERTS_SEND` | `ALERTS_ALLOWLIST` |
+|---|---|---|
+| scheduler, **preview** | **left unset** (dry-run) | stored as a Worker **secret**, so no address is in the repo |
+| scheduler, **production** | **nothing set**; `send` is set only after **all three** below | not set |
+
+Production gets `ALERTS_SEND=send` only after **all** of:
+
+1. The E2-06 alert code is merged.
+2. The production secrets are installed (waits on Fatih's "ya" and the Neon Launch plan).
+3. A production sender domain exists.
+
+Until then nothing is set in production. Note: the design calls both names DevOps settings, not secrets; the allowlist is kept as a secret anyway because it holds email addresses.
+
 ## Residual risk: the Cloudflare token is repo-level (accepted, Fatih, 2026-10-27)
 
 `CLOUDFLARE_API_TOKEN` is a **repository** secret, not an environment secret. Two consequences, both known and accepted:
