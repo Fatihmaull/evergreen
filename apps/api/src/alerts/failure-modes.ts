@@ -141,15 +141,22 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F10: {
     user: { kind: 'email', alerts: ['testnet_reset'] },
     operator: { when: 'every' },
-    detector: 'undetermined: exact signal undetermined in the doc',
+    // PROVISIONAL (PM-accepted, pending Tih's confirmation): signal 1 only.
+    // The user email needs the signal-2 confirmation, pending on #482.
+    detector:
+      'testnetResetSignal (signal 1, provisional; user email needs signal 2, pending on #482)',
   },
   F11: {
-    user: { kind: 'undetermined', note: "rule for an entry 'at risk' from a gap is undetermined" },
+    // PROVISIONAL (PM-accepted, pending Tih's confirmation): option 1, entriesAtRiskFromGap.
+    user: {
+      kind: 'undetermined',
+      note: 'at-risk rule provisional (entriesAtRiskFromGap); user channel undetermined',
+    },
     operator: thr(
       'gap in ledgers between scheduler_ticks; trigger must be independent of the scheduler',
     ),
     detector:
-      'tickGaps, gapMarginHolds (reading scheduler_ticks and the trigger pending on #482; alert threshold undetermined)',
+      'tickGaps, gapMarginHolds, entriesAtRiskFromGap (reading scheduler_ticks and the trigger pending on #482; alert threshold undetermined)',
   },
   F12: {
     user: { kind: 'none' },
@@ -407,4 +414,55 @@ export function missingApiSettings(
     const v = env[n];
     return v === undefined || v.trim() === '';
   });
+}
+
+// ---- PROVISIONAL decisions: PM-accepted, pending Tih's confirmation ----
+
+export interface TestnetResetSignal {
+  /** Operator alert: ledger went backwards between consecutive ticks. */
+  readonly operatorAlert: boolean;
+  /** DoD-2 measurement window must restart. */
+  readonly restartDod2Window: boolean;
+  /** The user email needs signal 2 (pending on #482); never true from signal 1 alone. */
+  readonly userEmail: false;
+  readonly decreases: readonly { readonly from: bigint; readonly to: bigint }[];
+}
+
+/**
+ * F10 signal 1, PROVISIONAL (PM-accepted, pending Tih's confirmation):
+ * observed_ledger decreasing between consecutive scheduler_ticks. Reads
+ * tickGaps().nonIncreasing and keeps strict decreases only (an equal ledger is
+ * a stall, not a reset). Triggers an operator alert and a DoD-2 window restart.
+ * The user `testnet_reset` email waits on signal 2, pending on #482.
+ */
+export function testnetResetSignal(ticks: readonly TickFact[]): TestnetResetSignal {
+  const decreases = tickGaps(ticks).nonIncreasing.filter((s) => s.to < s.from);
+  const hit = decreases.length > 0;
+  return { operatorAlert: hit, restartDod2Window: hit, userEmail: false, decreases };
+}
+
+export interface EntryLedgersLeft {
+  readonly entryId: string;
+  /** Ledgers left before expiry; undefined when not observed. */
+  readonly ledgersLeft: number | undefined;
+}
+
+/**
+ * F11 option 1, PROVISIONAL (PM-accepted, pending Tih's confirmation): an entry
+ * is at risk when its ledgers left are below 4 x the running worst gap.
+ * This is a scheduler-margin rule (gap vs ledgers left), not the act rule:
+ * core's needsAction is not imported because apps/api does not depend on core
+ * (Worker build). Whether this belongs in a core helper is asked on #385.
+ * Returns undefined when the worst gap is unknown (absence is not health);
+ * entries with unknown ledgers left are skipped.
+ */
+export function entriesAtRiskFromGap(
+  entries: readonly EntryLedgersLeft[],
+  worstGapLedgers: bigint | undefined,
+): string[] | undefined {
+  if (worstGapLedgers === undefined) return undefined;
+  const margin = 4n * worstGapLedgers;
+  return entries
+    .filter((e) => e.ledgersLeft !== undefined && BigInt(e.ledgersLeft) < margin)
+    .map((e) => e.entryId);
 }
