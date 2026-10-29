@@ -16,6 +16,8 @@
  *   Undetermined is never read as either answer.
  */
 import {
+  isExpiredObservation,
+  needsAction,
   scanContracts,
   type ContractScanRequest,
   type LedgerEntryReader,
@@ -118,12 +120,12 @@ export function verdict(item: TenantItem, scan: ScanResult): DueVerdict {
   if (entries.length === 0) return 'undetermined';
   let min = Infinity;
   for (const entry of entries) {
-    if (entry.ttl.status === 'expired') return 'expired';
+    if (isExpiredObservation(entry.ttl)) return 'expired';
     if (entry.ttl.status !== 'known') return 'undetermined';
-    if (entry.ttl.remainingLedgers < 0) return 'expired';
     min = Math.min(min, entry.ttl.remainingLedgers);
   }
-  return BigInt(min) <= item.thresholdLedgers ? 'due' : 'not-due';
+  // The engine's plan only admits safe-integer thresholds (isEligible), so Number() is exact.
+  return needsAction(min, Number(item.thresholdLedgers)) ? 'due' : 'not-due';
 }
 
 /** Scans every planned item's scope once (core dedupes keys) and counts verdicts. */
