@@ -82,7 +82,7 @@ Reproduced 2026-10-27 on Postgres 16.15. Without `ON_ERROR_STOP`, psql keeps goi
    `exit=0` is required, but **not sufficient**: go on to Verify.
 5. **Verify** (below), then record it in the PR that added the file: file name, branch, the object-level evidence.
 
-Never run a migration against `production` without Fatih's explicit "ya". Production waits on a least-privilege app role, append-only grants on `fee_ledger`, and the production approval gate ([`deploy.md`](deploy.md)).
+Never run a migration against `production` without Fatih's explicit "ya", and **take a snapshot first** (next section). Production waits on a least-privilege app role, append-only grants on `fee_ledger`, and the production approval gate ([`deploy.md`](deploy.md)).
 
 ## Verify
 
@@ -128,11 +128,29 @@ Expected diff on 2026-10-27: one line, `fn   fips_mode ...`, from `pgcrypto`. An
 - **CI does not lock the SQL.** It does not apply `apps/api/db` to anything, so a file that does not apply is discovered at the Neon apply (flagged as a follow-up on #440).
 - **No rollback script.** Migrations are forward-only; see [`rollback.md`](rollback.md).
 
+## Before each production migration: one manual snapshot (Fatih, 2026-10-28)
+
+Until the Neon Launch upgrade ([`backup-and-restore.md`](backup-and-restore.md), option C now, option A later), the only restore point older than Free's 6-hour history is **one manual snapshot**, and Free allows **exactly one**. Production has no tables and no migration yet, so the log below is empty.
+
+```bash
+P=icy-sun-89705623; O=org-delicate-violet-65283800
+neonctl snapshots list --project-id $P --org-id $O                       # find the old one
+neonctl snapshots delete <old-snapshot-id> --project-id $P --org-id $O  # Free keeps one; make room
+neonctl snapshots create --branch production --name pre-<migration-file> --project-id $P --org-id $O
+neonctl snapshots list --project-id $P --org-id $O                       # confirm it exists, then migrate
+```
+
+The delete-then-create gap leaves **no snapshot for a moment**, so create the new one immediately and do not migrate until `list` shows it. Snapshots exist only on root branches, and `production` is the only root. Record every snapshot here, in the same PR or an ops note that applies the migration:
+
+| Date (UTC) | Migration applied next | Snapshot name | Created by |
+|---|---|---|---|
+| (none yet) | | | |
+
 ## Compute budget on the Free plan
 
 Neon Free allows **100 CU-hours per project per month**, shared by every branch's compute (`neon.com/docs/introduction/plans`, read 2026-10-28). The compute here is 0.25 CU (the endpoint minimum; observed average 0.256 while active) and suspends after **5 idle minutes, which cannot be changed on Free**. The billing period ran 2026-10-22 to 2026-11-01 and had used **0.57 CU-hours** on 2026-10-28.
 
-A scheduler that touches the database every N minutes wakes it every N minutes. Whether the 5 idle minutes before suspension count as active time is **not stated in Neon's docs and not yet measured here**, so both readings are shown (30.4 days, 0.25 CU, 10 s of work per tick):
+A scheduler that touches the database every N minutes wakes it every N minutes. Whether the 5 idle minutes before suspension count as active time is **not stated in Neon's docs**. It was **measured here on 2026-10-28** (below): they do count. Both readings are kept for comparison (30.4 days, 0.25 CU, 10 s of work per tick):
 
 | Tick every | CU-h per month, idle window **billed** | idle window **not billed** |
 |---|---|---|
@@ -145,7 +163,8 @@ A scheduler that touches the database every N minutes wakes it every N minutes. 
 - **Only one branch may tick at 15 minutes.** Two is about 146 CU-h. A preview scheduler runs on manual dispatch or every 6 hours (about 3 more).
 - **Keep-alive pings cannot work on Free:** staying awake is 182.4 CU-h.
 - Paid alternative: Launch at $0.106 per CU-hour is about $7 to $8 a month for the same 15-minute hours, and about **$19.3** a month with scale-to-zero disabled (always on), which allows any cadence.
-- **The measurement** that settles the billed/not-billed question: wake the `production` branch (no other traffic) with one query and read the change in `active_time_seconds` from `neonctl branches list --project-id <id> --org-id <org> --output json`. A wake that adds about 300 s means the idle window is billed. Neon's per-branch counters lag by more than 10 minutes, so read it later. **Result: pending** (woken 2026-10-28 11:43 UTC from a baseline of 600 s active, 152 compute-seconds).
+- **The measurement.** The `production` branch has no other traffic, so one read-only query there isolates one wake. Baseline 2026-10-28 11:43 UTC: `active_time_seconds` 600, `compute_time_seconds` 152. After one `select 1`, read at 14:09 UTC: **964 and 244, so one wake added 364 s of active time and 92 compute-seconds (0.253 CU).** A wake that costs a query's few milliseconds would have added about zero; 364 s is the **5-minute idle window plus about a minute**, so **the idle window is billed**. At that cost, 96 wakes a day is about 9.7 hours, which is **about 74 CU-hours a month** at 15 minutes (the 60 s-of-work row above is the same figure). One sample, so treat the extra minute as approximate. Neon's per-branch counters lag: they had not moved after 10 minutes and had by 26. Re-measure (`neonctl branches list --project-id <id> --org-id <org> --output json`, field `active_time_seconds`) before relying on a different interval.
+- **Decision (Fatih, 2026-10-28): stay on Free; 15-minute ticks on `production` only; the preview scheduler is manual.**
 - Read consumption daily once a scheduler runs; flag at 70 CU-h.
 
 The numbers and options were posted for CEF on [#461](https://github.com/Fatihmaull/evergreen/pull/461).
