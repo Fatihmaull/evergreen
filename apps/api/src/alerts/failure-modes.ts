@@ -12,6 +12,8 @@
  *   "Alert channels"); the heartbeat alert's independent trigger is open.
  * - Every threshold, window, retry bound and copy the doc marks undetermined.
  */
+import { AUTH_SECRET_NAMES } from '../auth/mount.js';
+import { wholeNumber } from '../watchlist/mount.js';
 import { ALERT_SPECS, type AlertKind } from './policy.js';
 
 export type FailureMode =
@@ -146,7 +148,8 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
     operator: thr(
       'gap in ledgers between scheduler_ticks; trigger must be independent of the scheduler',
     ),
-    detector: 'pending: scheduler (#482) and an independent trigger',
+    detector:
+      'tickGaps, gapMarginHolds (reading scheduler_ticks and the trigger pending on #482; alert threshold undetermined)',
   },
   F12: {
     user: { kind: 'none' },
@@ -180,13 +183,13 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F17: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
-    detector:
-      'pending: already answered as 503 by the watchlist mount; operator delivery needs a channel',
+    detector: 'thresholdFloorProblem (operator delivery needs a channel)',
   },
   F18: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
-    detector: 'pending: engine key does not exist yet; operator delivery needs a channel',
+    detector:
+      'missingApiSettings (engine key pending: it does not exist yet; operator delivery needs a channel)',
   },
   F19: {
     user: { kind: 'email', alerts: ['restore_lost_changes'] },
@@ -324,4 +327,84 @@ export function pulledThenFailedRates(
   for (const [u, a] of acc)
     out.set(u, { pulled: a.pulled, pulledThenFailed: a.failed, rate: a.failed / a.pulled });
   return out;
+}
+
+// ---- Detectors over inputs that exist on main: scheduler_ticks, the API's env ----
+
+/** One `scheduler_ticks` row (apps/api/db/0005_scheduler_ticks.sql:7). */
+export interface TickFact {
+  readonly tickedAt: number;
+  readonly observedLedger: bigint;
+}
+
+export interface TickGaps {
+  /** Largest ledger step between consecutive ticks; undefined with fewer than two ticks (never 0). */
+  readonly worstGapLedgers: bigint | undefined;
+  /** Steps where observed_ledger did not increase. A candidate F10 signal, not decided as one. */
+  readonly nonIncreasing: readonly { readonly from: bigint; readonly to: bigint }[];
+}
+
+/**
+ * F11: the gap in ledgers between consecutive ticks, ordered by `ticked_at`
+ * (the migration's index). The window and alert threshold are undetermined;
+ * the caller passes the rows of whatever window is decided.
+ */
+export function tickGaps(ticks: readonly TickFact[]): TickGaps {
+  const sorted = [...ticks].sort((a, b) => a.tickedAt - b.tickedAt);
+  let worst: bigint | undefined;
+  const nonIncreasing: { from: bigint; to: bigint }[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const from = sorted[i - 1]!.observedLedger;
+    const to = sorted[i]!.observedLedger;
+    if (to <= from) nonIncreasing.push({ from, to });
+    const gap = to - from;
+    if (worst === undefined || gap > worst) worst = gap;
+  }
+  return { worstGapLedgers: worst, nonIncreasing };
+}
+
+/**
+ * DoD-2 (phase-2/PHASE2-PLAN.md:49): 4 x the worst gap is below the lowest act
+ * threshold in use. `undefined` when either input is missing: absence is not health.
+ * A margin check on the scheduler, not a TTL comparison: no entry TTL is read here.
+ */
+export function gapMarginHolds(
+  worstGapLedgers: bigint | undefined,
+  lowestActLedgers: bigint | undefined,
+): boolean | undefined {
+  if (worstGapLedgers === undefined || lowestActLedgers === undefined) return undefined;
+  return 4n * worstGapLedgers < lowestActLedgers;
+}
+
+/**
+ * F17: `THRESHOLD_FLOOR_LEDGERS` by the watchlist mount's own rule
+ * (apps/api/src/watchlist/mount.ts:47). Unset blocks autopilot (docs/API.md:175);
+ * malformed takes the whole watchlist mount down.
+ */
+export function thresholdFloorProblem(
+  env: Readonly<Record<string, string | undefined>>,
+): 'unset' | 'malformed' | null {
+  const raw = env['THRESHOLD_FLOOR_LEDGERS'];
+  if (raw === undefined || raw === '') return 'unset';
+  return wholeNumber(raw) === undefined ? 'malformed' : null;
+}
+
+/** F18 settings the API reads today (docs/API.md:35, apps/api/src/auth/mount.ts:27). */
+export const API_REQUIRED_SETTINGS = [
+  ...AUTH_SECRET_NAMES,
+  'EMAIL_FROM',
+  'DASHBOARD_ORIGIN',
+] as const;
+
+/**
+ * F18: names (never values) of required settings that are unset or empty.
+ * For the operator only; user-facing errors never name a setting.
+ */
+export function missingApiSettings(
+  env: Readonly<Record<string, string | undefined>>,
+): (typeof API_REQUIRED_SETTINGS)[number][] {
+  return API_REQUIRED_SETTINGS.filter((n) => {
+    const v = env[n];
+    return v === undefined || v.trim() === '';
+  });
 }

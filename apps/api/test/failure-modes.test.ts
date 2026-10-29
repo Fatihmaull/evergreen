@@ -7,7 +7,12 @@ import {
   ALERT_SPECS,
   FAILURE_MODES,
   FAILURE_MODE_ALERTS,
+  API_REQUIRED_SETTINGS,
   alertModeMismatches,
+  gapMarginHolds,
+  missingApiSettings,
+  thresholdFloorProblem,
+  tickGaps,
   duplicatePulls,
   isPreflightFailed,
   isPulledThenFailed,
@@ -130,5 +135,50 @@ describe('pulled-then-failed rate', () => {
   it('a user with no pulls has no rate (undetermined, not 0)', () => {
     const r = pulledThenFailedRates([{ userId: 'u3', status: 'preflight-failed', pulled: false }]);
     expect(r.has('u3')).toBe(false);
+  });
+});
+
+describe('detectors over inputs on main', () => {
+  it('tickGaps: worst gap, non-increasing steps, no gap from < 2 ticks', () => {
+    expect(tickGaps([]).worstGapLedgers).toBeUndefined();
+    expect(tickGaps([{ tickedAt: 1, observedLedger: 10n }]).worstGapLedgers).toBeUndefined();
+    const g = tickGaps([
+      { tickedAt: 3, observedLedger: 160n },
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 112n },
+      { tickedAt: 4, observedLedger: 150n },
+    ]);
+    expect(g.worstGapLedgers).toBe(48n);
+    expect(g.nonIncreasing).toEqual([{ from: 160n, to: 150n }]);
+  });
+
+  it('gapMarginHolds: 4x worst < lowest threshold, undefined when unknown', () => {
+    expect(gapMarginHolds(10n, 41n)).toBe(true);
+    expect(gapMarginHolds(10n, 40n)).toBe(false);
+    expect(gapMarginHolds(undefined, 40n)).toBeUndefined();
+    expect(gapMarginHolds(10n, undefined)).toBeUndefined();
+  });
+
+  it('thresholdFloorProblem follows the watchlist mount rule', () => {
+    expect(thresholdFloorProblem({})).toBe('unset');
+    expect(thresholdFloorProblem({ THRESHOLD_FLOOR_LEDGERS: '' })).toBe('unset');
+    expect(thresholdFloorProblem({ THRESHOLD_FLOOR_LEDGERS: '0' })).toBe('malformed');
+    expect(thresholdFloorProblem({ THRESHOLD_FLOOR_LEDGERS: '12x' })).toBe('malformed');
+    expect(thresholdFloorProblem({ THRESHOLD_FLOOR_LEDGERS: '720' })).toBeNull();
+  });
+
+  it('missingApiSettings names missing settings, never values', () => {
+    const full = Object.fromEntries(API_REQUIRED_SETTINGS.map((n) => [n, 'v']));
+    expect(missingApiSettings(full)).toEqual([]);
+    expect(missingApiSettings({ ...full, EMAIL_FROM: ' ', DATABASE_URL: undefined })).toEqual([
+      'DATABASE_URL',
+      'EMAIL_FROM',
+    ]);
+  });
+
+  it('mapping names the new detectors', () => {
+    expect(FAILURE_MODE_ALERTS.F11.detector).toMatch(/^tickGaps/);
+    expect(FAILURE_MODE_ALERTS.F17.detector).toMatch(/^thresholdFloorProblem/);
+    expect(FAILURE_MODE_ALERTS.F18.detector).toMatch(/^missingApiSettings/);
   });
 });
