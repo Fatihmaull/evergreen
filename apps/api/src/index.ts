@@ -146,6 +146,13 @@ export {
   isTryAgainLater,
   pulledThenFailedRates,
   reconcileProblems,
+  pulledThenFailedBreaches,
+  PULLED_THEN_FAILED_WINDOW_SECONDS,
+  PULLED_THEN_FAILED_MIN_PULLED,
+  PULLED_THEN_FAILED_RATE_PERCENT,
+  floatCheck,
+  isPermanentEmailFailure,
+  emailFailureOperatorAlert,
 } from './alerts/failure-modes.js';
 export type {
   FailureMode,
@@ -161,4 +168,9 @@ export type {
   EntryLedgersLeft,
   UserAlert,
   UserJobFact,
+  WindowedUserJobFact,
+  PulledThenFailedBreach,
+  FloatFacts,
+  FloatCheck,
+  EmailFailureFacts,
 } from './alerts/failure-modes.js';

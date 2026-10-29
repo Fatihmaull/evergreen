@@ -43,7 +43,7 @@ Final, no longer provisional. Each is applied in its row below.
 **Decision:** Fatih, 2026-10-28: the list includes a per-user failure rate, jobs that pulled and then failed to extend, per user, so abuse of the full-refund rule is visible. Recorded at `BACKLOG.md:654`, `phase-2/PHASE2-PLAN.md:354`, `docs/adr/ADR-007-allowance-funded-hosted-engine.md:68` and `docs/API.md:295`.
 
 - **Definition:** per user, over a window, the number of jobs whose pull confirmed and whose extend finally failed (status `refunded` after a pull, `docs/API.md:237`), divided by that user's jobs that pulled.
-- **Window: 30 days, rolling.** **Alert threshold: ≥ 3 pulled jobs and a rate ≥ 50%.** **On breach: an operator alert only**, no automatic action (Fatih, 2026-10-29).
+- **Window: 30 days, rolling.** **Alert threshold: ≥ 3 pulled jobs and a rate ≥ 50%.** **On breach: an operator alert only**, no automatic action (Fatih, 2026-10-29). Detector: `pulledThenFailedBreaches` (`apps/api/src/alerts/failure-modes.ts`); reading the job rows waits on `PH2-E4-02`.
 - **User alert:** each such job already alerts the user (mode F4 below). A separate user alert for the rate itself is **undetermined**.
 - **Operator alert:** on breach of the threshold.
 - A fleet-wide counterpart follows from DoD-2's "≥99% of autopilot jobs succeed" (`phase-2/PHASE2-PLAN.md:47`). The alert threshold for it is **undetermined**; 99% is the DoD-2 pass mark over 30 days, not an alert level.
@@ -111,7 +111,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Owner: `PH2-E4-02` (reconcile); alert `PH2-E4-05`.
 
 **F8. Engine float low or refund headroom short** (`BACKLOG.md:652`, `PH2-E4-03`).
-- Detection: engine account balance read against the float cap and headroom. **Headroom = the pulls in flight; cap = headroom + a sweep buffer** (Fatih, 2026-10-29, option 2). The buffer is decided at `PH2-E4-03`; until then only the low side can be checked.
+- Detection: engine account balance read against the float cap and headroom. **Headroom = the pulls in flight; cap = headroom + a sweep buffer** (Fatih, 2026-10-29, option 2). The buffer is decided at `PH2-E4-03`; until then only the low side can be checked. Detector: `floatCheck`; the balance read waits on `PH2-E4-02`.
 - User: none unless a job is blocked by it, then as F1. Whether a refund can be blocked by low float is **undetermined**; if it can, F6 applies.
 - Operator: required. DoD-2 also needs "the float never exceeded its cap" (`phase-2/PHASE2-PLAN.md:52`), so the cap's upper side alerts too.
 - Money: fees accumulate until the sweep; refunds draw on the pool.
@@ -185,7 +185,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - User: the sign-in screen says so (§9a). **When the failed email is itself a user alert, the user gets no alert:** a second channel or a dashboard notice is required for DoD-2's "alerts the user"; which one is **undetermined**.
 - Operator: required, for every failed user-alert send. Sign-in failures are logs only today.
 - Money: none.
-- Operator timing (Fatih, 2026-10-29, option 3): a **permanent** rejection goes to the operator's Telegram immediately; a **transient** failure alerts once its retries run out. The retry count is **undetermined**.
+- Operator timing (Fatih, 2026-10-29, option 3): a **permanent** rejection goes to the operator's Telegram immediately; a **transient** failure alerts once its retries run out. The retry count is **undetermined**. Detector: `emailFailureOperatorAlert` (permanent = provider 4xx other than 429, or a request that could not be built).
 - Retry: sign-in: the user retries; alerts: transient failures retry (bound **undetermined**), permanent rejections do not.
 - Owner: `PH2-E2-04` (sign-in), `PH2-E4-05` (alerts).
 
