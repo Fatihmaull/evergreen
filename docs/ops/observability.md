@@ -61,4 +61,4 @@ Cloudflare's older Workers Logs page quotes 20 million events a month then $0.60
 
 ## Budget alert
 
-Fatih adds a Budget Alert himself (Workers & Pages, Usage, Add Budget Alert; **$5 suggested**). Billing settings are his; DevOps does not change them. **Not confirmed yet**: record the date and amount here once he says it is set.
+Fatih adds a Budget Alert himself (Workers & Pages, Usage, Add Budget Alert; **$5 was the suggestion**). Billing settings are his; DevOps does not change them. **Confirmed 2026-10-28, relayed through the PM: the Cloudflare Budget Alert is installed.** The amount was not relayed (`undetermined`; not readable from the CLI).

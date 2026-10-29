@@ -13,5 +13,8 @@
   "dependencies": {
     "@neondatabase/serverless": "1.2.0",
     "@stellar/stellar-sdk": "17.0.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11"
   }
 }

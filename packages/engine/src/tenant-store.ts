@@ -15,6 +15,12 @@ export interface TenantStore {
     network: TenantNetwork,
     contractId: string,
   ): Promise<bigint | undefined>;
+  /**
+   * The same sum for every (user, contract) on the network in one read, keyed by spendKey.
+   * A key absent from a successful batch means no spend in the window; `null` means undetermined
+   * (a pulled job without its pull ledger row).
+   */
+  spentLast30dBatch(network: TenantNetwork): Promise<ReadonlyMap<string, bigint | null>>;
 }
 
 export async function planTenantsFromStore(
@@ -22,11 +28,13 @@ export async function planTenantsFromStore(
   network: TenantNetwork = 'testnet',
 ): Promise<TenantPlan[]> {
   const rows = await store.listAutopilotItems(network);
+  const batch = await store.spentLast30dBatch(network);
   const spent = new Map<string, bigint>();
   for (const row of rows) {
     if (!isEligible(row, network)) continue;
-    const used = await store.spentLast30d(row.userId, network, row.contractId);
-    if (used !== undefined) spent.set(spendKey(row.userId, row.network, row.contractId), used);
+    const key = spendKey(row.userId, row.network, row.contractId);
+    const used = batch.get(key);
+    if (used !== null) spent.set(key, used ?? 0n);
   }
   return planTenants(rows, spent, network);
 }
@@ -88,5 +96,18 @@ export class MemoryTenantStore implements TenantStore {
         total += e.pulled - e.refunded;
       }
     return total;
+  }
+
+  async spentLast30dBatch(network: TenantNetwork): Promise<ReadonlyMap<string, bigint | null>> {
+    const since = this.#now().getTime() - 30 * 24 * 60 * 60 * 1000;
+    const out = new Map<string, bigint | null>();
+    for (const e of this.#spend) {
+      if (e.network !== network || e.pulledAt.getTime() <= since) continue;
+      const key = spendKey(e.userId, e.network, e.contractId);
+      const prev = out.get(key);
+      if (prev === null) continue;
+      out.set(key, e.pullRecorded === false ? null : (prev ?? 0n) + e.pulled - e.refunded);
+    }
+    return out;
   }
 }

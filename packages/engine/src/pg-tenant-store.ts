@@ -1,3 +1,4 @@
+import { spendKey } from './tenants.js';
 import type { AutopilotItemRow, TenantNetwork } from './tenants.js';
 import type { TenantStore } from './tenant-store.js';
 
@@ -18,7 +19,12 @@ export class TenantStoreError extends Error {
   }
 }
 
-/** Read-only. Numeric columns are cast to text so stroops never pass through a float. */
+/**
+ * Read-only. Numeric columns are cast to text so stroops never pass through a float.
+ * A payer wallet counts as linked only if the user was never reactivated or the wallet was linked
+ * strictly after the last reactivation (#385 option 2, migration 0004). A wallet linked at or before
+ * reactivation drops the item from the plan (fails closed) until the wallet is re-linked.
+ */
 export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT i.user_id::text AS user_id, i.network, i.contract_id, i.scope,
   i.autopilot_enabled, (i.removed_at IS NOT NULL) AS removed, i.payer_network, i.payer_account,
   w.user_id::text AS payer_owner_user_id,
@@ -26,6 +32,7 @@ export const LIST_AUTOPILOT_ITEMS_SQL = `SELECT i.user_id::text AS user_id, i.ne
   i.budget_per_job_max::text AS budget_per_job_max, i.budget_per_30d_max::text AS budget_per_30d_max
 FROM watch_items i
 JOIN wallets w ON w.network = i.payer_network AND w.account = i.payer_account AND w.user_id = i.user_id
+JOIN users u ON u.id = i.user_id AND (u.reactivated_at IS NULL OR w.linked_at > u.reactivated_at)
 WHERE i.network = $1 AND i.autopilot_enabled AND i.removed_at IS NULL
 ORDER BY i.payer_account, i.contract_id, i.user_id`;
 
@@ -45,6 +52,21 @@ FROM (
     AND j.pulled_at > now() - interval '720 hours'
   GROUP BY j.id
 ) s`;
+
+/** SPENT_LAST_30D_SQL for every (user, contract) on the network, with the same missing-pull count. */
+export const SPENT_LAST_30D_BATCH_SQL = `SELECT s.user_id::text AS user_id, s.contract_id AS contract_id,
+  coalesce(sum(s.net), 0)::text AS spent,
+  count(*) FILTER (WHERE NOT s.has_pull)::text AS missing_pull
+FROM (
+  SELECT j.id, j.user_id, j.contract_id,
+    coalesce(sum(CASE WHEN f.kind = 'pull' THEN f.amount WHEN f.kind = 'refund' THEN -f.amount END), 0) AS net,
+    coalesce(bool_or(f.kind = 'pull'), false) AS has_pull
+  FROM jobs j LEFT JOIN fee_ledger f ON f.job_id = j.id AND f.kind IN ('pull', 'refund')
+  WHERE j.network = $1
+    AND j.pulled_at > now() - interval '720 hours'
+  GROUP BY j.id, j.user_id, j.contract_id
+) s
+GROUP BY s.user_id, s.contract_id`;
 
 function str(row: Record<string, unknown>, key: string): string {
   const v = row[key];
@@ -107,5 +129,21 @@ export class PgTenantStore implements TenantStore {
       throw new TenantStoreError('Malformed tenant spend result.');
     // Fail closed: a pulled job without its pull row would otherwise read as spend 0.
     return missing === 0n ? v : undefined;
+  }
+
+  async spentLast30dBatch(network: TenantNetwork): Promise<ReadonlyMap<string, bigint | null>> {
+    const rows = await this.#query(SPENT_LAST_30D_BATCH_SQL, [network]);
+    const out = new Map<string, bigint | null>();
+    for (const row of rows) {
+      const v = optInt(row, 'spent');
+      const missing = optInt(row, 'missing_pull');
+      if (v === null || missing === null)
+        throw new TenantStoreError('Malformed tenant spend result.');
+      const key = spendKey(str(row, 'user_id'), network, str(row, 'contract_id'));
+      if (out.has(key)) throw new TenantStoreError('Malformed tenant spend result.');
+      // Fail closed, as in spentLast30d: null means undetermined, never 0.
+      out.set(key, missing === 0n ? v : null);
+    }
+    return out;
   }
 }
