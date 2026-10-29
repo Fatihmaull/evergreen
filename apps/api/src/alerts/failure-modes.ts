@@ -141,16 +141,15 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F10: {
     user: { kind: 'email', alerts: ['testnet_reset'] },
     operator: { when: 'every' },
-    // PROVISIONAL (PM-accepted, pending Tih's confirmation): signal 1 only.
+    // Decided (Fatih, 2026-10-29 17:03 WIB, option 3): signal 1 alerts the operator.
     // The user email needs the signal-2 confirmation, pending on #482.
-    detector:
-      'testnetResetSignal (signal 1, provisional; user email needs signal 2, pending on #482)',
+    detector: 'testnetResetSignal (signal 1; user email needs signal 2, pending on #482)',
   },
   F11: {
-    // PROVISIONAL (PM-accepted, pending Tih's confirmation): option 1, entriesAtRiskFromGap.
+    // Decided (Fatih, 2026-10-29 17:03 WIB, option 1): entriesAtRiskFromGap, < 4 x worst gap.
     user: {
       kind: 'undetermined',
-      note: 'at-risk rule provisional (entriesAtRiskFromGap); user channel undetermined',
+      note: 'at-risk rule decided (entriesAtRiskFromGap); user channel undetermined',
     },
     operator: thr(
       'gap in ledgers between scheduler_ticks; trigger must be independent of the scheduler',
@@ -175,8 +174,10 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   },
   F15: {
     user: { kind: 'via', modes: ['F14'] },
-    operator: thr('Neon CU-hours this month (70 is proposed, not decided)'),
-    detector: 'undetermined: flag level not decided',
+    // Decided (Fatih, 2026-10-29): a $5 Neon spending notification in Neon Billing, set by
+    // DevOps; the project is on Neon Launch. Not 70 CU-hours. Nothing in this repo reads it.
+    operator: { when: 'every' },
+    detector: 'none in code: Neon Billing spending notification at $5 (DevOps)',
   },
   F16: {
     user: {
@@ -418,7 +419,7 @@ export function missingApiSettings(
   });
 }
 
-// ---- PROVISIONAL decisions: PM-accepted, pending Tih's confirmation ----
+// ---- F10 / F11 decisions (Fatih, 2026-10-29 17:03 WIB) ----
 
 export interface TestnetResetSignal {
   /** Operator alert: ledger went backwards between consecutive ticks. */
@@ -431,7 +432,7 @@ export interface TestnetResetSignal {
 }
 
 /**
- * F10 signal 1, PROVISIONAL (PM-accepted, pending Tih's confirmation):
+ * F10 signal 1 (option 3, Fatih 2026-10-29 17:03 WIB):
  * observed_ledger decreasing between consecutive scheduler_ticks. Reads
  * tickGaps().nonIncreasing and keeps strict decreases only (an equal ledger is
  * a stall, not a reset). Triggers an operator alert and a DoD-2 window restart.
@@ -450,7 +451,7 @@ export interface EntryLedgersLeft {
 }
 
 /**
- * F11 option 1, PROVISIONAL (PM-accepted, pending Tih's confirmation): an entry
+ * F11 option 1 (Fatih, 2026-10-29 17:03 WIB): an entry
  * is at risk when its ledgers left are below 4 x the running worst gap.
  * This is a scheduler-margin rule (gap vs ledgers left), not the act rule:
  * The rule is exported from core as belowGapMargin / gapMarginHolds

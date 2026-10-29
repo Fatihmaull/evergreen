@@ -4,6 +4,19 @@
 
 Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:654`). Nothing here changes code, schema or deployment.
 
+## Decisions (Fatih, 2026-10-29, confirmed 17:03 WIB)
+
+Final, no longer provisional. Each is applied in its row below.
+
+| Item | Decision |
+|---|---|
+| F8 | **Option 2.** Refund headroom = the pulls in flight; float cap = headroom + a sweep buffer. The buffer is decided at `PH2-E4-03`. |
+| F10 | **Option 3.** A ledger that decreases between consecutive ticks triggers the operator alert and restarts the DoD-2 window. Signal 2 must confirm before the user email goes out. An equal ledger counts as a stall, not a reset. |
+| F11 | **Option 1.** An entry is at risk when its ledgers left are below 4 × the worst gap (`belowGapMargin` in `packages/core/src/gap-margin.ts`). |
+| F15 | **A Neon spending notification at $5**, set in Neon Billing by DevOps. **Not** a 70 CU-hours flag: the project has been on Neon Launch since 16:53 WIB, 2026-10-29 (preview and production share the project). No code. |
+| F16 | **Option 3.** A permanent rejection of an email goes to the operator's Telegram immediately. A transient failure alerts only after its retries run out. |
+| Pulled-then-failed rate | **Option 1.** 30-day rolling window; breach when a user has **≥ 3** pulled jobs **and** a rate **≥ 50%**. Operator alert only; no automatic action on the user. |
+
 ## Rules every row follows
 
 1. **Both alerts are mandatory.** Every mode has a user alert and an operator alert (Fatih, 2026-10-20, `BACKLOG.md:654`). A mode where the user has nothing to do still tells them what happened to their money or their protection.
@@ -30,9 +43,9 @@ Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:654`). Nothing here changes 
 **Decision:** Fatih, 2026-10-28: the list includes a per-user failure rate, jobs that pulled and then failed to extend, per user, so abuse of the full-refund rule is visible. Recorded at `BACKLOG.md:654`, `phase-2/PHASE2-PLAN.md:354`, `docs/adr/ADR-007-allowance-funded-hosted-engine.md:68` and `docs/API.md:295`.
 
 - **Definition:** per user, over a window, the number of jobs whose pull confirmed and whose extend finally failed (status `refunded` after a pull, `docs/API.md:237`), divided by that user's jobs that pulled.
-- **Window: undetermined.** **Alert threshold: undetermined.** **What happens on breach (pause autopilot, review, nothing): undetermined.** All three are Fatih's to set.
+- **Window: 30 days, rolling.** **Alert threshold: ≥ 3 pulled jobs and a rate ≥ 50%.** **On breach: an operator alert only**, no automatic action (Fatih, 2026-10-29).
 - **User alert:** each such job already alerts the user (mode F4 below). A separate user alert for the rate itself is **undetermined**.
-- **Operator alert:** on breach of the threshold, once set.
+- **Operator alert:** on breach of the threshold.
 - A fleet-wide counterpart follows from DoD-2's "≥99% of autopilot jobs succeed" (`phase-2/PHASE2-PLAN.md:47`). The alert threshold for it is **undetermined**; 99% is the DoD-2 pass mark over 30 days, not an alert level.
 
 ## The list
@@ -98,7 +111,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Owner: `PH2-E4-02` (reconcile); alert `PH2-E4-05`.
 
 **F8. Engine float low or refund headroom short** (`BACKLOG.md:652`, `PH2-E4-03`).
-- Detection: engine account balance read against the float cap and headroom. **Both numbers are undetermined.**
+- Detection: engine account balance read against the float cap and headroom. **Headroom = the pulls in flight; cap = headroom + a sweep buffer** (Fatih, 2026-10-29, option 2). The buffer is decided at `PH2-E4-03`; until then only the low side can be checked.
 - User: none unless a job is blocked by it, then as F1. Whether a refund can be blocked by low float is **undetermined**; if it can, F6 applies.
 - Operator: required. DoD-2 also needs "the float never exceeded its cap" (`phase-2/PHASE2-PLAN.md:52`), so the cap's upper side alerts too.
 - Money: fees accumulate until the sweep; refunds draw on the pool.
@@ -116,9 +129,9 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
 
 **F10. Testnet reset.**
-- Detection: ledger sequence goes backwards, or watched entries vanish at once; exact signal **undetermined**.
-- User: required: protection state is reset.
-- Operator: required: **DoD-2's 30-day window restarts** (`phase-2/PHASE2-PLAN.md:45`).
+- Detection (Fatih, 2026-10-29, option 3): signal 1 is `observed_ledger` decreasing between consecutive `scheduler_ticks`; an equal ledger is a stall, not a reset. Signal 2 (confirmation, from the scheduler, #482) is required before the user email.
+- User: required: protection state is reset. Sent only once signal 2 confirms.
+- Operator: required, on signal 1: **DoD-2's 30-day window restarts** (`phase-2/PHASE2-PLAN.md:45`).
 - Money: testnet only.
 - Owner: `PH2-E4-05`.
 
@@ -126,7 +139,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 
 **F11. Cron missed, or the gap too large.**
 - Detection: `scheduler_ticks` (migration 0005, `apps/api/db/0005_scheduler_ticks.sql:7`, applied to preview per #481) shows a gap in ledgers. DoD-2 passes only if **4 × the worst gap is below the lowest act threshold in use** (`phase-2/PHASE2-PLAN.md:49`). Cloudflare's cron has no delivery guarantee (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:22`) and has never been measured here.
-- User: when the gap puts one of their entries at risk; the rule for "at risk" is **undetermined**.
+- User: when the gap puts one of their entries at risk: **ledgers left below 4 × the worst gap** (Fatih, 2026-10-29, option 1). The user channel is **undetermined**.
 - Operator: required, from a trigger **independent of the scheduler** (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:61`); which one is open. Alert threshold in ledgers **undetermined**.
 - Money: none; protection may be missed.
 - Retry: the next tick. Ticks are never thinned to save compute (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:5`).
@@ -158,12 +171,12 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Retry: next request or tick.
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
 
-**F15. Neon compute budget near its cap** (Free: 100 CU-hours per project per month, `docs/PH2-E4-04-SCHEDULER-DESIGN.md:27`).
-- Detection: a daily read of consumption, **flag at 70 CU-hours**, is DevOps' proposal and **not decided** (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:99`).
+**F15. Neon spend.** The project has been on Neon **Launch** since 16:53 WIB, 2026-10-29, so the Free plan's 100 CU-hours cap no longer applies.
+- Detection: **a Neon spending notification at $5**, set by DevOps in Neon Billing (Fatih, 2026-10-29). The earlier 70 CU-hours proposal is dropped. Nothing in the repo reads it.
 - User: none until it becomes F14.
 - Operator: required.
 - Money: none directly.
-- Retry: fallback order in the design: 30-minute ticks, then Neon Launch (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:98`).
+- Retry: n/a. The design's last fallback (Neon Launch, `docs/PH2-E4-04-SCHEDULER-DESIGN.md:98`) is already in place.
 - Owner: DevOps; alert `PH2-E4-05`.
 
 **F16. Email send refused or unavailable.**
@@ -172,7 +185,8 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - User: the sign-in screen says so (§9a). **When the failed email is itself a user alert, the user gets no alert:** a second channel or a dashboard notice is required for DoD-2's "alerts the user"; which one is **undetermined**.
 - Operator: required, for every failed user-alert send. Sign-in failures are logs only today.
 - Money: none.
-- Retry: sign-in: the user retries; alerts: **undetermined**.
+- Operator timing (Fatih, 2026-10-29, option 3): a **permanent** rejection goes to the operator's Telegram immediately; a **transient** failure alerts once its retries run out. The retry count is **undetermined**.
+- Retry: sign-in: the user retries; alerts: transient failures retry (bound **undetermined**), permanent rejections do not.
 - Owner: `PH2-E2-04` (sign-in), `PH2-E4-05` (alerts).
 
 **F17. `THRESHOLD_FLOOR_LEDGERS` unset or malformed.**
@@ -203,7 +217,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 ## Undetermined, in one place
 
 - The operator alert channel, and the independent trigger for the heartbeat alert.
-- Every alert threshold: per-user failure rate (window, level, action), fleet failure rate, `preflight-failed` counts, retries, consecutive failed ticks, gap in ledgers, float low and cap, dead-letter depth.
+- Every alert threshold: fleet failure rate, `preflight-failed` counts, retries, consecutive failed ticks, gap in ledgers, the F8 sweep buffer (decided at `PH2-E4-03`), dead-letter depth.
 - Extend retry bound; refund retry cap and escalation; dead-letter policy.
 - Lead time of the allowance-expiry warning.
 - The per-step envelope expiry and the submitted-hash columns (#466 open).
