@@ -88,11 +88,11 @@ export function wantsAlert(
 }
 
 /**
- * Per-user cap (§5). UNDETERMINED: the design doc leaves N and the window
- * open (Fatih's call). These are named placeholders, not a justified value.
+ * Per-user cap for optional alerts (§5): 5 per 24 hours, decided by Tih
+ * (Fatih) on 2026-10-29. Required alerts always pass.
  */
-export const ALERT_RATE_LIMIT_UNDETERMINED = {
-  maxOptionalPerWindow: 3,
+export const ALERT_RATE_LIMIT = {
+  maxOptionalPerWindow: 5,
   windowSeconds: 24 * 60 * 60,
 } as const;
 
@@ -106,7 +106,7 @@ export type RateDecision =
 export function rateDecision(
   kind: AlertKind,
   sentInWindow: number,
-  max: number = ALERT_RATE_LIMIT_UNDETERMINED.maxOptionalPerWindow,
+  max: number = ALERT_RATE_LIMIT.maxOptionalPerWindow,
 ): RateDecision {
   if (isRequired(kind)) return { allow: true };
   return sentInWindow < max ? { allow: true } : { allow: false, reason: 'rate_limited' };

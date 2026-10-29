@@ -60,7 +60,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 - **Event ID:** stable per fact, not per tick. Examples are `job:<job_id>:refund-delayed` and `entry:<user>:<network>:<contract>:approaching:<threshold-crossing ledger window>`. The ID for the approaching alert depends on the autopilot-window rule that is still open (#461 §7), and is **undetermined** until that is decided.
 - **Outbox (asked of Rakha, §7):** one row per (user, event ID). The UNIQUE constraint is what dedupes. Status is `pending`, then `sent` or `failed`, plus the Resend email ID once accepted. "Accepted" never means "received": `EmailChannel` returns `receivedInInbox: 'unverified'`.
 - **Resend idempotency:** a retry of the same row sends the same body, so Resend gets the same idempotency key. Resend's retention window for that key is **undetermined** (not read yet).
-- **Rate limit per user:** a conservative cap of at most N emails per user per window, with required alerts **always** sent (decided by Tih, 2026-10-29). If the cap is hit, optional alerts are folded into the next one. The exact N and window are still **undetermined**.
+- **Rate limit per user:** a conservative cap of at most N emails per user per window, with required alerts **always** sent (decided by Tih, 2026-10-29). If the cap is hit, optional alerts are folded into the next one. **At most 5 optional alerts per user per 24 hours**, decided by Tih on 2026-10-29. Required alerts always pass and never count against it. In code: `ALERT_RATE_LIMIT` (`apps/api/src/alerts/policy.ts`).
 - **Retries:** bounded, with backoff, on the next tick. The count is **undetermined** and follows E4-05's retry decisions. When retries run out, the row is `failed` and goes to the operator as F16.
 
 ## 6. User preferences and opt-out
@@ -81,7 +81,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 
 **DevOps:** `EMAIL_API_KEY` and `EMAIL_FROM` on the scheduler Worker's **preview** environment, plus `ALERTS_SEND` (a setting) and `ALERTS_ALLOWLIST` (a secret, `docs/ops/secrets.md`). Production waits for Fatih.
 
-**Fatih:** decided 2026-10-29: (1) conservative per-user rate limit, required alerts always pass; (2) the receipt alert is on by default, still optional; (3) one-click unsubscribe for optional alerts only; (4) Telegram as the F16 backup channel, wired later. Still his: the exact N and window, and turning production sending on.
+**Fatih:** decided 2026-10-29: (1) conservative per-user rate limit, required alerts always pass; (2) the receipt alert is on by default, still optional; (3) one-click unsubscribe for optional alerts only; (4) Telegram as the F16 backup channel, wired later; (5) the optional-alert rate limit is 5 per 24 hours (§5). Still his: turning production sending on.
 
 ## 8. Test plan (no network)
 
@@ -103,7 +103,7 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 ## 9. Undetermined
 
 - When the scheduler emits each event. That depends on `PH2-E4-04` and `PH2-E4-02`, neither of which is built.
-- The allowance-expiry lead time, the rate limit (N and window), the retry count, and Resend's idempotency-key retention.
+- The allowance-expiry lead time, the retry count, and Resend's idempotency-key retention.
 - The event ID for the "approaching critical" alert, which depends on the autopilot-window rule (#461 §7).
 - Whether alerts use a separate sender address.
 - When the Telegram backup channel for F16 is wired (the channel itself is decided).

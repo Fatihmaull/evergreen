@@ -5,6 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  ALERT_RATE_LIMIT,
   ALERT_SPECS,
   alertRateDecision,
   alertsMode,
@@ -140,6 +141,16 @@ describe('rate limit (test 5)', () => {
       allow: false,
       reason: 'rate_limited',
     });
+  });
+
+  it('default cap is 5 optional alerts per 24 hours (Tih, 2026-10-29)', () => {
+    expect(ALERT_RATE_LIMIT).toEqual({ maxOptionalPerWindow: 5, windowSeconds: 86_400 });
+    expect(alertRateDecision('extend_succeeded', 4)).toEqual({ allow: true });
+    expect(alertRateDecision('extend_succeeded', 5)).toEqual({
+      allow: false,
+      reason: 'rate_limited',
+    });
+    expect(alertRateDecision('refund_delayed', 5)).toEqual({ allow: true });
   });
 });
 
