@@ -117,6 +117,8 @@ Neither note says why, and neither says a code was sent. This is the known previ
 
 ## Part B — watchlist (steps 6, 7, 8, 10)
 
+**Run 2026-10-29 by Fatih, on the production host at `626823f`, not preview.** Steps 6, 8, 9 and 10 pass. Step 7 lists the row but shows binding expiry `undetermined` ("Not scanned yet.") because no engine observation exists yet. Record: [`docs/evidence/2026-10-29-e3-partB/`](evidence/2026-10-29-e3-partB/README.md).
+
 **Runnable.** `PH2-E2-05`'s routes merged on 2026-10-24 (#427) and are deployed. Verified without a session on 2026-10-26, which is safe and costs no email quota:
 
 ```
