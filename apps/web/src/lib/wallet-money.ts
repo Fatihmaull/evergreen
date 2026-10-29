@@ -80,10 +80,14 @@ const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, 
 
 export async function signAndSubmit(
   wallet: Wallet,
-  chain: ChainPort,
   xdr: string,
   address: string,
-  { pollIntervalMs = 2_000, pollTimeoutMs = 60_000, sleep = wait }: MoneyOptions = {},
+  {
+    chain = rpcChain(),
+    pollIntervalMs = 2_000,
+    pollTimeoutMs = 60_000,
+    sleep = wait,
+  }: MoneyOptions & { chain?: ChainPort } = {},
 ): Promise<MoneyResult> {
   const prepared = await chain.prepare(xdr);
   if ('kind' in prepared) return prepared;
@@ -109,8 +113,13 @@ export async function signAndSubmit(
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-/** The real chain, always through `verifiedServer()`. */
-export function rpcChain(serverOf: () => Promise<rpc.Server> = verifiedServer): ChainPort {
+/**
+ * The real chain. Every call goes through `verifiedServer()`, and there is no
+ * parameter to hand it another server: a chain that skipped the passphrase
+ * check could only be built by editing this file (tests mock `./evergreen`).
+ */
+export function rpcChain(): ChainPort {
+  const serverOf = verifiedServer;
   return {
     async prepare(xdr) {
       const server = await serverOf();

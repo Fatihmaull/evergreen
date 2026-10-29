@@ -1,7 +1,15 @@
 /**
  * `lib/wallet-money.ts` against stand-ins for the wallet and the RPC.
  */
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+
+const fake = vi.hoisted(() => ({ server: undefined as unknown, calls: 0 }));
+vi.mock('../src/lib/evergreen', () => ({
+  verifiedServer: async () => {
+    fake.calls++;
+    return fake.server;
+  },
+}));
 import {
   describeTxResult,
   isMoneyFailure,
@@ -48,7 +56,7 @@ describe('signAndSubmit', () => {
   test('prepares, signs with NETWORK.passphrase and the address, submits, reads back', async () => {
     const w = wallet();
     const c = chain();
-    expect(await signAndSubmit(w, c, 'T', ME, { sleep: noSleep })).toEqual({
+    expect(await signAndSubmit(w, 'T', ME, { chain: c, sleep: noSleep })).toEqual({
       hash: 'H',
       ledger: 7,
     });
@@ -60,7 +68,7 @@ describe('signAndSubmit', () => {
 
   test('the passphrase it signs with is the testnet one', async () => {
     const w = wallet();
-    await signAndSubmit(w, chain(), 'T', ME, { sleep: noSleep });
+    await signAndSubmit(w, 'T', ME, { chain: chain(), sleep: noSleep });
     expect((w.asked[0] as { opts: { networkPassphrase: string } }).opts.networkPassphrase).toBe(
       'Test SDF Network ; September 2015',
     );
@@ -68,12 +76,9 @@ describe('signAndSubmit', () => {
 
   test('a simulation failure never reaches the wallet', async () => {
     const w = wallet();
-    const r = await signAndSubmit(
-      w,
-      chain({ prepare: async () => ({ kind: 'simulation-failed', detail: 'x' }) }),
-      'T',
-      ME,
-    );
+    const r = await signAndSubmit(w, 'T', ME, {
+      chain: chain({ prepare: async () => ({ kind: 'simulation-failed', detail: 'x' }) }),
+    });
     expect(r).toEqual({ kind: 'simulation-failed', detail: 'x' });
     expect(w.asked).toEqual([]);
   });
@@ -81,14 +86,14 @@ describe('signAndSubmit', () => {
   test('a signing timeout is possibly-signed and nothing is submitted or retried', async () => {
     const w = wallet({ signTransaction: async () => ({ kind: 'timeout' }) });
     const c = chain();
-    expect(await signAndSubmit(w, c, 'T', ME)).toEqual({ kind: 'possibly-signed' });
+    expect(await signAndSubmit(w, 'T', ME, { chain: c })).toEqual({ kind: 'possibly-signed' });
     expect(c.sent).toEqual([]);
   });
 
   test('other wallet failures pass through unchanged', async () => {
     const w = wallet({ signTransaction: async () => ({ kind: 'rejected' }) });
     const c = chain();
-    const r = await signAndSubmit(w, c, 'T', ME);
+    const r = await signAndSubmit(w, 'T', ME, { chain: c });
     expect(r).toEqual({ kind: 'rejected' });
     expect(isWalletFailure(r)).toBe(true);
     expect(c.sent).toEqual([]);
@@ -96,7 +101,7 @@ describe('signAndSubmit', () => {
 
   test('failed on chain carries the hash', async () => {
     const c = chain({ status: async () => ({ status: 'FAILED', detail: 'txFailed' }) });
-    expect(await signAndSubmit(wallet(), c, 'T', ME, { sleep: noSleep })).toEqual({
+    expect(await signAndSubmit(wallet(), 'T', ME, { chain: c, sleep: noSleep })).toEqual({
       kind: 'failed-on-chain',
       hash: 'H',
       detail: 'txFailed',
@@ -106,7 +111,8 @@ describe('signAndSubmit', () => {
   test('read-back that never settles is pending, not failed', async () => {
     const c = chain({ status: async () => ({ status: 'NOT_FOUND' }) });
     expect(
-      await signAndSubmit(wallet(), c, 'T', ME, {
+      await signAndSubmit(wallet(), 'T', ME, {
+        chain: c,
         sleep: noSleep,
         pollIntervalMs: 1,
         pollTimeoutMs: 3,
@@ -166,9 +172,49 @@ describe('rpcChain status', () => {
         resultXdr: xdr.TransactionResult.fromXdr('AAAAAAAAAGT////7AAAAAA==', 'base64'),
       }),
     } as unknown as rpc.Server;
-    expect(await rpcChain(async () => server).status('H')).toEqual({
+    fake.server = server;
+    const before = fake.calls;
+    expect(await rpcChain().status('H')).toEqual({
       status: 'FAILED',
       detail: 'txBadSeq',
     });
+    expect(fake.calls).toBe(before + 1);
+  });
+});
+
+/** WEBF's review points on #327 for this module, pinned to its source. */
+describe('lib/wallet-money.ts source', () => {
+  const read = async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../src/lib/wallet-money.ts', import.meta.url), 'utf8');
+    return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  };
+  test('reaches the RPC only through verifiedServer()', async () => {
+    const code = await read();
+    expect(code).not.toMatch(/new\s+rpc\.Server|new\s+Server\(|rpcUrl/);
+    expect(code).toMatch(/verifiedServer/);
+  });
+  test('carries no literal network passphrase', async () => {
+    expect(await read()).not.toMatch(/Test SDF|Public Global|Networks\.(TESTNET|PUBLIC)/);
+  });
+  test('never uses the rounding formatter', async () => {
+    expect(await read()).not.toMatch(/approxXlm/);
+  });
+});
+
+describe('rejected is not failed and not pending', () => {
+  test('a rejection is the wallet kind, never a money kind, and nothing is sent', async () => {
+    const c = chain();
+    const r = await signAndSubmit(
+      wallet({ signTransaction: async () => ({ kind: 'rejected' }) }),
+      'T',
+      ME,
+      {
+        chain: c,
+      },
+    );
+    expect(r).toEqual({ kind: 'rejected' });
+    expect(isMoneyFailure(r)).toBe(false);
+    expect(c.sent).toEqual([]);
   });
 });
