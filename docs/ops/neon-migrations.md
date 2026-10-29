@@ -18,7 +18,7 @@ Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`,
 
 ## Applied state of `preview` (verified 2026-10-28)
 
-`schema.sql`, `0002`, `0003` and `0004` are applied, and the result is **structurally identical to a clean build of those four files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
+`schema.sql`, `0002`, `0003`, `0004` and `0005` are applied, and the result is **structurally identical to a clean build of those five files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
 
 | File | Applied to `preview` | Evidence |
 |---|---|---|
@@ -26,7 +26,10 @@ Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`,
 | `0002_jobs_daily_limit_per_user.sql` | yes | `jobs_daily_limit_idx` is `(user_id, network, contract_id, pulled_at) WHERE kind = 'extend-now' AND pull_tx_hash IS NOT NULL`, the file's definition, not the cross-user one from `schema.sql` |
 | `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
 | `0004_users_reactivated_at.sql` (#456) | yes, **2026-10-28**, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`ALTER TABLE`, `COMMENT`) | `users.reactivated_at` is `timestamptz`, nullable, no default, with the file's column comment; the one preview user row is `NULL`; the whole-schema diff above was repeated with 0004 in the reference build and still differs only by `fips_mode` |
-| `0005` (#465, `scheduler_ticks`), `0006` (#466, submitted hashes) | **not yet**, the PRs are open | apply each after it merges, the same way, and record it in the migration ledger once #464 lands |
+| `0005_scheduler_ticks.sql` (#465) | yes, **2026-10-28**, from `main` at `6c9478c`, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`CREATE TABLE`, `CREATE INDEX`) | `scheduler_ticks`: `id bigint GENERATED ALWAYS AS IDENTITY` PK, `ticked_at timestamptz NOT NULL DEFAULT now()`, `observed_ledger bigint NOT NULL CHECK (> 0)`, index on `(ticked_at)`; zero rows; whole-schema diff with 0005 in the reference build differs only by `fips_mode` |
+| `0006` (#466, submitted hashes) | **not yet**, the PR is open | apply after it merges, the same way |
+
+**The migration ledger does not exist yet.** #464 added only its card (`PH2-E2-07`, a `schema_migrations` table written by each file); until that table is built, this table is the record of what ran where.
 
 The `production` branch has **nothing applied**. That is deliberate: production has no `DATABASE_URL`.
 
