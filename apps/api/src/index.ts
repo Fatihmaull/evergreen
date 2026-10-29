@@ -128,3 +128,26 @@ export type {
   AlertRequest,
   AlertTransport,
 } from './alerts/sender.js';
+export {
+  FAILURE_MODES,
+  FAILURE_MODE_ALERTS,
+  alertModeMismatches,
+  duplicatePulls,
+  isPreflightFailed,
+  isPulledThenFailed,
+  isRefundOwed,
+  isTryAgainLater,
+  pulledThenFailedRates,
+  reconcileProblems,
+} from './alerts/failure-modes.js';
+export type {
+  FailureMode,
+  FailureModeAlerts,
+  JobFacts,
+  LedgerFact,
+  OperatorAlert,
+  PulledThenFailedRate,
+  ReconcileProblem,
+  UserAlert,
+  UserJobFact,
+} from './alerts/failure-modes.js';
