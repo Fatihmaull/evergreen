@@ -1,6 +1,6 @@
 /**
  * apps/api/db applied in order on PGlite: schema.sql → 0002 → 0003 → 0004 → 0006 (0005 is independent
- * of 0006 and not chained here). Checks 0004's users.reactivated_at, 0006's submitted-hash columns,
+ * of 0006 and not chained here). Checks 0004's users.reactivated_at, 0006's submitted-hash and expiry columns,
  * and that rows from before a migration survive it.
  */
 import { readFileSync } from 'node:fs';
@@ -78,6 +78,7 @@ describe('apps/api/db migrations on PGlite', () => {
 
   describe('0006 submitted hashes on jobs', () => {
     const HASHES = ['pull_submitted_hash', 'extend_submitted_hash', 'refund_submitted_hash'];
+    const EXPIRIES = ['pull_submitted_expires_at', 'extend_submitted_expires_at', 'refund_submitted_expires_at'];
 
     it('adds three nullable text columns with no default', async () => {
       const { rows } = await pg.query<Record<string, unknown>>(
@@ -94,9 +95,24 @@ describe('apps/api/db migrations on PGlite', () => {
       );
     });
 
+    it('adds three nullable timestamptz expiry columns with no default', async () => {
+      const { rows } = await pg.query<Record<string, unknown>>(
+        `SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns
+         WHERE table_name = 'jobs' AND column_name LIKE '%_submitted_expires_at' ORDER BY column_name`,
+      );
+      expect(rows).toEqual(
+        [...EXPIRIES].sort().map((column_name) => ({
+          column_name,
+          data_type: 'timestamp with time zone',
+          is_nullable: 'YES',
+          column_default: null,
+        })),
+      );
+    });
+
     it('a job from before 0006 survives, confirmed hash intact, submitted hashes NULL', async () => {
       const { rows } = await pg.query<Record<string, unknown>>(
-        `SELECT pull_tx_hash, ${HASHES.join(', ')} FROM jobs WHERE id = '${JOB_OLD}'`,
+        `SELECT pull_tx_hash, ${HASHES.join(', ')}, ${EXPIRIES.join(', ')} FROM jobs WHERE id = '${JOB_OLD}'`,
       );
       expect(rows).toEqual([
         {
@@ -104,6 +120,9 @@ describe('apps/api/db migrations on PGlite', () => {
           pull_submitted_hash: null,
           extend_submitted_hash: null,
           refund_submitted_hash: null,
+          pull_submitted_expires_at: null,
+          extend_submitted_expires_at: null,
+          refund_submitted_expires_at: null,
         },
       ]);
     });
