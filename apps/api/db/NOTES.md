@@ -27,12 +27,14 @@ Applied in order:
 | `0003_auth_rate_counters_wallet_challenges.sql` | Adds `auth_rate_counters` and `wallet_challenges` for the auth store (#400). Shape from [#407](https://github.com/Fatihmaull/evergreen/issues/407). PH2-E2-04. |
 | `0004_users_reactivated_at.sql` | Adds nullable `users.reactivated_at` (NULL = never reactivated). After a reactivation, only wallets linked later count as linked for autopilot ([#385](https://github.com/Fatihmaull/evergreen/issues/385), option 2). Setting it on reactivation is the API's job. PH2-E2-04. |
 | `0005_scheduler_ticks.sql` | Adds `scheduler_ticks` (tick time, observed ledger): one heartbeat per cron tick, so the scheduler gap DoD-2 needs can be measured in ledgers ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §4). PH2-E4-04. |
+| `0006_jobs_submitted_hashes.sql` | Adds nullable `jobs.pull_submitted_hash`, `extend_submitted_hash`, `refund_submitted_hash` (each step's signed-envelope hash, written before the send) and `pull_submitted_expires_at`, `extend_submitted_expires_at`, `refund_submitted_expires_at` (that envelope's expiry) ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §5). `*_tx_hash` still means confirmed. PH2-E4-02. |
 
 ```
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0003_auth_rate_counters_wallet_challenges.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0004_users_reactivated_at.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0005_scheduler_ticks.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0006_jobs_submitted_hashes.sql
 ```
 
 `schema.sql` still shows the cross-user index; it is not edited after apply. The live index is the one from `0002`.

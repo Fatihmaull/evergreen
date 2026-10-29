@@ -15,6 +15,7 @@
 import { AUTH_SECRET_NAMES } from '../auth/mount.js';
 import { wholeNumber } from '../watchlist/mount.js';
 import { ALERT_SPECS, type AlertKind } from './policy.js';
+import { belowGapMargin, gapMarginHolds as coreGapMarginHolds } from '@evergreen-stellar/core';
 
 export type FailureMode =
   | 'F1'
@@ -375,15 +376,16 @@ export function tickGaps(ticks: readonly TickFact[]): TickGaps {
  * DoD-2 (phase-2/PHASE2-PLAN.md:49): 4 x the worst gap is below the lowest act
  * threshold in use. `undefined` when either input is missing: absence is not health.
  * A margin check on the scheduler, not a TTL comparison: no entry TTL is read here.
- * Same rule as core's gapMarginHolds (packages/core/src/gap-margin.ts); duplicated
- * until apps/api can import core (see entriesAtRiskFromGap).
+ * Delegates to core (packages/core/src/gap-margin.ts). A negative worst gap is a
+ * ledger going down (a reset, not a gap), so it is undetermined here instead of
+ * throwing inside a detector.
  */
 export function gapMarginHolds(
   worstGapLedgers: bigint | undefined,
   lowestActLedgers: bigint | undefined,
 ): boolean | undefined {
-  if (worstGapLedgers === undefined || lowestActLedgers === undefined) return undefined;
-  return 4n * worstGapLedgers < lowestActLedgers;
+  if (worstGapLedgers !== undefined && worstGapLedgers < 0n) return undefined;
+  return coreGapMarginHolds(worstGapLedgers, lowestActLedgers);
 }
 
 /**
@@ -454,10 +456,7 @@ export interface EntryLedgersLeft {
  * F11 option 1 (Fatih, 2026-10-29 17:03 WIB): an entry
  * is at risk when its ledgers left are below 4 x the running worst gap.
  * This is a scheduler-margin rule (gap vs ledgers left), not the act rule:
- * The rule is exported from core as belowGapMargin / gapMarginHolds
- * (packages/core/src/gap-margin.ts). It is not imported here yet: apps/api does
- * not depend on core, and the API deploy job runs wrangler without building
- * core's dist/ first. Keep this in step with core until that is wired.
+ * Delegates to core's belowGapMargin (packages/core/src/gap-margin.ts).
  * Returns undefined when the worst gap is unknown (absence is not health);
  * entries with unknown ledgers left are skipped.
  */
@@ -465,10 +464,13 @@ export function entriesAtRiskFromGap(
   entries: readonly EntryLedgersLeft[],
   worstGapLedgers: bigint | undefined,
 ): string[] | undefined {
-  if (worstGapLedgers === undefined) return undefined;
-  const margin = 4n * worstGapLedgers;
+  if (worstGapLedgers === undefined || worstGapLedgers < 0n) return undefined;
   return entries
-    .filter((e) => e.ledgersLeft !== undefined && BigInt(e.ledgersLeft) < margin)
+    .filter(
+      (e) =>
+        e.ledgersLeft !== undefined &&
+        belowGapMargin(BigInt(e.ledgersLeft), worstGapLedgers) === true,
+    )
     .map((e) => e.entryId);
 }
 
