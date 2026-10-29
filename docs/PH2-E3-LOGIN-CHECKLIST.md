@@ -8,7 +8,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 
 ## Read first
 
-- **Which email works.** On preview the sign-in code is sent from `onboarding@resend.dev`, which Resend documents as delivering only to the account owner's own email (`docs/API.md` §1; documented by Resend, not yet observed by us). Use **the email of your own Resend account**. For any other email, step 2 is expected to show one of two notes: the "could not be sent to that address" note (the API answered `502 EMAIL_NOT_SENT`) or the "could not send the code" note (`503 UPSTREAM_UNAVAILABLE`). Which one you get is undetermined until someone observes it; the page claims no cause for either, and neither should you. This is a limit of the preview, not a defect to file.
+- **Which email works.** On preview the sign-in code is sent from `alerts@mail.evergreenstellar.biz.id` (`apps/api/wrangler.jsonc` `env.preview.vars`), on a domain Resend shows as verified, so any recipient address should receive it. Before 2026-10-29 the sender was `onboarding@resend.dev`, which delivers only to the Resend account owner's email. If sending fails, step 2 shows one of two notes: the "could not be sent to that address" note (the API answered `502 EMAIL_NOT_SENT`) or the "could not send the code" note (`503 UPSTREAM_UNAVAILABLE`). Which one you get is undetermined until someone observes it; the page claims no cause for either, and neither should you. This is a limit of the preview, not a defect to file.
 - **Rate limits.** `POST /auth/email/start` allows 3 sends per address per 15 minutes and 20 per IP per hour (`docs/API.md` §3). A code lives 10 minutes, works once, and is void after 5 failed attempts. Do not click "Email me a code" repeatedly.
 - **Numbering.** The steps keep the numbers of the ten-step list: 1, 2, 3, 4, 5, 9 are **part A** (login and sign-out), run on 2026-10-26. 6, 7, 8, 10 are **part B** (watchlist) and are runnable. The text of the original ten-step list is not in the repo, so the step titles below are this document's own; the numbers are the ones to quote back.
 - **There is no link to `/login/` in the site's navigation** (checked in `apps/web/src/chrome.mjs`). Type or paste the URL.
@@ -40,7 +40,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 **Expect, on success.**
 - The note: **"If `<your email>` can receive mail, a code is on its way. The answer is the same whether or not an account exists."**
 - The form "The code from the email", with a button "Sign in", appears.
-- An email arrives from `onboarding@resend.dev`, subject **"Your Evergreen sign-in code"**, body **"Your Evergreen sign-in code is `<code>`. It expires in 10 minutes. If you did not ask for it, ignore this email."** (`apps/api/src/auth/mount.ts`). The code is 8 digits by default (`docs/API.md` §3). Whether the email lands in the inbox or in spam is undetermined.
+- An email arrives from `alerts@mail.evergreenstellar.biz.id`, subject **"Your Evergreen sign-in code"**, body **"Your Evergreen sign-in code is `<code>`. It expires in 10 minutes. If you did not ask for it, ignore this email."** (`apps/api/src/auth/mount.ts`). The code is 8 digits by default (`docs/API.md` §3). Whether the email lands in the inbox or in spam is undetermined.
 - Under the hood the page expects HTTP 202 from `POST /auth/email/start`. The page does not show the status; it shows the note above.
 
 **Expect, if the email is not your Resend account's.** One of these, with no code form and no email:
