@@ -3,10 +3,12 @@ import {
   LIST_AUTOPILOT_ITEMS_SQL,
   PgTenantStore,
   SPENT_LAST_30D_SQL,
+  SPENT_LAST_30D_BATCH_SQL,
   TenantStoreError,
 } from '../src/pg-tenant-store.js';
 import type { TenantQuery } from '../src/pg-tenant-store.js';
-import { C, G, U1 } from './tenant-fixtures.js';
+import { C, G, U1, U2 } from './tenant-fixtures.js';
+import { spendKey } from '../src/tenants.js';
 
 const dbRow = {
   user_id: U1,
@@ -65,6 +67,48 @@ describe('PgTenantStore', () => {
       new PgTenantStore(async () => [{ spent: '0' }]).spentLast30d(U1, 'testnet', C('A')),
     ).rejects.toBeInstanceOf(TenantStoreError);
     expect(SPENT_LAST_30D_SQL).toMatch(/LEFT JOIN fee_ledger/);
+  });
+
+  it('batch: one read, keyed per (user, contract), grouped by user and netting refunds', async () => {
+    const query = vi.fn<TenantQuery>(async () => [
+      { user_id: U1, contract_id: C('A'), spent: '60', missing_pull: '0' },
+      { user_id: U2, contract_id: C('A'), spent: '250', missing_pull: '0' },
+    ]);
+    const m = await new PgTenantStore(query).spentLast30dBatch('testnet');
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith(SPENT_LAST_30D_BATCH_SQL, ['testnet']);
+    expect(m.get(spendKey(U1, 'testnet', C('A')))).toBe(60n);
+    expect(m.get(spendKey(U2, 'testnet', C('A')))).toBe(250n);
+    expect(SPENT_LAST_30D_BATCH_SQL).toMatch(/GROUP BY s\.user_id, s\.contract_id/);
+    expect(SPENT_LAST_30D_BATCH_SQL).toContain("WHEN f.kind = 'refund' THEN -f.amount");
+    expect(SPENT_LAST_30D_BATCH_SQL).toContain("f.kind IN ('pull', 'refund')");
+    expect(SPENT_LAST_30D_BATCH_SQL.trimStart()).toMatch(/^SELECT /);
+  });
+
+  it.each([
+    [
+      'duplicate key',
+      [
+        { user_id: U1, contract_id: C('A'), spent: '1', missing_pull: '0' },
+        { user_id: U1, contract_id: C('A'), spent: '2', missing_pull: '0' },
+      ],
+    ],
+    ['no missing_pull', [{ user_id: U1, contract_id: C('A'), spent: '1' }]],
+    ['null spent', [{ user_id: U1, contract_id: C('A'), spent: null }]],
+    ['missing user', [{ contract_id: C('A'), spent: '1', missing_pull: '0' }]],
+  ])('batch rejects a malformed result: %s', async (_n, rows) => {
+    const store = new PgTenantStore(async () => rows);
+    await expect(store.spentLast30dBatch('testnet')).rejects.toBeInstanceOf(TenantStoreError);
+  });
+
+  it('batch fails closed per key when a pulled job has no pull ledger row', async () => {
+    const store = new PgTenantStore(async () => [
+      { user_id: U1, contract_id: C('A'), spent: '0', missing_pull: '1' },
+      { user_id: U2, contract_id: C('A'), spent: '5', missing_pull: '0' },
+    ]);
+    const m = await store.spentLast30dBatch('testnet');
+    expect(m.get(spendKey(U1, 'testnet', C('A')))).toBeNull();
+    expect(m.get(spendKey(U2, 'testnet', C('A')))).toBe(5n);
   });
 
   it.each([
