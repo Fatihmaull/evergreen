@@ -109,7 +109,7 @@ export type {
   WatchlistStore,
 } from './watchlist/store.js';
 export {
-  ALERT_RATE_LIMIT_INTERIM,
+  ALERT_RATE_LIMIT,
   ALERT_SPECS,
   alertsMode,
   canUnsubscribe,

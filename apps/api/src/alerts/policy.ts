@@ -88,12 +88,11 @@ export function wantsAlert(
 }
 
 /**
- * Per-user cap for optional alerts (§5). INTERIM default: 3 per 24 hours,
- * decided by the PM on 2026-10-29 under Tih's "conservative" approval, to be
- * revisited once usage data exists. Required alerts always pass.
+ * Per-user cap for optional alerts (§5): 5 per 24 hours, decided by Tih
+ * (Fatih) on 2026-10-29. Required alerts always pass.
  */
-export const ALERT_RATE_LIMIT_INTERIM = {
-  maxOptionalPerWindow: 3,
+export const ALERT_RATE_LIMIT = {
+  maxOptionalPerWindow: 5,
   windowSeconds: 24 * 60 * 60,
 } as const;
 
@@ -107,7 +106,7 @@ export type RateDecision =
 export function rateDecision(
   kind: AlertKind,
   sentInWindow: number,
-  max: number = ALERT_RATE_LIMIT_INTERIM.maxOptionalPerWindow,
+  max: number = ALERT_RATE_LIMIT.maxOptionalPerWindow,
 ): RateDecision {
   if (isRequired(kind)) return { allow: true };
   return sentInWindow < max ? { allow: true } : { allow: false, reason: 'rate_limited' };
