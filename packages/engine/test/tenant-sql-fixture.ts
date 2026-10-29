@@ -5,6 +5,7 @@ export const TENANT_DB_FILES = [
   'schema.sql',
   '0002_jobs_daily_limit_per_user.sql',
   '0003_auth_rate_counters_wallet_challenges.sql',
+  '0004_users_reactivated_at.sql',
 ] as const;
 
 export const TENANT_FIXTURE_SQL = `
