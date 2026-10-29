@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run --coverage && pnpm test:ttl && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:evidence-inventory && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:action",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
+    "test:pglite": "vitest run --coverage.enabled=false pglite pg-store",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
