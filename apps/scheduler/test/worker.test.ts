@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EvaluationError } from '../src/evaluate.js';
 import { TickError } from '../src/tick.js';
 import {
   deployedCommit,
@@ -222,5 +223,54 @@ describe('tokenMatches', () => {
     expect(await tokenMatches(null, TOKEN)).toBe(false);
     expect(await tokenMatches('', '')).toBe(false);
     expect(await tokenMatches('x', '')).toBe(false);
+  });
+});
+
+describe('Stage 1 evaluation step', () => {
+  const SUMMARY = { dryRun: true as const, payers: 1, items: 2, itemsWithoutBudget: 1 };
+  const withEval = (
+    evaluate: Runtime['evaluate'],
+    tick = () => Promise.resolve({ observedLedger: 7 }),
+  ) => {
+    const logs: Record<string, unknown>[] = [];
+    let evals = 0;
+    const rt: Runtime = {
+      runTick: tick,
+      evaluate: evaluate && (() => (evals++, evaluate())),
+      log: (entry) => logs.push({ ...entry }),
+    };
+    return { rt, logs, evals: () => evals };
+  };
+
+  it('runs after the heartbeat and logs counts only', async () => {
+    const { rt, logs } = withEval(() => Promise.resolve(SUMMARY));
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(logs.map((l) => l['event'])).toEqual(['scheduler.tick', 'scheduler.evaluate']);
+    expect(logs[1]).toMatchObject(SUMMARY);
+  });
+
+  it('does not run when the heartbeat failed', async () => {
+    const { rt, evals } = withEval(
+      () => Promise.resolve(SUMMARY),
+      () => Promise.reject(new TickError('DB_FAILED')),
+    );
+    await expect(handleScheduled({}, rt)).rejects.toBeInstanceOf(TickError);
+    expect(evals()).toBe(0);
+  });
+
+  it('an evaluation failure is logged by code and does not fail the tick', async () => {
+    const { rt, logs } = withEval(() => Promise.reject(new EvaluationError('EVAL_DB_FAILED')));
+    await expect(handleScheduled({}, rt)).resolves.toBeUndefined();
+    expect(logs[1]).toEqual({
+      event: 'scheduler.evaluate_failed',
+      trigger: 'cron',
+      environment: 'undetermined',
+      code: 'EVAL_DB_FAILED',
+    });
+  });
+
+  it('a fault of ours in evaluation is not hidden', async () => {
+    const { rt } = withEval(() => Promise.reject(new TypeError('bug')));
+    await expect(handleScheduled({}, rt)).rejects.toBeInstanceOf(TypeError);
   });
 });

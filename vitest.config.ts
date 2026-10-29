@@ -22,13 +22,21 @@ export default defineConfig({
      * bundled CLI, run as a user runs it — so speed and truthfulness are split
      * deliberately rather than traded.
      */
-    alias: {
-      '@evergreen-stellar/core': new URL('./packages/core/src/index.ts', import.meta.url).pathname,
-      '@evergreen-stellar/shared-types': new URL(
-        './packages/shared-types/src/index.ts',
-        import.meta.url,
-      ).pathname,
-    },
+    alias: [
+      {
+        find: '@evergreen-stellar/core',
+        replacement: new URL('./packages/core/src/index.ts', import.meta.url).pathname,
+      },
+      {
+        find: '@evergreen-stellar/shared-types',
+        replacement: new URL('./packages/shared-types/src/index.ts', import.meta.url).pathname,
+      },
+      // The scheduler imports engine files by path (apps/scheduler/src/evaluate.ts); read their source too.
+      {
+        find: /^@evergreen\/engine\/dist\/(.+)\.js$/,
+        replacement: `${new URL('./packages/engine/src/', import.meta.url).pathname}$1.ts`,
+      },
+    ],
   },
   test: {
     // docs/CONVENTIONS.md § Testing — the default run never touches the network.

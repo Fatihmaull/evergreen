@@ -1,16 +1,33 @@
 /**
- * The scheduler Worker, Stage 0 of PH2-E4-04: a heartbeat. See
+ * The scheduler Worker of PH2-E4-04: Stage 0 heartbeat, Stage 1 dry-run evaluation. See
  * docs/PH2-E4-04-SCHEDULER-DESIGN.md and apps/scheduler/README.md.
  */
 import { NETWORKS } from '@evergreen-stellar/core';
 import { neon } from '@neondatabase/serverless';
+import { evaluate } from './evaluate.js';
 import { TickError, runTick } from './tick.js';
 import { handleFetch, handleScheduled, type Env, type Runtime } from './worker.js';
 
 /** The runtime, built lazily so `/health` works with no database configured. */
 export function productionRuntime(env: Env): Runtime {
+  const databaseUrl = (): string => {
+    const url = env.DATABASE_URL;
+    if (url === undefined || url === '') throw new TickError('NOT_CONFIGURED');
+    return url;
+  };
   return {
     log: (entry) => console.log(JSON.stringify(entry)),
+    // Stage 1, read-only and dry-run (src/evaluate.ts). Only reached after a recorded heartbeat,
+    // so DATABASE_URL is present by then.
+    evaluate: async () => {
+      const sql = neon(databaseUrl());
+      return (
+        await evaluate(
+          async (text, params) =>
+            (await sql.query(text, [...params])) as readonly Record<string, unknown>[],
+        )
+      ).summary;
+    },
     runTick: () => {
       const databaseUrl = env.DATABASE_URL;
       if (databaseUrl === undefined || databaseUrl === '') {
@@ -43,5 +60,13 @@ export default {
 
 export { handleFetch, handleScheduled, deployedCommit, tokenMatches, SERVICE } from './worker.js';
 export type { Env, Runtime } from './worker.js';
+export {
+  EvaluationError,
+  evaluate,
+  isReadOnlyStatement,
+  readOnlyQuery,
+  summarise,
+} from './evaluate.js';
+export type { EvaluationErrorCode, EvaluationSummary } from './evaluate.js';
 export { INSERT_TICK_SQL, TickError, runTick } from './tick.js';
 export type { FetchLike, TickDeps, TickErrorCode } from './tick.js';
