@@ -123,7 +123,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F9. RPC unavailable or slow** (`NETWORK_UNAVAILABLE`, `UPSTREAM_UNAVAILABLE`, `docs/API.md:331`).
 - Detection: failed or timed-out RPC reads in evaluation; a tick that cannot read the latest ledger cannot write a meaningful heartbeat.
 - User: affected items show **undetermined**, never healthy (`docs/API.md:390`). A push alert for a short outage is **undetermined**.
-- Operator: consecutive failed ticks; count **undetermined**.
+- Operator: consecutive failed ticks; count **undetermined**. **Waiting on real RPC numbers** (PM, 2026-10-30): the slow and failed-tick thresholds are set only after preview ticks log `rpcMs`/`rpcBatches`/`rpcMaxMs` from real RPC calls.
 - Money: none moves during evaluation; a money step in flight is F3/F5.
 - Retry: next tick. **Horizon:** no source under `packages/engine/src` on main mentions Horizon; whether the hosted engine will use it is **undetermined**.
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
@@ -166,7 +166,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F14. Database unavailable.**
 - Detection: the API answers `503 UPSTREAM_UNAVAILABLE` (`apps/api/src/router.ts`, watchlist branch; `docs/API.md:331`); a tick cannot write its heartbeat, which shows as F11.
 - User: the dashboard renders undetermined with a sentence that names no cause (§9a).
-- Operator: required, from outside the database (F11's independent trigger).
+- Operator: required, from outside the database (F11's independent trigger). **Channel: email only** (PM, 2026-10-30; no Telegram for now).
 - Money: a money step whose state cannot be written must not start; one in flight resumes later (F3).
 - Retry: next request or tick.
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
@@ -185,19 +185,20 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - User: the sign-in screen says so (§9a). **When the failed email is itself a user alert, the user gets no alert:** a second channel or a dashboard notice is required for DoD-2's "alerts the user"; which one is **undetermined**.
 - Operator: required, for every failed user-alert send. Sign-in failures are logs only today.
 - Money: none.
-- Operator timing (Fatih, 2026-10-29, option 3): a **permanent** rejection goes to the operator's Telegram immediately; a **transient** failure alerts once its retries run out. The retry count is **undetermined**. Detector: `emailFailureOperatorAlert` (permanent = provider 4xx other than 429, or a request that could not be built).
-- Retry: sign-in: the user retries; alerts: transient failures retry (bound **undetermined**), permanent rejections do not.
+- Operator timing (Fatih, 2026-10-29, option 3): a **permanent** rejection goes to the operator's Telegram immediately; a **transient** failure alerts once its retries run out. The retry count is **3 attempts** (PM, 2026-10-30; see *Alert retries* below). Detector: `emailFailureOperatorAlert` (permanent = provider 4xx other than 429, or a request that could not be built).
+- Retry: sign-in: the user retries; alerts: transient failures retry (at most 3 attempts with backoff), permanent rejections do not.
 - Owner: `PH2-E2-04` (sign-in), `PH2-E4-05` (alerts).
 
 **F17. `THRESHOLD_FLOOR_LEDGERS` unset or malformed.**
 - Detection: turning autopilot on answers `503 UPSTREAM_UNAVAILABLE` (`docs/API.md:175`). Set-but-malformed makes the whole watchlist mount answer `503` (`apps/api/src/watchlist/mount.ts:47`).
 - User: autopilot cannot be turned on; the dashboard's sentence names no cause.
-- Operator: required: this is configuration. The value is **undetermined**; it comes from Stage 0's measurement as `ceil(4 × worst gap)` (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:59`).
+- Operator: required: this is configuration. **Channel: email only** (PM, 2026-10-30). The value is **undetermined**; it comes from Stage 0's measurement as `ceil(4 × worst gap)` (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:59`).
 - Money: none.
 - Owner: `PH2-E4-04`.
 
 **F18. A required secret or setting missing** (`DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER`, `CHALLENGE_SIGNING_KEY`, `EMAIL_FROM`, `DASHBOARD_ORIGIN`; `docs/API.md:35`, `apps/api/src/auth/mount.ts:28`).
 - Detection: the affected routes answer `503 UPSTREAM_UNAVAILABLE`. The scheduler's engine key does not exist yet; how its absence is detected is **undetermined**.
+- Operator: **channel: email only** (PM, 2026-10-30). If the missing setting is `EMAIL_API_KEY` or `EMAIL_FROM`, the email channel itself is down; a fallback for that case is **undetermined**.
 - User: the affected screen renders undetermined.
 - Operator: required. Production has no secrets today (`docs/ops/README.md`).
 - Money: none moves without the engine key.
@@ -228,7 +229,7 @@ Which monitor covers each mode today. **Live** means it can page someone now. No
 | F6 refund fails | `isRefundOwed` | none wired; needs refund rows | missing |
 | F7 ledger/reconcile mismatch | `reconcileProblems` | none wired; engine-tx-without-job pending on #466 | missing |
 | F8 float low | `floatCheck` | none; balance read pending on `PH2-E4-02` | missing |
-| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Slow threshold **undetermined** | partial (log) |
+| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Threshold waits on real RPC numbers (PM, 2026-10-30) | partial (log) |
 | F10 testnet reset | `observed_ledger` decrease (signal 1), confirmed by the next tick (signal 2) | API Worker cron `runTestnetResetCheck` (operator); `testnetResetUserEvents` (user, needs the outbox) | code; not live (0009, lookback unset, `ALERTS_SEND` off) |
 | F11 cron missed / gap | newest `scheduler_ticks` row too old; `tickGaps` | API Worker cron `runHeartbeatCheck` (operator) | code; not live (0009, `HEARTBEAT_STALE_SECONDS` unset, `ALERTS_SEND` off) |
 | F12 overlapping ticks / duplicates | `duplicatePulls` | none wired | missing |
@@ -236,15 +237,22 @@ Which monitor covers each mode today. **Live** means it can page someone now. No
 | F14 database unavailable | trigger outside the database | none; the F11 cron logs `read_failed` but does not alert | missing |
 | F15 Neon spend | Neon Billing spending notification at $5 | Neon (outside the repo, DevOps) | outside the repo; set state **undetermined** here |
 | F16 email send refused | `auth.email_send_failed` log; `emailFailureOperatorAlert`; dispatch `failed`/`exhausted` | log only; operator Telegram channel not wired | partial (log) |
-| F17 threshold floor unset | `thresholdFloorProblem` | none wired; needs an operator channel | missing |
-| F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes | none; nobody is paged | missing |
+| F17 threshold floor unset | `thresholdFloorProblem` | none wired; operator channel is email (PM, 2026-10-30) | missing |
+| F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes | none; nobody is paged; operator channel is email (PM, 2026-10-30) | missing |
 | F19 restore lost changes | manual restore procedure | none; manual | missing |
 
-Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (both need the operator channel, which is **undetermined**: Telegram per F16, but no chat is configured). The rest wait on `PH2-E4-02` (Rakha) or on schema.
+Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (operator channel is email only, PM 2026-10-30; not wired). F16's "operator's Telegram" (Fatih, option 3) conflicts with the PM's email-only call for F14/F17/F18 and is left as written until Fatih decides.
+
+## Alert retries and Resend idempotency
+
+- **Retries (PM, 2026-10-30):** a per-user alert is attempted at most **3** times (`DEFAULT_ALERT_MAX_ATTEMPTS`, `apps/api/src/alerts/dispatch.ts`). Backoff: attempt 2 no sooner than **5 minutes** after attempt 1, attempt 3 no sooner than **15 minutes** after attempt 2 (`300 s × 3^(n-1)`). The cron runs every 5 minutes, so a retry goes out on the first run past its wait. After attempt 3 the row is `exhausted` (F16).
+- **Resend key retention:** "Idempotency keys are kept in the system for 24 hours." (https://resend.com/docs/dashboard/emails/idempotency-keys). Resend also returns `409 invalid_idempotent_request` when a key is reused with a different payload.
+- **Consequence for per-user alerts:** all three attempts finish in about 20 minutes, inside the 24-hour window; the outbox's UNIQUE (user, event) row is the durable dedupe past 24 hours.
+- **Consequence for F10/F11 operator emails:** they have no outbox, so Resend's 24 hours is their only dedupe. F11's key is `f11-heartbeat-stale:<newest tick>`: while the scheduler stays down, every cron run reuses it, so operators get one email per 24 hours of the same outage. F10's key is per drop: a drop still inside the `TESTNET_RESET_LOOKBACK_TICKS` rows after 24 hours emails again. The operator key now adds a short hash of the recipient, because one key across several operators differs in `to` and Resend would refuse the second with 409. The rest wait on `PH2-E4-02` (Rakha) or on schema.
 
 ## Undetermined, in one place
 
-- The operator alert channel, and the independent trigger for the heartbeat alert.
+- The independent trigger for the heartbeat alert. (Operator channel: email only for F14/F17/F18, PM 2026-10-30; F16 still says Telegram.)
 - Every alert threshold: fleet failure rate, `preflight-failed` counts, retries, consecutive failed ticks, gap in ledgers, the F8 sweep buffer (decided at `PH2-E4-03`), dead-letter depth.
 - Extend retry bound; refund retry cap and escalation; dead-letter policy.
 - Lead time of the allowance-expiry warning.

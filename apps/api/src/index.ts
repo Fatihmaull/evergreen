@@ -172,6 +172,7 @@ export {
   LATEST_TICK_SQL,
   heartbeatNotification,
   heartbeatState,
+  operatorIdempotencyKey,
   resendOperatorTransport,
   runHeartbeatCheck,
   staleThresholdSeconds,
@@ -235,7 +236,14 @@ export type {
   FloatCheck,
   EmailFailureFacts,
 } from './alerts/failure-modes.js';
-export { dispatchUserAlert, memoryOutboxStore, testnetResetUserEvents } from './alerts/dispatch.js';
+export {
+  ALERT_BACKOFF_BASE_SECONDS,
+  DEFAULT_ALERT_MAX_ATTEMPTS,
+  alertRetryDelaySeconds,
+  dispatchUserAlert,
+  memoryOutboxStore,
+  testnetResetUserEvents,
+} from './alerts/dispatch.js';
 export type {
   AlertOutboxStore,
   DispatchDeps,

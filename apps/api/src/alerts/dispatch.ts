@@ -29,6 +29,25 @@ export interface OutboxRow {
   readonly status: OutboxStatus;
   readonly attempts: number;
   readonly resendEmailId?: string | undefined;
+  /** Epoch seconds of the latest `beginAttempt`; drives the retry backoff. */
+  readonly lastAttemptAt?: number | undefined;
+}
+
+/**
+ * Retry policy (PM, 2026-10-30): at most 3 attempts per (user, event), with
+ * backoff. Attempt 1 is immediate; attempt 2 waits >= 5 minutes after attempt
+ * 1; attempt 3 waits >= 15 minutes after attempt 2 (300 s x 3^(n-1)). The API
+ * cron runs every 5 minutes, so a retry happens on the first cron run past its
+ * wait. All 3 attempts finish within about 20 minutes, well inside Resend's
+ * 24-hour idempotency-key window, so every retry is deduped by Resend too.
+ */
+export const DEFAULT_ALERT_MAX_ATTEMPTS = 3;
+export const ALERT_BACKOFF_BASE_SECONDS = 300;
+
+/** Seconds to wait after failed attempt `attempts` (1-based) before the next one. */
+export function alertRetryDelaySeconds(attempts: number): number {
+  if (attempts <= 0) return 0;
+  return ALERT_BACKOFF_BASE_SECONDS * 3 ** (attempts - 1);
 }
 
 /** Shape asked of Rakha in §7 item 1; UNIQUE (userId, eventId) is the dedupe. */
@@ -41,7 +60,7 @@ export interface AlertOutboxStore {
     severity: AlertNotification['severity'];
   }): Promise<OutboxRow>;
   /** Increments attempts before the send, so a crash mid-send is still counted. */
-  beginAttempt(userId: string, eventId: string): Promise<void>;
+  beginAttempt(userId: string, eventId: string, nowSeconds: number): Promise<void>;
   markSent(userId: string, eventId: string, resendEmailId: string | undefined): Promise<void>;
   markFailed(userId: string, eventId: string): Promise<void>;
   /** Optional alerts sent to this user in the rate window (§5). */
@@ -56,14 +75,15 @@ export interface DispatchDeps {
   readonly store: AlertOutboxStore;
   readonly transportFor: (recipient: string) => AlertTransport;
   readonly nowSeconds: () => number;
-  /** Bound on attempts per row; undetermined in the design, so the caller passes it. */
-  readonly maxAttempts: number;
+  /** Bound on attempts per row; defaults to DEFAULT_ALERT_MAX_ATTEMPTS (3). */
+  readonly maxAttempts?: number;
 }
 
 export type DispatchOutcome =
   | ReturnType<typeof decideAlert>
   | { readonly action: 'duplicate'; readonly status: 'sent' }
   | { readonly action: 'exhausted'; readonly attempts: number }
+  | { readonly action: 'backoff'; readonly attempts: number; readonly retryAt: number }
   | { readonly action: 'sent' }
   | { readonly action: 'failed'; readonly attempts: number };
 
@@ -87,9 +107,15 @@ export async function dispatchUserAlert(
     severity: req.notification.severity,
   });
   if (row.status === 'sent') return { action: 'duplicate', status: 'sent' };
-  if (row.attempts >= deps.maxAttempts) return { action: 'exhausted', attempts: row.attempts };
+  const maxAttempts = deps.maxAttempts ?? DEFAULT_ALERT_MAX_ATTEMPTS;
+  if (row.attempts >= maxAttempts) return { action: 'exhausted', attempts: row.attempts };
+  const now = deps.nowSeconds();
+  if (row.status === 'failed' && row.lastAttemptAt !== undefined) {
+    const retryAt = row.lastAttemptAt + alertRetryDelaySeconds(row.attempts);
+    if (now < retryAt) return { action: 'backoff', attempts: row.attempts, retryAt };
+  }
 
-  await deps.store.beginAttempt(req.userId, req.eventId);
+  await deps.store.beginAttempt(req.userId, req.eventId, now);
   try {
     const result = await deps.transportFor(req.recipient).deliver(req.notification, req.eventId);
     await deps.store.markSent(req.userId, req.eventId, resendId(result));
@@ -138,9 +164,9 @@ export function memoryOutboxStore(): AlertOutboxStore & { rows: Map<string, Outb
       rows.set(k(r.userId, r.eventId), row);
       return row;
     },
-    async beginAttempt(u, e) {
+    async beginAttempt(u, e, now) {
       const r = get(u, e);
-      rows.set(k(u, e), { ...r, attempts: r.attempts + 1 });
+      rows.set(k(u, e), { ...r, attempts: r.attempts + 1, lastAttemptAt: now });
     },
     async markSent(u, e, id) {
       const r = get(u, e);
