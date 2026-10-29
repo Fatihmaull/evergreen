@@ -11,6 +11,11 @@ import {
   runHeartbeatCheck,
   type HeartbeatEnv,
 } from './alerts/heartbeat.js';
+import {
+  RECENT_TICKS_SQL,
+  runTestnetResetCheck,
+  type TestnetResetEnv,
+} from './alerts/testnet-reset.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
 export type { Env } from './router.js';
@@ -24,7 +29,7 @@ export default {
   },
   // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
   // for this Worker; logs the outcome, never an address or a key.
-  async scheduled(_event: unknown, env: Env & HeartbeatEnv): Promise<void> {
+  async scheduled(_event: unknown, env: Env & HeartbeatEnv & TestnetResetEnv): Promise<void> {
     const databaseUrl = env.DATABASE_URL;
     const outcome = await runHeartbeatCheck(env, {
       latestTickedAt: async () => {
@@ -40,6 +45,22 @@ export default {
         ),
     });
     console.log(JSON.stringify({ event: 'alerts.f11_heartbeat', ...outcome }));
+    // F10 signal 1 (PH2-E4-05): observed ledger decreased between ticks.
+    const f10 = await runTestnetResetCheck(env, {
+      recentTicks: async (limit) => {
+        if (!databaseUrl) throw new Error('DATABASE_URL unset');
+        const rows = await neonSqlClient(databaseUrl).query(RECENT_TICKS_SQL, [limit]);
+        return rows.map((r) => ({
+          tickedAt: Number(r['t']),
+          observedLedger: BigInt(String(r['l'])),
+        }));
+      },
+      transportFor: (to) =>
+        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
+          fetch(u, i),
+        ),
+    });
+    console.log(JSON.stringify({ event: 'alerts.f10_testnet_reset', ...f10 }));
   },
 };
 
@@ -223,3 +244,14 @@ export type {
   OutboxRow,
   OutboxStatus,
 } from './alerts/dispatch.js';
+export {
+  RECENT_TICKS_SQL,
+  lookbackTicks,
+  runTestnetResetCheck,
+  testnetResetNotification,
+} from './alerts/testnet-reset.js';
+export type {
+  TestnetResetDeps,
+  TestnetResetEnv,
+  TestnetResetOutcome,
+} from './alerts/testnet-reset.js';
