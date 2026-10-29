@@ -15,7 +15,7 @@ Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:634`). *Depends on `PH2-E2-0
 - The operator alert. That is `PH2-E4-05`, and its channel is still undetermined.
 - The decision about when an event fires. That belongs to the scheduler and the money path (`PH2-E4-04`, `PH2-E4-02`).
 - The CLI's own bump notifications (`EmailChannel` as it is used today).
-- Any channel other than email. The second channel needed for F16 is an open question in §8.
+- Any channel other than email. Telegram is the F16 backup channel (decided by Tih, 2026-10-29); its wiring comes later and is out of scope here.
 - Dashboard UI for preferences. That is WEBF's path (`apps/web`), and this design only defines the API it would call.
 
 ## 2. Recommendation in five lines
@@ -41,7 +41,7 @@ Every row maps to a mode in [`PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MOD
 | Testnet reset | F10 | required | warn | Protection state is reset. |
 | Restore lost recent changes | F19 | required | warn | Which changes is **undetermined** until the restore procedure exists. |
 | Entry approaching critical with autopilot off | — | optional, on by default | warn/critical | This is the product's core alert. The `approachingCritical` template already exists (`packages/core/src/notification-templates.ts:113`). |
-| Extend succeeded | — | optional, off by default | info | Shown as a receipt. Whether it is on by default is **undetermined**. |
+| Extend succeeded | — | optional, **on by default** | info | Shown as a receipt. Default ON decided by Tih, 2026-10-29, for a clearer user flow. Still optional: the user can turn it off or unsubscribe. |
 
 There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those modes surface to the user only when they become F1, F4 or F6, or as undetermined on the dashboard (`docs/API.md:390`). This matches the user column of each mode in the E4-05 list. Whether F3's "pending" or F5's delay should also be emailed is still **undetermined** there, and this design follows whatever is decided.
 
@@ -60,13 +60,13 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 - **Event ID:** stable per fact, not per tick. Examples are `job:<job_id>:refund-delayed` and `entry:<user>:<network>:<contract>:approaching:<threshold-crossing ledger window>`. The ID for the approaching alert depends on the autopilot-window rule that is still open (#461 §7), and is **undetermined** until that is decided.
 - **Outbox (asked of Rakha, §7):** one row per (user, event ID). The UNIQUE constraint is what dedupes. Status is `pending`, then `sent` or `failed`, plus the Resend email ID once accepted. "Accepted" never means "received": `EmailChannel` returns `receivedInInbox: 'unverified'`.
 - **Resend idempotency:** a retry of the same row sends the same body, so Resend gets the same idempotency key. Resend's retention window for that key is **undetermined** (not read yet).
-- **Rate limit per user:** at most N emails per user per window, with required alerts **always** sent. If the cap is hit, optional alerts are folded into the next one. N and the window are **undetermined** and are Fatih's to set.
+- **Rate limit per user:** a conservative cap of at most N emails per user per window, with required alerts **always** sent (decided by Tih, 2026-10-29). If the cap is hit, optional alerts are folded into the next one. The exact N and window are still **undetermined**.
 - **Retries:** bounded, with backoff, on the next tick. The count is **undetermined** and follows E4-05's retry decisions. When retries run out, the row is `failed` and goes to the operator as F16.
 
 ## 6. User preferences and opt-out
 
 - **Preferences:** per user, one boolean per optional event (§3). Required alerts aren't stored as preferences, because they can't be turned off.
-- **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. A one-click unsubscribe header (RFC 8058) is **undetermined**: it needs a signed, unauthenticated route on the API, and that is a security decision for Fatih. Required alerts say why they can't be turned off.
+- **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. One-click unsubscribe (RFC 8058) is offered for **optional alerts only** (decided by Tih, 2026-10-29); it needs a signed, unauthenticated route on the API, whose design is part of the build. Required alerts cannot be unsubscribed and say why they can't be turned off.
 - **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF (`docs/API.md`). The shape will be written into `docs/API.md` when it is built.
 - **Deactivated users** (`users.deactivated_at`) get nothing. That matches the planner rule from #477.
 - **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. Both are DevOps settings, not secrets.
@@ -81,7 +81,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 
 **DevOps:** `EMAIL_API_KEY` and `EMAIL_FROM` on the scheduler Worker's **preview** environment, plus `ALERTS_SEND` and `ALERTS_ALLOWLIST`. Production waits for Fatih.
 
-**Fatih:** the rate limit (N and the window), whether the receipt alert is on by default, the unsubscribe-link decision in §6, and the second channel for F16.
+**Fatih:** decided 2026-10-29: (1) conservative per-user rate limit, required alerts always pass; (2) the receipt alert is on by default, still optional; (3) one-click unsubscribe for optional alerts only; (4) Telegram as the F16 backup channel, wired later. Still his: the exact N and window, and turning production sending on.
 
 ## 8. Test plan (no network)
 
@@ -105,8 +105,8 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 - When the scheduler emits each event. That depends on `PH2-E4-04` and `PH2-E4-02`, neither of which is built.
 - The allowance-expiry lead time, the rate limit (N and window), the retry count, and Resend's idempotency-key retention.
 - The event ID for the "approaching critical" alert, which depends on the autopilot-window rule (#461 §7).
-- Whether alerts use a separate sender address, and whether one-click unsubscribe is offered.
-- The second user channel when an alert email fails (F16).
+- Whether alerts use a separate sender address.
+- When the Telegram backup channel for F16 is wired (the channel itself is decided).
 - The outbox and preferences schema, which is Rakha's call (§7).
 - Whether F3 "pending" and F5 "delay" are emailed (open in E4-05).
 - Alert copy. Nothing is written yet.
