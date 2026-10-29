@@ -1,6 +1,8 @@
 # Pages builds and the build quota
 
-**Status (2026-10-28): measured; restricting preview builds is recommended and waits on Fatih's clicks** (an agent cannot make the change: see below). Until it is made, nothing about Pages has changed.
+**Status (2026-10-29): branch control is set.** Production builds from `main` (automatic production deployments on); **preview builds run only for the branch `preview`**. Set by DevOps through the Cloudflare API on 2026-10-29 (`source.config`: `preview_deployment_setting: custom`, `preview_branch_includes: ["preview"]`, `preview_branch_excludes: []`; it was `all` / `["*"]`), and read back from the project config afterwards. The 2026-10-28 note below that this needed Fatih's clicks is superseded.
+
+**October 2026 count (2026-10-29):** **602 builds**, all on `evergreen-stellar` (preview 439, production 163; 3 of them failed). Counted from the Pages API deployment list for all four Pages projects on the account, entries with `created_on` in October (UTC); the other three projects had 0. That is **102 over a limit of 500**, yet builds were still succeeding (latest 2026-10-29 07:19 UTC). **Whether the limit is enforced for this account is `undetermined`.**
 
 ## The limit
 
