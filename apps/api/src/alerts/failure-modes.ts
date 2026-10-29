@@ -110,7 +110,7 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F4: {
     user: { kind: 'email', alerts: ['extend_failed_refund'] },
     operator: { when: 'every' },
-    detector: 'isPulledThenFailed',
+    detector: 'isPulledThenFailed; rate breach: pulledThenFailedBreaches (operator only)',
   },
   F5: {
     user: { kind: 'via', modes: ['F4'] },
@@ -130,8 +130,8 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   },
   F8: {
     user: { kind: 'via', modes: ['F1'] },
-    operator: thr('engine balance vs float cap and refund headroom'),
-    detector: 'undetermined: float cap and headroom undetermined',
+    operator: thr('engine balance vs headroom (in-flight pulls) and cap (headroom + sweep buffer)'),
+    detector: 'floatCheck (sweep buffer decided at PH2-E4-03; balance read pending on PH2-E4-02)',
   },
   F9: {
     user: { kind: 'dashboard' },
@@ -186,7 +186,7 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
     },
     operator: { when: 'every' },
     detector:
-      "pending: sendAlert's transport result has no failure shape yet; outbox schema pending",
+      'emailFailureOperatorAlert (permanent now, transient after retries; outbox schema pending)',
   },
   F17: {
     user: { kind: 'dashboard' },
@@ -470,4 +470,100 @@ export function entriesAtRiskFromGap(
   return entries
     .filter((e) => e.ledgersLeft !== undefined && BigInt(e.ledgersLeft) < margin)
     .map((e) => e.entryId);
+}
+
+// ---- Detectors on the final numbers (Fatih, 2026-10-29 17:03 WIB) ----
+
+/** Pulled-then-failed metric, option 1: 30 days rolling. */
+export const PULLED_THEN_FAILED_WINDOW_SECONDS = 30 * 24 * 60 * 60;
+/** A user needs at least this many pulled jobs in the window before a rate can breach. */
+export const PULLED_THEN_FAILED_MIN_PULLED = 3;
+/** Breach at a rate of at least 50%, compared in integers (failed × 2 ≥ pulled). */
+export const PULLED_THEN_FAILED_RATE_PERCENT = 50;
+
+export interface WindowedUserJobFact extends UserJobFact {
+  /** `jobs.pulled_at`, unix seconds; undefined when the pull did not confirm. */
+  readonly pulledAt: number | undefined;
+}
+
+export interface PulledThenFailedBreach extends PulledThenFailedRate {
+  readonly userId: string;
+}
+
+/**
+ * Pulled-then-failed breach (option 1): over the 30 days up to `nowSeconds`,
+ * a user with ≥ 3 pulled jobs and a pulled-then-failed rate ≥ 50%. Operator
+ * alert only; nothing is done to the user's account. Jobs with no `pulledAt`
+ * or pulled in the future are not counted. Sorted by userId.
+ */
+export function pulledThenFailedBreaches(
+  jobs: readonly WindowedUserJobFact[],
+  nowSeconds: number,
+): PulledThenFailedBreach[] {
+  const from = nowSeconds - PULLED_THEN_FAILED_WINDOW_SECONDS;
+  const inWindow = jobs.filter(
+    (j) => j.pulled && j.pulledAt !== undefined && j.pulledAt > from && j.pulledAt <= nowSeconds,
+  );
+  const out: PulledThenFailedBreach[] = [];
+  for (const [userId, r] of pulledThenFailedRates(inWindow)) {
+    if (r.pulled < PULLED_THEN_FAILED_MIN_PULLED) continue;
+    if (r.pulledThenFailed * 100 < r.pulled * PULLED_THEN_FAILED_RATE_PERCENT) continue;
+    out.push({ userId, ...r });
+  }
+  return out.sort((a, b) => (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0));
+}
+
+export interface FloatFacts {
+  /** Engine account balance in stroops; undefined when the read failed. */
+  readonly balanceStroops: bigint | undefined;
+  /** Sum of the pulls in flight (pulled, not yet extended or refunded): the refund headroom. */
+  readonly inFlightPullsStroops: bigint;
+  /** Sweep buffer, decided at PH2-E4-03; undefined until then. */
+  readonly sweepBufferStroops: bigint | undefined;
+}
+
+export interface FloatCheck {
+  /** Balance below the headroom; undefined when the balance is unknown. */
+  readonly belowHeadroom: boolean | undefined;
+  /** Balance above cap = headroom + sweep buffer; undefined while the buffer or balance is unknown. */
+  readonly aboveCap: boolean | undefined;
+}
+
+/**
+ * F8 (option 2): headroom = the pulls in flight; cap = headroom + sweep
+ * buffer. Unknown inputs give undefined, never false (absence is not health).
+ */
+export function floatCheck(f: FloatFacts): FloatCheck {
+  if (f.balanceStroops === undefined) return { belowHeadroom: undefined, aboveCap: undefined };
+  const belowHeadroom = f.balanceStroops < f.inFlightPullsStroops;
+  const aboveCap =
+    f.sweepBufferStroops === undefined
+      ? undefined
+      : f.balanceStroops > f.inFlightPullsStroops + f.sweepBufferStroops;
+  return { belowHeadroom, aboveCap };
+}
+
+/** The part of an email send failure F16 needs (apps/api/src/auth/mailer-error.ts). */
+export interface EmailFailureFacts {
+  readonly kind: 'rejected' | 'unavailable' | 'network';
+  readonly fetchStage?: 'build' | 'send';
+}
+
+/**
+ * Permanent: the provider rejected it (4xx other than 429), or the request
+ * could not even be built. Retrying the same request will not help.
+ */
+export const isPermanentEmailFailure = (f: EmailFailureFacts): boolean =>
+  f.kind === 'rejected' || (f.kind === 'network' && f.fetchStage === 'build');
+
+/**
+ * F16 (option 3): when the operator's Telegram alert goes out. A permanent
+ * rejection: now. A transient failure: only once its retries are exhausted
+ * (the retry bound itself is undetermined; the caller decides exhaustion).
+ */
+export function emailFailureOperatorAlert(
+  f: EmailFailureFacts,
+  retriesExhausted: boolean,
+): 'now' | 'wait_for_retries' {
+  return isPermanentEmailFailure(f) || retriesExhausted ? 'now' : 'wait_for_retries';
 }
