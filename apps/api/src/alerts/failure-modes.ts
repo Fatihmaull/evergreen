@@ -6,7 +6,7 @@
  *
  * PENDING (not here, by design):
  * - Reading the inputs: job rows, ledger rows, RPC, `scheduler_ticks`, the DLQ,
- *   Neon usage. Needs the scheduler (PH2-E4-04, #482 open), the engine
+ *   Neon usage. Needs the scheduler (PH2-E4-04; Stage 0 merged in #482), the engine
  *   (PH2-E4-02) or schema that does not exist yet (#466, the outbox).
  * - Delivering the operator alert: its channel is undetermined (doc,
  *   "Alert channels"); the heartbeat alert's independent trigger is open.
@@ -143,8 +143,8 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
     user: { kind: 'email', alerts: ['testnet_reset'] },
     operator: { when: 'every' },
     // Decided (Fatih, 2026-10-29 17:03 WIB, option 3): signal 1 alerts the operator.
-    // The user email needs the signal-2 confirmation, pending on #482.
-    detector: 'testnetResetSignal (signal 1; user email needs signal 2, pending on #482)',
+    // Signal 2 (PM, 2026-10-29): the next tick is still <= the pre-drop ledger.
+    detector: 'testnetResetSignal (signal 1 alerts operator; signal 2 confirms the user email)',
   },
   F11: {
     // Decided (Fatih, 2026-10-29 17:03 WIB, option 1): entriesAtRiskFromGap, < 4 x worst gap.
@@ -156,7 +156,7 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
       'gap in ledgers between scheduler_ticks; trigger must be independent of the scheduler',
     ),
     detector:
-      'tickGaps, gapMarginHolds, entriesAtRiskFromGap (reading scheduler_ticks and the trigger pending on #482; alert threshold undetermined)',
+      'tickGaps, gapMarginHolds, entriesAtRiskFromGap (reading scheduler_ticks not wired; alert threshold undetermined)',
   },
   F12: {
     user: { kind: 'none' },
@@ -424,26 +424,53 @@ export function missingApiSettings(
 // ---- F10 / F11 decisions (Fatih, 2026-10-29 17:03 WIB) ----
 
 export interface TestnetResetSignal {
-  /** Operator alert: ledger went backwards between consecutive ticks. */
+  /** Operator alert: ledger went backwards between consecutive ticks (signal 1). */
   readonly operatorAlert: boolean;
   /** DoD-2 measurement window must restart. */
   readonly restartDod2Window: boolean;
-  /** The user email needs signal 2 (pending on #482); never true from signal 1 alone. */
-  readonly userEmail: false;
+  /** User `testnet_reset` email: true only when signal 2 confirms a decrease. */
+  readonly userEmail: boolean;
   readonly decreases: readonly { readonly from: bigint; readonly to: bigint }[];
+  /** Decreases confirmed by signal 2 (the following tick is still <= `from`). */
+  readonly confirmed: readonly {
+    readonly from: bigint;
+    readonly to: bigint;
+    readonly next: bigint;
+  }[];
 }
 
 /**
- * F10 signal 1 (option 3, Fatih 2026-10-29 17:03 WIB):
- * observed_ledger decreasing between consecutive scheduler_ticks. Reads
- * tickGaps().nonIncreasing and keeps strict decreases only (an equal ledger is
- * a stall, not a reset). Triggers an operator alert and a DoD-2 window restart.
- * The user `testnet_reset` email waits on signal 2, pending on #482.
+ * F10 (option 3, Fatih 2026-10-29 17:03 WIB; signal 2 decided by PM 2026-10-29).
+ * Signal 1: observed_ledger strictly decreasing between consecutive
+ * scheduler_ticks (an equal ledger is a stall, not a reset). Triggers an
+ * operator alert and a DoD-2 window restart.
+ * Signal 2: the tick after the decrease still observes a ledger lower than or
+ * equal to the ledger before the decrease (it did not bounce back to the old
+ * network). Only a confirmed decrease sets `userEmail`. A decrease on the
+ * latest tick stays unconfirmed until the next tick exists.
  */
 export function testnetResetSignal(ticks: readonly TickFact[]): TestnetResetSignal {
-  const decreases = tickGaps(ticks).nonIncreasing.filter((s) => s.to < s.from);
+  const sorted = [...ticks].sort((a, b) => a.tickedAt - b.tickedAt);
+  const decreases: { from: bigint; to: bigint }[] = [];
+  const confirmed: { from: bigint; to: bigint; next: bigint }[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const from = sorted[i - 1]!.observedLedger;
+    const to = sorted[i]!.observedLedger;
+    if (to >= from) continue;
+    decreases.push({ from, to });
+    const after = sorted[i + 1];
+    if (after !== undefined && after.observedLedger <= from) {
+      confirmed.push({ from, to, next: after.observedLedger });
+    }
+  }
   const hit = decreases.length > 0;
-  return { operatorAlert: hit, restartDod2Window: hit, userEmail: false, decreases };
+  return {
+    operatorAlert: hit,
+    restartDod2Window: hit,
+    userEmail: confirmed.length > 0,
+    decreases,
+    confirmed,
+  };
 }
 
 export interface EntryLedgersLeft {

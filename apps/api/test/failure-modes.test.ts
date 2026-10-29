@@ -197,6 +197,7 @@ describe('F10 signal 1 and F11 option 1 (decided 2026-10-29)', () => {
       restartDod2Window: true,
       userEmail: false,
       decreases: [{ from: 120n, to: 5n }],
+      confirmed: [],
     });
     const stall = testnetResetSignal([
       { tickedAt: 1, observedLedger: 100n },
@@ -205,6 +206,33 @@ describe('F10 signal 1 and F11 option 1 (decided 2026-10-29)', () => {
     expect(stall.operatorAlert).toBe(false);
     expect(stall.restartDod2Window).toBe(false);
     expect(testnetResetSignal([]).operatorAlert).toBe(false);
+  });
+
+  it('testnetResetSignal signal 2: next tick still <= pre-drop ledger confirms the user email', () => {
+    const r = testnetResetSignal([
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 5n },
+      { tickedAt: 3, observedLedger: 40n },
+    ]);
+    expect(r.userEmail).toBe(true);
+    expect(r.confirmed).toEqual([{ from: 100n, to: 5n, next: 40n }]);
+    const equal = testnetResetSignal([
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 5n },
+      { tickedAt: 3, observedLedger: 100n },
+    ]);
+    expect(equal.userEmail).toBe(true);
+  });
+
+  it('testnetResetSignal signal 2: a bounce above the pre-drop ledger is not confirmed', () => {
+    const r = testnetResetSignal([
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 5n },
+      { tickedAt: 3, observedLedger: 101n },
+    ]);
+    expect(r.operatorAlert).toBe(true);
+    expect(r.userEmail).toBe(false);
+    expect(r.confirmed).toEqual([]);
   });
 
   it('entriesAtRiskFromGap: below 4x worst gap, undefined without a gap', () => {
