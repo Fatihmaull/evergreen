@@ -248,8 +248,9 @@ export function render(ctx) {
             <div>
               <p class="how-name">Watch</p>
               <p>
-                A scheduled job re-reads the entries you configure and alerts before they cross the
-                thresholds: seven days for a warning, one day to act.
+                Each entry you configure is read against two thresholds: seven days for a warning,
+                one day to act. Email alerts for those thresholds are written but not
+                switched on yet.
               </p>
             </div>
             <div>
