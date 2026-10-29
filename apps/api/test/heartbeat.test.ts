@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   heartbeatState,
+  operatorIdempotencyKey,
   resendOperatorTransport,
   runHeartbeatCheck,
   staleThresholdSeconds,
@@ -110,6 +111,15 @@ describe('F11 heartbeat check', () => {
     expect(sent).toHaveLength(1);
   });
 
+  it('operator idempotency keys are stable per (event, operator) and differ across operators', async () => {
+    const a = await operatorIdempotencyKey('f11-heartbeat-stale:100', OP);
+    expect(await operatorIdempotencyKey('f11-heartbeat-stale:100', OP)).toBe(a);
+    expect(
+      await operatorIdempotencyKey('f11-heartbeat-stale:100', 'second@alerts.example.test'),
+    ).not.toBe(a);
+    expect(a.length).toBeLessThanOrEqual(256);
+  });
+
   it('resendOperatorTransport posts once to Resend with the event id, via the injected fetch', async () => {
     const calls: [string, RequestInit][] = [];
     const t = resendOperatorTransport('k', 'from@alerts.example.test', OP, (u, i) => {
@@ -119,7 +129,9 @@ describe('F11 heartbeat check', () => {
     await t.deliver({ subject: 's', body: 'b', severity: 'critical' }, 'ev-1');
     expect(calls).toHaveLength(1);
     expect(calls[0]![0]).toBe('https://api.resend.com/emails');
-    expect((calls[0]![1].headers as Record<string, string>)['idempotency-key']).toBe('ev-1');
+    const key = (calls[0]![1].headers as Record<string, string>)['idempotency-key'];
+    expect(key).toMatch(/^ev-1\/[0-9a-f]{16}$/);
+    expect(key).not.toContain(OP);
     const failing = resendOperatorTransport('k', 'f@x.test', OP, () =>
       Promise.resolve(new Response('', { status: 500 })),
     );

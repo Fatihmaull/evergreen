@@ -123,13 +123,14 @@ export function resendOperatorTransport(
 ): AlertTransport {
   return {
     async deliver(n, eventId) {
+      const idempotencyKey = await operatorIdempotencyKey(eventId, to);
       const response = await fetcher('https://api.resend.com/emails', {
         method: 'POST',
         redirect: 'manual',
         headers: {
           authorization: `Bearer ${apiKey}`,
           'content-type': 'application/json',
-          'idempotency-key': eventId,
+          'idempotency-key': idempotencyKey,
         },
         body: JSON.stringify({ from, to: [to], subject: n.subject, text: n.body }),
       });
@@ -137,4 +138,19 @@ export function resendOperatorTransport(
       return { status: response.status };
     },
   };
+}
+
+/**
+ * Resend rejects a reused key whose payload differs (409
+ * `invalid_idempotent_request`, resend.com/docs/dashboard/emails/idempotency-keys),
+ * and each operator's request differs in `to`. So the key is the event id plus
+ * a short hash of the recipient: stable per (event, operator), and the address
+ * itself never leaves in a header. Keys live 24 h at Resend.
+ */
+export async function operatorIdempotencyKey(eventId: string, to: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(to));
+  const hex = [...new Uint8Array(digest).slice(0, 8)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `${eventId}/${hex}`;
 }
