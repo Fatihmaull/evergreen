@@ -200,7 +200,8 @@ test('a phase-2 ID parses, and its owner is the person, not the agent track', ()
     '- [ ] **PH2-E0-07** (F · CEF) something\n' +
       '- [ ] **PH2-E4-03** (S · CER + F) something\n' +
       '- [ ] **PH2-BL-01** (R · CER) something\n' +
-      '- [ ] **PH2-E10-02b** (R · WEBR) open-ended epic and suffix\n',
+      '- [ ] **PH2-E10-02b** (R · WEBR) open-ended epic and suffix\n' +
+      '- [ ] **PH2-E0-10** (F · OPS) the DevOps track needs no parser entry\n',
   );
   assert.deepEqual(
     rows.map((r) => [r.id, r.owner]),
@@ -209,6 +210,7 @@ test('a phase-2 ID parses, and its owner is the person, not the agent track', ()
       ['PH2-E4-03', 'Shared'],
       ['PH2-BL-01', 'Rakha'],
       ['PH2-E10-02b', 'Rakha'],
+      ['PH2-E0-10', 'Fatih'],
     ],
   );
 });
