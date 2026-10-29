@@ -172,6 +172,42 @@ That is the answer step 10 needs, and it is no longer a 404.
 
 **Send back.** For steps 6, 7 and 8: a screenshot of the whole browser window including the address bar. For step 10: the same. For anything reading `undetermined`, or any error: the exact text on screen and the WIB time to the minute.
 
+## Part C — wallet-money: sign and submit on testnet (PH2-E3-05)
+
+**Status: not runnable yet.** `apps/web/src/lib/wallet-money.ts` landed in #384 (`fc25151`), but on `origin/main` at `a7acf6f` **no page imports it**. The only mentions outside the module are comments in `lib/wallet.ts` and `pages/login.ts`. The first screen that calls `signAndSubmit` is Rakha's (PH2-E3-04 and later). Run this part once that screen is on preview. The screen's own wording is **undetermined** until then. The steps below give the result the module returns for each case, quoted from `wallet-money.ts` and `wallet.ts`. Map each one to the text on screen when you run it.
+
+**Before you start.** Use Stellar **testnet only**. Freighter must be set to Testnet, unlocked, and linked to your account (Step 5b). Use a testnet account funded from Friendbot, never a mainnet one. Cite the commit from `GET /api/v1/health` before and after, as above. For every case, send a screenshot, the time in WIB to the minute, and the transaction hash if the screen shows one.
+
+### Step C1 — Happy path: sign and submit
+
+Start the screen's action, read the Freighter prompt (network **Test SDF Network ; September 2015**), and approve it.
+**Expected:** a success that shows a hash and a ledger number (`{ hash, ledger }`). Open the hash on a testnet explorer and check that the transaction is there and successful.
+
+### Step C2 — Reject in Freighter
+
+Start the action and press Reject in Freighter.
+**Expected:** `rejected`. The screen treats this as your choice, not an error, and nothing is sent. The account balance stays the same.
+
+### Step C3 — Wrong network
+
+Switch Freighter to Mainnet (or Futurenet), then start the action. **Do not approve anything.**
+**Expected:** `wrong-network`, before any prompt to sign. If Freighter offers a signature on a non-testnet network, stop and report it, because that is a defect.
+
+### Step C4 — Locked wallet
+
+Lock Freighter, then start the action.
+**Expected:** `locked` (or `not-connected` if the site lost its permission). Nothing is sent.
+
+### Step C5 — Leave the prompt open past the deadline
+
+Start the action and leave the Freighter prompt open without answering until the screen gives up.
+**Expected:** `possibly-signed`. The screen must **not** offer a plain retry. It should tell you to check the account first. Close the prompt with Reject afterwards. If you approve it late by mistake, report the hash, because that is exactly the case this state exists for.
+
+### Not tested by hand
+
+- `pending` (accepted, but polling ended before a final status), `submit-failed`, `failed-on-chain`, `simulation-failed`, and `restore-required` can't be caused on purpose from the browser without spending real setup. The unit tests in `apps/web/test/wallet-money.test.ts` cover them, including a status read that throws after send (expected `pending` with the hash kept, sent once). If any of them shows up during C1, screenshot it and send the hash.
+- Which screen and which amount C1 uses is **undetermined** until Rakha's screen exists.
+
 ## Findings from the first read, and where they stand
 
 These were findings, not test failures. Do not mark a step failed because of them. Items 1 to 5 are fixed in the follow-up pull request; items 6 and 7 are not, by design.
