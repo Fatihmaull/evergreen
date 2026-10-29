@@ -374,6 +374,8 @@ export function tickGaps(ticks: readonly TickFact[]): TickGaps {
  * DoD-2 (phase-2/PHASE2-PLAN.md:49): 4 x the worst gap is below the lowest act
  * threshold in use. `undefined` when either input is missing: absence is not health.
  * A margin check on the scheduler, not a TTL comparison: no entry TTL is read here.
+ * Same rule as core's gapMarginHolds (packages/core/src/gap-margin.ts); duplicated
+ * until apps/api can import core (see entriesAtRiskFromGap).
  */
 export function gapMarginHolds(
   worstGapLedgers: bigint | undefined,
@@ -451,8 +453,10 @@ export interface EntryLedgersLeft {
  * F11 option 1, PROVISIONAL (PM-accepted, pending Tih's confirmation): an entry
  * is at risk when its ledgers left are below 4 x the running worst gap.
  * This is a scheduler-margin rule (gap vs ledgers left), not the act rule:
- * core's needsAction is not imported because apps/api does not depend on core
- * (Worker build). Whether this belongs in a core helper is asked on #385.
+ * The rule is exported from core as belowGapMargin / gapMarginHolds
+ * (packages/core/src/gap-margin.ts). It is not imported here yet: apps/api does
+ * not depend on core, and the API deploy job runs wrangler without building
+ * core's dist/ first. Keep this in step with core until that is wired.
  * Returns undefined when the worst gap is unknown (absence is not health);
  * entries with unknown ledgers left are skipped.
  */
