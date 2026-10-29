@@ -2,7 +2,7 @@
   "name": "@evergreen/scheduler",
   "version": "0.0.0",
   "private": true,
-  "description": "The scheduler Worker (docs/PH2-E4-04-SCHEDULER-DESIGN.md). Stage 0: a heartbeat only. It never signs or submits a transaction.",
+  "description": "The scheduler Worker (docs/PH2-E4-04-SCHEDULER-DESIGN.md). Stage 0: a heartbeat. Stage 1: a read-only, dry-run evaluation of the autopilot plan. It never signs or submits a transaction.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@evergreen-stellar/core": "workspace:*",
-    "@neondatabase/serverless": "1.2.0"
+    "@neondatabase/serverless": "1.2.0",
+    "@evergreen/engine": "workspace:*"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

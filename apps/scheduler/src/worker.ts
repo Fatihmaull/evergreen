@@ -11,6 +11,7 @@
  *
  * Nothing here signs, submits or reads a secret other than the two it is given.
  */
+import { EvaluationError, type EvaluationSummary } from './evaluate.js';
 import { TickError } from './tick.js';
 
 export const SERVICE = 'evergreen-scheduler';
@@ -29,6 +30,11 @@ export interface Env {
 
 export interface Runtime {
   readonly runTick: () => Promise<{ readonly observedLedger: number }>;
+  /**
+   * Stage 1: the read-only, dry-run evaluation, run after the heartbeat is recorded. Absent
+   * means Stage 0 only. Its failure never fails the tick: the heartbeat already measured the gap.
+   */
+  readonly evaluate?: () => Promise<EvaluationSummary>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -61,6 +67,34 @@ export async function tokenMatches(presented: string | null, expected: string): 
   return diff === 0;
 }
 
+/** Runs the evaluation and logs counts or a code. A fault of ours (not an EvaluationError) is rethrown. */
+async function evaluateStep(
+  env: Env,
+  evaluate: () => Promise<EvaluationSummary>,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<EvaluationSummary | { readonly ok: false; readonly code: string }> {
+  try {
+    const summary = await evaluate();
+    runtime.log({
+      event: 'scheduler.evaluate',
+      trigger,
+      environment: environmentOf(env),
+      ...summary,
+    });
+    return summary;
+  } catch (error) {
+    if (!(error instanceof EvaluationError)) throw error;
+    runtime.log({
+      event: 'scheduler.evaluate_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: error.code,
+    });
+    return { ok: false as const, code: error.code };
+  }
+}
+
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
@@ -72,7 +106,12 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
       environment: environmentOf(env),
       observedLedger,
     });
-    return { ok: true as const, observedLedger };
+    if (runtime.evaluate === undefined) return { ok: true as const, observedLedger };
+    return {
+      ok: true as const,
+      observedLedger,
+      evaluation: await evaluateStep(env, runtime.evaluate, runtime, trigger),
+    };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';
     runtime.log({ event: 'scheduler.tick_failed', trigger, environment: environmentOf(env), code });

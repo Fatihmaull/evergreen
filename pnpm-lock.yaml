@@ -75,6 +75,9 @@ importers:
       '@evergreen-stellar/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@evergreen/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@neondatabase/serverless':
         specifier: 1.2.0
         version: 1.2.0
