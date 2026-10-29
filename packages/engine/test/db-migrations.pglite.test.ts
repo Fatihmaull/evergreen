@@ -1,7 +1,7 @@
 /**
- * apps/api/db applied in order on PGlite: schema.sql → 0002 → 0003 → 0004 → 0005 → 0006. Checks 0004's
- * users.reactivated_at shape, 0005's scheduler_ticks, 0006's submitted-hash and expiry columns, and that
- * rows from before a migration survive it.
+ * apps/api/db applied in order on PGlite: schema.sql → 0002 → 0003 → 0004 → 0005 → 0006 → 0007. Checks 0004's
+ * users.reactivated_at shape, 0005's scheduler_ticks, 0006's submitted-hash and expiry columns, 0007's
+ * fee-ledger views, and that rows from before a migration survive it.
  */
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
@@ -18,6 +18,13 @@ const JOB_OLD = '20000000-0000-4000-8000-000000000001';
 const job = (id: string, cols: string, vals: string): string =>
   `INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, autopilot_window${cols})
    VALUES ('${id}', '${U}', 'testnet', '${C}', 'autopilot', '${G}', ${parseInt(id.slice(-2), 16)}${vals})`;
+const F7 = '0007_fee_ledger_network_fee_evidence.sql';
+const J = {
+  balanced: '00000000-0000-4000-8000-0000000000b1',
+  subsidy: '00000000-0000-4000-8000-0000000000b2',
+  refunded: '00000000-0000-4000-8000-0000000000b3',
+  breakEven: '00000000-0000-4000-8000-0000000000b4',
+};
 let pg: PGlite;
 
 describe('apps/api/db migrations on PGlite', () => {
@@ -38,6 +45,7 @@ describe('apps/api/db migrations on PGlite', () => {
       job(JOB_OLD, ', pull_tx_hash, pulled_at, pull_amount', ", 'confirmed-old', now(), 10"),
     );
     await pg.exec(db('0006_jobs_submitted_hashes.sql'));
+    await pg.exec(db(F7));
   }, 60_000);
   afterAll(async () => {
     await pg?.close();
@@ -218,6 +226,139 @@ describe('apps/api/db migrations on PGlite', () => {
         `SELECT pull_submitted_hash FROM jobs WHERE id = '20000000-0000-4000-8000-000000000002'`,
       );
       expect(rows).toEqual([{ pull_submitted_hash: 'submitted-1' }]);
+    });
+  });
+
+  describe('0007 fee-ledger views (network-fee is evidence only, #414)', () => {
+    // kind, amount; stored kinds get a tx hash, derived kinds (rent, evergreen-fee, difference) don't.
+    const rows: Record<keyof typeof J, [string, number][]> = {
+      balanced: [
+        ['pull', 1000],
+        ['rent', 690],
+        ['evergreen-fee', 300],
+        ['difference', 10],
+        ['network-fee', 200],
+      ],
+      subsidy: [
+        ['pull', 1000],
+        ['rent', 900],
+        ['evergreen-fee', 100],
+        ['network-fee', 300],
+      ],
+      refunded: [
+        ['pull', 1000],
+        ['refund', 1000],
+        ['network-fee', 300],
+      ],
+      breakEven: [
+        ['pull', 500],
+        ['rent', 250],
+        ['evergreen-fee', 250],
+        ['network-fee', 250],
+      ],
+    };
+    beforeAll(async () => {
+      // the watch_items row for (U, C) comes from the top-level beforeAll (before 0006)
+      for (const [name, id] of Object.entries(J)) {
+        await pg.exec(
+          `INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, idempotency_key)
+           VALUES ('${id}', '${U}', 'testnet', '${C}', 'extend-now', '${G}', gen_random_uuid())`,
+        );
+        for (const [i, [kind, amount]] of rows[name as keyof typeof J].entries()) {
+          const derived = ['rent', 'evergreen-fee', 'difference'].includes(kind);
+          await pg.exec(
+            `INSERT INTO fee_ledger (job_id, network, wallet, contract_id, kind, amount, tx_hash)
+             VALUES ('${id}', 'testnet', '${G}', '${C}', '${kind}', ${amount}, ${derived ? 'NULL' : `'${name}-${i}'`})`,
+          );
+        }
+      }
+    });
+
+    it('keeps fee_ledger_job_balance columns, order and types', async () => {
+      const { rows: cols } = await pg.query(
+        `SELECT column_name, data_type FROM information_schema.columns
+         WHERE table_name = 'fee_ledger_job_balance' ORDER BY ordinal_position`,
+      );
+      expect(cols).toEqual([
+        { column_name: 'job_id', data_type: 'uuid' },
+        { column_name: 'unexplained', data_type: 'numeric' },
+      ]);
+    });
+
+    it('unexplained is 0 for every reconciled job; network-fee rows no longer count', async () => {
+      const { rows: r } = await pg.query<{ job_id: string; unexplained: string }>(
+        'SELECT job_id, unexplained::text AS unexplained FROM fee_ledger_job_balance ORDER BY job_id',
+      );
+      expect(r).toEqual(Object.values(J).map((job_id) => ({ job_id, unexplained: '0' })));
+    });
+
+    it('a real gap still shows: an unsplit pull remainder is unexplained', async () => {
+      const id = '00000000-0000-4000-8000-0000000000b9';
+      await pg.exec(
+        `INSERT INTO jobs (id, user_id, network, contract_id, kind, payer_account, idempotency_key)
+         VALUES ('${id}', '${U}', 'testnet', '${C}', 'extend-now', '${G}', gen_random_uuid());
+         INSERT INTO fee_ledger (job_id, network, wallet, contract_id, kind, amount, tx_hash) VALUES
+           ('${id}', 'testnet', '${G}', '${C}', 'pull', 1000, 'gap-0'),
+           ('${id}', 'testnet', '${G}', '${C}', 'rent', 600, NULL),
+           ('${id}', 'testnet', '${G}', '${C}', 'network-fee', 400, 'gap-1')`,
+      );
+      const { rows: r } = await pg.query<{ u: string }>(
+        `SELECT unexplained::text AS u FROM fee_ledger_job_balance WHERE job_id = '${id}'`,
+      );
+      expect(r).toEqual([{ u: '400' }]);
+      await pg.exec(
+        `DELETE FROM fee_ledger WHERE job_id = '${id}'; DELETE FROM jobs WHERE id = '${id}'`,
+      );
+    });
+
+    it('fee_ledger_job_subsidy: margin = evergreen-fee - network-fee, subsidy flagged, full refund flagged apart', async () => {
+      const { rows: r } = await pg.query(
+        `SELECT job_id, evergreen_fee::text AS ef, network_fee::text AS nf, margin::text AS margin,
+                fully_refunded, subsidised
+         FROM fee_ledger_job_subsidy ORDER BY job_id`,
+      );
+      expect(r).toEqual([
+        {
+          job_id: J.balanced,
+          ef: '300',
+          nf: '200',
+          margin: '100',
+          fully_refunded: false,
+          subsidised: false,
+        },
+        {
+          job_id: J.subsidy,
+          ef: '100',
+          nf: '300',
+          margin: '-200',
+          fully_refunded: false,
+          subsidised: true,
+        },
+        {
+          job_id: J.refunded,
+          ef: '0',
+          nf: '300',
+          margin: '-300',
+          fully_refunded: true,
+          subsidised: false,
+        },
+        {
+          job_id: J.breakEven,
+          ef: '250',
+          nf: '250',
+          margin: '0',
+          fully_refunded: false,
+          subsidised: false,
+        },
+      ]);
+    });
+
+    it('is idempotent: re-applying 0007 keeps both views and their results', async () => {
+      await pg.exec(db(F7));
+      const { rows: r } = await pg.query<{ n: number }>(
+        'SELECT count(*)::int AS n FROM fee_ledger_job_subsidy WHERE subsidised',
+      );
+      expect(r).toEqual([{ n: 1 }]);
     });
   });
 });

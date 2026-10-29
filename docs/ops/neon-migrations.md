@@ -7,7 +7,7 @@ Rakha's agent (CER) owns the schema and writes the SQL under [`apps/api/db/`](..
 | | |
 |---|---|
 | Project | `evergreen`, id `icy-sun-89705623`, AWS `ap-southeast-1`, Postgres 18.6, **Free plan** |
-| Branches | `preview` and `production` (the default). **`production` has no tables.** |
+| Branches | `preview` and `production` (the default). **`production` has 12 tables** (schema.sql + 0002-0005, 2026-10-29). |
 | Roles | only `neondb_owner`, on both branches. No least-privilege app role exists yet. |
 | Database | `neondb` on both |
 | History retention | **21600 s (6 hours)**. A restore can only reach back that far. |
@@ -16,18 +16,22 @@ Rakha's agent (CER) owns the schema and writes the SQL under [`apps/api/db/`](..
 
 Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`, `neonctl branches list --project-id icy-sun-89705623 --org-id <org>`, `neonctl roles list ...`. (`--org-id` is required once the account has an organization; `neonctl projects list` without it opens an interactive prompt.)
 
-## Applied state of `preview` (verified 2026-10-27)
+## Applied state of `preview` (verified 2026-10-28)
 
-`schema.sql`, `0002` and `0003` are applied, and the result is **structurally identical to a clean build of those three files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
+`schema.sql`, `0002`, `0003`, `0004` and `0005` are applied, and the result is **structurally identical to a clean build of those five files**: same columns, constraints, indexes, enums, triggers and function bodies. Method in [Verify](#verify). The only difference found was `fips_mode`, which belongs to the `pgcrypto` extension (1.4 on Postgres 18; the local reference ran Postgres 16) and is not drift.
 
 | File | Applied to `preview` | Evidence |
 |---|---|---|
 | `schema.sql` | yes | 11 tables present, matching the reference build |
 | `0002_jobs_daily_limit_per_user.sql` | yes | `jobs_daily_limit_idx` is `(user_id, network, contract_id, pulled_at) WHERE kind = 'extend-now' AND pull_tx_hash IS NOT NULL`, the file's definition, not the cross-user one from `schema.sql` |
 | `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
-| `0004` (#456, `users.reactivated_at`) | **not yet**, the PR is open | apply after it merges |
+| `0004_users_reactivated_at.sql` (#456) | yes, **2026-10-28**, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`ALTER TABLE`, `COMMENT`) | `users.reactivated_at` is `timestamptz`, nullable, no default, with the file's column comment; the one preview user row is `NULL`; the whole-schema diff above was repeated with 0004 in the reference build and still differs only by `fips_mode` |
+| `0005_scheduler_ticks.sql` (#465) | yes, **2026-10-28**, from `main` at `6c9478c`, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`CREATE TABLE`, `CREATE INDEX`) | `scheduler_ticks`: `id bigint GENERATED ALWAYS AS IDENTITY` PK, `ticked_at timestamptz NOT NULL DEFAULT now()`, `observed_ledger bigint NOT NULL CHECK (> 0)`, index on `(ticked_at)`; zero rows; whole-schema diff with 0005 in the reference build differs only by `fips_mode` |
+| `0006` (#466, submitted hashes) | **applied 2026-10-29**: preview 19:58 WIB, production 19:59 WIB (from `04a7328`, blob `48472ae`), one transaction each, Neon WS driver | 6 nullable columns on `jobs` (`{pull,extend,refund}_submitted_hash` text, `{pull,extend,refund}_submitted_expires_at` timestamptz) present on both branches, still 12 tables |
 
-The `production` branch has **nothing applied**. That is deliberate: production has no `DATABASE_URL`.
+**The migration ledger does not exist yet.** #464 added only its card (`PH2-E2-07`, a `schema_migrations` table written by each file); until that table is built, this table is the record of what ran where.
+
+**Production** (`br-proud-mountain-aon0gpyl`) got `schema.sql` + `0002`-`0005` on **2026-10-29 at about 17:01 WIB**, applied from `main` at `211ff128`, on Fatih's yes. Each file ran as a single transaction with stop-on-error (Neon WS driver). Result: **12 tables**, and the full shape is identical to `preview`. `0006` followed at 19:59 WIB (row above); `0007`-`0008` are not on production.
 
 Preview holds a little test data (a user, a session, sign-in codes and rate counters from login tests). Counts only were read.
 
@@ -81,7 +85,7 @@ Reproduced 2026-10-27 on Postgres 16.15. Without `ON_ERROR_STOP`, psql keeps goi
    `exit=0` is required, but **not sufficient**: go on to Verify.
 5. **Verify** (below), then record it in the PR that added the file: file name, branch, the object-level evidence.
 
-Never run a migration against `production` without Fatih's explicit "ya". Production waits on a least-privilege app role, append-only grants on `fee_ledger`, and the production approval gate ([`deploy.md`](deploy.md)).
+Never run a migration against `production` without Fatih's explicit "ya", and **take a snapshot first** (next section). Production waits on a least-privilege app role, append-only grants on `fee_ledger`, and the production approval gate ([`deploy.md`](deploy.md)).
 
 ## Verify
 
@@ -126,3 +130,48 @@ Expected diff on 2026-10-27: one line, `fn   fips_mode ...`, from `pgcrypto`. An
 - **No migration ledger.** There is no table recording which files ran, so the answer comes from the diff above, not from a lookup. Adding one is a schema decision for Rakha (CER); DevOps recommends it before production.
 - **CI does not lock the SQL.** It does not apply `apps/api/db` to anything, so a file that does not apply is discovered at the Neon apply (flagged as a follow-up on #440).
 - **No rollback script.** Migrations are forward-only; see [`rollback.md`](rollback.md).
+
+## Before each production migration: one manual snapshot (Fatih, 2026-10-28)
+
+Until the Neon Launch upgrade ([`backup-and-restore.md`](backup-and-restore.md), option C now, option A later), the only restore point older than Free's 6-hour history is **one manual snapshot**, and Free allows **exactly one**. The org has been on Launch since 2026-10-29, so the one-snapshot limit no longer applies, and a daily schedule now runs (below).
+
+```bash
+P=icy-sun-89705623; O=org-delicate-violet-65283800
+neonctl snapshots list --project-id $P --org-id $O                       # find the old one
+neonctl snapshots delete <old-snapshot-id> --project-id $P --org-id $O  # Free keeps one; make room
+neonctl snapshots create --branch production --name pre-<migration-file> --project-id $P --org-id $O
+neonctl snapshots list --project-id $P --org-id $O                       # confirm it exists, then migrate
+```
+
+The delete-then-create gap leaves **no snapshot for a moment**, so create the new one immediately and do not migrate until `list` shows it. Snapshots exist only on root branches, and `production` is the only root. Record every snapshot here, in the same PR or an ops note that applies the migration:
+
+| Date (UTC) | Migration applied next | Snapshot name | Created by |
+|---|---|---|---|
+| 2026-10-29 10:00 | schema.sql + 0002-0005 | `pre-schema-0001-0005` (`snap-fancy-bar-aonzvey1`), kept until 0006-0008 are safely on production | DevOps |
+| 2026-10-29 12:58 | 0006 | `pre-0006-20261029` (`snap-sweet-tree-ao8i2oue`); preview has none (Neon refuses snapshots of non-root branches) | DevOps |
+| 2026-10-29 11:07 | (post-schema baseline) | `post-schema-0001-0005-20261029` (`snap-bold-brook-ao0wyvhr`) | DevOps |
+
+**Schedule (2026-10-29):** daily at 19:00 UTC (02:00 WIB), each snapshot kept 7 days (`backup_schedule` on `br-proud-mountain-aon0gpyl`).
+
+## Compute budget on the Free plan
+
+Neon Free allows **100 CU-hours per project per month**, shared by every branch's compute (`neon.com/docs/introduction/plans`, read 2026-10-28). The compute here is 0.25 CU (the endpoint minimum; observed average 0.256 while active) and suspends after **5 idle minutes, which cannot be changed on Free**. The billing period ran 2026-10-22 to 2026-11-01 and had used **0.57 CU-hours** on 2026-10-28.
+
+A scheduler that touches the database every N minutes wakes it every N minutes. Whether the 5 idle minutes before suspension count as active time is **not stated in Neon's docs**. It was **measured here on 2026-10-28** (below): they do count. Both readings are kept for comparison (30.4 days, 0.25 CU, 10 s of work per tick):
+
+| Tick every | CU-h per month, idle window **billed** | idle window **not billed** |
+|---|---|---|
+| 60 min | 15.7 | 0.5 |
+| 30 min | 31.4 | 1.0 |
+| **15 min (96 wake-ups a day)** | **62.8** (73.0 with 60 s of work) | 2.0 |
+| 10 min | 94.2 | 3.0 |
+| 5 min | 182.4 (always on) | 6.1 |
+
+- **Only one branch may tick at 15 minutes.** Two is about 146 CU-h. A preview scheduler runs on manual dispatch or every 6 hours (about 3 more).
+- **Keep-alive pings cannot work on Free:** staying awake is 182.4 CU-h.
+- Paid alternative: Launch at $0.106 per CU-hour is about $7 to $8 a month for the same 15-minute hours, and about **$19.3** a month with scale-to-zero disabled (always on), which allows any cadence.
+- **The measurement.** The `production` branch has no other traffic, so one read-only query there isolates one wake. Baseline 2026-10-28 11:43 UTC: `active_time_seconds` 600, `compute_time_seconds` 152. After one `select 1`, read at 14:09 UTC: **964 and 244, so one wake added 364 s of active time and 92 compute-seconds (0.253 CU).** A wake that costs a query's few milliseconds would have added about zero; 364 s is the **5-minute idle window plus about a minute**, so **the idle window is billed**. At that cost, 96 wakes a day is about 9.7 hours, which is **about 74 CU-hours a month** at 15 minutes (the 60 s-of-work row above is the same figure). One sample, so treat the extra minute as approximate. Neon's per-branch counters lag: they had not moved after 10 minutes and had by 26. Re-measure (`neonctl branches list --project-id <id> --org-id <org> --output json`, field `active_time_seconds`) before relying on a different interval.
+- **Decision (Fatih, 2026-10-28): stay on Free; 15-minute ticks on `production` only; the preview scheduler is manual.**
+- Read consumption daily once a scheduler runs; flag at 70 CU-h.
+
+The numbers and options were posted for CEF on [#461](https://github.com/Fatihmaull/evergreen/pull/461).

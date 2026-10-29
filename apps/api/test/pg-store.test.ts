@@ -118,9 +118,11 @@ describe('users and sign-in codes', () => {
       email: 'a@example.test',
       createdAt: 5,
     });
-    expect(sql.queries[0]!.text).toMatch(
-      /ON CONFLICT \(\(lower\(email\)\)\) DO UPDATE SET deactivated_at = NULL/,
-    );
+    const { text } = sql.queries[0]!;
+    expect(text).toMatch(/ON CONFLICT \(\(lower\(email\)\)\) DO UPDATE SET/);
+    expect(text).toContain('deactivated_at = NULL');
+    // Stamped only when the row was deactivated; behaviour is proven in reactivation.pglite.test.ts.
+    expect(text).toContain('CASE WHEN users.deactivated_at IS NOT NULL THEN to_timestamp($2)');
   });
 
   it('🔴 reactivation turns autopilot off on every watch item, in the same statement', async () => {
@@ -189,6 +191,9 @@ describe('wallets', () => {
     expect(await store.linkWallet(UID, G, 9)).toBe('already-linked');
     expect(await store.linkWallet(UID, G, 9)).toBe('linked-elsewhere');
     expect(sql.queries[0]!.text).toContain('ON CONFLICT (network, account) DO NOTHING');
+    // Signing again as the same user refreshes linked_at; never another user's wallet.
+    expect(sql.queries[0]!.text).toContain('UPDATE wallets SET linked_at = to_timestamp($3)');
+    expect(sql.queries[0]!.text).toContain('user_id = $1::uuid AND NOT EXISTS (SELECT 1 FROM ins)');
   });
 
   it("🔴 unlinkWallet only deletes the caller's own wallet", async () => {
