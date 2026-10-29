@@ -18,6 +18,8 @@
 import { PgTenantStore, type TenantQuery } from '@evergreen/engine/dist/pg-tenant-store.js';
 import { planTenantsFromStore } from '@evergreen/engine/dist/tenant-store.js';
 import type { TenantPlan } from '@evergreen/engine/dist/tenants.js';
+import type { LedgerEntryReader } from '@evergreen-stellar/core';
+import { countDue, type DueCounts } from './due.js';
 
 export type EvaluationErrorCode = 'EVAL_WRITE_REFUSED' | 'EVAL_DB_FAILED';
 
@@ -60,6 +62,8 @@ export interface EvaluationSummary {
   readonly items: number;
   /** Items whose 30-day budget has nothing left, including undetermined spend (fails closed). */
   readonly itemsWithoutBudget: number;
+  /** Stage 1b: due-ness from the chain. Absent when no reader was given. */
+  readonly due?: DueCounts;
 }
 
 export function summarise(plans: readonly TenantPlan[]): EvaluationSummary {
@@ -78,6 +82,7 @@ export function summarise(plans: readonly TenantPlan[]): EvaluationSummary {
 /** Reads the testnet plan through the read-only wrapper. A database failure is reported by code only. */
 export async function evaluate(
   query: TenantQuery,
+  reader?: LedgerEntryReader,
 ): Promise<{ readonly plans: readonly TenantPlan[]; readonly summary: EvaluationSummary }> {
   const store = new PgTenantStore(readOnlyQuery(query));
   let plans: TenantPlan[];
@@ -88,5 +93,8 @@ export async function evaluate(
     // Driver and row-shape errors can carry connection details: keep the code only.
     throw new EvaluationError('EVAL_DB_FAILED');
   }
-  return { plans, summary: summarise(plans) };
+  const summary = summarise(plans);
+  if (reader === undefined) return { plans, summary };
+  // core's scan turns a failed read into an issue (so the item is undetermined), never a throw.
+  return { plans, summary: { ...summary, due: await countDue(plans, reader) } };
 }

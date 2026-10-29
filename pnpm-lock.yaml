@@ -75,6 +75,9 @@ importers:
       '@evergreen-stellar/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@evergreen-stellar/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       '@evergreen/engine':
         specifier: workspace:*
         version: link:../../packages/engine
