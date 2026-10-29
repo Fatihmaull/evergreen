@@ -102,7 +102,9 @@ export async function signAndSubmit(
   if ('kind' in sent) return sent;
 
   for (let waited = 0; ; waited += pollIntervalMs) {
-    const s = await chain.status(sent.hash);
+    // The transaction is already submitted: a read-back error must not lose
+    // the hash (a retry would charge twice), so it counts as not found yet.
+    const s = await chain.status(sent.hash).catch(() => ({ status: 'NOT_FOUND' as const }));
     if (s.status === 'SUCCESS') return { hash: sent.hash, ledger: s.ledger };
     if (s.status === 'FAILED')
       return { kind: 'failed-on-chain', hash: sent.hash, detail: s.detail };

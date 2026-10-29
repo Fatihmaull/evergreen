@@ -119,6 +119,27 @@ describe('signAndSubmit', () => {
       }),
     ).toEqual({ kind: 'pending', hash: 'H' });
   });
+
+  test('status that throws after send keeps the hash as pending and never resubmits', async () => {
+    const c = chain({
+      send: async (x) => {
+        c.sent.push(x);
+        return { hash: 'H1' };
+      },
+      status: async () => {
+        throw new Error('rpc down');
+      },
+    });
+    expect(
+      await signAndSubmit(wallet(), 'T', ME, {
+        chain: c,
+        sleep: noSleep,
+        pollIntervalMs: 1,
+        pollTimeoutMs: 3,
+      }),
+    ).toEqual({ kind: 'pending', hash: 'H1' });
+    expect(c.sent).toHaveLength(1);
+  });
 });
 
 describe('MoneyFailure and WalletFailure are told apart', () => {
