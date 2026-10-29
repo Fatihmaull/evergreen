@@ -4,6 +4,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_ALERT_MAX_ATTEMPTS,
+  alertRetryDelaySeconds,
   dispatchUserAlert,
   memoryOutboxStore,
   testnetResetUserEvents,
@@ -36,14 +38,15 @@ const req = (over: Partial<DispatchRequest> = {}): DispatchRequest => ({
   ...over,
 });
 
+const clock = { now: 1_000 };
 const deps = (t: AlertTransport, store = memoryOutboxStore()) => ({
   store,
   transportFor: () => t,
-  nowSeconds: () => 1_000,
-  maxAttempts: 3,
+  nowSeconds: () => clock.now,
 });
 
 beforeEach(() => {
+  clock.now = 1_000;
   vi.stubGlobal('fetch', () => {
     throw new Error('network is not allowed in tests');
   });
@@ -93,11 +96,31 @@ describe('dispatchUserAlert', () => {
     expect(t.calls).toEqual(['job:j1:refund-delayed']);
   });
 
-  it('a failed send is retried with the same event id, then stops at maxAttempts', async () => {
+  it('backoff is 0, 300 s, 900 s; default max attempts is 3', () => {
+    expect(DEFAULT_ALERT_MAX_ATTEMPTS).toBe(3);
+    expect([0, 1, 2].map(alertRetryDelaySeconds)).toEqual([0, 300, 900]);
+  });
+
+  it('a retry inside the backoff window does not send', async () => {
     const t = fake(true);
     const d = deps(t);
-    for (let i = 1; i <= 3; i++)
+    expect(await dispatchUserAlert(SEND, req(), d)).toEqual({ action: 'failed', attempts: 1 });
+    clock.now += 299;
+    expect(await dispatchUserAlert(SEND, req(), d)).toEqual({
+      action: 'backoff',
+      attempts: 1,
+      retryAt: 1_300,
+    });
+    expect(t.calls).toHaveLength(1);
+  });
+
+  it('a failed send is retried with the same event id after backoff, then stops at 3 attempts', async () => {
+    const t = fake(true);
+    const d = deps(t);
+    for (let i = 1; i <= 3; i++) {
       expect(await dispatchUserAlert(SEND, req(), d)).toEqual({ action: 'failed', attempts: i });
+      clock.now += alertRetryDelaySeconds(i);
+    }
     expect(await dispatchUserAlert(SEND, req(), d)).toEqual({ action: 'exhausted', attempts: 3 });
     expect(new Set(t.calls)).toEqual(new Set(['job:j1:refund-delayed']));
     expect(t.calls).toHaveLength(3);
