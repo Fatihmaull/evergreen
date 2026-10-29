@@ -1,6 +1,6 @@
 # PH2-E4-05: the failure-mode list (DoD-2)
 
-**Status, 2026-10-29: a list, not wiring.** This is the deliverable DoD-2 checks: *"every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator"* (`phase-2/PHASE2-PLAN.md:51`). **No alert in this list is built.** Every detection signal, user alert and operator alert below depends on `PH2-E4-04` (the scheduler; only Stage 0, the heartbeat, is merged, in #482 `65fa23e`, and it is not deployed) and, for the money path, on `PH2-E4-02` (Rakha's, not built). Where the repo does not define a threshold, a count or a behaviour, this page says **undetermined**. It invents no numbers.
+**Status, 2026-10-29: a list, not wiring.** This is the deliverable DoD-2 checks: *"every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator"* (`phase-2/PHASE2-PLAN.md:51`). **No alert in this list is live.** The coverage table below says which ones have code. Every detection signal, user alert and operator alert below depends on `PH2-E4-04` (the scheduler; only Stage 0, the heartbeat, is merged, in #482 `65fa23e`, and it is not deployed) and, for the money path, on `PH2-E4-02` (Rakha's, not built). Where the repo does not define a threshold, a count or a behaviour, this page says **undetermined**. It invents no numbers.
 
 Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:654`). Nothing here changes code, schema or deployment.
 
@@ -129,7 +129,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
 
 **F10. Testnet reset.**
-- Detection (Fatih, 2026-10-29, option 3): signal 1 is `observed_ledger` decreasing between consecutive `scheduler_ticks`; an equal ledger is a stall, not a reset. Signal 2 (decided by PM, 2026-10-29): the tick after the decrease still observes a ledger lower than or equal to the ledger before the decrease. Only then does the user email go out; a decrease on the latest tick waits for the next tick. Implemented as `testnetResetSignal` in `apps/api/src/alerts/failure-modes.ts` (pure; reading `scheduler_ticks` is not wired).
+- Detection (Fatih, 2026-10-29, option 3): signal 1 is `observed_ledger` decreasing between consecutive `scheduler_ticks`; an equal ledger is a stall, not a reset. Signal 2 (decided by PM, 2026-10-29): the tick after the decrease still observes a ledger lower than or equal to the ledger before the decrease. Only then does the user email go out; a decrease on the latest tick waits for the next tick. Implemented as `testnetResetSignal` in `apps/api/src/alerts/failure-modes.ts`. Signal 1 is read by the API Worker cron in `apps/api/src/alerts/testnet-reset.ts` (`runTestnetResetCheck`, the newest `TESTNET_RESET_LOOKBACK_TICKS` rows; unset means no check, and the value is **undetermined**). Signal 2 feeds the user email through `testnetResetUserEvents` (`apps/api/src/alerts/dispatch.ts`, #526).
 - User: required: protection state is reset. Sent only once signal 2 confirms.
 - Operator: required, on signal 1: **DoD-2's 30-day window restarts** (`phase-2/PHASE2-PLAN.md:45`).
 - Money: testnet only.
@@ -213,6 +213,34 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Money: **jobs that moved money after the restore point are missing from the restored database while their transactions are on chain.** They must be reconstructed from the chain before the scheduler resumes; how is **undetermined** (it needs F3's column and F7's reconcile). The scheduler should stay paused until then; that rule is **proposed here, not decided**.
 - Retry: n/a. The drill records RPO and RTO in `docs/evidence/` against this mode (`docs/ops/backup-and-restore.md:69`). Their values are **undetermined** until the first drill.
 - Owner: DevOps (`PH2-E0-12`); alert and evidence `PH2-E4-05`.
+
+## Monitor coverage (2026-10-29, `main` at `85ac42d`)
+
+Which monitor covers each mode today. **Live** means it can page someone now. Nothing in this table is live in production. On preview, the API Worker cron runs every 5 minutes (`apps/api/wrangler.jsonc:42`), but `ALERTS_SEND` is off, so the F10 and F11 checks only log `alerts.f10_testnet_reset` and `alerts.f11_heartbeat`. Their `scheduler_ticks` read also needs SELECT for `eg_api`, which is migration 0009 (Rakha, #385). Until 0009 lands, the read fails and the cron logs `read_failed`, which is not reported as healthy.
+
+| Mode | How it is detected | Monitor | State |
+|---|---|---|---|
+| F1 pre-flight failed | job status `preflight-failed` (`isPreflightFailed`) | none wired; needs the scheduler job path (`PH2-E4-02`) | missing |
+| F2 allowance missing/expiring | `allowance()` read in evaluation | none; pending in `PH2-E4-04` | missing |
+| F3 pull outcome unknown | submitted-unconfirmed job past the bound | none; needs #466's submitted-hash column | missing |
+| F4 pulled then failed, and per-user rate | `isPulledThenFailed`, `pulledThenFailedBreaches` | none wired; needs job rows | missing |
+| F5 extend transient failure | `isTryAgainLater`, retry counts | none; retry counting pending on `PH2-E4-02` | missing |
+| F6 refund fails | `isRefundOwed` | none wired; needs refund rows | missing |
+| F7 ledger/reconcile mismatch | `reconcileProblems` | none wired; engine-tx-without-job pending on #466 | missing |
+| F8 float low | `floatCheck` | none; balance read pending on `PH2-E4-02` | missing |
+| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Slow threshold **undetermined** | partial (log) |
+| F10 testnet reset | `observed_ledger` decrease (signal 1), confirmed by the next tick (signal 2) | API Worker cron `runTestnetResetCheck` (operator); `testnetResetUserEvents` (user, needs the outbox) | code; not live (0009, lookback unset, `ALERTS_SEND` off) |
+| F11 cron missed / gap | newest `scheduler_ticks` row too old; `tickGaps` | API Worker cron `runHeartbeatCheck` (operator) | code; not live (0009, `HEARTBEAT_STALE_SECONDS` unset, `ALERTS_SEND` off) |
+| F12 overlapping ticks / duplicates | `duplicatePulls` | none wired | missing |
+| F13 dead-lettered message | queue DLQ | none; DLQ config pending in `PH2-E4-04` | missing |
+| F14 database unavailable | trigger outside the database | none; the F11 cron logs `read_failed` but does not alert | missing |
+| F15 Neon spend | Neon Billing spending notification at $5 | Neon (outside the repo, DevOps) | outside the repo; set state **undetermined** here |
+| F16 email send refused | `auth.email_send_failed` log; `emailFailureOperatorAlert`; dispatch `failed`/`exhausted` | log only; operator Telegram channel not wired | partial (log) |
+| F17 threshold floor unset | `thresholdFloorProblem` | none wired; needs an operator channel | missing |
+| F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes | none; nobody is paged | missing |
+| F19 restore lost changes | manual restore procedure | none; manual | missing |
+
+Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (both need the operator channel, which is **undetermined**: Telegram per F16, but no chat is configured). The rest wait on `PH2-E4-02` (Rakha) or on schema.
 
 ## Undetermined, in one place
 
