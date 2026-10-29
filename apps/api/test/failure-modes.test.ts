@@ -217,4 +217,17 @@ describe('F10 signal 1 and F11 option 1 (decided 2026-10-29)', () => {
     expect(entriesAtRiskFromGap(entries, undefined)).toBeUndefined();
     expect(entriesAtRiskFromGap([], 10n)).toEqual([]);
   });
+
+  it('a negative worst gap (a ledger going down) is undetermined, not a throw', () => {
+    // tickGaps over a reset: the only step goes down.
+    const { worstGapLedgers } = tickGaps([
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 40n },
+    ]);
+    expect(worstGapLedgers).toBe(-60n);
+    expect(gapMarginHolds(worstGapLedgers, 1000n)).toBeUndefined();
+    expect(
+      entriesAtRiskFromGap([{ entryId: 'a', ledgersLeft: 1 }], worstGapLedgers),
+    ).toBeUndefined();
+  });
 });
