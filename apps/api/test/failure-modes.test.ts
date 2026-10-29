@@ -185,7 +185,7 @@ describe('detectors over inputs on main', () => {
   });
 });
 
-describe('PROVISIONAL F10 signal 1 and F11 option 1 (pending Tih)', () => {
+describe('F10 signal 1 and F11 option 1 (decided 2026-10-29)', () => {
   it('testnetResetSignal: strict decrease -> operator alert + DoD-2 restart, never user email', () => {
     const r = testnetResetSignal([
       { tickedAt: 2, observedLedger: 120n },
