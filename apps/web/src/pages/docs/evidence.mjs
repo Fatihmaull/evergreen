@@ -61,7 +61,7 @@ export function render(ctx) {
   <section class="card card-pad stack">
     <h2 class="section">Where the deliverables stand</h2>
     <p class="small muted">Snapshot: 28 September 2026. The repository's STATUS and evidence index carry later changes.</p>
-    <p class="muted"><strong>CLI.</strong> Version 0.1.1 is public on npm; scanning, rent estimates and manual Testnet extension have recorded evidence.</p>
+    <p class="muted"><strong>CLI.</strong> Version 0.2.0 is public on npm; scanning, rent estimates and manual Testnet extension have recorded evidence.</p>
     <p class="muted"><strong>Auto-bump engine.</strong> A local OS timer triggered one unattended Testnet save. The repository cron is decide-only, not a live submission service; policy-signer Stage 2 remains Partial.</p>
     <p class="muted"><strong>Dashboard and Action.</strong> The dashboard is public and the Action is tagged v1 with an external green/red run. The 3–5 minute grant demo video is still pending in this snapshot.</p>
   </section>`;
