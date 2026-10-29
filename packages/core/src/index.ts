@@ -36,10 +36,18 @@ export {
   TESTNET_PASSPHRASE,
   loadConfig,
   WORST_OBSERVED_SCHEDULER_GAP_MINUTES,
+  MIN_ACTION_RUNS_IN_WINDOW,
   SCHEDULER_GAP_FLOOR_MINUTES,
 } from './config.js';
 export { SHARED_CODE_ENTRY_KEY } from './shared-code.js';
 export { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
+export {
+  lowestPassingActionWindowLedgers,
+  marginLedgers,
+  schedulerGapCheck,
+  tickGapsLedgers,
+  worstGapLedgers,
+} from './scheduler-gap.js';
 export {
   PROVISIONAL_HOSTED_FEE,
   PROVISIONAL_ROUTER_FEE,
