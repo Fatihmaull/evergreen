@@ -50,6 +50,14 @@ The settings are in the Pages project and `wrangler` has no command for them. Ch
 
 Pages can skip a build when no watched path changed (Settings, Builds, **Build watch paths**). Many merges touch only docs, the engine or the CLI. A conservative include list for this repo: `apps/**`, `functions/**`, `packages/core/**`, `packages/shared-types/**`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.nvmrc`. **Trade-off:** a path missing from the list means a stale site after a change that matters. Recommended only after two days of measurement under the first change, and with `packages/**` as the safe superset if the saving is small.
 
+## Re-measured 2026-10-29 17:52 WIB (Pages API, `evergreen-stellar`)
+
+- Branch control read back: `preview_deployment_setting: custom`, `preview_branch_includes: ["preview"]`, production `main`.
+- The last preview build of a non-`preview` branch was `cef/e405-failure-modes` at 07:17 UTC. Every later feature-branch push is listed with no build stage (skipped).
+- October so far: **642 deployments listed, 618 built, 24 skipped**.
+- 2026-10-29 builds: 56 (preview 38, production 18). Build stage **23 s min, 46 s max, 32 s average**.
+- Local on the box (Node 24.22.1, warm `tsc --build` cache): `pnpm build` 0.7 s, `node apps/web/build.mjs` 2.6 s.
+
 ## Re-measuring
 
 ```bash
