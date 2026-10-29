@@ -50,6 +50,8 @@
       "vars": {
         "ENVIRONMENT": "preview",
         "HEARTBEAT_STALE_SECONDS": "900",
+        // F10 testnet-reset check (src/alerts/testnet-reset.ts): compare the last 12 ticks (~1 h at */5).
+        "TESTNET_RESET_LOOKBACK_TICKS": "12",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
