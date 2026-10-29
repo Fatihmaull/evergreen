@@ -1,6 +1,6 @@
 /**
  * The tenant store SQL against PGlite (Postgres compiled to WASM, in-process): no container, so it
- * runs in plain `pnpm test` and in CI. schema.sql → 0002 → 0003 are applied as in the opt-in
+ * runs in plain `pnpm test` and in CI. schema.sql → 0002 → 0003 → 0004 are applied as in the opt-in
  * podman test, with the same fixture rows. Test harness only; production uses an injected driver.
  */
 import { readFileSync } from 'node:fs';
