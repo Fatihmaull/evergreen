@@ -49,7 +49,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 |---|---|---|
 | Worker secrets | DevOps, using Fatih's `wrangler` login, when a task needs it | **Only on Fatih's explicit "ya"**, and only after the prerequisites below |
 | `CLOUDFLARE_API_TOKEN`, `NOTION_TOKEN` | Fatih | Fatih |
-| `CHALLENGE_SIGNING_KEY` | who generated the preview seed, and where it was kept, is **not recorded** (`undetermined`); it must live only in the Worker | a **different** key, never the preview one |
+| `CHALLENGE_SIGNING_KEY` | rotated 2026-10-29 17:48 WIB by DevOps (Fatih's yes): fresh random seed, set with the secrets API (Worker version `f6bc3e7f`), public key `GAXT6OU3XSMEJ2HSYQIMAN3S7WLP6GZDNG3BW2YOW7AOYTZ6WJ5SZGE4`. The seed is kept only in the Worker and DevOps' private secrets folder, never in the repo | a **different** key, never the preview one |
 
 **Production prerequisites (none met on 2026-10-27):**
 
