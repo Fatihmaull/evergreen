@@ -17,6 +17,17 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-22",
   "workers_dev": false,
+  // Workers Logs, so auth.email_send_failed (docs/API.md §9) can be read. Console output
+  // only: invocation logs are OFF because they record the whole request, and the
+  // platform redacts Cookie and Authorization but NOT X-Evergreen-CSRF, the client IP
+  // or the user agent (observed with `wrangler tail`, docs/ops/observability.md).
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "invocation_logs": false,
+    },
+  },
   "vars": {
     "ENVIRONMENT": "production",
     "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
@@ -25,6 +36,13 @@
     "preview": {
       "name": "evergreen-api-preview",
       "workers_dev": false,
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": {
+          "invocation_logs": false,
+        },
+      },
       "vars": {
         "ENVIRONMENT": "preview",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",

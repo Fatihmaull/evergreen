@@ -1,10 +1,18 @@
 name: API deploy
 
-# Auto-deploys the apps/api Worker: evergreen-api-preview on every same-repo PR,
-# evergreen-api (production) on merge to main. Needs repo secret
-# CLOUDFLARE_API_TOKEN and repo variable CLOUDFLARE_ACCOUNT_ID.
+# Deploys the apps/api Worker. Needs repo secret CLOUDFLARE_API_TOKEN and repo
+# variable CLOUDFLARE_ACCOUNT_ID. See docs/ops/deploy.md.
+#
+#   evergreen-api-preview   = `main` by default: every push to main redeploys it.
+#                             A pull request deploys to it ONLY when it is not a draft,
+#                             comes from this repo, and carries the label `deploy-preview`
+#                             (adding the label deploys). Last writer wins on that one
+#                             Worker, and GET /api/v1/health says which commit it runs.
+#   evergreen-api           = production: a push to main, after preview, and only once
+#                             the `production` Environment's reviewer approves.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - 'apps/api/**'
       - '.github/workflows/api-deploy.yml'
@@ -30,8 +38,13 @@ jobs:
   preview:
     name: deploy evergreen-api-preview
     if: >-
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name == 'push'
       || github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+          && github.event.pull_request.draft == false
+          && contains(github.event.pull_request.labels.*.name, 'deploy-preview')
+          && (github.event.action != 'labeled' || github.event.label.name == 'deploy-preview'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -48,7 +61,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview
+          # On pull_request, github.sha is GitHub's synthetic MERGE commit, which
+          # exists on no branch. The commit under test is the PR head.
+          DEPLOY_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
 
   production:
     name: deploy evergreen-api (production)
@@ -56,9 +72,25 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    needs: preview
     environment: production
     steps:
       - uses: actions/checkout@v5
+      # Approving a waiting run deploys THAT run's commit, however old. This step
+      # runs after the approval, so it catches the stale click: if main has changed
+      # the Worker's inputs since this run's commit, fail and let the newer run deploy.
+      - name: refuse a commit that main has moved past
+        env:
+          RUN_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          if git diff --quiet "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml; then
+            echo "apps/api at $RUN_SHA matches main"
+            exit 0
+          fi
+          git diff --stat "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml
+          echo "::error::main changed apps/api or this workflow after $RUN_SHA. Reject this run and approve the newest one."
+          exit 1
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
@@ -72,15 +104,28 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy
-      - name: smoke /api/v1/health (200 + application/json)
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+      # Reads what is SERVING, not what was sent: an injected var proves nothing
+      # about what shipped. The `commit` field comes from #460; a response
+      # without it (a version older than that) passes with a notice, and
+      # "undetermined" (code reads the var, the workflow did not inject it) fails.
+      - name: smoke /api/v1/health (200 + application/json + the commit just deployed)
+        env:
+          WANT: ${{ github.sha }}
         run: |
           url=https://evergreen-stellar.pages.dev/api/v1/health
+          body=$(mktemp)
           for i in 1 2 3 4 5; do
-            out=$(curl -sS -o /dev/null -w '%{http_code} %{content_type}' "$url" || true)
+            out=$(curl -sS -o "$body" -w '%{http_code} %{content_type}' "$url" || true)
             echo "attempt $i: $out"
             code=${out%% *}; ctype=${out#* }
-            if [ "$code" = "200" ] && [[ "$ctype" == application/json* ]]; then exit 0; fi
+            if [ "$code" = "200" ] && [[ "$ctype" == application/json* ]]; then
+              got=$(jq -r 'if has("commit") then .commit else "absent" end' "$body" 2>/dev/null || echo unreadable)
+              if [ "$got" = "$WANT" ]; then echo "serving $got"; exit 0; fi
+              if [ "$got" = "absent" ]; then echo "::notice::health reports no commit field yet (pre-#460 code); not checked"; exit 0; fi
+              echo "serving commit: $got (want $WANT)"
+            fi
             sleep 10
           done
-          echo "::error::health check failed: $out"; exit 1
+          echo "::error::health check failed: $out; commit served: ${got:-none}, want $WANT"; exit 1
