@@ -226,7 +226,8 @@ export const WORST_OBSERVED_SCHEDULER_GAP_MINUTES = 369;
  */
 export const SCHEDULER_GAP_FLOOR_MINUTES = 480;
 
-const MIN_ACTION_RUNS_IN_WINDOW = 4;
+/** Scheduler runs an action window must span: one to notice, three to survive what made the gap worst. */
+export const MIN_ACTION_RUNS_IN_WINDOW = 4;
 
 /**
  * Deliberately still derived from **331**, the measurement as of 2026-09-14, and

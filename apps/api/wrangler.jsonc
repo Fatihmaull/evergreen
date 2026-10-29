@@ -6,9 +6,8 @@
 //   CHALLENGE_SIGNING_KEY  S… seed of the unfunded SEP-10 challenge-signing key
 // Plain vars auth also needs (not secret):
 //   DASHBOARD_ORIGIN  set below per environment (one exact origin, no wildcard)
-//   EMAIL_FROM        preview: onboarding@resend.dev (env.preview vars; only delivers
-//                     to the Resend account owner's email); production undetermined
-//                     until the Resend sender domain is verified
+//   EMAIL_FROM        alerts@mail.evergreenstellar.biz.id on both environments
+//                     (Resend domain mail.evergreenstellar.biz.id, verified)
 // Until all of these are set, the auth routes answer 503 UPSTREAM_UNAVAILABLE.
 // No account_id: wrangler reads it from CLOUDFLARE_ACCOUNT_ID or the
 // logged-in account.
@@ -31,6 +30,7 @@
   "vars": {
     "ENVIRONMENT": "production",
     "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
+    "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
   },
   "env": {
     "preview": {
@@ -46,7 +46,7 @@
       "vars": {
         "ENVIRONMENT": "preview",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
-        "EMAIL_FROM": "onboarding@resend.dev",
+        "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
     },
   },
