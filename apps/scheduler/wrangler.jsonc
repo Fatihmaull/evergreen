@@ -1,0 +1,35 @@
+// The scheduler Worker (apps/scheduler/README.md, docs/PH2-E4-04-SCHEDULER-DESIGN.md §8).
+// PREVIEW ONLY for now: the top-level (production) block has NO cron trigger and no
+// workflow deploys it. Production cron (every 15 min) lands in a later PR.
+// Worker secrets, set per environment with `wrangler secret put <NAME> --env preview`:
+//   DATABASE_URL  the eg_scheduler role's connection string (never the owner's)
+//   TICK_TOKEN    bearer token that turns POST /tick on (preview only)
+// No account_id: wrangler reads it from CLOUDFLARE_ACCOUNT_ID or the logged-in account.
+{
+  "name": "evergreen-scheduler",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-22",
+  "workers_dev": false,
+  "triggers": { "crons": [] },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": false },
+  },
+  "vars": { "ENVIRONMENT": "production" },
+  "env": {
+    "preview": {
+      "name": "evergreen-scheduler-preview",
+      // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
+      "workers_dev": true,
+      // No cron on preview: the Neon allowance is per project (README).
+      "triggers": { "crons": [] },
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": { "invocation_logs": false },
+      },
+      "vars": { "ENVIRONMENT": "preview" },
+    },
+  },
+}
