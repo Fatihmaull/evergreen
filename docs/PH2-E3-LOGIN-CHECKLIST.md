@@ -99,6 +99,31 @@ Neither note says why, and neither says a code was sent. This is the known previ
 
 **Send back.** **Screenshot of the "Signed in as …" note, before the reload.** For a fail: the exact text and the WIB time. You may blur your email in the screenshot.
 
+### Step 5b — Link a Freighter wallet (production host)
+
+Added 2026-10-29 for `PH2-E3-01`; goes into Tih's next batch. Strings are quoted from `apps/web/src/pages/login.ts` (`connectWallet`, `linkWallet`, `walletSentence`). Read without a session on 2026-10-29: `POST https://evergreen-stellar.pages.dev/api/v1/wallets/challenge` → `401 UNAUTHENTICATED` "Sign in first.", so the route is deployed on production.
+
+**Before.** Freighter installed, unlocked, set to **testnet**. Signed in on `https://evergreen-stellar.pages.dev/login/` (step 5). Linking signs a challenge transaction with sequence number 0, which the network rejects; it moves nothing. If Freighter asks to sign a payment or anything else, decline and report it.
+
+**Do.**
+1. Click **"Connect Freighter"** and allow the site in Freighter.
+2. Click **"Link this wallet"** and approve the signature in Freighter.
+
+**Expect.**
+- After 1: "Connected: `<your G… account>`, on testnet. Not linked yet: linking needs you to be signed in, and a signature."
+- After 2: "Linked: `<your G… account>`." and the session note changes to "Signed in as `<email>`. Linked: `G…` (shortened)."
+
+**Pass.** Both texts above, and the session note still reads "Linked: …" after a reload.
+
+**Fail, or report with the exact text.**
+- "Freighter is on a different network (it reports “…”). Switch it to testnet." Switch, then retry; not a defect.
+- "This wallet is already linked to a different account."
+- "The signing request expired. Try linking again." / "This page was open too long. Reload and try again." Retry once; report if it repeats.
+- "The service issued a challenge for a different network than this site reads. Nothing was signed." This is a defect.
+- An `undetermined` panel headed "Whether a sign-in challenge can be issued." or "Whether the wallet was linked." This is a defect: send the detail line.
+
+**Send back.** A screenshot after step 2 with the address bar showing, and one after the reload. Blur the email if you want. For anything else: the exact text and the WIB time.
+
 ### Step 9 — Sign out
 
 **Do.** Click "Sign out". Then reload the page.
