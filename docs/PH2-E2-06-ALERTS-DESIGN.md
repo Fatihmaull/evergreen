@@ -69,7 +69,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 - **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. One-click unsubscribe (RFC 8058) is offered for **optional alerts only** (decided by Tih, 2026-10-29); it needs a signed, unauthenticated route on the API, whose design is part of the build. Required alerts cannot be unsubscribed and say why they can't be turned off.
 - **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF (`docs/API.md`). The shape will be written into `docs/API.md` when it is built.
 - **Deactivated users** (`users.deactivated_at`) get nothing. That matches the planner rule from #477.
-- **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. Both are DevOps settings, not secrets.
+- **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. `ALERTS_SEND` is a plain DevOps setting. `ALERTS_ALLOWLIST` is a Worker **secret**, because it holds email addresses (`docs/ops/secrets.md`); its values are never logged or echoed.
 
 ## 7. Asks
 
@@ -79,7 +79,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 3. **`EmailChannel`:** a per-call recipient, or a confirmation that one instance per send is fine.
 4. **Copy for each required alert:** it goes in `packages/core` alongside the existing templates. Who writes it is undetermined (CEF proposes a draft, Rakha reviews).
 
-**DevOps:** `EMAIL_API_KEY` and `EMAIL_FROM` on the scheduler Worker's **preview** environment, plus `ALERTS_SEND` and `ALERTS_ALLOWLIST`. Production waits for Fatih.
+**DevOps:** `EMAIL_API_KEY` and `EMAIL_FROM` on the scheduler Worker's **preview** environment, plus `ALERTS_SEND` (a setting) and `ALERTS_ALLOWLIST` (a secret, `docs/ops/secrets.md`). Production waits for Fatih.
 
 **Fatih:** decided 2026-10-29: (1) conservative per-user rate limit, required alerts always pass; (2) the receipt alert is on by default, still optional; (3) one-click unsubscribe for optional alerts only; (4) Telegram as the F16 backup channel, wired later. Still his: the exact N and window, and turning production sending on.
 

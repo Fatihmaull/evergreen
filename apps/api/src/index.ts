@@ -108,3 +108,23 @@ export type {
   WatchScope,
   WatchlistStore,
 } from './watchlist/store.js';
+export {
+  ALERT_RATE_LIMIT_UNDETERMINED,
+  ALERT_SPECS,
+  alertsMode,
+  canUnsubscribe,
+  isAllowlisted,
+  isRequired,
+  parseAllowlist,
+  rateDecision as alertRateDecision,
+  wantsAlert,
+} from './alerts/policy.js';
+export type { AlertClass, AlertKind, AlertSpec, AlertsMode } from './alerts/policy.js';
+export { decideAlert, sendAlert } from './alerts/sender.js';
+export type {
+  AlertEnv,
+  AlertNotification,
+  AlertOutcome,
+  AlertRequest,
+  AlertTransport,
+} from './alerts/sender.js';
