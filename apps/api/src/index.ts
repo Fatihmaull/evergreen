@@ -129,9 +129,14 @@ export type {
   AlertTransport,
 } from './alerts/sender.js';
 export {
+  API_REQUIRED_SETTINGS,
   FAILURE_MODES,
   FAILURE_MODE_ALERTS,
   alertModeMismatches,
+  gapMarginHolds,
+  missingApiSettings,
+  thresholdFloorProblem,
+  tickGaps,
   duplicatePulls,
   isPreflightFailed,
   isPulledThenFailed,
@@ -148,6 +153,8 @@ export type {
   OperatorAlert,
   PulledThenFailedRate,
   ReconcileProblem,
+  TickFact,
+  TickGaps,
   UserAlert,
   UserJobFact,
 } from './alerts/failure-modes.js';
