@@ -22,8 +22,8 @@
       "name": "evergreen-scheduler-preview",
       // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
       "workers_dev": true,
-      // No cron on preview: the Neon allowance is per project (README).
-      "triggers": { "crons": [] },
+      // Preview cron every 5 minutes (PM-approved 2026-10-29). Production stays empty above.
+      "triggers": { "crons": ["*/5 * * * *"] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
