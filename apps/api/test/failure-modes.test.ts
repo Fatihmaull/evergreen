@@ -13,6 +13,8 @@ import {
   missingApiSettings,
   thresholdFloorProblem,
   tickGaps,
+  testnetResetSignal,
+  entriesAtRiskFromGap,
   duplicatePulls,
   isPreflightFailed,
   isPulledThenFailed,
@@ -180,5 +182,39 @@ describe('detectors over inputs on main', () => {
     expect(FAILURE_MODE_ALERTS.F11.detector).toMatch(/^tickGaps/);
     expect(FAILURE_MODE_ALERTS.F17.detector).toMatch(/^thresholdFloorProblem/);
     expect(FAILURE_MODE_ALERTS.F18.detector).toMatch(/^missingApiSettings/);
+  });
+});
+
+describe('PROVISIONAL F10 signal 1 and F11 option 1 (pending Tih)', () => {
+  it('testnetResetSignal: strict decrease -> operator alert + DoD-2 restart, never user email', () => {
+    const r = testnetResetSignal([
+      { tickedAt: 2, observedLedger: 120n },
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 3, observedLedger: 5n },
+    ]);
+    expect(r).toEqual({
+      operatorAlert: true,
+      restartDod2Window: true,
+      userEmail: false,
+      decreases: [{ from: 120n, to: 5n }],
+    });
+    const stall = testnetResetSignal([
+      { tickedAt: 1, observedLedger: 100n },
+      { tickedAt: 2, observedLedger: 100n },
+    ]);
+    expect(stall.operatorAlert).toBe(false);
+    expect(stall.restartDod2Window).toBe(false);
+    expect(testnetResetSignal([]).operatorAlert).toBe(false);
+  });
+
+  it('entriesAtRiskFromGap: below 4x worst gap, undefined without a gap', () => {
+    const entries = [
+      { entryId: 'a', ledgersLeft: 39 },
+      { entryId: 'b', ledgersLeft: 40 },
+      { entryId: 'c', ledgersLeft: undefined },
+    ];
+    expect(entriesAtRiskFromGap(entries, 10n)).toEqual(['a']);
+    expect(entriesAtRiskFromGap(entries, undefined)).toBeUndefined();
+    expect(entriesAtRiskFromGap([], 10n)).toEqual([]);
   });
 });

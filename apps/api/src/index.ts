@@ -137,6 +137,8 @@ export {
   missingApiSettings,
   thresholdFloorProblem,
   tickGaps,
+  testnetResetSignal,
+  entriesAtRiskFromGap,
   duplicatePulls,
   isPreflightFailed,
   isPulledThenFailed,
@@ -155,6 +157,8 @@ export type {
   ReconcileProblem,
   TickFact,
   TickGaps,
+  TestnetResetSignal,
+  EntryLedgersLeft,
   UserAlert,
   UserJobFact,
 } from './alerts/failure-modes.js';
