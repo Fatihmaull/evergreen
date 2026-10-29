@@ -6,7 +6,7 @@ Preview may connect as the database owner. A least-privilege application role, a
 
 ## Migrations
 
-No migration tool. Each file is applied with `psql --single-transaction`.
+No migration tool. Each file is applied with `psql -v ON_ERROR_STOP=1 --single-transaction`. Without `ON_ERROR_STOP`, psql keeps going after a failed statement and still exits 0, so a half-failed apply can look like success. `DATABASE_URL` is the connection string from the environment; never paste it into a command or a doc.
 
 Numbered SQL files live under `apps/api/db/`:
 
@@ -15,7 +15,7 @@ Numbered SQL files live under `apps/api/db/`:
 - Do not edit a file after it has been applied. Add the next number instead.
 
 ```
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/schema.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/schema.sql
 ```
 
 Applied in order:
@@ -29,9 +29,9 @@ Applied in order:
 | `0005_scheduler_ticks.sql` | Adds `scheduler_ticks` (tick time, observed ledger): one heartbeat per cron tick, so the scheduler gap DoD-2 needs can be measured in ledgers ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §4). PH2-E4-04. |
 
 ```
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0003_auth_rate_counters_wallet_challenges.sql
-psql "$DATABASE_URL" --single-transaction -f apps/api/db/0004_users_reactivated_at.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0003_auth_rate_counters_wallet_challenges.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0004_users_reactivated_at.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0005_scheduler_ticks.sql
 ```
 
