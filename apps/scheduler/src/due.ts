@@ -91,6 +91,44 @@ export function createFetchReader(options: FetchReaderOptions): LedgerEntryReade
   };
 }
 
+/** Per-tick RPC timing of the Stage 1b reads. Durations in whole milliseconds. */
+export interface RpcTiming {
+  /** Sum of every `getLedgerEntries` read's duration, failed reads included. */
+  readonly rpcMs: number;
+  /** Reads attempted (core batches at most 200 keys per read). */
+  readonly rpcBatches: number;
+  /** The slowest single read, 0 when none ran. */
+  readonly rpcMaxMs: number;
+}
+
+/**
+ * Wraps a reader so each read is timed with the injected clock (tests pass a fake one). A read
+ * that throws is still counted and timed, then the error is rethrown unchanged for core.
+ */
+export function timedReader(
+  inner: LedgerEntryReader,
+  now: () => number = Date.now,
+): { readonly reader: LedgerEntryReader; readonly timing: () => RpcTiming } {
+  let rpcMs = 0;
+  let rpcBatches = 0;
+  let rpcMaxMs = 0;
+  const reader: LedgerEntryReader = {
+    ...(inner.network === undefined ? {} : { network: inner.network }),
+    async read(keys) {
+      const start = now();
+      try {
+        return await inner.read(keys);
+      } finally {
+        const ms = Math.max(0, Math.round(now() - start));
+        rpcMs += ms;
+        rpcBatches += 1;
+        rpcMaxMs = Math.max(rpcMaxMs, ms);
+      }
+    },
+  };
+  return { reader, timing: () => ({ rpcMs, rpcBatches, rpcMaxMs }) };
+}
+
 /** The watch item's scope as core's scan request, or null when it is not one of the two API shapes. */
 export function scanRequest(item: TenantItem): ContractScanRequest | null {
   const scope = item.scope;

@@ -249,6 +249,17 @@ describe('Stage 1 evaluation step', () => {
     expect(logs[1]).toMatchObject(SUMMARY);
   });
 
+  it('logs Stage 1b rpc timing next to the due counts', async () => {
+    const full = {
+      ...SUMMARY,
+      due: { due: 1, notDue: 1, expired: 0, undetermined: 0 },
+      rpc: { rpcMs: 120, rpcBatches: 2, rpcMaxMs: 80 },
+    };
+    const { rt, logs } = withEval(() => Promise.resolve(full));
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(logs[1]).toMatchObject({ due: full.due, rpc: full.rpc });
+  });
+
   it('does not run when the heartbeat failed', async () => {
     const { rt, evals } = withEval(
       () => Promise.resolve(SUMMARY),

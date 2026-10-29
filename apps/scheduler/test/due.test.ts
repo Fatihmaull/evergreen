@@ -5,7 +5,8 @@
 import { readFileSync } from 'node:fs';
 import type { TenantItem, TenantPlan } from '@evergreen/engine/dist/tenants.js';
 import { describe, expect, it } from 'vitest';
-import { countDue, createFetchReader, scanRequest } from '../src/due.js';
+import { countDue, createFetchReader, scanRequest, timedReader } from '../src/due.js';
+import type { LedgerEntryReader } from '@evergreen-stellar/core';
 import { evaluate } from '../src/evaluate.js';
 import type { FetchLike } from '../src/tick.js';
 
@@ -144,5 +145,74 @@ describe('evaluate with a reader', () => {
     }, reader(fakeRpc()));
     expect(summary.due).toEqual({ due: 0, notDue: 0, expired: 0, undetermined: 0 });
     expect(seen.every((s) => /^\s*select/i.test(s))).toBe(true);
+  });
+});
+
+/** A clock that advances by the given steps, one per call. */
+const stepClock = (...readings: number[]) => {
+  let i = 0;
+  return () => readings[Math.min(i++, readings.length - 1)]!;
+};
+
+describe('timedReader', () => {
+  it('sums, counts and maxes read durations with the injected clock', async () => {
+    const inner: LedgerEntryReader = {
+      network: 'testnet',
+      read: async () => ({ latestLedger: 1, entries: [] }),
+    };
+    const t = timedReader(inner, stepClock(100, 130, 200, 290, 300, 305));
+    expect(t.timing()).toEqual({ rpcMs: 0, rpcBatches: 0, rpcMaxMs: 0 });
+    await t.reader.read([]);
+    await t.reader.read([]);
+    await t.reader.read([]);
+    expect(t.timing()).toEqual({ rpcMs: 125, rpcBatches: 3, rpcMaxMs: 90 });
+    expect(t.reader.network).toBe('testnet');
+  });
+
+  it('times a failed read and rethrows its error unchanged', async () => {
+    const boom = new Error('x');
+    const inner: LedgerEntryReader = {
+      network: 'testnet',
+      read: async () => {
+        throw boom;
+      },
+    };
+    const t = timedReader(inner, stepClock(0, 10000));
+    await expect(t.reader.read([])).rejects.toBe(boom);
+    expect(t.timing()).toEqual({ rpcMs: 10000, rpcBatches: 1, rpcMaxMs: 10000 });
+  });
+
+  it('never reports a negative duration if the clock goes backwards', async () => {
+    const inner: LedgerEntryReader = {
+      network: 'testnet',
+      read: async () => ({ latestLedger: 1, entries: [] }),
+    };
+    const t = timedReader(inner, stepClock(50, 40));
+    await t.reader.read([]);
+    expect(t.timing()).toEqual({ rpcMs: 0, rpcBatches: 1, rpcMaxMs: 0 });
+  });
+});
+
+describe('evaluate rpc timing', () => {
+  it('reports zero batches when there is nothing to read', async () => {
+    const rpc = fakeRpc();
+    const { summary } = await evaluate(async () => [], reader(rpc), stepClock(0));
+    expect(summary.rpc).toEqual({ rpcMs: 0, rpcBatches: 0, rpcMaxMs: 0 });
+    expect(rpc.calls).toEqual([]);
+  });
+
+  it('omits rpc timing when no reader is given', async () => {
+    const { summary } = await evaluate(async () => []);
+    expect(summary.rpc).toBeUndefined();
+  });
+});
+
+describe('countDue through timedReader', () => {
+  it('counts every read core makes (instance, then code) and times them', async () => {
+    const rpc = fakeRpc();
+    const t = timedReader(reader(rpc), stepClock(1000, 1042));
+    expect(await countDue(plan(item(1n)), t.reader)).toMatchObject({ undetermined: 0 });
+    expect(t.timing()).toEqual({ rpcMs: 42, rpcBatches: rpc.calls.length, rpcMaxMs: 42 });
+    expect(rpc.calls.length).toBe(2);
   });
 });
