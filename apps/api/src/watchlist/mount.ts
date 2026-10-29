@@ -28,7 +28,7 @@ export interface WatchlistMountOptions extends MountOptions {
 /** What every watchlist route needs: the database, and the session's origin for CSRF. */
 export const WATCHLIST_NEEDS: readonly AuthFeature[] = ['database', 'session'];
 
-const wholeNumber = (raw: string): number | undefined =>
+export const wholeNumber = (raw: string): number | undefined =>
   /^[1-9]\d*$/.test(raw) && Number.isSafeInteger(Number(raw)) ? Number(raw) : undefined;
 
 export function watchlistDepsFor(

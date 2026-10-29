@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkBudget, isEligible, planTenants, spendKey } from '../src/tenants.js';
 import { MemoryTenantStore, planTenantsFromStore } from '../src/tenant-store.js';
+import type { TenantStore } from '../src/tenant-store.js';
 import { C, G, U1, U2, row } from './tenant-fixtures.js';
 
 const zero = (...rows: ReturnType<typeof row>[]) =>
@@ -196,11 +197,76 @@ describe('missing pull ledger row (fail closed)', () => {
       () => now,
     );
     expect(await store.spentLast30d(U1, 'testnet', C('A'))).toBeUndefined();
+    expect(
+      (await store.spentLast30dBatch('testnet')).get(spendKey(U1, 'testnet', C('A'))),
+    ).toBeNull();
     const [plan] = await planTenantsFromStore(store);
     expect(plan!.items.map((i) => [i.contractId, i.budget.per30dRemaining])).toEqual([
       [C('A'), 0n],
       [C('B'), 250n],
     ]);
+  });
+});
+
+describe('ledger value validation (safe integers, core isValidBumpWindow)', () => {
+  it.each([
+    ['negative threshold', { thresholdLedgers: -1n }],
+    ['negative extend-to', { extendToLedgers: -5n }],
+    ['threshold beyond safe integer', { thresholdLedgers: 2n ** 60n }],
+    ['extend-to beyond safe integer', { extendToLedgers: 2n ** 60n }],
+  ])('excludes %s', (_n, over) => {
+    expect(planTenants([row(over)], new Map())).toEqual([]);
+  });
+
+  it('keeps a valid pair', () => {
+    expect(planTenants([row()], new Map())).toHaveLength(1);
+  });
+});
+
+describe('planTenantsFromStore uses one batched spend read', () => {
+  it('absent from the batch means nothing spent; present is netted', async () => {
+    const now = new Date('2026-10-24T00:00:00Z');
+    const store = new MemoryTenantStore(
+      [row(), row({ userId: U2 }), row({ contractId: C('B') })],
+      [
+        {
+          userId: U1,
+          network: 'testnet',
+          contractId: C('A'),
+          pulledAt: new Date('2026-10-20T00:00:00Z'),
+          pulled: 100n,
+          refunded: 40n,
+        },
+        {
+          userId: U1,
+          network: 'testnet',
+          contractId: C('A'),
+          pulledAt: new Date('2026-08-01T00:00:00Z'),
+          pulled: 999n,
+          refunded: 0n,
+        },
+      ],
+      () => now,
+    );
+    let perItem = 0;
+    const spy: TenantStore = {
+      listAutopilotItems: (n) => store.listAutopilotItems(n),
+      spentLast30dBatch: (n) => store.spentLast30dBatch(n),
+      spentLast30d: async () => {
+        perItem += 1;
+        return 0n;
+      },
+    };
+    const [plan] = await planTenantsFromStore(spy);
+    expect(perItem).toBe(0);
+    const left = Object.fromEntries(
+      plan!.items.map((i) => [`${i.userId}/${i.contractId}`, i.budget.per30dRemaining]),
+    );
+    expect(left).toEqual({
+      [`${U1}/${C('A')}`]: 240n,
+      [`${U2}/${C('A')}`]: 300n,
+      [`${U1}/${C('B')}`]: 300n,
+    });
   });
 });
 

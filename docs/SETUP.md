@@ -81,7 +81,7 @@ Documented here, values only in your local `.env` / platform secret store.
 | `EVERGREEN_DEV_SECRET` | Developer key for Testnet setup/tests, separate from the bot | local `.env` only |
 | `EVERGREEN_SIGNER_SECRET` | Ed25519 signer for the bot (**testnet only**) | `.env` local · GitHub Actions secret · hosting env store |
 | `EMAIL_API_KEY` | Resend sending API key for explicit EmailChannel sends | local `.env` / secret stores only |
-| `EMAIL_FROM` | One plain sender address; defaults to `onboarding@resend.dev` | local `.env` |
+| `EMAIL_FROM` | One plain sender address; defaults to `onboarding@resend.dev` locally. Preview and production use `alerts@mail.evergreenstellar.biz.id` (`apps/api/wrangler.jsonc`) | local `.env` |
 | `EMAIL_TO` | Historical W1 recipient; ignored by W3 EmailChannel | local `.env` only |
 | `EVERGREEN_ALERT_TO` | Private EmailChannel destination selected through notifications.toEnvVar | `.env` / hosting env store |
 | `EVERGREEN_CONFIG` | Config path read by the decide-only `engine:run` **after you explicitly load the environment**. The local `engine:execute` instead takes `--config PATH`; neither command auto-loads `.env`. No `evergreen.config.json` is tracked — the repo ships `evergreen.config.dogfood.json` (real IDs, what the cron uses), `.example.json` and `.save-proof.json`. | `.env` |
@@ -303,7 +303,9 @@ Keep `EVERGREEN_ALERT_TO` (one plain recipient address), `EMAIL_FROM` and
 `EMAIL_API_KEY` in the environment or ignored local environment file. There is no
 fallback to the old `EMAIL_TO`. `EMAIL_FROM` defaults to `onboarding@resend.dev`;
 that sender is for the Resend account mailbox, and other recipients require a
-verified sender domain. Never paste an API key into chat, config or evidence.
+verified sender domain. The deployed preview and production Workers set
+`EMAIL_FROM` to `alerts@mail.evergreenstellar.biz.id`, a Resend-verified domain
+(`apps/api/wrangler.jsonc`). Never paste an API key into chat, config or evidence.
 The command does not automatically load `.env`.
 
 Save **one** BumpRecord from a reviewed execution result in an ignored local file,

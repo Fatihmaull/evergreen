@@ -23,7 +23,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 |---|---|---|---|
 | `ENVIRONMENT` | `production` | `preview` | `apps/api/wrangler.jsonc` |
 | `DASHBOARD_ORIGIN` | `https://evergreen-stellar.pages.dev` | `https://preview.evergreen-stellar.pages.dev` | same; one exact origin, no wildcard |
-| `EMAIL_FROM` | **undetermined** until a sender domain is verified | `onboarding@resend.dev` (delivers only to the Resend account owner's address) | `env.preview.vars` |
+| `EMAIL_FROM` | `alerts@mail.evergreenstellar.biz.id` | `alerts@mail.evergreenstellar.biz.id` | top-level `vars` / `env.preview.vars` |
 | `DEPLOY_COMMIT` | the deployed SHA | the PR head SHA | injected by the workflow, not committed |
 
 ### GitHub
@@ -49,7 +49,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 |---|---|---|
 | Worker secrets | DevOps, using Fatih's `wrangler` login, when a task needs it | **Only on Fatih's explicit "ya"**, and only after the prerequisites below |
 | `CLOUDFLARE_API_TOKEN`, `NOTION_TOKEN` | Fatih | Fatih |
-| `CHALLENGE_SIGNING_KEY` | who generated the preview seed, and where it was kept, is **not recorded** (`undetermined`); it must live only in the Worker | a **different** key, never the preview one |
+| `CHALLENGE_SIGNING_KEY` | rotated 2026-10-29 17:48 WIB by DevOps (Fatih's yes): fresh random seed, set with the secrets API (Worker version `f6bc3e7f`), public key `GAXT6OU3XSMEJ2HSYQIMAN3S7WLP6GZDNG3BW2YOW7AOYTZ6WJ5SZGE4`. The seed is kept only in the Worker and DevOps' private secrets folder, never in the repo | a **different** key, never the preview one |
 
 **Production prerequisites (none met on 2026-10-27):**
 
@@ -66,6 +66,23 @@ wrangler secret put <NAME>                    # production; Fatih's go first
 ```
 
 Rotating `SIGNIN_CODE_PEPPER` makes every outstanding sign-in code unverifiable (they are stored under the HMAC key, so they expire within their 10 minutes anyway). Rotating `CHALLENGE_SIGNING_KEY` invalidates outstanding wallet challenges. Neither moves money.
+
+## Alert sending: `ALERTS_SEND` (PH2-E2-06; Fatih, relayed 2026-10-29 16:25 WIB)
+
+The kill switch from [`docs/PH2-E2-06-ALERTS-DESIGN.md`](../PH2-E2-06-ALERTS-DESIGN.md) (#485, `e5347cb`): sending is on **only when `ALERTS_SEND` is exactly `send`**. Any other value, including unset, empty, `SEND` or added whitespace, is dry-run.
+
+| Worker | `ALERTS_SEND` | `ALERTS_ALLOWLIST` |
+|---|---|---|
+| scheduler, **preview** | **left unset** (dry-run) | stored as a Worker **secret**, so no address is in the repo |
+| scheduler, **production** | **nothing set**; `send` is set only after **all three** below | not set |
+
+Production gets `ALERTS_SEND=send` only after **all** of:
+
+1. The E2-06 alert code is merged.
+2. The production secrets are installed (waits on Fatih's "ya" and the Neon Launch plan).
+3. A production sender domain exists.
+
+Until then nothing is set in production. Note: the design calls both names DevOps settings, not secrets; the allowlist is kept as a secret anyway because it holds email addresses.
 
 ## Residual risk: the Cloudflare token is repo-level (accepted, Fatih, 2026-10-27)
 
