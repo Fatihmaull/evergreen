@@ -19,6 +19,7 @@ const NEVER = '00000000-0000-4000-8000-0000000000b1';
 const BEFORE = '00000000-0000-4000-8000-0000000000b2';
 const RELINKED = '00000000-0000-4000-8000-0000000000b3';
 const EQUAL = '00000000-0000-4000-8000-0000000000b4';
+const DEACTIVATED = '00000000-0000-4000-8000-0000000000b5';
 const R = '2026-10-20T00:00:00Z';
 
 let pg: PGlite;
@@ -35,17 +36,20 @@ describe('PgTenantStore wallet link after reactivation (PGlite)', () => {
         ('${BEFORE}', 'before@example.invalid', '${R}'),
         ('${RELINKED}', 'relinked@example.invalid', '${R}'),
         ('${EQUAL}', 'equal@example.invalid', '${R}');
+      INSERT INTO users (id, email, deactivated_at) VALUES ('${DEACTIVATED}', 'deactivated@example.invalid', '${R}');
       INSERT INTO wallets (network, account, user_id, linked_at) VALUES
         ('testnet', '${G('N')}', '${NEVER}', '2026-01-01T00:00:00Z'),
         ('testnet', '${G('B')}', '${BEFORE}', '2026-10-19T23:59:59Z'),
         ('testnet', '${G('R')}', '${RELINKED}', '2026-10-20T00:00:01Z'),
-        ('testnet', '${G('E')}', '${EQUAL}', '${R}');
+        ('testnet', '${G('E')}', '${EQUAL}', '${R}'),
+        ('testnet', '${G('D')}', '${DEACTIVATED}', '2026-01-01T00:00:00Z');
       INSERT INTO watch_items (user_id, network, contract_id, scope, autopilot_enabled, payer_network, payer_account,
         threshold_ledgers, extend_to_ledgers, budget_per_job_max, budget_per_30d_max) VALUES
         ('${NEVER}', 'testnet', '${C('N')}', '{"noDataKeys":true}', true, 'testnet', '${G('N')}', 1000, 5000, 100, 300),
         ('${BEFORE}', 'testnet', '${C('B')}', '{"noDataKeys":true}', true, 'testnet', '${G('B')}', 1000, 5000, 100, 300),
         ('${RELINKED}', 'testnet', '${C('R')}', '{"noDataKeys":true}', true, 'testnet', '${G('R')}', 1000, 5000, 100, 300),
-        ('${EQUAL}', 'testnet', '${C('E')}', '{"noDataKeys":true}', true, 'testnet', '${G('E')}', 1000, 5000, 100, 300);
+        ('${EQUAL}', 'testnet', '${C('E')}', '{"noDataKeys":true}', true, 'testnet', '${G('E')}', 1000, 5000, 100, 300),
+        ('${DEACTIVATED}', 'testnet', '${C('D')}', '{"noDataKeys":true}', true, 'testnet', '${G('D')}', 1000, 5000, 100, 300);
     `);
   }, 60_000);
   afterAll(async () => {
@@ -69,6 +73,10 @@ describe('PgTenantStore wallet link after reactivation (PGlite)', () => {
 
   it('boundary: linked_at == reactivated_at is excluded (strictly after)', async () => {
     expect(await listed()).not.toContain(EQUAL);
+  });
+
+  it('excludes a deactivated user’s wallet even though it was never reactivated', async () => {
+    expect(await listed()).not.toContain(DEACTIVATED);
   });
 
   it('lists exactly the never-reactivated and re-linked items', async () => {
