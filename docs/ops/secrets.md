@@ -100,7 +100,9 @@ Production gets `ALERTS_SEND=send` only after **all** of:
 2. The production secrets are installed (waits on Fatih's "ya" and the Neon Launch plan).
 3. A production sender domain exists.
 
-Until then nothing is set in production. Note: the design calls both names DevOps settings, not secrets; the allowlist is kept as a secret anyway because it holds email addresses.
+Until then nothing is set in production.
+
+Preview test send ([`alerts-test-send.md`](alerts-test-send.md), #545, `08e5114`): the runner reads `ALERTS_TEST_ALLOWLIST` and `ALERTS_SEND` from the **local shell env** of the one run, not from Worker secrets. `ALERTS_SEND` is not set on any Worker (checked 2026-10-30). Note: the design calls both names DevOps settings, not secrets; the allowlist is kept as a secret anyway because it holds email addresses.
 
 ## Residual risk: the Cloudflare token is repo-level (accepted, Fatih, 2026-10-27)
 
