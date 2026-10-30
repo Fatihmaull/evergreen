@@ -2,15 +2,15 @@
 
 **Names only. No value is ever written in this repo, a PR, chat or argv.** A value is typed at a prompt or passed by naming an environment variable. `wrangler secret list` prints names and types and nothing else, which is all that is ever recorded.
 
-## Inventory now (read 2026-10-30 16:40 WIB, names only)
+## Inventory now (read 2026-10-30 17:10 WIB via the Cloudflare secrets API, names only)
 
 Read from the Cloudflare Workers secrets API, `gh secret list`, `gh variable list`, the GitHub environments API and the Pages project config.
 
 | Where | Names |
 |---|---|
 | Worker `evergreen-api` (production) | `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (all four now **set**; the 2026-10-27 table below said absent) |
-| Worker `evergreen-api-preview` | `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` |
-| Worker `evergreen-scheduler-preview` | `DATABASE_URL`, `TICK_TOKEN` (**`ALERTS_ALLOWLIST` is not set**, unlike the E2-06 section below) |
+| Worker `evergreen-api-preview` | `ALERTS_ALLOWLIST` (set 2026-10-30 17:07 WIB; comma-separated operator emails), `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` |
+| Worker `evergreen-scheduler-preview` | `DATABASE_URL`, `TICK_TOKEN` (no `ALERTS_ALLOWLIST`: the scheduler code does not read it) |
 | Production scheduler Worker | none deployed |
 | GitHub repo secrets | `CLOUDFLARE_API_TOKEN`, `NOTION_TOKEN` |
 | GitHub repo variables | `CLOUDFLARE_ACCOUNT_ID` |
@@ -86,10 +86,13 @@ Rotating `SIGNIN_CODE_PEPPER` makes every outstanding sign-in code unverifiable 
 
 The kill switch from [`docs/PH2-E2-06-ALERTS-DESIGN.md`](../PH2-E2-06-ALERTS-DESIGN.md) (#485, `e5347cb`): sending is on **only when `ALERTS_SEND` is exactly `send`**. Any other value, including unset, empty, `SEND` or added whitespace, is dry-run.
 
+Only `apps/api/src/alerts` reads `ALERTS_ALLOWLIST`, so it lives on the API Worker, not the scheduler.
+
 | Worker | `ALERTS_SEND` | `ALERTS_ALLOWLIST` |
 |---|---|---|
-| scheduler, **preview** | **left unset** (dry-run) | stored as a Worker **secret**, so no address is in the repo |
-| scheduler, **production** | **nothing set**; `send` is set only after **all three** below | not set |
+| `evergreen-api-preview` | **left unset** (dry-run) | Worker **secret** (set 2026-10-30 17:07 WIB, comma-separated operator emails), so no address is in the repo |
+| `evergreen-scheduler-preview` | not set | not set (not read by scheduler code) |
+| `evergreen-api` (production) | **nothing set**; `send` is set only after **all three** below | not set |
 
 Production gets `ALERTS_SEND=send` only after **all** of:
 
