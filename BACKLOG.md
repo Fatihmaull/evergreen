@@ -621,7 +621,7 @@ Fatih keeps dashboard, README, troubleshooting, demo video, and evidence assembl
   - release owner: Rakha.
 
   *Depends on `PH2-E1-01`.*
-- [ ] **PH2-E1-08** (F · CEF) **S** CLI "Support Evergreen" tip (plan §3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI. *Depends on `PH2-E4-03` (treasury address).*
+- [~] **PH2-E1-08** (F · CEF) **S** 🟡 **Built in a draft PR (2026-10-22); not merged until `PH2-E4-03` fixes the address. The address is read from `EVERGREEN_SUPPORT_ADDRESS`, never compiled in.** CLI "Support Evergreen" tip (plan §3.3): at most monthly, dismissible for the month, TTY/stderr only, never in `--json` or CI. *Depends on `PH2-E4-03` (treasury address).*
 - [x] **PH2-E1-09** (F · CEF) **S** ✅ **DONE 2026-10-18.** Make core's extend path Buffer-free (#311, found by `PH2-E2-01`): `extensionKey` and the four `hash()` hex sites use `encoding.ts` (`isCanonicalBase64`, `bytesToHex`) instead of Node's global `Buffer`. `executeExtensions` now records a `ReferenceError` as `RUNTIME_ERROR` with its message, not as `SIMULATION_FAILED`. Ordinary failures keep the fixed sentence, because a provider error may carry credentials. **Commissioned:** 5 new tests fail on `main`'s sources with `ReferenceError: Buffer is not defined`. Registered as discovered work (hard rule 8).
 
 ### E2 — Backend
