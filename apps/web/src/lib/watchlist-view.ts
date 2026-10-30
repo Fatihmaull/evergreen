@@ -31,7 +31,14 @@ export interface WatchItem {
   readonly label?: string;
   readonly addedAt: string;
   readonly scope: { readonly dataKeys: readonly LedgerKey[] } | { readonly noDataKeys: true };
-  readonly autopilot: { readonly enabled: boolean };
+  readonly autopilot:
+    | { readonly enabled: false }
+    | {
+        readonly enabled: true;
+        readonly payerWallet?: string;
+        readonly thresholdLedgers?: number;
+        readonly extendToLedgers?: number;
+      };
   readonly extendNow: {
     readonly limitPerDay: number;
     readonly usedToday: number;
@@ -162,6 +169,52 @@ const CHIP: Record<Conclusion, string> = {
   undetermined: 'undetermined',
 };
 
+/** At risk is one conclusion; the chip says how close, from the engine's own health word. */
+function chipClass(r: Row): string {
+  if (
+    r.conclusion === 'at-risk' &&
+    r.binding.state !== 'expired' &&
+    r.item.lastObservation?.health === 'warning'
+  )
+    return 'warning';
+  return CHIP[r.conclusion];
+}
+
+const LEDGERS_PER_DAY = 17_280;
+const days = (ledgers: number): string => {
+  const d = ledgers / LEDGERS_PER_DAY;
+  return `about ${d >= 1 ? Math.round(d) : Math.round(d * 10) / 10} day${Math.round(d) === 1 ? '' : 's'}`;
+};
+const short = (g: string): string => `${g.slice(0, 6)}…${g.slice(-6)}`;
+
+/**
+ * Autopilot, as the API stored it. "On" is a setting, not a promise that the
+ * engine has acted: with no observation the cell says the engine has not
+ * stored a check of this contract, so nothing has been decided for it yet.
+ */
+export function autopilotCell(item: WatchItem): string {
+  const a = item.autopilot;
+  if (a === undefined || a === null || typeof a.enabled !== 'boolean')
+    return '<span class="chip undetermined"><span class="shape"></span>undetermined</span>';
+  if (!a.enabled) return '<span class="small">Off</span>';
+  const parts: string[] = [];
+  if (Number.isInteger(a.thresholdLedgers) && (a.thresholdLedgers as number) > 0)
+    parts.push(
+      `acts below <span class="mono">${esc(formatCount(a.thresholdLedgers as number))}</span> ledgers left (${days(a.thresholdLedgers as number)})`,
+    );
+  if (Number.isInteger(a.extendToLedgers) && (a.extendToLedgers as number) > 0)
+    parts.push(
+      `extends to <span class="mono">${esc(formatCount(a.extendToLedgers as number))}</span> (${days(a.extendToLedgers as number)})`,
+    );
+  if (typeof a.payerWallet === 'string' && a.payerWallet.length > 12)
+    parts.push(`paid by <span class="mono">${esc(short(a.payerWallet))}</span>`);
+  const pending =
+    item.lastObservation === null
+      ? '<br /><span class="small muted">No engine check of this contract is stored yet, so autopilot has not decided anything for it.</span>'
+      : '';
+  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${pending}`;
+}
+
 function bindingCell(b: Binding): string {
   if (b.state === 'expired')
     return `<span class="chip expired"><span class="shape"></span>${b.word}</span> <span class="small muted">${esc(b.kind)} entry</span>`;
@@ -190,10 +243,11 @@ export function rowHtml(r: Row): string {
     : `<span class="mono">${esc(item.contractId.slice(0, 6))}…${esc(item.contractId.slice(-4))}</span>`;
   return `<tr>
       <td>${bindingCell(r.binding)}</td>
-      <td><span class="chip ${CHIP[r.conclusion]}"><span class="shape"></span>${WORD[r.conclusion]}</span>${r.why ? ` <span class="small muted">${esc(r.why)}</span>` : ''}</td>
+      <td><span class="chip ${chipClass(r)}"><span class="shape"></span>${WORD[r.conclusion]}</span>${r.why ? ` <span class="small muted">${esc(r.why)}</span>` : ''}</td>
       <td>${name}</td>
       <td class="small">${seen}</td>
       <td class="small muted">${esc(coverage(item))}</td>
+      <td>${autopilotCell(item)}</td>
       <td><button type="button" class="btn" data-remove-network="${esc(item.network)}" data-remove-contract="${esc(item.contractId)}">Remove</button> <span class="small" data-remove-status role="status"></span></td>
     </tr>`;
 }
@@ -204,7 +258,7 @@ export function tableHtml(items: readonly WatchItem[], now = new Date()): string
   }
   const rows = orderRows(items.map((i) => rowFor(i, now)));
   return `<div class="table-wrap"><table>
-      <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Remove</th></tr></thead>
+      <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Autopilot</th><th scope="col">Remove</th></tr></thead>
       <tbody>${rows.map(rowHtml).join('')}</tbody></table></div>
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
