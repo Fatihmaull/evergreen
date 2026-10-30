@@ -1,6 +1,11 @@
 // The scheduler Worker (apps/scheduler/README.md, docs/PH2-E4-04-SCHEDULER-DESIGN.md §8).
-// PREVIEW ONLY for now: the top-level (production) block has NO cron trigger and no
-// workflow deploys it. Production cron (every 15 min) lands in a later PR.
+// Production (top-level block) is CONFIGURED with its 15-minute cron but NOT DEPLOYED:
+// no workflow deploys the top-level block (scheduler-deploy.yml is manual and runs
+// `wrangler deploy --env preview` only), so merging this file schedules nothing.
+// GATE: do not run `wrangler deploy` without `--env`, and do not add a production deploy
+// job, before migration 0009 (scheduler grants/outbox) is applied on production and
+// the PM/Fatih approve the production scheduler. A cron trigger is live the moment the
+// Worker is deployed with it.
 // Worker secrets, set per environment with `wrangler secret put <NAME> --env preview`:
 //   DATABASE_URL  the eg_scheduler role's connection string (never the owner's)
 //   TICK_TOKEN    bearer token that turns POST /tick on (preview only)
@@ -10,7 +15,8 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-22",
   "workers_dev": false,
-  "triggers": { "crons": [] },
+  // Production cron every 15 minutes (PH2-E4-04, design §8). Inactive until deployed; see GATE above.
+  "triggers": { "crons": ["*/15 * * * *"] },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -22,7 +28,7 @@
       "name": "evergreen-scheduler-preview",
       // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
       "workers_dev": true,
-      // Preview cron every 5 minutes (PM-approved 2026-10-29). Production stays empty above.
+      // Preview cron every 5 minutes (PM-approved 2026-10-29). Production is */15 above, not deployed.
       "triggers": { "crons": ["*/5 * * * *"] },
       "observability": {
         "enabled": true,

@@ -58,6 +58,14 @@ Pages can skip a build when no watched path changed (Settings, Builds, **Build w
 - 2026-10-29 builds: 56 (preview 38, production 18). Build stage **23 s min, 46 s max, 32 s average**.
 - Local on the box (Node 24.22.1, warm `tsc --build` cache): `pnpm build` 0.7 s, `node apps/web/build.mjs` 2.6 s.
 
+## Re-measured 2026-10-30 16:50 WIB (Pages API, `evergreen-stellar`)
+
+- Branch control unchanged: production `main`, `preview_deployment_setting: custom`, `preview_branch_includes: ["preview"]`. Build command read from the project config: `corepack enable && pnpm install --frozen-lockfile && pnpm build && node apps/web/build.mjs`, output `apps/dashboard/public`.
+- Since the 2026-10-29 17:52 WIB measurement: **95 builds** (production 48, preview 47). **0** builds of a branch other than `preview`; feature-branch pushes are listed as `queued`/`idle` with no build stage.
+- Build stage over those 95: **21.6 s min, 32.2 s median, 35.9 s average, 147.8 s max** (production `0b0689b`, 2026-10-29 21:59 WIB, the only one above 61 s). Created-to-deployed for builds since 2026-10-29 15:00 WIB: median 68.6 s, max 231 s.
+- October so far (UTC, 2026-10-01 to now): **832 deployments listed, 713 built, 119 skipped**, 219 production, 4 failed. The 500/month Free limit is passed and builds still succeed; whether a limit applies to this account is still `undetermined`.
+- Local on the box, clean worktree of `main` at `0f8e610`, Node 24.22.2, pnpm 11.25.0 (warm pnpm store, cold `tsc` cache): `pnpm install --frozen-lockfile` 7.2 s, `pnpm build` 10.3 s, `node apps/web/build.mjs` 7.0 / 5.9 / 5.8 s (3 runs), 33 routes, no file changed. The 2026-10-29 2.6 s figure was with a warm cache in an existing checkout. On Node 20 `build.mjs` fails (`ERR_UNKNOWN_FILE_EXTENSION`), so Node 24 is required, as `AGENTS.md` says.
+
 ## Re-measuring
 
 ```bash
