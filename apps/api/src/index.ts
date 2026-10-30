@@ -268,3 +268,9 @@ export type {
   TestnetResetEnv,
   TestnetResetOutcome,
 } from './alerts/testnet-reset.js';
+
+// PH2-E2-06 per-user templates and the preview-only test send (Stage B).
+export { ALERT_TEMPLATE_KINDS, renderAlertEmail } from './alerts/templates.js';
+export type { AlertContext, AlertEmail } from './alerts/templates.js';
+export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
+export type { ResendLikeClient, TestSendEnv, TestSendOutcome } from './alerts/test-send.js';
