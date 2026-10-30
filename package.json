@@ -6,7 +6,7 @@
   "description": "Soroban state-archival autopilot — monitor TTL, predict archival, extend automatically.",
   "license": "MIT",
   "engines": {
-    "node": ">=24",
+    "node": ">=24 <25",
     "pnpm": ">=10"
   },
   "packageManager": "pnpm@11.25.0",
