@@ -1203,6 +1203,17 @@ writeFileSync(
   <image width="1536" height="1536" href="data:image/jpeg;base64,${logoSource}" filter="url(#cutout)" />
 </svg>\n`,
 );
+// Favicons ship at the site root so /favicon.ico is a real file, not the SPA fallback.
+for (const file of [
+  'favicon.ico',
+  'favicon.svg',
+  'apple-touch-icon.png',
+  'icon-192.png',
+  'icon-512.png',
+  'site.webmanifest',
+]) {
+  cpSync(join(repo, 'web-reference/design-language/source/favicon', file), join(out, file));
+}
 cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {
