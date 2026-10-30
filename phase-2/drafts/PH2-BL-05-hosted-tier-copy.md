@@ -90,7 +90,7 @@ typed into a page (`futureEnd`, #337).
 | The minimum binds only below 0.125 XLM | 25,000 ÷ 2% = 1,250,000 stroops | **Yes**, arithmetic, and the examples above come from the function |
 | The figure is provisional | `fee.ts` header; ADR-007 | **Yes**, and the copy must keep saying so |
 | A failed extension refunds the whole pull, fee included | ADR-007 step 5 (Fatih, #414) | **No.** The refund is `PH2-E4-02`, not built |
-| It runs on a schedule | `PH2-E4-04` | **No.** The scheduler is not built |
+| It runs on a schedule | `PH2-E4-04`; `apps/scheduler/src/evaluate.ts` | **Not yet.** Re-checked 2026-10-30 against `origin/main` `40d0255`: the scheduler exists and ticks on **preview** only, as a Stage 1 dry run that "enqueues nothing, signs nothing and writes nothing" except its own tick row. No production cron, no job, no extension |
 | Testnet only | footer on every page; `PH2-E1-03` refuses non-testnet builds | **Yes** |
 
 **Consequence.** Four sentences describe behaviour the engine does not have:
