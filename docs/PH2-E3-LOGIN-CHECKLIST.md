@@ -8,7 +8,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 
 ## Read first
 
-- **Which email works.** On preview the sign-in code is sent from `onboarding@resend.dev`, which Resend documents as delivering only to the account owner's own email (`docs/API.md` §1; documented by Resend, not yet observed by us). Use **the email of your own Resend account**. For any other email, step 2 is expected to show one of two notes: the "could not be sent to that address" note (the API answered `502 EMAIL_NOT_SENT`) or the "could not send the code" note (`503 UPSTREAM_UNAVAILABLE`). Which one you get is undetermined until someone observes it; the page claims no cause for either, and neither should you. This is a limit of the preview, not a defect to file.
+- **Which email works.** On preview the sign-in code is sent from `alerts@mail.evergreenstellar.biz.id` (`apps/api/wrangler.jsonc` `env.preview.vars`), on a domain Resend shows as verified, so any recipient address should receive it. Before 2026-10-29 the sender was `onboarding@resend.dev`, which delivers only to the Resend account owner's email. If sending fails, step 2 shows one of two notes: the "could not be sent to that address" note (the API answered `502 EMAIL_NOT_SENT`) or the "could not send the code" note (`503 UPSTREAM_UNAVAILABLE`). Which one you get is undetermined until someone observes it; the page claims no cause for either, and neither should you. This is a limit of the preview, not a defect to file.
 - **Rate limits.** `POST /auth/email/start` allows 3 sends per address per 15 minutes and 20 per IP per hour (`docs/API.md` §3). A code lives 10 minutes, works once, and is void after 5 failed attempts. Do not click "Email me a code" repeatedly.
 - **Numbering.** The steps keep the numbers of the ten-step list: 1, 2, 3, 4, 5, 9 are **part A** (login and sign-out), run on 2026-10-26. 6, 7, 8, 10 are **part B** (watchlist) and are runnable. The text of the original ten-step list is not in the repo, so the step titles below are this document's own; the numbers are the ones to quote back.
 - **There is no link to `/login/` in the site's navigation** (checked in `apps/web/src/chrome.mjs`). Type or paste the URL.
@@ -40,7 +40,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 **Expect, on success.**
 - The note: **"If `<your email>` can receive mail, a code is on its way. The answer is the same whether or not an account exists."**
 - The form "The code from the email", with a button "Sign in", appears.
-- An email arrives from `onboarding@resend.dev`, subject **"Your Evergreen sign-in code"**, body **"Your Evergreen sign-in code is `<code>`. It expires in 10 minutes. If you did not ask for it, ignore this email."** (`apps/api/src/auth/mount.ts`). The code is 8 digits by default (`docs/API.md` §3). Whether the email lands in the inbox or in spam is undetermined.
+- An email arrives from `alerts@mail.evergreenstellar.biz.id`, subject **"Your Evergreen sign-in code"**, body **"Your Evergreen sign-in code is `<code>`. It expires in 10 minutes. If you did not ask for it, ignore this email."** (`apps/api/src/auth/mount.ts`). The code is 8 digits by default (`docs/API.md` §3). Whether the email lands in the inbox or in spam is undetermined.
 - Under the hood the page expects HTTP 202 from `POST /auth/email/start`. The page does not show the status; it shows the note above.
 
 **Expect, if the email is not your Resend account's.** One of these, with no code form and no email:
@@ -99,6 +99,31 @@ Neither note says why, and neither says a code was sent. This is the known previ
 
 **Send back.** **Screenshot of the "Signed in as …" note, before the reload.** For a fail: the exact text and the WIB time. You may blur your email in the screenshot.
 
+### Step 5b — Link a Freighter wallet (production host)
+
+Added 2026-10-29 for `PH2-E3-01`; goes into Tih's next batch. Strings are quoted from `apps/web/src/pages/login.ts` (`connectWallet`, `linkWallet`, `walletSentence`). Read without a session on 2026-10-29: `POST https://evergreen-stellar.pages.dev/api/v1/wallets/challenge` → `401 UNAUTHENTICATED` "Sign in first.", so the route is deployed on production.
+
+**Before.** Freighter installed, unlocked, set to **testnet**. Signed in on `https://evergreen-stellar.pages.dev/login/` (step 5). Linking signs a challenge transaction with sequence number 0, which the network rejects; it moves nothing. If Freighter asks to sign a payment or anything else, decline and report it.
+
+**Do.**
+1. Click **"Connect Freighter"** and allow the site in Freighter.
+2. Click **"Link this wallet"** and approve the signature in Freighter.
+
+**Expect.**
+- After 1: "Connected: `<your G… account>`, on testnet. Not linked yet: linking needs you to be signed in, and a signature."
+- After 2: "Linked: `<your G… account>`." and the session note changes to "Signed in as `<email>`. Linked: `G…` (shortened)."
+
+**Pass.** Both texts above, and the session note still reads "Linked: …" after a reload.
+
+**Fail, or report with the exact text.**
+- "Freighter is on a different network (it reports “…”). Switch it to testnet." Switch, then retry; not a defect.
+- "This wallet is already linked to a different account."
+- "The signing request expired. Try linking again." / "This page was open too long. Reload and try again." Retry once; report if it repeats.
+- "The service issued a challenge for a different network than this site reads. Nothing was signed." This is a defect.
+- An `undetermined` panel headed "Whether a sign-in challenge can be issued." or "Whether the wallet was linked." This is a defect: send the detail line.
+
+**Send back.** A screenshot after step 2 with the address bar showing, and one after the reload. Blur the email if you want. For anything else: the exact text and the WIB time.
+
 ### Step 9 — Sign out
 
 **Do.** Click "Sign out". Then reload the page.
@@ -116,6 +141,8 @@ Neither note says why, and neither says a code was sent. This is the known previ
 **Send back.** **Screenshot of the page after the click.** For the `undetermined` panel or any error: the exact text and the WIB time.
 
 ## Part B — watchlist (steps 6, 7, 8, 10)
+
+**Run 2026-10-29 by Fatih, on the production host at `626823f`, not preview.** Steps 6, 8, 9 and 10 pass. Step 7 lists the row but shows binding expiry `undetermined` ("Not scanned yet.") because no engine observation exists yet. Record: [`docs/evidence/2026-10-29-e3-partB/`](evidence/2026-10-29-e3-partB/README.md).
 
 **Runnable.** `PH2-E2-05`'s routes merged on 2026-10-24 (#427) and are deployed. Verified without a session on 2026-10-26, which is safe and costs no email quota:
 
@@ -144,6 +171,42 @@ That is the answer step 10 needs, and it is no longer a 404.
 **One documented limitation, so it is not filed as a bug** (#445, `docs/API.md` §6). `DELETE` for an item you do not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all; they differ only in `message`, which is not part of the contract. A client branching on code and status cannot tell them apart. The page says "Nothing to remove for this account." for both. That is known and deliberate.
 
 **Send back.** For steps 6, 7 and 8: a screenshot of the whole browser window including the address bar. For step 10: the same. For anything reading `undetermined`, or any error: the exact text on screen and the WIB time to the minute.
+
+## Part C — wallet-money: sign and submit on testnet (PH2-E3-05)
+
+**Status: not runnable yet.** `apps/web/src/lib/wallet-money.ts` landed in #384 (`fc25151`), but on `origin/main` at `a7acf6f` **no page imports it**. The only mentions outside the module are comments in `lib/wallet.ts` and `pages/login.ts`. The first screen that calls `signAndSubmit` is Rakha's (PH2-E3-04 and later). Run this part once that screen is on preview. The screen's own wording is **undetermined** until then. The steps below give the result the module returns for each case, quoted from `wallet-money.ts` and `wallet.ts`. Map each one to the text on screen when you run it.
+
+**Before you start.** Use Stellar **testnet only**. Freighter must be set to Testnet, unlocked, and linked to your account (Step 5b). Use a testnet account funded from Friendbot, never a mainnet one. Cite the commit from `GET /api/v1/health` before and after, as above. For every case, send a screenshot, the time in WIB to the minute, and the transaction hash if the screen shows one.
+
+### Step C1 — Happy path: sign and submit
+
+Start the screen's action, read the Freighter prompt (network **Test SDF Network ; September 2015**), and approve it.
+**Expected:** a success that shows a hash and a ledger number (`{ hash, ledger }`). Open the hash on a testnet explorer and check that the transaction is there and successful.
+
+### Step C2 — Reject in Freighter
+
+Start the action and press Reject in Freighter.
+**Expected:** `rejected`. The screen treats this as your choice, not an error, and nothing is sent. The account balance stays the same.
+
+### Step C3 — Wrong network
+
+Switch Freighter to Mainnet (or Futurenet), then start the action. **Do not approve anything.**
+**Expected:** `wrong-network`, before any prompt to sign. If Freighter offers a signature on a non-testnet network, stop and report it, because that is a defect.
+
+### Step C4 — Locked wallet
+
+Lock Freighter, then start the action.
+**Expected:** `locked` (or `not-connected` if the site lost its permission). Nothing is sent.
+
+### Step C5 — Leave the prompt open past the deadline
+
+Start the action and leave the Freighter prompt open without answering until the screen gives up.
+**Expected:** `possibly-signed`. The screen must **not** offer a plain retry. It should tell you to check the account first. Close the prompt with Reject afterwards. If you approve it late by mistake, report the hash, because that is exactly the case this state exists for.
+
+### Not tested by hand
+
+- `pending` (accepted, but polling ended before a final status), `submit-failed`, `failed-on-chain`, `simulation-failed`, and `restore-required` can't be caused on purpose from the browser without spending real setup. The unit tests in `apps/web/test/wallet-money.test.ts` cover them, including a status read that throws after send (expected `pending` with the hash kept, sent once). If any of them shows up during C1, screenshot it and send the hash.
+- Which screen and which amount C1 uses is **undetermined** until Rakha's screen exists.
 
 ## Findings from the first read, and where they stand
 

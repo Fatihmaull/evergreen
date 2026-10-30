@@ -41,6 +41,13 @@ export {
 export { SHARED_CODE_ENTRY_KEY } from './shared-code.js';
 export { ARCHIVED_ENTRY_ADVICE } from './archived-advice.js';
 export {
+  lowestPassingActionWindowLedgers,
+  marginLedgers,
+  schedulerGapCheck,
+  tickGapsLedgers,
+  worstGapLedgers,
+} from './scheduler-gap.js';
+export {
   PROVISIONAL_HOSTED_FEE,
   PROVISIONAL_ROUTER_FEE,
   hostedFeeStroops,
@@ -126,3 +133,5 @@ export {
 export type { NetworkChoice } from './network.js';
 export { priceExtend } from './price-extend.js';
 export type { ExtendPrice } from './price-extend.js';
+export { MIN_ACTION_RUNS_IN_WINDOW } from './config.js';
+export { gapMarginLedgers, gapMarginHolds, belowGapMargin } from './gap-margin.js';

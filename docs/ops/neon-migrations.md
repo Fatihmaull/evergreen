@@ -7,7 +7,7 @@ Rakha's agent (CER) owns the schema and writes the SQL under [`apps/api/db/`](..
 | | |
 |---|---|
 | Project | `evergreen`, id `icy-sun-89705623`, AWS `ap-southeast-1`, Postgres 18.6, **Free plan** |
-| Branches | `preview` and `production` (the default). **`production` has no tables.** |
+| Branches | `preview` and `production` (the default). **`production` has 12 tables** (schema.sql + 0002-0005, 2026-10-29). |
 | Roles | only `neondb_owner`, on both branches. No least-privilege app role exists yet. |
 | Database | `neondb` on both |
 | History retention | **21600 s (6 hours)**. A restore can only reach back that far. |
@@ -27,11 +27,13 @@ Read with: `neonctl projects get icy-sun-89705623 --org-id <org> --output json`,
 | `0003_auth_rate_counters_wallet_challenges.sql` | yes | `auth_rate_counters(key PK, count NOT NULL DEFAULT 0)` and `wallet_challenges(id PK, session_hash bytea FK to sessions(id_hash) ON DELETE CASCADE, expires_at)` |
 | `0004_users_reactivated_at.sql` (#456) | yes, **2026-10-28**, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`ALTER TABLE`, `COMMENT`) | `users.reactivated_at` is `timestamptz`, nullable, no default, with the file's column comment; the one preview user row is `NULL`; the whole-schema diff above was repeated with 0004 in the reference build and still differs only by `fips_mode` |
 | `0005_scheduler_ticks.sql` (#465) | yes, **2026-10-28**, from `main` at `6c9478c`, `psql -v ON_ERROR_STOP=1 --single-transaction` exit 0 (`CREATE TABLE`, `CREATE INDEX`) | `scheduler_ticks`: `id bigint GENERATED ALWAYS AS IDENTITY` PK, `ticked_at timestamptz NOT NULL DEFAULT now()`, `observed_ledger bigint NOT NULL CHECK (> 0)`, index on `(ticked_at)`; zero rows; whole-schema diff with 0005 in the reference build differs only by `fips_mode` |
-| `0006` (#466, submitted hashes) | **not yet**, the PR is open | apply after it merges, the same way |
+| `0006` (#466, submitted hashes) | **applied 2026-10-29**: preview 19:58 WIB, production 19:59 WIB (from `04a7328`, blob `48472ae`), one transaction each, Neon WS driver | 6 nullable columns on `jobs` (`{pull,extend,refund}_submitted_hash` text, `{pull,extend,refund}_submitted_expires_at` timestamptz) present on both branches, still 12 tables |
+| `0007` (#478, network-fee evidence views) | **applied 2026-10-29**: preview 21:52 WIB, production 21:52 WIB (from `85918dc`, blob `679cc56`), one transaction each, Neon WS driver | `fee_ledger_job_balance` and `fee_ledger_job_subsidy` replaced on both branches; subsidy columns `job_id,evergreen_fee,network_fee,margin,fully_refunded,subsidised`; still 12 tables |
+| `0008` (#479, roles and grants) | **preview only, 2026-10-29 21:52 WIB** (from `a7acf6f`, blob `178cf04`), plus `GRANT CONNECT ON DATABASE neondb TO eg_api, eg_scheduler`. **Not on production:** the login roles `eg_api` and `eg_scheduler` do not exist there yet, and the file requires them | preview: triggers `fee_ledger_no_update_delete` and `fee_ledger_no_truncate`; `eg_api` and `eg_scheduler` have CONNECT, no CREATE on `public`, only the file's table and column grants |
 
 **The migration ledger does not exist yet.** #464 added only its card (`PH2-E2-07`, a `schema_migrations` table written by each file); until that table is built, this table is the record of what ran where.
 
-The `production` branch has **nothing applied**. That is deliberate: production has no `DATABASE_URL`.
+**Production** (`br-proud-mountain-aon0gpyl`) got `schema.sql` + `0002`-`0005` on **2026-10-29 at about 17:01 WIB**, applied from `main` at `211ff128`, on Fatih's yes. Each file ran as a single transaction with stop-on-error (Neon WS driver). Result: **12 tables**, and the full shape is identical to `preview`. `0006` followed at 19:59 WIB (row above); `0007` followed at 21:52 WIB; `0008` is not on production (roles missing, above).
 
 Preview holds a little test data (a user, a session, sign-in codes and rate counters from login tests). Counts only were read.
 
@@ -133,7 +135,7 @@ Expected diff on 2026-10-27: one line, `fn   fips_mode ...`, from `pgcrypto`. An
 
 ## Before each production migration: one manual snapshot (Fatih, 2026-10-28)
 
-Until the Neon Launch upgrade ([`backup-and-restore.md`](backup-and-restore.md), option C now, option A later), the only restore point older than Free's 6-hour history is **one manual snapshot**, and Free allows **exactly one**. Production has no tables and no migration yet, so the log below is empty.
+Until the Neon Launch upgrade ([`backup-and-restore.md`](backup-and-restore.md), option C now, option A later), the only restore point older than Free's 6-hour history is **one manual snapshot**, and Free allows **exactly one**. The org has been on Launch since 2026-10-29, so the one-snapshot limit no longer applies, and a daily schedule now runs (below).
 
 ```bash
 P=icy-sun-89705623; O=org-delicate-violet-65283800
@@ -147,7 +149,12 @@ The delete-then-create gap leaves **no snapshot for a moment**, so create the ne
 
 | Date (UTC) | Migration applied next | Snapshot name | Created by |
 |---|---|---|---|
-| (none yet) | | | |
+| 2026-10-29 10:00 | schema.sql + 0002-0005 | `pre-schema-0001-0005` (`snap-fancy-bar-aonzvey1`), kept until 0006-0008 are safely on production | DevOps |
+| 2026-10-29 12:58 | 0006 | `pre-0006-20261029` (`snap-sweet-tree-ao8i2oue`); preview has none (Neon refuses snapshots of non-root branches) | DevOps |
+| 2026-10-29 14:52 | 0007 (+0008 once roles exist) | `pre-0007-0008-20261029` (`snap-spring-butterfly-ao3sy187`) | DevOps |
+| 2026-10-29 11:07 | (post-schema baseline) | `post-schema-0001-0005-20261029` (`snap-bold-brook-ao0wyvhr`) | DevOps |
+
+**Schedule (2026-10-29):** daily at 19:00 UTC (02:00 WIB), each snapshot kept 7 days (`backup_schedule` on `br-proud-mountain-aon0gpyl`).
 
 ## Compute budget on the Free plan
 

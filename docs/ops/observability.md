@@ -2,6 +2,8 @@
 
 **Status (2026-10-28):** enabled for the API Worker by [#431](https://github.com/Fatihmaull/evergreen/pull/431) (merged `868caea`), **console output only**. On `evergreen-api-preview` since the PR's own deploy; on `evergreen-api` (production) since run 40648815806, approved by Fatih and finished 2026-10-28 07:34 UTC (production `/health` served `commit: 868caea…` afterwards). Approved by Fatih 2026-10-28, who **accepted invocation logs being off**: the CSRF token in a request header is reason enough. Keep them off unless he decides otherwise.
 
+**Read back 2026-10-29** (Cloudflare API, `evergreen-api` script settings): observability `enabled: true`, `head_sampling_rate: 1`; logs `enabled: true`, `persist: true`, `invocation_logs: false`, sampling 1; traces `enabled: false`. Workers Logs are live on production.
+
 ## What is logged
 
 `apps/api/wrangler.jsonc` sets, in both environments:
@@ -41,7 +43,7 @@ Cloudflare's Workers Logs page does not say which request fields an invocation r
 |---|---|
 | Live line on preview, via `wrangler tail`: a refused sign-in to `logcheck-…@example.invalid` | `auth.email_send_failed`, `reason: testing_recipient_restricted`, `httpStatus: 403`, **`recipientDomain: example.invalid`**; the full address appears **nowhere** in the event |
 | Persisted line visible in the dashboard (**Fatih**) | **pending.** Marker request 2026-10-28T07:12:51Z, recipient local part `logcheck-c3e9a1`. Expect one `auth.email_send_failed` line and **no hit** for `logcheck-c3e9a1` |
-| Same on production | **cannot be shown by a log line yet.** Production has no auth secrets, so sign-in answers 503 before the mailer runs and never writes `auth.email_send_failed`; with invocation logs off, production logs stay empty until production auth is live. The check is the **setting**: the Worker's Settings, Observability shows Workers Logs enabled (Fatih), **pending**. The first real line is the check that matters once the production secrets exist |
+| Same on production | **cannot be shown by a log line yet.** Production has no auth secrets, so sign-in answers 503 before the mailer runs and never writes `auth.email_send_failed`; with invocation logs off, production logs stay empty until production auth is live. The check is the **setting**: the Worker's Settings, Observability shows Workers Logs enabled: **confirmed by API read-back 2026-10-29** (see Status). The first real line is the check that matters once the production secrets exist |
 
 Reading them: dashboard, Workers & Pages, the Worker, **Observability**, Logs. Wrangler has no query command; `wrangler tail <worker> --format json` is a **live** view only (and shows the platform's event, not the stored one).
 

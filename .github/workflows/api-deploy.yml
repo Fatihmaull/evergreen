@@ -15,11 +15,19 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths:
       - 'apps/api/**'
+      # workspace packages apps/api builds from (apps/api -> core -> shared-types)
+      - 'packages/core/**'
+      - 'packages/shared-types/**'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/api-deploy.yml'
   push:
     branches: [main]
     paths:
       - 'apps/api/**'
+      # workspace packages apps/api builds from (apps/api -> core -> shared-types)
+      - 'packages/core/**'
+      - 'packages/shared-types/**'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/api-deploy.yml'
   # Manual run: deploys preview from any ref, production only from main.
   workflow_dispatch:
@@ -54,6 +62,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # apps/api imports @evergreen-stellar/core helpers (#497); its package
+      # `main` is dist/, so build core and its workspace deps first.
+      - name: build packages/core (and its workspace deps)
+        run: pnpm --filter "@evergreen-stellar/core..." run build
       - name: test apps/api (if a test script exists)
         run: pnpm --filter @evergreen/api run --if-present test
       - name: wrangler deploy --env preview
@@ -84,11 +96,11 @@ jobs:
           RUN_SHA: ${{ github.sha }}
         run: |
           git fetch --no-tags --depth=1 origin main
-          if git diff --quiet "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml; then
+          if git diff --quiet "$RUN_SHA" FETCH_HEAD -- apps/api packages/core packages/shared-types pnpm-lock.yaml .github/workflows/api-deploy.yml; then
             echo "apps/api at $RUN_SHA matches main"
             exit 0
           fi
-          git diff --stat "$RUN_SHA" FETCH_HEAD -- apps/api .github/workflows/api-deploy.yml
+          git diff --stat "$RUN_SHA" FETCH_HEAD -- apps/api packages/core packages/shared-types pnpm-lock.yaml .github/workflows/api-deploy.yml
           echo "::error::main changed apps/api or this workflow after $RUN_SHA. Reject this run and approve the newest one."
           exit 1
       - uses: pnpm/action-setup@v5
@@ -97,6 +109,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # apps/api imports @evergreen-stellar/core helpers (#497); its package
+      # `main` is dist/, so build core and its workspace deps first.
+      - name: build packages/core (and its workspace deps)
+        run: pnpm --filter "@evergreen-stellar/core..." run build
       - name: test apps/api (if a test script exists)
         run: pnpm --filter @evergreen/api run --if-present test
       - name: wrangler deploy

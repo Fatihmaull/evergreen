@@ -29,7 +29,7 @@ Since #462, `commit` shows the SHA of the code answering. If the rolled-back ver
 Things to know before you do it:
 
 - **The next merge to `main` that touches `apps/api` deploys forward again**, after Fatih approves. A rollback is not a revert. Revert the bad commit on `main` too, or the next approval redeploys it.
-- **Whether a rollback also reverts secrets and plain vars is `undetermined`.** Not exercised on this account. Do not rely on a rollback to undo a bad secret change; fix the secret.
+- **A rollback brings back the old version's plain vars and secrets.** Every Worker version carries its own bindings: the Cloudflare versions API (2026-10-29) shows `evergreen-api-preview` version `a875e647` with `EMAIL_FROM=onboarding@resend.dev` and the current version with `alerts@mail.evergreenstellar.biz.id`, and a `secret put` creates a new version (`f6bc3e7f`, source `api secret`). So rolling back past a var or secret change reverts it too. That secrets revert with the version is read from the version model, not from an exercised rollback. After a rotation, never roll back past it; fix forward instead.
 - **Do not roll production back by approving an old run.** An old waiting run redeploys its own old SHA ([`deploy.md`](deploy.md#stale-approvals-are-refused)).
 - Production has no database, so a rollback never has a data component today.
 
