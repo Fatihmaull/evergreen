@@ -28,7 +28,10 @@ export const NAV = [
    */
   {
     section: 'Your account',
-    items: [{ href: '/dashboard/watchlist/', label: 'Watchlist' }],
+    items: [
+      { href: '/dashboard/watchlist/', label: 'Watchlist' },
+      { href: '/login/', label: 'Sign in' },
+    ],
   },
   {
     section: 'Our own record',
