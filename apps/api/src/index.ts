@@ -16,6 +16,7 @@ import {
   runTestnetResetCheck,
   type TestnetResetEnv,
 } from './alerts/testnet-reset.js';
+import { configCheck } from './alerts/config-check.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
 export type { Env } from './router.js';
@@ -30,6 +31,8 @@ export default {
   // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
   // for this Worker; logs the outcome, never an address or a key.
   async scheduled(_event: unknown, env: Env & HeartbeatEnv & TestnetResetEnv): Promise<void> {
+    // F17/F18 (PH2-E4-05): config check, log only, setting names never values.
+    console.log(JSON.stringify(configCheck(env as unknown as Record<string, unknown>)));
     const databaseUrl = env.DATABASE_URL;
     const outcome = await runHeartbeatCheck(env, {
       latestTickedAt: async () => {
@@ -258,6 +261,8 @@ export {
   runTestnetResetCheck,
   testnetResetNotification,
 } from './alerts/testnet-reset.js';
+export { configCheck } from './alerts/config-check.js';
+export type { ConfigCheckLog } from './alerts/config-check.js';
 export type {
   TestnetResetDeps,
   TestnetResetEnv,
