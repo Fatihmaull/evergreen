@@ -123,7 +123,8 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F9. RPC unavailable or slow** (`NETWORK_UNAVAILABLE`, `UPSTREAM_UNAVAILABLE`, `docs/API.md:331`).
 - Detection: failed or timed-out RPC reads in evaluation; a tick that cannot read the latest ledger cannot write a meaningful heartbeat.
 - User: affected items show **undetermined**, never healthy (`docs/API.md:390`). A push alert for a short outage is **undetermined**.
-- Operator: consecutive failed ticks; count **undetermined**. **Waiting on real RPC numbers** (PM, 2026-10-30): the slow and failed-tick thresholds are set only after preview ticks log `rpcMs`/`rpcBatches`/`rpcMaxMs` from real RPC calls.
+- Operator: consecutive failed ticks; count **undetermined**. Slow and failed-tick thresholds: **undetermined, waits on ~24h of preview ticks (PM, 2026-10-30)**; preview ticks log `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524.
+- Note: Stage 1 dry-run writes no `observations` or `jobs` rows by design (`apps/scheduler/src/evaluate.ts:1-16`; the scheduler's only INSERT is `scheduler_ticks`, `apps/scheduler/src/tick.ts:55`).
 - Money: none moves during evaluation; a money step in flight is F3/F5.
 - Retry: next tick. **Horizon:** no source under `packages/engine/src` on main mentions Horizon; whether the hosted engine will use it is **undetermined**.
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
@@ -224,24 +225,24 @@ Which monitor covers each mode today. **Live** means it can page someone now. No
 | F1 pre-flight failed | job status `preflight-failed` (`isPreflightFailed`) | none wired; needs the scheduler job path (`PH2-E4-02`) | missing |
 | F2 allowance missing/expiring | `allowance()` read in evaluation | none; pending in `PH2-E4-04` | missing |
 | F3 pull outcome unknown | submitted-unconfirmed job past the bound | none; needs #466's submitted-hash column | missing |
-| F4 pulled then failed, and per-user rate | `isPulledThenFailed`, `pulledThenFailedBreaches` | none wired; needs job rows | missing |
+| F4 pulled then failed, and per-user rate | `isPulledThenFailed`, `pulledThenFailedBreaches` (per-user rate: 30 days, ≥ 3 pulled, ≥ 50%, operator only) | none wired; needs job rows (0 in Stage 1 by design; reader waits on `PH2-E4-02`) | missing |
 | F5 extend transient failure | `isTryAgainLater`, retry counts | none; retry counting pending on `PH2-E4-02` | missing |
 | F6 refund fails | `isRefundOwed` | none wired; needs refund rows | missing |
 | F7 ledger/reconcile mismatch | `reconcileProblems` | none wired; engine-tx-without-job pending on #466 | missing |
 | F8 float low | `floatCheck` | none; balance read pending on `PH2-E4-02` | missing |
-| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Threshold waits on real RPC numbers (PM, 2026-10-30) | partial (log) |
+| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Threshold undetermined, waits on ~24h of preview ticks (PM, 2026-10-30) | partial (log) |
 | F10 testnet reset | `observed_ledger` decrease (signal 1), confirmed by the next tick (signal 2) | API Worker cron `runTestnetResetCheck` (operator); `testnetResetUserEvents` (user, needs the outbox) | code; not live (0009, lookback unset, `ALERTS_SEND` off) |
 | F11 cron missed / gap | newest `scheduler_ticks` row too old; `tickGaps` | API Worker cron `runHeartbeatCheck` (operator) | code; not live (0009, `HEARTBEAT_STALE_SECONDS` unset, `ALERTS_SEND` off) |
-| F12 overlapping ticks / duplicates | `duplicatePulls` | none wired | missing |
+| F12 overlapping ticks / duplicates | `duplicatePulls` | none wired: no pull rows exist in Stage 1 (dry-run writes no `jobs`, `apps/scheduler/src/evaluate.ts:1-16`), and the reader waits on `PH2-E4-02` | missing |
 | F13 dead-lettered message | queue DLQ | none; DLQ config pending in `PH2-E4-04` | missing |
 | F14 database unavailable | trigger outside the database | none; the F11 cron logs `read_failed` but does not alert | missing |
 | F15 Neon spend | Neon Billing spending notification at $5 | Neon (outside the repo, DevOps) | outside the repo; set state **undetermined** here |
 | F16 email send refused | `auth.email_send_failed` log; `emailFailureOperatorAlert`; dispatch `failed`/`exhausted` | log only; operator channel not wired (target Telegram, email until it exists) | partial (log) |
-| F17 threshold floor unset | `thresholdFloorProblem` | none wired; operator channel: target Telegram, email until it exists (PM, 2026-10-30) | missing |
-| F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes | none; nobody is paged; operator channel: target Telegram, email until it exists (PM, 2026-10-30) | missing |
+| F17 threshold floor unset | `thresholdFloorProblem` via `configCheck` | API Worker cron logs `alerts.f17_f18_config` (log only, no send); operator channel: target Telegram, email until it exists (PM, 2026-10-30) | partial (log) |
+| F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes; `missingApiSettings` via `configCheck` (names only) | API Worker cron logs `alerts.f17_f18_config` (log only, nobody paged); operator channel: target Telegram, email until it exists (PM, 2026-10-30) | partial (log) |
 | F19 restore lost changes | manual restore procedure | none; manual | missing |
 
-Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (not wired). For F14, F16, F17 and F18: the target stays the operator's Telegram (Fatih's choice, option 3), and until that Telegram channel exists, operators get the alert by email (PM, 2026-10-30).
+Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (logged by `configCheck`; operator delivery not wired). For F14, F16, F17 and F18: the target stays the operator's Telegram (Fatih's choice, option 3), and until that Telegram channel exists, operators get the alert by email (PM, 2026-10-30).
 
 ## Alert retries and Resend idempotency
 
