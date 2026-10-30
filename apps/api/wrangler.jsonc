@@ -52,6 +52,8 @@
         "HEARTBEAT_STALE_SECONDS": "900",
         // F10 testnet-reset check (src/alerts/testnet-reset.ts): compare the last 12 ticks (~1 h at */5).
         "TESTNET_RESET_LOOKBACK_TICKS": "12",
+        // Watchlist floor (src/watchlist/mount.ts): 4 x worst preview tick gap 259 + 1 (packages/core/src/scheduler-gap.ts). Preview only.
+        "THRESHOLD_FLOOR_LEDGERS": "1037",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
