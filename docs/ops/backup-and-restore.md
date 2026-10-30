@@ -84,6 +84,33 @@ Plan: the org (`org-delicate-violet-65283800`) is on **Launch** (billing page, 2
 
 **Measured RTO** (create to a verified shape): under 30 s each, on an almost empty database. **RPO** for point-in-time: the last commit inside the 6-hour window. Not yet exercised: row-count/fee-ledger comparison (production holds no rows yet) and connecting with an app-grants role (no least-privilege role yet, #385). **Next:** take a post-migration snapshot or turn on the Launch snapshot schedule, since the only snapshot predates the schema.
 
+## Drill run 2026-10-30 (DevOps, Neon API, PH2-E0-12)
+
+Point-in-time restore of **`preview`** (`br-billowing-waterfall-aoa9ok0v`) into a new temporary branch. All 5 snapshots in the project come from `production`, and Neon cannot snapshot a child branch, so `preview` can only be restored from its history. `production` was not read or touched. Times are UTC (WIB = UTC+7).
+
+| Step | What | Result |
+|---|---|---|
+| Create | `POST /branches` `{name: drill-restore-20261030, parent_id: preview, parent_timestamp: 2026-10-30T08:00:00Z}` + one read-write endpoint | `br-billowing-mouse-aoayz7p5`, endpoint `ep-withered-glade-aotjdmed`; Neon resolved the point to `07:59:44Z` (LSN `0/20158C0`). Request 09:32:15.7 |
+| Ready | poll `GET /branches/<id>` until `current_state: ready` | 09:32:18.9 (**3.2 s**) |
+| Verify | read-only transaction (`BEGIN READ ONLY`): table list, `count(*)` per table, `max(id)` of `scheduler_ticks` | 09:32:24.1 (**5.3 s**, includes cold start of the new compute) |
+| Delete | `DELETE /branches/<id>` (operations `suspend_compute`, `delete_timeline`) | 09:32:36; `GET` branch and endpoint both **404** at 09:32:46; branch list back to `preview`, `production`; still 5 snapshots |
+
+**Results.** Drill branch and `preview` both have the same **12 tables**. Row counts equal except `scheduler_ticks`:
+
+| table | drill (08:00Z) | preview (09:32Z) |
+|---|---|---|
+| `scheduler_ticks` | 203, `max(id)` 203 (14:55:46 WIB) | 222, `max(id)` 222 (16:30:47 WIB) |
+| `users` | 2 | 2 |
+| `watch_items` | 1 | 1 |
+| `sessions` / `signin_codes` / `auth_rate_counters` / `wallets` | 3 / 13 / 33 / 1 | same |
+| `observations` / `jobs` / `fee_ledger` / `allowance_observations` / `wallet_challenges` | 0 | 0 |
+
+On `preview`, the highest `scheduler_ticks.id` with `ticked_at <= 08:00Z` is also 203, and the next tick is 15:00:46 WIB. The difference is exactly the 19 ticks written after the restore point, so **RPO = the restore point** (nothing before it was lost).
+
+**Measured RTO:** **8.5 s** from the create request to verified counts (3.2 s to ready + 5.3 s to verify), on a database of about 32 MB. A real restore adds the time to repoint `DATABASE_URL` or finalize, which was not exercised.
+
+**Not exercised:** connecting with an app-grants role (`eg_api` / `eg_scheduler`, both lacking SELECT on most tables before 0009), finalizing a restore onto a branch, and a restore of `production` with data in it.
+
 ## Decisions (Fatih, 2026-10-28)
 
 1. **Backup: option A**, executed with the production-secrets "ya". **Option C until then.**
