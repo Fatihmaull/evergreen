@@ -2,7 +2,22 @@
 
 **Names only. No value is ever written in this repo, a PR, chat or argv.** A value is typed at a prompt or passed by naming an environment variable. `wrangler secret list` prints names and types and nothing else, which is all that is ever recorded.
 
-## Inventory (read 2026-10-27)
+## Inventory now (read 2026-10-30 16:40 WIB, names only)
+
+Read from the Cloudflare Workers secrets API, `gh secret list`, `gh variable list`, the GitHub environments API and the Pages project config.
+
+| Where | Names |
+|---|---|
+| Worker `evergreen-api` (production) | `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (all four now **set**; the 2026-10-27 table below said absent) |
+| Worker `evergreen-api-preview` | `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` |
+| Worker `evergreen-scheduler-preview` | `DATABASE_URL`, `TICK_TOKEN` (**`ALERTS_ALLOWLIST` is not set**, unlike the E2-06 section below) |
+| Production scheduler Worker | none deployed |
+| GitHub repo secrets | `CLOUDFLARE_API_TOKEN`, `NOTION_TOKEN` |
+| GitHub repo variables | `CLOUDFLARE_ACCOUNT_ID` |
+| GitHub environment `production` | no secrets, no variables |
+| Pages `evergreen-stellar` env (preview and production) | `NODE_VERSION` (plain text) only |
+
+## Inventory (read 2026-10-27, historical)
 
 ### API Workers (`wrangler secret list [--env preview]`)
 
