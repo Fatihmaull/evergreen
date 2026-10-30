@@ -257,7 +257,14 @@ describe('Stage 1 evaluation step', () => {
     };
     const { rt, logs } = withEval(() => Promise.resolve(full));
     await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
-    expect(logs[1]).toMatchObject({ due: full.due, rpc: full.rpc });
+    expect(logs[1]).toMatchObject({ due: full.due, rpc: full.rpc, rpcSlow: [] });
+  });
+
+  it('marks a slow tick in the log only (F9, provisional)', async () => {
+    const slow = { ...SUMMARY, rpc: { rpcMs: 4000, rpcBatches: 2, rpcMaxMs: 2500 } };
+    const { rt, logs } = withEval(() => Promise.resolve(slow));
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(logs[1]).toMatchObject({ rpcSlow: ['max', 'total'] });
   });
 
   it('does not run when the heartbeat failed', async () => {

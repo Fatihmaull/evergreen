@@ -11,6 +11,7 @@
  *
  * Nothing here signs, submits or reads a secret other than the two it is given.
  */
+import { rpcSlowReasons } from './rpc-health.js';
 import { EvaluationError, type EvaluationSummary } from './evaluate.js';
 import { TickError } from './tick.js';
 
@@ -81,6 +82,8 @@ async function evaluateStep(
       trigger,
       environment: environmentOf(env),
       ...summary,
+      // F9, log only (provisional thresholds, rpc-health.ts).
+      ...(summary.rpc === undefined ? {} : { rpcSlow: rpcSlowReasons(summary.rpc) }),
     });
     return summary;
   } catch (error) {

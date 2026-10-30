@@ -123,7 +123,8 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F9. RPC unavailable or slow** (`NETWORK_UNAVAILABLE`, `UPSTREAM_UNAVAILABLE`, `docs/API.md:331`).
 - Detection: failed or timed-out RPC reads in evaluation; a tick that cannot read the latest ledger cannot write a meaningful heartbeat.
 - User: affected items show **undetermined**, never healthy (`docs/API.md:390`). A push alert for a short outage is **undetermined**.
-- Operator: consecutive failed ticks; count **undetermined**. **Waiting on real RPC numbers** (PM, 2026-10-30): the slow and failed-tick thresholds are set only after preview ticks log `rpcMs`/`rpcBatches`/`rpcMaxMs` from real RPC calls.
+- Operator: **provisional thresholds, revise with more data (PM, 2026-10-30)**, in `apps/scheduler/src/rpc-health.ts`. Source: 8 active preview ticks, 1 watch item, dryRun (DevOps, Cloudflare telemetry, 2026-10-30 13:05–13:40 WIB): `rpcMs` 419, 277, 94, 80, 39, 473, 57, 611; `rpcMaxMs` 368, 156, 59, 40, 25, 395, 40, 310; `rpcBatches` 2 on every tick. A tick is RPC-slow when `rpcMaxMs` ≥ **2000** ms or `rpcMs` ≥ **3500** ms (5 × the observed max, 395 and 611, rounded up to the next 500 ms). Failed ticks: **3 in a row** (15 minutes at the 5-minute cadence), a conservative pick with no failed tick observed yet. Log only: the worker adds `rpcSlow` to the `scheduler.evaluate` line; nothing is sent. `consecutiveFailedTicks` is pure; reading past ticks is not wired. `rpcMs` grows with batches, so the total bound needs revising when there are more items.
+- Note: Stage 1 dry-run writes no `observations` or `jobs` rows by design (`apps/scheduler/src/evaluate.ts:1-16`; the scheduler's only INSERT is `scheduler_ticks`, `apps/scheduler/src/tick.ts:55`), so `lastObservation` stays null until Stage 2.
 - Money: none moves during evaluation; a money step in flight is F3/F5.
 - Retry: next tick. **Horizon:** no source under `packages/engine/src` on main mentions Horizon; whether the hosted engine will use it is **undetermined**.
 - Owner: `PH2-E4-04`; alert `PH2-E4-05`.
@@ -229,7 +230,7 @@ Which monitor covers each mode today. **Live** means it can page someone now. No
 | F6 refund fails | `isRefundOwed` | none wired; needs refund rows | missing |
 | F7 ledger/reconcile mismatch | `reconcileProblems` | none wired; engine-tx-without-job pending on #466 | missing |
 | F8 float low | `floatCheck` | none; balance read pending on `PH2-E4-02` | missing |
-| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only; no alert. Threshold waits on real RPC numbers (PM, 2026-10-30) | partial (log) |
+| F9 RPC unavailable or slow | `scheduler.evaluate` log, with `rpcMs`/`rpcBatches`/`rpcMaxMs` since #524 | log only: `rpcSlowReasons` adds `rpcSlow` to the log; provisional slow ≥ 2000 ms max / ≥ 3500 ms total, 3 failed ticks, from 8 preview samples (provisional, revise with more data (PM, 2026-10-30)) | partial (log) |
 | F10 testnet reset | `observed_ledger` decrease (signal 1), confirmed by the next tick (signal 2) | API Worker cron `runTestnetResetCheck` (operator); `testnetResetUserEvents` (user, needs the outbox) | code; not live (0009, lookback unset, `ALERTS_SEND` off) |
 | F11 cron missed / gap | newest `scheduler_ticks` row too old; `tickGaps` | API Worker cron `runHeartbeatCheck` (operator) | code; not live (0009, `HEARTBEAT_STALE_SECONDS` unset, `ALERTS_SEND` off) |
 | F12 overlapping ticks / duplicates | `duplicatePulls` | none wired | missing |
@@ -241,7 +242,7 @@ Which monitor covers each mode today. **Live** means it can page someone now. No
 | F18 required secret missing | `503 UPSTREAM_UNAVAILABLE` on auth routes | none; nobody is paged; operator channel: target Telegram, email until it exists (PM, 2026-10-30) | missing |
 | F19 restore lost changes | manual restore procedure | none; manual | missing |
 
-Operator monitors still missing whose code would sit in CEF's paths: F9 (slow threshold **undetermined**), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (not wired). For F14, F16, F17 and F18: the target stays the operator's Telegram (Fatih's choice, option 3), and until that Telegram channel exists, operators get the alert by email (PM, 2026-10-30).
+Operator monitors still missing whose code would sit in CEF's paths: F9 (provisional thresholds logged; failed-tick reader not wired), F14 (alerting on `read_failed` needs a channel that does not depend on the database), F17 and F18 (not wired). For F14, F16, F17 and F18: the target stays the operator's Telegram (Fatih's choice, option 3), and until that Telegram channel exists, operators get the alert by email (PM, 2026-10-30).
 
 ## Alert retries and Resend idempotency
 
@@ -253,7 +254,7 @@ Operator monitors still missing whose code would sit in CEF's paths: F9 (slow th
 ## Undetermined, in one place
 
 - The independent trigger for the heartbeat alert. (Operator channel for F14/F16/F17/F18: the target stays the operator's Telegram (Fatih's choice, option 3), and until that Telegram channel exists, operators get the alert by email; PM, 2026-10-30.)
-- Every alert threshold: fleet failure rate, `preflight-failed` counts, retries, consecutive failed ticks, gap in ledgers, the F8 sweep buffer (decided at `PH2-E4-03`), dead-letter depth.
+- Every alert threshold: fleet failure rate, `preflight-failed` counts, retries, gap in ledgers, the F8 sweep buffer (decided at `PH2-E4-03`), dead-letter depth.
 - Extend retry bound; refund retry cap and escalation; dead-letter policy.
 - Lead time of the allowance-expiry warning.
 - The per-step envelope expiry and the submitted-hash columns (#466 open).

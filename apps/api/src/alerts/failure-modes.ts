@@ -137,7 +137,8 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F9: {
     user: { kind: 'dashboard' },
     operator: thr('consecutive failed ticks'),
-    detector: 'pending: scheduler (PH2-E4-04)',
+    // Provisional (PM, 2026-10-30): apps/scheduler/src/rpc-health.ts, log only.
+    detector: 'rpcSlowReasons, consecutiveFailedTicks (apps/scheduler; provisional, log only)',
   },
   F10: {
     user: { kind: 'email', alerts: ['testnet_reset'] },
