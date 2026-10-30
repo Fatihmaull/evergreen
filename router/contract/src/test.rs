@@ -213,3 +213,87 @@ fn refuses_the_router_itself_as_treasury() {
     }));
     assert!(res.is_err());
 }
+
+// --- PH2-E4-08 hardening (2026-10-30): edges an auditor would probe. ---
+
+#[test]
+fn the_constructor_cannot_be_called_again() {
+    // `__constructor` runs only at deploy; a later call must not reset the treasury.
+    let s = setup();
+    let attacker = Address::generate(&s.env);
+    let res = s.env.try_invoke_contract::<(), RouterError>(
+        &s.router,
+        &Symbol::new(&s.env, "__constructor"),
+        (s.token.clone(), attacker.clone()).into_val(&s.env),
+    );
+    assert!(res.is_err());
+    assert_eq!(s.client().treasury(), s.treasury);
+}
+
+#[test]
+fn threshold_equal_to_extend_to_is_accepted() {
+    let s = setup();
+    s.client()
+        .fee_and_extend(&s.payer, &1, &s.target, &150_000, &150_000);
+    assert_eq!(s.instance_ttl(), 150_000);
+    assert_eq!(s.balance(&s.treasury), 1);
+}
+
+#[test]
+fn the_payers_whole_balance_can_be_the_fee_and_nothing_more_moves() {
+    let s = setup();
+    s.client()
+        .fee_and_extend(&s.payer, &1_000, &s.target, &100_000, &200_000);
+    assert_eq!(s.balance(&s.payer), 0);
+    assert_eq!(s.balance(&s.treasury), 1_000);
+    assert_eq!(s.balance(&s.router), 0);
+}
+
+#[test]
+fn an_i128_max_fee_fails_and_moves_nothing() {
+    let s = setup();
+    let before = s.instance_ttl();
+    let res = s
+        .client()
+        .try_fee_and_extend(&s.payer, &i128::MAX, &s.target, &100_000, &200_000);
+    assert!(res.is_err());
+    assert_eq!(s.balance(&s.payer), 1_000);
+    assert_eq!(s.balance(&s.treasury), 0);
+    assert_eq!(s.instance_ttl(), before);
+}
+
+#[test]
+fn a_target_that_is_not_a_contract_fails_and_moves_nothing() {
+    let s = setup();
+    let not_a_contract = Address::generate(&s.env);
+    let res = s
+        .client()
+        .try_fee_and_extend(&s.payer, &10, &not_a_contract, &100_000, &200_000);
+    assert!(res.is_err());
+    assert_eq!(
+        s.balance(&s.payer),
+        1_000,
+        "fee rolled back with the failed extend"
+    );
+    assert_eq!(s.balance(&s.treasury), 0);
+}
+
+#[test]
+fn repeated_calls_charge_each_time_and_never_accumulate_in_the_router() {
+    let s = setup();
+    for _ in 0..3 {
+        s.client()
+            .fee_and_extend(&s.payer, &5, &s.target, &100_000, &200_000);
+    }
+    assert_eq!(s.balance(&s.treasury), 15);
+    assert_eq!(s.balance(&s.router), 0);
+}
+
+#[test]
+fn the_router_can_extend_its_own_instance_without_changing_its_config() {
+    let s = setup();
+    s.client()
+        .fee_and_extend(&s.payer, &0, &s.router, &100_000, &200_000);
+    assert_eq!(s.client().treasury(), s.treasury);
+    assert_eq!(s.client().fee_token(), s.token);
+}
