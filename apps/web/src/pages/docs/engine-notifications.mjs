@@ -48,8 +48,9 @@ export function render() {
     <p>
       No notification can mean nothing crossed a threshold — or it can mean the scheduled run did
       not fire. Those are different situations that look identical from an inbox, which is why a
-      missed run is meant to be alerted on separately rather than inferred from quiet. That
-      separate alert is written but not switched on yet, so for now quiet proves nothing.
+      missed run is meant to be alerted on separately rather than inferred from quiet. Today, if
+      the scheduler stops running for about 45 minutes, the team is alerted; a single missed run
+      is not, and user alerts are not switched on yet, so quiet in your inbox still proves nothing.
       <a class="site-more" href="/docs/engine/">What the engine is</a>
     </p>
   `;

@@ -57,8 +57,8 @@ export function render() {
       If the schedule does not fire, nothing happens — and nothing happening looks exactly like
       nothing needing to happen. That is the failure mode this shape introduces, so it is treated
       as one: a missed run is meant to be noticed rather than silently absorbed. A heartbeat check
-      that alerts the operator when the scheduler stops recording runs is written, but it is not
-      switched on yet, so today a missed run is not alerted on.
+      now alerts the team if the scheduler stops running for about 45 minutes. A single missed
+      run is still not alerted on, and alerts to users are not switched on yet.
     </p>
   `;
 }
