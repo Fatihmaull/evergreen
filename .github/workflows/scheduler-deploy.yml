@@ -1,16 +1,26 @@
-# Deploys the scheduler Worker to PREVIEW only (evergreen-scheduler-preview).
+# Deploys the scheduler Worker. Manual only (workflow_dispatch), never on push.
+#   target=preview     -> evergreen-scheduler-preview (wrangler deploy --env preview)
+#   target=production  -> evergreen-scheduler (top-level block, */15 cron), behind the
+#                         `production` GitHub environment gate (PM/Fatih approve each run).
+# Production needs DATABASE_URL (eg_scheduler role) set on evergreen-scheduler by DevOps
+# first, and the API's F11 heartbeat live on production (order agreed 2026-10-31).
 # Manual on purpose: the first run CREATES the Worker on Cloudflare, so it runs only
-# when DevOps dispatches it after the secrets below exist. There is no production job
-# and no cron; production lands in a later PR behind the `production` environment.
+# when DevOps dispatches it after the secrets below exist. No cron.
 # Needs on the Worker (set by DevOps, never in this file): DATABASE_URL (eg_scheduler role),
 # TICK_TOKEN. Without them /health answers and /tick does not exist.
-name: Scheduler deploy (preview)
+name: Scheduler deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which Worker to deploy'
+        type: choice
+        options: [preview, production]
+        default: preview
 
 concurrency:
-  group: scheduler-deploy-preview
+  group: scheduler-deploy-${{ inputs.target }}
   cancel-in-progress: false
 
 permissions:
@@ -22,6 +32,7 @@ env:
 jobs:
   preview:
     name: deploy evergreen-scheduler-preview
+    if: inputs.target == 'preview'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -41,3 +52,27 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
         run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+
+  production:
+    name: deploy evergreen-scheduler (production)
+    if: inputs.target == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: build the scheduler's workspace deps
+        run: pnpm --filter "@evergreen/scheduler^..." run build
+      # Top-level block = production; no --env flag selects it.
+      - name: wrangler deploy (production)
+        working-directory: apps/scheduler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"

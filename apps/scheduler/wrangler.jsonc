@@ -1,11 +1,8 @@
 // The scheduler Worker (apps/scheduler/README.md, docs/PH2-E4-04-SCHEDULER-DESIGN.md §8).
-// Production (top-level block) is CONFIGURED with its 15-minute cron but NOT DEPLOYED:
-// no workflow deploys the top-level block (scheduler-deploy.yml is manual and runs
-// `wrangler deploy --env preview` only), so merging this file schedules nothing.
-// GATE: do not run `wrangler deploy` without `--env`, and do not add a production deploy
-// job, before migration 0009 (scheduler grants/outbox) is applied on production and
-// the PM/Fatih approve the production scheduler. A cron trigger is live the moment the
-// Worker is deployed with it.
+// Production (top-level block) is CONFIGURED with its 15-minute cron but NOT DEPLOYED.
+// scheduler-deploy.yml deploys it only on a manual run with target=production, behind the
+// `production` environment gate; merging this file schedules nothing. 0009 is applied on
+// production (2026-10-31). A cron trigger is live the moment the Worker is deployed with it.
 // Worker secrets, set per environment with `wrangler secret put <NAME> --env preview`:
 //   DATABASE_URL  the eg_scheduler role's connection string (never the owner's)
 //   TICK_TOKEN    bearer token that turns POST /tick on (preview only)
