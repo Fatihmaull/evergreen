@@ -54,6 +54,11 @@ export function render() {
           transaction with sequence number 0, which the network rejects, so it cannot move anything. Nothing on
           this page asks your wallet to sign a payment, an allowance or an extension.
         </p>
+        <p class="small muted" id="unlink-allowance-note">
+          Unlinking a wallet from your account does not revoke the allowance it granted Evergreen’s engine: the
+          allowance stays on chain until it is revoked or reaches its expiry ledger.
+          <a href="/allowance/">Revoke it on the allowance page</a>.
+        </p>
         <div class="row">
           <button id="connect-button" class="secondary" type="button">Connect Freighter</button>
           <button id="link-button" type="button">Link this wallet</button>
