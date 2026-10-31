@@ -25,8 +25,8 @@
       "name": "evergreen-scheduler-preview",
       // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
       "workers_dev": true,
-      // Preview cron every 5 minutes (PM-approved 2026-10-29). Production is */15 above, not deployed.
-      "triggers": { "crons": ["*/5 * * * *"] },
+      // Preview: no cron (F9 24h data done, PR #519); tick manually via POST /tick. Production is */15 above.
+      "triggers": { "crons": [] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
