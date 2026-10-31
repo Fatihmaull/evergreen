@@ -44,8 +44,8 @@
     "preview": {
       "name": "evergreen-api-preview",
       "workers_dev": false,
-      // Preview only: the heartbeat check (src/alerts/heartbeat.ts) every 5 minutes.
-      "triggers": { "crons": ["*/5 * * * *"] },
+      // Preview: no cron (F9 24h data done, PR #519). F10/F11 run via manual dispatch/tick only.
+      "triggers": { "crons": [] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
