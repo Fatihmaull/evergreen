@@ -728,6 +728,12 @@ const PAGES = [
     to: 'login/index.html',
     login: true,
   },
+  {
+    module: 'src/pages/allowance.mjs',
+    entry: 'src/pages/allowance.ts',
+    js: 'assets/allowance.js',
+    to: 'allowance/index.html',
+  },
 ];
 
 for (const page of DOC_PAGES) {
