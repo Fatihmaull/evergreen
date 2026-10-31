@@ -2,12 +2,18 @@
 #   target=preview     -> evergreen-scheduler-preview (wrangler deploy --env preview)
 #   target=production  -> evergreen-scheduler (top-level block, */15 cron), behind the
 #                         `production` GitHub environment gate (PM/Fatih approve each run).
-# Production needs DATABASE_URL (eg_scheduler role) set on evergreen-scheduler by DevOps
-# first, and the API's F11 heartbeat live on production (order agreed 2026-10-31).
 # Manual on purpose: the first run CREATES the Worker on Cloudflare, so it runs only
-# when DevOps dispatches it after the secrets below exist. No cron.
-# Needs on the Worker (set by DevOps, never in this file): DATABASE_URL (eg_scheduler role),
-# TICK_TOKEN. Without them /health answers and /tick does not exist.
+# when DevOps dispatches it after the secrets below exist. This workflow has no cron of
+# its own; the */15 cron lives on the production Worker (apps/scheduler/wrangler.jsonc).
+# Neither job installs secrets: production runs plain `wrangler deploy`. DevOps sets them
+# first with `wrangler secret put <NAME>` (add `--env preview` for preview), never in this file.
+# Worker secrets (apps/scheduler/README.md, Settings):
+#   production: DATABASE_URL only (eg_scheduler role, never the owner's). It ticks from its
+#               */15 cron and must NOT have TICK_TOKEN. It also needs the API's F11
+#               heartbeat live on production first (order agreed 2026-10-31).
+#   preview:    DATABASE_URL (eg_scheduler role) and TICK_TOKEN. TICK_TOKEN is preview-only:
+#               it turns on POST /tick, since preview has no cron. Without it /tick does
+#               not exist and only /health answers.
 name: Scheduler deploy
 
 on:
