@@ -9,7 +9,7 @@ Input for the F9 thresholds in [`docs/PH2-E4-05-FAILURE-MODES.md`](../../PH2-E4-
 - Slots expected: 290. Slots with `scheduler.evaluate`: **290** (all `dryRun`, Worker version `df539fbe`).
 - Every tick: items 1, due 0, notDue 1, expired 0, undetermined 0. `rpcBatches` = 2 on all 290.
 - Failed ticks: **0** (no `scheduler.evaluate_failed`, no tick with `ok: false`, no `undetermined > 0`). Longest run of failed ticks: **0**.
-- One `scheduler.tick` log line is missing (slot 2026-10-30 20:50 WIB), but that slot's `evaluate` event exists and `scheduler_ticks` row id 274 exists. It is a dropped log, not a failed tick; the CSV marks it in `failed` as `tick_log_missing_but_db_row_274_ok`.
+- One `scheduler.tick` log line is missing (slot 2026-10-30 20:50 WIB), but that slot's `evaluate` event exists and `scheduler_ticks` row id 274 exists. It is a dropped log, not a failed tick; the CSV leaves `failed` empty for that slot and explains it in the `note` column. `failed` is empty on all 290 rows.
 - Database: 290 `scheduler_ticks` rows in the window, ids 181..470 contiguous, 0 gaps over 6 minutes.
 
 | ms, n = 290 | min | p50 | p95 | p99 | max | mean |
