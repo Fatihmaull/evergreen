@@ -273,4 +273,16 @@ export type {
 export { ALERT_TEMPLATE_KINDS, renderAlertEmail } from './alerts/templates.js';
 export type { AlertContext, AlertEmail } from './alerts/templates.js';
 export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
+export {
+  MAX_EVENT_ID_LENGTH,
+  dispatchUserAlertEvent,
+  eventIdProblem,
+  planUserAlert,
+} from './alerts/plan.js';
+export type {
+  EventIdProblem,
+  PlanResult,
+  PlannedDispatchOutcome,
+  UserAlertEvent,
+} from './alerts/plan.js';
 export type { ResendLikeClient, TestSendEnv, TestSendOutcome } from './alerts/test-send.js';
