@@ -20,9 +20,9 @@
   // only: invocation logs are OFF because they record the whole request, and the
   // platform redacts Cookie and Authorization but NOT X-Evergreen-CSRF, the client IP
   // or the user agent (observed with `wrangler tail`, docs/ops/observability.md).
-  // Production: the heartbeat check (src/alerts/heartbeat.ts) every 5 minutes, same as
-  // preview (PM-approved 2026-10-31). Live once the API is deployed with this file.
-  "triggers": { "crons": ["*/5 * * * *"] },
+  // Production: the F10/F11 checks every 15 minutes (PM, 2026-10-31: Neon budget).
+  // Live once the API is deployed with this file.
+  "triggers": { "crons": ["*/15 * * * *"] },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
@@ -32,7 +32,11 @@
   },
   "vars": {
     "ENVIRONMENT": "production",
-    "HEARTBEAT_STALE_SECONDS": "900",
+    // 3 x the prod scheduler interval (*/15 = 900 s); worst detection ~3600 s with a */15 check.
+    "HEARTBEAT_STALE_SECONDS": "2700",
+    // Same as preview (PM-approved 2026-10-31).
+    "TESTNET_RESET_LOOKBACK_TICKS": "12",
+    "THRESHOLD_FLOOR_LEDGERS": "1037",
     "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
     "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
   },
