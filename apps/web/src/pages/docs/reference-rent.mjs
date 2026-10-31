@@ -61,8 +61,8 @@ export function render() {
       Nothing is submitted.
     </p>
     <p>
-      Rent pricing varies with network state. We have measured it differ by about 18% between
-      days, so treat a cost figure as a reading with a timestamp. If a budget depends on it, take
+      Rent pricing varies with network state. On our own contract we measured simulated rent of 0.13496–0.13855 stroops per ledger on 10 September 2026, against 0.11768 for a real extension priced on 9 September,
+      so treat a cost figure as a reading with a timestamp. If a budget depends on it, take
       the reading close to when you will submit.
     </p>
 
