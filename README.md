@@ -101,8 +101,9 @@ Cost to extend 2 entries by 518,400 more ledgers
 ```
 
 Priced by simulating the real operation against live network config, not by a
-local formula. It is an estimate: rent varies with network state, and we have
-measured ~18% between days.
+local formula. It is an estimate: rent varies with network state. On our own contract we
+measured simulated rent of 0.13496–0.13855 stroops per ledger on 10 September
+2026, against 0.11768 for a real extension priced on 9 September.
 
 ### The thing most people do not know they have
 
