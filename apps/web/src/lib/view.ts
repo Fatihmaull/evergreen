@@ -67,6 +67,8 @@ import { estimateEndsAt, hasExpired, type AssessedEntry } from './evergreen';
  * than inventing one.
  */
 import knownEndsData from '../../data/known-ends.json';
+import { SECONDS_PER_LEDGER } from '../../../../packages/core/src/index';
+import { approxDate } from './format';
 
 const KNOWN_ENDS: Record<
   string,
@@ -214,4 +216,23 @@ export function bindingEntry(
   );
   if (live.length === 0) return undefined;
   return live.reduce((a, b) => (a.v.endsAtLedger <= b.v.endsAtLedger ? a : b)).e;
+}
+
+/**
+ * A chosen ledger (an allowance's `live_until_ledger`) as an approximate date,
+ * from the ledger the read was taken at. Here rather than beside the allowance
+ * screen because this module is the one that projects dates (#328 decision 4,
+ * accepted by Fatih 2026-10-18; `raw-ttl-is-confined.test.ts` unchanged).
+ * Ledgers are the truth; the date travels with `~`. A ledger already passed
+ * gets no date.
+ */
+export function approxDateOfLedger(
+  ledger: number,
+  observedAtLedger: number,
+  now = new Date(),
+): string {
+  if (!Number.isInteger(ledger) || ledger < observedAtLedger) return 'date undetermined';
+  return approxDate(
+    new Date(now.getTime() + (ledger - observedAtLedger) * SECONDS_PER_LEDGER * 1000),
+  );
 }

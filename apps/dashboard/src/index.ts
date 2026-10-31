@@ -50,6 +50,11 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'live',
   },
   {
+    route: '/allowance/',
+    does: 'Read the native XLM allowance a wallet granted the engine, and revoke it with a wallet signature.',
+    reads: 'live',
+  },
+  {
     route: '/dashboard/blast-radius/',
     does: 'Scan several contracts together to resolve what one scan cannot.',
     reads: 'live',
