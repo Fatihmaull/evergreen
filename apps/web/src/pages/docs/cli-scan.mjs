@@ -76,7 +76,7 @@ evergreen scan &lt;A&gt; &lt;B&gt; &lt;C&gt;      code entry: 3 consumers, SHARE
     <p>
       <span class="mono">--cost</span> prices an extension by simulating it against the network, so
       it reflects current pricing rather than a formula in this tool. Rent pricing varies with
-      network state — we have measured it differ by about 18% between days — so treat the figure
+      network state — on our own contract we measured simulated rent of 0.13496–0.13855 stroops per ledger on 10 September 2026, against 0.11768 for a real extension priced on 9 September — so treat the figure
       as an estimate with a timestamp, not a quote.
       <a class="site-more" href="/docs/reference/rent/">Rent and cost</a>
     </p>
