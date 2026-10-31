@@ -61,6 +61,9 @@ export type Binding =
       readonly endsAtLedger: number;
       readonly endsAt: Date | undefined;
       readonly kind: string;
+      /** Ledgers left after the ledger it was read at, from `entryView`. */
+      readonly remainingLedgers?: number;
+      readonly observedAtLedger?: number;
     }
   | { readonly state: 'undetermined' };
 
@@ -70,6 +73,12 @@ export interface Row {
   /** Why undetermined, when it is. About the contract, not about us (§9a). */
   readonly why?: string;
   readonly binding: Binding;
+  /**
+   * Who read the binding expiry: the engine's stored observation, or this
+   * browser reading the chain because the engine has stored none yet. A
+   * browser read never makes a row healthy.
+   */
+  readonly bindingSource?: 'engine' | 'browser';
 }
 
 function hasObservation(
@@ -87,8 +96,46 @@ function hasObservation(
   );
 }
 
-export function rowFor(item: WatchItem, now = new Date()): Row {
+/** The binding expiry of one scan, through the same `bindingEntry` the scanner uses. */
+export function bindingFromScan(scan: ScanResult, now = new Date()): Binding {
+  try {
+    const b = bindingEntry(report(scan).entries, now);
+    if (b === undefined) return { state: 'undetermined' };
+    const v = entryView(b, now);
+    if (v.state === 'expired') return { state: 'expired', word: v.word, kind: b.entry.kind };
+    if (v.state === 'live')
+      return {
+        state: 'live',
+        endsAtLedger: v.endsAtLedger,
+        endsAt: v.endsAt,
+        kind: b.entry.kind,
+        remainingLedgers: v.remainingLedgers,
+        observedAtLedger: v.observedAtLedger,
+      };
+  } catch {
+    // fall through
+  }
+  return { state: 'undetermined' };
+}
+
+/**
+ * `browserScan` is this browser's own read of the chain, for a row the engine
+ * has not observed yet (Stage 1: `lastObservation` is null). It fills the
+ * binding expiry only. The health conclusion stays undetermined, because the
+ * engine has not checked the contract and a page read is not its check.
+ */
+export function rowFor(item: WatchItem, now = new Date(), browserScan?: ScanResult): Row {
   if (item.lastObservation === null) {
+    const binding = browserScan === undefined ? undefined : bindingFromScan(browserScan, now);
+    if (binding !== undefined && binding.state !== 'undetermined') {
+      return {
+        item,
+        conclusion: 'undetermined',
+        why: 'Not checked by the engine yet. The expiry beside it is this browser reading the chain now.',
+        binding,
+        bindingSource: 'browser',
+      };
+    }
     return {
       item,
       conclusion: 'undetermined',
@@ -106,29 +153,14 @@ export function rowFor(item: WatchItem, now = new Date()): Row {
     };
   }
   const obs = item.lastObservation;
-  let binding: Binding = { state: 'undetermined' };
-  try {
-    const b = bindingEntry(report(obs.scan).entries, now);
-    if (b !== undefined) {
-      const v = entryView(b, now);
-      if (v.state === 'expired') binding = { state: 'expired', word: v.word, kind: b.entry.kind };
-      else if (v.state === 'live')
-        binding = {
-          state: 'live',
-          endsAtLedger: v.endsAtLedger,
-          endsAt: v.endsAt,
-          kind: b.entry.kind,
-        };
-    }
-  } catch {
-    binding = { state: 'undetermined' };
-  }
+  const binding = bindingFromScan(obs.scan, now);
 
-  if (binding.state === 'expired') return { item, conclusion: 'at-risk', binding };
+  if (binding.state === 'expired')
+    return { item, conclusion: 'at-risk', binding, bindingSource: 'engine' };
   if (obs.health === 'warning' || obs.health === 'critical')
-    return { item, conclusion: 'at-risk', binding };
+    return { item, conclusion: 'at-risk', binding, bindingSource: 'engine' };
   if (obs.health === 'healthy' && binding.state === 'live')
-    return { item, conclusion: 'healthy', binding };
+    return { item, conclusion: 'healthy', binding, bindingSource: 'engine' };
   return {
     item,
     conclusion: 'undetermined',
@@ -215,11 +247,20 @@ export function autopilotCell(item: WatchItem): string {
   return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${pending}`;
 }
 
-function bindingCell(b: Binding): string {
+export function bindingCell(b: Binding, source?: 'engine' | 'browser'): string {
+  const by =
+    source === 'browser'
+      ? `<br /><span class="small muted">read by this browser${b.state === 'live' && b.observedAtLedger !== undefined ? ` at ledger <span class="mono">${esc(formatCount(b.observedAtLedger))}</span>` : ''}, not an engine check</span>`
+      : '';
   if (b.state === 'expired')
-    return `<span class="chip expired"><span class="shape"></span>${b.word}</span> <span class="small muted">${esc(b.kind)} entry</span>`;
-  if (b.state === 'live')
-    return `ledger <span class="mono">${esc(formatCount(b.endsAtLedger))}</span> <span class="small muted">${esc(approxDate(b.endsAt))} · ${esc(b.kind)} entry</span>`;
+    return `<span class="chip expired"><span class="shape"></span>${b.word}</span> <span class="small muted">${esc(b.kind)} entry</span>${by}`;
+  if (b.state === 'live') {
+    const left =
+      b.remainingLedgers !== undefined && Number.isInteger(b.remainingLedgers)
+        ? ` · <span class="mono">${esc(formatCount(b.remainingLedgers))}</span> ledgers left (${days(b.remainingLedgers)})`
+        : '';
+    return `ledger <span class="mono">${esc(formatCount(b.endsAtLedger))}</span> <span class="small muted">${esc(approxDate(b.endsAt))}${left} · ${esc(b.kind)} entry</span>${by}`;
+  }
   return '<span class="chip undetermined"><span class="shape"></span>undetermined</span>';
 }
 
@@ -242,7 +283,7 @@ export function rowHtml(r: Row): string {
     ? `${esc(item.label)} <span class="small muted mono">${esc(item.contractId.slice(0, 6))}…${esc(item.contractId.slice(-4))}</span>`
     : `<span class="mono">${esc(item.contractId.slice(0, 6))}…${esc(item.contractId.slice(-4))}</span>`;
   return `<tr>
-      <td>${bindingCell(r.binding)}</td>
+      <td>${bindingCell(r.binding, r.bindingSource)}</td>
       <td><span class="chip ${chipClass(r)}"><span class="shape"></span>${WORD[r.conclusion]}</span>${r.why ? ` <span class="small muted">${esc(r.why)}</span>` : ''}</td>
       <td>${name}</td>
       <td class="small">${seen}</td>
@@ -252,11 +293,15 @@ export function rowHtml(r: Row): string {
     </tr>`;
 }
 
-export function tableHtml(items: readonly WatchItem[], now = new Date()): string {
+export function tableHtml(
+  items: readonly WatchItem[],
+  now = new Date(),
+  browserScans: ReadonlyMap<string, ScanResult> = new Map(),
+): string {
   if (items.length === 0) {
     return '<p class="muted">Your watchlist is empty. Add a contract from <a href="/dashboard/scanner/">the scanner</a>.</p>';
   }
-  const rows = orderRows(items.map((i) => rowFor(i, now)));
+  const rows = orderRows(items.map((i) => rowFor(i, now, browserScans.get(i.contractId))));
   return `<div class="table-wrap"><table>
       <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Autopilot</th><th scope="col">Remove</th></tr></thead>
       <tbody>${rows.map(rowHtml).join('')}</tbody></table></div>
@@ -291,6 +336,7 @@ const undeterminedBox = (sentence: string): string =>
 export function watchlistScreenHtml(
   outcome: ApiOutcome<{ items?: unknown }>,
   now = new Date(),
+  browserScans: ReadonlyMap<string, ScanResult> = new Map(),
 ): string {
   if (outcome.kind === 'ok') {
     const items = outcome.data?.items;
@@ -303,7 +349,7 @@ export function watchlistScreenHtml(
     // the only thing "signed in" rests on here. It says nothing about contracts.
     return items.length === 0
       ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
-      : tableHtml(items as WatchItem[], now);
+      : tableHtml(items as WatchItem[], now, browserScans);
   }
   if (outcome.kind === 'unavailable') {
     return undeterminedBox(
