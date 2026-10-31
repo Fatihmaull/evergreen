@@ -7,6 +7,8 @@ File: `apps/api/db/0009_connect_and_scheduler_ticks_select.sql` (Rakha, [#551](h
 
 `eg_scheduler` keeps INSERT only on `scheduler_ticks` (no SELECT, K1). The file is idempotent. Apply it after 0008. Re-running 0008 drops the `scheduler_ticks` grant, so re-run 0009 after any 0008 re-run.
 
+**Status: applied on Neon `preview` and production 2026-10-31 ~09:59 WIB** from `main` after #551 merged (`179fae0`), by DevOps. Verified with `has_database_privilege` / `has_table_privilege` (results as in step 4). The `SET ROLE` probes in step 4 could not run: the Neon owner role is not a member of `eg_api` / `eg_scheduler`, so `SET ROLE` is refused. The role-level SELECT probe is undetermined until someone connects as `eg_api` (see [`switch-database-url-eg_api.md`](switch-database-url-eg_api.md)).
+
 Names only in this file. No connection strings or secrets. `DATABASE_URL` comes from the environment and holds the **owner** connection for the branch being changed.
 
 ## 1. Preconditions
@@ -45,6 +47,8 @@ SET LOCAL ROLE eg_scheduler;
 SELECT * FROM scheduler_ticks ORDER BY ticked_at DESC LIMIT 1;  -- ERROR: permission denied for table scheduler_ticks
 ROLLBACK;
 ```
+
+**Limitation:** the Neon owner is not a member of `eg_api` / `eg_scheduler`, so `SET ROLE` fails with `permission denied to set role`. In that case, rely on the `has_*_privilege` checks, or run the SELECT over a connection made as that role.
 
 Every result must match the comment. If one doesn't, stop and do not touch production.
 
