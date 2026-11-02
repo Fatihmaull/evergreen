@@ -34,13 +34,15 @@ Need a change in someone else's path? Open an issue mentioning that owner. [`AGE
 2. **Fatih performs every login himself**: `wrangler login`, `neonctl auth`, `gh auth refresh -s workflow`. Never ask for or paste a token.
 3. **Read-only first.** Inventory and verify before you change anything, and say what you read and how.
 4. **Never approve a deployment, and never modify a workflow to bypass the production gate** (`AGENTS.md` rule 11). Every Fatih-side agent acts as `Fatihmaull`; GitHub cannot tell you from him. This rule is the only separation.
-5. **Production secrets need Fatih's explicit "ya"**, and not before the prerequisites in [`docs/ops/secrets.md`](../../docs/ops/secrets.md): the approval gate (met), a least-privilege app DB role with append-only grants on the fee ledger (agree with Rakha on #385), a production email sender domain (deferred).
+5. **Production secrets need Fatih's explicit "ya"**. The prerequisites in [`docs/ops/secrets.md`](../../docs/ops/secrets.md) are met as of 2026-11-01 and the production secrets are installed; **any further production secret change still needs his go**, and so does setting or changing `ALERTS_SEND`.
 6. **Commission everything you build.** A gate or check nobody watched fail is a decoration: exercise it in the failing direction and show it. When you change a deploy path, read back **what is serving**, not what you sent.
 7. **When a PR adds a file under `apps/api/db`, you apply it to the Neon `preview` branch and verify it**, with `psql -v ON_ERROR_STOP=1 --single-transaction` ([`neon-migrations.md`](../../docs/ops/neon-migrations.md)). The exit code alone is not proof.
 8. **Production is changed only by a deploy Fatih approved, or a rollback he told you to run.** Prepare the exact command; he decides.
 9. **Rakha: GitHub only, on #385, signed `(drafted with Fatih's PM assistant)`.** Never a private channel.
 10. **Never touch the unrelated Cloudflare projects** that share the account.
 11. **Testnet only until DoD-2** (`AGENTS.md` rule 1).
+12. **Never merge a `rakhargo`-authored PR unless Rakha has written "ready to merge" on it** (Fatih, K2, 2026-11-01). Applying a merged file of his is DevOps' job; merging it is not.
+13. **Production migrations only inside Fatih's pre-approval:** the PR is merged, the file is applied and verified on `preview` first, and a snapshot is taken and listed before the production apply (`docs/ops/neon-migrations.md`). The 2026-11-01 pre-approval names 0010, 0011 and 0012 and nothing else.
 
 ## Your cards, in the order to take them
 
@@ -55,9 +57,11 @@ Standing duties, not cards: apply each new `apps/api/db` file to Neon `preview` 
 
 ## Waiting, do not start without a "ya" from Fatih
 
-- **#431: Workers Logs on the API Worker.** Fatih first checks the plan tier and retention in the Cloudflare dashboard.
-- **Any production secret** (`DATABASE_URL` and the auth secrets).
-- **Production Neon work** of any kind.
+- **Any production secret change**, and any change to `ALERTS_SEND` or `ALERTS_ALLOWLIST` on `evergreen-api`.
+- **Production Neon work** other than the pre-approved applies of 0010, 0011 and 0012 under rule 13.
+- Anything that changes billing (Neon history retention, plan settings, spending limits): his, not DevOps'.
+
+(Done since this file was written: #431 Workers Logs, production secrets, the Neon Launch upgrade, the production scheduler deploy.)
 
 ## Report format
 

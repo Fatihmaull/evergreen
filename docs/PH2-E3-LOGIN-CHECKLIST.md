@@ -125,6 +125,26 @@ Added 2026-10-29 for `PH2-E3-01`; goes into Tih's next batch. Strings are quoted
 
 **Send back.** A screenshot after step 2 with the address bar showing, and one after the reload. Blur the email if you want. For anything else: the exact text and the WIB time.
 
+### Step 5c — Unlink the wallet (production host)
+
+Added 2026-11-02 for `PH2-E3-01`. The control shipped in #574 (merge `9c1ad2b`) and is on production: the bundle `/assets/login.js` contains it. Nobody has clicked it signed in, because that needs an emailed code. Strings are quoted from `apps/web/src/lib/login-view.ts` and `apps/web/src/pages/login.ts`.
+
+**Before.** Signed in, with the wallet from step 5b linked. Unlinking moves nothing and revokes nothing; you can link the wallet again with step 5b.
+
+**Do.** Click **"Unlink"** beside the shortened address.
+
+**Expect.** "Unlinked `G…` from this account. Unlinking does not revoke an allowance. It stays on the chain until you revoke it or it expires." with a link **"Revoke it on the allowance page"** to `/allowance/`. The session note then reads "No wallet linked."
+
+**Pass.** The text above, the link, and the session note after a reload.
+
+**Fail, or report with the exact text.**
+- An `undetermined` panel headed "Whether the wallet was unlinked." The button comes back. Send the detail line.
+- "…pays for one or more contracts on your watchlist, so it cannot be unlinked yet." Not a defect if a watch item uses this wallet; it points at the watchlist and names no contract because the API sends none.
+- "Nothing to unlink: `G…` is not linked to this account." Only expected if you unlinked it in another tab.
+- Any sentence that says the allowance was revoked, cancelled or made safe. That is a defect.
+
+**Send back.** A screenshot after the click with the address bar, and the time in WIB.
+
 ### Step 9 — Sign out
 
 **Do.** Click "Sign out". Then reload the page.
@@ -172,6 +192,25 @@ That is the answer step 10 needs, and it is no longer a 404.
 **One documented limitation, so it is not filed as a bug** (#445, `docs/API.md` §6). `DELETE` for an item you do not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all; they differ only in `message`, which is not part of the contract. A client branching on code and status cannot tell them apart. The page says "Nothing to remove for this account." for both. That is known and deliberate.
 
 **Send back.** For steps 6, 7 and 8: a screenshot of the whole browser window including the address bar. For step 10: the same. For anything reading `undetermined`, or any error: the exact text on screen and the WIB time to the minute.
+
+### Step 7, second look: after the first engine observation (PH2-E3-02)
+
+**Do not run this before an engine observation exists.** As of 2026-11-02 none can: nothing inserts into `observations`, the scheduler is a heartbeat (`PH2-E4-04`), and there is no scan route. The signal that it is time is a `PH2-E4-04` merge that writes a row, plus a DevOps note that the scheduler job runs on production. Until then the row reads one of two things, and both mean "no engine observation":
+- "Not scanned yet." (no browser read), or
+- "Not checked by the engine yet. The expiry beside it is this browser reading the chain now." with the expiry marked "read by this browser … not an engine check".
+
+**Do.** Signed in, with guinea-pig A (`CANZNT…XL6L`) on the watchlist, open `/dashboard/watchlist/` after DevOps confirms the scheduler job has run at least once on production.
+
+**Look at, in this order.**
+1. **The "why" line is gone** and the state chip reads **healthy** or **at risk**. (An undetermined chip next to an observation is possible only when the engine itself reported undetermined, or reported healthy with no entry that has a TTL; the page says which. Report it rather than passing it.)
+2. **The observation sits beside the state:** "ledger `N`, `<time>`". A state with no ledger beside it is a P0 (§9a), not a display bug.
+3. **The binding expiry leads and names the code entry.** For guinea-pig A the earliest entry is the shared **code** entry, not the instance. The cell reads "`<kind>` entry"; it must say **code**.
+4. **The source is the engine.** The line "read by this browser … not an engine check" must be **absent**. If it is still there, the row is on the browser fallback, not the engine, and the card does not close.
+5. **The binding agrees with the chain.** The binding ledger must match what `/dashboard/scanner/` shows for the same contract right now. Small drift in the remaining-ledgers count is normal; a different entry or a different end ledger is not.
+
+**Pass.** All five. Then `PH2-E3-02` closes, with the screenshot (address bar showing) and the `/api/v1/health` commit recorded.
+
+**Fail.** Any of: a state with no observation; the instance named as binding when the code entry ends sooner; "read by this browser" still shown next to a state; the state healthy while the binding reads expired. Send the exact text, the WIB time and the row's contract.
 
 ## Part C — wallet-money: sign and submit on testnet (PH2-E3-05)
 
