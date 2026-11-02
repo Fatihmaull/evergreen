@@ -187,19 +187,24 @@ export async function logout(csrfToken: string, f?: FetchLike): Promise<LogoutRe
 export type UnlinkResult =
   | { readonly kind: 'unlinked' }
   | { readonly kind: 'pays-for-watched' }
+  | { readonly kind: 'not-linked' }
   | { readonly kind: 'csrf-failed' }
   | { readonly kind: 'signed-out' }
   | Undetermined;
 
 /**
- * `DELETE /wallets/{account}`, §4. #350 does not state the success status for
- * this route; `204` is read as unlinked (the convention of §4's logout and
- * §6's delete), and any other success status stays undetermined until the
- * spec says.
+ * `DELETE /wallets/{account}`, §4: success is `204 No Content` with an empty
+ * body, and any other success status stays undetermined.
  *
- * Client only, no control yet: §9a's `WALLET_PAYS_FOR_WATCHED_CONTRACT` row
- * puts the revoke (`approve(0)`, a wallet-signed money path, WEBR) beside
- * unlink, so the unlink control waits for that screen.
+ * `409 WALLET_PAYS_FOR_WATCHED_CONTRACT` carries NO list of the contracts in
+ * `details` (checked in `apps/api/src/auth/routes.ts`: it is a bare message),
+ * so a screen cannot name them and must not pretend to — it points at the
+ * watchlist instead. §9a's "which watched contracts" is therefore not
+ * deliverable from this response.
+ *
+ * `404 NOT_FOUND` is "no such wallet on this account". It shares a code with
+ * an unknown route, as `DELETE /watchlist/...` does (§6's documented
+ * limitation), and the copy is written to be true of either: nothing to unlink.
  */
 export async function unlinkWallet(
   account: string,
@@ -216,6 +221,8 @@ export async function unlinkWallet(
     switch (o.code) {
       case 'WALLET_PAYS_FOR_WATCHED_CONTRACT':
         return { kind: 'pays-for-watched' };
+      case 'NOT_FOUND':
+        return { kind: 'not-linked' };
       case 'CSRF_FAILED':
         return { kind: 'csrf-failed' };
       case 'UNAUTHENTICATED':
