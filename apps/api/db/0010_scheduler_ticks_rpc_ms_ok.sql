@@ -12,16 +12,19 @@
 --                    CHECK (observed_ledger IS NULL OR observed_ledger > 0).
 --                    (In SQL a CHECK on NULL already passes; the explicit form documents it.)
 --
--- Grants: eg_scheduler stays INSERT-only (K1, #385): its column-level INSERT is extended to
--- rpc_ms and ok, still no SELECT. eg_api's table-level SELECT from 0009 covers the new
--- columns without a new grant.
+-- Grants: eg_scheduler stays INSERT-only (K1, #385), still no SELECT. Its column-level INSERT
+-- becomes exactly (observed_ledger, rpc_ms, ok): INSERT on ticked_at is REVOKEd, so the
+-- scheduler cannot write its own heartbeat time; ticked_at always takes its DEFAULT now()
+-- (Postgres needs no privilege on a column an INSERT leaves to its default). eg_api's
+-- table-level SELECT from 0009 covers the new columns without a new grant.
 --
--- Apply AFTER 0009. Re-run after any 0008 re-run (0008 starts with REVOKE ALL, which drops
--- the column-level INSERT on rpc_ms/ok; re-run 0009 and then 0010).
+-- Apply AFTER 0009. SECURITY STEP: 0008 still contains GRANT INSERT (ticked_at, ...), so
+-- re-running 0008 alone re-opens the heartbeat-forging path. After ANY 0008 re-run, re-run
+-- 0009 and then 0010 immediately.
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0010_scheduler_ticks_rpc_ms_ok.sql
 --
 -- Idempotent: columns are added IF NOT EXISTS, the constraint is dropped and re-added under
--- a fixed name, GRANT can be re-run.
+-- a fixed name, REVOKE/GRANT can be re-run.
 
 ALTER TABLE scheduler_ticks ADD COLUMN IF NOT EXISTS rpc_ms integer NULL CHECK (rpc_ms >= 0);
 ALTER TABLE scheduler_ticks ADD COLUMN IF NOT EXISTS ok boolean NOT NULL DEFAULT true;
@@ -32,4 +35,5 @@ ALTER TABLE scheduler_ticks DROP CONSTRAINT IF EXISTS scheduler_ticks_observed_l
 ALTER TABLE scheduler_ticks ADD CONSTRAINT scheduler_ticks_observed_ledger_positive
   CHECK (observed_ledger IS NULL OR observed_ledger > 0);
 
-GRANT INSERT (ticked_at, observed_ledger, rpc_ms, ok) ON scheduler_ticks TO eg_scheduler;
+REVOKE INSERT (ticked_at) ON scheduler_ticks FROM eg_scheduler;
+GRANT  INSERT (observed_ledger, rpc_ms, ok) ON scheduler_ticks TO eg_scheduler;

@@ -69,7 +69,7 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
   it('eg_scheduler writes a failed tick: NULL observed_ledger, ok = false, rpc_ms', async () => {
     await as(
       'eg_scheduler',
-      'INSERT INTO scheduler_ticks (ticked_at, observed_ledger, rpc_ms, ok) VALUES (now(), NULL, 3400, false)',
+      'INSERT INTO scheduler_ticks (observed_ledger, rpc_ms, ok) VALUES (NULL, 3400, false)',
     );
     const { rows } = await pg.query<{ n: number }>(
       'SELECT count(*)::int AS n FROM scheduler_ticks WHERE observed_ledger IS NULL AND ok = false AND rpc_ms = 3400',
@@ -108,6 +108,22 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
       await expect(as('eg_scheduler', sql)).rejects.toThrow(/permission denied/);
   });
 
+  it('eg_scheduler cannot write ticked_at (K1: no forged heartbeat time)', async () => {
+    await expect(
+      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 15)"),
+    ).rejects.toThrow(/permission denied/);
+    const { rows } = await pg.query<{ c: string; ok: boolean }>(
+      `SELECT c, has_column_privilege('eg_scheduler', 'scheduler_ticks', c, 'INSERT') AS ok
+         FROM unnest(ARRAY['ticked_at','observed_ledger','rpc_ms','ok']) AS c`,
+    );
+    expect(rows).toEqual([
+      { c: 'ticked_at', ok: false },
+      { c: 'observed_ledger', ok: true },
+      { c: 'rpc_ms', ok: true },
+      { c: 'ok', ok: true },
+    ]);
+  });
+
   it('eg_scheduler still cannot set id', async () => {
     await expect(
       as('eg_scheduler', 'INSERT INTO scheduler_ticks (id, observed_ledger) VALUES (999, 11)'),
@@ -144,10 +160,17 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
     await expect(as('eg_scheduler', 'SELECT * FROM scheduler_ticks')).rejects.toThrow(
       /permission denied/,
     );
+    await expect(
+      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 16)"),
+    ).rejects.toThrow(/permission denied/);
   });
 
-  it('after a 0008 re-run, the new INSERT columns are gone until 0009 + 0010 are re-run', async () => {
+  it('after a 0008 re-run, ticked_at is grantable again and new columns are gone until 0009 + 0010 are re-run (security step)', async () => {
     await pg.exec(s0008.replace(NEON_LINE, ''));
+    const reopened = await pg.query<{ ok: boolean }>(
+      "SELECT has_column_privilege('eg_scheduler', 'scheduler_ticks', 'ticked_at', 'INSERT') AS ok",
+    );
+    expect(reopened.rows[0]!.ok).toBe(true);
     await expect(
       as('eg_scheduler', 'INSERT INTO scheduler_ticks (observed_ledger, ok) VALUES (14, false)'),
     ).rejects.toThrow(/permission denied/);
@@ -157,5 +180,8 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
       'eg_scheduler',
       'INSERT INTO scheduler_ticks (observed_ledger, ok) VALUES (14, false)',
     );
+    await expect(
+      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 17)"),
+    ).rejects.toThrow(/permission denied/);
   });
 });
