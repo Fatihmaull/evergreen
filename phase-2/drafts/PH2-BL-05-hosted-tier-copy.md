@@ -82,23 +82,35 @@ typed into a page (`futureEnd`, #337).
 |---|---|---|
 | The CLI, the Action and a self-hosted engine are MIT, with no fee | Q10, Q21; `claims-and-copy.md` says "Open source, MIT" may be said now | **Yes.** Nothing charges in any of them |
 | Extension is permissionless | measured in `W1-D4-06` (two independent accounts, no auth entries); `docs/SOROBAN-PRIMER.md` | **Yes**, measured on testnet |
-| You sign one allowance: a cap and an expiry | ADR-007; spike #297, four limits measured | The chain side **yes** (spike). The screen that asks for it (`PH2-E3-05`) **no** |
+| You sign one allowance: a cap and an expiry | ADR-007; spike #297, four limits measured | The chain side **yes** (spike). The screen that asks for it **no**: `/allowance/` on production is revoke-only, and there is no approve screen or cap sizing (`PH2-E3-05` is `[~]`) |
 | Evergreen draws on funds only through that allowance, only for rent and fee | ADR-007; `AGENTS.md` hard rule 4 as amended | **Policy, not yet mechanism in the hosted path:** the pull (`PH2-E4-02`) is not built |
-| You can revoke it | `approve(0)`; `GET /wallets/{account}/allowance` | The chain side **yes**. The revoke control **no** (`PH2-E3-05`) |
+| You can revoke it | `approve(0)`; `GET /wallets/{account}/allowance` | The chain side **yes**. The revoke screen **exists on production** (`/allowance/`, #567), and `/login/` says unlinking does not revoke (#569, #574). But the spender is unset until `PH2-E4-01`/`PH2-E4-03`, and status stays undetermined until `GET /wallets/{account}/allowance` answers, so **no allowance to Evergreen's engine can exist to revoke yet** |
 | A new allowance replaces the old one | spike #297 (measured: one allowance per user–spender pair) | **Yes** (protocol behaviour). The screen copy that says so is not built |
 | Fee = 2% of rent charged, minimum 25,000 stroops | `packages/core/src/fee.ts` `PROVISIONAL_HOSTED_FEE`; ADR-007 amendment | The **formula exists** and is tested. **Nothing outside core calls it:** `grep` finds no use in `apps/`, `packages/engine` or `apps/api` |
 | The minimum binds only below 0.125 XLM | 25,000 ÷ 2% = 1,250,000 stroops | **Yes**, arithmetic, and the examples above come from the function |
 | The figure is provisional | `fee.ts` header; ADR-007 | **Yes**, and the copy must keep saying so |
 | A failed extension refunds the whole pull, fee included | ADR-007 step 5 (Fatih, #414) | **No.** The refund is `PH2-E4-02`, not built |
-| It runs on a schedule | `PH2-E4-04`; `apps/scheduler/src/evaluate.ts` | **Not yet.** Re-checked 2026-10-30 against `origin/main` `40d0255`: the scheduler exists and ticks on **preview** only, as a Stage 1 dry run that "enqueues nothing, signs nothing and writes nothing" except its own tick row. No production cron, no job, no extension |
+| It runs on a schedule | `PH2-E4-04`; `apps/scheduler/src/evaluate.ts`; `docs/ops/README.md` | **Not for anyone.** A scheduler Worker has ticked on **production** since 2026-10-31 (cron `*/15`; DevOps counted 139 `scheduler_ticks` rows to 2026-11-01 15:15 UTC), but it is a heartbeat and a read-only dry run: it signs nothing, holds no key, enqueues nothing, and extends nothing for any user. Stage 2, the money path, waits on `PH2-E4-02`. Which scheduler build is deployed was not read from the Worker: **undetermined** |
+| Email me when something needs attention (alerts, renewal reminders) | `PH2-E2-06`, `PH2-E3-05` | **Not claimed, and must not be.** User alerts are off: #571 (the outbox and preferences tables) is unmerged and the dispatcher is not wired to the scheduler. What exists is operator email: F10 (testnet reset) and F11 (stale scheduler heartbeat, about 45 minutes; `docs/ops/secrets.md`). Whether `ALERTS_SEND` is `send` on the production API is **undetermined** (its value cannot be read). Renewal reminders belong to `PH2-E3-05` and are not built |
+| Evergreen's email comes from `mail.evergreenstellar.biz.id` | `docs/ops/secrets.md` (#493) | The sender domain is **live**, and email sign-in works on production (#500). **No sentence in the copy mentions email**, so this row backs nothing. It is here so a later sentence about email is checked against it and against the row above |
 | Testnet only | footer on every page; `PH2-E1-03` refuses non-testnet builds | **Yes** |
+
+**Refreshed 2026-11-02 against `origin/main` `9c1ad2b`.** What moved since
+the last check: the revoke screen shipped (#567) and the unlink control with it
+(#574); the sender domain is live; a scheduler Worker ticks on production, as a
+heartbeat. What did not move: nothing pulls, refunds or extends for anyone
+(`PH2-E4-02` is `[ ]`), the fee function is still called by nothing outside
+`packages/core`, there is no approve screen, and user alerts are off. The copy
+text above is unchanged by this refresh.
 
 **Consequence.** Four sentences describe behaviour the engine does not have:
 the pull, the refund, the scheduled run, and the allowance screen. They are
-true as a design and untrue as a product. The copy therefore cannot go live
-until `PH2-E4-02`, `PH2-E4-04` and `PH2-E3-05` ship, and it should be
-re-checked row by row against `origin/main` on the day it does, because every
-"No" above is a claim that may have become a "Yes" or may have changed.
+true as a design and untrue as a product. A scheduler ticking on production
+does not make "it runs on a schedule" true: the sentence promises extensions.
+The copy therefore cannot go live until `PH2-E4-02`, `PH2-E4-04` and
+`PH2-E3-05` ship, and it should be re-checked row by row against `origin/main`
+on the day it does, because every "No" above is a claim that may have become a
+"Yes" or may have changed.
 
 ## Words deliberately not used
 
