@@ -321,7 +321,7 @@ describe('logout (POST /auth/logout) and unlink (DELETE /wallets/{account})', ()
     ['WALLET_PAYS_FOR_WATCHED_CONTRACT', 409, 'pays-for-watched'],
     ['CSRF_FAILED', 403, 'csrf-failed'],
     ['UNAUTHENTICATED', 401, 'signed-out'],
-    ['NOT_FOUND', 404, 'undetermined'],
+    ['NOT_FOUND', 404, 'not-linked'],
   ])('unlink %s is %s', async (code, status, kind) => {
     const { f } = fake(envelope(status, code));
     expect((await unlinkWallet('GABC', 'tok', f)).kind).toBe(kind);

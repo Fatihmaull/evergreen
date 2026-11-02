@@ -103,3 +103,51 @@ export function setCodeFormVisible(
   // `.stack > *` sets display, which beats the `hidden` attribute.
   form.style.display = visible ? '' : 'none';
 }
+
+/**
+ * What unlinking a wallet says, for each outcome (`PH2-E3-01`, §4 and §9a).
+ *
+ * THE LINE THAT MATTERS is the one the outcomes that reach the chain's side
+ * repeat: unlinking removes the wallet from this account, and it does NOT
+ * revoke the allowance. An allowance lives on the chain, signed by the user's
+ * own wallet, and nothing an email session does can end it — which is the
+ * design (ADR-008), and also why a person who unlinks and believes they are
+ * "disconnected" would be wrong in the way that costs money.
+ *
+ * `pays-for-watched` does not name the contracts. The API's 409 carries no
+ * list (`apps/api/src/auth/routes.ts`: a bare message), and §9a's "which
+ * watched contracts" cannot be built from it. The sentence points at the
+ * watchlist instead of inventing a list.
+ *
+ * The `/allowance/` link is to the revoke screen that shipped in #567.
+ */
+export const UNLINK_DOES_NOT_REVOKE_TEXT =
+  'Unlinking does not revoke an allowance. It stays on the chain until you revoke it or it expires.';
+
+export type UnlinkOutcome =
+  | { readonly kind: 'unlinked' }
+  | { readonly kind: 'pays-for-watched' }
+  | { readonly kind: 'not-linked' }
+  | { readonly kind: 'csrf-failed' }
+  | { readonly kind: 'signed-out' };
+
+/** `shortAccount` is escaped by the caller; the markup here is fixed. */
+export function unlinkOutcomeHtml(outcome: UnlinkOutcome, shortAccount: string): string {
+  const revoke = `<a href="/allowance/">Revoke it on the allowance page</a>`;
+  switch (outcome.kind) {
+    case 'unlinked':
+      return `Unlinked <span class="mono">${shortAccount}</span> from this account. ${UNLINK_DOES_NOT_REVOKE_TEXT} ${revoke}.`;
+    case 'pays-for-watched':
+      return (
+        `<span class="mono">${shortAccount}</span> pays for one or more contracts on your <a href="/dashboard/watchlist/">watchlist</a>, ` +
+        `so it cannot be unlinked yet. Move those contracts to another wallet or turn their autopilot off first. ` +
+        `${UNLINK_DOES_NOT_REVOKE_TEXT} ${revoke}.`
+      );
+    case 'not-linked':
+      return `Nothing to unlink: <span class="mono">${shortAccount}</span> is not linked to this account.`;
+    case 'csrf-failed':
+      return 'This page was open too long. Reload and try again.';
+    case 'signed-out':
+      return 'Your session ended. Sign in again.';
+  }
+}
