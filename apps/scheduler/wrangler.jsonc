@@ -1,8 +1,8 @@
 // The scheduler Worker (apps/scheduler/README.md, docs/PH2-E4-04-SCHEDULER-DESIGN.md §8).
-// Production (top-level block) is CONFIGURED with its 15-minute cron but NOT DEPLOYED.
-// scheduler-deploy.yml deploys it only on a manual run with target=production, behind the
-// `production` environment gate; merging this file schedules nothing. 0009 is applied on
-// production (2026-10-31). A cron trigger is live the moment the Worker is deployed with it.
+// Production (top-level block) is DEPLOYED (2026-10-31 04:33 UTC, scheduler-deploy.yml run
+// 41168994480, approved by Fatih) and its */15 cron is LIVE. scheduler-deploy.yml deploys it only on
+// a manual run with target=production, behind the `production` environment gate; merging this
+// file changes nothing until such a run. 0009 is applied on production (2026-10-31). See docs/ops/deploy.md.
 // Worker secrets, set per environment with `wrangler secret put <NAME> --env preview`:
 //   DATABASE_URL  the eg_scheduler role's connection string (never the owner's)
 //   TICK_TOKEN    bearer token that turns POST /tick on (preview only)
@@ -12,7 +12,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-22",
   "workers_dev": false,
-  // Production cron every 15 minutes (PH2-E4-04, design §8). Inactive until deployed; see GATE above.
+  // Production cron every 15 minutes (PH2-E4-04, design §8). Live since the 2026-10-31 production deploy.
   "triggers": { "crons": ["*/15 * * * *"] },
   "observability": {
     "enabled": true,
