@@ -23,6 +23,14 @@
 -- 0009 and then 0010 immediately.
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0010_scheduler_ticks_rpc_ms_ok.sql
 --
+-- ok / observed_ledger: CHECK scheduler_ticks_ok_has_ledger (NOT ok OR observed_ledger IS NOT
+-- NULL) refuses a "successful" row that measured no ledger (e.g. INSERT (rpc_ms) alone, which
+-- would default ok = true), so a WHERE ok heartbeat read never counts it and never hands
+-- tickGapsLedgers a NULL. Rows before 0010 all have a ledger (0005 NOT NULL), so it validates.
+-- A failed tick (ok = false) may have a NULL ledger. It SHOULD fill rpc_ms when the RPC time
+-- was measured (an RPC timeout is the case F9 most wants); NULL only when nothing was
+-- measured. That is the writer's job (CEF's runTick), not enforced here.
+--
 -- Idempotent: columns are added IF NOT EXISTS, the constraint is dropped and re-added under
 -- a fixed name, REVOKE/GRANT can be re-run.
 
@@ -37,3 +45,7 @@ ALTER TABLE scheduler_ticks ADD CONSTRAINT scheduler_ticks_observed_ledger_posit
 
 REVOKE INSERT (ticked_at) ON scheduler_ticks FROM eg_scheduler;
 GRANT  INSERT (observed_ledger, rpc_ms, ok) ON scheduler_ticks TO eg_scheduler;
+
+ALTER TABLE scheduler_ticks DROP CONSTRAINT IF EXISTS scheduler_ticks_ok_has_ledger;
+ALTER TABLE scheduler_ticks ADD CONSTRAINT scheduler_ticks_ok_has_ledger
+  CHECK (NOT ok OR observed_ledger IS NOT NULL);

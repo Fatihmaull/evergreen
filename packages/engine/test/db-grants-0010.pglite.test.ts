@@ -92,6 +92,28 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
     await expect(pg.query(sql)).rejects.toThrow(/check constraint/);
   });
 
+  it('CHECK ok_has_ledger refuses ok = true with a NULL ledger (explicit and defaulted)', async () => {
+    for (const sql of [
+      'INSERT INTO scheduler_ticks (rpc_ms) VALUES (5)',
+      'INSERT INTO scheduler_ticks (observed_ledger, ok) VALUES (NULL, true)',
+    ]) {
+      await expect(pg.query(sql)).rejects.toThrow(/scheduler_ticks_ok_has_ledger/);
+      await expect(as('eg_scheduler', sql)).rejects.toThrow(/scheduler_ticks_ok_has_ledger/);
+    }
+  });
+
+  it('CHECK ok_has_ledger allows a failed tick with NULL ledger and a normal tick', async () => {
+    await as(
+      'eg_scheduler',
+      'INSERT INTO scheduler_ticks (observed_ledger, rpc_ms, ok) VALUES (NULL, 9000, false)',
+    );
+    await as('eg_scheduler', 'INSERT INTO scheduler_ticks (observed_ledger) VALUES (18)');
+    const { rows } = await pg.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM scheduler_ticks WHERE (rpc_ms = 9000 AND NOT ok) OR observed_ledger = 18',
+    );
+    expect(rows[0]!.n).toBe(2);
+  });
+
   it('ok cannot be NULL', async () => {
     await expect(
       pg.query('INSERT INTO scheduler_ticks (observed_ledger, ok) VALUES (10, NULL)'),
@@ -110,7 +132,10 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
 
   it('eg_scheduler cannot write ticked_at (K1: no forged heartbeat time)', async () => {
     await expect(
-      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 15)"),
+      as(
+        'eg_scheduler',
+        "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 15)",
+      ),
     ).rejects.toThrow(/permission denied/);
     const { rows } = await pg.query<{ c: string; ok: boolean }>(
       `SELECT c, has_column_privilege('eg_scheduler', 'scheduler_ticks', c, 'INSERT') AS ok
@@ -149,7 +174,7 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
     const { rows } = await pg.query<{ n: number }>(
       "SELECT count(*)::int AS n FROM pg_constraint WHERE conrelid = 'scheduler_ticks'::regclass AND contype = 'c'",
     );
-    expect(rows[0]!.n).toBe(2); // observed_ledger_positive + rpc_ms_check
+    expect(rows[0]!.n).toBe(3); // observed_ledger_positive + rpc_ms_check + ok_has_ledger
     await expect(
       pg.query('INSERT INTO scheduler_ticks (observed_ledger) VALUES (0)'),
     ).rejects.toThrow(/check constraint/);
@@ -161,7 +186,10 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
       /permission denied/,
     );
     await expect(
-      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 16)"),
+      as(
+        'eg_scheduler',
+        "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 16)",
+      ),
     ).rejects.toThrow(/permission denied/);
   });
 
@@ -181,7 +209,10 @@ describe('0010 scheduler_ticks rpc_ms / ok on PGlite', () => {
       'INSERT INTO scheduler_ticks (observed_ledger, ok) VALUES (14, false)',
     );
     await expect(
-      as('eg_scheduler', "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 17)"),
+      as(
+        'eg_scheduler',
+        "INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES ('2020-01-01', 17)",
+      ),
     ).rejects.toThrow(/permission denied/);
   });
 });
