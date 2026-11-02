@@ -54,7 +54,7 @@ Queue consumer (max_concurrency = 1)
 
 **Where it lives.** A small `scheduler_ticks` table (tick time, observed ledger), which needs a migration **0005 that is Rakha's**. Without it, nothing exists to measure before the first user does, and `THRESHOLD_FLOOR_LEDGERS` (which keeps autopilot at 503 until set) could not be published. The existing `observations` table can answer a *second* question with no new table: the **per-contract coverage gap** (consecutive `observed_at_ledger` per contract). A tick can fire and still cover nobody, so the two numbers are both reported.
 
-**How DoD-2 gets its number.** Over the 30-day window, the worst tick gap and the worst per-contract gap are computed from those tables and recorded in `docs/evidence/` with their dates, as the 2026-09 cadence measurement was. Not an estimate, and not a declared cadence.
+**How DoD-2 gets its number.** Over the measurement period (DoD-2's gap check is not tied to its 14-day window), the worst tick gap and the worst per-contract gap are computed from those tables and recorded in `docs/evidence/` with their dates, as the 2026-09 cadence measurement was. Not an estimate, and not a declared cadence.
 
 **What "below the threshold" has to mean.** DoD-2 says the worst gap must be below the 17,280-ledger act threshold. Core's own rule is stricter: a threshold needs four scheduler runs of margin (`MIN_ACTION_RUNS_IN_WINDOW = 4`, `packages/core/src/config.ts`). A gap of 17,000 ledgers would pass DoD-2 as written and still leave no margin. **I propose `THRESHOLD_FLOOR_LEDGERS = ceil(4 × worst measured gap in ledgers)`, published from this measurement, and that DoD-2's check read "4 × the worst gap is below the lowest threshold in use".** That edit to the DoD is Fatih's to make.
 

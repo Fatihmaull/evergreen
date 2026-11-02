@@ -21,7 +21,7 @@ Final, no longer provisional. Each is applied in its row below.
 
 1. **Both alerts are mandatory.** Every mode has a user alert and an operator alert (Fatih, 2026-10-20, `BACKLOG.md:654`). A mode where the user has nothing to do still tells them what happened to their money or their protection.
 2. **Absence is not health.** A check that could not run is reported as undetermined, never as fine (`docs/API.md:390`).
-3. **Money rule (#469 and #470).** When a pull succeeded and the extend finally failed, **the refund is the whole pull, fee included**, from the engine pool and never from treasury, under the same idempotency key. Evergreen absorbs that job's network cost (about 8,000 to 12,400 stroops) as an operating cost (`docs/adr/ADR-007-allowance-funded-hosted-engine.md:68`, `docs/API.md:295`, `BACKLOG.md:651`). DoD-2 needs **100%** of such pulls refunded (`phase-2/PHASE2-PLAN.md:47`).
+3. **Money rule (#469 and #470).** When a pull succeeded and the extend finally failed, **the refund is the whole pull, fee included**, from the engine pool and never from treasury, under the same idempotency key. Evergreen absorbs that job's network cost (about 8,000 to 12,400 stroops) as an operating cost (`docs/adr/ADR-007-allowance-funded-hosted-engine.md:68`, `docs/API.md:295`, `BACKLOG.md:651`). DoD-2 needs **100%** of such pulls refunded (`phase-2/PHASE2-PLAN.md` § DoD-2).
 4. **The chain is the truth for money.** A job's recorded state is reconciled against `getTransaction`, never assumed (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:69`).
 5. **A timeout cancels reads, never an in-flight transaction** (`docs/PH2-E4-04-SCHEDULER-DESIGN.md:14`).
 
@@ -46,7 +46,7 @@ Final, no longer provisional. Each is applied in its row below.
 - **Window: 30 days, rolling.** **Alert threshold: ≥ 3 pulled jobs and a rate ≥ 50%.** **On breach: an operator alert only**, no automatic action (Fatih, 2026-10-29). Detector: `pulledThenFailedBreaches` (`apps/api/src/alerts/failure-modes.ts`); reading the job rows waits on `PH2-E4-02`.
 - **User alert:** each such job already alerts the user (mode F4 below). A separate user alert for the rate itself is **undetermined**.
 - **Operator alert:** on breach of the threshold.
-- A fleet-wide counterpart follows from DoD-2's "≥99% of autopilot jobs succeed" (`phase-2/PHASE2-PLAN.md:47`). The alert threshold for it is **undetermined**; 99% is the DoD-2 pass mark over 30 days, not an alert level.
+- A fleet-wide counterpart follows from DoD-2's "≥99% of autopilot jobs succeed" (`phase-2/PHASE2-PLAN.md` § DoD-2). The alert threshold for it is **undetermined**; 99% is the DoD-2 pass mark over its 14-day window, not an alert level.
 
 ## The list
 
@@ -97,7 +97,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F6. Refund fails** (or is submitted with outcome unknown).
 - Detection: job past F4 with no confirmed `refund` row (`docs/API.md:244`, `:285`).
 - User: required: the refund is owed and delayed. Copy **undetermined**.
-- Operator: **every occurrence, highest severity**: DoD-2 needs 100% of these refunds (`phase-2/PHASE2-PLAN.md:47`).
+- Operator: **every occurrence, highest severity**: DoD-2 needs 100% of these refunds (`phase-2/PHASE2-PLAN.md` § DoD-2).
 - Money: the user's pull is held in the engine pool, owed in full. Never refunded from treasury (ADR-007 step 5).
 - Retry: until confirmed, under the same key, resume-not-restart. A cap and escalation are **undetermined**.
 - Owner: `PH2-E4-02`; alert `PH2-E4-05`.
@@ -132,7 +132,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 **F10. Testnet reset.**
 - Detection (Fatih, 2026-10-29, option 3): signal 1 is `observed_ledger` decreasing between consecutive `scheduler_ticks`; an equal ledger is a stall, not a reset. Signal 2 (decided by PM, 2026-10-29): the tick after the decrease still observes a ledger lower than or equal to the ledger before the decrease. Only then does the user email go out; a decrease on the latest tick waits for the next tick. Implemented as `testnetResetSignal` in `apps/api/src/alerts/failure-modes.ts`. Signal 1 is read by the API Worker cron in `apps/api/src/alerts/testnet-reset.ts` (`runTestnetResetCheck`, the newest `TESTNET_RESET_LOOKBACK_TICKS` rows; unset means no check, and the value is **undetermined**). Signal 2 feeds the user email through `testnetResetUserEvents` (`apps/api/src/alerts/dispatch.ts`, #526).
 - User: required: protection state is reset. Sent only once signal 2 confirms.
-- Operator: required, on signal 1: **DoD-2's 30-day window restarts** (`phase-2/PHASE2-PLAN.md:45`).
+- Operator: required, on signal 1: **the affected days drop out of DoD-2's 14-day window** (`phase-2/PHASE2-PLAN.md` § DoD-2; until 2026-11-02 a reset restarted a 30-day window).
 - Money: testnet only.
 - Owner: `PH2-E4-05`.
 
