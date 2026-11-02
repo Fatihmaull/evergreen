@@ -192,13 +192,14 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F17: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
-    detector: 'thresholdFloorProblem (operator delivery needs a channel)',
+    detector:
+      'thresholdFloorProblem, logged by configCheck in the API cron (operator delivery needs a channel)',
   },
   F18: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
     detector:
-      'missingApiSettings (engine key pending: it does not exist yet; operator delivery needs a channel)',
+      'missingApiSettings, logged by configCheck in the API cron (engine key pending; operator delivery needs a channel)',
   },
   F19: {
     user: { kind: 'email', alerts: ['restore_lost_changes'] },

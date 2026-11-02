@@ -94,6 +94,11 @@ instead is narrow and true:
   appears, so it follows the "Wallet connect, sign-in, accounts" row above.
 - A **page-specific** statement of what that page does ("A scan is a read",
   "No wallet, no signup") where it is true of that page.
+- **Signing is page-scoped** (#328 decision 1a, Fatih, 2026-10-18). Scan pages
+  never ask a wallet to sign; a page that does says so on that page. The
+  allowance page (`/allowance/`, `PH2-E3-05`) says "your wallet asks you to
+  sign" and states the allowance's limits (an amount, an expiry ledger, revoked
+  by `approve` with 0) instead of custody words (#328 decision 2a).
 - Custody wording ("we never hold your keys", "XLM moves only under an
   allowance you signed") stays behind the custody row above: only in the words
   of the custody statement Fatih approves (`PH2-E4-06`).

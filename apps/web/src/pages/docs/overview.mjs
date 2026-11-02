@@ -44,7 +44,7 @@ export function render(ctx) {
       <thead><tr><th scope="col">It will not</th><th scope="col">Where that is enforced</th></tr></thead>
       <tbody>
         <tr>
-          <td>Touch mainnet</td>
+          <td>Write to any network but testnet</td>
           <td>The config loader compares the network passphrase rather than trusting a label. <a class="site-more" href="/docs/reference/security/">Security</a></td>
         </tr>
         <tr>

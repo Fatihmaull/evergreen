@@ -141,7 +141,7 @@ async function runCost(): Promise<void> {
           ? `<p class="small">${share}% of that rent is one entry (<span class="mono">${esc(topKey.slice(0, 10))}…${esc(topKey.slice(-6))}</span>). Code entries hold the Wasm and are usually the expensive one — and the one shared between contracts.</p>`
           : ''
       }
-      <p class="small muted">Priced by simulating against the network at ledger ${esc(formatCount(quote.pricedAtLedger))}. Rent pricing varies with network state — a quote taken on another day has differed by ~18%. This is an estimate to budget against, not a quoted price.</p>
+      <p class="small muted">Priced by simulating against the network at ledger ${esc(formatCount(quote.pricedAtLedger))}. Rent pricing varies with network state — on our own contract, simulated rent of 0.13496–0.13855 stroops per ledger on 10 September 2026, against 0.11768 for a real extension priced on 9 September. This is an estimate to budget against, not a quoted price.</p>
       <p class="small muted">Rent only. The CLI's total also carries the non-refundable resource and base fees; that assembly lives in the CLI and moves into core under #195.</p>
       ${quote.cappedEntries > 0 ? `<p class="small">⚠ ${quote.cappedEntries} entr${quote.cappedEntries === 1 ? 'y was' : 'ies were'} capped at the protocol maximum, so they get less than requested.</p>` : ''}
       ${

@@ -33,14 +33,21 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: router
+      # PH2-E4-08 hardening: no Stellar address may be compiled into the router
+      # (ADR-009: fee token and treasury are constructor arguments only).
+      - name: No address literal in router source
+        run: |
+          if grep -nE '\b[GC][A-Z2-7]{55}\b' contract/src/lib.rs; then
+            echo "::error::router source contains a Stellar address literal"; exit 1
+          fi
       - name: cargo fmt
         run: cargo fmt --all --check
       - name: cargo clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --locked --all-targets -- -D warnings
       - name: cargo test
-        run: cargo test
+        run: cargo test --locked
       - name: Wasm release build
-        run: cargo build --release --target wasm32v1-none
+        run: cargo build --locked --release --target wasm32v1-none
       - name: Wasm size limit (65536 bytes)
         run: |
           shopt -s nullglob

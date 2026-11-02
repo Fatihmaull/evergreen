@@ -30,6 +30,7 @@ Applied in order:
 | `0006_jobs_submitted_hashes.sql` | Adds nullable `jobs.pull_submitted_hash`, `extend_submitted_hash`, `refund_submitted_hash` (each step's signed-envelope hash, written before the send) and `pull_submitted_expires_at`, `extend_submitted_expires_at`, `refund_submitted_expires_at` (that envelope's expiry) ([#461](https://github.com/Fatihmaull/evergreen/pull/461) §5). `*_tx_hash` still means confirmed. PH2-E4-02. |
 | `0007_fee_ledger_network_fee_evidence.sql` | Replaces `fee_ledger_job_balance` (same columns) so `unexplained` = pull − (rent + evergreen-fee + refund + difference): `network-fee` rows are evidence only, never billed ([#414](https://github.com/Fatihmaull/evergreen/issues/414), Fatih's decision 1). Adds `fee_ledger_job_subsidy`: per job `margin` = evergreen-fee − network-fee, must be ≥ 0; a fully refunded job (extend failed after the pull) has `fully_refunded` and is never `subsidised`. Apply **after 0006**; 0007 uses no 0006 column. PH2-E4-02. |
 | `0008_roles_grants.sql` | Least-privilege grants for the two login roles `eg_api` and `eg_scheduler` (placeholder names) and append-only triggers on `fee_ledger` (UPDATE, DELETE and TRUNCATE refused for every role, owner included). Refuses to run if a role is missing or is a member of `neon_superuser` / `pg_*_all_data`. Apply after 0007, once DevOps has created both roles with SQL `CREATE ROLE ... LOGIN` (not the Neon console). Grants matrix: [#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6486873101). PH2-E4-04. |
+| `0009_connect_and_scheduler_ticks_select.sql` | Grants `CONNECT` on the current database (name from `current_database()`) to `eg_api` and `eg_scheduler`, so a fresh database needs no manual step ([#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6500253802)), and `SELECT` on `scheduler_ticks` to `eg_api` for the F11 heartbeat alert ([#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6500764140), [#533](https://github.com/Fatihmaull/evergreen/issues/533)). `eg_scheduler` keeps INSERT only on `scheduler_ticks` (K1). Apply after 0008; re-running 0008 drops the `scheduler_ticks` grant, so re-run 0009 after it. No-op for CONNECT on Neon preview (granted by hand). PH2-E4-05. |
 
 ```
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
@@ -39,6 +40,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0005
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0006_jobs_submitted_hashes.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0007_fee_ledger_network_fee_evidence.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0008_roles_grants.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0009_connect_and_scheduler_ticks_select.sql
 ```
 
 ### Checklist for every new migration

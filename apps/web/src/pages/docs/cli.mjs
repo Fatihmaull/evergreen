@@ -61,10 +61,12 @@ export function render(ctx) {
       variable, not its value. There is no <span class="mono">.env</span> auto-loading, and
       diagnostics never echo file contents or credentials.
     </p>
-    <h3>Testnet only</h3>
+    <h3>Writes are testnet only</h3>
     <p>
-      The network passphrase is compared rather than a label trusted. There is no mainnet path in
-      this tool, and adding one is not a configuration change.
+      <span class="mono">extend</span> refuses any network but testnet, and the network
+      passphrase is compared rather than a label trusted. <span class="mono">scan</span> is a
+      read and defaults to testnet; its <span class="mono">--network</span> flag is printed in
+      the usage on <a href="/docs/cli/scan/">the scan page</a>.
     </p>
   `;
 }

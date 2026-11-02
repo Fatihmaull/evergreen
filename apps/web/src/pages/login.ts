@@ -35,6 +35,7 @@ import {
   readSession,
   requestChallenge,
   startEmail as postEmailStart,
+  unlinkWallet,
   verifyEmail as postEmailVerify,
   type Me,
 } from '../lib/login';
@@ -49,6 +50,7 @@ import {
   rateLimitText,
   sentText,
   setCodeFormVisible,
+  unlinkOutcomeHtml,
 } from '../lib/login-view';
 import { NETWORK } from '../lib/network';
 import { createWallet, isWalletFailure, type WalletFailure } from '../lib/wallet';
@@ -81,18 +83,52 @@ function signedOut(): void {
 function renderSession(): void {
   const out = $('session');
   if (me) {
-    const linked = me.wallets.map((w) => `<span class="mono">${esc(short(w.account))}</span>`);
+    // One Unlink per wallet. The full account rides in a data attribute because
+    // `short()` is for reading, not for sending.
+    const linked = me.wallets.map(
+      (w) =>
+        `<span class="mono">${esc(short(w.account))}</span> <button class="secondary unlink-button" type="button" data-account="${esc(w.account)}">Unlink</button>`,
+    );
     out.innerHTML = note(
       `Signed in as <strong>${esc(me.user.email)}</strong>. ${
-        linked.length ? `Linked: ${linked.join(', ')}.` : 'No wallet linked.'
+        linked.length ? `Linked: ${linked.join(' ')}` : 'No wallet linked.'
       }</p><p><button id="logout-button" class="secondary" type="button">Sign out</button>`,
     );
     $('logout-button').addEventListener('click', () => void signOut());
+    for (const button of out.querySelectorAll<HTMLButtonElement>('.unlink-button')) {
+      button.addEventListener('click', () => void unlink(button));
+    }
     // Signed in: the code was used. Its form goes, and so does what was typed in it.
     setCodeFormVisible($('code-form'), false);
     $<HTMLInputElement>('code').value = '';
     pendingEmail = undefined;
   }
+}
+
+/**
+ * Unlink one wallet from this account (`DELETE /wallets/{account}`, §4).
+ *
+ * It says, every time and in the outcome rather than in a tooltip, that this
+ * does not revoke the allowance. The link is to the revoke screen. After a
+ * success the session is re-read, so the list shows the server's truth rather
+ * than this page's guess at it.
+ */
+async function unlink(button: HTMLButtonElement): Promise<void> {
+  const account = button.dataset['account'];
+  const out = $('wallet-result');
+  if (!me || !account) return;
+  // Disabled for the call: a second click is a second DELETE.
+  button.disabled = true;
+  const r = await unlinkWallet(account, me.csrfToken);
+  if (r.kind === 'undetermined') {
+    button.disabled = false;
+    out.innerHTML = undetermined('Whether the wallet was unlinked.', r.detail);
+    return;
+  }
+  out.innerHTML = note(unlinkOutcomeHtml(r, esc(short(account))));
+  if (r.kind === 'signed-out') signedOut();
+  else if (r.kind === 'unlinked' || r.kind === 'not-linked') await loadMe();
+  else button.disabled = false;
 }
 
 async function signOut(): Promise<void> {

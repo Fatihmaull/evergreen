@@ -31,7 +31,19 @@ Things to know before you do it:
 - **The next merge to `main` that touches `apps/api` deploys forward again**, after Fatih approves. A rollback is not a revert. Revert the bad commit on `main` too, or the next approval redeploys it.
 - **A rollback brings back the old version's plain vars and secrets.** Every Worker version carries its own bindings: the Cloudflare versions API (2026-10-29) shows `evergreen-api-preview` version `a875e647` with `EMAIL_FROM=onboarding@resend.dev` and the current version with `alerts@mail.evergreenstellar.biz.id`, and a `secret put` creates a new version (`f6bc3e7f`, source `api secret`). So rolling back past a var or secret change reverts it too. That secrets revert with the version is read from the version model, not from an exercised rollback. After a rotation, never roll back past it; fix forward instead.
 - **Do not roll production back by approving an old run.** An old waiting run redeploys its own old SHA ([`deploy.md`](deploy.md#stale-approvals-are-refused)).
-- Production has no database, so a rollback never has a data component today.
+- Production has had a database since 2026-10-29 (schema through 0008). A Worker rollback does not undo a migration; check the old version still works with the current schema before rolling back.
+
+## Scheduler Worker (preview only today)
+
+`evergreen-scheduler-preview` is deployed by `.github/workflows/scheduler-deploy.yml`. Roll back the same way: `wrangler versions list --name evergreen-scheduler-preview`, then `wrangler rollback <version-id> --name evergreen-scheduler-preview --message "<why>"`. To stop it instead, remove the cron in `apps/scheduler/wrangler.jsonc` through a PR. No production scheduler exists yet.
+
+## Runbook: deploy, check, roll back (checklist)
+
+1. Merge to `main`; `api-deploy.yml` deploys preview, then waits at the `production` environment gate ([`deploy.md`](deploy.md)).
+2. Check preview `/api/v1/health` shows the new `commit`.
+3. Fatih (or PM under his delegation) approves the production job. Do not approve an old waiting run.
+4. Check production `/api/v1/health` `commit`, and a 404 path returns JSON.
+5. If bad: `wrangler rollback` the API Worker (above), revert the commit on `main`, and roll Pages back in the dashboard if the dashboard was involved. Migrations are fixed forward.
 
 ## Database
 
