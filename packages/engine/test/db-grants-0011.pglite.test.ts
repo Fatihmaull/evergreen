@@ -162,6 +162,32 @@ describe('0011 alert outbox and preferences on PGlite', () => {
     ])('refuses %s', async (_n, sql) => {
       await expect(as('eg_api', sql)).rejects.toThrow(CHECK);
     });
+    it('CHECK sent_has_time: sent without sent_at is refused', async () => {
+      await expect(
+        as('eg_api', `UPDATE alert_outbox SET status = 'sent' WHERE event_id = 's-info'`),
+      ).rejects.toThrow(/alert_outbox_sent_has_time/);
+      await expect(
+        as(
+          'eg_api',
+          `UPDATE alert_outbox SET status = 'sent', sent_at = NULL WHERE event_id = 's-info'`,
+        ),
+      ).rejects.toThrow(/alert_outbox_sent_has_time/);
+    });
+    it('CHECK sent_has_time: sent with sent_at, and pending/failed without it, are allowed', async () => {
+      await as('eg_api', claim('sht-1'));
+      await as('eg_api', `UPDATE alert_outbox SET status = 'failed' WHERE event_id = 'sht-1'`);
+      await as(
+        'eg_api',
+        `UPDATE alert_outbox SET status = 'sent', sent_at = now() WHERE event_id = 'sht-1'`,
+      );
+      const { rows } = await pg.query<{ status: string; has: boolean }>(
+        `SELECT status, sent_at IS NOT NULL AS has FROM alert_outbox WHERE event_id IN ('sht-1', 's-info') ORDER BY event_id`,
+      );
+      expect(rows).toEqual([
+        { status: 'pending', has: false },
+        { status: 'sent', has: true },
+      ]);
+    });
     it('user_id must reference users', async () => {
       await expect(
         as('eg_api', claim('fk', 'testnet_reset', 'info', '00000000-0000-0000-0000-000000000000')),
@@ -270,6 +296,10 @@ describe('0011 alert outbox and preferences on PGlite', () => {
     await as('eg_api', claim('after-rerun'));
     await expect(as('eg_api', 'DELETE FROM alert_outbox')).rejects.toThrow(DENIED);
     await expect(as('eg_scheduler', 'SELECT * FROM alert_outbox')).rejects.toThrow(DENIED);
+    const { rows } = await pg.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM pg_constraint WHERE conrelid = 'alert_outbox'::regclass AND conname = 'alert_outbox_sent_has_time'`,
+    );
+    expect(rows[0]!.n).toBe(1);
   });
 
   it('after a 0008 re-run the grants are gone until 0011 is re-run', async () => {

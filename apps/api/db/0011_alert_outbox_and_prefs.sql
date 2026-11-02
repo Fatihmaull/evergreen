@@ -24,7 +24,7 @@
 -- these grants).
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0011_alert_outbox_and_prefs.sql
 --
--- Idempotent: CREATE ... IF NOT EXISTS, GRANT can be re-run.
+-- Idempotent: CREATE ... IF NOT EXISTS, the named CHECK is dropped and re-added, GRANT can be re-run.
 
 CREATE TABLE IF NOT EXISTS alert_outbox (
   id               bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -48,6 +48,13 @@ CREATE TABLE IF NOT EXISTS alert_outbox (
   sent_at          timestamptz,
   CONSTRAINT alert_outbox_user_event_uq UNIQUE (user_id, event_id)
 );
+
+-- A row marked sent must say when (markSent sets sent_at); the 24h send-window count reads
+-- sent_at, so a sent row without it would silently escape the cap. Dropped and re-added
+-- under a fixed name so a re-run (or a table created by an earlier draft) ends up with it.
+ALTER TABLE alert_outbox DROP CONSTRAINT IF EXISTS alert_outbox_sent_has_time;
+ALTER TABLE alert_outbox ADD CONSTRAINT alert_outbox_sent_has_time
+  CHECK (status <> 'sent' OR sent_at IS NOT NULL);
 
 -- sentInWindow: count of a user's sent alerts in the last 24 h (optional-kind filter applied in the query).
 CREATE INDEX IF NOT EXISTS alert_outbox_sent_window_idx ON alert_outbox (user_id, sent_at) WHERE status = 'sent';
