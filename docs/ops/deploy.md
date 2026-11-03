@@ -8,6 +8,7 @@ Source of truth for the triggers is [`.github/workflows/api-deploy.yml`](../../.
 |---|---|---|---|
 | **API Worker, preview** | **`push` to `main`** that touches `apps/api/**` or the workflow file (restores `main` as the baseline); a `pull_request` from a branch **in this repo** (never a fork) that is **not a draft**, touches those paths, **and carries the label `deploy-preview`**; or `workflow_dispatch` on **any** ref | `evergreen-api-preview` | none |
 | **API Worker, production** | `push` to `main` that touches `apps/api/**` or the workflow file; or `workflow_dispatch` on `main`. Runs only after the preview job succeeds (`needs: preview`) | `evergreen-api` | **required: Fatih, in the GitHub Environment `production`** |
+| **Scheduler Worker, preview and production** | **Manual only**: `workflow_dispatch` of [`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml) with `target=preview` or `target=production`. It never runs on a push. The Worker's 15-minute cron lives on the **production** Worker (`apps/scheduler/wrangler.jsonc`), so a production deploy starts the cron at once. | `evergreen-scheduler-preview`, `evergreen-scheduler` | preview none; **production behind the same `production` Environment approval** |
 | **Dashboard (Pages)** | Cloudflare's Git integration, not a GitHub workflow. Push to `main` = a production deployment. A push to **any other branch** = a preview deployment | project `evergreen-stellar` | none |
 | **Pages Function proxy** | Part of the Pages build (`functions/` at the repo root) | with the dashboard | none |
 | Router Rust CI, engine cron, flake hunt | Other workflows; they test or run, they do not deploy | n/a | n/a |
@@ -49,6 +50,8 @@ gh api repos/Fatihmaull/evergreen/environments/production \
 
 How runs queue (observed 2026-10-27 and 2026-10-28): a run **waiting for approval** holds the group `api-deploy-refs/heads/main`; the next run waits behind it, and a still-newer run **replaces** that pending one (the replaced run shows `cancelled`). So approve or reject the **oldest** waiting run first; with the guard, an old one fails at once instead of deploying, and the next run then starts.
 
+**Observed in production since the guard shipped:** it refused four approved runs (listed in [the approvals record](#production-approvals-2026-10-29-to-2026-10-31)), each within 8 seconds of the approval, each because `main` had moved past it for `apps/api`.
+
 Observed before the guard existed: [run 40266644991](https://github.com/Fatihmaull/evergreen/actions/runs/40266644991) was dispatched on `ab74675` and approved 36 hours later, so it redeployed `ab74675`, which happened to be what production already ran.
 
 ### Commissioning record (2026-10-26 to 2026-10-27)
@@ -64,6 +67,68 @@ A gate nobody watched fail is a decoration, so it was exercised in both directio
 | Production job after approval | Started 2026-10-27 16:16:11Z, finished 16:16:50Z, success; Worker version `e9cc479b-40ef-48ec-ab92-b929cc3a4caa` created 16:16:44Z |
 
 So the hold holds, the approval path works, and the preview deploy is unaffected.
+
+## Production approvals, 2026-10-29 to 2026-10-31
+
+**Recorded at Fatih's word, 2026-11-01 (relayed by the PM): he personally approved all 13 production `api-deploy` runs of 2026-10-29 to 2026-10-31.** What GitHub shows, read 2026-11-01 from `actions/runs/<id>/approvals` for every `push` run of the workflow since 2026-10-29 (36 runs):
+
+| Outcome | Runs | What it means |
+|---|---|---|
+| **Approved and deployed** | **15** (10 on 10-29, 2 on 10-30, 3 on 10-31) | the production job ran and succeeded |
+| **Approved, then refused by the stale-approval guard** | 4 | the job started, failed at the step `refuse a commit that main has moved past` |
+| **Rejected in the review** | 7 | the job never started: `failure`, **zero steps** |
+| **Cancelled by concurrency** | 10 | a newer run replaced a pending one; no review was made |
+
+- **Two things this record cannot show.** GitHub records the reviewer as `Fatihmaull` for every one, and every Fatih-side agent uses that account, so GitHub **cannot corroborate "personally"**; the rule that agents never approve ([`AGENTS.md`](../../AGENTS.md) rule 11) is what stands behind it. And **"13" does not match any count GitHub gives**: 15 runs were approved and deployed, 19 were approved at all. Which 13 Fatih meant is `undetermined`; his statement is recorded as given.
+- The 15 deployed runs, newest last (`push` events on `main`):
+
+| UTC created | Run | Commit |
+|---|---|---|
+| 2026-10-29 03:49 | [40814264461](https://github.com/Fatihmaull/evergreen/actions/runs/40814264461) | `3e3d73e` |
+| 2026-10-29 10:19 | [40856711687](https://github.com/Fatihmaull/evergreen/actions/runs/40856711687) | `626823f` |
+| 2026-10-29 11:28 | [40865615238](https://github.com/Fatihmaull/evergreen/actions/runs/40865615238) | `954bf72` |
+| 2026-10-29 12:52 | [40876924812](https://github.com/Fatihmaull/evergreen/actions/runs/40876924812) | `04a7328` |
+| 2026-10-29 13:26 | [40881985435](https://github.com/Fatihmaull/evergreen/actions/runs/40881985435) | `ad3118a` |
+| 2026-10-29 15:21 | [40900683022](https://github.com/Fatihmaull/evergreen/actions/runs/40900683022) | `ce99abb` |
+| 2026-10-29 15:35 | [40903141751](https://github.com/Fatihmaull/evergreen/actions/runs/40903141751) | `4554665` |
+| 2026-10-29 17:03 | [40917578645](https://github.com/Fatihmaull/evergreen/actions/runs/40917578645) | `72c453f` |
+| 2026-10-29 19:01 | [40936303350](https://github.com/Fatihmaull/evergreen/actions/runs/40936303350) | `7cf1893` |
+| 2026-10-29 19:11 | [40937798838](https://github.com/Fatihmaull/evergreen/actions/runs/40937798838) | `8d51da8` |
+| 2026-10-30 05:58 | [41011336564](https://github.com/Fatihmaull/evergreen/actions/runs/41011336564) | `40d0255` |
+| 2026-10-30 10:09 | [41038627088](https://github.com/Fatihmaull/evergreen/actions/runs/41038627088) | `30b342a` |
+| 2026-10-31 02:59 | [41162373955](https://github.com/Fatihmaull/evergreen/actions/runs/41162373955) | `179fae0` |
+| 2026-10-31 03:35 | [41165036693](https://github.com/Fatihmaull/evergreen/actions/runs/41165036693) | `e7fb0aa` |
+| 2026-10-31 06:19 | [41176139056](https://github.com/Fatihmaull/evergreen/actions/runs/41176139056) | `4210757` |
+
+### Why three production runs "failed" with no steps
+
+Runs [40916908287](https://github.com/Fatihmaull/evergreen/actions/runs/40916908287) (`bc1008b`, 2026-10-29 16:59), [41038330619](https://github.com/Fatihmaull/evergreen/actions/runs/41038330619) (`08e5114`, 2026-10-30 10:06) and [41163782188](https://github.com/Fatihmaull/evergreen/actions/runs/41163782188) (`f1a598e`, 2026-10-31 03:18) each show the production job as `failure` with **no steps executed**. **Cause: each was rejected in the `production` Environment review by `Fatihmaull`, with a comment naming the newer commit that replaced it.** Read from the run, job and approvals metadata:
+
+| Run | Review | Comment | The run it gave way to |
+|---|---|---|---|
+| 40916908287 | `rejected` | "superseded by 72c453f" | [40917578645](https://github.com/Fatihmaull/evergreen/actions/runs/40917578645), created 17:03:14Z, success |
+| 41038330619 | `rejected` | "Stale: superseded by 30b342a" | [41038627088](https://github.com/Fatihmaull/evergreen/actions/runs/41038627088), created 10:09:10Z, success |
+| 41163782188 | `rejected` | "Stale; superseded by e7fb0aa." | [41165036693](https://github.com/Fatihmaull/evergreen/actions/runs/41165036693), created 03:35:29Z, success |
+
+How to tell the three causes apart, so the next failed run takes one look:
+
+- **Rejected review:** production job `failure`, **0 steps**, and `approvals` shows `state: rejected` with the reviewer's comment. The job is marked started at the moment preview finished and completed when the reviewer rejected it (5 to 18 minutes later here).
+- **Stale-approval guard:** production job `failure`, but with steps, the failing one named `refuse a commit that main has moved past`, and `approvals` shows `state: approved`. Four runs: `fb4d197` (40806680733), `781e79a` (40850278533), `62d8100` (40861087873), `a7acf6f` (40888186486). The log carries the guard's diffstat and "main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."
+- **Concurrency cancel:** run `cancelled`, **no review at all**. A newer run replaced a pending one (10 runs).
+
+The other four rejected runs follow the same pattern and each comment names its replacement: `b5e214c` (40863864691), `1fcfb75` (40867215684, "superseded by run 40876924812 (04a7328), which deploys after 0006 is on prod"), `77b4f2f` (40897723343, "superseded by f508337") and `62e059a` (40899905042, "superseded by ce99abb").
+
+## Scheduler Worker deploys
+
+[`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml) is manual: `workflow_dispatch` with `target` = `preview` or `production`. A **production** run sits behind the same `production` Environment approval; the first one **creates** the Worker, and its `*/15 * * * *` cron is live the moment the deploy finishes.
+
+| Date (UTC) | Run | Target | Commit | Result |
+|---|---|---|---|---|
+| 2026-10-31 04:32 | [41168994480](https://github.com/Fatihmaull/evergreen/actions/runs/41168994480) | **production** | `e7fb0aa` | approved by `Fatihmaull`, success; Worker version `2429392b` created 04:33. The Worker's first `scheduler_ticks` row is at 04:45. |
+| 2026-10-31 06:20 | [41176200443](https://github.com/Fatihmaull/evergreen/actions/runs/41176200443) | preview | `4210757` | success; the production job was skipped |
+
+Its secrets are in [`secrets.md`](secrets.md#inventory-now-read-2026-11-01-1525-to-1535-utc-names-only): production has `DATABASE_URL` only and **must not** have `TICK_TOKEN`.
+
 
 ## The deployed commit
 
@@ -118,4 +183,4 @@ for h in evergreen-stellar.pages.dev preview.evergreen-stellar.pages.dev; do
 done
 ```
 
-Expected on 2026-10-27: production `/health` 200 `environment: production`, `/watchlist` **503** `UPSTREAM_UNAVAILABLE` (production deliberately has no database or auth secrets), `/nope` 404 JSON; preview `/health` 200 `environment: preview`, `/watchlist` **401** `UNAUTHENTICATED`, `/nope` 404 JSON. A 200 `text/html` from `/api/*` means the proxy binding is missing.
+Expected on 2026-11-01: **production and preview both** answer `/health` 200 with their `environment` and the deployed `commit` (both served `4210757…` that day), `/watchlist` **401** `UNAUTHENTICATED` (production has had a database and the auth secrets since 2026-10-29; before that it answered 503), `/nope` 404 JSON. A 200 `text/html` from `/api/*` means the proxy binding is missing.
