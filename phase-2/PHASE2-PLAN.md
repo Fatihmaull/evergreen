@@ -23,7 +23,7 @@ Evergreen becomes a product people use. Success is real adoption (Q4), starting 
 
 ## Definitions of Done
 
-**Official, Fatih, 2026-10-20; refined the same day.** Two gates. The thresholds are written as Fatih set them. The first version's measurability note found five gaps, and Fatih closed them: P1 defined, the failure-mode list assigned, the refund wording, the testnet-reset rule, and the cold reader. The note below keeps what is still open.
+**Official, Fatih, 2026-10-20; refined the same day; DoD-2 shortened 2026-11-02.** Two gates. The thresholds are written as Fatih set them. The first version's measurability note found five gaps, and Fatih closed them: P1 defined, the failure-mode list assigned, the refund wording, the testnet-reset rule, and the cold reader. The note below keeps what is still open.
 
 **P0** = loss of funds, failed protection, or a false health state shown to a user.
 
@@ -42,15 +42,25 @@ Met when:
 
 ### DoD-2 — Stable (testnet, post-beta)
 
-Measured over 30 consecutive days after DoD-1. **A testnet reset during the 30 days restarts the window.**
+**Shortened by Fatih, 2026-11-02,** so DoD-2 fits inside one 30-day SOW 2 sprint. It replaces "measured over 30 consecutive days after DoD-1; a testnet reset restarts the window".
+
+**The window.** 14 days, starting at the first real autopilot extend: a job that pulls from a user's allowance and lands an `extendTTL` on testnet. It does not wait for the rest of DoD-1, so recruiting users runs alongside it. **A testnet reset excludes the affected days from the count** instead of restarting the window; the window ends once 14 unaffected days are counted.
+
+Measured over the window:
 - zero missed protections (no watched entry archived while its allowance was valid and funded);
 - ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;
 - zero subsidy (the fee ledger shows the engine never paid a user's rent, and reconciliation has no unexplained differences);
+- the float never exceeded its cap.
+
+Met at any time, before or during the window, even before DoD-1:
 - the scheduler gap is measured and dated, and **4 × the worst observed gap, in ledgers, is below the lowest act threshold in use** (Fatih, 2026-10-28; this is core's own rule that a threshold needs four scheduler runs of margin, `MIN_ACTION_RUNS_IN_WINDOW`, and it replaces "below the 17,280-ledger act threshold", which would have passed a gap of 17,000 ledgers);
-- no open P0/P1, every incident has a postmortem;
 - every failure mode on `PH2-E4-05`'s failure-mode list is shown to alert both user and operator, and a Neon backup restore has been exercised;
-- engine and treasury keys are separate and the float never exceeded its cap;
+- engine and treasury keys are separate;
 - a cold reader can onboard from the docs alone (`B-D31-03`). The cold reader is an external beta user.
+
+Checked when the window closes:
+- DoD-1 is met;
+- no open P0/P1, every incident has a postmortem.
 
 **Mainnet launch (`PH2-E5-02`..`PH2-E5-04`) comes only after DoD-2, and no immutable contract goes to mainnet before a written router audit** (a precondition of `PH2-E5-02`; Fatih, 2026-10-26, #414). `PH2-E5-02`'s core criterion is "DoD-2 met".
 
@@ -62,7 +72,7 @@ Checked against `origin/main` on 2026-10-20. Most thresholds are measurable from
 - **P1 is defined** (above), and the `P0` and `P1` labels exist with the definitions in their descriptions.
 - **The failure-mode list is a deliverable of `PH2-E4-05`.** "Every failure mode" means every mode on that list.
 - **The refund threshold now counts pulls whose extend finally failed.** That matches §3.3 step 5 and §4.3. A failed pull moves no XLM, so the first wording was vacuous.
-- **A testnet reset restarts the 30-day window.**
+- ~~**A testnet reset restarts the 30-day window.**~~ *Replaced 2026-11-02: the window is 14 days and a reset excludes the affected days (DoD-2 above).*
 - **The cold reader is an external beta user.** `B-D31-03`'s own row says Fatih no longer qualifies.
 - **The scheduler check is against the lowest threshold in use**, with four runs of margin (Fatih, 2026-10-28). It replaces "below the 17,280-ledger act threshold", and the gap is measured in ledgers from the scheduler heartbeat (`docs/PH2-E4-04-SCHEDULER-DESIGN.md` §4).
 
