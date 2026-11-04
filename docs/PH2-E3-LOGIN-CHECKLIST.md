@@ -201,6 +201,14 @@ That is the answer step 10 needs, and it is no longer a 404.
 
 **Do.** Signed in, with guinea-pig A (`CANZNT…XL6L`) on the watchlist, open `/dashboard/watchlist/` after DevOps confirms the scheduler job has run at least once on production.
 
+**Fast path (about a minute), then the screenshot.** In the same signed-in browser, open `https://evergreen-stellar.pages.dev/api/v1/watchlist`, select all, copy, and run:
+
+```
+pbpaste | node apps/web/scripts/check-watchlist-observation.mjs
+```
+
+It prints the five lines below as `PASS`, `FAIL` or `UNDETERMINED`, the production `/api/v1/health` commit (record it with the result), and one `RESULT:` line. Exit 0 means all five pass on every observed row, 1 means a line fails, 2 means undetermined or no observation yet. It is read-only: it reads what you pasted, takes one testnet scan per observed contract, and does one GET of the health route. It says what the page **would** render for that JSON; it is not what is on your screen, so the screenshot with the address bar showing is still the evidence. It cannot tell a real engine observation from pasted JSON that looks like one.
+
 **Look at, in this order.**
 1. **The "why" line is gone** and the state chip reads **healthy** or **at risk**. (An undetermined chip next to an observation is possible only when the engine itself reported undetermined, or reported healthy with no entry that has a TTL; the page says which. Report it rather than passing it.)
 2. **The observation sits beside the state:** "ledger `N`, `<time>`". A state with no ledger beside it is a P0 (§9a), not a display bug.
