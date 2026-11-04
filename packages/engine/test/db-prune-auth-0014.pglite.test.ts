@@ -116,13 +116,13 @@ describe('0014 prune_auth_tables on PGlite', () => {
     // now() is fixed inside one transaction, so the age can be made exactly equal to retention.
     const res = await pg.transaction(async (tx) => {
       await tx.exec(`INSERT INTO auth_rate_counters (key, count)
-        VALUES ('edge:x:' || floor(extract(epoch from now()))::int8, 1)`);
+        VALUES ('edge:x:' || (floor(extract(epoch from now()))::int8 - 86400), 1)`);
       await tx.exec('SET LOCAL ROLE eg_scheduler');
       const exact = await tx.query<{ counters_deleted: string }>(
-        `SELECT counters_deleted FROM prune_auth_tables(now() - to_timestamp(floor(extract(epoch from now()))))`,
+        `SELECT counters_deleted FROM prune_auth_tables(interval '1 day' + (now() - to_timestamp(floor(extract(epoch from now())))))`,
       );
       const older = await tx.query<{ counters_deleted: string }>(
-        `SELECT counters_deleted FROM prune_auth_tables(now() - to_timestamp(floor(extract(epoch from now()))) - interval '1 microsecond')`,
+        `SELECT counters_deleted FROM prune_auth_tables(interval '1 day' + (now() - to_timestamp(floor(extract(epoch from now())))) - interval '1 microsecond')`,
       );
       return [Number(exact.rows[0]!.counters_deleted), Number(older.rows[0]!.counters_deleted)];
     });
@@ -143,14 +143,31 @@ describe('0014 prune_auth_tables on PGlite', () => {
 
   it('defaults retention to 1 day and honours an explicit retention', async () => {
     const n = await nowEpoch();
-    await pg.exec(`INSERT INTO auth_rate_counters (key, count) VALUES ('s:x:${n - 7200}', 1)`);
-    expect(Number((await prune()).counters_deleted)).toBe(0);
-    expect(Number((await prune('eg_scheduler', "interval '1 hour'")).counters_deleted)).toBe(1);
+    await pg.exec(`INSERT INTO auth_rate_counters (key, count) VALUES
+      ('s:x:${n - 86_400 - 3600}', 1), ('s:y:${n - 2 * 86_400 - 3600}', 1)`);
+    expect(Number((await prune('eg_scheduler', "interval '2 days'")).counters_deleted)).toBe(1);
+    expect(await keys()).toEqual([`s:x:${n - 86_400 - 3600}`]);
+    expect(Number((await prune()).counters_deleted)).toBe(1);
+    expect(await keys()).toEqual([]);
   });
 
-  it('refuses NULL and negative retention', async () => {
-    await expect(prune('eg_scheduler', 'NULL')).rejects.toThrow(/non-negative/);
-    await expect(prune('eg_scheduler', "interval '-1 hour'")).rejects.toThrow(/non-negative/);
+  it('refuses NULL, negative and sub-day retention; a live counter survives the attempt', async () => {
+    const n = await nowEpoch();
+    await pg.exec(`INSERT INTO auth_rate_counters (key, count) VALUES ('email:a@x:${n - 60}', 1)`);
+    for (const arg of ['NULL', "interval '-1 hour'", "interval '0'", "interval '1 hour'",
+      "interval '1 day' - interval '1 microsecond'"]) {
+      await expect(prune('eg_scheduler', arg)).rejects.toThrow(/at least 1 day/);
+    }
+    expect(await keys()).toEqual([`email:a@x:${n - 60}`]);
+  });
+
+  it('never deletes sessions, expired ones included', async () => {
+    await pg.exec(`INSERT INTO sessions (id_hash, user_id, csrf_token, idle_expires_at, absolute_expires_at)
+      SELECT decode('bb','hex'), id, 'c', now() - interval '2 days', now() - interval '1 day' FROM users`);
+    await prune();
+    const { rows } = await pg.query<{ n: number }>('SELECT count(*)::int AS n FROM sessions');
+    expect(rows[0]!.n).toBe(2);
+    await pg.exec(`DELETE FROM sessions WHERE id_hash = decode('bb','hex')`);
   });
 
   it('eg_scheduler can EXECUTE but has no access to auth tables', async () => {
@@ -176,7 +193,7 @@ describe('0014 prune_auth_tables on PGlite', () => {
     );
     expect(rows).toHaveLength(1);
     expect(rows[0]!.secdef).toBe(true);
-    expect(rows[0]!.cfg).toEqual(['search_path=pg_catalog, public']);
+    expect(rows[0]!.cfg).toEqual(['search_path=pg_catalog, pg_temp']);
   });
 
   it('creates the session_hash index', async () => {

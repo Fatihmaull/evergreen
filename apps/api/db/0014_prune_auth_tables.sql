@@ -8,11 +8,15 @@
 --        see apps/api/src/auth/rate-limit.ts) is more than `retention` old
 --        (to_timestamp(windowStart) < now() - retention).
 --    Keys whose last segment is missing or not 1-12 digits (13+ digits would overflow to_timestamp) are skipped (kept), so one
---    malformed key never errors the whole prune. A NULL or negative retention is refused.
+--    malformed key never errors the whole prune.
+--    A NULL retention or one below 1 day is refused (22023), so EXECUTE cannot be used to
+--    wipe live rate-limit counters (#584 review). The 1-day floor is safe only while
+--    EMAIL_SENDS_PER_ADDRESS_WINDOW and EMAIL_SENDS_PER_IP_WINDOW (apps/api/src/auth/config.ts,
+--    env-settable; defaults 15 min and 1 hour) stay under a day.
 --    Returns one row (challenges_deleted, counters_deleted).
 --
 -- SECURITY DEFINER, owned by the role that runs this file (the database owner, as for
--- every migration), with search_path pinned to pg_catalog, public and schema-qualified
+-- every migration), with search_path pinned to pg_catalog, pg_temp and schema-qualified
 -- table names. EXECUTE is revoked from PUBLIC and granted to eg_scheduler only.
 -- eg_scheduler gets NO table grants on auth tables (0008: the scheduler never reads
 -- sessions or auth state); the function is its only way in. eg_api is unchanged.
@@ -30,11 +34,11 @@ CREATE OR REPLACE FUNCTION public.prune_auth_tables(retention interval DEFAULT i
 RETURNS TABLE (challenges_deleted bigint, counters_deleted bigint)
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, public
+SET search_path = pg_catalog, pg_temp
 AS $fn$
 BEGIN
-  IF retention IS NULL OR retention < interval '0' THEN
-    RAISE EXCEPTION 'prune_auth_tables: retention must be a non-negative interval, got %', retention
+  IF retention IS NULL OR retention < interval '1 day' THEN
+    RAISE EXCEPTION 'prune_auth_tables: retention must be at least 1 day, got %', retention
       USING ERRCODE = '22023';
   END IF;
 
