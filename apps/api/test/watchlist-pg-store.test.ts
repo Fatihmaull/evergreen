@@ -7,6 +7,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PgWatchlistStore,
+  WatchItemCapReached,
   type NewWatchItem,
   type SqlClient,
   type SqlQuery,
@@ -160,12 +161,18 @@ describe('add', () => {
       'ON CONFLICT (user_id, network, contract_id) DO UPDATE SET removed_at = NULL',
     );
     expect(q.text).toContain('WHERE watch_items.removed_at IS NOT NULL');
-    expect(q.params).toEqual([UID, 'testnet', C, 'vault', '{"noDataKeys":true}', NOW]);
+    expect(q.params).toEqual([UID, 'testnet', C, 'vault', '{"noDataKeys":true}', NOW, 50]);
+    expect(q.text).toContain('WHERE NOT (SELECT at_cap FROM live)');
   });
 
   it.each(['created', 'restored', 'existing'] as const)('maps outcome %s', async (outcome) => {
     sql.answers.push([{ outcome }]);
     expect(await store.add(UID, item, NOW)).toBe(outcome);
+  });
+
+  it('throws WatchItemCapReached when the statement answers full', async () => {
+    sql.answers.push([{ outcome: 'full' }]);
+    await expect(store.add(UID, item, NOW)).rejects.toBeInstanceOf(WatchItemCapReached);
   });
 
   it('fails closed on an unexpected answer', async () => {
