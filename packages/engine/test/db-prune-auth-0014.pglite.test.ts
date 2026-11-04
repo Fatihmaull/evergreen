@@ -154,8 +154,13 @@ describe('0014 prune_auth_tables on PGlite', () => {
   it('refuses NULL, negative and sub-day retention; a live counter survives the attempt', async () => {
     const n = await nowEpoch();
     await pg.exec(`INSERT INTO auth_rate_counters (key, count) VALUES ('email:a@x:${n - 60}', 1)`);
-    for (const arg of ['NULL', "interval '-1 hour'", "interval '0'", "interval '1 hour'",
-      "interval '1 day' - interval '1 microsecond'"]) {
+    for (const arg of [
+      'NULL',
+      "interval '-1 hour'",
+      "interval '0'",
+      "interval '1 hour'",
+      "interval '1 day' - interval '1 microsecond'",
+    ]) {
       await expect(prune('eg_scheduler', arg)).rejects.toThrow(/at least 1 day/);
     }
     expect(await keys()).toEqual([`email:a@x:${n - 60}`]);
