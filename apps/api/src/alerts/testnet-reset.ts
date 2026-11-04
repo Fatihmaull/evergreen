@@ -78,5 +78,9 @@ export async function runTestnetResetCheck(
   return { action: 'sent', recipients: operators.length, decreases };
 }
 
+/**
+ * `WHERE ok`: a failed tick (0010) has no observed ledger, and a reset is read off ledgers the
+ * chain actually reported.
+ */
 export const RECENT_TICKS_SQL =
-  'SELECT extract(epoch FROM ticked_at)::bigint AS t, observed_ledger AS l FROM scheduler_ticks ORDER BY ticked_at DESC LIMIT $1';
+  'SELECT extract(epoch FROM ticked_at)::bigint AS t, observed_ledger AS l FROM scheduler_ticks WHERE ok ORDER BY ticked_at DESC LIMIT $1';
