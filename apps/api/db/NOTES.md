@@ -32,6 +32,7 @@ Applied in order:
 | `0008_roles_grants.sql` | Least-privilege grants for the two login roles `eg_api` and `eg_scheduler` (placeholder names) and append-only triggers on `fee_ledger` (UPDATE, DELETE and TRUNCATE refused for every role, owner included). Refuses to run if a role is missing or is a member of `neon_superuser` / `pg_*_all_data`. Apply after 0007, once DevOps has created both roles with SQL `CREATE ROLE ... LOGIN` (not the Neon console). Grants matrix: [#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6486873101). PH2-E4-04. |
 | `0009_connect_and_scheduler_ticks_select.sql` | Grants `CONNECT` on the current database (name from `current_database()`) to `eg_api` and `eg_scheduler`, so a fresh database needs no manual step ([#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6500253802)), and `SELECT` on `scheduler_ticks` to `eg_api` for the F11 heartbeat alert ([#385](https://github.com/Fatihmaull/evergreen/issues/385#issuecomment-6500764140), [#533](https://github.com/Fatihmaull/evergreen/issues/533)). `eg_scheduler` keeps INSERT only on `scheduler_ticks` (K1). Apply after 0008; re-running 0008 drops the `scheduler_ticks` grant, so re-run 0009 after it. No-op for CONNECT on Neon preview (granted by hand). PH2-E4-05. |
 | `0010_scheduler_ticks_rpc_ms_ok.sql` | `scheduler_ticks` gains `rpc_ms integer NULL` (≥ 0) and `ok boolean NOT NULL DEFAULT true`; `observed_ledger` becomes nullable and 0005's `CHECK (observed_ledger > 0)` is replaced by `scheduler_ticks_observed_ledger_positive` `CHECK (observed_ledger IS NULL OR observed_ledger > 0)`, so a failed tick can write a row (`ok = false`, ledger NULL) for the F9 slow/failed-tick alert ([#533](https://github.com/Fatihmaull/evergreen/issues/533#issuecomment-6540103228)). Existing rows were all successful ticks and read `ok = true`. `scheduler_ticks_ok_has_ledger` `CHECK (NOT ok OR observed_ledger IS NOT NULL)` refuses a success row with no ledger; a failed tick should still fill `rpc_ms` when it was measured (writer's job, not enforced). `eg_scheduler`'s column-level INSERT becomes exactly `(observed_ledger, rpc_ms, ok)`: INSERT on `ticked_at` is revoked, so the scheduler cannot write its own heartbeat time (K1, [#570 review](https://github.com/Fatihmaull/evergreen/pull/570)); still no SELECT. `eg_api`'s 0009 table-level SELECT covers the new columns. Apply after 0009. **Security step:** 0008 still grants `INSERT (ticked_at, …)`, so re-running 0008 alone re-opens the heartbeat-forging path; after any 0008 re-run, re-run 0009 and then 0010 immediately. Schema only: the scheduler writing failed rows is CEF's `runTick` change. PH2-E4-05. |
+| `0013_schema_migrations.sql` | The migration ledger (`PH2-E2-07`): table `schema_migrations(filename PK, source 'applied' or 'backfill', first_applied_at, last_applied_at, apply_count)`. 0013 records itself; every later file ends with its own ledger INSERT in the same transaction. Files before 0013 are backfilled per environment ("Migration ledger" below). No grant to `eg_api` or `eg_scheduler`. Numbered 0013 because 0010–0012 are in open PRs #570–#572. |
 
 ```
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
@@ -43,14 +44,26 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0007
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0008_roles_grants.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0009_connect_and_scheduler_ticks_select.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0010_scheduler_ticks_rpc_ms_ok.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0013_schema_migrations.sql
 ```
 
 ### Checklist for every new migration
 
 - Apply line uses `-v ON_ERROR_STOP=1 --single-transaction`.
+- From 0013 on, every migration ends with its ledger line, `INSERT INTO schema_migrations (filename, source) VALUES ('<file>.sql', 'applied') ON CONFLICT (filename) DO UPDATE SET last_applied_at = now(), apply_count = schema_migrations.apply_count + 1;`, so it commits or rolls back with the file (`PH2-E2-07`).
 - Every migration carries its own GRANTs: a new table, view, sequence, or a column a role must read or write gets its GRANT to `eg_api` / `eg_scheduler` in the same file. 0008 sets no default privileges, and column-level grants never extend to new columns.
 
 `schema.sql` still shows the cross-user index; it is not edited after apply. The live index is the one from `0002`.
+
+## Migration ledger (PH2-E2-07)
+
+`schema_migrations` answers "what ran here?". It does not decide what runs: the apply line stays the plain `psql -v ON_ERROR_STOP=1 --single-transaction -f` above, there is no runner, and nothing skips a file because it is recorded (re-runs of 0008/0009 are deliberate).
+
+- **source = 'applied'**: the file wrote its own row while it ran. True only from 0013 on.
+- **source = 'backfill'**: a file that ran before the ledger existed (`schema.sql`, `0002`…`0012`), recorded afterwards from the evidence in `docs/ops/neon-migrations.md`. `first_applied_at` is then the time of the backfill, not of the original apply; the original time stays in that doc.
+- **Backfill is per environment and not in any migration**: a migration cannot know which earlier files ran on a branch. Proposed (to confirm with Rakha/DevOps): after 0013 on each branch, the operator inserts one `'backfill'` row per file the shape check in `docs/ops/neon-migrations.md` shows as applied there, e.g. `INSERT INTO schema_migrations (filename, source) VALUES ('schema.sql', 'backfill'), ('0002_jobs_daily_limit_per_user.sql', 'backfill') ON CONFLICT (filename) DO NOTHING;`. Undetermined until then.
+- 0008 starts with `REVOKE ALL` on every table; re-running it leaves the ledger unchanged (no role holds a grant on it).
+- A re-run of a file below 0013 is not counted (those files carry no ledger INSERT), so the ledger cannot show that a 0008 re-run happened. Re-running 0008 re-grants `ticked_at` until 0010 is re-run; the grants comparison in `docs/ops/neon-migrations.md` stays the check for that, not `apply_count`.
 
 ## Mapping to #350 (docs/API.md)
 | API | Table |
