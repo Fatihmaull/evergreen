@@ -63,6 +63,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0013
 - **source = 'backfill'**: a file that ran before the ledger existed (`schema.sql`, `0002`…`0012`), recorded afterwards from the evidence in `docs/ops/neon-migrations.md`. `first_applied_at` is then the time of the backfill, not of the original apply; the original time stays in that doc.
 - **Backfill is per environment and not in any migration**: a migration cannot know which earlier files ran on a branch. Proposed (to confirm with Rakha/DevOps): after 0013 on each branch, the operator inserts one `'backfill'` row per file the shape check in `docs/ops/neon-migrations.md` shows as applied there, e.g. `INSERT INTO schema_migrations (filename, source) VALUES ('schema.sql', 'backfill'), ('0002_jobs_daily_limit_per_user.sql', 'backfill') ON CONFLICT (filename) DO NOTHING;`. Undetermined until then.
 - 0008 starts with `REVOKE ALL` on every table; re-running it leaves the ledger unchanged (no role holds a grant on it).
+- A re-run of a file below 0013 is not counted (those files carry no ledger INSERT), so the ledger cannot show that a 0008 re-run happened. Re-running 0008 re-grants `ticked_at` until 0010 is re-run; the grants comparison in `docs/ops/neon-migrations.md` stays the check for that, not `apply_count`.
 
 ## Mapping to #350 (docs/API.md)
 | API | Table |

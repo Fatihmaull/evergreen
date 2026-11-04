@@ -29,7 +29,7 @@ type Row = { filename: string; source: string; apply_count: number; later: boole
 const rows = async (): Promise<Row[]> =>
   (
     await pg.query<Row>(
-      `SELECT filename, source, apply_count, last_applied_at >= first_applied_at AS later
+      `SELECT filename, source, apply_count, last_applied_at > first_applied_at AS later
          FROM schema_migrations ORDER BY filename`,
     )
   ).rows;
@@ -58,7 +58,7 @@ describe('0013 migration ledger on PGlite', () => {
 
   it('records itself, and only itself, as applied', async () => {
     expect(await rows()).toEqual([
-      { filename: '0013_schema_migrations.sql', source: 'applied', apply_count: 1, later: true },
+      { filename: '0013_schema_migrations.sql', source: 'applied', apply_count: 1, later: false },
     ]);
   });
 

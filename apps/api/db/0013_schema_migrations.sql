@@ -6,8 +6,9 @@
 -- How it is written: every numbered file from 0013 on ends with its own INSERT into this
 -- table, inside the same transaction as its DDL (the apply line uses --single-transaction),
 -- so a file that fails records nothing and a file that commits always records itself.
--- Re-running a file (0008, 0009, 0010 are re-run on purpose) bumps last_applied_at and
--- apply_count instead of failing.
+-- Re-running such a file bumps last_applied_at and apply_count instead of failing. A re-run
+-- of a file below 0013 (0008, 0009, 0010 are re-run on purpose) is NOT counted: those files
+-- carry no ledger INSERT, so only a file that ends with its own INSERT touches the ledger.
 --
 -- Files that ran before this table existed (schema.sql, 0002 onward) are NOT recorded here:
 -- whether and when each ran differs per environment, and a migration cannot know that.
