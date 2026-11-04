@@ -42,7 +42,7 @@ Need a change in someone else's path? Open an issue mentioning that owner. [`AGE
 10. **Never touch the unrelated Cloudflare projects** that share the account.
 11. **Testnet only until DoD-2** (`AGENTS.md` rule 1).
 12. **Never merge a `rakhargo`-authored PR unless Rakha has written "ready to merge" on it** (Fatih, K2, 2026-11-01). Applying a merged file of his is DevOps' job; merging it is not.
-13. **Production migrations only inside Fatih's pre-approval:** the PR is merged, the file is applied and verified on `preview` first, and a snapshot is taken and listed before the production apply (`docs/ops/neon-migrations.md`). The 2026-11-01 pre-approval names 0010, 0011 and 0012 and nothing else.
+13. **Production migrations only inside Fatih's pre-approval:** the PR is merged, the file is applied and verified on `preview` first, and a snapshot is taken and listed before the production apply (`docs/ops/neon-migrations.md`). The pre-approval names **0010, 0011, 0012** (2026-11-01), **0013** (K12, 2026-11-03) and **0014** (K14, 2026-11-04, only after CEF approves its security review), and nothing else. **K8: no hand `REVOKE` of `ticked_at`**; the revoke arrives with 0010.
 
 ## Your cards, in the order to take them
 
@@ -59,7 +59,7 @@ Standing duties, not cards: apply each new `apps/api/db` file to Neon `preview` 
 
 - **Any production secret change**, and any change to `ALERTS_SEND` or `ALERTS_ALLOWLIST` on `evergreen-api`.
 - **Production Neon work** other than the pre-approved applies of 0010, 0011 and 0012 under rule 13.
-- Anything that changes billing (Neon history retention, plan settings, spending limits): his, not DevOps'.
+- Anything that changes billing (Neon history retention, plan settings, spending limits): his, not DevOps'. **K6 and K7 (Fatih, 2026-11-02): he raises the spending notification to $10 and sets history to 7 days himself**; DevOps only verifies them read-only afterwards.
 
 (Done since this file was written: #431 Workers Logs, production secrets, the Neon Launch upgrade, the production scheduler deploy.)
 

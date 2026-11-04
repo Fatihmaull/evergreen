@@ -1,6 +1,6 @@
-# Plan: switch the API Worker's `DATABASE_URL` from the owner to `eg_api`
+# Switch the API Worker's `DATABASE_URL` from the owner to `eg_api` (executed; plan kept for the rollback)
 
-**Status: plan only. Nothing has been executed.** Order: `evergreen-api-preview` first, then `evergreen-api` (production). **PM approval is required for every step below**, and production needs Fatih's go-ahead. Names only: never paste a password or connection string into a command, a doc, a log, or chat.
+**Status: EXECUTED by Fatih himself, around 2026-10-31 (K5, Fatih, 2026-11-02).** Verified read-only by DevOps on 2026-11-01 15:30 UTC: at the 15-minute cron the production database held pooled sessions as `eg_api` and `eg_scheduler` and none as the owner (method in [`neon-migrations.md`](neon-migrations.md#which-role-each-production-worker-uses)). **What was not recorded:** the exact time, whether preview went first, and the smoke tests and log watch below. The plan that follows is kept as written, for its pre-checks and its rollback. **PM approval was required for every step, and production needed Fatih's go-ahead**: he made the switch himself. Names only: never paste a password or connection string into a command, a doc, a log, or chat.
 
 ## 0. Preconditions
 - 0008 and 0009 are applied on both branches (0009: 2026-10-31 ~09:59 WIB, see [`apply-0009.md`](apply-0009.md)).
