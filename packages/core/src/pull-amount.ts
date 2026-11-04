@@ -4,11 +4,17 @@
  * home, so the engine's preflight and the dashboard's allowance-cap estimate
  * (PH2-E3-05) cannot disagree on the sum.
  *
- * Decided by Rakha (2026-11-02):
- * - **The fee is locked at pull.** It is `hostedFeeStroops` of the *simulated*
- *   rent and is not recomputed at reconcile. The difference between charged and
- *   simulated is recorded at reconcile as a `fee_ledger` row (append-only).
- * - **The retry margin is absolute stroops**, a named parameter, never a literal
+ * Fee rule (K11, Fatih 2026-11-03; ADR-007: `max(2% × the rent actually
+ * charged, 25,000 stroops)`):
+ * - **The fee in the pull is an estimate**, `hostedFeeStroops` of the simulated
+ *   rent. Reconcile computes the final fee, `hostedFeeStroops(charged rent)`.
+ *   The excess of the pull over charged rent + final fee is refunded on-chain to
+ *   the user and stored as a `refund` row; `difference` holds only what was not
+ *   returned, normally 0 (#583).
+ * - **Shortfall (K13):** if charged rent + final fee exceeds the pull, reconcile
+ *   records the shortfall, raises a P1 operator alert and the job counts as a
+ *   zero-subsidy violation; there is no second `transfer_from` (#583).
+ * - **The retry margin is absolute stroops** (Rakha, 2026-11-02), a named parameter, never a literal
  *   here. Its size is UNDETERMINED until the testnet measurement of simulated vs
  *   charged rent, so callers pass the configured value or `undefined`.
  *
@@ -32,7 +38,10 @@ export interface PullAmountInput {
 export interface PullAmountBreakdown {
   /** = `simulatedRentStroops`. */
   readonly rentStroops: bigint;
-  /** = `hostedFeeStroops(simulatedRentStroops, config)`, locked at pull. */
+  /**
+   * = `hostedFeeStroops(simulatedRentStroops, config)`: an estimate; the final
+   * fee is `hostedFeeStroops(charged rent)` at reconcile.
+   */
   readonly feeStroops: bigint;
   /** = `retryMarginStroops`. */
   readonly marginStroops: bigint;
