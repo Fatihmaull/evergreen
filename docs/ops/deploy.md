@@ -70,17 +70,27 @@ So the hold holds, the approval path works, and the preview deploy is unaffected
 
 ## Production approvals, 2026-10-29 to 2026-10-31
 
-**Recorded at Fatih's word, 2026-11-01 (relayed by the PM): he personally approved all 13 production `api-deploy` runs of 2026-10-29 to 2026-10-31.** What GitHub shows, read 2026-11-01 from `actions/runs/<id>/approvals` for every `push` run of the workflow since 2026-10-29 (36 runs):
+**Fatih confirmed (2026-11-02, relayed by the PM on 2026-11-04) that every approval and rejection in the Grok window, 2026-10-29 07:20 to 2026-10-31, was his.** GitHub records the reviewer as `Fatihmaull` for every one of them, the account all Fatih-side agents share, so **GitHub itself cannot say "personally"**: that part is Fatih's confirmation, and the rule that agents never approve ([`AGENTS.md`](../../AGENTS.md) rule 11) is what stands behind it.
 
-| Outcome | Runs | What it means |
-|---|---|---|
-| **Approved and deployed** | **15** (10 on 10-29, 2 on 10-30, 3 on 10-31) | the production job ran and succeeded |
-| **Approved, then refused by the stale-approval guard** | 4 | the job started, failed at the step `refuse a commit that main has moved past` |
-| **Rejected in the review** | 7 | the job never started: `failure`, **zero steps** |
-| **Cancelled by concurrency** | 10 | a newer run replaced a pending one; no review was made |
+**The counts, verified by DevOps on 2026-11-04** from `actions/runs/<id>/approvals` for every `push` run of `api-deploy.yml` and every run of `scheduler-deploy.yml` since 2026-10-29. The `production` Environment gates **both** workflows, and exactly one scheduler run used it (run 41168994480, approved, 2026-10-31). Windows are by run creation time:
 
-- **Two things this record cannot show.** GitHub records the reviewer as `Fatihmaull` for every one, and every Fatih-side agent uses that account, so GitHub **cannot corroborate "personally"**; the rule that agents never approve ([`AGENTS.md`](../../AGENTS.md) rule 11) is what stands behind it. And **"13" does not match any count GitHub gives**: 15 runs were approved and deployed, 19 were approved at all. Which 13 Fatih meant is `undetermined`; his statement is recorded as given.
-- The 15 deployed runs, newest last (`push` events on `main`):
+| Window | `api-deploy` | + `scheduler-deploy` (production) | **Approved in total** | **Rejected** |
+|---|---|---|---|---|
+| **The Grok window**, 2026-10-29 07:20 UTC to 10-31 | 17 (14 deployed + 3 refused by the stale-approval guard) | 1, deployed | **18** (15 deployed, 3 refused) | **7** |
+| **From 2026-10-29 00:00 UTC** (the last production run so far was 2026-10-31 06:19) | 19 (15 deployed + 4 refused) | 1, deployed | **20** (16 deployed, 4 refused) | **7** |
+
+These agree with the PM's counts. The earlier "13" was a miscount, and the first version of this section counted `api-deploy` alone (15 deployed, 19 approved), which is why it differed. The runs outside the Grok window: the 4th refusal (`fb4d197`, run 40806680733, 02:29 UTC) and one deployed run (`3e3d73e`, 03:49 UTC) are before 07:20 UTC. Also in the period: **10 cancelled by concurrency** (9 in the Grok window), which had no review.
+
+What each outcome means:
+
+| Outcome | What happened |
+|---|---|
+| **Approved and deployed** | the production job ran and succeeded |
+| **Approved, then refused by the stale-approval guard** | the job started and failed at the step `refuse a commit that main has moved past` |
+| **Rejected in the review** | the job never started: `failure`, **zero steps** |
+| **Cancelled by concurrency** | a newer run replaced a pending one; no review was made |
+
+The 15 deployed `api-deploy` runs, newest last (`push` events on `main`; the scheduler's production run is under [Scheduler Worker deploys](#scheduler-worker-deploys)):
 
 | UTC created | Run | Commit |
 |---|---|---|

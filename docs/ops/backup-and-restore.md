@@ -1,8 +1,8 @@
 # Backup and restore for DoD-2: proposal
 
-**Status: decided by Fatih 2026-10-28.** Option **A** (Neon Launch with scheduled snapshots) happens **together with his "ya" for the production secrets, not before**. Until then option **C**: one manual snapshot on `production` before each production migration, logged in [`neon-migrations.md`](neon-migrations.md#before-each-production-migration-one-manual-snapshot-fatih-2026-10-28). Nothing else changes before the beta. Production has no database today and Neon `production` has no tables, so there is nothing to lose yet.
+**Status (2026-11-04): option A is in place; the restore drill has not been exercised.** Neon Launch since 2026-10-29; a daily snapshot of `production` at 19:00 UTC kept 7 days (ten snapshots exist, the newest 2026-11-03 19:00); a named manual snapshot before each production migration, logged in [`neon-migrations.md`](neon-migrations.md#before-each-production-migration-a-manual-snapshot-fatih-2026-10-28-launch-since-2026-10-29). **The history window is still 6 hours; Fatih sets 7 days himself (K7, pending).** Production has had real data since 2026-10-29. Proposal text below is the original reasoning, kept for the costs.
 
-The requirement ([`PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) DoD-2): *"a Neon backup restore has been exercised"*, alongside the failure-mode list of `PH2-E4-05`. The problem: the Free plan keeps **6 hours** of history (21600 s, read from the project 2026-10-27), which is a recovery window for a bad deploy, not a backup.
+The requirement ([`PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) DoD-2): *"a Neon backup restore has been exercised"*, alongside the failure-mode list of `PH2-E4-05`. **DoD-2 was shortened by Fatih on 2026-11-02 (#582): a 14-day window from the first real autopilot extend, not 30 days after DoD-1. This check needs no window and can be met at any time**, so the drill below can run now. The problem: the Free plan keeps **6 hours** of history (21600 s, read from the project 2026-10-27), which is a recovery window for a bad deploy, not a backup.
 
 ## What Neon offers (read 2026-10-28)
 
@@ -48,7 +48,7 @@ A job dumps the database on a schedule to an encrypted object in Cloudflare R2, 
 
 Before each production migration, replace the single manual snapshot (`neonctl snapshots create --branch production --name pre-migration`). Covers a bad migration, not a bad week.
 
-- **Cost:** $0. **Gives:** one restore point, as old as the last migration. **Does not** meet "a backup restore exercised" for a 30-day DoD-2 window by itself.
+- **Cost:** $0. **Gives:** one restore point, as old as the last migration. **Does not** meet "a backup restore exercised" by itself: a restore has to be performed, which no snapshot does on its own.
 
 ### Recommendation
 
