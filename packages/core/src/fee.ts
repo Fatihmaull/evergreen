@@ -1,8 +1,8 @@
 /**
  * The hosted-tier fee (PH2-E5-03). One home, so the engine that pulls it, the
- * reconcile step that books it and the allowance-cap estimate that shows it
- * (PH2-E3-05) cannot disagree. The fee is locked at pull, computed on the
- * simulated rent; reconcile does not recompute it.
+ * reconcile step that settles it and the allowance-cap estimate that shows it
+ * (PH2-E3-05) cannot disagree. The fee in a pull is an estimate, computed on the
+ * simulated rent. Reconcile computes the final fee on the charged rent (K11).
  *
  * `fee = max(2% × rent, 25,000 stroops)` per hosted action, where a hosted
  * action is one job (one pull), not one entry. Fatih set it on 2026-10-27 on #414.
@@ -56,10 +56,10 @@ const BASIS_POINTS_PER_UNIT = 10_000n;
 /**
  * The fee for one hosted action, in stroops.
  *
- * Pass the **simulated** rent: the fee is locked when the pull is sized and is
- * not recomputed at reconcile (Rakha, 2026-11-02). Reconcile records the
- * charged-vs-declared difference as a `fee_ledger` row of the existing
- * `'difference'` kind.
+ * Pass the **simulated** rent when sizing the pull (the result is an estimate)
+ * and the **charged** rent when reconcile settles it (the result is the final
+ * fee, ADR-007 line 53). The excess pulled is refunded on-chain to the user and
+ * stored as a `refund` row (#583).
  *
  * **Rounds up.** The percentage part is a ceiling, so rounding never goes against
  * Evergreen, by at most one stroop. Confirmed by Fatih on 2026-10-28
