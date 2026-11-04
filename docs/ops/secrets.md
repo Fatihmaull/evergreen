@@ -19,9 +19,9 @@ Read with `wrangler secret list --name <worker>`, `gh secret list`, `gh variable
 
 **Differences from what this file said before 2026-11-01:**
 
-- **`ALERTS_SEND` and `ALERTS_ALLOWLIST` exist on production.** This page said nothing was set there. `ALERTS_SEND` is also a **secret**, not the plain setting the design describes. Its value cannot be read: see [Alert sending](#alert-sending-alerts_send-ph2-e2-06-fatih-relayed-2026-10-29-1625-wib).
+- **`ALERTS_SEND` and `ALERTS_ALLOWLIST` exist on production.** This page said nothing was set there. `ALERTS_SEND` is a **secret**, not the plain setting the design describes. **K4 (Fatih, 2026-11-02): production's `ALERTS_SEND` is exactly `send`, set by Fatih himself** (the secret change of 2026-10-31 10:41 UTC), so the operator emails (F10, F11) go to the allowlist for real. User alerts stay off until 0011 and CEF's dispatcher. See [Alert sending](#alert-sending-alerts_send-ph2-e2-06-fatih-relayed-2026-10-29-1625-wib).
 - **The production scheduler Worker is deployed.** This page said "none deployed".
-- **Which role each production Worker connects as** is not readable from a secret's name. Read from the database instead, on 2026-11-01 15:30 UTC (see [`neon-migrations.md`](neon-migrations.md#which-role-each-production-worker-uses)): at the 15-minute cron the production database held pooled sessions as **`eg_scheduler`** and **`eg_api`**, and none as the owner. That is evidence for least privilege on both, **not a read of the secret**.
+- **Which role each production Worker connects as** is not readable from a secret's name. Read from the database instead, on 2026-11-01 15:30 UTC (see [`neon-migrations.md`](neon-migrations.md#which-role-each-production-worker-uses)): at the 15-minute cron the production database held pooled sessions as **`eg_scheduler`** and **`eg_api`**, and none as the owner. That is evidence for least privilege on both, **not a read of the secret**. **K5 (Fatih, 2026-11-02): Fatih switched the production `DATABASE_URL` to the `eg_api` and `eg_scheduler` roles himself, around 2026-10-31**; the sample agrees with him, and the exact time was not recorded.
 
 ## Inventory (read 2026-10-27, historical)
 
@@ -81,9 +81,9 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 | # | Prerequisite | State |
 |---|---|---|
 | 1 | The `production` approval gate ([`deploy.md`](deploy.md)) | **Met** since 2026-10-26 |
-| 2 | A least-privilege application DB role with **append-only** grants on the fee ledger | **Met in the database:** roles `eg_api` and `eg_scheduler` exist on both branches (2026-10-29), and 0008's triggers refuse `UPDATE`, `DELETE` and `TRUNCATE` on `fee_ledger` for every role. **Not recorded:** switching the production Workers' `DATABASE_URL` to those roles. [`switch-database-url-eg_api.md`](switch-database-url-eg_api.md) still reads "plan only", yet the 2026-11-01 session sample shows both roles in use. **One known gap:** `eg_scheduler` can still name `ticked_at` on `scheduler_ticks` (see K1 in [`neon-migrations.md`](neon-migrations.md)). |
+| 2 | A least-privilege application DB role with **append-only** grants on the fee ledger | **Met.** Roles `eg_api` and `eg_scheduler` exist on both branches (2026-10-29); 0008's triggers refuse `UPDATE`, `DELETE` and `TRUNCATE` on `fee_ledger` for every role; and **Fatih switched the production Workers' `DATABASE_URL` to those roles himself around 2026-10-31 (K5)**, which the 2026-11-01 session sample confirms ([`switch-database-url-eg_api.md`](switch-database-url-eg_api.md), marked executed). **One known gap, tracked:** `eg_scheduler` can still name `ticked_at` on `scheduler_ticks` until 0010 ([#570](https://github.com/Fatihmaull/evergreen/pull/570), the revoke is in the file, unmerged) is applied; K8: no hand `REVOKE` before then (see K1 in [`neon-migrations.md`](neon-migrations.md#open-k1-gap-eg_scheduler-can-still-name-ticked_at)). |
 | 3 | A production email sender domain | **Met:** `mail.evergreenstellar.biz.id` ([#493](https://github.com/Fatihmaull/evergreen/pull/493), merged 2026-10-29), see [Alert sending](#alert-sending-alerts_send-ph2-e2-06-fatih-relayed-2026-10-29-1625-wib) |
-| 4 | Fatih's "ya" | **Given** (the production secrets are installed, and Fatih states he approved the production deploys since; the record and a count mismatch are in [`deploy.md`](deploy.md#production-approvals-2026-10-29-to-2026-10-31)) |
+| 4 | Fatih's "ya" | **Given.** The production secrets are installed, and Fatih confirmed that every production approval and rejection from 2026-10-29 to 10-31 was his ([`deploy.md`](deploy.md#production-approvals-2026-10-29-to-2026-10-31)). |
 
 Setting a secret (value typed at the prompt, never in argv):
 
@@ -104,11 +104,11 @@ Only `apps/api/src/alerts` reads `ALERTS_ALLOWLIST`, so it lives on the API Work
 |---|---|---|
 | `evergreen-api-preview` | **not set** (dry-run), checked 2026-11-01 | Worker **secret**, set 2026-10-30 (comma-separated operator emails), so no address is in the repo |
 | `evergreen-scheduler-preview`, `evergreen-scheduler` (production) | not set | not set (the scheduler code does not read either) |
-| `evergreen-api` (production) | **a secret named `ALERTS_SEND` exists** (the last secret change on the Worker is 2026-10-31 10:41 UTC). Its value cannot be read, so **whether it is exactly `send` is undetermined to DevOps.** The API cron logs `alerts.f11_heartbeat` each 15 minutes, but a healthy heartbeat returns before `ALERTS_SEND` is consulted, so the logs do not show it either. | a secret named `ALERTS_ALLOWLIST` exists (contents unreadable) |
+| `evergreen-api` (production) | **exactly `send`** (K4, Fatih, 2026-11-02), set by Fatih as a secret (the last secret change on the Worker is 2026-10-31 10:41 UTC). The value cannot be read back; this is Fatih's statement, and the API cron's logs cannot show it (a healthy heartbeat returns before `ALERTS_SEND` is consulted). | a secret named `ALERTS_ALLOWLIST` exists (contents unreadable): the operator addresses F10 and F11 emails go to |
 
-**This differs from the rule this page used to state** ("nothing set in production; `send` only after all of the conditions below, and never before Fatih's ya"). `ALERTS_SEND` is set; nobody in the repo has recorded what to. **Decision needed from Fatih:** confirm the value. If it is `send`, the production API sends operator emails (F10 testnet reset, F11 stale heartbeat) to the allowlist when those checks fire; if not, they only log.
+**Production sends operator emails for real (K4).** The F10 testnet-reset check and the F11 stale-heartbeat check run in the API Worker's 15-minute cron; when one fires, the email goes to the allowlist. **User alerts stay off** until migration 0011 ([#571](https://github.com/Fatihmaull/evergreen/pull/571)) is applied and CEF's dispatcher lands. This replaces the rule this page used to state ("nothing set in production"); the design's own rule, that production sending needs Fatih's ya, is met by K4.
 
-`ALERTS_SEND=send` is allowed in production only when **all** of these hold. State read 2026-11-01:
+`ALERTS_SEND=send` is allowed in production only when **all** of these hold. State read 2026-11-01, updated 2026-11-04 with K4:
 
 | Precondition | State | Evidence |
 |---|---|---|
@@ -119,7 +119,7 @@ Only `apps/api/src/alerts` reads `ALERTS_ALLOWLIST`, so it lives on the API Work
 | The production scheduler is ticking | **Met** | 139 rows from 2026-10-31 04:45 to 2026-11-01 15:15 UTC, one every 15 minutes |
 | `HEARTBEAT_STALE_SECONDS` set on production | **Met** | `2700` |
 | An operator channel other than email for F16 (Telegram) | **Not met** | not wired, per `docs/PH2-E4-05-FAILURE-MODES.md` |
-| **Fatih's explicit "ya" for production sending** | **Not recorded** | no record in the repo, a PR or the Worker's version metadata |
+| **Fatih's explicit "ya" for production sending** | **Given: K4** (Fatih, 2026-11-02): `ALERTS_SEND` is exactly `send`, set by him | the statement; the secret's value is unreadable |
 
 The production API cron is running: the tail on 2026-11-01 15:30:16 UTC showed `alerts.f17_f18_config` (`problem: false`), `alerts.f11_heartbeat` (`action: none`, `reason: fresh`) and `alerts.f10_testnet_reset` (`action: none`, `reason: no_decrease`), outcome `ok`.
 
