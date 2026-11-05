@@ -11,6 +11,21 @@
 /** The "Extend now" window (§7): a rolling 24 hours. */
 export const DAY_SECONDS = 86_400;
 
+/**
+ * Live (not removed) watch items one user may hold: 50 (Rakha, 2026-11-02,
+ * PH2-E2-05 pre-launch list). Adding or restoring a 51st throws
+ * `WatchItemCapReached`; re-adding an item already on the list does not.
+ */
+export const WATCH_ITEMS_PER_USER_MAX = 50;
+
+/** Thrown by `WatchlistStore.add` at the cap; the router answers 422 INVALID_REQUEST. */
+export class WatchItemCapReached extends Error {
+  constructor(readonly max: number = WATCH_ITEMS_PER_USER_MAX) {
+    super(`A user can watch at most ${max} contracts.`);
+    this.name = 'WatchItemCapReached';
+  }
+}
+
 export type WatchNetwork = 'testnet' | 'mainnet';
 
 export type WatchScope = { readonly dataKeys: readonly string[] } | { readonly noDataKeys: true };
@@ -91,6 +106,8 @@ export interface WatchlistStore {
    * Idempotent on (user, network, contract). Re-adding a removed item clears
    * `removed_at` and keeps its old label, scope and budget; autopilot stays off
    * (docs/API.md §6, NOTES.md D4). An item already on the list is left as is.
+   * Throws `WatchItemCapReached` when the caller already has
+   * `WATCH_ITEMS_PER_USER_MAX` live items and this add would create or restore one.
    */
   add(userId: string, item: NewWatchItem, now: number): Promise<AddOutcome>;
   update(

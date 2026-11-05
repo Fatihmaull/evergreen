@@ -14,6 +14,7 @@ import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-er
 import { handleAuth } from './auth/routes.js';
 import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
 import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
+import { WatchItemCapReached } from './watchlist/store.js';
 
 export const API_BASE = '/api/v1';
 export const API_VERSION = 'v1';
@@ -142,7 +143,15 @@ export async function handle(
       }
       try {
         return (await handleWatchlist(request, path, deps)) ?? notFound();
-      } catch {
+      } catch (error) {
+        // The per-user item cap (docs/API.md §6): a well-formed add refused on
+        // its meaning, so 422 INVALID_REQUEST, not retryable. The store throws
+        // it because routes.ts is not ours to change.
+        if (error instanceof WatchItemCapReached) {
+          return apiError('INVALID_REQUEST', error.message, 422, {
+            details: { field: 'body', limit: error.max },
+          });
+        }
         // The database did not answer: absence is not health, and the error names nothing (§9).
         return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
       }
