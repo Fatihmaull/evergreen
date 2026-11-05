@@ -4,6 +4,8 @@
 
 Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:654`). Nothing here changes code, schema or deployment.
 
+**Update 2026-11-05: the state below the list is the [DoD-2 evidence table](#dod-2-evidence-is-each-alert-wired-proven-and-live-2026-11-05).** The status line above and the *Monitor coverage* table were written on 2026-10-29 and are stale on one point: the F10 and F11 operator checks run in production's cron and may send (K4). Nothing else changed: no user alert is wired, and no money-path alert has a data source.
+
 ## Decisions (Fatih, 2026-10-29, confirmed 17:03 WIB)
 
 Final, no longer provisional. Each is applied in its row below.
@@ -216,7 +218,53 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Retry: n/a. The drill records RPO and RTO in `docs/evidence/` against this mode (`docs/ops/backup-and-restore.md:69`). Their values are **undetermined** until the first drill.
 - Owner: DevOps (`PH2-E0-12`); alert and evidence `PH2-E4-05`.
 
+## DoD-2 evidence: is each alert wired, proven and live? (2026-11-05)
+
+DoD-2 asks that *every failure mode on this list is shown to raise an alert* (`phase-2/PHASE2-PLAN.md:51`). This table says what is shown and what is not, as of `main` at `96fabde` plus the tests in this change. Three columns, each answered separately, because they come apart:
+
+- **Wired:** a code path that runs in a deployed Worker and reaches an operator (**Op**) or a user (**User**). A detector function that nothing calls is **not** wired. A log line is not an alert (nobody is paged by Workers Logs).
+- **Proven by:** a test that fails if the alert stops being raised, plus a mutation result, or a drill that was run. "Predicate only" means the test checks the decision function and there is no alert path to prove. A mutation count is only claimed where it was run.
+- **Fires on production:** *yes* only when a real firing was observed there. *No* when nothing can fire. *Undetermined* when the code is live but no firing has been seen.
+
+`CRON` below is `apps/api/test/cron-scheduled.pglite.test.ts`: the API Worker's real `scheduled()` handler on PGlite (real `LATEST_TICK_SQL`, `RECENT_TICKS_SQL`, Resend request and `configCheck`; only the Neon driver and `fetch` are faked). Before it, the handler itself had no test: the unit tests faked everything around it, so removing the F10 call from `index.ts` would have passed. 22 mutants applied to the handler, the SQL, the send gate and the decision functions: all 22 caught (one survived the first run, the F10 sender address, and got an assertion).
+
+| Mode | Wired | Proven by | Fires on production |
+|---|---|---|---|
+| **F1** pre-flight failed | Op no · User no. `isPreflightFailed` has no caller; no job rows exist (Stage 1 writes none). | Predicate only: `failure-modes.test.ts` "F1 / F4". User template: `alerts-templates.test.ts`. No mutation run. | **No** |
+| **F2** allowance missing or expiring | Op no · User no. No detector exists (`pending` in `FAILURE_MODE_ALERTS`). | Nothing. | **No** |
+| **F3** pull outcome unknown | Op no · User no. Needs #466's submitted-hash column. | Nothing. | **No** |
+| **F4** pulled then failed (and the per-user rate) | Op no · User no. Predicates and `pulledThenFailedBreaches` have no caller; no job rows. | Predicate only: `failure-modes.test.ts` "F1 / F4", `failure-modes-final.test.ts` "breaches at exactly 3 jobs and exactly 50%". No mutation run. | **No** |
+| **F5** extend transient failure | Op no · User no. `isTryAgainLater` has no caller; retry counting is `PH2-E4-02`. | Predicate only: `failure-modes.test.ts` "F5". | **No** |
+| **F6** refund fails | Op no · User no. `isRefundOwed` has no caller; no refund rows. | Predicate only: `failure-modes.test.ts` "F6". | **No** |
+| **F7** ledger/reconcile mismatch | Op no · User no. `reconcileProblems` has no caller. | Predicate only: `failure-modes.test.ts` "F7". | **No** |
+| **F8** float low | Op no · User no. `floatCheck` has no caller; the balance read is `PH2-E4-02`. | Predicate only: `failure-modes-final.test.ts` "F8 floatCheck". | **No** |
+| **F9** RPC slow | Op: **in #587** (open; not on `main`, not deployed). User no (dashboard only, nothing built). The failed-tick half is F11's. | #587: `slow-tick.test.ts`, `slow-tick.pglite.test.ts`; 35 of 35 mutants caught at `306687e`. | **No** (not deployed). After the deploy: undetermined until a tick exceeds 3000 ms. |
+| **F10** testnet reset | Op **yes**, API cron every 15 min. User no: `testnetResetUserEvents` has no caller (needs 0011 applied, #588 and a caller). | CRON "F10: a decreasing observed ledger emails each operator, even with a fresh heartbeat", "equal ledger is a stall", "older than the lookback"; mutants caught. Unit: `testnet-reset.test.ts`. | **Undetermined.** K4 says `ALERTS_SEND` is `send` (unreadable); no firing seen. |
+| **F11** cron missed or gap | Op **yes**, same cron. User no (user channel undetermined). | CRON "F11: a heartbeat older than HEARTBEAT_STALE_SECONDS emails each operator once", "exactly at the threshold is still fresh", "an empty table is stale"; mutants caught. Unit: `heartbeat.test.ts`, `heartbeat.pglite.test.ts`. | **Undetermined.** Healthy runs seen (2026-11-01 tail); no send seen. See D2. |
+| **F12** overlapping ticks / duplicates | Op no · User none by design. `duplicatePulls` has no caller. | Predicate only: `failure-modes.test.ts` "F12". | **No** |
+| **F13** dead-lettered message | Op no · User no. No queue exists. | Nothing. | **No** |
+| **F14** database unavailable | Op **no**: the cron logs `read_failed` and sends nothing. User no. | CRON "F14 gap: a database that cannot be read logs read_failed and sends NOTHING" pins the gap; it proves there is no alert. | **No**: a database outage raises no alert today. |
+| **F15** Neon spend | Outside the repo: a Neon Billing notification at $5 (DevOps). | Nothing in the repo can prove it. | **Undetermined** (D4). |
+| **F16** email send refused | Op no: `auth.email_send_failed` is a log line; `emailFailureOperatorAlert` has no caller. User no. | Decision only: `failure-modes-final.test.ts` "F16 email failure"; the log: `email-send-failure.test.ts`. | **No** (log only) |
+| **F17** threshold floor unset | Op **log only** (`alerts.f17_f18_config` each cron run). User no. | CRON "F17: THRESHOLD_FLOOR_LEDGERS unset is logged as a problem and sends NOTHING"; mutants "config check not logged" and "sees an empty env" caught. `config-check.test.ts`. | **No** alert. The check runs (2026-11-01 tail, `problem: false`). |
+| **F18** required secret missing | Op **log only**, same line, names only. User no. | CRON "F18: a missing required secret is logged by name only, and sends NOTHING"; "no log line carries an operator address, the database URL or a key". | **No** alert, as F17. |
+| **F19** restore lost changes | Op no · User no. Manual procedure. | Nothing. The K18 restore drill (DevOps, 2026-11-04) exercised a restore, not an alert. | **No** |
+
+**Count.** Of 19 modes: an operator alert is wired and proven for **2** (F10, F11), for a third (F9) in #587; log only for **3** (F16, F17, F18); no operator path for the other **13**, of which F15 is outside the repo. A user alert is wired for **0** of the 7 modes that have one (F1, F2, F4, F6, F7, F10, F19). The dispatcher is proven against an in-memory store (`alerts-dispatch.test.ts`) and, in #588 (draft), against Postgres, but nothing calls it. **DoD-2's alert clause is not met today.** The money-path modes (F1 to F8, F12, F13) cannot be met before `PH2-E4-02` and Stage 2 of `PH2-E4-04` exist: there is no data to detect on.
+
+**Drills that need a live system** (CEF does not run these: they need secrets or production):
+
+| Id | What | Who | Needs |
+|---|---|---|---|
+| D1 | F10 and F11 end to end on **preview**: `wrangler dev --env preview --test-scheduled` on a shell holding the preview secrets, `ALERTS_SEND=send` and an allowlist of one test inbox for that run only; make `scheduler_ticks` stale for F11, insert one lower-ledger row for F10 (owner role, preview branch). Evidence: the two `alerts.*` log lines and the inbox. | DevOps | Fatih's "ya" for the send; secrets from the secret store, not typed |
+| D2 | F11 on **production**: look in Resend's log and Workers Logs for an `alerts.f11_heartbeat` `action: sent` around the 45-minute gap on 2026-11-03 (541 ledgers, about 2700 s: at the threshold, so it may or may not have fired). Costs nothing. If none is found and Fatih wants a real firing, the only drill is to lower `HEARTBEAT_STALE_SECONDS` for one cron run, which is a production deploy (Fatih approves). | DevOps reads; Fatih decides on the deploy | Resend dashboard access |
+| D3 | The per-user templates: `docs/ops/alerts-test-send.md` (#545) on preview. Whether it has been run is undetermined. | DevOps | Fatih's "ya" |
+| D4 | F15: the Neon spending notification exists and points at an operator inbox. A screenshot without the address is the evidence. | DevOps | Neon Billing access |
+| D5 | F9 after #587 is deployed: a slow tick on preview (a stubbed RPC over 3000 ms). | DevOps with CEF | the scheduler deploy |
+
 ## Monitor coverage (2026-10-29, `main` at `85ac42d`)
+
+**Superseded for state by the evidence table above (2026-11-05).** Kept for the detection signals. The *State* column and this paragraph are from 2026-10-29: F10 and F11 are live in production's cron since K4.
 
 Which monitor covers each mode today. **Live** means it can page someone now. Nothing in this table is live in production. On preview, the API Worker cron runs every 5 minutes (`apps/api/wrangler.jsonc:42`), but `ALERTS_SEND` is off, so the F10 and F11 checks only log `alerts.f10_testnet_reset` and `alerts.f11_heartbeat`. Their `scheduler_ticks` read also needs SELECT for `eg_api`, which is migration 0009 (Rakha, #385). Until 0009 lands, the read fails and the cron logs `read_failed`, which is not reported as healthy.
 
