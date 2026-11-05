@@ -14,7 +14,7 @@ The scheduler Worker of `PH2-E4-04`: **Stage 0**, a heartbeat, and **Stage 1**, 
 
 The Neon allowance is per **project** (100 CU-hours), so two branches ticking every 15 minutes would not fit. `/tick` does not exist unless `TICK_TOKEN` is set.
 
-A tick: ask the RPC for its network and refuse anything but the testnet passphrase, ask for the latest ledger, `INSERT INTO scheduler_ticks (observed_ledger) VALUES ($1)`. Failures are logged by **code only** (`RPC_UNREACHABLE`, `RPC_BAD_RESPONSE`, `NETWORK_MISMATCH`, `DB_FAILED`, `NOT_CONFIGURED`, or `INTERNAL` for a fault of ours), never by message, because an RPC or database error can carry a key. A failed tick is thrown, so the platform records the run as failed.
+A tick: ask the RPC for its network and refuse anything but the testnet passphrase, ask for the latest ledger, `INSERT INTO scheduler_ticks (observed_ledger, rpc_ms, ok) VALUES ($1, $2, true)`, where `rpc_ms` is the time both RPC calls took. **A failed tick writes a row too** (migration 0010): `ok = false`, `observed_ledger` NULL, and `rpc_ms` only if every RPC call returned (NULL when one never did). A failed row is not a heartbeat, so everything that means "the scheduler is alive" reads `WHERE ok`. Failures are logged by **code only** (`RPC_UNREACHABLE`, `RPC_BAD_RESPONSE`, `NETWORK_MISMATCH`, `DB_FAILED`, `NOT_CONFIGURED`, or `INTERNAL` for a fault of ours), never by message, because an RPC or database error can carry a key. A failed tick is thrown, so the platform records the run as failed.
 
 ## Stage 1: evaluation (read-only, dry-run)
 
@@ -40,12 +40,12 @@ There is no `wrangler.jsonc` in this package yet: the Worker name, the cron expr
 
 ## The database role needs very little
 
-The tick needs **`INSERT (observed_ledger)` on `scheduler_ticks`, and nothing else**:
+The tick needs **`INSERT (observed_ledger, rpc_ms, ok)` on `scheduler_ticks`, and nothing else** (0010 sets exactly this):
 
 - **No `SELECT`.** So the statement has **no `RETURNING`**: `RETURNING id` needs `SELECT` on `id`, and the alert on a missing heartbeat must not run on the scheduler.
 - **Not `ticked_at`.** It takes its default, the database clock. Granting it would let a compromised scheduler write its own heartbeat time and so forge the DoD-2 evidence. Postgres needs no privilege on a column that takes its default.
 
-`test/heartbeat.pglite.test.ts` runs the tick on a real Postgres engine as exactly that role.
+`test/heartbeat.pglite.test.ts` applies the real 0010 over 0008's grant and runs the tick on a real Postgres engine as exactly that role.
 
 ## Develop
 

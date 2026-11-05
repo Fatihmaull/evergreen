@@ -32,7 +32,7 @@
 - `PH2-E3-07` follow-ups (K17) before `/support/` is registered.
 
 **CEF / Rakha (API and engine):**
-- Autopilot cannot be turned on until `THRESHOLD_FLOOR_LEDGERS` is configured and the engine's spender address is published (`PH2-E4-02`, `PH2-E4-04`).
+- Autopilot cannot be turned on until `THRESHOLD_FLOOR_LEDGERS` is configured and the engine's spender address is published (`PH2-E4-02`, `PH2-E4-04`). *Update, 2026-11-05:* #590 sets `THRESHOLD_FLOOR_LEDGERS` (2165) in the API config for production and preview. Whether that deploy has reached production is undetermined from this record; the spender address was still unpublished on `/allowance/` on 2026-11-04.
 - Nothing inserts into `observations`, so no row can ever show an engine read (`PH2-E3-02`).
 
 **DevOps:**
