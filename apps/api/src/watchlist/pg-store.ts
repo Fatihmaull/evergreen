@@ -13,6 +13,7 @@
  * checks that itself.
  */
 import type { SqlClient, SqlQuery, SqlRow } from '../auth/pg-store.js';
+import { WATCH_ITEMS_PER_USER_MAX, WatchItemCapReached } from './store.js';
 import type {
   AddOutcome,
   AutopilotSettings,
@@ -129,25 +130,46 @@ export class PgWatchlistStore implements WatchlistStore {
   /**
    * One statement. A new row is inserted; a removed row is restored with
    * `removed_at = NULL` and nothing else changed (label, scope and budget stay,
-   * autopilot is already off); a live row is left untouched.
+   * autopilot is already off); a live row is left untouched. The per-user cap
+   * (`WATCH_ITEMS_PER_USER_MAX`, `$7`) is in the same statement: with that many
+   * live items, nothing is inserted or restored and the answer is `full`, which
+   * throws `WatchItemCapReached`. Re-adding a live item is never refused.
+   *
+   * Two concurrent adds by the same user at 49 can both pass the count (READ
+   * COMMITTED) and leave 51 live rows; the cap is a guard against unbounded
+   * rows, not an exact invariant. Undetermined whether that needs a lock.
    */
   async add(userId: string, item: NewWatchItem, now: number): Promise<AddOutcome> {
     const rows = await this.sql.query(
       `WITH prior AS (
   SELECT removed_at IS NOT NULL AS was_removed FROM watch_items
   WHERE user_id = $1::uuid AND network = $2 AND contract_id = $3
+), live AS (
+  SELECT count(*) >= $7 AS at_cap FROM watch_items WHERE user_id = $1::uuid AND removed_at IS NULL
 ), ins AS (
   INSERT INTO watch_items (user_id, network, contract_id, label, scope, added_at)
-  VALUES ($1::uuid, $2, $3, $4, $5::jsonb, to_timestamp($6))
+  SELECT $1::uuid, $2, $3, $4, $5::jsonb, to_timestamp($6)
+  WHERE NOT (SELECT at_cap FROM live)
   ON CONFLICT (user_id, network, contract_id) DO UPDATE SET removed_at = NULL
     WHERE watch_items.removed_at IS NOT NULL
   RETURNING 1
 )
-SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM prior) THEN 'created'
-  WHEN (SELECT was_removed FROM prior) THEN 'restored' ELSE 'existing' END AS outcome`,
-      [userId, item.network, item.contractId, item.label ?? null, JSON.stringify(item.scope), now],
+SELECT CASE WHEN EXISTS (SELECT 1 FROM prior WHERE NOT was_removed) THEN 'existing'
+  WHEN (SELECT at_cap FROM live) THEN 'full'
+  WHEN NOT EXISTS (SELECT 1 FROM prior) THEN 'created'
+  ELSE 'restored' END AS outcome`,
+      [
+        userId,
+        item.network,
+        item.contractId,
+        item.label ?? null,
+        JSON.stringify(item.scope),
+        now,
+        WATCH_ITEMS_PER_USER_MAX,
+      ],
     );
     const outcome = rows[0]?.['outcome'];
+    if (outcome === 'full') throw new WatchItemCapReached();
     if (outcome === 'created' || outcome === 'restored' || outcome === 'existing') return outcome;
     throw new Error('Unexpected answer to the watch item insert.');
   }

@@ -71,7 +71,7 @@ async function runScan(event: Event): Promise<void> {
          <div class="row">
            <button class="secondary" type="button" id="watch-button">Add to watchlist</button>
          </div>
-         <p class="small muted">Adds this contract, with the same data keys, to a watchlist the Evergreen API keeps. The scan itself never needs it.</p>
+         <p class="small muted">Adds this contract, with the same data keys, to the watchlist of your signed-in account, which the Evergreen API keeps. Adding needs <a href="/login/">an email sign-in</a>; the scan itself never does. The engine has not necessarily checked it yet: the watchlist says so per row.</p>
          <div id="watch-result" aria-live="polite"></div>
        </div>`,
       jsonPanel(result, health(result)),
