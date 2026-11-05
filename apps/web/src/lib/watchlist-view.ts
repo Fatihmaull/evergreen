@@ -359,7 +359,7 @@ export function watchlistScreenHtml(
     );
   }
   if (outcome.code === 'UNAUTHENTICATED') {
-    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
   }
   if (outcome.code === 'NOT_FOUND' || outcome.code === 'METHOD_NOT_ALLOWED') {
     // The API answered in its own envelope, but not with this route. That is all
