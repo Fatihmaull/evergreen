@@ -14,5 +14,5 @@ Public site on **Cloudflare Pages**, per [ADR-003](../../docs/adr/ADR-003-toolch
 ## Constraints
 
 - **No automated write path.** The dashboard never bumps anything. That is the engine's job. An email session never authorises moving XLM (ADR-008).
-- **No dead buttons.** The site ships without disabled controls or auth-gated empty regions.
+- **No dead buttons.** A disabled control appears only when its feature is built but not yet configured, with the reason shown next to it (`/allowance/` "Revoke allowance" until the engine's spender address is published; K28 in [`claims-and-copy.md`](../../web-reference/design-language/claims-and-copy.md)). A control for an unbuilt feature is never shown, and there are no auth-gated empty regions.
 - **The deployed instance is a demonstration, not a service.** No registration, no accounts, no storing strangers' contract IDs. If it starts growing toward a service, stop and flag it.
