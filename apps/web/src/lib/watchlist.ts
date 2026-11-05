@@ -119,7 +119,7 @@ export function addOutcomeCopy(
           return {
             tone: 'undetermined',
             word: 'not added',
-            html: 'Not added. A watchlist belongs to a signed-in session, and this browser has none.',
+            html: 'Not added. A watchlist belongs to a signed-in session, and this browser has none. <a href="/login/">Sign in</a>, then add it again.',
           };
         case 'CSRF_FAILED':
           return {
