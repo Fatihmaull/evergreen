@@ -100,6 +100,11 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'committed',
   },
   {
+    route: '/docs/account/',
+    does: 'The optional email sign-in, wallet linking and watchlist, as they are today.',
+    reads: 'committed',
+  },
+  {
     route: '/docs/cli/',
     does: 'Install, the two commands, and the conventions they share.',
     reads: 'committed',
