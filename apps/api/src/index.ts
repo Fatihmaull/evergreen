@@ -145,7 +145,7 @@ export { WATCHLIST_DEFAULTS, WATCHLIST_NEEDS, watchlistDepsFor } from './watchli
 export type { WatchlistMountOptions, WatchlistStoreFactory } from './watchlist/mount.js';
 export { MemoryWatchlistStore } from './watchlist/memory-store.js';
 export { PgWatchlistStore } from './watchlist/pg-store.js';
-export { DAY_SECONDS } from './watchlist/store.js';
+export { DAY_SECONDS, WATCH_ITEMS_PER_USER_MAX, WatchItemCapReached } from './watchlist/store.js';
 export type {
   AddOutcome,
   AutopilotPatch,

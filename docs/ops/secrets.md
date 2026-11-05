@@ -48,7 +48,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 | `DEPLOY_COMMIT` | the deployed SHA | the PR head SHA | injected by the workflow, not committed |
 | `HEARTBEAT_STALE_SECONDS` | `2700` (3 x the 900 s tick) | `900` | `apps/api/wrangler.jsonc`; the F11 check treats a newer `scheduler_ticks` row than this as fresh |
 | `TESTNET_RESET_LOOKBACK_TICKS` | `12` | `12` | same |
-| `THRESHOLD_FLOOR_LEDGERS` | `1037` | `1037` | same |
+| `THRESHOLD_FLOOR_LEDGERS` | `2165` | `2165` | same; 4 × 541 + 1, where 541 ledgers is the 45-minute production gap of 2026-11-03 (K19) |
 | scheduler `ENVIRONMENT`, `DEPLOY_COMMIT` | `production`, the deployed SHA | `preview`, the dispatched SHA | `apps/scheduler/wrangler.jsonc`; `scheduler-deploy.yml` injects the SHA |
 
 ### GitHub

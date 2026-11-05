@@ -1,6 +1,8 @@
 /** In-memory `WatchlistStore` for tests and local runs. Not for production: nothing persists. */
 import {
   DAY_SECONDS,
+  WATCH_ITEMS_PER_USER_MAX,
+  WatchItemCapReached,
   type AddOutcome,
   type AutopilotSettings,
   type NewWatchItem,
@@ -106,6 +108,9 @@ export class MemoryWatchlistStore implements WatchlistStore {
 
   add(userId: string, item: NewWatchItem, now: number): Promise<AddOutcome> {
     const row = this.rows.find((r) => same(r, userId, item.network, item.contractId));
+    if (row !== undefined && row.removedAt === undefined) return Promise.resolve('existing');
+    const live = this.rows.filter((r) => r.userId === userId && r.removedAt === undefined).length;
+    if (live >= WATCH_ITEMS_PER_USER_MAX) return Promise.reject(new WatchItemCapReached());
     if (row === undefined) {
       this.rows.push({
         userId,
@@ -117,7 +122,6 @@ export class MemoryWatchlistStore implements WatchlistStore {
       });
       return Promise.resolve('created');
     }
-    if (row.removedAt === undefined) return Promise.resolve('existing');
     delete row.removedAt; // old label, scope and budget stay; autopilot is already off
     return Promise.resolve('restored');
   }

@@ -1,6 +1,6 @@
 # Neon migrations
 
-## Current status (read 2026-11-04 00:20 UTC, read-only transactions on both branches)
+## Current status (read 2026-11-04 00:20 UTC, read-only transactions on both branches; 0010 applied 2026-11-04 09:53 to 09:55 UTC)
 
 | File | `preview` (`br-billowing-waterfall-aoa9ok0v`) | `production` (`br-proud-mountain-aon0gpyl`) | Evidence read |
 |---|---|---|---|
@@ -13,13 +13,13 @@
 | `0007` | applied | applied | `fee_ledger_job_subsidy` columns `job_id,evergreen_fee,network_fee,margin,fully_refunded,subsidised` |
 | `0008` | applied 2026-10-29 21:52 WIB | applied 2026-10-29 22:04 WIB, after roles `eg_api`/`eg_scheduler` were created | triggers `fee_ledger_no_update_delete`, `fee_ledger_no_truncate`; roles `eg_api` (13 table grants), `eg_scheduler` (3) on each |
 | `0009` (`0009_connect_and_scheduler_ticks_select.sql`, #551) | applied 2026-10-31 ~09:59 WIB ([`apply-0009.md`](apply-0009.md)) | applied, same time | read 2026-11-01: `CONNECT` is `true` for both roles; `eg_api` has `SELECT` on `scheduler_ticks` and no write; `eg_scheduler` has no table-level privilege |
-| `0010` ([#570](https://github.com/Fatihmaull/evergreen/pull/570), head `178ff91`) | **not applied** | **not applied** | open, CI green; the K1 `REVOKE INSERT (ticked_at)` and the `ok` → ledger CHECK are in the file; waits on CEF's review, then Rakha's merge (K2) |
-| `0011` ([#571](https://github.com/Fatihmaull/evergreen/pull/571), `2c9d408`) | **not applied** | **not applied** | open; has the `sent` → `sent_at` CHECK; grants to `eg_api` only |
-| `0012` ([#572](https://github.com/Fatihmaull/evergreen/pull/572), `d0529f3`) | **not applied** | **not applied** | open; independent of 0010 and 0011 |
-| `0013` ([#577](https://github.com/Fatihmaull/evergreen/pull/577), `41ce753`, the migration ledger) | **not applied** | **not applied** | open; pre-approved for production (K12). Backfill plan reviewed on the PR, see [Applying 0013](#applying-0013-and-the-ledger-backfill) |
-| `0014` ([#584](https://github.com/Fatihmaull/evergreen/pull/584), `52b9b3c`, `prune_auth_tables`) | **not applied** | **not applied** | open; pre-approved for production only after CEF approves its security review (K14); carries no ledger row yet |
+| `0010` ([#570](https://github.com/Fatihmaull/evergreen/pull/570), merged by Rakha as `d15c52f`; the file is byte-identical to the CEF-approved head `178ff91`) | **applied 2026-11-04 09:53:14 to 09:53:17 UTC** | **applied 2026-11-04 09:55:06 to 09:55:09 UTC**, after `pre-0010-20261104` (`snap-soft-shadow-aonpyfwy`) | `rpc_ms`, `ok` present; the three CHECKs present; **`eg_scheduler` `INSERT` on `ticked_at` is now `false`** on both (the K1 gap is closed); structure and all 270 privilege lines identical to a clean build of `schema.sql` + 0002 to 0010; the 10:00:30 UTC production tick (ledger 5552557, `ok = t`, `rpc_ms` NULL) was written by the deployed scheduler after the apply. Ledger row: none (0010 predates 0013), so it joins the backfill list |
+| `0011` ([#571](https://github.com/Fatihmaull/evergreen/pull/571), head `8c4d626` after Rakha's merge of main) | **not applied** | **not applied** | open; has the `sent` → `sent_at` CHECK; grants to `eg_api` only |
+| `0012` ([#572](https://github.com/Fatihmaull/evergreen/pull/572), head `d833b61`) | **not applied** | **not applied** | open; independent of 0010 and 0011 |
+| `0013` ([#577](https://github.com/Fatihmaull/evergreen/pull/577), head `9de42b2`, the migration ledger) | **not applied** | **not applied** | open; pre-approved for production (K12). Backfill plan reviewed on the PR, see [Applying 0013](#applying-0013-and-the-ledger-backfill) |
+| `0014` ([#584](https://github.com/Fatihmaull/evergreen/pull/584), head `2621829`, `prune_auth_tables`) | **not applied** | **not applied** | open; **CEF security approval given at `2621829` (2026-11-04 09:54 UTC), so K14's security condition is met**; the production apply still waits for the merge. Carries no ledger row yet: CEF asks Rakha to add it if 0013 merges first |
 
-**Verified on 2026-11-04 as a whole, not only by sampling:** a probe per file (one object each) reads true for `schema.sql` and 0002 to 0009 on **both** branches and false for 0010 to 0014; a clean local build of `schema.sql` + 0002 to 0009 (with the roles and Neon's `neon_superuser` created first) is **structurally identical** to each branch apart from `pgcrypto`'s own `fips_mode`, and every `eg_api` and `eg_scheduler` privilege matches it (267 lines each). So the two branches are at the same migration level, and the **migration ledger does not exist yet** (0013 creates it), so this is inferred from objects. Project plan: Neon **Launch** since 2026-10-29. The production scheduler has written **365 `scheduler_ticks` rows** from 2026-10-31 04:45 to 2026-11-04 00:15 UTC: median gap 15:00, minimum 14:51, and **one gap of 45:02** (2026-11-03 08:00 to 08:45 UTC, **541 ledgers**), the only one over 20 minutes; preview holds 473 rows from the earlier tests. (The 541-ledger gap is the figure DoD-2's scheduler-gap check wants; `THRESHOLD_FLOOR_LEDGERS=1037` was derived from preview's worst gap of 259 ledgers, 4 x 259 + 1, whereas 541 would give 4 x 541 + 1 = 2,165. That is CEF's to weigh.)
+**Verified on 2026-11-04 as a whole, not only by sampling:** a probe per file (one object each) read true for `schema.sql` and 0002 to 0009 on **both** branches and false for 0010 to 0014 (the state before 0010 was applied); a clean local build of `schema.sql` + 0002 to 0009 (with the roles and Neon's `neon_superuser` created first) is **structurally identical** to each branch apart from `pgcrypto`'s own `fips_mode`, and every `eg_api` and `eg_scheduler` privilege matches it (267 lines each). So the two branches are at the same migration level, and the **migration ledger does not exist yet** (0013 creates it), so this is inferred from objects. Project plan: Neon **Launch** since 2026-10-29. The production scheduler has written **365 `scheduler_ticks` rows** from 2026-10-31 04:45 to 2026-11-04 00:15 UTC: median gap 15:00, minimum 14:51, and **one gap of 45:02** (2026-11-03 08:00 to 08:45 UTC, **541 ledgers**), the only one over 20 minutes; preview holds 473 rows from the earlier tests. (The 541-ledger gap is the figure DoD-2's scheduler-gap check wants; `THRESHOLD_FLOOR_LEDGERS=1037` was derived from preview's worst gap of 259 ledgers, 4 x 259 + 1, whereas 541 would give 4 x 541 + 1 = 2,165. That is CEF's to weigh; K19 (a), 2026-11-04: CEF's PR sets it to 2165.) **What the 2026-11-03 gap was, read 2026-11-04** (K19): the two missing slots are 08:15 and 08:30 UTC. In both, Neon recorded a `start_compute` at :17 and a `suspend_compute` about 5 minutes later, exactly as in every other slot, and the ledger advanced normally (541 = 3 x about 180), so the Stellar testnet and the database were up and something connected at 08:15 and 08:30. The API Worker's own `*/15` cron also connects at :17, so the wake does not say whether the scheduler ran. The scheduler connects to the database only after both RPC calls succeed, and before 0010 a failed tick wrote no row, so "scheduler's RPC call failed", "scheduler's insert failed" and "cron did not fire" leave the same trace. Cloudflare's status page lists no Workers or cron incident that day (its other entries that day are Workers Builds, Durable Objects in Dallas and network issues in APJC and HKG earlier in the morning); Stellar's status page lists only the testnet upgrade at 17:00 UTC. No deploy ran in that window. **Verdict: undetermined.** The per-invocation outcome lives in the `evergreen-scheduler` Workers Logs / invocation history, which needs the dashboard (Fatih): Workers & Pages, `evergreen-scheduler`, Observability, filter 2026-11-03 08:10 to 08:35 UTC. A `scheduler.tick_failed` line with a code means errored (the code says which); no line at all means the cron did not fire. Retention of those logs may already have lapsed.
 
 ### Which role each production Worker uses
 
@@ -30,9 +30,11 @@ The secrets' names don't say, and their values can't be read. The database can: 
 - **K5 (Fatih, 2026-11-02): Fatih switched the production `DATABASE_URL` to the `eg_api` and `eg_scheduler` roles himself, around 2026-10-31.** That closes the "unrecorded" point above; the exact time is still not recorded, and the sample agrees with him.
 - The earlier note here ("the role is undetermined, no session was seen in the 2026-10-30 polls") is superseded.
 
-### Open K1 gap: `eg_scheduler` can still name `ticked_at`
+### K1 gap: `eg_scheduler` could name `ticked_at` (closed by 0010 on 2026-11-04)
 
-Fatih's K1 (2026-11-01, via CEF): **the scheduler must not be able to write its own heartbeat time**, because `scheduler_ticks.ticked_at` is the DoD-2 evidence for the scheduler gap. **Today it can, on both branches** (re-read 2026-11-04 00:18 UTC): `has_column_privilege('eg_scheduler','scheduler_ticks','ticked_at','INSERT')` is `true`, from 0008's column grant `(ticked_at, observed_ledger)`. Postgres needs no privilege on a column an `INSERT` leaves to its default, so the tick works without it, and the scheduler's own statement names only `observed_ledger`.
+**Closed 2026-11-04 09:55 UTC on both branches** (0010 applied, see the Apply log). The text below is the state before that, kept for the record and for the re-run-0008 warning, which still holds.
+
+Fatih's K1 (2026-11-01, via CEF): **the scheduler must not be able to write its own heartbeat time**, because `scheduler_ticks.ticked_at` is the DoD-2 evidence for the scheduler gap. **Until 0010 it could, on both branches** (re-read 2026-11-04 00:18 UTC): `has_column_privilege('eg_scheduler','scheduler_ticks','ticked_at','INSERT')` is `true`, from 0008's column grant `(ticked_at, observed_ledger)`. Postgres needs no privilege on a column an `INSERT` leaves to its default, so the tick works without it, and the scheduler's own statement names only `observed_ledger`.
 
 **K8 (Fatih, 2026-11-02): no hand `REVOKE` of `ticked_at`; wait for #570.** 0008 is already applied, so the revoke arrives as 0010, and #570 at its current head (`178ff91`) now carries it: `REVOKE INSERT (ticked_at) ON scheduler_ticks FROM eg_scheduler; GRANT INSERT (observed_ledger, rpc_ms, ok) ON scheduler_ticks TO eg_scheduler;`, plus the `ok` → ledger CHECK. The gap stays open until that file merges and is applied. The check that closes it is in [Each file](#each-file).
 
@@ -212,7 +214,7 @@ Apply only from a **fresh checkout of `origin/main` at the merge commit** (recor
 
 | File | What must be true after the apply, on `preview` first |
 |---|---|
-| **0010** `scheduler_ticks` gets `rpc_ms`, `ok` | `rpc_ms integer NULL` with `CHECK (>= 0)`; `ok boolean NOT NULL DEFAULT true`; `observed_ledger` nullable; every existing row `ok = true`; the named checks present, **including `scheduler_ticks_ok_has_ledger` (`NOT ok OR observed_ledger IS NOT NULL`)**: `INSERT INTO scheduler_ticks (rpc_ms) VALUES (5)` inside a rolled-back transaction must be refused. **K1 gate: `has_column_privilege('eg_scheduler','scheduler_ticks','ticked_at','INSERT')` must be `false`.** `observed_ledger`, `rpc_ms` and `ok` are `true`; `eg_scheduler` still has no table-level `SELECT`, `UPDATE` or `DELETE`; `eg_api` still `SELECT`. At the head of #570 read on 2026-11-04 (`178ff91`) the file revokes `ticked_at` and grants `(observed_ledger, rpc_ms, ok)`, so the check should pass; it stays the gate. **If `ticked_at` is still `true`, do not apply it to production, and report to the PM.** |
+| **0010** `scheduler_ticks` gets `rpc_ms`, `ok` | `rpc_ms integer NULL` with `CHECK (>= 0)`; `ok boolean NOT NULL DEFAULT true`; `observed_ledger` nullable; every existing row `ok = true`; the named checks present, **including `scheduler_ticks_ok_has_ledger` (`NOT ok OR observed_ledger IS NOT NULL`)**: `INSERT INTO scheduler_ticks (rpc_ms) VALUES (5)` inside a rolled-back transaction must be refused. **K1 gate: `has_column_privilege('eg_scheduler','scheduler_ticks','ticked_at','INSERT')` must be `false`.** `observed_ledger`, `rpc_ms` and `ok` are `true`; `eg_scheduler` still has no table-level `SELECT`, `UPDATE` or `DELETE`; `eg_api` still `SELECT`. At the head of #570 read on 2026-11-04 (`178ff91`) the file revokes `ticked_at` and grants `(observed_ledger, rpc_ms, ok)`, so the check should pass; it stays the gate. **If `ticked_at` is still `true`, do not apply it to production, and report to the PM.** **Statement-level check:** the `neondb_owner` login cannot `SET ROLE eg_scheduler` (not a member; do not grant it), so the insert behaviour (`observed_ledger` alone accepted; `ticked_at` named refused; `rpc_ms` alone refused by the CHECK; `(NULL, 100, false)` accepted) is run as `eg_scheduler` on the clean local build, whose grants were compared line by line with the branch. Passed on both branches on 2026-11-04. |
 | **0011** alert outbox and preferences | tables `alert_outbox` and `alert_preferences` (14 public tables), with the constraints (including `alert_outbox_sent_has_time`, a `sent` row must carry `sent_at`) and the two partial indexes the file defines; the grants comparison differs by exactly the file's grant lines, all to `eg_api` (`SELECT`; `INSERT` on four columns; `UPDATE` on five), and **`eg_scheduler` gains nothing** |
 | **0012** per-user autopilot dedupe | `jobs_autopilot_uq` is `UNIQUE (user_id, network, contract_id, autopilot_window) WHERE kind = 'autopilot'`, same name, no other index changed, **no grant change** (the comparison shows no difference) |
 | **0013** the migration ledger | table `schema_migrations(filename PK, source, first_applied_at, last_applied_at, apply_count)` with its three named CHECKs; **no privilege for `eg_api`, `eg_scheduler` or PUBLIC** (the grants comparison shows no difference); it holds exactly its own row, `source = 'applied'`; then the backfill below, after which the row count equals the probes' "applied" files plus 0013 |
@@ -224,8 +226,8 @@ Also, after each: the whole-schema comparison from [Verify](#verify) (extend the
 
 ```bash
 P=icy-sun-89705623; O=org-delicate-violet-65283800
-neonctl snapshots create --branch production --name pre-<file>-<yyyymmdd> --project-id $P --org-id $O
-neonctl snapshots list --project-id $P --org-id $O                    # it must be listed before the next line
+neonctl snapshots create --branch production --name pre-<file>-<yyyymmdd> --project-id $P
+neonctl snapshots list --project-id $P                    # it must be listed before the next line
 neon_env production && psql -X -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/<file>.sql; echo "exit=$?"
 ```
 
@@ -236,7 +238,7 @@ neon_env production && psql -X -v ON_ERROR_STOP=1 --single-transaction -f apps/a
 Reviewed with Rakha on [#577](https://github.com/Fatihmaull/evergreen/pull/577#issuecomment-6618974068) (nothing run). The ledger records what ran, it does not decide what runs, and it is owner-only.
 
 1. **Apply 0013** by the normal route (preview, verify; production snapshot, apply, verify). It records itself (`source = 'applied'`).
-2. **Backfill the files that ran before it**, per branch, inside one `--single-transaction`, preview first. On 2026-11-04 both branches are at the same level, so one list serves both; **if 0010 to 0012 are applied before 0013, add each applied one to the list**:
+2. **Backfill the files that ran before it**, per branch, inside one `--single-transaction`, preview first. On 2026-11-04 both branches are at the same level (0010 applied on both), so one list serves both; **0010 is on the list (ten files); if 0011 or 0012 are applied before 0013, add each applied one**:
 
    ```sql
    INSERT INTO schema_migrations (filename, source) VALUES
@@ -248,9 +250,10 @@ Reviewed with Rakha on [#577](https://github.com/Fatihmaull/evergreen/pull/577#i
      ('0006_jobs_submitted_hashes.sql',                'backfill'),
      ('0007_fee_ledger_network_fee_evidence.sql',      'backfill'),
      ('0008_roles_grants.sql',                         'backfill'),
-     ('0009_connect_and_scheduler_ticks_select.sql',   'backfill')
+     ('0009_connect_and_scheduler_ticks_select.sql',   'backfill'),
+     ('0010_scheduler_ticks_rpc_ms_ok.sql',            'backfill')
    ON CONFLICT (filename) DO NOTHING;
-   -- expected: SELECT count(*) FROM schema_migrations  ->  10 (these nine + 0013's own row)
+   -- expected: SELECT count(*) FROM schema_migrations  ->  11 (these ten + 0013's own row)
    ```
 
 3. **A file numbered below 0013 that is applied after the ledger exists writes no row of its own** (0010, 0011 and 0012 carry no ledger `INSERT`). Apply it together with its row in one transaction: `psql -v ON_ERROR_STOP=1 --single-transaction -f 00NN_<name>.sql -c "INSERT INTO schema_migrations (filename, source) VALUES ('00NN_<name>.sql', 'backfill') ON CONFLICT (filename) DO NOTHING"`. A failed file then records nothing.
@@ -262,7 +265,8 @@ Reviewed with Rakha on [#577](https://github.com/Fatihmaull/evergreen/pull/577#i
 
 | File | Branch | UTC time | Applied from `main` at | Snapshot | Result |
 |---|---|---|---|---|---|
-| (none yet) | | | | | |
+| `0010_scheduler_ticks_rpc_ms_ok.sql` (#570) | `preview` | 2026-11-04 09:53:14 to 09:53:17 | `d15c52f` | none (preview is not a root branch) | exit 0, `psql -v ON_ERROR_STOP=1 --single-transaction`; checks in [Each file](#each-file) pass; before/after grants diff is exactly `ticked_at` INSERT revoked from `eg_scheduler`, `ok` and `rpc_ms` INSERT granted to it, `ok` and `rpc_ms` SELECT to `eg_api` |
+| `0010_scheduler_ticks_rpc_ms_ok.sql` (#570) | `production` | 2026-11-04 09:55:06 to 09:55:09 | `d15c52f` | `pre-0010-20261104` (`snap-soft-shadow-aonpyfwy`, 09:54:44) | exit 0, same transaction flags; structure and 270 privilege lines identical to the clean build; 403 existing rows `ok = true`; live tick 10:00:30 written after the apply. K16: #587's production deploy no longer waits on the schema |
 
 ## Before each production migration: a manual snapshot (Fatih, 2026-10-28; Launch since 2026-10-29)
 
@@ -270,8 +274,8 @@ The project has been on Launch since 2026-10-29, so the Free limit of one manual
 
 ```bash
 P=icy-sun-89705623; O=org-delicate-violet-65283800
-neonctl snapshots create --branch production --name pre-<migration-file>-<yyyymmdd> --project-id $P --org-id $O
-neonctl snapshots list --project-id $P --org-id $O      # confirm it exists BEFORE you migrate
+neonctl snapshots create --branch production --name pre-<migration-file>-<yyyymmdd> --project-id $P   # no --org-id: this subcommand rejects it
+neonctl snapshots list --project-id $P      # confirm it exists BEFORE you migrate
 ```
 
 Snapshots exist only on root branches, and `production` is the only root (Neon refuses one on `preview`). Record every snapshot here, in the PR or ops note that applies the migration.
@@ -282,6 +286,7 @@ Snapshots exist only on root branches, and `production` is the only root (Neon r
 | 2026-10-29 11:07 | (post-schema baseline) | `post-schema-0001-0005-20261029` (`snap-bold-brook-ao0wyvhr`) | DevOps |
 | 2026-10-29 12:58 | 0006 | `pre-0006-20261029` (`snap-sweet-tree-ao8i2oue`) | DevOps |
 | 2026-10-29 14:52 | 0007 (+0008 once roles exist) | `pre-0007-0008-20261029` (`snap-spring-butterfly-ao3sy187`) | DevOps |
+| 2026-11-04 09:54 | 0010 | `pre-0010-20261104` (`snap-soft-shadow-aonpyfwy`, no expiry) | DevOps |
 | **none** | **0009**, applied to production 2026-10-31 ~02:59 UTC | **no manual snapshot was taken.** The nearest restore point was the scheduled `br-proud-mountain-aon0gpyl-20261030-190006` (`snap-quiet-frog-aobgi618`), about 8 hours earlier. 0009 only adds grants, so the `REVOKE` rollback in `apply-0009.md` was the real undo. Recorded as a departure from this rule. | DevOps |
 
 **Schedule (read 2026-11-01 with `neonctl snapshots schedule get --branch production`):** daily at 19:00 UTC (02:00 WIB), each kept 7 days (`604800 s`). Three scheduled snapshots exist (2026-10-29, 10-30, 10-31 19:00 UTC); `preview` has no schedule and cannot have one (not a root).
