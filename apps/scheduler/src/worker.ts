@@ -29,7 +29,7 @@ export interface Env {
 }
 
 export interface Runtime {
-  readonly runTick: () => Promise<{ readonly observedLedger: number }>;
+  readonly runTick: () => Promise<{ readonly observedLedger: number; readonly rpcMs?: number }>;
   /**
    * Stage 1: the read-only, dry-run evaluation, run after the heartbeat is recorded. Absent
    * means Stage 0 only. Its failure never fails the tick: the heartbeat already measured the gap.
@@ -98,13 +98,14 @@ async function evaluateStep(
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
-    const { observedLedger } = await runtime.runTick();
+    const { observedLedger, rpcMs } = await runtime.runTick();
     runtime.log({
       event: 'scheduler.tick',
       ok: true,
       trigger,
       environment: environmentOf(env),
       observedLedger,
+      ...(rpcMs === undefined ? {} : { rpcMs }),
     });
     if (runtime.evaluate === undefined) return { ok: true as const, observedLedger };
     return {
@@ -114,7 +115,14 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
     };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';
-    runtime.log({ event: 'scheduler.tick_failed', trigger, environment: environmentOf(env), code });
+    runtime.log({
+      event: 'scheduler.tick_failed',
+      trigger,
+      environment: environmentOf(env),
+      code,
+      // Whether a failed-tick row (ok = false) was written for it (migration 0010).
+      ...(error instanceof TickError ? { recorded: error.recorded } : {}),
+    });
     throw error;
   }
 }

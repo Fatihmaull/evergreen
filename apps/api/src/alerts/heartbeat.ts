@@ -110,9 +110,13 @@ export async function runHeartbeatCheck(
   return { action: 'sent', recipients: operators.length, ageSeconds: s.ageSeconds };
 }
 
-/** The read the cron needs. Requires SELECT on scheduler_ticks for the API role. */
+/**
+ * The read the cron needs. Requires SELECT on scheduler_ticks for the API role (0009).
+ * **`WHERE ok`**: since 0010 a failed tick writes a row too, and a failed row is not a
+ * heartbeat; counting it would show a scheduler that fails every tick as alive.
+ */
 export const LATEST_TICK_SQL =
-  'SELECT extract(epoch FROM max(ticked_at))::bigint AS t FROM scheduler_ticks';
+  'SELECT extract(epoch FROM max(ticked_at))::bigint AS t FROM scheduler_ticks WHERE ok';
 
 /** Resend transport for one operator. Never logs the key or the address. */
 export function resendOperatorTransport(
