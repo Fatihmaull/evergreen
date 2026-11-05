@@ -128,6 +128,19 @@ How to tell the three causes apart, so the next failed run takes one look:
 
 The other four rejected runs follow the same pattern and each comment names its replacement: `b5e214c` (40863864691), `1fcfb75` (40867215684, "superseded by run 40876924812 (04a7328), which deploys after 0006 is on prod"), `77b4f2f` (40897723343, "superseded by f508337") and `62e059a` (40899905042, "superseded by ce99abb").
 
+## Production approvals from 2026-11-04
+
+Counted from `actions/runs/<id>/approvals` and the run's jobs; updated as Fatih acts. Everything is the `production` Environment's `Fatihmaull` reviewer. Totals above (Grok window and since 10-29) are unchanged by these rows and run to 2026-10-31.
+
+| Run | Commit | Created (UTC) | Outcome | Counts as |
+|---|---|---|---|---|
+| [41766591396](https://github.com/Fatihmaull/evergreen/actions/runs/41766591396) | `d15c52f` | 2026-11-04 03:21 | production job `cancelled`, zero steps, **no review recorded**: replaced by the newer run behind it | **cancelled by concurrency** (superseded), not a rejection |
+| [41769762578](https://github.com/Fatihmaull/evergreen/actions/runs/41769762578) | `b8f69e4` | 2026-11-04 03:52 | approved by `Fatihmaull`; production job success (14 steps, started 09:02) | **approved, deployed** |
+| [41833547148](https://github.com/Fatihmaull/evergreen/actions/runs/41833547148) | `9ba3624` (the 2165 floor, #590) | 2026-11-04 12:56 | waiting for review as of 2026-11-05 07:40 UTC | pending |
+| [41969447493](https://github.com/Fatihmaull/evergreen/actions/runs/41969447493) | `96fabde` (0011 merge) | 2026-11-05 04:42 | pending as of 2026-11-05 07:40 UTC | pending |
+
+Subtotal so far, 2026-11-04 onward: **1 approved (1 deployed), 0 rejected, 1 cancelled by concurrency, 2 pending.** Running total since 2026-10-29 00:00 UTC, with those two settled: **21 approved (17 deployed, 4 refused by the guard), 7 rejected**, plus 1 cancelled. A concurrency cancel is not counted as a rejection because GitHub records no review for it; if Fatih meant to reject run 41766591396, it never reached him as a review.
+
 ## Scheduler Worker deploys
 
 [`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml) is manual: `workflow_dispatch` with `target` = `preview` or `production`. A **production** run sits behind the same `production` Environment approval; the first one **creates** the Worker, and its `*/15 * * * *` cron is live the moment the deploy finishes.
