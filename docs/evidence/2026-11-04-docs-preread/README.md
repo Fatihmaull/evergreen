@@ -44,4 +44,4 @@
 - Hosted tier landing copy waits on `PH2-E4-02` (`PH2-BL-05`, draft #480).
 - `/about/` still tells the phase-1 story (grant dates 3 September to 2 October). Not wrong; says nothing of the account.
 
-**Stale "30 days" wording, from the previous round:** `docs/ops/backup-and-restore.md:51` (DevOps), `packages/core/src/scheduler-gap.ts:30` (CEF).
+**Stale "30 days" wording, from the previous round:** `packages/core/src/scheduler-gap.ts:30` (CEF, a code comment: "reset restarts its 30 days"). *Correction, 2026-11-05:* this record first also listed `docs/ops/backup-and-restore.md:51` (DevOps). That was wrong or already fixed: the PM verified the file says 14 days (#585, #591), and a search of `docs/ops` on `96fabde` finds no "30-day" line.
