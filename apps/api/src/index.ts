@@ -16,6 +16,7 @@ import {
   runTestnetResetCheck,
   type TestnetResetEnv,
 } from './alerts/testnet-reset.js';
+import { LATEST_OK_TICK_SQL, runSlowTickCheck, type SlowTickEnv } from './alerts/slow-tick.js';
 import { configCheck } from './alerts/config-check.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
@@ -30,7 +31,10 @@ export default {
   },
   // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
   // for this Worker; logs the outcome, never an address or a key.
-  async scheduled(_event: unknown, env: Env & HeartbeatEnv & TestnetResetEnv): Promise<void> {
+  async scheduled(
+    _event: unknown,
+    env: Env & HeartbeatEnv & TestnetResetEnv & SlowTickEnv,
+  ): Promise<void> {
     // F17/F18 (PH2-E4-05): config check, log only, setting names never values.
     console.log(JSON.stringify(configCheck(env as unknown as Record<string, unknown>)));
     const databaseUrl = env.DATABASE_URL;
@@ -64,6 +68,26 @@ export default {
         ),
     });
     console.log(JSON.stringify({ event: 'alerts.f10_testnet_reset', ...f10 }));
+    // F9 slow-tick (PH2-E4-05): the newest successful tick's RPC time is above the threshold.
+    const f9 = await runSlowTickCheck(env, {
+      latestOkTick: async () => {
+        if (!databaseUrl) throw new Error('DATABASE_URL unset');
+        const rows = await neonSqlClient(databaseUrl).query(LATEST_OK_TICK_SQL, []);
+        const row = rows[0];
+        if (row === undefined) return undefined;
+        const ms = row['rpc_ms'];
+        return {
+          tickedAt: Number(row['t']),
+          rpcMs: ms === null || ms === undefined ? undefined : Number(ms),
+        };
+      },
+      nowSeconds: () => Math.floor(Date.now() / 1000),
+      transportFor: (to) =>
+        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
+          fetch(u, i),
+        ),
+    });
+    console.log(JSON.stringify({ event: 'alerts.f9_slow_tick', ...f9 }));
   },
 };
 
@@ -186,6 +210,20 @@ export type {
   HeartbeatOutcome,
   HeartbeatState,
 } from './alerts/heartbeat.js';
+export {
+  LATEST_OK_TICK_SQL,
+  SLOW_TICK_RPC_MS,
+  runSlowTickCheck,
+  slowTickNotification,
+  slowTickState,
+} from './alerts/slow-tick.js';
+export type {
+  LatestOkTick,
+  SlowTickDeps,
+  SlowTickEnv,
+  SlowTickOutcome,
+  SlowTickState,
+} from './alerts/slow-tick.js';
 export type {
   AlertEnv,
   AlertNotification,
