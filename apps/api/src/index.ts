@@ -195,6 +195,7 @@ export {
 } from './alerts/policy.js';
 export type { AlertClass, AlertKind, AlertSpec, AlertsMode } from './alerts/policy.js';
 export { decideAlert, sendAlert } from './alerts/sender.js';
+export { PgAlertOutboxStore, PgAlertPreferencesStore } from './alerts/pg-store.js';
 export {
   LATEST_TICK_SQL,
   heartbeatNotification,
