@@ -13,6 +13,7 @@ Run on the preview site, `https://preview.evergreen-stellar.pages.dev/login/`, i
 - **Numbering.** The steps keep the numbers of the ten-step list: 1, 2, 3, 4, 5, 9 are **part A** (login and sign-out), run on 2026-10-26. 6, 7, 8, 10 are **part B** (watchlist) and are runnable. The text of the original ten-step list is not in the repo, so the step titles below are this document's own; the numbers are the ones to quote back.
 - **`/login/` is linked as "Sign in" under "Your account" in the dashboard nav** since 2026-10-30 (`apps/web/src/chrome.mjs`). Before that there was no link; typing the URL still works.
 - **Step 5b passed on production on 2026-10-30 11:31 WIB** ([evidence](evidence/2026-10-30-e3-step5b/README.md)).
+- **Step 5c passed on production on 2026-11-04**, shortly before 12:21 WIB, with `/api/v1/health` at `4210757` read at 12:21 WIB ([evidence](evidence/2026-11-04-e3-step5c/README.md)).
 - **Screenshots.** Send a screenshot of the whole browser window, with the address bar, for steps **3, 5 and 9**.
 - **Times.** For any step that shows `undetermined` or an error, send the time in WIB (UTC+7) when it happened, to the minute, so it can be matched to logs. Send the exact text on screen too.
 
@@ -127,7 +128,7 @@ Added 2026-10-29 for `PH2-E3-01`; goes into Tih's next batch. Strings are quoted
 
 ### Step 5c — Unlink the wallet (production host)
 
-Added 2026-11-02 for `PH2-E3-01`. The control shipped in #574 (merge `9c1ad2b`) and is on production: the bundle `/assets/login.js` contains it. Nobody has clicked it signed in, because that needs an emailed code. Strings are quoted from `apps/web/src/lib/login-view.ts` and `apps/web/src/pages/login.ts`.
+Added 2026-11-02 for `PH2-E3-01`. The control shipped in #574 (merge `9c1ad2b`) and is on production: the bundle `/assets/login.js` contains it. **Run on production by Tih on 2026-11-04: PASS** ([evidence](evidence/2026-11-04-e3-step5c/README.md)). Before that nobody had clicked it signed in, because that needs an emailed code. Strings are quoted from `apps/web/src/lib/login-view.ts` and `apps/web/src/pages/login.ts`.
 
 **Before.** Signed in, with the wallet from step 5b linked. Unlinking moves nothing and revokes nothing; you can link the wallet again with step 5b.
 

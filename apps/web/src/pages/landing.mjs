@@ -248,7 +248,7 @@ export function render(ctx) {
             <div>
               <p class="how-name">Watch</p>
               <p>
-                Each entry you configure is read against two thresholds: seven days for a warning,
+                Each entry you <a href="/docs/engine/config/">configure</a> is read against two thresholds: seven days for a warning,
                 one day to act. Email alerts for those thresholds are written but not
                 switched on yet.
               </p>

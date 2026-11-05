@@ -152,6 +152,13 @@ describe('addOutcomeCopy', () => {
     expect(html).toContain('nothing was added');
   });
 
+  test('signed out says not added and links to /login/, so a cold reader can act on it', () => {
+    const html = addOutcomeHtml({ kind: 'error', status: 401, code: 'UNAUTHENTICATED' }, ID);
+    expect(html).toContain('not added');
+    expect(html).toContain('this browser has none');
+    expect(html).toContain('href="/login/"');
+  });
+
   test('rate limit shows minutes from Retry-After', () => {
     expect(
       addOutcomeCopy(
