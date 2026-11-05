@@ -252,6 +252,8 @@ DoD-2 asks that *every failure mode on this list is shown to raise an alert* (`p
 
 **Count.** Of 19 modes: an operator alert is wired and proven for **2** (F10, F11), for a third (F9) in #587; log only for **3** (F16, F17, F18); no operator path for the other **13**, of which F15 is outside the repo. A user alert is wired for **0** of the 7 modes that have one (F1, F2, F4, F6, F7, F10, F19). The dispatcher is proven against an in-memory store (`alerts-dispatch.test.ts`) and, in #588 (draft), against Postgres, but nothing calls it. **DoD-2's alert clause is not met today.** The money-path modes (F1 to F8, F12, F13) cannot be met before `PH2-E4-02` and Stage 2 of `PH2-E4-04` exist: there is no data to detect on.
 
+**A defect the cron test found (probe run 2026-11-05, not yet fixed).** If Resend answers 5xx while the heartbeat is stale, `scheduled()` rejects at the first operator's request: the second operator is never tried, the `alerts.f11_heartbeat` line is never written and the F10 check does not run in that cycle. The F10 and F11 rows above are true when the send succeeds; they are not when the one thing that pages someone is itself down. The fix is a per-recipient and per-check `try/catch` in `apps/api/src` (Fatih merges); recommended, not done.
+
 **Drills that need a live system** (CEF does not run these: they need secrets or production):
 
 | Id | What | Who | Needs |
