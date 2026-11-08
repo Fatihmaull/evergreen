@@ -29,8 +29,10 @@ export default {
   fetch(request: Request, env: Env): Promise<Response> {
     return handle(request, env);
   },
-  // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
-  // for this Worker; logs the outcome, never an address or a key.
+  // F11, then F10, then F9 (PH2-E4-05). Runs only if a cron trigger is configured
+  // for this Worker. Each check logs its outcome and contains a failed Resend
+  // send (the next operator and the next check still run). Logs never carry an
+  // address or a key.
   async scheduled(
     _event: unknown,
     env: Env & HeartbeatEnv & TestnetResetEnv & SlowTickEnv,
@@ -205,6 +207,8 @@ export {
   runHeartbeatCheck,
   staleThresholdSeconds,
 } from './alerts/heartbeat.js';
+export { operatorSendFailedLog } from './alerts/operator-send.js';
+export type { OperatorCheckEvent, OperatorSendFailedLog } from './alerts/operator-send.js';
 export type {
   HeartbeatDeps,
   HeartbeatEnv,
