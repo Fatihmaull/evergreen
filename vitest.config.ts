@@ -44,6 +44,23 @@ export default defineConfig({
     // purpose; run them deliberately with `pnpm test:integration`.
     include: ['packages/*/test/**/*.test.ts', 'apps/*/test/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/*.integration.test.ts'],
+    /**
+     * Vitest's defaults (5 s a test, 10 s a hook) are sized for a quiet machine. This suite
+     * boots PGlite (a WASM Postgres) inside tests, spawns the bundled CLI and runs ESLint, and
+     * on 2026-11-04 four of those timed out on a host at load 60-160 (three agents running
+     * the full check at once): `db-grants-0008` "refuses when a role does not exist" (a fresh
+     * PGlite in the test), `repository-app-gates` "ESLint rejects a hand-written TTL
+     * comparison", engine `artifact` "runs actual SDK preparation", and the `beforeAll` of
+     * `apps/api` `heartbeat.pglite`. Each passed alone and on a re-run.
+     *
+     * 30 s matches `vitest.integration.config.ts`; 60 s for hooks matches the `60_000` the
+     * other PGlite files already pass to their `beforeAll`. A test that really hangs still
+     * fails, at 30 s instead of 5. The child processes the tests spawn carry their own
+     * 20 s `timeout`, which is shorter, so a hung CLI is killed first and fails with its own
+     * message. A test that needs more sets its own (`{ timeout }`), as the web build tests do.
+     */
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
