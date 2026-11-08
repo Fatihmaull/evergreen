@@ -42,6 +42,10 @@
 
 On `origin/main` at `852f11d`, a thrown `fetch` or a Resend non-OK response inside F11 rejected `scheduled()` before the other operator, F10 and F9. Each of F11, F10 and F9 now catches that per recipient, logs `action: 'send_failed'` with no address, and continues. Alert semantics otherwise are unchanged, including F9 leaving a stale slow tick to F11 and F14's `read_failed`. Mutation: 4/4 guards caught (the three catches, and the log builder). **Fires on production: undetermined** until the API Worker that contains this change is what `GET /api/v1/health` reports. The card stays open: DoD-2's alert clause is not met. Notion sync pending for PH2-E4-05.
 
+## Current — PH2-E3-09 registered, 2026-11-08
+
+SOW 2 workshop assets had no backlog card. `PH2-E3-08` stays Done. **`PH2-E3-09`** `(F · DES)` is `[~]`: a 16:9 slide template (online and offline) and announce / reminder / recap event cards, draft [#605](https://github.com/Fatihmaull/evergreen/pull/605). Weight undetermined. The row is not in `phase-2/PHASE2-PLAN.md`. Notion sync pending.
+
 ## Current — PH2-E4-05 cron test covers F9, 2026-11-08
 
 #598 (`cef-failure-mode-proof`) was red because the cron test still built migration 0005 after #587 (`41692cd`) added `WHERE ok`, `rpc_ms` and a fourth check. The test now applies 0010 and exercises F9 on the real `scheduled()` handler (fires, does not fire, kill switch). `apps/api/src` was not changed. Production and preview API health both served `8166908` on 2026-11-08. F9 fires on production: **undetermined** — the production scheduler's last successful deploy is `e7fb0aa` (run 41168994480), which does not write `rpc_ms`. Notion sync pending for PH2-E4-05. The card stays open: DoD-2's alert clause is not met.
