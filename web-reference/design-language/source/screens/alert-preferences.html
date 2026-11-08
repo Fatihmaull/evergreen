@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alerts — Evergreen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=Newsreader:opsz,wght@6..72,400&amp;family=Space+Mono&amp;display=swap"
+    />
+    <link rel="stylesheet" href="../templates/base.css" />
+    <link rel="stylesheet" href="alert-preferences.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-name">Evergreen</span>
+            <span class="brand-sub">Soroban state</span>
+          </span>
+        </a>
+        <nav aria-label="Sections">
+          <div class="nav-group">
+            <p class="nav-section">Live reads</p>
+            <a class="nav-item" href="/dashboard/">Overview</a>
+            <a class="nav-item" href="/dashboard/scanner/">Contract scanner</a>
+            <a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a>
+            <a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Your account</p>
+            <a class="nav-item" href="/dashboard/watchlist/">Watchlist</a>
+            <a class="nav-item active" href="/dashboard/alerts/" aria-current="page">Alerts</a>
+            <a class="nav-item" href="/login/">Sign in</a>
+            <a class="nav-item" href="/allowance/">Allowance</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Our own record</p>
+            <a class="nav-item" href="/dashboard/contracts/">Our contracts</a>
+            <a class="nav-item" href="/dashboard/engine/">Engine runs</a>
+            <a class="nav-item" href="/dashboard/history/">Extension history</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Reference</p>
+            <a class="nav-item" href="/docs/">Documentation</a>
+          </div>
+        </nav>
+        <div class="sidebar-foot">testnet only</div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+          <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+          <span class="status-item">ledger <span class="dim">reading…</span></span>
+          <span class="status-item dim"
+            >ledger close 5.000000 s ± 0.000050 · measured, not assumed</span
+          >
+        </div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">Account · Stellar testnet</p>
+            <h1>Alerts</h1>
+            <p class="lead">
+              Optional emails can be turned off. Required ones cannot. Signing in with email cannot
+              move XLM.
+            </p>
+          </header>
+
+          <section class="panel" aria-label="Email">
+            <p class="field-label">Email</p>
+            <div class="fact">
+              <div>
+                <p class="field-label">To</p>
+                <p class="email">alerts-user@example.com</p>
+              </div>
+              <span class="chip undetermined"><span class="shape"></span>undetermined</span>
+            </div>
+            <p class="note">
+              A sign-in code was accepted for this address once. Whether a later alert arrives is
+              undetermined.
+            </p>
+            <div class="fact">
+              <p class="field-label">Sending</p>
+              <span class="chip undetermined"><span class="shape"></span>undetermined</span>
+            </div>
+            <p class="note">
+              Whether any alert email is being sent is undetermined. No mail in the inbox is not
+              health.
+            </p>
+          </section>
+
+          <section class="section" aria-labelledby="optional-heading">
+            <h2 id="optional-heading">Optional</h2>
+            <p class="note">On unless you turn one off. A missing saved choice means on.</p>
+            <ul class="rows">
+              <li class="pref">
+                <div class="pref-copy">
+                  <p class="row-title">Allowance about to expire</p>
+                  <p class="note">
+                    The allowance autopilot uses is about to expire. How far ahead is undetermined.
+                  </p>
+                </div>
+                <div class="control">
+                  <span class="state-word">on</span>
+                  <button
+                    class="switch"
+                    type="button"
+                    role="switch"
+                    aria-checked="true"
+                    aria-label="Allowance about to expire"
+                  >
+                    <span class="track"><span class="knob"></span></span>
+                  </button>
+                </div>
+              </li>
+              <li class="pref">
+                <div class="pref-copy">
+                  <p class="row-title">Approaching expiry</p>
+                  <p class="note">
+                    Email when an entry you watch is approaching expiry and autopilot is off for it.
+                    The ledger count is undetermined. Any day count is an estimate; the ledger is
+                    the truth.
+                  </p>
+                  <p class="note standing">
+                    One choice for every entry you watch. There is no per-contract switch.
+                  </p>
+                </div>
+                <div class="control">
+                  <span class="state-word">on</span>
+                  <button
+                    class="switch"
+                    type="button"
+                    role="switch"
+                    aria-checked="true"
+                    aria-label="Approaching expiry"
+                  >
+                    <span class="track"><span class="knob"></span></span>
+                  </button>
+                </div>
+              </li>
+              <li class="pref">
+                <div class="pref-copy">
+                  <p class="row-title">Extend succeeded</p>
+                  <p class="note">
+                    Autopilot extended this entry. The email is a receipt of that extend. It is not
+                    a payment, and this page does not move XLM.
+                  </p>
+                </div>
+                <div class="control">
+                  <span class="state-word">on</span>
+                  <button
+                    class="switch"
+                    type="button"
+                    role="switch"
+                    aria-checked="true"
+                    aria-label="Extend succeeded"
+                  >
+                    <span class="track"><span class="knob"></span></span>
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <section class="section" aria-labelledby="required-heading">
+            <h2 id="required-heading">Required</h2>
+            <p class="note">
+              These alerts are required for autopilot users and cannot be turned off. The mark is
+              the email's severity, not a contract's health.
+            </p>
+            <ul class="rows">
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Pre-flight failed</p>
+                  <span class="chip warning"><span class="shape"></span>warning</span>
+                </div>
+                <p class="note">
+                  The pre-flight check failed, so nothing was pulled from your wallet and the entry
+                  was not extended.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Allowance missing or used up</p>
+                  <span class="chip warning"><span class="shape"></span>warning</span>
+                </div>
+                <p class="note">
+                  Your allowance is missing, expired, or its 30-day budget is used up. Autopilot
+                  cannot extend this entry until you approve a new allowance.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Extend failed, refund under way</p>
+                  <span class="chip critical"><span class="shape"></span>critical</span>
+                </div>
+                <p class="note">
+                  The extend failed after the pull. The whole pull, fee included, is being refunded.
+                  The entry is still not protected.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Refund delayed</p>
+                  <span class="chip critical"><span class="shape"></span>critical</span>
+                </div>
+                <p class="note">
+                  A refund owed to you is delayed. It is still owed and will be sent to your wallet.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Unexplained charge</p>
+                  <span class="chip critical"><span class="shape"></span>critical</span>
+                </div>
+                <p class="note">
+                  Reconciliation found a difference between what Evergreen recorded and what the
+                  chain shows for your wallet.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Testnet reset</p>
+                  <span class="chip warning"><span class="shape"></span>warning</span>
+                </div>
+                <p class="note">
+                  The Stellar testnet appears to have been reset. Protection state for this entry
+                  starts over.
+                </p>
+              </li>
+              <li class="required">
+                <div class="required-line">
+                  <p class="row-title">Restore lost changes</p>
+                  <span class="chip warning"><span class="shape"></span>warning</span>
+                </div>
+                <p class="note">
+                  Evergreen data was restored from a backup. Recent changes for this entry may be
+                  missing; which ones is undetermined.
+                </p>
+              </li>
+            </ul>
+          </section>
+
+          <div class="closing">
+            <p class="note">
+              At most 5 optional emails are sent in 24 hours. Required emails are not counted in
+              that 5.
+            </p>
+            <p class="note">
+              No alert email is not health. It can mean nothing happened, or that sending did not.
+            </p>
+          </div>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built for Stellar, backed by Instawards.</p>
+            <p>
+              <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
+            </p>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

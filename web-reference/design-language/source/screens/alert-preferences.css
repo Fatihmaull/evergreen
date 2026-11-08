@@ -1,0 +1,363 @@
+/* PH2-E2-06 reference. Tokens come from templates/base.css.
+   --k is 1 so that file's geometry is the site's, not the canvas scale.
+   No colour, face, or weight is introduced here. */
+
+:root {
+  --k: 1;
+}
+
+html,
+body.app {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+body.app {
+  font: 400 14px/1.5 var(--sans);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.app,
+body.app * {
+  font-weight: 400;
+}
+
+body.app h1,
+body.app h2 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+body.app h1 {
+  font: 400 28px/1.18 var(--serif);
+  letter-spacing: -0.0125em;
+}
+
+body.app h2 {
+  font: 400 20px/1.3 var(--serif);
+  letter-spacing: -0.005em;
+}
+
+body.app p {
+  margin: 0;
+}
+
+body.app a {
+  color: var(--pine);
+  text-underline-offset: 3px;
+}
+
+/* Sidebar links sit on pine. `body.app a` would paint them pine on pine. */
+.sidebar a.brand,
+.sidebar a.brand .brand-name {
+  color: var(--surface);
+  text-decoration: none;
+}
+
+.sidebar a.nav-item {
+  color: rgba(252, 249, 248, 0.88);
+  text-decoration: none;
+}
+
+.skip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+.sidebar {
+  background: var(--pine);
+  color: var(--surface);
+  padding: 20px 16px;
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+.brand {
+  color: var(--surface);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand-name {
+  display: block;
+  font: 400 16px/1.1 var(--serif);
+  letter-spacing: -0.005em;
+}
+
+.brand-sub {
+  display: block;
+  font: 400 12px/1.3 var(--mono);
+  letter-spacing: 0.02em;
+  color: rgba(252, 249, 248, 0.62);
+}
+
+.nav-group {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.nav-section {
+  margin: 0 0 2px;
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(252, 249, 248, 0.62);
+}
+
+.nav-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font: 400 14px/1.4 var(--sans);
+  color: rgba(252, 249, 248, 0.88);
+  text-decoration: none;
+}
+
+.sidebar a.nav-item.active {
+  background: var(--surface);
+  color: var(--pine);
+}
+
+.sidebar-foot {
+  font: 400 12px/1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--sage);
+}
+
+.content {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  min-width: 0;
+  align-content: start;
+}
+
+.statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 10px 40px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  font: 400 12px/1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+.statusbar .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  margin-right: 7px;
+}
+
+.dim {
+  color: var(--ink-3);
+}
+
+main.main {
+  padding: 32px 40px 48px;
+  display: grid;
+  gap: 28px;
+  align-content: start;
+  max-width: 1180px;
+  width: 100%;
+}
+
+.page-head {
+  display: grid;
+  gap: 12px;
+}
+
+.eyebrow {
+  font: 400 12px/1.4 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+
+.lead {
+  max-width: 54ch;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 20px 22px;
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.field-label {
+  font: 400 12px/1.3 var(--sans);
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+
+.fact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.email {
+  font: 400 14px/1.4 var(--sans);
+  color: var(--ink);
+}
+
+.note {
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.section {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+}
+
+.rows {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.pref,
+.required {
+  display: grid;
+  gap: 6px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.pref {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 24px;
+  align-items: start;
+}
+
+.pref-copy,
+.required-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.row-title {
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.standing {
+  color: var(--ink-3);
+}
+
+.required-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.control {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  align-content: start;
+}
+
+.state-word {
+  font: 400 12px/1 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+button.switch {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.switch:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+
+.track {
+  width: 36px;
+  height: 20px;
+  border-radius: 100vw;
+  border: 1px solid var(--pine);
+  background: var(--pine);
+  position: relative;
+}
+
+.knob {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.closing {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+}
+
+footer.site {
+  padding: 20px 40px 28px;
+  border-top: 1px solid var(--rule);
+}
+
+.foot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  justify-content: space-between;
+  max-width: 1180px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.foot-row a {
+  color: var(--ink-2);
+}
