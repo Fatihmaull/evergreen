@@ -218,7 +218,7 @@ This repo is built with heavy agent assistance, so context lives in files rather
 
 Testnet only. No mainnet auto-bump, no hosted billing, no rent subsidy, no multi-sig custody, no non-Soroban chains, no audit tooling. The engine is self-hosted by you; we do not run infrastructure on anyone's behalf. Those are deliberate non-goals for this grant — see [`docs/PRD.md`](docs/PRD.md) §3.
 
-**Phase 2 (testnet).** The hosted pieces now store email accounts, the wallet addresses linked to them, and watchlists on testnet, and nothing more. What the sign-in, the wallet link and the watchlist do today: [Account and watchlist](https://evergreen-stellar.pages.dev/docs/account/).
+**Phase 2 (testnet).** The hosted pieces now store email accounts, the wallet addresses linked to them, and watchlists on testnet. What the sign-in, the wallet link and the watchlist do today: [Account and watchlist](https://evergreen-stellar.pages.dev/docs/account/).
 
 ## Team
 
