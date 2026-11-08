@@ -2,6 +2,8 @@
 
 **Status, 2026-10-29: design only. No code, no schema, no deploy.** This document follows the #461 pattern: agree on the shape first, then build it in stages. Everything here is **testnet and preview only**. Production sends nothing until Fatih gives his production-secrets "ya" (`docs/ops/secrets.md`). Wherever the repo doesn't define a value or a behaviour, this page says **undetermined**. It invents no numbers.
 
+**Update, 2026-11-04:** the dispatcher (`apps/api/src/alerts/dispatch.ts`) now has Postgres stores over migration 0011, run as the `eg_api` role: `PgAlertOutboxStore` and `PgAlertPreferencesStore` in `apps/api/src/alerts/pg-store.ts` (draft PR, stacked on #571). They are not live: 0011 is not applied, and nothing yet calls `dispatchUserAlert` (the events come from the scheduler and money path, `PH2-E4-04`/`PH2-E4-02`). A preference reset is an UPDATE to the kind's default, never a delete (`eg_api` has no DELETE). Operator alerts (F9, F10, F11) do not use the outbox, because it has a user foreign key; their only dedupe is Resend's 24-hour idempotency key.
+
 Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:634`). *Depends on `PH2-E2-05`* (the watchlist API, #427). The events that need alerts come from `PH2-E4-05`'s failure-mode list, [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md), and most of them come from the scheduler, [`docs/PH2-E4-04-SCHEDULER-DESIGN.md`](PH2-E4-04-SCHEDULER-DESIGN.md). **Neither of those is built**, so this design defines the interface the scheduler will call. It does not define when the scheduler calls it.
 
 ## 1. Scope
