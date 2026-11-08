@@ -1,12 +1,17 @@
 /**
  * The API Worker's `scheduled()` handler, end to end (PH2-E4-05, DoD-2 "every failure mode is
- * shown to raise an alert"). The unit tests prove `runHeartbeatCheck` and `runTestnetResetCheck`
- * with fakes; nothing proved that the handler in `src/index.ts` actually calls them, with the real
+ * shown to raise an alert"). The unit tests prove `runHeartbeatCheck`, `runTestnetResetCheck` and
+ * `runSlowTickCheck` with fakes; nothing proved that the handler in `src/index.ts` actually calls
+ * them, with the real
  * SQL, the real Resend request and the right settings. That wiring is what pages someone.
  *
- * Real: the default export's `scheduled`, `LATEST_TICK_SQL`, `RECENT_TICKS_SQL`, the Resend
- * transport, `configCheck`, and migration 0005 on PGlite. Faked: the Neon driver (it hands the
- * handler PGlite's rows) and `fetch` (it records the Resend request). No network.
+ * Real: the default export's `scheduled`, `LATEST_TICK_SQL`, `RECENT_TICKS_SQL`,
+ * `LATEST_OK_TICK_SQL`, the Resend transport, `configCheck`, and migrations 0005 and 0010 on
+ * PGlite (`ok` and `rpc_ms`; 0010's grants name the `eg_scheduler` role). Faked: the Neon driver
+ * (it hands the handler PGlite's rows) and `fetch` (it records the Resend request). No network.
+ *
+ * 0005 alone is not enough. On main the three reads are `WHERE ok`, and F9 also selects `rpc_ms`.
+ * A table without those columns makes every read throw, and each check logs `read_failed`.
  */
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
@@ -65,16 +70,27 @@ let logs: Record<string, unknown>[];
 let resendStatus = 200;
 
 const pg = new PGlite();
-const db0005 = readFileSync(new URL('../db/0005_scheduler_ticks.sql', import.meta.url), 'utf8');
+const dbFile = (name: string): string =>
+  readFileSync(new URL(`../db/${name}`, import.meta.url), 'utf8');
 
-const tick = (agoSeconds: number, ledger: number): Promise<unknown> =>
+/** A successful tick. `rpcMs` defaults under the F9 line so the other checks are not also slow. */
+const tick = (agoSeconds: number, ledger: number, rpcMs: number | null = 100): Promise<unknown> =>
   pg.query(
-    'INSERT INTO scheduler_ticks (ticked_at, observed_ledger) VALUES (to_timestamp($1), $2)',
-    [NOW - agoSeconds, ledger],
+    'INSERT INTO scheduler_ticks (ticked_at, observed_ledger, rpc_ms, ok) VALUES (to_timestamp($1), $2, $3, true)',
+    [NOW - agoSeconds, ledger, rpcMs],
+  );
+
+/** A failed tick: no ledger, `ok` false. F9 and F11 must not treat it as the newest heartbeat. */
+const failedTick = (agoSeconds: number, rpcMs: number | null): Promise<unknown> =>
+  pg.query(
+    'INSERT INTO scheduler_ticks (ticked_at, observed_ledger, rpc_ms, ok) VALUES (to_timestamp($1), NULL, $2, false)',
+    [NOW - agoSeconds, rpcMs],
   );
 
 beforeAll(async () => {
-  await pg.exec(db0005);
+  await pg.exec(dbFile('0005_scheduler_ticks.sql'));
+  await pg.exec('CREATE ROLE eg_scheduler');
+  await pg.exec(dbFile('0010_scheduler_ticks_rpc_ms_ok.sql'));
   db.pg = pg as never;
 });
 afterAll(async () => {
@@ -116,8 +132,8 @@ afterEach(() => {
 const logOf = (event: string): Record<string, unknown> | undefined =>
   logs.find((l) => l['event'] === event);
 
-describe('the cron as deployed: F11, F10, F17/F18', () => {
-  it('a healthy scheduler sends nothing and logs all three checks', async () => {
+describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
+  it('a healthy scheduler sends nothing and logs all four checks', async () => {
     await tick(900, 1000);
     await tick(0, 1060);
     await run({ ...PROD });
@@ -127,10 +143,11 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
       action: 'none',
       reason: 'no_decrease',
     });
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
     expect(logOf('alerts.f17_f18_config')).toMatchObject({ problem: false });
   });
 
-  it('the cron runs exactly these three checks today; change the DoD-2 evidence table when this list changes', async () => {
+  it('the cron runs exactly these four checks today; change the DoD-2 evidence table when this list changes', async () => {
     await tick(0, 1000);
     await run({ ...PROD });
     expect(
@@ -138,11 +155,17 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
         .map((l) => String(l['event']))
         .filter((e) => e.startsWith('alerts.'))
         .sort(),
-    ).toEqual(['alerts.f10_testnet_reset', 'alerts.f11_heartbeat', 'alerts.f17_f18_config']);
+    ).toEqual([
+      'alerts.f10_testnet_reset',
+      'alerts.f11_heartbeat',
+      'alerts.f17_f18_config',
+      'alerts.f9_slow_tick',
+    ]);
   });
 
   it('F11: a heartbeat older than HEARTBEAT_STALE_SECONDS emails each operator once', async () => {
-    await tick(2701, 1000);
+    // Slow as well as stale. F9 must leave it to F11: one email per operator, not two.
+    await tick(2701, 1000, 5000);
     await run({ ...PROD });
     expect(resend.map((r) => r.body.to)).toEqual([[OP_A], [OP_B]]);
     const first = resend[0]!;
@@ -154,6 +177,8 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
     expect(first.key).toMatch(/^f11-heartbeat-stale:\d+\/[0-9a-f]{16}$/);
     expect(resend[0]!.key).not.toBe(resend[1]!.key);
     expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'sent', recipients: 2 });
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'stale' });
+    expect(resend.every((r) => r.body.subject.includes('(F11)'))).toBe(true);
   });
 
   it('F11: exactly at the threshold is still fresh', async () => {
@@ -167,6 +192,7 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
     await run({ ...PROD });
     expect(resend).toHaveLength(2);
     expect(resend[0]!.body.text).toContain('no scheduler tick has been recorded');
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'no_tick' });
   });
 
   it('F10: a decreasing observed ledger emails each operator, even with a fresh heartbeat', async () => {
@@ -187,6 +213,47 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
       decreases: 1,
     });
     expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
+  });
+
+  it('F9: a fresh tick slower than 3000 ms emails each operator once', async () => {
+    await tick(60, 1000, 3001);
+    await run({ ...PROD });
+    expect(resend.map((r) => r.body.to)).toEqual([[OP_A], [OP_B]]);
+    const first = resend[0]!;
+    expect(first.url).toBe('https://api.resend.com/emails');
+    expect(first.auth).toBe('Bearer re_test_key');
+    expect(first.body.from).toBe('alerts@mail.example.invalid');
+    expect(first.body.subject).toContain('scheduler RPC slow (F9)');
+    expect(first.body.text).toContain('3001 ms');
+    expect(first.body.text).toContain('3000 ms');
+    expect(first.key).toMatch(/^f9-slow-tick:\d+\/[0-9a-f]{16}$/);
+    expect(resend[0]!.key).not.toBe(resend[1]!.key);
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({
+      action: 'sent',
+      recipients: 2,
+      rpcMs: 3001,
+    });
+    expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
+    expect(logOf('alerts.f10_testnet_reset')).toMatchObject({
+      action: 'none',
+      reason: 'no_decrease',
+    });
+  });
+
+  it('F9: exactly 3000 ms is not slow', async () => {
+    await tick(0, 1000, 3000);
+    await run({ ...PROD });
+    expect(resend).toEqual([]);
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
+  });
+
+  it('F9: a failed tick with a long rpc_ms is not the alert; the newest ok row is', async () => {
+    await tick(900, 1000, 200);
+    await failedTick(10, 9000);
+    await run({ ...PROD });
+    expect(resend).toEqual([]);
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
   });
 
   it('F10: an equal ledger is a stall, not a reset', async () => {
@@ -221,8 +288,28 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
         action: 'dry-run',
         reason: 'alerts_send_off',
       });
+      // Stale, so F9 leaves it to F11 and never reaches its own send gate.
+      expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'stale' });
     }
     expect(resend).toEqual([]);
+  });
+
+  it('F9 kill switch: a fresh slow tick with anything but exactly "send" is a dry run', async () => {
+    await tick(0, 1000, 4200);
+    for (const v of [undefined, '', 'SEND', ' send', 'send ']) {
+      logs.length = 0;
+      resend.length = 0;
+      const env: Env = { ...PROD };
+      if (v === undefined) delete env['ALERTS_SEND'];
+      else env['ALERTS_SEND'] = v;
+      await run(env);
+      expect(logOf('alerts.f9_slow_tick')).toMatchObject({
+        action: 'dry-run',
+        reason: 'alerts_send_off',
+        rpcMs: 4200,
+      });
+      expect(resend).toEqual([]);
+    }
   });
 
   it('no allowlist: a dry run, nothing sent', async () => {
@@ -234,6 +321,19 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
     expect(logOf('alerts.f11_heartbeat')).toMatchObject({
       action: 'dry-run',
       reason: 'no_operator',
+    });
+  });
+
+  it('F9: no allowlist on a fresh slow tick is a dry run, nothing sent', async () => {
+    await tick(0, 1000, 4200);
+    const env: Env = { ...PROD };
+    delete env['ALERTS_ALLOWLIST'];
+    await run(env);
+    expect(resend).toEqual([]);
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({
+      action: 'dry-run',
+      reason: 'no_operator',
+      rpcMs: 4200,
     });
   });
 
@@ -259,6 +359,10 @@ describe('the cron as deployed: F11, F10, F17/F18', () => {
     });
     expect(logOf('alerts.f10_testnet_reset')).toEqual({
       event: 'alerts.f10_testnet_reset',
+      action: 'read_failed',
+    });
+    expect(logOf('alerts.f9_slow_tick')).toEqual({
+      event: 'alerts.f9_slow_tick',
       action: 'read_failed',
     });
     expect(resend).toEqual([]);

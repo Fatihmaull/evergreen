@@ -159,3 +159,5 @@ The asymmetry is the finding. **B and C had a drift check running twice a week; 
 - 2026-09-15 · W3-D19 feasibility: ADR-002/POLICY-SIGNER assume smart-account auth can constrain the fee-paying native TTL envelope, but do not identify a policy hook on that path. Pinned protocol/provider tracing found the missing link; see W3-POLICY-SIGNER-FEASIBILITY.md. No deploy performed.
 
 - 2026-09-17 · W3-D21-01 inventory: #166 inserted acceptance prose into a sealed A-save README without changing the original manifest. The other57 files still match. Preserve the annotation separately and restore the original sealed README, rather than silently blessing altered evidence.
+
+- 2026-11-08 · PH2-E4-05 CI on #598: `docs/PH2-E4-05-FAILURE-MODES.md` still said F9 was an open draft (#587) after `41692cd` was on `origin/main`. The page does not say to read `GET /api/v1/health` for the serving commit, or to separate that from the scheduler deploy (the API Worker and the scheduler are different deploys). Had to read the health response and the scheduler-deploy job list.

@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-05 cron test covers F9, 2026-11-08
+
+#598 (`cef-failure-mode-proof`) was red because the cron test still built migration 0005 after #587 (`41692cd`) added `WHERE ok`, `rpc_ms` and a fourth check. The test now applies 0010 and exercises F9 on the real `scheduled()` handler (fires, does not fire, kill switch). `apps/api/src` was not changed. Production and preview API health both served `8166908` on 2026-11-08. F9 fires on production: **undetermined** — the production scheduler's last successful deploy is `e7fb0aa` (run 41168994480), which does not write `rpc_ms`. Notion sync pending for PH2-E4-05. The card stays open: DoD-2's alert clause is not met.
+
 ## Current — design language extended to every medium, 2026-10-15
 
 Design audit, then Fatih's five decisions of the same day, applied in
