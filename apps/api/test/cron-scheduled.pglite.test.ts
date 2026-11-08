@@ -69,6 +69,10 @@ let resend: Resend[];
 let logs: Record<string, unknown>[];
 let resendStatus = 200;
 
+/** Fail one operator's send for one check. `to: '*'` fails every recipient of that subject. */
+let failSend:
+  { readonly subject: string; readonly to: string; readonly how: 'throw' | 'status' } | undefined;
+
 const pg = new PGlite();
 const dbFile = (name: string): string =>
   readFileSync(new URL(`../db/${name}`, import.meta.url), 'utf8');
@@ -101,18 +105,34 @@ beforeEach(async () => {
   await pg.exec('TRUNCATE scheduler_ticks');
   db.failReads = false;
   resendStatus = 200;
+  failSend = undefined;
   resend = [];
   logs = [];
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW * 1000);
   vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
     const h = new Headers(init.headers);
+    const body = JSON.parse(String(init.body)) as Resend['body'];
     resend.push({
       url,
       auth: h.get('authorization'),
       key: h.get('idempotency-key'),
-      body: JSON.parse(String(init.body)),
+      body,
     });
+    const to = body.to[0] ?? '';
+    if (
+      failSend &&
+      body.subject.includes(failSend.subject) &&
+      (failSend.to === '*' || failSend.to === to)
+    ) {
+      if (failSend.how === 'throw') {
+        // The message embeds the address and the key on purpose. The log must not.
+        const error = new Error(`abort LEAK ${to} ${PROD.EMAIL_API_KEY} ${PROD.DATABASE_URL}`);
+        error.name = 'AbortError';
+        throw error;
+      }
+      return new Response('{"message":"LEAK_BODY"}', { status: 500 });
+    }
     return new Response('{"id":"x"}', { status: resendStatus });
   });
   vi.spyOn(console, 'log').mockImplementation((line: unknown) => {
@@ -131,6 +151,28 @@ afterEach(() => {
 
 const logOf = (event: string): Record<string, unknown> | undefined =>
   logs.find((l) => l['event'] === event);
+
+const sentTo = (subject: string): (string | undefined)[] =>
+  resend.filter((r) => r.body.subject.includes(subject)).map((r) => r.body.to[0]);
+
+/** A stale heartbeat and a ledger drop. F9 runs and leaves the stale tick to F11. */
+const staleDrop = async (): Promise<void> => {
+  await tick(4000, 5000, 5000);
+  await tick(2701, 1200, 5000);
+};
+
+/** A fresh slow tick and a ledger drop, so F10 and F9 both send and F11 does not. */
+const freshSlowDrop = async (): Promise<void> => {
+  await tick(1800, 5000, 100);
+  await tick(60, 1200, 3001);
+};
+
+const assertNoLeak = (): void => {
+  const all = JSON.stringify(logs);
+  for (const secret of [OP_A, OP_B, PROD.DATABASE_URL, PROD.EMAIL_API_KEY, 'LEAK', 'LEAK_BODY']) {
+    expect(all).not.toContain(secret);
+  }
+};
 
 describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
   it('a healthy scheduler sends nothing and logs all four checks', async () => {
@@ -404,5 +446,120 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
       PROD.SIGNIN_CODE_PEPPER,
     ])
       expect(all).not.toContain(secret);
+  });
+});
+
+describe('a failed operator send does not stop the cron', () => {
+  it('F11: a thrown fetch for one operator still mails the other, and F10 still sends', async () => {
+    await staleDrop();
+    failSend = { subject: '(F11)', to: OP_A, how: 'throw' };
+    await expect(run({ ...PROD })).resolves.toBeUndefined();
+    expect(sentTo('(F11)')).toEqual([OP_A, OP_B]);
+    expect(sentTo('(F10')).toEqual([OP_A, OP_B]);
+    expect(sentTo('(F9)')).toEqual([]);
+    expect(logs.filter((l) => l['event'] === 'alerts.f11_heartbeat')).toEqual([
+      { event: 'alerts.f11_heartbeat', action: 'send_failed', errorName: 'AbortError' },
+      { event: 'alerts.f11_heartbeat', action: 'sent', recipients: 1, failed: 1, ageSeconds: 2701 },
+    ]);
+    expect(logOf('alerts.f10_testnet_reset')).toMatchObject({
+      action: 'sent',
+      recipients: 2,
+      decreases: 1,
+    });
+    // A stale slow tick stays F11's. F9 ran; it did not send.
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'stale' });
+    const f11Key = resend.find((r) => r.body.subject.includes('(F11)') && r.body.to[0] === OP_B);
+    expect(f11Key?.key).toMatch(/^f11-heartbeat-stale:\d+\/[0-9a-f]{16}$/);
+    expect(f11Key?.key).not.toContain(OP_B);
+    assertNoLeak();
+  });
+
+  it('F11: a 5xx for one operator still mails the other, and F10 still sends', async () => {
+    await staleDrop();
+    failSend = { subject: '(F11)', to: OP_A, how: 'status' };
+    await expect(run({ ...PROD })).resolves.toBeUndefined();
+    expect(sentTo('(F11)')).toEqual([OP_A, OP_B]);
+    expect(sentTo('(F10')).toEqual([OP_A, OP_B]);
+    expect(logs.filter((l) => l['event'] === 'alerts.f11_heartbeat')).toEqual([
+      { event: 'alerts.f11_heartbeat', action: 'send_failed', httpStatus: 500 },
+      { event: 'alerts.f11_heartbeat', action: 'sent', recipients: 1, failed: 1, ageSeconds: 2701 },
+    ]);
+    expect(logOf('alerts.f10_testnet_reset')).toMatchObject({ action: 'sent', recipients: 2 });
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'stale' });
+    assertNoLeak();
+  });
+
+  it('F11: every operator 5xx is send_failed, and F10 still mails both operators', async () => {
+    await staleDrop();
+    failSend = { subject: '(F11)', to: '*', how: 'status' };
+    await expect(run({ ...PROD })).resolves.toBeUndefined();
+    expect(sentTo('(F11)')).toEqual([OP_A, OP_B]);
+    expect(sentTo('(F10')).toEqual([OP_A, OP_B]);
+    expect(logs.filter((l) => l['event'] === 'alerts.f11_heartbeat')).toEqual([
+      { event: 'alerts.f11_heartbeat', action: 'send_failed', httpStatus: 500 },
+      { event: 'alerts.f11_heartbeat', action: 'send_failed', httpStatus: 500 },
+      { event: 'alerts.f11_heartbeat', action: 'send_failed', failed: 2, ageSeconds: 2701 },
+    ]);
+    expect(logOf('alerts.f9_slow_tick')).toEqual({
+      event: 'alerts.f9_slow_tick',
+      action: 'none',
+      reason: 'stale',
+    });
+    assertNoLeak();
+  });
+
+  it('F10: a thrown fetch for one operator still mails the other, and F9 still sends', async () => {
+    await freshSlowDrop();
+    failSend = { subject: '(F10', to: OP_A, how: 'throw' };
+    await expect(run({ ...PROD })).resolves.toBeUndefined();
+    expect(sentTo('(F11)')).toEqual([]);
+    expect(sentTo('(F10')).toEqual([OP_A, OP_B]);
+    expect(sentTo('(F9)')).toEqual([OP_A, OP_B]);
+    expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
+    expect(logs.filter((l) => l['event'] === 'alerts.f10_testnet_reset')).toEqual([
+      { event: 'alerts.f10_testnet_reset', action: 'send_failed', errorName: 'AbortError' },
+      {
+        event: 'alerts.f10_testnet_reset',
+        action: 'sent',
+        recipients: 1,
+        failed: 1,
+        decreases: 1,
+      },
+    ]);
+    expect(logOf('alerts.f9_slow_tick')).toMatchObject({
+      action: 'sent',
+      recipients: 2,
+      rpcMs: 3001,
+    });
+    assertNoLeak();
+  });
+
+  it('F9: a 5xx for one operator still mails the other, and the cron resolves', async () => {
+    await tick(60, 1000, 3001);
+    failSend = { subject: '(F9)', to: OP_A, how: 'status' };
+    await expect(run({ ...PROD })).resolves.toBeUndefined();
+    expect(sentTo('(F9)')).toEqual([OP_A, OP_B]);
+    expect(logs.filter((l) => l['event'] === 'alerts.f9_slow_tick')).toEqual([
+      { event: 'alerts.f9_slow_tick', action: 'send_failed', httpStatus: 500 },
+      { event: 'alerts.f9_slow_tick', action: 'sent', recipients: 1, failed: 1, rpcMs: 3001 },
+    ]);
+    expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
+    expect(logOf('alerts.f10_testnet_reset')).toMatchObject({
+      action: 'none',
+      reason: 'no_decrease',
+    });
+    expect(
+      logs
+        .map((l) => String(l['event']))
+        .filter((e) => e.startsWith('alerts.'))
+        .filter((e, i, all) => all.indexOf(e) === i)
+        .sort(),
+    ).toEqual([
+      'alerts.f10_testnet_reset',
+      'alerts.f11_heartbeat',
+      'alerts.f17_f18_config',
+      'alerts.f9_slow_tick',
+    ]);
+    assertNoLeak();
   });
 });
