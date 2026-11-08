@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E2-06 alert preferences route, 2026-11-08
+
+`GET` and `PATCH /api/v1/me/alert-preferences` (`docs/API.md` §6a). Optional kinds can be turned off or reset to the default; required kinds cannot. The user id comes from the session. The route does not send mail and does not move XLM. Migration 0011 was already on `main` and applied to preview and production on 2026-11-05; the BACKLOG row that still said the card was waiting on those tables was corrected. Nothing calls `dispatchUserAlert` from the API cron or the scheduler yet. Notion sync pending for PH2-E2-06.
+
 ## Current — PH2-E4-05 send failure stays inside one recipient, 2026-11-08
 
 On `origin/main` at `852f11d`, a thrown `fetch` or a Resend non-OK response inside F11 rejected `scheduled()` before the other operator, F10 and F9. Each of F11, F10 and F9 now catches that per recipient, logs `action: 'send_failed'` with no address, and continues. Alert semantics otherwise are unchanged, including F9 leaving a stale slow tick to F11 and F14's `read_failed`. Mutation: 4/4 guards caught (the three catches, and the log builder). **Fires on production: undetermined** until the API Worker that contains this change is what `GET /api/v1/health` reports. The card stays open: DoD-2's alert clause is not met. Notion sync pending for PH2-E4-05.

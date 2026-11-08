@@ -1,8 +1,8 @@
 # PH2-E2-06 per-user alerts via Resend: design for agreement before code
 
-**Status, 2026-10-29: design only. No code, no schema, no deploy.** This document follows the #461 pattern: agree on the shape first, then build it in stages. Everything here is **testnet and preview only**. Production sends nothing until Fatih gives his production-secrets "ya" (`docs/ops/secrets.md`). Wherever the repo doesn't define a value or a behaviour, this page says **undetermined**. It invents no numbers.
+**Status, 2026-11-08:** dispatcher, templates, planning and the Postgres stores are on `main`. Migration **0011 is on `main` and applied** to preview (2026-11-05 07:34:02–07:34:07 UTC) and production (2026-11-05 07:35:20–07:35:26 UTC, snapshot `pre-0011-20261105`); see `docs/ops/neon-migrations.md`. The 2026-11-04 line that said 0011 was not applied was stale. `GET` and `PATCH /me/alert-preferences` are specified in `docs/API.md` §6a and implemented in `apps/api/src/alerts/routes.ts`. **Nothing in the API cron or the scheduler calls `dispatchUserAlert` yet.** Those events come from `PH2-E4-04` and `PH2-E4-02` (CER). Production sends nothing until Fatih gives his production-secrets "ya" (`docs/ops/secrets.md`). Wherever the repo doesn't define a value or a behaviour, this page says **undetermined**. It invents no numbers.
 
-**Update, 2026-11-04:** the dispatcher (`apps/api/src/alerts/dispatch.ts`) now has Postgres stores over migration 0011, run as the `eg_api` role: `PgAlertOutboxStore` and `PgAlertPreferencesStore` in `apps/api/src/alerts/pg-store.ts` (draft PR, stacked on #571). They are not live: 0011 is not applied, and nothing yet calls `dispatchUserAlert` (the events come from the scheduler and money path, `PH2-E4-04`/`PH2-E4-02`). A preference reset is an UPDATE to the kind's default, never a delete (`eg_api` has no DELETE). Operator alerts (F9, F10, F11) do not use the outbox, because it has a user foreign key; their only dedupe is Resend's 24-hour idempotency key.
+**Update, 2026-11-04 (kept; the "not applied" clause is superseded above):** the dispatcher (`apps/api/src/alerts/dispatch.ts`) has Postgres stores over migration 0011, run as the `eg_api` role: `PgAlertOutboxStore` and `PgAlertPreferencesStore` in `apps/api/src/alerts/pg-store.ts` (#588). A preference reset is an UPDATE to the kind's default, never a delete (`eg_api` has no DELETE). Operator alerts (F9, F10, F11) do not use the outbox, because it has a user foreign key; their only dedupe is Resend's 24-hour idempotency key.
 
 Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:634`). *Depends on `PH2-E2-05`* (the watchlist API, #427). The events that need alerts come from `PH2-E4-05`'s failure-mode list, [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md), and most of them come from the scheduler, [`docs/PH2-E4-04-SCHEDULER-DESIGN.md`](PH2-E4-04-SCHEDULER-DESIGN.md). **Neither of those is built**, so this design defines the interface the scheduler will call. It does not define when the scheduler calls it.
 
@@ -69,13 +69,13 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 
 - **Preferences:** per user, one boolean per optional event (§3). Required alerts aren't stored as preferences, because they can't be turned off.
 - **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. One-click unsubscribe (RFC 8058) is offered for **optional alerts only** (decided by Tih, 2026-10-29); it needs a signed, unauthenticated route on the API, whose design is part of the build. Required alerts cannot be unsubscribed and say why they can't be turned off.
-- **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF (`docs/API.md`). The shape will be written into `docs/API.md` when it is built.
+- **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF. The shape is `docs/API.md` §6a. One-click unsubscribe (RFC 8058) is still not built.
 - **Deactivated users** (`users.deactivated_at`) get nothing. That matches the planner rule from #477.
 - **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. `ALERTS_SEND` is a plain DevOps setting. `ALERTS_ALLOWLIST` is a Worker **secret**, because it holds email addresses (`docs/ops/secrets.md`); its values are never logged or echoed.
 
 ## 7. Asks
 
-**Rakha** (schema and engine; nothing here is a migration):
+**Rakha** (schema and engine). Items 1 and 2 landed as migration 0011, applied 2026-11-05. The original ask follows.
 1. **An outbox table** for user alerts: `user_id`, `event_id`, `kind`, `severity`, `status`, `resend_email_id`, `attempts`, `created_at`, `sent_at`, and UNIQUE (`user_id`, `event_id`). With its grants, per the #479 checklist: INSERT and UPDATE on the status columns for `eg_scheduler`; SELECT for `eg_api` only if a history route needs it (**undetermined**). Name and migration number are your call.
 2. **A preferences store:** either columns on `users` or a separate `alert_preferences` table. Your call. Grants: `eg_api` SELECT and UPDATE (that user only), `eg_scheduler` SELECT.
 3. **`EmailChannel`:** a per-call recipient, or a confirmation that one instance per send is fine.
@@ -109,6 +109,6 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 - The event ID for the "approaching critical" alert, which depends on the autopilot-window rule (#461 §7).
 - Whether alerts use a separate sender address.
 - When the Telegram backup channel for F16 is wired (the channel itself is decided).
-- The outbox and preferences schema, which is Rakha's call (§7).
+- The outbox and preferences schema. Landed as migration 0011 (Rakha's call, applied 2026-11-05). Who the F10 user email is addressed to is still **undetermined**: `testnetResetUserEvents` returns event ids only.
 - Whether F3 "pending" and F5 "delay" are emailed (open in E4-05).
-- Alert copy. Nothing is written yet.
+- Alert copy. Draft subjects and bodies are in `apps/api/src/alerts/templates.ts`. Whether they move to `packages/core` (recommendation 2) is still open.

@@ -180,6 +180,32 @@ type WatchItem = {
 - So the API refuses a threshold below a floor the engine publishes: `422 THRESHOLD_BELOW_FLOOR`.
 - The floor's value is Rakha's (`PH2-E4-04`, `B-D31-01`).
 
+## 6a · Alert preferences (`PH2-E2-06`, CEF)
+
+Per-user email alerts. **This route does not send mail and does not move XLM.** A session, including one opened by email, only reads and writes a boolean. Sending stays behind `ALERTS_SEND` (exactly `send`) and `ALERTS_ALLOWLIST` on the alert dispatcher, which is not this route.
+
+| Route | Auth | Does |
+|---|---|---|
+| `GET /me/alert-preferences` | session | `{ items: AlertPreference[] }`, every kind, in the order of `ALERT_SPECS` |
+| `PATCH /me/alert-preferences` `{ kind, enabled }` or `{ kind, reset: true }` | session + CSRF | Sets one optional kind, or puts it back to its default. Returns the same `{ items }` list |
+
+```ts
+type AlertPreference = {
+  kind: AlertKind;                 // the ten kinds in apps/api/src/alerts/policy.ts
+  class: 'required' | 'optional';
+  enabled: boolean;                // effective. A required kind is always true
+  defaultOn: boolean;
+  stored: boolean;                 // true only when an optional kind has a row
+};
+```
+
+- **Required kinds cannot be stored and cannot be turned off** (`preflight_failed`, `allowance_missing`, `extend_failed_refund`, `refund_delayed`, `unexplained_charge`, `testnet_reset`, `restore_lost_changes`). A well-formed PATCH of one is `422 INVALID_REQUEST` with `details.field: "kind"`. The message does not repeat the sent kind.
+- **Optional kinds** (`allowance_expiring`, `approaching_critical`, `extend_succeeded`) default on. A missing row means that default (`stored: false`). `enabled: false` writes a row. `reset: true` updates that row back to `defaultOn` and leaves it (`stored` stays true). There is no DELETE: the API role has none on `alert_preferences`. Reset with no row is `200` and writes nothing.
+- **The body has no other fields.** `enabled` and `reset` together, a missing one of them, a non-boolean `enabled`, `reset` other than `true`, an unknown kind, or any other field (including a user id) is `400 INVALID_REQUEST`. `details.field` names the field and does not echo the value.
+- **The user id comes from the session.** The response has no email and no user id. One user cannot read or write another's row.
+- **`POST`, `PUT` and `DELETE` are `405`** with `Allow: GET, PATCH`.
+- A missing database or dashboard origin, or a store the Worker could not build, is `503 UPSTREAM_UNAVAILABLE`. The message names no setting.
+
 ## 7 · Allowance state, jobs and history
 
 ### Allowance
@@ -323,7 +349,7 @@ Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_
 
 `INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
 - `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, a path segment is not a valid network or contract ID, a `budget` amount is `"0"`, or `perJobMaxStroops` is above `per30DaysMaxStroops` (§6).
-- `422`: the request is well-formed but refused on its meaning. Today that is a `POST /watchlist` past the 50-item cap (`details: { field: 'body', limit: 50 }`, §6), `autopilot.extendToLedgers` not above `thresholdLedgers`, an `autopilot.payerWallet` that is not linked to the caller, and an `autopilot.payerWallet` that the caller linked **at or before their account's last reactivation** (the message says to sign with that wallet again, §10).
+- `422`: the request is well-formed but refused on its meaning. Today that is a `POST /watchlist` past the 50-item cap (`details: { field: 'body', limit: 50 }`, §6), `autopilot.extendToLedgers` not above `thresholdLedgers`, an `autopilot.payerWallet` that is not linked to the caller, an `autopilot.payerWallet` that the caller linked **at or before their account's last reactivation** (the message says to sign with that wallet again, §10), and a `PATCH /me/alert-preferences` for a required alert kind (§6a).
 - **The web client has copy for it** (WEBF's, in `apps/web/src/lib/watchlist.ts`, #444; the copy belongs to the web client, not to the API contract). When `POST /watchlist` answers `INVALID_REQUEST` (`400` or `422`, the code decides, not the status), the dashboard says: "The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly." If the scan declared more data keys than a watchlist item takes, it appends: "This scan declared N data keys, and a watchlist item takes at most 100." (N is the number declared). It branches on the code, never on `message`.
 
 **Known limitation: an absent item and an unknown route look the same.** `DELETE /watchlist/{network}/{contractId}` (and `PATCH`) for an item the caller does not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all, such as `/watchlist/a/b/c`. The two differ only in `message` ("No such watch item." and "No such route."), which is not part of the contract, so a client that branches on the code and status cannot tell them apart. This is documented, not a planned code change. A malformed `network` or `contractId` segment is not part of it: that is `400 INVALID_REQUEST`. The web client shows "Nothing to remove for this account." for the `DELETE` case (its copy, see §9a).
