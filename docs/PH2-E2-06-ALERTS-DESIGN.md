@@ -104,7 +104,7 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 
 ## 9. Undetermined
 
-- When the scheduler emits each event. That depends on `PH2-E4-04` and `PH2-E4-02`, neither of which is built.
+- When the scheduler emits each event. `PH2-E4-04` has a heartbeat and a dry-run evaluation; it does not call `dispatchUserAlert`. The money path (`PH2-E4-02`) is not built.
 - The allowance-expiry lead time, the retry count, and Resend's idempotency-key retention.
 - The event ID for the "approaching critical" alert, which depends on the autopilot-window rule (#461 §7).
 - Whether alerts use a separate sender address.
