@@ -247,9 +247,12 @@ describe('GET and PATCH /me/alert-preferences', () => {
     expect(text).not.toContain('@');
     expect(text).not.toContain(s.email);
     expect(text).not.toContain(s.userId);
-    const items = (JSON.parse(text) as { items: PreferenceItem[] }).items;
+    const body = JSON.parse(text) as { items: PreferenceItem[] };
+    expect(Object.keys(body)).toEqual(['items']);
+    const items = body.items;
     expect(items.map((row) => row.kind)).toEqual(Object.keys(ALERT_SPECS));
     for (const row of items) {
+      expect(Object.keys(row).sort()).toEqual(['class', 'defaultOn', 'enabled', 'kind', 'stored']);
       expect(row.enabled).toBe(true);
       expect(row.stored).toBe(false);
       expect(row.class).toBe(isRequired(row.kind) ? 'required' : 'optional');
@@ -291,6 +294,7 @@ describe('GET and PATCH /me/alert-preferences', () => {
 
   it.each([
     [{ kind: 'extend_succeeded', enabled: false, userId: 'other-user' }, 'userId'],
+    [{ kind: 'approaching_critical', enabled: false, contractId: 'CABC' }, 'contractId'],
     [{ kind: 'not-a-kind', enabled: true }, 'kind'],
     [{ kind: 'extend_succeeded', enabled: 'false' }, 'enabled'],
     [{ kind: 'extend_succeeded', enabled: false, reset: true }, 'body'],

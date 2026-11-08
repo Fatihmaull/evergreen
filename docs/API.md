@@ -202,9 +202,14 @@ type AlertPreference = {
 - **Required kinds cannot be stored and cannot be turned off** (`preflight_failed`, `allowance_missing`, `extend_failed_refund`, `refund_delayed`, `unexplained_charge`, `testnet_reset`, `restore_lost_changes`). A well-formed PATCH of one is `422 INVALID_REQUEST` with `details.field: "kind"`. The message does not repeat the sent kind.
 - **Optional kinds** (`allowance_expiring`, `approaching_critical`, `extend_succeeded`) default on. A missing row means that default (`stored: false`). `enabled: false` writes a row. `reset: true` updates that row back to `defaultOn` and leaves it (`stored` stays true). There is no DELETE: the API role has none on `alert_preferences`. Reset with no row is `200` and writes nothing.
 - **The body has no other fields.** `enabled` and `reset` together, a missing one of them, a non-boolean `enabled`, `reset` other than `true`, an unknown kind, or any other field (including a user id) is `400 INVALID_REQUEST`. `details.field` names the field and does not echo the value.
-- **The user id comes from the session.** The response has no email and no user id. One user cannot read or write another's row.
+- **The user id comes from the session.** The response has no email and no user id. One user cannot read or write another's row. The top-level object is `{ items }` only. Each item's fields are `kind`, `class`, `enabled`, `defaultOn`, `stored`. There is no `updated_at`. A missing optional row is still an item, with `enabled` true and `stored` false: the read is not a list of only the stored rows.
+- **No per-contract override.** A `contractId` (or any other field) on the PATCH body is `400`. The primary key is `(user_id, kind)`.
+- **No email-verification field.** `users` has `email`, `created_at`, and `deactivated_at` (`apps/api/db/schema.sql`). `GET /me` returns `{ id, email, createdAt }` and nothing about verification. This route does not add one. A session means a sign-in code was accepted once. It does not say a later alert arrived.
+- **No send-mode field.** `ALERTS_SEND` is not in this response. Exactly `send` is the only value that sends, and the API Worker cannot see the scheduler Worker's copy of that setting.
+- **No outbox history.** This slice does not list `alert_outbox`. If a later route does, `sent` means Resend accepted the message. Inbox delivery stays unverified (`receivedInInbox: 'unverified'`). The word is accepted, not delivered and not received.
 - **`POST`, `PUT` and `DELETE` are `405`** with `Allow: GET, PATCH`.
 - A missing database or dashboard origin, or a store the Worker could not build, is `503 UPSTREAM_UNAVAILABLE`. The message names no setting.
+- **Not decided here:** when `allowance_expiring` is sent, the ledger count for `approaching_critical`, and whether F3 or F5 send a user email. None of those is a field on this route. F3 and F5 have no alert kind.
 
 ## 7 · Allowance state, jobs and history
 

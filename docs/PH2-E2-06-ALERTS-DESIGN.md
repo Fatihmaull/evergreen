@@ -4,7 +4,7 @@
 
 **Update, 2026-11-04 (kept; the "not applied" clause is superseded above):** the dispatcher (`apps/api/src/alerts/dispatch.ts`) has Postgres stores over migration 0011, run as the `eg_api` role: `PgAlertOutboxStore` and `PgAlertPreferencesStore` in `apps/api/src/alerts/pg-store.ts` (#588). A preference reset is an UPDATE to the kind's default, never a delete (`eg_api` has no DELETE). Operator alerts (F9, F10, F11) do not use the outbox, because it has a user foreign key; their only dedupe is Resend's 24-hour idempotency key.
 
-Owner: CEF (`F · CEF`); Rakha reviews (`BACKLOG.md:634`). *Depends on `PH2-E2-05`* (the watchlist API, #427). The events that need alerts come from `PH2-E4-05`'s failure-mode list, [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md), and most of them come from the scheduler, [`docs/PH2-E4-04-SCHEDULER-DESIGN.md`](PH2-E4-04-SCHEDULER-DESIGN.md). **Neither of those is built**, so this design defines the interface the scheduler will call. It does not define when the scheduler calls it.
+Owner: CEF (`F · CEF`); Rakha reviews. *Depends on `PH2-E2-05`* (the watchlist API, #427). The events that need alerts come from `PH2-E4-05`'s failure-mode list, [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md), and most of them come from the scheduler, [`docs/PH2-E4-04-SCHEDULER-DESIGN.md`](PH2-E4-04-SCHEDULER-DESIGN.md). The scheduler has a heartbeat and a dry-run evaluation; it does not call `dispatchUserAlert`. This design defines the interface it will call. It does not define when.
 
 ## 1. Scope
 
@@ -42,7 +42,7 @@ Every row maps to a mode in [`PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MOD
 | Unexplained charge on the user's own money | F7 | required | critical | Sent only after reconcile confirms a difference against the chain. |
 | Testnet reset | F10 | required | warn | Protection state is reset. |
 | Restore lost recent changes | F19 | required | warn | Which changes is **undetermined** until the restore procedure exists. |
-| Entry approaching critical with autopilot off | — | optional, on by default | warn/critical | This is the product's core alert. The `approachingCritical` template already exists (`packages/core/src/notification-templates.ts:113`). |
+| Entry approaching critical with autopilot off | — | optional, on by default | warn/critical | Not one severity. Core's `approachingCritical` is `critical` when `assessEntry` health is `critical`, and `warn` otherwise (including `unknown`). The hosted draft in `templates.ts` is fixed at `warn`. The preference screen shows no chip for this kind until one rule is the sent value. Which rule is sent is a decision for Fatih (§9). |
 | Extend succeeded | — | optional, **on by default** | info | Shown as a receipt. Default ON decided by Tih, 2026-10-29, for a clearer user flow. Still optional: the user can turn it off or unsubscribe. |
 
 There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those modes surface to the user only when they become F1, F4 or F6, or as undetermined on the dashboard (`docs/API.md:390`). This matches the user column of each mode in the E4-05 list. Whether F3's "pending" or F5's delay should also be emailed is still **undetermined** there, and this design follows whatever is decided.
@@ -60,7 +60,7 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 ## 5. Dedupe, rate limit, retries
 
 - **Event ID:** stable per fact, not per tick. Examples are `job:<job_id>:refund-delayed` and `entry:<user>:<network>:<contract>:approaching:<threshold-crossing ledger window>`. The ID for the approaching alert depends on the autopilot-window rule that is still open (#461 §7), and is **undetermined** until that is decided.
-- **Outbox (asked of Rakha, §7):** one row per (user, event ID). The UNIQUE constraint is what dedupes. Status is `pending`, then `sent` or `failed`, plus the Resend email ID once accepted. "Accepted" never means "received": `EmailChannel` returns `receivedInInbox: 'unverified'`.
+- **Outbox (migration 0011, applied 2026-11-05):** one row per (user, event ID). The UNIQUE constraint is what dedupes. Status is `pending`, then `sent` or `failed`, plus the Resend email ID once accepted. **`sent` means Resend accepted the message. It does not mean the inbox received it.** `EmailChannel` returns `receivedInInbox: 'unverified'`. There is no history route. A later one must use those words and must not say delivered or received (`docs/API.md` §6a).
 - **Resend idempotency:** a retry of the same row sends the same body, so Resend gets the same idempotency key. Resend's retention window for that key is **undetermined** (not read yet).
 - **Rate limit per user:** a conservative cap of at most N emails per user per window, with required alerts **always** sent (decided by Tih, 2026-10-29). If the cap is hit, optional alerts are folded into the next one. **At most 5 optional alerts per user per 24 hours**, decided by Tih on 2026-10-29. Required alerts always pass and never count against it. In code: `ALERT_RATE_LIMIT` (`apps/api/src/alerts/policy.ts`).
 - **Retries:** bounded, with backoff, on the next tick. The count is **undetermined** and follows E4-05's retry decisions. When retries run out, the row is `failed` and goes to the operator as F16.
@@ -69,9 +69,9 @@ There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those m
 
 - **Preferences:** per user, one boolean per optional event (§3). Required alerts aren't stored as preferences, because they can't be turned off.
 - **Unsubscribe:** every optional alert carries a link to the dashboard preferences page. One-click unsubscribe (RFC 8058) is offered for **optional alerts only** (decided by Tih, 2026-10-29); it needs a signed, unauthenticated route on the API, whose design is part of the build. Required alerts cannot be unsubscribed and say why they can't be turned off.
-- **API:** `GET` and `PATCH /v1/me/alert-preferences` under the existing session and CSRF. The shape is `docs/API.md` §6a. One-click unsubscribe (RFC 8058) is still not built.
+- **API:** `GET` and `PATCH /api/v1/me/alert-preferences`, specified in `docs/API.md` §6a and implemented in `apps/api/src/alerts/routes.ts`. Session on both; CSRF on PATCH. The read returns every kind with the effective `enabled` (a missing optional row is the default, which is on). The write is one kind and one boolean, or `reset: true`, which updates the row to that default and does not delete it. No `updated_at`, no per-contract field, no email-verification field, and no `ALERTS_SEND` value. One-click unsubscribe (RFC 8058) is still not built.
 - **Deactivated users** (`users.deactivated_at`) get nothing. That matches the planner rule from #477.
-- **Kill switch:** `ALERTS_SEND` on the scheduler Worker. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. `ALERTS_SEND` is a plain DevOps setting. `ALERTS_ALLOWLIST` is a Worker **secret**, because it holds email addresses (`docs/ops/secrets.md`); its values are never logged or echoed.
+- **Kill switch:** `ALERTS_SEND` on the scheduler Worker, and the same name on the API Worker for the operator checks. **Sending is on only when the value is exactly `send`**, compared byte for byte with no trimming or case folding. Every other value means dry-run (render and record, never send): unset, empty, `dry-run`, a different case such as `SEND`, or added whitespace such as ` send`. It is never set to `send` in production before Fatih's "ya". Stage B adds `ALERTS_ALLOWLIST`, a list of test addresses, and anything outside it is dry-run. `ALERTS_SEND` is a plain DevOps setting. `ALERTS_ALLOWLIST` is a Worker **secret**, because it holds email addresses (`docs/ops/secrets.md`); its values are never logged or echoed. **The dashboard cannot read either Worker's value.** `GET /me/alert-preferences` does not return it. The two Workers can disagree, and the API cannot see the scheduler's environment.
 
 ## 7. Asks
 
@@ -105,7 +105,8 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 ## 9. Undetermined
 
 - When the scheduler emits each event. `PH2-E4-04` has a heartbeat and a dry-run evaluation; it does not call `dispatchUserAlert`. The money path (`PH2-E4-02`) is not built.
-- The allowance-expiry lead time, the retry count, and Resend's idempotency-key retention.
+- The allowance-expiry lead time. Plan §3.3 says allowance renewal reminders at 30, 7 and 1 days before expiry (`PHASE2-PLAN.md`, Renewal). That schedule is not wired to `allowance_expiring`, and this design does not adopt it until Fatih says those three reminders are this email. The ledger count for `approaching_critical` is not a stored number: core grades the entry with `assessEntry` against that entry's threshold. `17,280` is the CLI default threshold, not this alert's setting.
+- Retries are 3 (`DEFAULT_ALERT_MAX_ATTEMPTS`). Resend keeps an idempotency key for 24 hours (`docs/PH2-E4-05-FAILURE-MODES.md`).
 - The event ID for the "approaching critical" alert, which depends on the autopilot-window rule (#461 §7).
 - Whether alerts use a separate sender address.
 - When the Telegram backup channel for F16 is wired (the channel itself is decided).
