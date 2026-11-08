@@ -19,6 +19,7 @@
  * scheduler whose last tick happened to be slow does not email again every 24 hours.
  */
 import { staleThresholdSeconds } from './heartbeat.js';
+import { operatorSendFailedLog } from './operator-send.js';
 import { alertsMode, parseAllowlist } from './policy.js';
 import type { AlertNotification, AlertTransport } from './sender.js';
 
@@ -91,12 +92,20 @@ export type SlowTickOutcome =
       readonly reason: 'alerts_send_off' | 'no_operator';
       readonly rpcMs: number;
     }
-  | { readonly action: 'sent'; readonly recipients: number; readonly rpcMs: number };
+  | {
+      readonly action: 'sent';
+      readonly recipients: number;
+      readonly rpcMs: number;
+      /** How many delivers threw, when at least one other succeeded. */
+      readonly failed?: number;
+    }
+  | { readonly action: 'send_failed'; readonly failed: number; readonly rpcMs: number };
 
 /**
  * One cron run. Reads, decides, and calls `transport.deliver` only when the newest successful
  * tick is slow, `ALERTS_SEND` is exactly `send` and the allowlist has an operator. The event
- * id is per slow tick, so cron runs over the same tick reuse Resend's idempotency key.
+ * id is per slow tick, so cron runs over the same tick reuse Resend's idempotency key. A failed
+ * deliver is logged (`action: 'send_failed'`, no address) and the next operator is still tried.
  */
 export async function runSlowTickCheck(
   env: SlowTickEnv,
@@ -121,8 +130,22 @@ export async function runSlowTickCheck(
   if (operators.length === 0) return { action: 'dry-run', reason: 'no_operator', rpcMs: s.rpcMs };
   const eventId = `f9-slow-tick:${s.tickedAt}`;
   const notification = slowTickNotification(s);
-  for (const r of operators) await deps.transportFor(r).deliver(notification, eventId);
-  return { action: 'sent', recipients: operators.length, rpcMs: s.rpcMs };
+  // Guard: one recipient's send failure must not skip the other operators, and must not reject the cron.
+  let sent = 0;
+  let failed = 0;
+  for (const r of operators) {
+    try {
+      await deps.transportFor(r).deliver(notification, eventId);
+      sent += 1;
+    } catch (error) {
+      failed += 1;
+      console.log(JSON.stringify(operatorSendFailedLog('alerts.f9_slow_tick', error)));
+    }
+  }
+  if (sent === 0) return { action: 'send_failed', failed, rpcMs: s.rpcMs };
+  return failed === 0
+    ? { action: 'sent', recipients: sent, rpcMs: s.rpcMs }
+    : { action: 'sent', recipients: sent, failed, rpcMs: s.rpcMs };
 }
 
 /**
