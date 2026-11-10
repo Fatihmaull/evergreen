@@ -11,9 +11,11 @@
  *   The excess of the pull over charged rent + final fee is refunded on-chain to
  *   the user and stored as a `refund` row; `difference` holds only what was not
  *   returned, normally 0 (#583).
- * - **Shortfall (K13):** if charged rent + final fee exceeds the pull, reconcile
- *   records the shortfall, raises a P1 operator alert and the job counts as a
- *   zero-subsidy violation; there is no second `transfer_from` (#583).
+ * - **Shortfall (K13, K15):** `charged rent + final fee − pull`, where the final
+ *   fee is `hostedFeeStroops(charged rent)`. When that is positive, reconcile
+ *   records it, raises a P1 operator alert, the user's autopilot keeps running,
+ *   the job counts as a zero-subsidy violation, and the margin is then resized.
+ *   There is no second `transfer_from` (#583, ADR-007).
  * - **The retry margin is absolute stroops** (Rakha, 2026-11-02), a named parameter, never a literal
  *   here. Its size is UNDETERMINED until the testnet measurement of simulated vs
  *   charged rent, so callers pass the configured value or `undefined`.
