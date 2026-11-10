@@ -286,7 +286,9 @@ describe('every outcome renders distinctly', () => {
   });
 
   test('possibly-signed and pending say no second send, and pending keeps the hash', () => {
-    expect(text(revokeOutcomeHtml({ kind: 'possibly-signed' }))).toContain('will not send another');
+    const late = text(revokeOutcomeHtml({ kind: 'possibly-signed' }));
+    expect(late).toContain('this page will not send it, so nothing is revoked');
+    expect(late).not.toContain('can still be sent');
     const pending = text(revokeOutcomeHtml({ kind: 'pending', hash: 'H1' }));
     expect(pending).toContain('H1');
     expect(pending).toContain('undetermined');

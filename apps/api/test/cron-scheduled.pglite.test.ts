@@ -164,14 +164,14 @@ const sentTo = (subject: string): (string | undefined)[] =>
 
 /** A stale heartbeat and a ledger drop. F9 runs and leaves the stale tick to F11. */
 const staleDrop = async (): Promise<void> => {
-  await tick(4000, 5000, 5000);
-  await tick(2701, 1200, 5000);
+  await tick(4000, 5000, 12001);
+  await tick(2701, 1200, 12001);
 };
 
 /** A fresh slow tick and a ledger drop, so F10 and F9 both send and F11 does not. */
 const freshSlowDrop = async (): Promise<void> => {
   await tick(1800, 5000, 100);
-  await tick(60, 1200, 3001);
+  await tick(60, 1200, 12001);
 };
 
 const assertNoLeak = (): void => {
@@ -214,7 +214,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
 
   it('F11: a heartbeat older than HEARTBEAT_STALE_SECONDS emails each operator once', async () => {
     // Slow as well as stale. F9 must leave it to F11: one email per operator, not two.
-    await tick(2701, 1000, 5000);
+    await tick(2701, 1000, 12001);
     await run({ ...PROD });
     expect(resend.map((r) => r.body.to)).toEqual([[OP_A], [OP_B]]);
     const first = resend[0]!;
@@ -265,8 +265,8 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
   });
 
-  it('F9: a fresh tick slower than 3000 ms emails each operator once', async () => {
-    await tick(60, 1000, 3001);
+  it('F9: a fresh tick slower than 12000 ms emails each operator once', async () => {
+    await tick(60, 1000, 12001);
     await run({ ...PROD });
     expect(resend.map((r) => r.body.to)).toEqual([[OP_A], [OP_B]]);
     const first = resend[0]!;
@@ -274,14 +274,14 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
     expect(first.auth).toBe('Bearer re_test_key');
     expect(first.body.from).toBe('alerts@mail.example.invalid');
     expect(first.body.subject).toContain('scheduler RPC slow (F9)');
-    expect(first.body.text).toContain('3001 ms');
-    expect(first.body.text).toContain('3000 ms');
+    expect(first.body.text).toContain('12001 ms');
+    expect(first.body.text).toContain('12000 ms');
     expect(first.key).toMatch(/^f9-slow-tick:\d+\/[0-9a-f]{16}$/);
     expect(resend[0]!.key).not.toBe(resend[1]!.key);
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({
       action: 'sent',
       recipients: 2,
-      rpcMs: 3001,
+      rpcMs: 12001,
     });
     expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
     expect(logOf('alerts.f10_testnet_reset')).toMatchObject({
@@ -290,8 +290,8 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
     });
   });
 
-  it('F9: exactly 3000 ms is not slow', async () => {
-    await tick(0, 1000, 3000);
+  it('F9: exactly 12000 ms is not slow', async () => {
+    await tick(0, 1000, 12000);
     await run({ ...PROD });
     expect(resend).toEqual([]);
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
@@ -299,7 +299,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
 
   it('F9: a failed tick with a long rpc_ms is not the alert; the newest ok row is', async () => {
     await tick(900, 1000, 200);
-    await failedTick(10, 9000);
+    await failedTick(10, 13160);
     await run({ ...PROD });
     expect(resend).toEqual([]);
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({ action: 'none', reason: 'fine' });
@@ -344,7 +344,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
   });
 
   it('F9 kill switch: a fresh slow tick with anything but exactly "send" is a dry run', async () => {
-    await tick(0, 1000, 4200);
+    await tick(0, 1000, 12001);
     for (const v of [undefined, '', 'SEND', ' send', 'send ']) {
       logs.length = 0;
       resend.length = 0;
@@ -355,7 +355,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
       expect(logOf('alerts.f9_slow_tick')).toMatchObject({
         action: 'dry-run',
         reason: 'alerts_send_off',
-        rpcMs: 4200,
+        rpcMs: 12001,
       });
       expect(resend).toEqual([]);
     }
@@ -374,7 +374,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
   });
 
   it('F9: no allowlist on a fresh slow tick is a dry run, nothing sent', async () => {
-    await tick(0, 1000, 4200);
+    await tick(0, 1000, 12001);
     const env: Env = { ...PROD };
     delete env['ALERTS_ALLOWLIST'];
     await run(env);
@@ -382,7 +382,7 @@ describe('the cron as deployed: F11, F10, F9, F17/F18', () => {
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({
       action: 'dry-run',
       reason: 'no_operator',
-      rpcMs: 4200,
+      rpcMs: 12001,
     });
   });
 
@@ -817,19 +817,19 @@ describe('a failed operator send does not stop the cron', () => {
     expect(logOf('alerts.f9_slow_tick')).toMatchObject({
       action: 'sent',
       recipients: 2,
-      rpcMs: 3001,
+      rpcMs: 12001,
     });
     assertNoLeak();
   });
 
   it('F9: a 5xx for one operator still mails the other, and the cron resolves', async () => {
-    await tick(60, 1000, 3001);
+    await tick(60, 1000, 12001);
     failSend = { subject: '(F9)', to: OP_A, how: 'status' };
     await expect(run({ ...PROD })).resolves.toBeUndefined();
     expect(sentTo('(F9)')).toEqual([OP_A, OP_B]);
     expect(logs.filter((l) => l['event'] === 'alerts.f9_slow_tick')).toEqual([
       { event: 'alerts.f9_slow_tick', action: 'send_failed', httpStatus: 500 },
-      { event: 'alerts.f9_slow_tick', action: 'sent', recipients: 1, failed: 1, rpcMs: 3001 },
+      { event: 'alerts.f9_slow_tick', action: 'sent', recipients: 1, failed: 1, rpcMs: 12001 },
     ]);
     expect(logOf('alerts.f11_heartbeat')).toMatchObject({ action: 'none', reason: 'fresh' });
     expect(logOf('alerts.f10_testnet_reset')).toMatchObject({

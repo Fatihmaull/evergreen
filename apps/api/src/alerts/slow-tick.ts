@@ -6,9 +6,12 @@
  * when `ALERTS_SEND` is exactly `send`, to the operators in `ALERTS_ALLOWLIST`.
  *
  * **The threshold is decided, so it is a constant:** slow if the latest tick's `rpcMs` is
- * above 3000 ms (the PM, 2026-10-31; revisable by Fatih, in this one place). The failed-tick
- * rule is not here: a failed tick is not a heartbeat, so a run of them leaves the newest
- * `ok` row ageing, which is F11.
+ * above 12000 ms (PM, 2026-11-10; revisable by Fatih, in this one place). Production `rpc_ms`
+ * on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359,
+ * 10057, 13160), had median 7852 ms and max 13160 ms. `rpc_ms` is the sum of getNetwork and
+ * getLatestLedger, each with a 10 s timeout, so the previous 3000 ms line fired on every
+ * successful tick. The failed-tick rule is not here: a failed tick is not a heartbeat, so a
+ * run of them leaves the newest `ok` row ageing, which is F11.
  *
  * **Not a user alert and not in `alert_outbox`.** That table has a user foreign key, which an
  * operator alert cannot satisfy. Its only dedupe is Resend's 24-hour idempotency key, built
@@ -23,8 +26,8 @@ import { operatorSendFailedLog } from './operator-send.js';
 import { alertsMode, parseAllowlist } from './policy.js';
 import type { AlertNotification, AlertTransport } from './sender.js';
 
-/** Slow if the newest successful tick's `rpc_ms` is strictly above this (PM, 2026-10-31). */
-export const SLOW_TICK_RPC_MS = 3000;
+/** Slow if the newest successful tick's `rpc_ms` is strictly above this (PM, 2026-11-10; revisable by Fatih). */
+export const SLOW_TICK_RPC_MS = 12000;
 
 export interface SlowTickEnv {
   readonly ALERTS_SEND?: string;
