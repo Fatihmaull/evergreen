@@ -11,32 +11,27 @@ export const TREASURY_UNSET_TEXT =
   "Evergreen's treasury address is not published yet: it waits on the key-separation work. " +
   'Until it is, this page cannot send a payment.';
 
-/** Hidden while the treasury is unset (K17). The note in `#send-result` stays. */
-const UNSET_HIDDEN_IDS = [
-  'wallet-step',
-  'connect-button',
-  'amount-heading',
-  'to-line',
-  'amount-label',
-  'amount-input',
-  'send-button',
-] as const;
-
 /**
- * While the treasury is unset, the page shows only the unset note. Connect,
- * the amount step, the label and the destination line are hidden, not disabled.
+ * While the treasury is unset, the page shows only the unset note (K17).
+ * The amount card is removed, so no card frame remains around that note.
  */
 export function hideUnsetTreasury(doc: {
-  getElementById(id: string): { hidden: boolean; innerHTML: string } | null;
+  getElementById(
+    id: string,
+  ): { hidden: boolean; textContent: string | null; remove(): void } | null;
 }): void {
-  for (const id of UNSET_HIDDEN_IDS) {
+  for (const id of ['wallet-step', 'amount-step'] as const) {
     const el = doc.getElementById(id);
     if (!el) throw new Error(`support page is missing #${id}`);
     el.hidden = true;
   }
-  const result = doc.getElementById('send-result');
-  if (!result) throw new Error('support page is missing #send-result');
-  result.innerHTML = `<p class="small muted">${esc(TREASURY_UNSET_TEXT)}</p>`;
+  const card = doc.getElementById('amount-card');
+  if (!card) throw new Error('support page is missing #amount-card');
+  card.remove();
+  const note = doc.getElementById('unset-note');
+  if (!note) throw new Error('support page is missing #unset-note');
+  note.hidden = false;
+  note.textContent = TREASURY_UNSET_TEXT;
 }
 
 function panel(tone: 'note' | 'undetermined' | 'error', html: string): string {

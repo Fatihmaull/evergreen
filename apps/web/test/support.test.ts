@@ -98,30 +98,25 @@ describe('the treasury is unset', () => {
     expect(text(tipOutcomeHtml({ kind: 'treasury-unset' }))).toContain(TREASURY_UNSET_TEXT);
   });
 
-  test('the unset page hides connect, the amount step and the destination, and shows only the note', async () => {
+  test('the unset page removes the amount card and shows only the note', async () => {
     const { Window } = await import('happy-dom');
     const { render } = await import('../src/pages/support.mjs');
     const document = new Window().document;
     document.body.innerHTML = render();
     hideUnsetTreasury(document);
-    for (const id of [
-      'wallet-step',
-      'connect-button',
-      'amount-heading',
-      'to-line',
-      'amount-label',
-      'amount-input',
-      'send-button',
-    ]) {
-      const el = document.getElementById(id);
-      expect(el, id).not.toBeNull();
-      expect(el!.hidden, id).toBe(true);
+    expect(document.getElementById('amount-card')).toBeNull();
+    expect(document.querySelector('.card')).not.toBeNull();
+    for (const card of document.querySelectorAll('.card')) {
+      expect(card.closest('[hidden]')).not.toBeNull();
     }
-    const note = document.getElementById('send-result');
+    const note = document.getElementById('unset-note');
     expect(note!.hidden).toBe(false);
     expect(note!.textContent).toContain(TREASURY_UNSET_TEXT);
+    expect(note!.closest('.card')).toBeNull();
+    expect(document.getElementById('wallet-step')!.hidden).toBe(true);
+    expect(document.getElementById('amount-step')!.hidden).toBe(true);
     expect(src('../src/pages/support.ts')).toContain('hideUnsetTreasury(document)');
-    expect(src('../src/pages/support.mjs')).not.toMatch(/disabled/);
+    expect(src('../src/pages/support.mjs')).not.toMatch(/\bdisabled\b/);
   });
 
   test('the page is not registered in the build, the nav or the dashboard routes yet', () => {
