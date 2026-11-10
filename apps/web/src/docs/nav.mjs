@@ -60,6 +60,16 @@ export const DOC_NAV = [
     ],
   },
   {
+    label: 'Account',
+    pages: [
+      {
+        route: '/docs/account/',
+        title: 'Account and watchlist',
+        blurb: 'Optional email sign-in, linking a wallet, and the watchlist: what each does today.',
+      },
+    ],
+  },
+  {
     label: 'Command line',
     pages: [
       {

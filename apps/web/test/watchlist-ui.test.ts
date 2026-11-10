@@ -162,6 +162,7 @@ describe('the screen', () => {
     const html = watchlistScreenHtml({ kind: 'error', status: 401, code: 'UNAUTHENTICATED' }, NOW);
     expect(html).toContain('card card-pad');
     expect(html).toContain('this browser has none');
+    expect(html).toContain('href="/login/"');
     expect(html).not.toContain('route is not available');
   });
 

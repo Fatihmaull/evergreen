@@ -37,6 +37,9 @@ const tickAt = (unix: number): Promise<unknown> =>
 beforeAll(async () => {
   pg = new PGlite();
   await pg.exec(db('0005_scheduler_ticks.sql'));
+  // 0010: failed ticks write a row (ok = false, no ledger). Its grants name eg_scheduler.
+  await pg.exec('CREATE ROLE eg_scheduler');
+  await pg.exec(db('0010_scheduler_ticks_rpc_ms_ok.sql'));
 });
 afterAll(async () => {
   await pg.close();
@@ -97,5 +100,42 @@ describe('F11 LATEST_TICK_SQL on PGlite', () => {
       await pg.exec('ALTER TABLE scheduler_ticks_x RENAME TO scheduler_ticks');
     }
     expect(sent).toEqual([]);
+  });
+});
+
+describe('F11 reads only successful ticks (0010: a failed tick writes a row too)', () => {
+  const failedAt = (unix: number): Promise<unknown> =>
+    pg.query(
+      'INSERT INTO scheduler_ticks (ticked_at, observed_ledger, rpc_ms, ok) VALUES (to_timestamp($1), NULL, NULL, false)',
+      [unix],
+    );
+
+  it('🔴 a failed tick newer than the last good one is not a heartbeat', async () => {
+    await tickAt(NOW - 3000);
+    await failedAt(NOW - 10);
+    expect(await latestTickedAt()).toBe(NOW - 3000);
+    expect(await runHeartbeatCheck(sendEnv, deps)).toMatchObject({
+      action: 'sent',
+      ageSeconds: 3000,
+    });
+    expect(sent).toHaveLength(1);
+  });
+
+  it('🔴 a scheduler that only fails reads as no heartbeat at all, which is stale', async () => {
+    await failedAt(NOW - 10);
+    await failedAt(NOW - 5);
+    expect(await latestTickedAt()).toBeUndefined();
+    expect(await runHeartbeatCheck(env, deps)).toEqual({
+      action: 'dry-run',
+      reason: 'alerts_send_off',
+      ageSeconds: undefined,
+    });
+  });
+
+  it('a good tick after failures is a heartbeat again', async () => {
+    await failedAt(NOW - 100);
+    await tickAt(NOW - 20);
+    expect(await latestTickedAt()).toBe(NOW - 20);
+    expect(await runHeartbeatCheck(sendEnv, deps)).toEqual({ action: 'none', reason: 'fresh' });
   });
 });
