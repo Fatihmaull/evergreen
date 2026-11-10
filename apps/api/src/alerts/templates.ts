@@ -15,6 +15,16 @@ export interface AlertContext {
   readonly detail?: string | undefined;
   /** Dashboard link; defaults to the watchlist path only. */
   readonly dashboardUrl?: string | undefined;
+  /**
+   * Absolute URL of `/dashboard/alerts/`. Optional alerts link it. Required
+   * alerts do not: they cannot be turned off.
+   */
+  readonly preferencesUrl?: string | undefined;
+  /**
+   * Absolute RFC 8058 one-click URL. Optional alerts put it in
+   * `List-Unsubscribe`. Required alerts ignore it. Never a `mailto:`.
+   */
+  readonly unsubscribeUrl?: string | undefined;
 }
 
 export interface AlertEmail extends AlertNotification {
@@ -81,6 +91,28 @@ function oneLine(s: string): string {
   return s.replace(/[\r\n]+/g, ' ').trim();
 }
 
+/**
+ * An absolute https URL safe to place in a body and in `List-Unsubscribe`.
+ * Anything else (including `mailto:` and `http:`) is dropped.
+ */
+function httpsLink(value: string | undefined): string | undefined {
+  if (value === undefined || value.length === 0 || value.length > 2048) return undefined;
+  // Whitespace, quotes and brackets would break a header or an href.
+  if (!/^https:\/\/[^\s<>"'\\]+$/.test(value)) return undefined;
+  if (value.toLowerCase().includes('mailto:')) return undefined;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol !== 'https:') return undefined;
+  if (url.username !== '' || url.password !== '') return undefined;
+  // Embed the caller string only when it is already the canonical href.
+  if (url.href !== value) return undefined;
+  return value;
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -98,9 +130,23 @@ export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail
   const lead = fill(c.lead);
   const detail = ctx.detail === undefined ? undefined : oneLine(ctx.detail);
   const url = ctx.dashboardUrl;
-  const footer = canUnsubscribe(kind)
-    ? 'You can turn this alert off in your Evergreen alert preferences.'
+  const optional = canUnsubscribe(kind);
+  // Required alerts never carry an opt-out link or a one-click header, even
+  // if a caller passed the URLs.
+  const preferences = optional ? httpsLink(ctx.preferencesUrl) : undefined;
+  const unsubscribe = optional ? httpsLink(ctx.unsubscribeUrl) : undefined;
+  const footer = optional
+    ? preferences === undefined
+      ? 'You can turn this alert off in your Evergreen alert preferences.'
+      : `You can turn this alert off in your Evergreen alert preferences: ${preferences}`
     : 'This alert is required for autopilot users and cannot be turned off.';
+  const headers =
+    unsubscribe === undefined
+      ? undefined
+      : {
+          'List-Unsubscribe': `<${unsubscribe}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        };
 
   const text = [
     lead,
@@ -111,6 +157,12 @@ export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail
     ...(url ? ['', `Open your watchlist: ${url}`] : []),
     '',
     footer,
+    ...(unsubscribe === undefined
+      ? []
+      : [
+          '',
+          'The one-click unsubscribe in this message turns off every optional alert. Required alerts stay on.',
+        ]),
   ].join('\n');
 
   const html = [
@@ -122,11 +174,20 @@ export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail
     ...(detail ? [`<li>Details: ${escapeHtml(detail)}</li>`] : []),
     '</ul>',
     ...(url ? [`<p><a href="${escapeHtml(url)}">Open your watchlist</a></p>`] : []),
+    ...(preferences === undefined
+      ? []
+      : [`<p><a href="${escapeHtml(preferences)}">Alert preferences</a></p>`]),
     `<p style="color:#666;font-size:12px">${escapeHtml(footer)}</p>`,
     '</body></html>',
   ].join('');
 
-  return { subject, body: text, html, severity: c.severity };
+  return {
+    subject,
+    body: text,
+    html,
+    severity: c.severity,
+    ...(headers === undefined ? {} : { headers }),
+  };
 }
 
 export const ALERT_TEMPLATE_KINDS: readonly AlertKind[] = Object.keys(COPY) as AlertKind[];

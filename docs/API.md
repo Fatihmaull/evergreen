@@ -31,6 +31,7 @@ Nothing is built against this until it merges. "Written before either side build
 - `SIGNIN_CODE_PEPPER`: the HMAC key that sign-in codes are stored under.
 - `EMAIL_API_KEY`: the Resend key. Same name the engine's EmailChannel already uses (CONVENTIONS.md).
 - `CHALLENGE_SIGNING_KEY`: the `S…` seed of the challenge-signing key (§4).
+- `ALERTS_UNSUBSCRIBE_SECRET`: HMAC key for the unauthenticated one-click unsubscribe link (§6a). It is not `SIGNIN_CODE_PEPPER`. Unset, blank, or containing whitespace, `POST /alerts/unsubscribe` answers `503` and optional alerts are sent without the one-click header. Auth does not require it. The value is never logged. DevOps sets it on `evergreen-api-preview` first; production waits for Fatih. No value belongs in the repo.
 
 Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBOARD_ORIGIN` (the CSRF `Origin`, and the SEP-10 home and web-auth domain). `DASHBOARD_ORIGIN` is one exact origin per environment, set in `apps/api/wrangler.jsonc`: production `https://evergreen-stellar.pages.dev`, preview `https://preview.evergreen-stellar.pages.dev`. `EMAIL_FROM` is `alerts@mail.evergreenstellar.biz.id` on both production (top-level `vars`) and preview (`env.preview` vars), sent through the verified Resend domain `mail.evergreenstellar.biz.id`. A send Resend refuses surfaces as `502 EMAIL_NOT_SENT` (§4, §9). Until every one is set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`. The Pages project holds the proxy and the service binding, nothing secret.
 - **Folder:** `apps/api`.
@@ -76,6 +77,8 @@ Two plain vars, not secret: `EMAIL_FROM` (the sign-in code's sender) and `DASHBO
 **CSRF:** every state-changing request (`POST`, `PATCH`, `DELETE`) must pass both checks, or it is refused with `403 CSRF_FAILED`:
 - **an `Origin` check:** it must equal the dashboard's origin;
 - **a synchronizer token:** the `X-Evergreen-CSRF` header must equal the token stored on the session row and returned by `GET /me`.
+
+**Exception:** `POST /alerts/unsubscribe` (§6a). RFC 8058 one-click comes from a mail client, which sends no session cookie and no `X-Evergreen-CSRF` header, and whose `Origin` is not the dashboard. The HMAC on the query token is the authorisation. The route updates optional alert preferences only. It does not send mail and does not move XLM.
 
 **Rate limits:**
 - They answer `429` with `Retry-After` (seconds) and error code `RATE_LIMITED`.
@@ -210,6 +213,24 @@ type AlertPreference = {
 - **`POST`, `PUT` and `DELETE` are `405`** with `Allow: GET, PATCH`.
 - A missing database or dashboard origin, or a store the Worker could not build, is `503 UPSTREAM_UNAVAILABLE`. The message names no setting.
 - **Not decided here:** when `allowance_expiring` is sent, the ledger count for `approaching_critical`, and whether F3 or F5 send a user email. None of those is a field on this route. F3 and F5 have no alert kind.
+
+### One-click unsubscribe (RFC 8058)
+
+**Public API change, for Fatih's review before merge.** Unauthenticated. It is not a session route and it is not under CSRF (§3). It does not send mail and does not move XLM.
+
+| Route | Auth | Does |
+|---|---|---|
+| `GET /alerts/unsubscribe?token=` | none | `{ ok: true }`. Does not read or write a preference. A mail client or a person opening the link must not be unsubscribed by the GET |
+| `POST /alerts/unsubscribe?token=` | the token | Body `List-Unsubscribe=One-Click` (`Content-Type: application/x-www-form-urlencoded`, a `;charset` parameter allowed). Sets every optional kind to `enabled: false` and returns `{ ok: true }` |
+
+- **Headers on an optional alert**, when the secret and `DASHBOARD_ORIGIN` are both usable: `List-Unsubscribe: <https://<dashboard-origin>/api/v1/alerts/unsubscribe?token=…>` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. There is no `mailto:`. The absolute URL is `DASHBOARD_ORIGIN` plus `/api/v1` (this document's option B: the dashboard origin is the public API base). No hostname is invented. Required alerts do not get these headers. They say they cannot be turned off.
+- **The body of an optional alert** links `DASHBOARD_ORIGIN/dashboard/alerts/` (WEBF's screen; the page is not built in `apps/web`). Per-kind control stays on `PATCH /me/alert-preferences`. One-click is list-level: it turns off `allowance_expiring`, `approaching_critical` and `extend_succeeded` together.
+- **Token.** HMAC-SHA-256 over the user id, the fixed purpose `alerts-optional`, and an expiry. Query parameter `token` only. TTL is **90 days** from mint (decision for Fatih; the alternative is no expiry until the secret rotates). A secret rotation invalidates outstanding links immediately.
+- **Secret.** `ALERTS_UNSUBSCRIBE_SECRET`, its own Worker secret, not `SIGNIN_CODE_PEPPER`. Missing or unusable: this route is `503 UPSTREAM_UNAVAILABLE` and the message names no setting. Optional alerts then omit the one-click header. The preferences-page link still uses `DASHBOARD_ORIGIN`.
+- **Writes.** An `UPDATE`/`INSERT` of `enabled = false` through the existing preferences store, one optional kind at a time. No `DELETE` (`eg_api` has none). A second POST leaves those kinds false. Required kinds are not written. A deactivated user, or a user id that matches no row, is `{ ok: true }` and writes nothing: `PgAuthStore.getUser` treats a deactivated row as no user, and the response is the same as a write.
+- **Failures that do not write** (missing, malformed, tampered, expired, wrong secret, wrong content type, body other than the one field `List-Unsubscribe=One-Click`) are one `400 INVALID_REQUEST`. The message does not say which, and the body contains no email, no user id, no token and no secret. GET does not check the token, so it is not an oracle.
+- **No separate rate limit** is defined. A bad token does not touch the database. A valid token's write is idempotent.
+- `PUT`, `PATCH` and `DELETE` are `405` with `Allow: GET, POST`.
 
 ## 7 · Allowance state, jobs and history
 
