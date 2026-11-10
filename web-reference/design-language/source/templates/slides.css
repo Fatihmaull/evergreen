@@ -1,0 +1,65 @@
+/* 16:9 slides. The page is 1920×1080 CSS px at 96px per inch: 508×285.75mm.
+   The screenshot uses the px canvas; the PDF uses @page. No new tokens.
+   Linked from the slide templates only — a social card must not pick this up. */
+
+@page {
+  size: 508mm 285.75mm;
+  margin: 0;
+}
+
+html,
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body.ground-surface {
+  background: var(--surface);
+}
+body.ground-pine {
+  background: var(--pine);
+}
+body.ground-pine-deep {
+  background: var(--pine-deep);
+}
+
+/* The site's one primary button, at k. Closing slides only. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(7px * var(--k));
+  width: fit-content;
+  margin: 0;
+  padding: calc(7px * var(--k)) calc(14px * var(--k));
+  border-radius: 100vw;
+  background: var(--pine);
+  color: var(--surface);
+  font: 400 calc(var(--t-body) * var(--k)) / 1 var(--sans);
+  letter-spacing: 0.01em;
+}
+.on-pine .cta,
+.on-pine-deep .cta {
+  background: var(--surface);
+  color: var(--pine-deep);
+}
+
+/* Projector floor. The label role moves up to the body role. Nothing else
+   changes size. .62 text is not used; a leftover .muted inherits the
+   foreground instead. The figure's own .62 label and .78 caption become
+   full cream, which is the heading alpha on a dark ground. */
+.slide-offline .label,
+.slide-offline .terminal,
+.slide-offline .cta,
+.slide-offline .chip {
+  font-size: calc(var(--t-body) * var(--k));
+}
+.slide-offline .muted {
+  color: inherit;
+}
+.slide-offline .figure .label,
+.slide-offline .figure-caption {
+  color: var(--surface);
+}

@@ -194,6 +194,20 @@ p {
   max-width: 44ch;
 }
 
+/* The site's terminal (components.md), at k. No window chrome. Text is
+   #ececec, the one terminal colour tokens.md already names; it is not a
+   new token. */
+.terminal {
+  margin: 0;
+  background: var(--off-black);
+  color: #ececec;
+  border-radius: calc(4px * var(--k));
+  padding: calc(32px * var(--k));
+  font: 400 calc(var(--t-label) * var(--k)) / 1.65 var(--mono);
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+}
+
 /* Hairline grid, radius 0 where borders meet; one cell may invert. */
 .hairline-grid {
   display: grid;

@@ -180,6 +180,37 @@ type WatchItem = {
 - So the API refuses a threshold below a floor the engine publishes: `422 THRESHOLD_BELOW_FLOOR`.
 - The floor's value is Rakha's (`PH2-E4-04`, `B-D31-01`).
 
+## 6a · Alert preferences (`PH2-E2-06`, CEF)
+
+Per-user email alerts. **This route does not send mail and does not move XLM.** A session, including one opened by email, only reads and writes a boolean. Sending stays behind `ALERTS_SEND` (exactly `send`) and `ALERTS_ALLOWLIST` on the alert dispatcher, which is not this route.
+
+| Route | Auth | Does |
+|---|---|---|
+| `GET /me/alert-preferences` | session | `{ items: AlertPreference[] }`, every kind, in the order of `ALERT_SPECS` |
+| `PATCH /me/alert-preferences` `{ kind, enabled }` or `{ kind, reset: true }` | session + CSRF | Sets one optional kind, or puts it back to its default. Returns the same `{ items }` list |
+
+```ts
+type AlertPreference = {
+  kind: AlertKind;                 // the ten kinds in apps/api/src/alerts/policy.ts
+  class: 'required' | 'optional';
+  enabled: boolean;                // effective. A required kind is always true
+  defaultOn: boolean;
+  stored: boolean;                 // true only when an optional kind has a row
+};
+```
+
+- **Required kinds cannot be stored and cannot be turned off** (`preflight_failed`, `allowance_missing`, `extend_failed_refund`, `refund_delayed`, `unexplained_charge`, `testnet_reset`, `restore_lost_changes`). A well-formed PATCH of one is `422 INVALID_REQUEST` with `details.field: "kind"`. The message does not repeat the sent kind.
+- **Optional kinds** (`allowance_expiring`, `approaching_critical`, `extend_succeeded`) default on. A missing row means that default (`stored: false`). `enabled: false` writes a row. `reset: true` updates that row back to `defaultOn` and leaves it (`stored` stays true). There is no DELETE: the API role has none on `alert_preferences`. Reset with no row is `200` and writes nothing.
+- **The body has no other fields.** `enabled` and `reset` together, a missing one of them, a non-boolean `enabled`, `reset` other than `true`, an unknown kind, or any other field (including a user id) is `400 INVALID_REQUEST`. `details.field` names the field and does not echo the value.
+- **The user id comes from the session.** The response has no email and no user id. One user cannot read or write another's row. The top-level object is `{ items }` only. Each item's fields are `kind`, `class`, `enabled`, `defaultOn`, `stored`. There is no `updated_at`. A missing optional row is still an item, with `enabled` true and `stored` false: the read is not a list of only the stored rows.
+- **No per-contract override.** A `contractId` (or any other field) on the PATCH body is `400`. The primary key is `(user_id, kind)`.
+- **No email-verification field.** `users` has `email`, `created_at`, and `deactivated_at` (`apps/api/db/schema.sql`). `GET /me` returns `{ id, email, createdAt }` and nothing about verification. This route does not add one. A session means a sign-in code was accepted once. It does not say a later alert arrived.
+- **No send-mode field.** `ALERTS_SEND` is not in this response. Exactly `send` is the only value that sends, and the API Worker cannot see the scheduler Worker's copy of that setting.
+- **No outbox history.** This slice does not list `alert_outbox`. If a later route does, `sent` means Resend accepted the message. Inbox delivery stays unverified (`receivedInInbox: 'unverified'`). The word is accepted, not delivered and not received.
+- **`POST`, `PUT` and `DELETE` are `405`** with `Allow: GET, PATCH`.
+- A missing database or dashboard origin, or a store the Worker could not build, is `503 UPSTREAM_UNAVAILABLE`. The message names no setting.
+- **Not decided here:** when `allowance_expiring` is sent, the ledger count for `approaching_critical`, and whether F3 or F5 send a user email. None of those is a field on this route. F3 and F5 have no alert kind.
+
 ## 7 · Allowance state, jobs and history
 
 ### Allowance
@@ -292,10 +323,11 @@ type LedgerRow = {
 ```
 
 This is what DoD-2's **zero subsidy** is measured from. Every XLM the engine moves for a user has a row, and the rows reconcile against the transactions:
-- per job, `pull` = `rent` + `evergreen-fee` + `refund` + `difference`. **`network-fee` is not in this sum** (Fatih, 2026-10-28, #414, which changes what an earlier draft of this section said): a `network-fee` row records what one of the job's transactions (the pull, the extend, a refund) cost the engine. It is **evidence of the engine's cost and is never billed to the user**. The user pays the rent plus the Evergreen fee, and the fee is what covers the engine's network costs;
+- per job, `pull` = `rent` + `evergreen-fee` + `refund` + `difference`, where `rent` is the **charged** rent and `evergreen-fee` is the ADR-007 fee on the **charged** rent, `max(2% × charged rent, 25,000 stroops)`: the fee inside the pull is an estimate and the final fee is set at reconcile (K11, Fatih, 2026-11-03). **`refund` is everything returned on-chain to the user** (the unused part of the pull), and **`difference` is only what was not returned**, normally 0, so each stroop is counted once and the balance view double-counts nothing. **`network-fee` is not in this sum** (Fatih, 2026-10-28, #414, which changes what an earlier draft of this section said): a `network-fee` row records what one of the job's transactions (the pull, the extend, a refund) cost the engine. It is **evidence of the engine's cost and is never billed to the user**. The user pays the rent plus the Evergreen fee, and the fee is what covers the engine's network costs;
 - **zero subsidy per job** is `evergreen-fee` ≥ the sum of that job's `network-fee` rows. This applies to a job that charges a fee. **A job that pulled and whose extend finally failed is refunded in full, fee included** (Fatih, 2026-10-28): it has no `evergreen-fee`, its `pull` is returned by `refund` (plus any `difference`), and Evergreen absorbs its network cost (about 8,000 to 12,400 stroops) as an operating cost, which is not a rent subsidy. That is counted separately, as a per-user failure rate (`PH2-E4-05`), so abuse would be visible. **So this is a check on the jobs that charge a fee, not an invariant every job must satisfy, and a fully refunded job is not a violation of it** (Fatih, 2026-10-28);
 - **Stored vs derived** (Rakha's points 1 and 4). **Stored** kinds are each backed by their own transaction and always carry `txHash`: `pull`, `refund`, and `network-fee` (the fee charged on one of the job's transactions). **Derived** kinds are split out of another row by reconciliation and have `txHash: null`: `rent`, `evergreen-fee` (part of the pull amount) and `difference` (the recorded reconcile difference, so the zero-subsidy sum closes on rows alone);
 - how declared vs charged resource fee are stored stays a placeholder until the `PH2-E4-02` spike (Rakha's point 8);
+- **a shortfall** is `charged rent + final fee − pull` when that is positive (K13 (a) and K15, Fatih, 2026-11-04): the charged rent came in above what was pulled. Reconcile records it, raises a P1 operator alert, the user's autopilot keeps running, the job counts as a zero-subsidy violation for DoD-2, and there is no second `transfer_from`. `amountStroops` is always positive and a `difference` row cannot carry it, so how the shortfall is stored is `PH2-E4-02`'s call, as long as the DoD-2 count can query it. On such a job the identity above does not close on rows, and the balance view would show it as unexplained until the storage is decided;
 - an unexplained difference is a P0 or P1 by definition.
 
 The exact row split is Rakha's schema; this shape is the read view.
@@ -322,7 +354,7 @@ Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_
 
 `INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
 - `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, a path segment is not a valid network or contract ID, a `budget` amount is `"0"`, or `perJobMaxStroops` is above `per30DaysMaxStroops` (§6).
-- `422`: the request is well-formed but refused on its meaning. Today that is a `POST /watchlist` past the 50-item cap (`details: { field: 'body', limit: 50 }`, §6), `autopilot.extendToLedgers` not above `thresholdLedgers`, an `autopilot.payerWallet` that is not linked to the caller, and an `autopilot.payerWallet` that the caller linked **at or before their account's last reactivation** (the message says to sign with that wallet again, §10).
+- `422`: the request is well-formed but refused on its meaning. Today that is a `POST /watchlist` past the 50-item cap (`details: { field: 'body', limit: 50 }`, §6), `autopilot.extendToLedgers` not above `thresholdLedgers`, an `autopilot.payerWallet` that is not linked to the caller, an `autopilot.payerWallet` that the caller linked **at or before their account's last reactivation** (the message says to sign with that wallet again, §10), and a `PATCH /me/alert-preferences` for a required alert kind (§6a).
 - **The web client has copy for it** (WEBF's, in `apps/web/src/lib/watchlist.ts`, #444; the copy belongs to the web client, not to the API contract). When `POST /watchlist` answers `INVALID_REQUEST` (`400` or `422`, the code decides, not the status), the dashboard says: "The API did not accept this request, so nothing was added. The scan above is unaffected: it read the chain directly." If the scan declared more data keys than a watchlist item takes, it appends: "This scan declared N data keys, and a watchlist item takes at most 100." (N is the number declared). It branches on the code, never on `message`.
 
 **Known limitation: an absent item and an unknown route look the same.** `DELETE /watchlist/{network}/{contractId}` (and `PATCH`) for an item the caller does not have answers `404 NOT_FOUND`, and so does a path the API does not serve at all, such as `/watchlist/a/b/c`. The two differ only in `message` ("No such watch item." and "No such route."), which is not part of the contract, so a client that branches on the code and status cannot tell them apart. This is documented, not a planned code change. A malformed `network` or `contractId` segment is not part of it: that is `400 INVALID_REQUEST`. The web client shows "Nothing to remove for this account." for the `DELETE` case (its copy, see §9a).

@@ -285,7 +285,8 @@ export function render(ctx) {
           <h2>Ready to see what expires first in your Soroban contracts?</h2>
           <p class="lead">
             Open the dashboard, run the CLI against any contract, or read the evidence we recorded
-            doing it. Stellar testnet. You need no key and no account to scan.
+            doing it. Stellar testnet. You need no key and no account to scan; an account is optional, and
+            <a href="/docs/account/">what it does today</a> is written down.
           </p>
           <div class="command">
             <span class="command-prompt" aria-hidden="true">$</span>
