@@ -23,10 +23,14 @@
 --
 -- The call from the scheduler tick is a follow-up (not in this file).
 --
--- Apply after 0008 (needs eg_scheduler). Re-running 0008 does not touch function grants.
+-- Apply after 0008 and 0013 (needs eg_scheduler, and schema_migrations from 0013).
+-- Re-running 0008 does not touch function grants. The ledger INSERT at the end records
+-- this file in the same transaction; applied before 0013 it fails closed (the table is
+-- missing and the transaction rolls back). A re-run bumps last_applied_at and apply_count.
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0014_prune_auth_tables.sql
 --
--- Idempotent: CREATE INDEX IF NOT EXISTS, CREATE OR REPLACE FUNCTION, REVOKE/GRANT re-run.
+-- Idempotent: CREATE INDEX IF NOT EXISTS, CREATE OR REPLACE FUNCTION, REVOKE/GRANT re-run,
+-- and the ledger INSERT upserts.
 
 CREATE INDEX IF NOT EXISTS wallet_challenges_session_hash_idx ON wallet_challenges (session_hash);
 
@@ -56,3 +60,10 @@ $fn$;
 
 REVOKE ALL ON FUNCTION public.prune_auth_tables(interval) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.prune_auth_tables(interval) TO eg_scheduler;
+
+-- Ledger line (PH2-E2-07). Same statement as 0013, this file's name.
+INSERT INTO schema_migrations (filename, source)
+VALUES ('0014_prune_auth_tables.sql', 'applied')
+ON CONFLICT (filename) DO UPDATE
+  SET last_applied_at = now(),
+      apply_count     = schema_migrations.apply_count + 1;

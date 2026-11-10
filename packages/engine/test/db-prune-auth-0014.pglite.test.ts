@@ -1,5 +1,5 @@
 /**
- * 0014_prune_auth_tables.sql on PGlite, after schema.sql → 0002 … 0006 → 0008 → 0014 (#421).
+ * 0014_prune_auth_tables.sql on PGlite, after schema.sql → 0002 … 0006 → 0008 → 0013 → 0014 (#421).
  *
  * Test-harness only: the 0008 neon_superuser guard line is removed (PGlite has no such role).
  */
@@ -13,6 +13,7 @@ const db = (f: string): string =>
 
 const NEON_LINE = "       OR pg_has_role(r, 'neon_superuser', 'MEMBER')\n";
 const s0008 = db('0008_roles_grants.sql');
+const s0013 = db('0013_schema_migrations.sql');
 const s0014 = db('0014_prune_auth_tables.sql');
 let pg: PGlite;
 
@@ -59,8 +60,8 @@ describe('0014 prune_auth_tables on PGlite', () => {
     if (!s0008.includes(NEON_LINE)) throw new Error('0008 neon_superuser guard line not found');
     await pg.exec(s0008.replace(NEON_LINE, ''));
     await pg.exec('GRANT USAGE ON SCHEMA public TO other_role'); // reach the schema, so only EXECUTE is tested
+    await pg.exec(s0013);
     await pg.exec(s0014);
-    await pg.exec(s0014); // idempotent
     await pg.exec(`INSERT INTO users (email) VALUES ('a@example.com')`);
     await pg.exec(`INSERT INTO sessions (id_hash, user_id, csrf_token, idle_expires_at, absolute_expires_at)
       SELECT ${SESSION}, id, 'c', now() + interval '1 day', now() + interval '1 day' FROM users`);
@@ -71,6 +72,36 @@ describe('0014 prune_auth_tables on PGlite', () => {
 
   beforeEach(async () => {
     await pg.exec('DELETE FROM wallet_challenges; DELETE FROM auth_rate_counters;');
+  });
+
+  it('records itself in schema_migrations over 0013, and a re-run bumps apply_count', async () => {
+    const ledger = async () =>
+      (
+        await pg.query<{
+          filename: string;
+          source: string;
+          apply_count: number;
+          later: boolean;
+        }>(
+          `SELECT filename, source, apply_count, last_applied_at > first_applied_at AS later
+             FROM schema_migrations ORDER BY filename`,
+        )
+      ).rows;
+    expect(await ledger()).toEqual([
+      { filename: '0013_schema_migrations.sql', source: 'applied', apply_count: 1, later: false },
+      { filename: '0014_prune_auth_tables.sql', source: 'applied', apply_count: 1, later: false },
+    ]);
+    await pg.exec(s0014); // idempotent: DDL re-runs, ledger upserts
+    const [self] = (await ledger()).filter((r) => r.filename === '0014_prune_auth_tables.sql');
+    expect(self).toEqual({
+      filename: '0014_prune_auth_tables.sql',
+      source: 'applied',
+      apply_count: 2,
+      later: true,
+    });
+    await expect(as('eg_scheduler', 'SELECT 1 FROM schema_migrations')).rejects.toThrow(
+      /permission denied/,
+    );
   });
 
   it('deletes expired challenges and keeps live ones', async () => {
