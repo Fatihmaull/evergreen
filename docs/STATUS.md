@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-05 F9 slow-tick threshold is 12000 ms, 2026-11-10
+
+`SLOW_TICK_RPC_MS` is 12000. The comparison stays strictly above. PM decision 2026-11-10, revisable by Fatih. Production `rpc_ms` on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359, 10057, 13160), median 7852 ms, max 13160 ms. That value is the sum of getNetwork and getLatestLedger, each with a 10 s timeout, so 3000 ms alerted on every successful tick. The card stays `[~]`: DoD-2's alert clause is not met. Fires on production: **undetermined** until the API Worker that serves `GET /api/v1/health` contains this constant. Notion note sync pending for PH2-E4-05. A full Notion presence diff was not run this session; the task was this constant only.
+
 ## Current — PH2-E2-06 alert preferences route, 2026-11-08
 
 `GET` and `PATCH /api/v1/me/alert-preferences` (`docs/API.md` §6a). Optional kinds can be turned off or reset to the default; required kinds cannot. The user id comes from the session. The route does not send mail and does not move XLM. Migration 0011 was already on `main` and applied to preview and production on 2026-11-05; the BACKLOG row that still said the card was waiting on those tables was corrected. Nothing calls `dispatchUserAlert` from the API cron or the scheduler yet. The screen spec in #602 is answered in `docs/API.md` §6a and the design: no verification column, no `ALERTS_SEND` read, no outbox history route, and `sent` means Resend accepted. Lead time, the approaching-expiry severity, and F3/F5 email stay decisions for Fatih. Notion sync pending for PH2-E2-06.
