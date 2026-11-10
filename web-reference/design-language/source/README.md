@@ -8,8 +8,8 @@ nothing is drawn by hand.
 |---|---|---|
 | `brand/` | The mark as vectors: pine, cream and ink | `tools/build_brand.py` |
 | `favicon/` | `favicon.svg`, `favicon.ico` (16/32/48), `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `site.webmanifest` | `tools/build_brand.py` |
-| `templates/` | One HTML canvas per format, and `base.css`, the site's tokens at canvas scale | by hand, checked by `tools/render.mjs` |
-| `renders/` | Every template rendered at size, a copy with safe areas drawn in `guides/`, the A3 PDF, and the brand proof sheet | `tools/render.mjs`, `tools/build_brand.py` |
+| `templates/` | One HTML canvas per format, the slide and event-card templates, `base.css`, and `slides.css` for the 16:9 page | by hand, checked by `tools/render.mjs` |
+| `renders/` | Every template rendered at size, a copy with safe areas drawn in `guides/`, the A3 PDF, one PDF per slide, and the brand proof sheet | `tools/render.mjs`, `tools/build_brand.py` |
 | `tools/` | The two builders and the tracer they share | — |
 
 ## Rebuilding
