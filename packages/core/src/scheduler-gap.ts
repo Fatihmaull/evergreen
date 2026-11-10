@@ -26,8 +26,10 @@ const isLedger = (n: number): boolean => Number.isSafeInteger(n) && n > 0;
  *
  * Two ticks in the same ledger give a gap of 0 (a manual dispatch right after a
  * cron tick). A ledger that goes **down** throws: that is a testnet reset or ticks
- * read out of order, and either makes every later number meaningless. DoD-2 says a
- * reset restarts its 30 days, so the caller must start a new window, not average
+ * read out of order, and either makes every later number meaningless. DoD-2's window
+ * is 14 days from the first real autopilot extend, and a testnet reset excludes the
+ * days it affects instead of restarting the window (phase-2/PHASE2-PLAN.md, #582), so
+ * the caller must cut the ticks at the reset and drop the affected days, not average
  * across it.
  */
 export function tickGapsLedgers(observedLedgers: readonly number[]): number[] {
@@ -39,7 +41,7 @@ export function tickGapsLedgers(observedLedgers: readonly number[]): number[] {
     const gap = observedLedgers[i]! - observedLedgers[i - 1]!;
     if (gap < 0) {
       throw new RangeError(
-        `ticks are not in ledger order (tick ${i} is ledger ${observedLedgers[i]}, after ${observedLedgers[i - 1]}); a testnet reset starts a new window`,
+        `ticks are not in ledger order (tick ${i} is ledger ${observedLedgers[i]}, after ${observedLedgers[i - 1]}); a testnet reset excludes the days it affects, so cut the ticks at the reset`,
       );
     }
     gaps.push(gap);

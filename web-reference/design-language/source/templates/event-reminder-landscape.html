@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Landscape 1920 × 1080 — Sehari sebelumnya</title>
+  </head>
+  <body>
+    <!-- Day-before reminder. Every content line is a placeholder. Replace it; do not invent an event. -->
+    <div
+      class="canvas"
+      data-format="landscape 1920×1080 · k=2 · reminder"
+      style="
+        --w: 1920px;
+        --h: 1080px;
+        --safe-t: 96px;
+        --safe-r: 160px;
+        --safe-b: 96px;
+        --safe-l: 160px;
+      "
+    >
+      <div class="safe">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <div class="spacer"></div>
+        <div style="display: grid; gap: calc(10px * var(--k)); max-width: 36ch">
+          <p class="label muted">Sehari sebelumnya</p>
+          <p class="display" style="max-width: 16ch">Judul acara</p>
+          <p class="lead">Tanggal</p>
+          <p class="lead">Daring atau luring</p>
+          <p class="lead">Tempat atau tautan</p>
+          <p class="lead" style="color: var(--pine)">Ajakan <span aria-hidden="true">→</span></p>
+        </div>
+        <div class="spacer"></div>
+        <p class="label muted">Stellar testnet · evergreen-stellar.pages.dev</p>
+      </div>
+    </div>
+  </body>
+</html>

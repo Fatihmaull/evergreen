@@ -19,7 +19,8 @@ export function render(ctx) {
   return `
     <h2 id="file">The file</h2>
     <p>
-      Copy <span class="mono">evergreen.config.example.json</span> to a private Testnet config
+      In a checkout of the repository, copy
+      <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/evergreen.config.example.json">evergreen.config.example.json</a> to a private Testnet config
       as a starting shape for a dry run. Replace its placeholder contract and payer; the displayed
       example alone is not a ready-to-run selected-payer simulation. Add the payer's public
       <span class="mono">sourceAccount</span> and a decimal-string
@@ -67,7 +68,7 @@ export function render(ctx) {
       Adding an entry to <span class="mono">contracts</span> does not extend anything by itself —
       the engine correctly does nothing until a threshold is crossed. A mismatched threshold can
       still cause an unexpected decision. Use only a contract and Testnet fee account you control;
-      run <span class="mono">pnpm engine:execute --config PATH --dry-run</span> and inspect its
+      from that checkout (there is no npm engine package) run <span class="mono">pnpm engine:execute --config PATH --dry-run</span> and inspect its
       decisions, preview, liveness and fee diagnostics. Neither a quiet dry run nor an exit code
       authorizes a write. Live execution is a separate, bounded local operator procedure in the
       <a class="site-more" href="https://github.com/Fatihmaull/evergreen/blob/main/docs/ENGINE-SETUP.md">setup guide</a>;

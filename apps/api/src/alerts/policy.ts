@@ -1,8 +1,8 @@
 /**
  * PH2-E2-06 per-user alerts: the pure decisions that need no schema
  * (docs/PH2-E2-06-ALERTS-DESIGN.md §3, §5, §6). No transport, no clock, no
- * storage. The outbox and the preferences store are Rakha's schema (§7) and
- * are NOT here; callers pass in what those would hold.
+ * storage. Callers pass preferences in. Rows live in migration 0011;
+ * `PgAlertPreferencesStore` and `GET`/`PATCH /me/alert-preferences` write them.
  */
 
 /** `ALERTS_SEND` (§6): sending is on only for exactly `send`, byte for byte. */

@@ -151,6 +151,21 @@ export function parseAutopilot(v: unknown, field = 'autopilot'): Parsed<Autopilo
   if (!perJob.ok) return perJob;
   const per30 = parseStroops(budget['per30DaysMaxStroops'], `${field}.budget.per30DaysMaxStroops`);
   if (!per30.ok) return per30;
+  // PH2-E2-05 pre-launch list (Rakha, 2026-11-02): a zero budget can never pay
+  // for a job, and a per-job cap above the 30-day cap could never be reached.
+  // Both are malformed budgets: 400 INVALID_REQUEST (docs/API.md §6, §9).
+  if (perJob.value === '0') {
+    return refuse(`${field}.budget.perJobMaxStroops`, 'Budget amounts must be above 0 stroops.');
+  }
+  if (per30.value === '0') {
+    return refuse(`${field}.budget.per30DaysMaxStroops`, 'Budget amounts must be above 0 stroops.');
+  }
+  if (BigInt(perJob.value) > BigInt(per30.value)) {
+    return refuse(
+      `${field}.budget.perJobMaxStroops`,
+      'perJobMaxStroops must not be above per30DaysMaxStroops.',
+    );
+  }
   return ok({
     enabled: true,
     payerWallet: payer,
