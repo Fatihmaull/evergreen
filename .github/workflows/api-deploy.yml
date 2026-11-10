@@ -40,7 +40,9 @@ permissions:
   contents: read
 
 env:
-  WRANGLER_VERSION: '4'
+  # Pinned. `wrangler deploy --tag` and `--message` need >= 4.66.0.
+  # 4.156.0 is the version last seen on a production deploy.
+  WRANGLER_VERSION: '4.156.0'
 
 jobs:
   preview:
@@ -76,7 +78,9 @@ jobs:
           # On pull_request, github.sha is GitHub's synthetic MERGE commit, which
           # exists on no branch. The commit under test is the PR head.
           DEPLOY_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_RUN_ID: ${{ github.run_id }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}" --tag "${DEPLOY_SHA:0:7}" --message "${DEPLOY_SHA} ${DEPLOY_RUN_ID}"
 
   production:
     name: deploy evergreen-api (production)
@@ -121,7 +125,9 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_RUN_ID: ${{ github.run_id }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}" --tag "${DEPLOY_SHA:0:7}" --message "${DEPLOY_SHA} ${DEPLOY_RUN_ID}"
       # Reads what is SERVING, not what was sent: an injected var proves nothing
       # about what shipped. The `commit` field comes from #460; a response
       # without it (a version older than that) passes with a notice, and
