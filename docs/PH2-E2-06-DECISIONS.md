@@ -1,6 +1,6 @@
 # PH2-E2-06 alert preferences: decisions still open
 
-**Status: accepted.** The PM accepted every recommendation for items 2–7 in the review on [#608](https://github.com/Fatihmaull/evergreen/pull/608#pullrequestreview-5818648963). This is not an ADR. `docs/adr/` is for a choice that has been made. The PM decides these items before any of them is built. Where a number or a behaviour is not in the repo, this page says **undetermined**. It invents no Soroban method and no ledger count.
+**Status: accepted.** The PM accepted every recommendation for items 2–7 in the review on [#608](https://github.com/Fatihmaull/evergreen/pull/608#pullrequestreview-5818648963). This is not an ADR. `docs/adr/` is for a choice that has been made. The PM decided these items before any of them is built. Where a number or a behaviour is not in the repo, this page says **undetermined**. It invents no Soroban method and no ledger count.
 
 **Source of the questions.** Draft PR [#602](https://github.com/Fatihmaull/evergreen/pull/602) (`cursor/ph2-e2-06-alert-preferences-262f`), `web-reference/design-language/components.md` § Alert preferences, screen `/dashboard/alerts/`. The open list is at lines 453–479 of that file. Draft PR [#605](https://github.com/Fatihmaull/evergreen/pull/605) does not contain that section. It is the workshop-template branch. The questions below are #602's items 2–7. Item 1 (the preference read and write) is the subject of [#603](https://github.com/Fatihmaull/evergreen/pull/603) and is not decided here.
 

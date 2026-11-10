@@ -1,6 +1,6 @@
 # PH2-E2-06: which Worker sends, and the ledger leads
 
-**Status: proposed. Nothing here is accepted.** This is not an ADR. It builds on [`docs/PH2-E2-06-DECISIONS.md`](PH2-E2-06-DECISIONS.md). The PM accepted every recommendation for items 2–7 in the review on [#608](https://github.com/Fatihmaull/evergreen/pull/608#pullrequestreview-5818648963). This page does not reopen those items. It answers the two questions that review left standing: which Worker calls `dispatchUserAlert`, and what ledger comparison item 5 was waiting for. Nothing in this page is implemented.
+**Status: accepted.** The PM accepted both recommendations (A option 1, B option 1 as the rule with no emit yet) in the review on [#611](https://github.com/Fatihmaull/evergreen/pull/611#pullrequestreview-5835929208). This is not an ADR. It builds on [`docs/PH2-E2-06-DECISIONS.md`](PH2-E2-06-DECISIONS.md). The PM accepted every recommendation for items 2–7 in the review on [#608](https://github.com/Fatihmaull/evergreen/pull/608#pullrequestreview-5818648963). This page does not reopen those items. It answers the two questions that review left standing: which Worker calls `dispatchUserAlert`, and what ledger comparison item 5 was waiting for. Nothing in this page is implemented.
 
 Citations are `origin/main` at `efed7fa` unless a line says otherwise. Where a number or a behaviour is not in the repo, or is not an official Stellar page this text can point at, this page says **undetermined**. It invents no Soroban method.
 
