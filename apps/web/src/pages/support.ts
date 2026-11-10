@@ -2,12 +2,13 @@
  * /support/ in the browser: connect, type an amount, send, receipt (PH2-E3-07).
  *
  * Imports `wallet-money.ts` (through `support.ts`), so it is never a login page.
- * Nothing is stored. The send control is not shown while the treasury is unset
- * (`claims-and-copy.md`: no disabled control stands in for a missing feature).
+ * Nothing is stored. While the treasury is unset, K17 hides connect, the amount
+ * step, the label and the destination line; the page shows only the unset note.
+ * `/support/` is not registered.
  */
 import { esc } from '../lib/format';
 import { TREASURY_ADDRESS, createTipper, parseXlmAmount } from '../lib/support';
-import { TREASURY_UNSET_TEXT, tipOutcomeHtml } from '../lib/support-view';
+import { hideUnsetTreasury, tipOutcomeHtml } from '../lib/support-view';
 import { createWallet, isWalletFailure } from '../lib/wallet';
 import { freighterPort } from '../lib/wallet-freighter';
 
@@ -18,9 +19,7 @@ const tipper = createTipper({ wallet });
 let account: string | undefined;
 
 if (TREASURY_ADDRESS === undefined) {
-  $('send-button').hidden = true;
-  $('amount-input').hidden = true;
-  $('send-result').innerHTML = `<p class="small muted">${esc(TREASURY_UNSET_TEXT)}</p>`;
+  hideUnsetTreasury(document);
 } else {
   $('treasury').textContent = TREASURY_ADDRESS;
 }

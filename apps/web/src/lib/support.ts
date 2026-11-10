@@ -139,7 +139,10 @@ export interface Tipper {
 /**
  * NEVER TWICE. Once a tip may have reached the network (success, `pending`,
  * `possibly-signed`, `submit-failed`, `failed-on-chain`) the tipper locks until
- * the page is reloaded, so a double click or a retry cannot pay twice.
+ * the page is reloaded, so a double click or a retry cannot pay twice. A throw
+ * from `signAndSubmit` locks too (K17): the chain's `prepare` and `send` can
+ * throw before they return a result, and the page must not stay on "Waiting
+ * for your wallet…".
  */
 export function createTipper({
   wallet,
@@ -184,10 +187,19 @@ export function createTipper({
             detail: error instanceof Error ? error.message : String(error),
           };
         }
-        const outcome = await signAndSubmit(wallet, built, from, {
-          ...(moneyChain ? { chain: moneyChain } : {}),
-          ...(sleep ? { sleep } : {}),
-        });
+        let outcome: TipOutcome;
+        try {
+          outcome = await signAndSubmit(wallet, built, from, {
+            ...(moneyChain ? { chain: moneyChain } : {}),
+            ...(sleep ? { sleep } : {}),
+          });
+        } catch (error) {
+          locked = true;
+          return {
+            kind: 'submit-failed',
+            detail: error instanceof Error ? error.message : String(error),
+          };
+        }
         if (tipMayHaveSent(outcome)) locked = true;
         return outcome;
       } finally {

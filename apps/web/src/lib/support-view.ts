@@ -11,6 +11,34 @@ export const TREASURY_UNSET_TEXT =
   "Evergreen's treasury address is not published yet: it waits on the key-separation work. " +
   'Until it is, this page cannot send a payment.';
 
+/** Hidden while the treasury is unset (K17). The note in `#send-result` stays. */
+const UNSET_HIDDEN_IDS = [
+  'wallet-step',
+  'connect-button',
+  'amount-heading',
+  'to-line',
+  'amount-label',
+  'amount-input',
+  'send-button',
+] as const;
+
+/**
+ * While the treasury is unset, the page shows only the unset note. Connect,
+ * the amount step, the label and the destination line are hidden, not disabled.
+ */
+export function hideUnsetTreasury(doc: {
+  getElementById(id: string): { hidden: boolean; innerHTML: string } | null;
+}): void {
+  for (const id of UNSET_HIDDEN_IDS) {
+    const el = doc.getElementById(id);
+    if (!el) throw new Error(`support page is missing #${id}`);
+    el.hidden = true;
+  }
+  const result = doc.getElementById('send-result');
+  if (!result) throw new Error('support page is missing #send-result');
+  result.innerHTML = `<p class="small muted">${esc(TREASURY_UNSET_TEXT)}</p>`;
+}
+
 function panel(tone: 'note' | 'undetermined' | 'error', html: string): string {
   return `<div class="panel ${tone}"><p>${html}</p></div>`;
 }
@@ -61,7 +89,7 @@ export function tipOutcomeHtml(o: TipOutcome, sent?: { stroops: bigint; to: stri
     case 'possibly-signed':
       return panel(
         'undetermined',
-        'Your wallet did not answer in time, and its prompt may still be open. If you approve it there, the payment can still be sent. This page will not send another: check your wallet first.',
+        'Your wallet did not answer in time, and its prompt may still be open. If you approve it there, this page will not send it, so nothing is paid. Reload and check your wallet before trying again.',
       );
     case 'submit-failed':
       return panel(

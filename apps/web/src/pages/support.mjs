@@ -19,7 +19,7 @@ export const meta = {
 };
 
 export function render() {
-  return `<section class="stack">
+  return `<section id="wallet-step" class="stack">
       <h2 class="section">1 · Wallet</h2>
       <div class="card card-pad stack">
         <div class="row"><button id="connect-button" class="secondary" type="button">Connect Freighter</button></div>
@@ -27,10 +27,10 @@ export function render() {
       </div>
     </section>
     <section class="stack">
-      <h2 class="section">2 · Amount</h2>
+      <h2 id="amount-heading" class="section">2 · Amount</h2>
       <div class="card card-pad stack">
-        <p class="small muted">To <span id="treasury" class="mono">the treasury address (not published yet)</span></p>
-        <label class="small" for="amount-input">Amount in XLM</label>
+        <p id="to-line" class="small muted">To <span id="treasury" class="mono">the treasury address (not published yet)</span></p>
+        <label id="amount-label" class="small" for="amount-input">Amount in XLM</label>
         <input id="amount-input" class="mono" type="text" inputmode="decimal" autocomplete="off" value="" />
         <div class="row"><button id="send-button" type="button">Send payment</button></div>
         <div id="send-result" aria-live="polite"></div>

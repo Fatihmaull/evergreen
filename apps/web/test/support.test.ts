@@ -20,7 +20,7 @@ import {
   parseXlmAmount,
   type SupportChain,
 } from '../src/lib/support';
-import { TREASURY_UNSET_TEXT, tipOutcomeHtml } from '../src/lib/support-view';
+import { TREASURY_UNSET_TEXT, hideUnsetTreasury, tipOutcomeHtml } from '../src/lib/support-view';
 import type { Wallet } from '../src/lib/wallet';
 import type { ChainPort } from '../src/lib/wallet-money';
 import { NETWORK } from '../src/lib/network';
@@ -98,9 +98,29 @@ describe('the treasury is unset', () => {
     expect(text(tipOutcomeHtml({ kind: 'treasury-unset' }))).toContain(TREASURY_UNSET_TEXT);
   });
 
-  test('the page hides the send control rather than showing it disabled', () => {
-    const page = src('../src/pages/support.ts');
-    expect(page).toMatch(/send-button'\)\.hidden = true/);
+  test('the unset page hides connect, the amount step and the destination, and shows only the note', async () => {
+    const { Window } = await import('happy-dom');
+    const { render } = await import('../src/pages/support.mjs');
+    const document = new Window().document;
+    document.body.innerHTML = render();
+    hideUnsetTreasury(document);
+    for (const id of [
+      'wallet-step',
+      'connect-button',
+      'amount-heading',
+      'to-line',
+      'amount-label',
+      'amount-input',
+      'send-button',
+    ]) {
+      const el = document.getElementById(id);
+      expect(el, id).not.toBeNull();
+      expect(el!.hidden, id).toBe(true);
+    }
+    const note = document.getElementById('send-result');
+    expect(note!.hidden).toBe(false);
+    expect(note!.textContent).toContain(TREASURY_UNSET_TEXT);
+    expect(src('../src/pages/support.ts')).toContain('hideUnsetTreasury(document)');
     expect(src('../src/pages/support.mjs')).not.toMatch(/disabled/);
   });
 
@@ -215,7 +235,7 @@ describe('a configured treasury (tests only)', () => {
     expect(m.sent.length).toBe(1);
   });
 
-  test('a wallet timeout is possibly-signed and locks', async () => {
+  test('a wallet timeout is possibly-signed and locks, and a late approval is not sent', async () => {
     const t = createTipper({
       wallet: wallet({ signTransaction: async () => ({ kind: 'timeout' }) }),
       treasury: valid,
@@ -224,6 +244,32 @@ describe('a configured treasury (tests only)', () => {
     });
     expect(await t.send(ME, '1')).toEqual({ kind: 'possibly-signed' });
     expect(t.locked).toBe(true);
+    const sentence = text(tipOutcomeHtml({ kind: 'possibly-signed' }));
+    expect(sentence).toContain('this page will not send it, so nothing is paid');
+    expect(sentence).not.toContain('can still be sent');
+  });
+
+  test.each([
+    ['prepare', { prepare: async () => Promise.reject(new Error('prepare down')) }],
+    ['send', { send: async () => Promise.reject(new Error('send down')) }],
+  ] as const)('a throw from %s locks and returns submit-failed', async (step, over) => {
+    const w = wallet();
+    const m = money(over);
+    const t = createTipper({
+      wallet: w,
+      treasury: valid,
+      supportChain: supportChain(),
+      moneyChain: m,
+      sleep: noSleep,
+    });
+    expect(await t.send(ME, '1')).toEqual({ kind: 'submit-failed', detail: `${step} down` });
+    expect(t.locked).toBe(true);
+    expect(w.asked.length).toBe(step === 'prepare' ? 0 : 1);
+    expect(m.sent.length).toBe(0);
+    expect(await t.send(ME, '1')).toEqual({ kind: 'already-sent' });
+    expect(text(tipOutcomeHtml({ kind: 'submit-failed', detail: `${step} down` }))).toContain(
+      'will not send another',
+    );
   });
 
   test('the treasury cannot tip itself', async () => {
