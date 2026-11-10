@@ -3,10 +3,10 @@
  * §5): turns one alert event plus the recipient's state into the
  * `DispatchRequest` that `dispatchUserAlert` takes, rendering the copy from
  * templates.ts so every caller words the same kind the same way. Pure: no
- * clock, no transport, no storage. The outbox and preferences are Rakha's
- * schema (§7); the caller passes `prefs` and `deactivated` in and injects the
- * store through `DispatchDeps`. Sending stays gated by `decideAlert`
- * (ALERTS_SEND exactly `send` plus the allowlist); nothing here sends.
+ * clock, no transport, no storage. The caller passes `prefs` and `deactivated`
+ * in (`PgAlertPreferencesStore.get`, or the §6a route) and injects the outbox
+ * through `DispatchDeps`. Sending stays gated by `decideAlert` (ALERTS_SEND
+ * exactly `send` plus the allowlist); nothing here sends.
  */
 import {
   dispatchUserAlert,

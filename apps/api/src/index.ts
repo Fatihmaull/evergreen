@@ -20,7 +20,7 @@ import { LATEST_OK_TICK_SQL, runSlowTickCheck, type SlowTickEnv } from './alerts
 import { configCheck } from './alerts/config-check.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
-export type { Env } from './router.js';
+export type { Env, HandleOptions } from './router.js';
 
 // The one default export allowed: the Workers runtime requires a module
 // Worker's handler object as the default export.
@@ -315,6 +315,25 @@ export type {
 // PH2-E2-06 per-user templates and the preview-only test send (Stage B).
 export { ALERT_TEMPLATE_KINDS, renderAlertEmail } from './alerts/templates.js';
 export type { AlertContext, AlertEmail } from './alerts/templates.js';
+export {
+  ALERT_PREFERENCE_PATH,
+  ALERT_PREFERENCE_WRITE_ROUTES,
+  alertPreferenceMethods,
+  handleAlertPreferences,
+} from './alerts/routes.js';
+export type { AlertPreferenceDeps } from './alerts/routes.js';
+export { ALERT_PREFERENCE_NEEDS, alertPreferencesDepsFor } from './alerts/mount.js';
+export type { AlertMountOptions, AlertPreferencesStoreFactory } from './alerts/mount.js';
+export { MemoryAlertPreferencesStore } from './alerts/memory-store.js';
+export type { PreferenceRow } from './alerts/memory-store.js';
+export { parsePreferencePatch, preferenceItems } from './alerts/preferences.js';
+export type {
+  AlertPreferencesStore,
+  ParsedPreference,
+  PreferenceItem,
+  PreferenceRefusal,
+  PreferenceWrite,
+} from './alerts/preferences.js';
 export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
 export {
   MAX_EVENT_ID_LENGTH,
