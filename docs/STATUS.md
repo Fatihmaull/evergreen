@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-05 F9 slow-tick threshold is 12000 ms, 2026-11-10
+
+`SLOW_TICK_RPC_MS` is 12000. The comparison stays strictly above. PM decision 2026-11-10, revisable by Fatih. Production `rpc_ms` on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359, 10057, 13160), median 7852 ms, max 13160 ms. That value is the sum of getNetwork and getLatestLedger, each with a 10 s timeout, so 3000 ms alerted on every successful tick. The card stays `[~]`: DoD-2's alert clause is not met. Fires on production: **undetermined** until the API Worker that serves `GET /api/v1/health` contains this constant. Notion note sync pending for PH2-E4-05. A full Notion presence diff was not run this session; the task was this constant only.
+
 ## Current — PH2-E2-06 alert preferences screen, 2026-11-10
 
 Draft #602, on `cursor/ph2-e2-06-alert-preferences-262f`, merged `origin/main` (merge commit, not a rebase) and builds `/dashboard/alerts/`. The page reads and writes optional preferences through `GET`/`PATCH /me/alert-preferences`. It does not send mail. The sidebar item is not added: `apps/web/src/chrome.mjs` is the shared layout. The page is linked from `/docs/account/`. Ledger leads from #611 are printed as the rule; a 6-second close, a temporary-entry line, event ids, send cadence, the sender address, and `ALERTS_SEND` stay undetermined. Nothing calls `dispatchUserAlert` from this screen. The card stays `[~]`. Notion sync pending for PH2-E2-06.
