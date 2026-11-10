@@ -13,7 +13,7 @@ export const meta = {
   description:
     'Soroban contract state expires on a schedule. Evergreen reads what expires first, what it costs, and what fails with it — and documents exactly what it will not do.',
   heading: 'Overview',
-  lead: 'Evergreen reads the time-to-live on a Soroban contract’s ledger entries, tells you which one ends first, and can extend it. Everything on this page and under it describes behaviour that exists in the published package today.',
+  lead: 'Evergreen reads the time-to-live on a Soroban contract’s ledger entries, tells you which one ends first, and can extend it. Everything on this page and under it describes behaviour that exists today: the command line and engine in the published package, and the account pages on this site.',
 };
 
 export function render(ctx) {
@@ -80,7 +80,8 @@ export function render(ctx) {
       If you want to see it work, the quickstart is one command and needs no key and no account.
       If you want to know whether you can trust it, read the refusals above and then the exit
       codes — what a tool does when it cannot answer is more informative than what it prints when
-      it can.
+      it can. An account is optional: <a href="/docs/account/">what signing in does today</a> says
+      what the email sign-in, the wallet link and the watchlist do, and what they do not.
     </p>
     <p class="provenance">
       Package <span class="mono">${esc(ctx.cli.packageName)}@${esc(ctx.cli.version)}</span>, published to npm and

@@ -16,10 +16,11 @@ import {
   runTestnetResetCheck,
   type TestnetResetEnv,
 } from './alerts/testnet-reset.js';
+import { LATEST_OK_TICK_SQL, runSlowTickCheck, type SlowTickEnv } from './alerts/slow-tick.js';
 import { configCheck } from './alerts/config-check.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
-export type { Env } from './router.js';
+export type { Env, HandleOptions } from './router.js';
 
 // The one default export allowed: the Workers runtime requires a module
 // Worker's handler object as the default export.
@@ -28,9 +29,14 @@ export default {
   fetch(request: Request, env: Env): Promise<Response> {
     return handle(request, env);
   },
-  // F11 heartbeat check (PH2-E4-05). Runs only if a cron trigger is configured
-  // for this Worker; logs the outcome, never an address or a key.
-  async scheduled(_event: unknown, env: Env & HeartbeatEnv & TestnetResetEnv): Promise<void> {
+  // F11, then F10, then F9 (PH2-E4-05). Runs only if a cron trigger is configured
+  // for this Worker. Each check logs its outcome and contains a failed Resend
+  // send (the next operator and the next check still run). Logs never carry an
+  // address or a key.
+  async scheduled(
+    _event: unknown,
+    env: Env & HeartbeatEnv & TestnetResetEnv & SlowTickEnv,
+  ): Promise<void> {
     // F17/F18 (PH2-E4-05): config check, log only, setting names never values.
     console.log(JSON.stringify(configCheck(env as unknown as Record<string, unknown>)));
     const databaseUrl = env.DATABASE_URL;
@@ -64,6 +70,26 @@ export default {
         ),
     });
     console.log(JSON.stringify({ event: 'alerts.f10_testnet_reset', ...f10 }));
+    // F9 slow-tick (PH2-E4-05): the newest successful tick's RPC time is above the threshold.
+    const f9 = await runSlowTickCheck(env, {
+      latestOkTick: async () => {
+        if (!databaseUrl) throw new Error('DATABASE_URL unset');
+        const rows = await neonSqlClient(databaseUrl).query(LATEST_OK_TICK_SQL, []);
+        const row = rows[0];
+        if (row === undefined) return undefined;
+        const ms = row['rpc_ms'];
+        return {
+          tickedAt: Number(row['t']),
+          rpcMs: ms === null || ms === undefined ? undefined : Number(ms),
+        };
+      },
+      nowSeconds: () => Math.floor(Date.now() / 1000),
+      transportFor: (to) =>
+        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
+          fetch(u, i),
+        ),
+    });
+    console.log(JSON.stringify({ event: 'alerts.f9_slow_tick', ...f9 }));
   },
 };
 
@@ -145,7 +171,7 @@ export { WATCHLIST_DEFAULTS, WATCHLIST_NEEDS, watchlistDepsFor } from './watchli
 export type { WatchlistMountOptions, WatchlistStoreFactory } from './watchlist/mount.js';
 export { MemoryWatchlistStore } from './watchlist/memory-store.js';
 export { PgWatchlistStore } from './watchlist/pg-store.js';
-export { DAY_SECONDS } from './watchlist/store.js';
+export { DAY_SECONDS, WATCH_ITEMS_PER_USER_MAX, WatchItemCapReached } from './watchlist/store.js';
 export type {
   AddOutcome,
   AutopilotPatch,
@@ -171,6 +197,7 @@ export {
 } from './alerts/policy.js';
 export type { AlertClass, AlertKind, AlertSpec, AlertsMode } from './alerts/policy.js';
 export { decideAlert, sendAlert } from './alerts/sender.js';
+export { PgAlertOutboxStore, PgAlertPreferencesStore } from './alerts/pg-store.js';
 export {
   LATEST_TICK_SQL,
   heartbeatNotification,
@@ -180,12 +207,28 @@ export {
   runHeartbeatCheck,
   staleThresholdSeconds,
 } from './alerts/heartbeat.js';
+export { operatorSendFailedLog } from './alerts/operator-send.js';
+export type { OperatorCheckEvent, OperatorSendFailedLog } from './alerts/operator-send.js';
 export type {
   HeartbeatDeps,
   HeartbeatEnv,
   HeartbeatOutcome,
   HeartbeatState,
 } from './alerts/heartbeat.js';
+export {
+  LATEST_OK_TICK_SQL,
+  SLOW_TICK_RPC_MS,
+  runSlowTickCheck,
+  slowTickNotification,
+  slowTickState,
+} from './alerts/slow-tick.js';
+export type {
+  LatestOkTick,
+  SlowTickDeps,
+  SlowTickEnv,
+  SlowTickOutcome,
+  SlowTickState,
+} from './alerts/slow-tick.js';
 export type {
   AlertEnv,
   AlertNotification,
@@ -272,6 +315,25 @@ export type {
 // PH2-E2-06 per-user templates and the preview-only test send (Stage B).
 export { ALERT_TEMPLATE_KINDS, renderAlertEmail } from './alerts/templates.js';
 export type { AlertContext, AlertEmail } from './alerts/templates.js';
+export {
+  ALERT_PREFERENCE_PATH,
+  ALERT_PREFERENCE_WRITE_ROUTES,
+  alertPreferenceMethods,
+  handleAlertPreferences,
+} from './alerts/routes.js';
+export type { AlertPreferenceDeps } from './alerts/routes.js';
+export { ALERT_PREFERENCE_NEEDS, alertPreferencesDepsFor } from './alerts/mount.js';
+export type { AlertMountOptions, AlertPreferencesStoreFactory } from './alerts/mount.js';
+export { MemoryAlertPreferencesStore } from './alerts/memory-store.js';
+export type { PreferenceRow } from './alerts/memory-store.js';
+export { parsePreferencePatch, preferenceItems } from './alerts/preferences.js';
+export type {
+  AlertPreferencesStore,
+  ParsedPreference,
+  PreferenceItem,
+  PreferenceRefusal,
+  PreferenceWrite,
+} from './alerts/preferences.js';
 export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
 export {
   MAX_EVENT_ID_LENGTH,

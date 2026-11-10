@@ -8,6 +8,7 @@
  * Undetermined, so not invented here: the staleness threshold. It comes from
  * `HEARTBEAT_STALE_SECONDS`; unset or malformed means no decision is made.
  */
+import { operatorSendFailedLog } from './operator-send.js';
 import { alertsMode, parseAllowlist } from './policy.js';
 import type { AlertNotification, AlertTransport } from './sender.js';
 
@@ -78,12 +79,21 @@ export type HeartbeatOutcome =
       readonly action: 'sent';
       readonly recipients: number;
       readonly ageSeconds: number | undefined;
+      /** How many delivers threw, when at least one other succeeded. */
+      readonly failed?: number;
+    }
+  | {
+      readonly action: 'send_failed';
+      readonly failed: number;
+      readonly ageSeconds: number | undefined;
     };
 
 /**
  * One cron run. Reads, decides, and calls `transport.deliver` only when the
  * heartbeat is stale, `ALERTS_SEND` is exactly `send` and the allowlist has at
- * least one operator. Event id is per stale tick so retries collapse.
+ * least one operator. Event id is per stale tick so retries collapse. A failed
+ * deliver is logged (`action: 'send_failed'`, no address) and the next operator
+ * is still tried; the check does not throw, so the cron continues to F10 and F9.
  */
 export async function runHeartbeatCheck(
   env: HeartbeatEnv,
@@ -106,13 +116,31 @@ export async function runHeartbeatCheck(
     return { action: 'dry-run', reason: 'no_operator', ageSeconds: s.ageSeconds };
   const eventId = `f11-heartbeat-stale:${latest ?? 'none'}`;
   const notification = heartbeatNotification(s);
-  for (const r of operators) await deps.transportFor(r).deliver(notification, eventId);
-  return { action: 'sent', recipients: operators.length, ageSeconds: s.ageSeconds };
+  // Guard: one recipient's send failure must not skip the other operators or F10/F9.
+  let sent = 0;
+  let failed = 0;
+  for (const r of operators) {
+    try {
+      await deps.transportFor(r).deliver(notification, eventId);
+      sent += 1;
+    } catch (error) {
+      failed += 1;
+      console.log(JSON.stringify(operatorSendFailedLog('alerts.f11_heartbeat', error)));
+    }
+  }
+  if (sent === 0) return { action: 'send_failed', failed, ageSeconds: s.ageSeconds };
+  return failed === 0
+    ? { action: 'sent', recipients: sent, ageSeconds: s.ageSeconds }
+    : { action: 'sent', recipients: sent, failed, ageSeconds: s.ageSeconds };
 }
 
-/** The read the cron needs. Requires SELECT on scheduler_ticks for the API role. */
+/**
+ * The read the cron needs. Requires SELECT on scheduler_ticks for the API role (0009).
+ * **`WHERE ok`**: since 0010 a failed tick writes a row too, and a failed row is not a
+ * heartbeat; counting it would show a scheduler that fails every tick as alive.
+ */
 export const LATEST_TICK_SQL =
-  'SELECT extract(epoch FROM max(ticked_at))::bigint AS t FROM scheduler_ticks';
+  'SELECT extract(epoch FROM max(ticked_at))::bigint AS t FROM scheduler_ticks WHERE ok';
 
 /** Resend transport for one operator. Never logs the key or the address. */
 export function resendOperatorTransport(
