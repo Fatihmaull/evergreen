@@ -40,13 +40,13 @@ gh api repos/Fatihmaull/evergreen/environments/production \
 ### How to approve
 
 1. Open the waiting run (Actions, then **API deploy**, then the run marked *Waiting*).
-2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main`; the guard below refuses it if `main` has moved past it for `apps/api`.
+2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main`; the guard below refuses it if `main` has moved past it for `apps/api`. A scheduler production run is refused the same way when `main` has moved past it for the scheduler bundle inputs ([Scheduler gates](#scheduler-gates)).
 3. Approve the run you mean to ship, normally the newest.
 4. Watch the smoke step. It now fails if the commit served is not the commit deployed ([#462](https://github.com/Fatihmaull/evergreen/pull/462), merged `0d7c78d`).
 
 ### Stale approvals are refused
 
-`push` and `workflow_dispatch` runs check out the SHA the run was created at, so approving a run created 36 hours ago would deploy the 36-hour-old commit. That is how production gets rolled back by accident. The production job therefore starts with a step, **after** the approval, that compares the run's commit with `main` for `apps/api/**` and the workflow file and **fails the job if they differ** ("main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."). A commit that `main` has passed only in docs, web or engine code still deploys.
+`push` and `workflow_dispatch` runs check out the SHA the run was created at, so approving a run created 36 hours ago would deploy the 36-hour-old commit. That is how production gets rolled back by accident. The production job therefore starts with a step, **after** the approval, that compares the run's commit with `main` for `apps/api/**` and the workflow file and **fails the job if they differ** ("main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."). A commit that `main` has passed only in docs, web or engine code still deploys. The scheduler production job uses the same step for its own inputs; see [Scheduler gates](#scheduler-gates).
 
 How runs queue (observed 2026-10-27 and 2026-10-28): a run **waiting for approval** holds the group `api-deploy-refs/heads/main`; the next run waits behind it, and a still-newer run **replaces** that pending one (the replaced run shows `cancelled`). So approve or reject the **oldest** waiting run first; with the guard, an old one fails at once instead of deploying, and the next run then starts.
 
@@ -152,6 +152,21 @@ Subtotal so far, 2026-11-04 onward: **1 approved (1 deployed), 0 rejected, 1 can
 
 Its secrets are in [`secrets.md`](secrets.md#inventory-now-read-2026-11-01-1525-to-1535-utc-names-only): production has `DATABASE_URL` only and **must not** have `TICK_TOKEN`.
 
+### Scheduler gates
+
+The production job refuses a commit `main` has moved past, after the `production` Environment approval and before install. The watched paths are the scheduler bundle's inputs: `apps/scheduler`, `packages/core`, `packages/shared-types`, `packages/engine`, `pnpm-lock.yaml`, and `.github/workflows/scheduler-deploy.yml`. `apps/scheduler/package.json` depends on `@evergreen-stellar/core`, `@evergreen-stellar/shared-types`, and `@evergreen/engine`, and the source imports those three. Preview has no such step. `api-deploy.yml` puts this guard on production only.
+
+Both jobs run `pnpm --filter @evergreen/scheduler run --if-present test` before `wrangler deploy`, the same form as the API jobs. `@evergreen/scheduler` has no `test` script, and neither does `@evergreen/api`, so the step does not run `apps/scheduler/test` until a script exists. Those files run under `pnpm test`.
+
+After deploy, both jobs read what is serving. Production `workers_dev` is false, so `/health` is not a public URL. Preview's `workers_dev` is true, but `wrangler.jsonc` does not contain the workers.dev hostname, so preview does not `GET /health` either. The readback is `wrangler deployments status --json` and then `wrangler versions view <version-id> --json`. Preview adds `--env preview`, which selects `evergreen-scheduler-preview` from the config. The log prints only the version id, the percentage, and `DEPLOY_COMMIT`. The version JSON is not printed: it lists every binding. The job fails unless the deployment is one version at 100% and that version's `plain_text` binding `DEPLOY_COMMIT` equals `github.sha`. A value that is not a 40-character hex SHA is logged as `not-a-sha` and fails the comparison.
+
+A red readback step after a successful `wrangler deploy` means the code is already deployed. The upload finished before the check ran. Before any rerun or rollback, the operator checks `wrangler deployments status` (or `GET /accounts/{account_id}/workers/scripts/{script_name}/deployments`) and sees which version is serving.
+
+The first preview dispatch after this change merges is the commissioning run. Production is not dispatched until that preview readback is green.
+
+`wrangler deployments status` prints the first element of `GET /accounts/{account_id}/workers/scripts/{script_name}/deployments` ([Wrangler `deployments status`](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deployments-status); the command takes `deployments[0]`). `wrangler versions view --json` prints `GET .../versions/{version_id}` ([`versions view`](https://developers.cloudflare.com/workers/wrangler/commands/workers/#versions-view)), whose `resources.bindings` include `plain_text` as `{ name, text, type }` ([Get Worker Script Version](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/get/)). `wrangler deploy` creates a version and deploys it at 100% in one step ([Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/), "Default behavior"). The version GET accepts `Workers Scripts Write` among other permissions. Which permission `CLOUDFLARE_API_TOKEN` was created with is not recorded here, so whether this token can read versions is undetermined until a dispatched run. This change adds no secret.
+
+The note below, that human-readable `wrangler versions view` shows `DEPLOY_COMMIT` as `(hidden)`, is why the API smoke uses `/health`. This readback does not print that view.
 
 ## The deployed commit
 
