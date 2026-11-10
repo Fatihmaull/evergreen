@@ -89,7 +89,7 @@ export function revokeOutcomeHtml(o: RevokeOutcome): string {
     case 'possibly-signed':
       return panel(
         'undetermined',
-        'Your wallet did not answer in time, and its prompt may still be open. If you approve it there, the revoke can still be sent. This page will not send another: reload and read the allowance first.',
+        'Your wallet did not answer in time, and its prompt may still be open. If you approve it there, this page will not send it, so nothing is revoked. Reload and read the allowance before trying again.',
       );
     case 'submit-failed':
       return panel(
