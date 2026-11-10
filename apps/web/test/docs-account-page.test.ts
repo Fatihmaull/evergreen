@@ -90,9 +90,17 @@ describe('the two statements that go stale', () => {
       ...sources(join(ROOT, 'apps/web/src'), /\.(ts|mjs)$/),
       ...sources(join(ROOT, 'apps/dashboard/src'), /\.(ts|mjs)$/),
     ];
-    // PATCH /watchlist is the only route that sets autopilot (docs/API.md §6).
+    // Autopilot is PATCH /watchlist (docs/API.md §6). The only PATCH in this
+    // tree is alert preferences, a boolean that does not turn autopilot on.
     const setters = files.filter((f) => /method:\s*['"]PATCH['"]/.test(readFileSync(f, 'utf8')));
-    expect(setters.map((f) => f.slice(ROOT.length))).toEqual([]);
+    expect(setters.map((f) => f.slice(ROOT.length))).toEqual([
+      'apps/web/src/lib/alert-preferences.ts',
+    ]);
+    const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
+    expect(prefs).toContain("'/me/alert-preferences'");
+    expect(prefs).not.toMatch(/\/watchlist/);
+    expect(prefs).not.toMatch(/autopilot/);
+    expect(prefs).not.toMatch(/dispatchUserAlert|resend\.com/);
     // Granting is an `approve` call with a nonzero amount. The only place the site
     // builds one is the revoke path, and it sends zero.
     const approvers = files.filter((f) => /call\(\s*['"]approve['"]/.test(readFileSync(f, 'utf8')));

@@ -45,6 +45,11 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'live',
   },
   {
+    route: '/dashboard/alerts/',
+    does: 'Read and edit optional alert preferences. Stores the choice. Does not send mail and does not move XLM.',
+    reads: 'live',
+  },
+  {
     route: '/login/',
     does: 'Sign in by email, and link a Freighter wallet by signing a sign-in challenge.',
     reads: 'live',

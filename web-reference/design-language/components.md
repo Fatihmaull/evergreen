@@ -241,10 +241,11 @@ Only these. A fact that is not in them is not on the screen.
 | Session payload has `user.email` and no verification field | `docs/API.md` `GET /me` |
 | Watchlist list shape, for the empty-list sentence only | `docs/API.md` `GET /watchlist` → `{ items: WatchItem[] }` |
 
-`docs/API.md` has no preference route. `apps/api/src/router.ts` has none.
-`docs/PH2-E2-06-ALERTS-DESIGN.md` §6 names `GET` and `PATCH /v1/me/alert-preferences`
-and says the shape will be written into `docs/API.md` when it is built.
-**That path is not a route. Do not call it.**
+`GET` and `PATCH /me/alert-preferences` are in `docs/API.md` §6a and
+`apps/api/src/alerts/routes.ts` (#603). The screen calls those two, and
+`GET /me` for the address and the CSRF token, and `GET /watchlist` for the
+empty-list sentence. It does not send mail. A path that is not one of those
+is not a route this screen calls.
 
 ### How the constraints hold
 
@@ -263,23 +264,28 @@ and says the shape will be written into `docs/API.md` when it is built.
 4. **No new colour, face, or weight.** States use the chips in this file.
    `info` is not one of those states and gets no chip. A colour this screen
    seems to need is a decision, listed below, not a value.
-5. **`body.app`.** Pine sidebar 264px, status bar, the existing nav. This
-   screen adds one item, `Alerts`, in **Your account**, after Watchlist.
-   The active item is a warm-white fill with pine text, and only the fill
-   marks it.
+5. **`body.app`.** Pine sidebar 264px, status bar, the existing nav. The
+   screen's place in the nav is one item, `Alerts`, in **Your account**,
+   after Watchlist. The active item is a warm-white fill with pine text,
+   and only the fill marks it. That item is not added in this change:
+   `apps/web/src/chrome.mjs` is the shared layout. The route is
+   `/dashboard/alerts/`, linked from `/docs/account/`.
 6. **No motion the person did not ask for.** No entrance, no shimmer, no
    skeleton, no knob that travels. A click paints the other position on the
    next frame. Hover changes colour only, over the existing 150ms, and this
    screen's switch has no hover move. Focus is the shipping ring: `2px solid
    --pine`, offset 2px, radius 3px.
-7. **Ledgers are the truth, dates are estimates.** This screen has no ledger
-   field to show. When a later read supplies a ledger count, the line is the
-   count and an estimate, in that order: `fewer than 17,280 ledgers remain,
-   about 1 day`. The day carries `about` or `~`. The numbers in that example
-   are `DEFAULT_CRITICAL_LEDGERS` in `packages/core/src/health.ts`, quoted so
-   the pattern is visible. They are **not** this alert's setting.
-   `alert_preferences` has no threshold, and `watch_items.threshold_ledgers`
-   is the autopilot threshold. Do not print either as the alert's ledger.
+7. **Ledgers are the truth, dates are estimates.** #611 named the rule.
+   `approaching_critical` is 17,280 ledgers remaining or fewer
+   (`DEFAULT_CRITICAL_LEDGERS`). `allowance_expiring` is three crossings,
+   at 518,400, 120,960 and 17,280 ledgers (30, 7 and 1 days × 86,400 ÷ 5).
+   The screen prints the ledger count first and the day as an estimate, at
+   5 seconds a ledger (`SECONDS_PER_LEDGER`), with the word *about*. 518,400
+   is not a protocol constant. Nothing is sent until those ledgers are
+   stored (#612). Still **undetermined**, and the screen says so: a close of
+   about 6 seconds, a separate line for a temporary entry, the event ids,
+   and how often a saved choice is checked. `watch_items.threshold_ledgers`
+   is the autopilot threshold and is not this alert's ledger.
 8. **Three-state honesty.** Unknown delivery and unknown verification render
    the undetermined chip: hollow ring, `--und` / `--und-ink`, the word
    `undetermined`. Never a healthy chip, never a check. A known `sent` is
@@ -354,8 +360,8 @@ read.
 
 | Kind | Title | Switch sentence |
 |---|---|---|
-| `allowance_expiring` | Allowance about to expire | The allowance autopilot uses is about to expire. How far ahead is undetermined. |
-| `approaching_critical` | Approaching expiry | Email when an entry you watch is approaching expiry and autopilot is off for it. The ledger count is undetermined. Any day count is an estimate; the ledger is the truth. |
+| `allowance_expiring` | Allowance about to expire | The allowance autopilot uses is about to expire. Once a send exists, the reminders are at 518,400, 120,960 and 17,280 ledgers remaining, about 30, 7 and 1 days at 5 seconds a ledger. 518,400 is not a protocol constant. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored. |
+| `approaching_critical` | Approaching expiry | Email when an entry you watch has 17,280 ledgers or fewer remaining and autopilot is off for it. About 1 day, at 5 seconds a ledger, the display assumption. A close of about 6 seconds is undetermined, and a separate line for a temporary entry is undetermined. Nothing is sent until that ledger is stored. The day is an estimate. |
 | `extend_succeeded` | Extend succeeded | Autopilot extended this entry. The email is a receipt of that extend. It is not a payment, and this page does not move XLM. |
 
 Intro, under the `Optional` heading: "On unless you turn one off. A missing
@@ -366,9 +372,9 @@ every entry you watch. There is no per-contract switch."
 
 The optional rows wear no severity chip. `extend_succeeded` and
 `allowance_expiring` are `info`, and `info` is not a health state.
-`approaching_critical` is `warn` in `templates.ts` and can be `critical` from
-core's `approachingCritical`. Which one the scheduler sends is undetermined,
-so the row does not pick a chip.
+`approaching_critical` takes its severity from `assessEntry` (#611, accepted
+item 6). That is warning or critical depending on the entry, so the row
+does not wear one chip. No send exists until the ledger is stored.
 
 **Required.** No switches. Intro: "These alerts are required for autopilot
 users and cannot be turned off. The mark is the email's severity, not a
@@ -415,9 +421,12 @@ button on this page. Turning a switch off is the opt-out.
 
 ### States
 
-Until the preference read is in `docs/API.md`, production renders the unread
-states below, not the success picture. The PNG is the success picture so the
-layout has a target. Do not hard-code the three switches on.
+The preference read is in `docs/API.md` §6a. A signed-in read renders the
+panel and both lists from that response. The unread line is only while the
+request is in flight. Do not hard-code the three switches on. The PNG is the
+success picture so the layout has a target. It was drawn before #611 named
+the ledger rule, so its sentences are the older "undetermined" lines. The
+screen's sentences are the ones in the table above.
 
 | State | What renders |
 |---|---|
@@ -452,14 +461,9 @@ An unpinned `toLocaleString()` is already a known defect in this product.
 
 ### Open questions for CEF
 
-1. **The read and the write.** Document them in `docs/API.md` before WEBF
-   calls anything. The screen needs, per optional kind, the effective
-   `enabled` (the stored boolean, or `true` when the row is absent). A body
-   of only stored rows is not enough. The write is one kind and one boolean,
-   under the existing session and the CSRF header `GET /me` already returns.
-   A required kind is refused. Reset is an update to the default, never a
-   delete (`eg_api` has no DELETE). Do not include `updated_at` unless the
-   screen is told to show it; it is not shown now.
+1. **The read and the write.** Answered by #603, `docs/API.md` §6a. The
+   screen calls it. `updated_at` is still not shown. Reset stays an API
+   action and is not a second control on the page.
 2. **A verification field.** None exists. The three email sentences above
    are waiting on an explicit boolean in that document. Until then the
    screen uses the unknown sentence.
@@ -469,11 +473,16 @@ An unpinned `toLocaleString()` is already a known defect in this product.
    only exactly `send` is on.
 4. **Outbox history.** Not built. Do not add it from the table.
 5. **The ledger count for `approaching_critical`, and the lead time for
-   `allowance_expiring`.** Both undetermined in the alerts design. The
-   screen says so. It does not substitute `120,960` or `17,280`.
-6. **Which severity `approaching_critical` sends.** `templates.ts` says
-   `warn`. Core's `approachingCritical` returns `critical` when health is
-   critical. The row has no chip until one of those is the sent value.
+   `allowance_expiring`.** #611 named both: 17,280, and 518,400 / 120,960 /
+   17,280. The screen prints them and says nothing is sent until the ledger
+   store exists (#612). Still undetermined: a close of about 6 seconds, a
+   separate line for a temporary entry, the event ids, and how often a
+   saved choice is checked. The screen says so and does not invent a number
+   for any of those.
+6. **Which severity `approaching_critical` sends.** #611 takes it from
+   `assessEntry`, which is warning or critical per entry. The row wears no
+   single chip. `templates.ts` still hard-codes `warn`; that file is not
+   changed here.
 7. **F3 and F5.** The alerts design leaves them undetermined and sends no
    user email for them today. They are not rows on this screen.
 

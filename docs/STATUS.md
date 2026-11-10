@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E2-06 alert preferences screen, 2026-11-10
+
+Draft #602, on `cursor/ph2-e2-06-alert-preferences-262f`, merged `origin/main` (merge commit, not a rebase) and builds `/dashboard/alerts/`. The page reads and writes optional preferences through `GET`/`PATCH /me/alert-preferences`. It does not send mail. The sidebar item is not added: `apps/web/src/chrome.mjs` is the shared layout. The page is linked from `/docs/account/`. Ledger leads from #611 are printed as the rule; a 6-second close, a temporary-entry line, event ids, send cadence, the sender address, and `ALERTS_SEND` stay undetermined. Nothing calls `dispatchUserAlert` from this screen. The card stays `[~]`. Notion sync pending for PH2-E2-06.
+
 ## Current — PH2-E2-06 alert preferences route, 2026-11-08
 
 `GET` and `PATCH /api/v1/me/alert-preferences` (`docs/API.md` §6a). Optional kinds can be turned off or reset to the default; required kinds cannot. The user id comes from the session. The route does not send mail and does not move XLM. Migration 0011 was already on `main` and applied to preview and production on 2026-11-05; the BACKLOG row that still said the card was waiting on those tables was corrected. Nothing calls `dispatchUserAlert` from the API cron or the scheduler yet. The screen spec in #602 is answered in `docs/API.md` §6a and the design: no verification column, no `ALERTS_SEND` read, no outbox history route, and `sent` means Resend accepted. Lead time, the approaching-expiry severity, and F3/F5 email stay decisions for Fatih. Notion sync pending for PH2-E2-06.
