@@ -4,8 +4,8 @@
  * retry of the same (user, event) reuses the row and the Resend idempotency
  * key, and an event already `sent` is never sent again.
  *
- * The outbox and preferences tables are Rakha's schema (§7, ask on #385), so
- * this module only defines `AlertOutboxStore`; a memory store backs the tests.
+ * The outbox is migration 0011 (`PgAlertOutboxStore`). This module only
+ * defines `AlertOutboxStore`; a memory store backs the tests.
  * Sending is still gated by `decideAlert` (ALERTS_SEND exactly `send`, the
  * allowlist on preview). Nothing here logs the recipient address.
  */
