@@ -2,7 +2,7 @@
  * PH2-E2-06 send decision (docs/PH2-E2-06-ALERTS-DESIGN.md §2, §6). Sends go
  * through an injected transport shaped like the engine's
  * `EmailChannel.deliver(notification, eventId)`; apps/api does not import
- * packages/engine. No outbox here: that is Rakha's schema (§7).
+ * packages/engine. No outbox here: that is `AlertOutboxStore` (migration 0011).
  */
 import {
   alertsMode,

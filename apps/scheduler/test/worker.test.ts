@@ -13,7 +13,7 @@ import {
 const SHA = '0123456789abcdef0123456789abcdef01234567';
 const TOKEN = 'a-long-random-token-not-a-real-one';
 
-function runtime(behaviour: () => Promise<{ observedLedger: number }>) {
+function runtime(behaviour: () => Promise<{ observedLedger: number; rpcMs?: number }>) {
   const logs: Record<string, unknown>[] = [];
   let ticks = 0;
   const rt: Runtime = {
@@ -61,8 +61,29 @@ describe('the cron tick', () => {
         trigger: 'cron',
         environment: 'production',
         code: 'RPC_UNREACHABLE',
+        recorded: false,
       },
     ]);
+  });
+
+  it('🔴 a tick logs the RPC time it measured, so the log and the row agree', async () => {
+    const { rt, logs } = runtime(() => Promise.resolve({ observedLedger: 65_143_700, rpcMs: 412 }));
+    await handleScheduled({ ENVIRONMENT: 'production' }, rt);
+    expect(logs[0]).toMatchObject({
+      event: 'scheduler.tick',
+      observedLedger: 65_143_700,
+      rpcMs: 412,
+    });
+  });
+
+  it('🔴 a failed tick logs whether its failed-tick row was written', async () => {
+    for (const recorded of [true, false]) {
+      const { rt, logs } = runtime(() =>
+        Promise.reject(new TickError('RPC_UNREACHABLE', recorded)),
+      );
+      await expect(handleScheduled({}, rt)).rejects.toBeInstanceOf(TickError);
+      expect(logs[0]).toMatchObject({ event: 'scheduler.tick_failed', recorded });
+    }
   });
 
   it('🔴 a fault of ours is logged as INTERNAL and rethrown, never as an RPC problem', async () => {

@@ -75,6 +75,79 @@ Notes per format:
   cream ground on white stock needs the bleed; a printed proof of `#fcf9f8`
   has not been seen.
 
+## Slides
+
+A slide is the landscape frame used as a deck. It is not a new canvas size.
+
+| | |
+|---|---|
+| Canvas | **1920 × 1080** |
+| Scale | **k = 2** |
+| Safe area | **96 · 160 · 96**, the landscape inset |
+| PDF page | **508 × 285.75mm**, which is 1920 × 1080 CSS px at 96px per inch, no margin |
+| File | `source/templates/slide-<variant>-<layout>.html` |
+
+One ground per slide. **No gradient.** The two gradients are transitions on a page that scrolls, and a slide does not scroll. Each layout is its own HTML file, rendered to PNG and to one PDF page.
+
+Seven layouts. The words in the proofs are sentences already on the site or in [`claims-and-copy.md`](claims-and-copy.md). A number on a slide is one of that file's figures, with its scope in the same slide.
+
+| Layout | Dominant element | Online ground | Offline ground |
+|---|---|---|---|
+| Cover | the display line | `--pine-deep` | `--surface` |
+| Section divider | the display line | `--pine` | `--pine` |
+| Text | the heading | `--surface` | `--surface` |
+| Number | the figure, the only element over 80px | `--surface`, slab `--pine` | the same |
+| Code | the terminal | `--surface`, terminal `--off-black` | the same |
+| Diagram | the display line; the grid sits under it | `--surface` | `--surface` |
+| Closing | the display line | `--pine-deep` | `--surface` |
+
+Nothing on a slide is over 80px except the **98%** on the number slide. The diagram's grid uses the sub role, which is under the display line. The code slide has no display line; the terminal is the dominant object and its text is the label role (online) or the body role (offline).
+
+### Online and offline
+
+| | Online | Offline |
+|---|---|---|
+| When | A screen share, a laptop, a recording | A projector in a room |
+| Minimum type | the label role, **24px** (12px × k) | the body role, **28px** (14px × k) |
+| Text | the site's three alphas, including `.62` for a label | full-strength foreground. `.second` and `.muted` are not used. A label that the component paints at `.62` (the figure's "of the rent") is full cream |
+| Templates | `slide-online-*.html` | `slide-offline-*.html` |
+
+The offline floor is the body role, not a new size. The label role is raised to it, so a footer, a kicker, a chip and the terminal render at 28px. Heading, sub, lead, display and figure stay where they are. **k stays 2.**
+
+The offline cover and the offline closing sit on `--surface`, so the type is ink on cream. Pine-deep is the title-card ground, and it is the right ground on a screen. A lit room washes it out. The section divider stays `--pine` in both variants, because that layout is a pine field. Its type is cream at full strength.
+
+### What each layout is for
+
+- **Cover.** Open the deck. The proof uses the landing page's two sentences.
+- **Section divider.** A break between parts. One pine field, one sentence.
+- **Text.** A claim and the sentence that limits it. No figure.
+- **Number.** One figure from [`claims-and-copy.md`](claims-and-copy.md). The proof is **98%**, with **99%** in the caption because the two denominators are the claim. Both stroop counts are unrounded. The footer is the source line.
+- **Code.** One terminal, the command as text, no window chrome. `<version>` and `<contract-id>` are placeholders. A published version is a number, and it is not in [`claims-and-copy.md`](claims-and-copy.md), so the template does not print one.
+- **Diagram.** The four entry kinds, a hairline grid, the temporary cell inverted. **720 ledgers** sits under the grid with the scope the site gives it: a temporary entry's minimum, read from the network's own configuration.
+- **Closing.** The site's closing question, and its one primary button.
+
+## Event cards
+
+An announcement, a day-before reminder, and a post-event recap, each on the four canvases a post uses: square, story, landscape, and the link card. Portrait and the A3 poster are not event formats.
+
+The programme these templates are for is two offline events and four online events. The templates are not those six events. No title, date, place or link is on record, so every field is a placeholder and is meant to be replaced:
+
+| Field | Placeholder |
+|---|---|
+| Title | Judul acara |
+| Date | Tanggal |
+| Mode | Daring atau luring |
+| Place or link | Tempat atau tautan |
+| Call to action | Ajakan |
+
+The eyebrow names the card, not the event: **Pengumuman**, **Sehari sebelumnya**, **Setelah acara**.
+
+Nothing on an event card is a measured number. The lockup and the line "Stellar testnet · evergreen-stellar.pages.dev" are there because the card shows the product. The dominant element is the display line. Nothing is over 80px.
+
+The meta lines are the lead role, except on the link card, where they are the body role so the title, the four fields and the footer fit a 630px height. On the link card the text block is **540px** wide and starts at the left safe edge, inside the left 630px that survives a square crop. The footer is two lines there — "Stellar testnet", then the domain — because one line of both crosses that crop.
+
+Replace a placeholder with the event's own words. Do not invent a count of people, a fee, or a mainnet promise. If a title needs a third line at the display size, set it in the heading role and remove the display line, so the card still has one dominant element.
+
 ## Grounds
 
 A canvas has **one ground**, chosen from three:
@@ -125,7 +198,9 @@ Nothing else is obligatory, and nothing is decoration.
 4. Look at the render, not the HTML. The first render of `square-dark.html`
    lost two lines of text that read correctly in the source.
 5. Export **PNG, sRGB, at canvas size**. Not JPEG: platforms recompress
-   anyway, and a JPEG around 24px mono text arrives already soft.
+   anyway, and a JPEG around 24px mono text arrives already soft. A slide
+   also exports one PDF page, sRGB, at the size in § Slides. The poster
+   PDF is unchanged.
 
 The templates load Inter, Newsreader and Space Mono from Google Fonts, the same
 request the site makes, so rendering needs a network connection. A render
