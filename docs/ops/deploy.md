@@ -40,13 +40,13 @@ gh api repos/Fatihmaull/evergreen/environments/production \
 ### How to approve
 
 1. Open the waiting run (Actions, then **API deploy**, then the run marked *Waiting*).
-2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main`; the guard below refuses it if `main` has moved past it for `apps/api`.
+2. **Read its commit SHA.** Approving deploys *that run's* SHA, not today's `main`; the guard below refuses it if `main` has moved past it for `apps/api`. A scheduler production run is refused the same way when `main` has moved past it for the scheduler bundle inputs ([Scheduler gates](#scheduler-gates)).
 3. Approve the run you mean to ship, normally the newest.
 4. Watch the smoke step. It now fails if the commit served is not the commit deployed ([#462](https://github.com/Fatihmaull/evergreen/pull/462), merged `0d7c78d`).
 
 ### Stale approvals are refused
 
-`push` and `workflow_dispatch` runs check out the SHA the run was created at, so approving a run created 36 hours ago would deploy the 36-hour-old commit. That is how production gets rolled back by accident. The production job therefore starts with a step, **after** the approval, that compares the run's commit with `main` for `apps/api/**` and the workflow file and **fails the job if they differ** ("main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."). A commit that `main` has passed only in docs, web or engine code still deploys.
+`push` and `workflow_dispatch` runs check out the SHA the run was created at, so approving a run created 36 hours ago would deploy the 36-hour-old commit. That is how production gets rolled back by accident. The production job therefore starts with a step, **after** the approval, that compares the run's commit with `main` for `apps/api/**` and the workflow file and **fails the job if they differ** ("main changed apps/api or this workflow after `<sha>`. Reject this run and approve the newest one."). A commit that `main` has passed only in docs, web or engine code still deploys. The scheduler production job uses the same step for its own inputs; see [Scheduler gates](#scheduler-gates).
 
 How runs queue (observed 2026-10-27 and 2026-10-28): a run **waiting for approval** holds the group `api-deploy-refs/heads/main`; the next run waits behind it, and a still-newer run **replaces** that pending one (the replaced run shows `cancelled`). So approve or reject the **oldest** waiting run first; with the guard, an old one fails at once instead of deploying, and the next run then starts.
 
@@ -70,17 +70,27 @@ So the hold holds, the approval path works, and the preview deploy is unaffected
 
 ## Production approvals, 2026-10-29 to 2026-10-31
 
-**Recorded at Fatih's word, 2026-11-01 (relayed by the PM): he personally approved all 13 production `api-deploy` runs of 2026-10-29 to 2026-10-31.** What GitHub shows, read 2026-11-01 from `actions/runs/<id>/approvals` for every `push` run of the workflow since 2026-10-29 (36 runs):
+**Fatih confirmed (2026-11-02, relayed by the PM on 2026-11-04) that every approval and rejection in the Grok window, 2026-10-29 07:20 to 2026-10-31, was his.** GitHub records the reviewer as `Fatihmaull` for every one of them, the account all Fatih-side agents share, so **GitHub itself cannot say "personally"**: that part is Fatih's confirmation, and the rule that agents never approve ([`AGENTS.md`](../../AGENTS.md) rule 11) is what stands behind it.
 
-| Outcome | Runs | What it means |
-|---|---|---|
-| **Approved and deployed** | **15** (10 on 10-29, 2 on 10-30, 3 on 10-31) | the production job ran and succeeded |
-| **Approved, then refused by the stale-approval guard** | 4 | the job started, failed at the step `refuse a commit that main has moved past` |
-| **Rejected in the review** | 7 | the job never started: `failure`, **zero steps** |
-| **Cancelled by concurrency** | 10 | a newer run replaced a pending one; no review was made |
+**The counts, verified by DevOps on 2026-11-04** from `actions/runs/<id>/approvals` for every `push` run of `api-deploy.yml` and every run of `scheduler-deploy.yml` since 2026-10-29. The `production` Environment gates **both** workflows, and exactly one scheduler run used it (run 41168994480, approved, 2026-10-31). Windows are by run creation time:
 
-- **Two things this record cannot show.** GitHub records the reviewer as `Fatihmaull` for every one, and every Fatih-side agent uses that account, so GitHub **cannot corroborate "personally"**; the rule that agents never approve ([`AGENTS.md`](../../AGENTS.md) rule 11) is what stands behind it. And **"13" does not match any count GitHub gives**: 15 runs were approved and deployed, 19 were approved at all. Which 13 Fatih meant is `undetermined`; his statement is recorded as given.
-- The 15 deployed runs, newest last (`push` events on `main`):
+| Window | `api-deploy` | + `scheduler-deploy` (production) | **Approved in total** | **Rejected** |
+|---|---|---|---|---|
+| **The Grok window**, 2026-10-29 07:20 UTC to 10-31 | 17 (14 deployed + 3 refused by the stale-approval guard) | 1, deployed | **18** (15 deployed, 3 refused) | **7** |
+| **From 2026-10-29 00:00 UTC** (the last production run so far was 2026-10-31 06:19) | 19 (15 deployed + 4 refused) | 1, deployed | **20** (16 deployed, 4 refused) | **7** |
+
+These agree with the PM's counts. The earlier "13" was a miscount, and the first version of this section counted `api-deploy` alone (15 deployed, 19 approved), which is why it differed. The runs outside the Grok window: the 4th refusal (`fb4d197`, run 40806680733, 02:29 UTC) and one deployed run (`3e3d73e`, 03:49 UTC) are before 07:20 UTC. Also in the period: **10 cancelled by concurrency** (9 in the Grok window), which had no review.
+
+What each outcome means:
+
+| Outcome | What happened |
+|---|---|
+| **Approved and deployed** | the production job ran and succeeded |
+| **Approved, then refused by the stale-approval guard** | the job started and failed at the step `refuse a commit that main has moved past` |
+| **Rejected in the review** | the job never started: `failure`, **zero steps** |
+| **Cancelled by concurrency** | a newer run replaced a pending one; no review was made |
+
+The 15 deployed `api-deploy` runs, newest last (`push` events on `main`; the scheduler's production run is under [Scheduler Worker deploys](#scheduler-worker-deploys)):
 
 | UTC created | Run | Commit |
 |---|---|---|
@@ -118,6 +128,19 @@ How to tell the three causes apart, so the next failed run takes one look:
 
 The other four rejected runs follow the same pattern and each comment names its replacement: `b5e214c` (40863864691), `1fcfb75` (40867215684, "superseded by run 40876924812 (04a7328), which deploys after 0006 is on prod"), `77b4f2f` (40897723343, "superseded by f508337") and `62e059a` (40899905042, "superseded by ce99abb").
 
+## Production approvals from 2026-11-04
+
+Counted from `actions/runs/<id>/approvals` and the run's jobs; updated as Fatih acts. Everything is the `production` Environment's `Fatihmaull` reviewer. Totals above (Grok window and since 10-29) are unchanged by these rows and run to 2026-10-31.
+
+| Run | Commit | Created (UTC) | Outcome | Counts as |
+|---|---|---|---|---|
+| [41766591396](https://github.com/Fatihmaull/evergreen/actions/runs/41766591396) | `d15c52f` | 2026-11-04 03:21 | production job `cancelled`, zero steps, **no review recorded**: replaced by the newer run behind it | **cancelled by concurrency** (superseded), not a rejection |
+| [41769762578](https://github.com/Fatihmaull/evergreen/actions/runs/41769762578) | `b8f69e4` | 2026-11-04 03:52 | approved by `Fatihmaull`; production job success (14 steps, started 09:02) | **approved, deployed** |
+| [41833547148](https://github.com/Fatihmaull/evergreen/actions/runs/41833547148) | `9ba3624` (the 2165 floor, #590) | 2026-11-04 12:56 | waiting for review as of 2026-11-05 07:40 UTC | pending |
+| [41969447493](https://github.com/Fatihmaull/evergreen/actions/runs/41969447493) | `96fabde` (0011 merge) | 2026-11-05 04:42 | pending as of 2026-11-05 07:40 UTC | pending |
+
+Subtotal so far, 2026-11-04 onward: **1 approved (1 deployed), 0 rejected, 1 cancelled by concurrency, 2 pending.** Running total since 2026-10-29 00:00 UTC, with those two settled: **21 approved (17 deployed, 4 refused by the guard), 7 rejected**, plus 1 cancelled. A concurrency cancel is not counted as a rejection because GitHub records no review for it; if Fatih meant to reject run 41766591396, it never reached him as a review.
+
 ## Scheduler Worker deploys
 
 [`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml) is manual: `workflow_dispatch` with `target` = `preview` or `production`. A **production** run sits behind the same `production` Environment approval; the first one **creates** the Worker, and its `*/15 * * * *` cron is live the moment the deploy finishes.
@@ -129,6 +152,34 @@ The other four rejected runs follow the same pattern and each comment names its 
 
 Its secrets are in [`secrets.md`](secrets.md#inventory-now-read-2026-11-01-1525-to-1535-utc-names-only): production has `DATABASE_URL` only and **must not** have `TICK_TOKEN`.
 
+### Scheduler gates
+
+The production job refuses a commit `main` has moved past, after the `production` Environment approval and before install. The watched paths are the scheduler bundle's inputs: `apps/scheduler`, `packages/core`, `packages/shared-types`, `packages/engine`, `pnpm-lock.yaml`, and `.github/workflows/scheduler-deploy.yml`. `apps/scheduler/package.json` depends on `@evergreen-stellar/core`, `@evergreen-stellar/shared-types`, and `@evergreen/engine`, and the source imports those three. Preview has no such step. `api-deploy.yml` puts this guard on production only.
+
+Both jobs run `pnpm --filter @evergreen/scheduler run --if-present test` before `wrangler deploy`, the same form as the API jobs. `@evergreen/scheduler` has no `test` script, and neither does `@evergreen/api`, so the step does not run `apps/scheduler/test` until a script exists. Those files run under `pnpm test`.
+
+After deploy, both jobs read what is serving. Production `workers_dev` is false, so `/health` is not a public URL. Preview's `workers_dev` is true, but `wrangler.jsonc` does not contain the workers.dev hostname, so preview does not `GET /health` either. The readback is `wrangler deployments status --json` and then `wrangler versions view <version-id> --json`. Preview adds `--env preview`, which selects `evergreen-scheduler-preview` from the config. The log prints only the version id, the percentage, and `DEPLOY_COMMIT`. The version JSON is not printed: it lists every binding. The job fails unless the deployment is one version at 100% and that version's `plain_text` binding `DEPLOY_COMMIT` equals `github.sha`. A value that is not a 40-character hex SHA is logged as `not-a-sha` and fails the comparison.
+
+A red readback step after a successful `wrangler deploy` means the code is already deployed. The upload finished before the check ran. Before any rerun or rollback, the operator checks `wrangler deployments status` (or `GET /accounts/{account_id}/workers/scripts/{script_name}/deployments`) and sees which version is serving.
+
+The first preview dispatch after this change merges is the commissioning run. Production is not dispatched until that preview readback is green.
+
+`wrangler deployments status` prints the first element of `GET /accounts/{account_id}/workers/scripts/{script_name}/deployments` ([Wrangler `deployments status`](https://developers.cloudflare.com/workers/wrangler/commands/workers/#deployments-status); the command takes `deployments[0]`). `wrangler versions view --json` prints `GET .../versions/{version_id}` ([`versions view`](https://developers.cloudflare.com/workers/wrangler/commands/workers/#versions-view)), whose `resources.bindings` include `plain_text` as `{ name, text, type }` ([Get Worker Script Version](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/get/)). `wrangler deploy` creates a version and deploys it at 100% in one step ([Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/), "Default behavior"). The version GET accepts `Workers Scripts Write` among other permissions. Which permission `CLOUDFLARE_API_TOKEN` was created with is not recorded here, so whether this token can read versions is undetermined until a dispatched run. This change adds no secret.
+
+The note below, that human-readable `wrangler versions view` shows `DEPLOY_COMMIT` as `(hidden)`, is why the API smoke uses `/health`. This readback does not print that view.
+
+## Preview tick
+
+[`.github/workflows/scheduler-preview-tick.yml`](../../.github/workflows/scheduler-preview-tick.yml) is manual only (`workflow_dispatch`). It has no push, schedule, or pull request trigger, and it sets no GitHub Environment, so it cannot run as production. It POSTs `/tick` to the preview scheduler and nowhere else.
+
+Prerequisites, before a dispatch. Neither exists yet; Fatih sets both himself:
+
+- `TICK_TOKEN` is not yet a GitHub secret. Fatih sets the repo secret to the same value as the Worker secret `TICK_TOKEN` on `evergreen-scheduler-preview`. Production does not have this secret.
+- `SCHEDULER_PREVIEW_URL` is not yet a repo variable. Fatih sets it to the preview Worker's `https://` origin, with no path and no port. The workflow reads that variable only. It refuses an empty value, a non-`https` URL, userinfo, a query, a fragment, a path, or a port. The parsed host must equal the workflow env constant `PREVIEW_SCHEDULER_HOST`, which is `evergreen-scheduler-preview.fatihmaulanamail.workers.dev`. That comparison is exact. It is not a suffix or a prefix match.
+
+If the preview Worker hostname ever changes, `PREVIEW_SCHEDULER_HOST` is updated in a reviewed PR.
+
+The Neon `preview` branch must be active. A tick writes only one `scheduler_ticks` row. The RPC is read-only testnet. This workflow is preview-only and never production.
 
 ## The deployed commit
 
@@ -139,6 +190,43 @@ The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEP
 - The value is **not** in `wrangler.jsonc`: a committed value goes stale. `wrangler versions view` shows it as `(hidden)`, so `/health` is the only way to read it.
 
 > **A deploy deletes dashboard-set plain vars.** `wrangler deploy` without `--keep-vars` removes every var not in the config or on the command line before applying. Put plain vars in `wrangler.jsonc` or `--var`; never in the dashboard. Secrets are separate and survive deploys.
+
+### Version metadata
+
+Each `wrangler deploy` in [`api-deploy.yml`](../../.github/workflows/api-deploy.yml) and [`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml), preview and production, also records the run on the Worker version. The workflows pin `wrangler@4.156.0`. `wrangler deploy --tag` and `--message` were added in wrangler 4.66.0 ([workers-sdk release `wrangler@4.66.0`](https://github.com/cloudflare/workers-sdk/releases/tag/wrangler%404.66.0)); 4.156.0 is the version last seen on a production deploy, and its `deploy --help` still lists both flags.
+
+| Flag | Value | Annotation |
+|---|---|---|
+| `--tag` | first 7 characters of `DEPLOY_COMMIT` | `workers/tag` (maximum 100 bytes) |
+| `--message` | the full `DEPLOY_COMMIT`, one space, then `github.run_id` | `workers/message` (truncated at 1000 bytes) |
+
+`--tag` and `--message` name `DEPLOY_COMMIT`, the same commit the workflow injects as the plain var. On an API preview deploy from a pull request, `DEPLOY_COMMIT` is the PR head. `wrangler versions view` still shows that var as `(hidden)`.
+
+Wrangler 4.156.0 writes the flags as `annotations["workers/tag"]` and `annotations["workers/message"]`, and reads those same keys back from the Workers versions API:
+
+```
+GET /accounts/{account_id}/workers/scripts/{script_name}/versions
+GET /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}
+```
+
+The list's published schema example (Cloudflare API, read 2026-11-10) shows `id`, `metadata`, and `number` and does not show `annotations`. The Version model that documents the keys is `GET /accounts/{account_id}/workers/workers/{worker_id}/versions`: `annotations["workers/tag"]` and `annotations["workers/message"]`. A live call of either endpoint was not made here. `script_name` is `evergreen-api`, `evergreen-api-preview`, `evergreen-scheduler`, or `evergreen-scheduler-preview`. The list docs say the first item is the latest version.
+
+```bash
+# Names only: CLOUDFLARE_API_TOKEN (repo secret), CLOUDFLARE_ACCOUNT_ID (repo variable).
+curl -sS \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/evergreen-api/versions" \
+  | jq '.result.items[] | {id, tag: .annotations["workers/tag"], message: .annotations["workers/message"]}'
+```
+
+One version, after taking `id` from that list:
+
+```bash
+curl -sS \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/evergreen-api/versions/${VERSION_ID}" \
+  | jq '.result.annotations["workers/tag"], .result.annotations["workers/message"]'
+```
 
 ## Deploying a PR to preview: the `deploy-preview` label
 

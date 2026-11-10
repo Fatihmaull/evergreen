@@ -50,6 +50,10 @@ export function render() {
       <h2 class="section">2 · Wallet</h2>
       <div class="card card-pad stack">
         <p class="small muted">
+          You can add contracts to your watchlist with the email sign-in alone. A linked wallet is needed only
+          for autopilot and allowances.
+        </p>
+        <p class="small muted">
           Linking proves you control a Stellar account. Freighter will ask you to sign a sign-in challenge: a
           transaction with sequence number 0, which the network rejects, so it cannot move anything. Nothing on
           this page asks your wallet to sign a payment, an allowance or an extension.

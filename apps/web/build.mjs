@@ -465,7 +465,7 @@ if (evidence.count === 0)
  */
 const capture = {
   text: readFileSync(join(repo, CAPTURE), 'utf8').trimEnd(),
-  provenance: `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now.`,
+  provenance: `Captured on 2026-09-12 and committed at <span class="mono">${CAPTURE}</span>. Its ledger numbers are from that day; the dashboard reads the chain now. The published package, 0.2.0, labels two things differently: the <span class="mono">approx:</span> line reads <span class="mono">expires ~:</span>, and the last line of a scan also names the warning threshold.`,
 };
 
 /**

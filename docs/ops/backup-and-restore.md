@@ -1,8 +1,8 @@
 # Backup and restore for DoD-2: proposal
 
-**Status: decided by Fatih 2026-10-28.** Option **A** (Neon Launch with scheduled snapshots) happens **together with his "ya" for the production secrets, not before**. Until then option **C**: one manual snapshot on `production` before each production migration, logged in [`neon-migrations.md`](neon-migrations.md#before-each-production-migration-one-manual-snapshot-fatih-2026-10-28). Nothing else changes before the beta. Production has no database today and Neon `production` has no tables, so there is nothing to lose yet.
+**Status (2026-11-04): option A is in place; the restore drill was exercised on production data on 2026-11-04 (K18, below), without finalizing; connecting with an app role and a finalize remain unexercised.** Neon Launch since 2026-10-29; a daily snapshot of `production` at 19:00 UTC kept 7 days (ten snapshots exist, the newest 2026-11-03 19:00); a named manual snapshot before each production migration, logged in [`neon-migrations.md`](neon-migrations.md#before-each-production-migration-a-manual-snapshot-fatih-2026-10-28-launch-since-2026-10-29). **The history window is still 6 hours; Fatih sets 7 days himself (K7, pending).** Production has had real data since 2026-10-29. Proposal text below is the original reasoning, kept for the costs.
 
-The requirement ([`PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) DoD-2): *"a Neon backup restore has been exercised"*, alongside the failure-mode list of `PH2-E4-05`. The problem: the Free plan keeps **6 hours** of history (21600 s, read from the project 2026-10-27), which is a recovery window for a bad deploy, not a backup.
+The requirement ([`PHASE2-PLAN.md`](../../phase-2/PHASE2-PLAN.md) DoD-2): *"a Neon backup restore has been exercised"*, alongside the failure-mode list of `PH2-E4-05`. **DoD-2 was shortened by Fatih on 2026-11-02 (#582): a 14-day window from the first real autopilot extend, not 30 days after DoD-1. This check needs no window and can be met at any time**, so the drill below can run now. The problem: the Free plan keeps **6 hours** of history (21600 s, read from the project 2026-10-27), which is a recovery window for a bad deploy, not a backup.
 
 ## What Neon offers (read 2026-10-28)
 
@@ -48,7 +48,7 @@ A job dumps the database on a schedule to an encrypted object in Cloudflare R2, 
 
 Before each production migration, replace the single manual snapshot (`neonctl snapshots create --branch production --name pre-migration`). Covers a bad migration, not a bad week.
 
-- **Cost:** $0. **Gives:** one restore point, as old as the last migration. **Does not** meet "a backup restore exercised" for a 30-day DoD-2 window by itself.
+- **Cost:** $0. **Gives:** one restore point, as old as the last migration. **Does not** meet "a backup restore exercised" by itself: a restore has to be performed, which no snapshot does on its own.
 
 ### Recommendation
 
@@ -69,6 +69,24 @@ Run on `production` data only once production holds data, **never in place** (`-
 7. **Delete the drill branch** (`neonctl branches delete`) and record the result in `docs/evidence/` (append-only, dated) and against the `PH2-E4-05` failure mode "database loss".
 
 Also exercise the **history-window** path once on a throwaway root branch: `neonctl branches restore <target> <source>@<timestamp>` (add `--preserve-under-name`, which Neon requires when restoring a branch onto its own history). Whether a throwaway root branch can be created cheaply is `undetermined` until tried.
+
+## Drill run 2026-11-04 (DevOps, `neonctl`, K18)
+
+Fatih's K18 (2026-11-04): restore **production** into a new temporary branch **without finalizing**, verify, delete the branch, log the cost. Times are UTC.
+
+| Step | What | Result |
+|---|---|---|
+| Before | `neonctl branches list` | `preview`, `production` only; 10 snapshots (the automatic daily ones plus four manual) |
+| Restore | `neonctl snapshots restore snap-wandering-mud-aoslhvnm --project-id icy-sun-89705623 --name drill-restore-20261104` (the **automatic** daily snapshot `br-proud-mountain-aon0gpyl-20261103-190006`, so the scheduled backup is what is tested, not a hand-made one). No `--finalize`. | request 10:01:04; branch `br-red-rice-aoayyf3n` created 10:01:05; listed `ready` at 10:01:06 (**about 2 s**). The tool printed "Restore left un-finalized" |
+| Production untouched | the `production` tick row written 10:00:30 and the next ones | production kept answering; the drill branch was a separate branch with its own compute |
+| Verify, schema | the shape query and the grants query ([`neon-migrations.md`](neon-migrations.md#before-and-after-the-grants-comparison)) on the drill branch | **identical** to production as it stood at 0009 (before 0010): same structure, same 267 privilege lines. The probe reads true for `schema.sql` to 0009 and false for 0010 to 0014, as at 19:00 on 2026-11-03 |
+| Verify, data | `count(*)` per table, drill vs production at 10:01 | `users` 4 / 4, `watch_items` 3 / 3, `sessions` 3 / 3, `jobs`, `fee_ledger`, `observations` 0 / 0. `scheduler_ticks` **343 vs 404**, drill's newest tick `2026-11-03 18:45:25`, production's `2026-11-04 10:00:30`; the 61 ticks since 19:00 are exactly the 15-minute slots from 19:00 to 10:00. `wallets` **1 vs 0**: the wallet was unlinked after the snapshot (E3-01), so the restore holds the state as of 19:00 on 2026-11-03, as it should |
+| Delete | `neonctl branches delete br-red-rice-aoayyf3n`, 10:02:00 | branch list back to `preview`, `production`; 11 snapshots now (the new `pre-0010-20261104`), none lost |
+| Cost | the drill branch's own counters read `active_time_seconds` 0 and `compute_time_seconds` 0 at 10:01:51 (they lag, see [`neon-migrations.md`](neon-migrations.md)); its compute was active for about 55 s at 0.25 CU minimum | **about 0.004 CU-hours, well under one US cent** at $0.106 per CU-hour. A restored branch shares storage with its snapshot, so no new storage was written (`written_data_bytes` 0). The project-level counters had not moved when read at 10:02 (they lag by tens of minutes); the number to re-read is the period consumption on the Neon billing page |
+
+**Measured:** RTO **about 2 s to a usable branch** on a database of a few MB (the figure grows with data). **RPO** of a snapshot restore is the snapshot time: this one was 15 hours behind the live branch. A point-in-time restore is closer but is limited to the history window, which is still 6 hours (K7 pending), so the daily snapshot is the only restore point older than 6 hours.
+
+**Not exercised:** connecting with `eg_api` or `eg_scheduler` (their passwords are Fatih's and the `neondb_owner` login cannot assume them), repointing `DATABASE_URL`, and `--finalize`. The DoD-2 check "a Neon backup restore has been exercised" is met by this drill on the restore itself; whether Fatih also wants the app-role connection and a finalize rehearsed is a decision for him.
 
 ## Drill run 2026-10-29 (DevOps, Neon API)
 
