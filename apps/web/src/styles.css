@@ -2396,3 +2396,107 @@ body.app .table-wrap {
 
 /* On a phone the footer text ran flush to both edges — measured at left 0,
    right 0 at 390px. Content does not touch the screen. */
+
+/* Alert preferences. Weight 400, existing sizes, no new colour token.
+   The off track uses the approved input border, rgba(15, 15, 15, 0.5),
+   not a new custom property. */
+body.app .alerts {
+  font-synthesis: none;
+  min-width: 0;
+}
+body.app .alerts .fine {
+  font-size: var(--d-label);
+  color: var(--ink-3);
+  max-width: 62ch;
+}
+body.app .alerts .pref-title,
+body.app .alerts .email-to {
+  font-size: var(--d-body);
+  font-weight: 400;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+body.app .alerts .email-to {
+  font-family: var(--sans);
+}
+body.app .alerts .panel {
+  padding: 20px 22px;
+}
+body.app .alerts .pref-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  padding: 16px 0;
+  border-top: 1px solid var(--rule);
+  min-width: 0;
+}
+body.app .alerts .pref-copy,
+body.app .alerts .req-row {
+  min-width: 0;
+}
+body.app .alerts .req-row {
+  display: grid;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid var(--rule);
+}
+body.app .alerts .alert-switch {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 400;
+}
+body.app .alerts .alert-switch .track {
+  display: flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  padding: 0 3px;
+  border-radius: 100vw;
+  background: var(--pine);
+  box-sizing: border-box;
+}
+body.app .alerts .alert-switch[aria-checked='false'] .track {
+  background: var(--paper);
+  border: 1px solid rgba(15, 15, 15, 0.5);
+  justify-content: flex-start;
+}
+body.app .alerts .alert-switch[aria-checked='true'] .track {
+  justify-content: flex-end;
+}
+body.app .alerts .alert-switch .knob {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: block;
+}
+body.app .alerts .alert-switch[aria-checked='false'] .knob {
+  background: var(--ink);
+}
+body.app .alerts .switch-word {
+  font-family: var(--mono);
+  font-size: var(--d-label);
+  font-weight: 400;
+}
+body.app .alerts .switch-word[data-on='true'] {
+  color: var(--ink);
+}
+body.app .alerts .switch-word[data-on='false'],
+body.app .alerts .switch-word[data-on='saving'] {
+  color: var(--ink-3);
+}
+body.app .alerts .mark-incomplete {
+  display: inline-block;
+  width: 9px;
+  height: 2px;
+  background: var(--ink-2);
+  outline: 1px solid var(--rule);
+  vertical-align: middle;
+}

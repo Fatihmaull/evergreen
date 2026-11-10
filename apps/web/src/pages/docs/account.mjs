@@ -118,7 +118,7 @@ export function render() {
     <h2 id="not">What none of this does</h2>
     <ul>
       <li>Adding a contract to the watchlist does not extend it, and nothing on this site submits an extension for you.</li>
-      <li>It does not send you alerts. What the engine alerts on, and what is not switched on, is on <a href="/docs/engine/notifications/">Notifications</a>.</li>
+      <li>Nothing on this site sends an alert email. <a href="/dashboard/alerts/">Alerts</a> stores which optional emails you want, and required ones cannot be turned off. Whether any email is being sent is undetermined. What the engine alerts on is on <a href="/docs/engine/notifications/">Notifications</a>.</li>
       <li>It does not work on mainnet. The site refuses to be built for another network.</li>
     </ul>
   `;

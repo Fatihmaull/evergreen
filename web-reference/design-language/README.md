@@ -143,7 +143,7 @@ fails when any exceeds its budget. One known blind spot: it measures each page
 6**, while production shows at least five card-shaped panels once the live
 read returns. The cause is probably that timing; that is *undetermined*. `--commission` plants each defect and proves
 the check still catches it. `node apps/web/scripts/check-layout.mjs` renders
-31 routes at two widths and asserts nothing overflows its box.
+every route in `apps/dashboard/src/index.ts` at two widths and asserts nothing overflows its box.
 
 `node web-reference/design-language/source/tools/render.mjs` renders every
 canvas template and refuses to when `source/templates/base.css` has drifted
