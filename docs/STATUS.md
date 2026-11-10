@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-05 F14, F17 and F18 operator email, 2026-11-10
+
+Checkpoint 1 of `PH2-E4-05`. The API cron emails operators for F14 (`read_failed`, one email per invocation, no database read on the send, Resend key per UTC hour) and for F17/F18 (setting names only, Resend key per sorted names and UTC day). If `EMAIL_API_KEY` or `EMAIL_FROM` is the missing setting, F17/F18 logs `action: 'email_channel_down'` and does not send; the fallback is undetermined. F16 is not wired. No user alert, and no `approaching_critical` or `allowance_expiring`. The card stays `[~]`: DoD-2's alert clause is not met. **Fires on production: undetermined** until the API Worker that contains this change is what `GET /api/v1/health` reports. Notion sync pending for PH2-E4-05.
+
 ## Current — PH2-E4-05 F9 slow-tick threshold is 12000 ms, 2026-11-10
 
 `SLOW_TICK_RPC_MS` is 12000. The comparison stays strictly above. PM decision 2026-11-10, revisable by Fatih. Production `rpc_ms` on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359, 10057, 13160), median 7852 ms, max 13160 ms. That value is the sum of getNetwork and getLatestLedger, each with a 10 s timeout, so 3000 ms alerted on every successful tick. The card stays `[~]`: DoD-2's alert clause is not met. Fires on production: **undetermined** until the API Worker that serves `GET /api/v1/health` contains this constant. Notion note sync pending for PH2-E4-05. A full Notion presence diff was not run this session; the task was this constant only.

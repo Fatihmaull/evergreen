@@ -171,7 +171,8 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
   F14: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
-    detector: 'pending: trigger outside the database (as F11)',
+    detector:
+      'API cron runDatabaseUnavailableAlert when a scheduler read returns read_failed (the send does not read the database)',
   },
   F15: {
     user: { kind: 'via', modes: ['F14'] },
@@ -193,13 +194,13 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
     detector:
-      'thresholdFloorProblem, logged by configCheck in the API cron (operator delivery needs a channel)',
+      'thresholdFloorProblem, logged by configCheck; the API cron emails the setting name when the email channel is up',
   },
   F18: {
     user: { kind: 'dashboard' },
     operator: { when: 'every' },
     detector:
-      'missingApiSettings, logged by configCheck in the API cron (engine key pending; operator delivery needs a channel)',
+      'missingApiSettings, logged by configCheck; the API cron emails the names, and does not send when EMAIL_API_KEY or EMAIL_FROM is missing',
   },
   F19: {
     user: { kind: 'email', alerts: ['restore_lost_changes'] },
