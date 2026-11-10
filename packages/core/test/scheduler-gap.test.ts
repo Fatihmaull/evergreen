@@ -66,12 +66,20 @@ describe('what four runs of margin come to', () => {
   });
 
   it('🔴 the published floor is the smallest window that passes, and one less does not', () => {
-    for (const worst of [180, 540, 4_319]) {
+    for (const worst of [180, 540, 541, 4_319]) {
       const floor = lowestPassingActionWindowLedgers(worst);
       expect(floor).toBe(worst * 4 + 1);
       expect(schedulerGapCheck(worst, floor)?.passes).toBe(true);
       expect(schedulerGapCheck(worst, floor - 1)?.passes).toBe(false);
     }
+  });
+
+  it('🔴 the 45-minute production gap of 2026-11-03 (541 ledgers) publishes a floor of 2165 (K19)', () => {
+    expect(lowestPassingActionWindowLedgers(541)).toBe(2_165);
+    expect(schedulerGapCheck(541, 2_165)).toEqual({ passes: true, marginLedgers: 2_164 });
+    expect(schedulerGapCheck(541, 2_164)).toEqual({ passes: false, marginLedgers: 2_164 });
+    // The floor this replaces (4 x the preview gap 259 + 1) no longer clears the gap that was seen.
+    expect(schedulerGapCheck(541, 1_037)?.passes).toBe(false);
   });
 
   it('a worst gap of 0 needs no margin: the floor is one ledger, the smallest valid window', () => {

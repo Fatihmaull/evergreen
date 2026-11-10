@@ -1,7 +1,7 @@
 /**
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
- * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), the watchlist
- * group (`PH2-E2-05`, §6) and a JSON 404.
+ * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), alert preferences
+ * (`PH2-E2-06`, §6a), the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
  */
 import {
   authDepsFor,
@@ -12,8 +12,11 @@ import {
 } from './auth/mount.js';
 import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
+import { alertPreferencesDepsFor, type AlertMountOptions } from './alerts/mount.js';
+import { handleAlertPreferences, alertPreferenceMethods } from './alerts/routes.js';
 import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
 import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
+import { WatchItemCapReached } from './watchlist/store.js';
 
 export const API_BASE = '/api/v1';
 export const API_VERSION = 'v1';
@@ -95,10 +98,12 @@ function logSendFailure(
   }
 }
 
+export type HandleOptions = WatchlistMountOptions & AlertMountOptions;
+
 export async function handle(
   request: Request,
   env: Env = {},
-  options: WatchlistMountOptions = {},
+  options: HandleOptions = {},
 ): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname.startsWith(`${API_BASE}/`)) {
@@ -128,6 +133,36 @@ export async function handle(
   }
   if (pathname.startsWith(`${API_BASE}/`)) {
     const path = pathname.slice(API_BASE.length);
+    const alertMethods = alertPreferenceMethods(path);
+    if (alertMethods !== undefined) {
+      const method = request.method.toUpperCase();
+      if (!alertMethods.includes(method)) {
+        return apiError('METHOD_NOT_ALLOWED', `Use ${alertMethods.join(' or ')}.`, 405, {
+          headers: { allow: alertMethods.join(', ') },
+        });
+      }
+      const deps = alertPreferencesDepsFor(env, options);
+      if (deps === undefined) {
+        return apiError(
+          'UPSTREAM_UNAVAILABLE',
+          'Alert preferences are not available right now.',
+          503,
+        );
+      }
+      try {
+        return (await handleAlertPreferences(request, path, deps)) ?? notFound();
+      } catch {
+        // The database did not answer: absence is not health, and the error names nothing (§9).
+        return apiError(
+          'UPSTREAM_UNAVAILABLE',
+          'Alert preferences are not available right now.',
+          503,
+        );
+      }
+    }
+  }
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
     const allowed = watchlistMethods(path);
     if (allowed !== undefined) {
       const method = request.method.toUpperCase();
@@ -142,7 +177,15 @@ export async function handle(
       }
       try {
         return (await handleWatchlist(request, path, deps)) ?? notFound();
-      } catch {
+      } catch (error) {
+        // The per-user item cap (docs/API.md §6): a well-formed add refused on
+        // its meaning, so 422 INVALID_REQUEST, not retryable. The store throws
+        // it because routes.ts is not ours to change.
+        if (error instanceof WatchItemCapReached) {
+          return apiError('INVALID_REQUEST', error.message, 422, {
+            details: { field: 'body', limit: error.max },
+          });
+        }
         // The database did not answer: absence is not health, and the error names nothing (§9).
         return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
       }

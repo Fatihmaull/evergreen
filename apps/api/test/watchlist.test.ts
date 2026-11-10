@@ -319,6 +319,24 @@ describe('a user sees and changes only their own items (guard-removal tests)', (
 });
 
 describe('POST /watchlist', () => {
+  it('refuses a 51st live item with 422 INVALID_REQUEST and adds nothing', async () => {
+    const s = await signIn();
+    for (let n = 1; n <= 50; n++) expect((await add(s, contract(n))).status).toBe(201);
+    const before = snapshot();
+    const res = await add(s, contract(51));
+    expect(res.status).toBe(422);
+    const err = await errorOf(res);
+    expect(err.code).toBe('INVALID_REQUEST');
+    expect(err.retryable).toBe(false);
+    expect(err.details).toEqual({ field: 'body', limit: 50 });
+    expect(snapshot()).toBe(before);
+    // Re-adding one already on the list is still the idempotent 200.
+    expect((await add(s, contract(1))).status).toBe(200);
+    // Removing one makes room again.
+    expect((await write('DELETE', itemPath(contract(1)), s)).status).toBe(204);
+    expect((await add(s, contract(51))).status).toBe(201);
+  });
+
   it('adds with 201 and answers 200 when already present, without overwriting', async () => {
     const s = await signIn();
     const first = await add(s, C1, { label: 'first' });
@@ -651,6 +669,27 @@ describe('PATCH /watchlist/{network}/{contractId}', () => {
       [
         'a fractional threshold',
         (a: Record<string, unknown>) => ({ ...a, thresholdLedgers: 20000.5 }),
+      ],
+      [
+        'a zero per-job budget',
+        (a: Record<string, unknown>) => ({
+          ...a,
+          budget: { perJobMaxStroops: '0', per30DaysMaxStroops: '5' },
+        }),
+      ],
+      [
+        'a zero 30-day budget',
+        (a: Record<string, unknown>) => ({
+          ...a,
+          budget: { perJobMaxStroops: '0', per30DaysMaxStroops: '0' },
+        }),
+      ],
+      [
+        'a per-job budget above the 30-day budget',
+        (a: Record<string, unknown>) => ({
+          ...a,
+          budget: { perJobMaxStroops: '6', per30DaysMaxStroops: '5' },
+        }),
       ],
       ['a zero threshold', (a: Record<string, unknown>) => ({ ...a, thresholdLedgers: 0 })],
       ['a string threshold', (a: Record<string, unknown>) => ({ ...a, thresholdLedgers: '20000' })],

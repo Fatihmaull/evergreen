@@ -10,8 +10,9 @@
  * Sending happens only when `ALERTS_SEND` is exactly `send`. Same read grant
  * as F11 (SELECT on scheduler_ticks for the API role, migration 0009).
  */
-import { alertsMode, parseAllowlist } from './policy.js';
 import { testnetResetSignal, type TickFact } from './failure-modes.js';
+import { operatorSendFailedLog } from './operator-send.js';
+import { alertsMode, parseAllowlist } from './policy.js';
 import type { AlertNotification, AlertTransport } from './sender.js';
 
 export interface TestnetResetEnv {
@@ -40,7 +41,14 @@ export type TestnetResetOutcome =
       readonly reason: 'alerts_send_off' | 'no_operator';
       readonly decreases: number;
     }
-  | { readonly action: 'sent'; readonly recipients: number; readonly decreases: number };
+  | {
+      readonly action: 'sent';
+      readonly recipients: number;
+      readonly decreases: number;
+      /** How many delivers threw. `recipients` counts operators with none. */
+      readonly failed?: number;
+    }
+  | { readonly action: 'send_failed'; readonly failed: number; readonly decreases: number };
 
 export function testnetResetNotification(from: bigint, to: bigint): AlertNotification {
   return {
@@ -69,14 +77,38 @@ export async function runTestnetResetCheck(
     return { action: 'dry-run', reason: 'alerts_send_off', decreases };
   const operators = [...parseAllowlist(env.ALERTS_ALLOWLIST)];
   if (operators.length === 0) return { action: 'dry-run', reason: 'no_operator', decreases };
+  // Guard: one recipient's send failure must not skip the other operators, later drops, or F9.
+  const operatorFailed = new Set<number>();
+  let failed = 0;
+  let sent = 0;
   for (const d of s.decreases) {
     // One event id per drop: later cron runs over the same drop reuse Resend's idempotency key.
     const eventId = `f10-ledger-decrease:${d.from}->${d.to}`;
     const n = testnetResetNotification(d.from, d.to);
-    for (const r of operators) await deps.transportFor(r).deliver(n, eventId);
+    for (const [i, recipient] of operators.entries()) {
+      try {
+        await deps.transportFor(recipient).deliver(n, eventId);
+        sent += 1;
+      } catch (error) {
+        failed += 1;
+        operatorFailed.add(i);
+        console.log(JSON.stringify(operatorSendFailedLog('alerts.f10_testnet_reset', error)));
+      }
+    }
   }
-  return { action: 'sent', recipients: operators.length, decreases };
+  if (sent === 0) return { action: 'send_failed', failed, decreases };
+  if (operatorFailed.size === 0) return { action: 'sent', recipients: operators.length, decreases };
+  return {
+    action: 'sent',
+    recipients: operators.length - operatorFailed.size,
+    failed,
+    decreases,
+  };
 }
 
+/**
+ * `WHERE ok`: a failed tick (0010) has no observed ledger, and a reset is read off ledgers the
+ * chain actually reported.
+ */
 export const RECENT_TICKS_SQL =
-  'SELECT extract(epoch FROM ticked_at)::bigint AS t, observed_ledger AS l FROM scheduler_ticks ORDER BY ticked_at DESC LIMIT $1';
+  'SELECT extract(epoch FROM ticked_at)::bigint AS t, observed_ledger AS l FROM scheduler_ticks WHERE ok ORDER BY ticked_at DESC LIMIT $1';

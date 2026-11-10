@@ -42,6 +42,15 @@ function deps(over: Partial<TickDeps> = {}) {
   return { deps: { ...base, ...over }, queries, methods: stub.methods };
 }
 
+/** The rows a tick tried to write: [observed_ledger, rpc_ms, ok]. */
+const written = (queries: { params: readonly unknown[] }[]): readonly (readonly unknown[])[] =>
+  queries.map((q) => q.params);
+/** A clock that returns the given millisecond values in turn, then keeps the last. */
+const clockOf = (...values: number[]): (() => number) => {
+  let i = 0;
+  return () => values[Math.min(i++, values.length - 1)]!;
+};
+
 const codeOf = async (p: Promise<unknown>): Promise<unknown> =>
   p.then(
     () => 'resolved',
@@ -50,23 +59,46 @@ const codeOf = async (p: Promise<unknown>): Promise<unknown> =>
 
 describe('one tick', () => {
   it('🔴 reads the network, then the latest ledger, then records that ledger', async () => {
-    const { deps: d, queries, methods } = deps();
-    expect(await runTick(d)).toEqual({ observedLedger: 65_143_700 });
+    const { deps: d, queries, methods } = deps({ now: clockOf(0, 120, 120, 300) });
+    expect(await runTick(d)).toEqual({ observedLedger: 65_143_700, rpcMs: 300 });
     expect(methods).toEqual(['getNetwork', 'getLatestLedger']);
-    expect(queries).toEqual([{ text: INSERT_TICK_SQL, params: [65_143_700] }]);
+    expect(queries).toEqual([{ text: INSERT_TICK_SQL, params: [65_143_700, 300, true] }]);
+  });
+
+  it.each([
+    ['200.4 rounds down', [0, 100.2, 500, 600.2], 200],
+    ['200.8 rounds up', [0, 100.4, 500, 600.4], 201],
+  ])(
+    '🔴 rpc_ms is the time both RPC calls took together, to the nearest millisecond: %s',
+    async (_, clock, expected) => {
+      const { deps: d, queries } = deps({ now: clockOf(...clock) });
+      expect((await runTick(d)).rpcMs).toBe(expected);
+      expect(written(queries)).toEqual([[65_143_700, expected, true]]);
+    },
+  );
+
+  it('a clock that steps backwards counts as zero, never as a negative rpc_ms', async () => {
+    const { deps: d, queries } = deps({ now: clockOf(500, 400, 400, 450) });
+    expect((await runTick(d)).rpcMs).toBe(50);
+    expect(written(queries)).toEqual([[65_143_700, 50, true]]);
   });
 
   it('🔴 writes with no RETURNING: the scheduler role has INSERT but no SELECT', () => {
-    expect(INSERT_TICK_SQL).toBe('INSERT INTO scheduler_ticks (observed_ledger) VALUES ($1)');
+    expect(INSERT_TICK_SQL).toBe(
+      'INSERT INTO scheduler_ticks (observed_ledger, rpc_ms, ok) VALUES ($1, $2, $3)',
+    );
     expect(INSERT_TICK_SQL).not.toMatch(/returning/i);
+    // K1: the scheduler never names ticked_at.
+    expect(INSERT_TICK_SQL).not.toMatch(/ticked_at/i);
   });
 
   it('🔴 refuses an RPC serving another network, before reading a ledger or writing', async () => {
     const stub = rpcStub({ passphrase: MAINNET });
-    const { deps: d, queries } = deps({ fetch: stub.fetch });
+    const { deps: d, queries } = deps({ fetch: stub.fetch, now: () => 0 });
     expect(await codeOf(runTick(d))).toBe('NETWORK_MISMATCH');
     expect(stub.methods).toEqual(['getNetwork']);
-    expect(queries).toEqual([]);
+    // Not a heartbeat: the only row is a failed tick, with no ledger.
+    expect(written(queries)).toEqual([[null, 0, false]]);
   });
 
   it('🔴 calls fetch as a plain function, never as a method of deps (Workers: Illegal invocation, #439)', async () => {
@@ -103,7 +135,9 @@ describe('RPC failures', () => {
   ])('🔴 %s is RPC_UNREACHABLE, not a fault of ours', async (_, respond) => {
     const { deps: d, queries } = deps({ fetch: respond });
     expect(await codeOf(runTick(d))).toBe('RPC_UNREACHABLE');
-    expect(queries).toEqual([]);
+    // Never a successful row: every row written is a failed tick with no ledger.
+    expect(written(queries).every((p) => p[0] === null && p[2] === false)).toBe(true);
+    expect(queries).toHaveLength(1);
   });
 
   it('🔴 a hung call is cancelled at the timeout and reported, not left to hold the tick', async () => {
@@ -194,9 +228,9 @@ describe('RPC failures', () => {
     ['null', null],
   ])('🔴 a ledger that is %s is RPC_BAD_RESPONSE, and nothing is written', async (_, sequence) => {
     const stub = rpcStub({ sequence });
-    const { deps: d, queries } = deps({ fetch: stub.fetch });
+    const { deps: d, queries } = deps({ fetch: stub.fetch, now: () => 0 });
     expect(await codeOf(runTick(d))).toBe('RPC_BAD_RESPONSE');
-    expect(queries).toEqual([]);
+    expect(written(queries)).toEqual([[null, 0, false]]);
   });
 });
 
@@ -223,5 +257,115 @@ describe('database failure', () => {
     const text = `${String(error)} ${(error as Error).message} ${JSON.stringify(error)}`;
     expect(text).not.toContain('SUPERSECRETKEY');
     expect(text).not.toContain('rpc.example.invalid');
+  });
+});
+
+describe('a failed tick writes a row, and says what it knows (migration 0010, F9)', () => {
+  const failing = async (p: Promise<unknown>): Promise<TickError> => {
+    const error = await p.then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(TickError);
+    return error as TickError;
+  };
+
+  it('🔴 an RPC that never returned leaves rpc_ms NULL and the ledger NULL, ok false', async () => {
+    const { deps: d, queries } = deps({
+      fetch: () => Promise.reject(new TypeError('Network connection lost')),
+      now: clockOf(0, 50),
+    });
+    const error = await failing(runTick(d));
+    expect(error.code).toBe('RPC_UNREACHABLE');
+    expect(error.recorded).toBe(true);
+    expect(queries).toEqual([{ text: INSERT_TICK_SQL, params: [null, null, false] }]);
+  });
+
+  it('🔴 a body that never parsed did not "return": rpc_ms stays NULL', async () => {
+    const { deps: d, queries } = deps({
+      fetch: () => Promise.resolve(new Response('<html>', { status: 200 })),
+    });
+    await failing(runTick(d));
+    expect(written(queries)).toEqual([[null, null, false]]);
+  });
+
+  it("🔴 a first call that returned and a second that timed out is still NULL: the tick's RPC did not return", async () => {
+    const stub = rpcStub();
+    let calls = 0;
+    const { deps: d, queries } = deps({
+      now: clockOf(0, 100, 100, 3_000),
+      fetch: (url, init) =>
+        ++calls === 1 ? stub.fetch(url, init) : Promise.reject(new Error('aborted')),
+    });
+    await failing(runTick(d));
+    expect(written(queries)).toEqual([[null, null, false]]);
+  });
+
+  it('🔴 an answer that arrived but was unusable keeps the time it took', async () => {
+    const { deps: d, queries } = deps({
+      fetch: () => Promise.resolve(new Response('{}', { status: 503 })),
+      now: clockOf(1_000, 4_200),
+    });
+    expect((await failing(runTick(d))).code).toBe('RPC_UNREACHABLE');
+    expect(written(queries)).toEqual([[null, 3_200, false]]);
+  });
+
+  it('🔴 the time of a failed tick is rounded to the nearest millisecond too', async () => {
+    const { deps: d, queries } = deps({
+      fetch: () => Promise.resolve(new Response('{}', { status: 503 })),
+      now: clockOf(0, 100.6),
+    });
+    await failing(runTick(d));
+    expect(written(queries)).toEqual([[null, 101, false]]);
+  });
+
+  it('🔴 a wrong network and a bad ledger keep the time of the calls that returned', async () => {
+    const mismatch = deps({ fetch: rpcStub({ passphrase: MAINNET }).fetch, now: clockOf(0, 80) });
+    await failing(runTick(mismatch.deps));
+    expect(written(mismatch.queries)).toEqual([[null, 80, false]]);
+
+    const bad = deps({ fetch: rpcStub({ sequence: 0 }).fetch, now: clockOf(0, 80, 80, 200) });
+    expect((await failing(runTick(bad.deps))).code).toBe('RPC_BAD_RESPONSE');
+    expect(written(bad.queries)).toEqual([[null, 200, false]]);
+  });
+
+  it('🔴 if the failed-tick row cannot be written, the error is still the RPC one, with recorded false', async () => {
+    const { deps: d } = deps({
+      fetch: () => Promise.reject(new TypeError('down')),
+      query: () =>
+        Promise.reject(new Error('connection to postgres://u:HUNTER2@db.invalid failed')),
+    });
+    const error = await failing(runTick(d));
+    expect(error.code).toBe('RPC_UNREACHABLE');
+    expect(error.recorded).toBe(false);
+    expect(`${String(error)} ${JSON.stringify(error)}`).not.toContain('HUNTER2');
+  });
+
+  it('🔴 a database failure on the good row is DB_FAILED, not retried as a failed row', async () => {
+    const attempts: unknown[][] = [];
+    const { deps: d } = deps({
+      query: (_text, params) => {
+        attempts.push([...params]);
+        return Promise.reject(new Error('down'));
+      },
+    });
+    const error = await failing(runTick(d));
+    expect(error.code).toBe('DB_FAILED');
+    expect(error.recorded).toBe(false);
+    expect(attempts).toHaveLength(1);
+  });
+
+  it('🔴 a fault of ours is rethrown as what it is, and no failed-tick row is written for it', async () => {
+    const { deps: d, queries } = deps({
+      now: () => {
+        throw new TypeError('our own bug');
+      },
+    });
+    await expect(runTick(d)).rejects.toBeInstanceOf(TypeError);
+    expect(queries).toEqual([]);
+  });
+
+  it('a successful tick has recorded = false on no error at all (nothing thrown)', async () => {
+    await expect(runTick(deps().deps)).resolves.toMatchObject({ observedLedger: 65_143_700 });
   });
 });
