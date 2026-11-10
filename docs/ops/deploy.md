@@ -168,6 +168,19 @@ The first preview dispatch after this change merges is the commissioning run. Pr
 
 The note below, that human-readable `wrangler versions view` shows `DEPLOY_COMMIT` as `(hidden)`, is why the API smoke uses `/health`. This readback does not print that view.
 
+## Preview tick
+
+[`.github/workflows/scheduler-preview-tick.yml`](../../.github/workflows/scheduler-preview-tick.yml) is manual only (`workflow_dispatch`). It has no push, schedule, or pull request trigger, and it sets no GitHub Environment, so it cannot run as production. It POSTs `/tick` to the preview scheduler and nowhere else.
+
+Prerequisites, before a dispatch. Neither exists yet; Fatih sets both himself:
+
+- `TICK_TOKEN` is not yet a GitHub secret. Fatih sets the repo secret to the same value as the Worker secret `TICK_TOKEN` on `evergreen-scheduler-preview`. Production does not have this secret.
+- `SCHEDULER_PREVIEW_URL` is not yet a repo variable. Fatih sets it to the preview Worker's `https://` origin, with no path and no port. The workflow reads that variable only. It refuses an empty value, a non-`https` URL, userinfo, a query, a fragment, a path, or a port. The parsed host must equal the workflow env constant `PREVIEW_SCHEDULER_HOST`, which is `evergreen-scheduler-preview.fatihmaulanamail.workers.dev`. That comparison is exact. It is not a suffix or a prefix match.
+
+If the preview Worker hostname ever changes, `PREVIEW_SCHEDULER_HOST` is updated in a reviewed PR.
+
+The Neon `preview` branch must be active. A tick writes only one `scheduler_ticks` row. The RPC is read-only testnet. This workflow is preview-only and never production.
+
 ## The deployed commit
 
 The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEPLOY_COMMIT:<sha>`) and `GET /api/v1/health` reports it as `commit` (#460 and #462, merged 2026-10-28):
