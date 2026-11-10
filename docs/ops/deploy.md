@@ -163,6 +163,43 @@ The workflow injects `DEPLOY_COMMIT` into the Worker (`wrangler deploy --var DEP
 
 > **A deploy deletes dashboard-set plain vars.** `wrangler deploy` without `--keep-vars` removes every var not in the config or on the command line before applying. Put plain vars in `wrangler.jsonc` or `--var`; never in the dashboard. Secrets are separate and survive deploys.
 
+### Version metadata
+
+Each `wrangler deploy` in [`api-deploy.yml`](../../.github/workflows/api-deploy.yml) and [`scheduler-deploy.yml`](../../.github/workflows/scheduler-deploy.yml), preview and production, also records the run on the Worker version. The workflows pin `wrangler@4.156.0`. `wrangler deploy --tag` and `--message` were added in wrangler 4.66.0 ([workers-sdk release `wrangler@4.66.0`](https://github.com/cloudflare/workers-sdk/releases/tag/wrangler%404.66.0)); 4.156.0 is the version last seen on a production deploy, and its `deploy --help` still lists both flags.
+
+| Flag | Value | Annotation |
+|---|---|---|
+| `--tag` | first 7 characters of `DEPLOY_COMMIT` | `workers/tag` (maximum 100 bytes) |
+| `--message` | the full `DEPLOY_COMMIT`, one space, then `github.run_id` | `workers/message` (truncated at 1000 bytes) |
+
+`--tag` and `--message` name `DEPLOY_COMMIT`, the same commit the workflow injects as the plain var. On an API preview deploy from a pull request, `DEPLOY_COMMIT` is the PR head. `wrangler versions view` still shows that var as `(hidden)`.
+
+Wrangler 4.156.0 writes the flags as `annotations["workers/tag"]` and `annotations["workers/message"]`, and reads those same keys back from the Workers versions API:
+
+```
+GET /accounts/{account_id}/workers/scripts/{script_name}/versions
+GET /accounts/{account_id}/workers/scripts/{script_name}/versions/{version_id}
+```
+
+The list's published schema example (Cloudflare API, read 2026-11-10) shows `id`, `metadata`, and `number` and does not show `annotations`. The Version model that documents the keys is `GET /accounts/{account_id}/workers/workers/{worker_id}/versions`: `annotations["workers/tag"]` and `annotations["workers/message"]`. A live call of either endpoint was not made here. `script_name` is `evergreen-api`, `evergreen-api-preview`, `evergreen-scheduler`, or `evergreen-scheduler-preview`. The list docs say the first item is the latest version.
+
+```bash
+# Names only: CLOUDFLARE_API_TOKEN (repo secret), CLOUDFLARE_ACCOUNT_ID (repo variable).
+curl -sS \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/evergreen-api/versions" \
+  | jq '.result.items[] | {id, tag: .annotations["workers/tag"], message: .annotations["workers/message"]}'
+```
+
+One version, after taking `id` from that list:
+
+```bash
+curl -sS \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/evergreen-api/versions/${VERSION_ID}" \
+  | jq '.result.annotations["workers/tag"], .result.annotations["workers/message"]'
+```
+
 ## Deploying a PR to preview: the `deploy-preview` label
 
 Preview is `main` unless somebody says otherwise. To test a PR's `apps/api` code on the real preview Worker:

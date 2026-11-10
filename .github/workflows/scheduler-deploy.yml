@@ -33,7 +33,9 @@ permissions:
   contents: read
 
 env:
-  WRANGLER_VERSION: '4'
+  # Pinned. `wrangler deploy --tag` and `--message` need >= 4.66.0.
+  # 4.156.0 is the version last seen on a production deploy.
+  WRANGLER_VERSION: '4.156.0'
 
 jobs:
   preview:
@@ -57,7 +59,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+          DEPLOY_RUN_ID: ${{ github.run_id }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}" --tag "${DEPLOY_COMMIT:0:7}" --message "${DEPLOY_COMMIT} ${DEPLOY_RUN_ID}"
 
   production:
     name: deploy evergreen-scheduler (production)
@@ -81,4 +84,5 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
-        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+          DEPLOY_RUN_ID: ${{ github.run_id }}
+        run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}" --tag "${DEPLOY_COMMIT:0:7}" --message "${DEPLOY_COMMIT} ${DEPLOY_RUN_ID}"
