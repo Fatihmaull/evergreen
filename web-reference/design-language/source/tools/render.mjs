@@ -3,6 +3,7 @@
  *
  *   node web-reference/design-language/source/tools/render.mjs
  *   node web-reference/design-language/source/tools/render.mjs --commission
+ *   node web-reference/design-language/source/tools/render.mjs --only=name,name
  *
  * Two jobs, in this order:
  *
@@ -13,7 +14,7 @@
  *      `apps/web/src/styles.css` must match; the few it owns are listed below
  *      and must also be stated in `tokens.md`.
  *   2. Render each template at its canvas size, clean and with its safe area
- *      drawn, into `renders/`, and the poster to PDF as well.
+ *      drawn, into `renders/`. The poster and each slide also go to PDF.
  *
  * `--commission` alters one value in memory and proves step 1 notices. A gate
  * nobody has watched fail is a decoration.
@@ -43,15 +44,42 @@ const repo = join(language, '../..');
 /** Tokens the templates own. Each is stated in tokens.md with its reason. */
 const OWN = new Set(['--k', '--t-display', '--crit-on-dark', '--und-on-dark']);
 
-/** [file, width, height] in CSS px. The poster is A3 plus 3mm bleed. */
+/** [file, width, height, pdf] in CSS px. The poster is A3 plus 3mm bleed.
+ *  Slides are the landscape frame; each is also one PDF page. */
 const TEMPLATES = [
-  ['square', 1080, 1080],
-  ['square-dark', 1080, 1080],
-  ['portrait', 1080, 1350],
-  ['landscape', 1920, 1080],
-  ['story', 1080, 1920],
-  ['og', 1200, 630],
-  ['poster-a3', 1146, 1611],
+  ['square', 1080, 1080, false],
+  ['square-dark', 1080, 1080, false],
+  ['portrait', 1080, 1350, false],
+  ['landscape', 1920, 1080, false],
+  ['story', 1080, 1920, false],
+  ['og', 1200, 630, false],
+  ['poster-a3', 1146, 1611, true],
+  ['slide-online-cover', 1920, 1080, true],
+  ['slide-online-section', 1920, 1080, true],
+  ['slide-online-text', 1920, 1080, true],
+  ['slide-online-number', 1920, 1080, true],
+  ['slide-online-code', 1920, 1080, true],
+  ['slide-online-diagram', 1920, 1080, true],
+  ['slide-online-close', 1920, 1080, true],
+  ['slide-offline-cover', 1920, 1080, true],
+  ['slide-offline-section', 1920, 1080, true],
+  ['slide-offline-text', 1920, 1080, true],
+  ['slide-offline-number', 1920, 1080, true],
+  ['slide-offline-code', 1920, 1080, true],
+  ['slide-offline-diagram', 1920, 1080, true],
+  ['slide-offline-close', 1920, 1080, true],
+  ['event-announce-square', 1080, 1080, false],
+  ['event-announce-story', 1080, 1920, false],
+  ['event-announce-landscape', 1920, 1080, false],
+  ['event-announce-og', 1200, 630, false],
+  ['event-reminder-square', 1080, 1080, false],
+  ['event-reminder-story', 1080, 1920, false],
+  ['event-reminder-landscape', 1920, 1080, false],
+  ['event-reminder-og', 1200, 630, false],
+  ['event-recap-square', 1080, 1080, false],
+  ['event-recap-story', 1080, 1920, false],
+  ['event-recap-landscape', 1920, 1080, false],
+  ['event-recap-og', 1200, 630, false],
 ];
 
 function declarations(css) {
@@ -199,7 +227,10 @@ async function main() {
   const out = join(source, 'renders');
   mkdirSync(join(out, 'guides'), { recursive: true });
   try {
-    for (const [name, width, height] of TEMPLATES) {
+    const only = process.argv.find((arg) => arg.startsWith('--only='));
+    const wanted = only ? only.slice('--only='.length).split(',') : null;
+    for (const [name, width, height, pdf] of TEMPLATES) {
+      if (wanted && !wanted.includes(name)) continue;
       for (const [suffix, dir] of [
         ['', out],
         ['?guides', join(out, 'guides')],
@@ -211,13 +242,19 @@ async function main() {
         ]);
       }
       console.log(`  ${name}.png  ${width}×${height}`);
+      if (pdf) {
+        await chrome([
+          '--no-pdf-header-footer',
+          `--print-to-pdf=${join(out, `${name}.pdf`)}`,
+          `${base}/${name}.html`,
+        ]);
+        console.log(
+          name === 'poster-a3'
+            ? '  poster-a3.pdf  303×426mm (A3 + 3mm bleed)'
+            : `  ${name}.pdf  ${width}×${height}`,
+        );
+      }
     }
-    await chrome([
-      '--no-pdf-header-footer',
-      `--print-to-pdf=${join(out, 'poster-a3.pdf')}`,
-      `${base}/poster-a3.html`,
-    ]);
-    console.log('  poster-a3.pdf  303×426mm (A3 + 3mm bleed)');
   } finally {
     server.close();
     rmSync(profile, { recursive: true, force: true });

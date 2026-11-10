@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=Newsreader:opsz,wght@6..72,400&family=Space+Mono&display=swap"
+    />
+    <link rel="stylesheet" href="base.css" />
+    <link rel="stylesheet" href="slides.css" />
+    <script>
+      if (location.search.includes('guides')) document.documentElement.classList.add('guides');
+    </script>
+    <title>Slide 1920 × 1080 — diagram, projector</title>
+  </head>
+  <body class="ground-surface">
+    <!-- Diagram slide, projector. Same grid, full ink, kickers at the body role. The display line stays the dominant element. -->
+    <div
+      class="canvas slide-offline"
+      data-format="slide offline 1920×1080 · k=2 · diagram"
+      style="
+        --w: 1920px;
+        --h: 1080px;
+        --safe-t: 96px;
+        --safe-r: 160px;
+        --safe-b: 96px;
+        --safe-l: 160px;
+      "
+    >
+      <div class="safe">
+        <div class="lockup">
+          <span class="mark" aria-hidden="true"></span><span class="word">Evergreen</span>
+        </div>
+        <div class="spacer"></div>
+        <div style="display: grid; gap: calc(16px * var(--k))">
+          <p class="label">The four kinds of entry</p>
+          <p class="display">Three are recoverable. One is not.</p>
+          <div class="hairline-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr">
+            <div>
+              <span class="sub">instance</span>
+              <p class="body">The contract's own state pointer.</p>
+              <span class="label">archived</span>
+            </div>
+            <div>
+              <span class="sub">code</span>
+              <p class="body">
+                The compiled Wasm. Every contract built from it shares this one entry.
+              </p>
+              <span class="label">archived</span>
+            </div>
+            <div>
+              <span class="sub">persistent</span>
+              <p class="body">Durable stored values.</p>
+              <span class="label">archived</span>
+            </div>
+            <div class="inverted">
+              <span class="sub">temporary</span>
+              <p class="body">Disposable stored values. Gone permanently, with no restore.</p>
+              <span class="label">deleted</span>
+            </div>
+          </div>
+          <p class="body">
+            Read from the network's own configuration: a temporary entry's minimum is 720 ledgers,
+            about an hour.
+          </p>
+        </div>
+        <div class="spacer"></div>
+        <p class="label">Stellar testnet · evergreen-stellar.pages.dev</p>
+      </div>
+    </div>
+  </body>
+</html>
