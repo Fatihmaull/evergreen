@@ -22,6 +22,7 @@
 import type { SqlClient, SqlRow } from '../auth/pg-store.js';
 import type { AlertOutboxStore, OutboxRow, OutboxStatus } from './dispatch.js';
 import { ALERT_SPECS, isRequired, type AlertKind } from './policy.js';
+import type { AlertPreferencesStore } from './preferences.js';
 
 /**
  * The optional kinds as a SQL list, built from the code's own constants (never from input), so the
@@ -126,7 +127,7 @@ WHERE user_id = $1::uuid AND status = 'sent' AND kind IN (${OPTIONAL_KINDS_SQL})
 }
 
 /** The user's choices for the optional kinds. A missing row means the kind's default. */
-export class PgAlertPreferencesStore {
+export class PgAlertPreferencesStore implements AlertPreferencesStore {
   constructor(private readonly sql: SqlClient) {}
 
   /** Only the kinds the user has set; pass it to `wantsAlert` / `dispatchUserAlert` as `prefs`. */

@@ -1,0 +1,149 @@
+# Manual tick of the preview scheduler only.
+# Trigger is workflow_dispatch. There is no push, schedule, or pull_request trigger,
+# and no GitHub Environment (never `production`).
+#
+# URL: repo variable SCHEDULER_PREVIEW_URL, passed only through env.
+# The parsed host must equal PREVIEW_SCHEDULER_HOST exactly. That constant is the
+# preview Worker's workers.dev hostname. It is not a suffix or a prefix match.
+# Auth: repo secret TICK_TOKEN, the same value as the Worker secret on
+# evergreen-scheduler-preview (apps/scheduler/wrangler.jsonc env.preview.name).
+# The header is written to a file and passed as `curl --header @file`, so the
+# token is not in the process argv. This script does not use `set -x`.
+#
+# POST /tick JSON (apps/scheduler/src/worker.ts handleFetch / tick):
+#   success: ok (boolean), observedLedger (number), evaluation (object; not printed)
+#   failure: ok (boolean), code (string)
+# runTick in tick.ts also returns rpcMs, and the worker logs it, but the HTTP
+# body does not include rpcMs. Printed scalars are only ok, observedLedger, and code.
+name: Scheduler preview tick
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scheduler-preview-tick
+  cancel-in-progress: false
+
+# Exact preview hostname. The tick URL still comes only from SCHEDULER_PREVIEW_URL.
+# If this hostname changes, update the constant in a reviewed PR.
+env:
+  PREVIEW_SCHEDULER_HOST: evergreen-scheduler-preview.fatihmaulanamail.workers.dev
+
+jobs:
+  tick:
+    name: POST /tick on the preview scheduler
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Guard the preview URL and POST /tick
+        env:
+          URL: ${{ vars.SCHEDULER_PREVIEW_URL }}
+          TICK_TOKEN: ${{ secrets.TICK_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          refuse() {
+            printf '%s\n' "$1"
+            exit 1
+          }
+
+          if [ -z "${URL:-}" ]; then
+            refuse 'refusing: SCHEDULER_PREVIEW_URL is empty'
+          fi
+          if [ -z "${TICK_TOKEN:-}" ]; then
+            refuse 'refusing: TICK_TOKEN is empty'
+          fi
+          case "$TICK_TOKEN" in
+            *$'\n'*|*$'\r'*) refuse 'refusing: TICK_TOKEN is not a single line' ;;
+          esac
+          case "$URL" in
+            *$'\n'*|*$'\r'*|*[[:space:]]*) refuse 'refusing: URL is not a single line' ;;
+          esac
+          case "$URL" in
+            *'@'*) refuse 'refusing: URL has userinfo' ;;
+          esac
+          case "$URL" in
+            *'?'*) refuse 'refusing: URL has a query' ;;
+          esac
+          case "$URL" in
+            *'#'*) refuse 'refusing: URL has a fragment' ;;
+          esac
+          case "$URL" in
+            https://*) ;;
+            *) refuse 'refusing: URL is not https' ;;
+          esac
+
+          rest="${URL#https://}"
+          case "$rest" in
+            */*)
+              pathpart="${rest#*/}"
+              if [ -n "$pathpart" ]; then
+                refuse 'refusing: URL has a path'
+              fi
+              ;;
+          esac
+          host="${rest%%/*}"
+          case "$host" in
+            *:*) refuse 'refusing: URL has a port' ;;
+          esac
+          if [ -z "$host" ] || [ -z "${PREVIEW_SCHEDULER_HOST:-}" ]; then
+            refuse 'refusing: URL host could not be parsed'
+          fi
+          if [ "$host" != "$PREVIEW_SCHEDULER_HOST" ]; then
+            printf 'refusing: host is not the preview scheduler (%s)\n' "$host"
+            exit 1
+          fi
+          printf 'host=%s\n' "$host"
+
+          umask 077
+          body="$(mktemp)"
+          hdr="$(mktemp)"
+          trap 'rm -f "$body" "$hdr"' EXIT
+          printf 'Authorization: Bearer %s\n' "$TICK_TOKEN" >"$hdr"
+
+          endpoint="${URL%/}/tick"
+          set +e
+          status="$(
+            curl \
+              --silent \
+              --fail-with-body \
+              --max-time 30 \
+              --retry 0 \
+              --proto '=https' \
+              --request POST \
+              --header @"$hdr" \
+              --output "$body" \
+              --write-out '%{http_code}' \
+              "$endpoint" 2>/dev/null
+          )"
+          curl_rc=$?
+          set -e
+          if [ -z "$status" ]; then
+            status=000
+          fi
+          printf 'http_status=%s\n' "$status"
+
+          if jq -e 'type == "object"' "$body" >/dev/null 2>&1; then
+            jq -c '
+              def scalar: type == "string" or type == "number" or type == "boolean";
+              def pick($k):
+                if has($k) and (.[$k] | scalar) then {($k): .[$k]} else {} end;
+              pick("ok") + pick("observedLedger") + pick("code")
+            ' "$body"
+          else
+            bytes="$(wc -c <"$body" | tr -d ' ')"
+            printf 'body_bytes=%s\n' "$bytes"
+          fi
+
+          ok="$(jq -r 'if type == "object" and (.ok | type) == "boolean" then (.ok | tostring) else "absent" end' "$body" 2>/dev/null || printf '%s' 'absent')"
+          case "$status" in
+            2[0-9][0-9]) status_ok=1 ;;
+            *) status_ok=0 ;;
+          esac
+          if [ "$status_ok" -ne 1 ] || [ "$ok" != "true" ] || [ "$curl_rc" -ne 0 ]; then
+            refuse 'refusing: tick did not succeed'
+          fi
