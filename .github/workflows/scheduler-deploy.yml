@@ -51,6 +51,8 @@ jobs:
       # Build every workspace package the scheduler imports from dist/ (core, engine, ...).
       - name: build the scheduler's workspace deps
         run: pnpm --filter "@evergreen/scheduler^..." run build
+      - name: test apps/scheduler (if a test script exists)
+        run: pnpm --filter @evergreen/scheduler run --if-present test
       - name: wrangler deploy --env preview
         working-directory: apps/scheduler
         env:
@@ -58,6 +60,62 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
         run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --env preview --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+      # workers.dev is on for preview, but wrangler.jsonc has no workers.dev
+      # hostname (the account subdomain is not in the repo), so this does not
+      # GET /health. Same metadata read as production. --env preview selects
+      # evergreen-scheduler-preview from the config.
+      - name: read back the active deployment (version id, percentage, DEPLOY_COMMIT)
+        working-directory: apps/scheduler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WANT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          status=$(mktemp)
+          version=$(mktemp)
+          trap 'rm -f "$status" "$version"' EXIT
+          # Latest deployment: wrangler deployments status prints deployments[0]
+          # from GET /accounts/{account}/workers/scripts/{name}/deployments.
+          # The version object from versions view is GET .../versions/{id} and
+          # includes every binding. Neither file is printed.
+          npx --yes "wrangler@${WRANGLER_VERSION}" deployments status --env preview --json >"$status"
+          mapfile -t fields < <(jq -r '
+            .versions as $v
+            | if ($v | type) != "array" or ($v | length) != 1 then
+                "bad", "none", ($v | length // 0 | tostring)
+              elif $v[0].percentage != 100 or ($v[0].version_id // "") == "" then
+                "bad", ($v[0].version_id // "none"), ($v[0].percentage | tostring)
+              else
+                "ok", $v[0].version_id, ($v[0].percentage | tostring)
+              end
+          ' "$status")
+          state=${fields[0]:-}
+          vid=${fields[1]:-}
+          pct=${fields[2]:-}
+          if [ "${#fields[@]}" -ne 3 ] || [ "$state" != ok ]; then
+            echo "version_id=${vid:-none} percentage=${pct:-none}"
+            echo "::error::active deployment is not one version at 100%"
+            exit 1
+          fi
+          npx --yes "wrangler@${WRANGLER_VERSION}" versions view "$vid" --env preview --json >"$version"
+          got=$(jq -r '
+            [ .resources.bindings[]?
+              | select(.type == "plain_text" and .name == "DEPLOY_COMMIT")
+              | .text
+            ]
+            | if length == 1 and .[0] != null then .[0] else "absent" end
+          ' "$version")
+          if printf '%s\n' "$got" | grep -qxE '[0-9a-f]{40}'; then
+            shown=$got
+          else
+            shown=not-a-sha
+          fi
+          echo "version_id=$vid percentage=$pct DEPLOY_COMMIT=$shown"
+          if [ "$got" != "$WANT" ]; then
+            echo "::error::DEPLOY_COMMIT does not equal the commit just deployed"
+            exit 1
+          fi
 
   production:
     name: deploy evergreen-scheduler (production)
@@ -66,6 +124,25 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v5
+      # Approving a waiting run deploys THAT run's commit, however old. This step
+      # runs after the approval, so it catches the stale click: if main has changed
+      # the Worker's inputs since this run's commit, fail and let the newer run deploy.
+      # Paths are what the scheduler bundle imports (apps/scheduler/package.json:
+      # @evergreen-stellar/core, @evergreen-stellar/shared-types, @evergreen/engine)
+      # plus the lockfile and this workflow. Preview has no such step; api-deploy
+      # puts this guard on production only.
+      - name: refuse a commit that main has moved past
+        env:
+          RUN_SHA: ${{ github.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          if git diff --quiet "$RUN_SHA" FETCH_HEAD -- apps/scheduler packages/core packages/shared-types packages/engine pnpm-lock.yaml .github/workflows/scheduler-deploy.yml; then
+            echo "scheduler bundle inputs at $RUN_SHA match main"
+            exit 0
+          fi
+          git diff --stat "$RUN_SHA" FETCH_HEAD -- apps/scheduler packages/core packages/shared-types packages/engine pnpm-lock.yaml .github/workflows/scheduler-deploy.yml
+          echo "::error::main changed apps/scheduler, its workspace packages, pnpm-lock.yaml, or this workflow after $RUN_SHA. Reject this run and approve the newest one."
+          exit 1
       - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
@@ -74,6 +151,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: build the scheduler's workspace deps
         run: pnpm --filter "@evergreen/scheduler^..." run build
+      - name: test apps/scheduler (if a test script exists)
+        run: pnpm --filter @evergreen/scheduler run --if-present test
       # Top-level block = production; no --env flag selects it.
       - name: wrangler deploy (production)
         working-directory: apps/scheduler
@@ -82,3 +161,56 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           DEPLOY_COMMIT: ${{ github.sha }}
         run: npx --yes "wrangler@${WRANGLER_VERSION}" deploy --var "DEPLOY_COMMIT:${DEPLOY_COMMIT}"
+      # Production workers_dev is false, so /health is not a public URL.
+      # deployments status --json is the latest deployment (deployments[0] of
+      # GET /accounts/{account}/workers/scripts/{name}/deployments).
+      # versions view --json is GET .../versions/{id} and includes every
+      # binding. Print only version id, percentage, and DEPLOY_COMMIT.
+      - name: read back the active deployment (version id, percentage, DEPLOY_COMMIT)
+        working-directory: apps/scheduler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WANT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          status=$(mktemp)
+          version=$(mktemp)
+          trap 'rm -f "$status" "$version"' EXIT
+          npx --yes "wrangler@${WRANGLER_VERSION}" deployments status --json >"$status"
+          mapfile -t fields < <(jq -r '
+            .versions as $v
+            | if ($v | type) != "array" or ($v | length) != 1 then
+                "bad", "none", ($v | length // 0 | tostring)
+              elif $v[0].percentage != 100 or ($v[0].version_id // "") == "" then
+                "bad", ($v[0].version_id // "none"), ($v[0].percentage | tostring)
+              else
+                "ok", $v[0].version_id, ($v[0].percentage | tostring)
+              end
+          ' "$status")
+          state=${fields[0]:-}
+          vid=${fields[1]:-}
+          pct=${fields[2]:-}
+          if [ "${#fields[@]}" -ne 3 ] || [ "$state" != ok ]; then
+            echo "version_id=${vid:-none} percentage=${pct:-none}"
+            echo "::error::active deployment is not one version at 100%"
+            exit 1
+          fi
+          npx --yes "wrangler@${WRANGLER_VERSION}" versions view "$vid" --json >"$version"
+          got=$(jq -r '
+            [ .resources.bindings[]?
+              | select(.type == "plain_text" and .name == "DEPLOY_COMMIT")
+              | .text
+            ]
+            | if length == 1 and .[0] != null then .[0] else "absent" end
+          ' "$version")
+          if printf '%s\n' "$got" | grep -qxE '[0-9a-f]{40}'; then
+            shown=$got
+          else
+            shown=not-a-sha
+          fi
+          echo "version_id=$vid percentage=$pct DEPLOY_COMMIT=$shown"
+          if [ "$got" != "$WANT" ]; then
+            echo "::error::DEPLOY_COMMIT does not equal the commit just deployed"
+            exit 1
+          fi
