@@ -17,12 +17,12 @@ const tick = (rpcMs: number | undefined, ageSeconds = 100): LatestOkTick => ({
 });
 
 describe('F9 slow-tick state', () => {
-  it('🔴 the threshold is 3000 ms and the comparison is strictly above (PM, 2026-10-31)', () => {
-    expect(SLOW_TICK_RPC_MS).toBe(3000);
-    expect(slowTickState(tick(3000), NOW, undefined)).toEqual({ state: 'fine', rpcMs: 3000 });
-    expect(slowTickState(tick(3001), NOW, undefined)).toEqual({
+  it('🔴 the threshold is 12000 ms and the comparison is strictly above (PM, 2026-11-10)', () => {
+    expect(SLOW_TICK_RPC_MS).toBe(12000);
+    expect(slowTickState(tick(12000), NOW, undefined)).toEqual({ state: 'fine', rpcMs: 12000 });
+    expect(slowTickState(tick(12001), NOW, undefined)).toEqual({
       state: 'slow',
-      rpcMs: 3001,
+      rpcMs: 12001,
       tickedAt: NOW - 100,
     });
     expect(slowTickState(tick(0), NOW, undefined)).toEqual({ state: 'fine', rpcMs: 0 });
@@ -37,23 +37,23 @@ describe('F9 slow-tick state', () => {
   });
 
   it('🔴 a slow tick older than the heartbeat threshold is left to F11', () => {
-    expect(slowTickState(tick(9000, 901), NOW, 900)).toEqual({ state: 'stale' });
-    // exactly at the threshold is still fresh, as in F11 (age > threshold is stale)
-    expect(slowTickState(tick(9000, 900), NOW, 900)).toMatchObject({ state: 'slow' });
+    expect(slowTickState(tick(12001, 901), NOW, 900)).toEqual({ state: 'stale' });
+    // exactly at the heartbeat threshold is still fresh, as in F11 (age > threshold is stale)
+    expect(slowTickState(tick(12001, 900), NOW, 900)).toMatchObject({ state: 'slow' });
   });
 
   it('without a heartbeat threshold it cannot judge staleness, so it judges the tick', () => {
-    expect(slowTickState(tick(9000, 100_000), NOW, undefined)).toMatchObject({ state: 'slow' });
+    expect(slowTickState(tick(12001, 100_000), NOW, undefined)).toMatchObject({ state: 'slow' });
   });
 });
 
 describe('F9 notification', () => {
   it('names F9 and the measured time, as a warning, with no address or key', () => {
-    const n = slowTickNotification({ state: 'slow', rpcMs: 4321, tickedAt: NOW });
+    const n = slowTickNotification({ state: 'slow', rpcMs: 13160, tickedAt: NOW });
     expect(n.severity).toBe('warn');
     expect(n.subject).toContain('F9');
-    expect(n.body).toContain('4321 ms');
-    expect(n.body).toContain('3000 ms');
+    expect(n.body).toContain('13160 ms');
+    expect(n.body).toContain('12000 ms');
   });
 });
 
@@ -76,11 +76,11 @@ const sendEnv = { ALERTS_SEND: 'send', ALERTS_ALLOWLIST: 'a@example.invalid,b@ex
 
 describe('runSlowTickCheck', () => {
   it('🔴 a slow tick with sending on mails every operator, one event id per tick', async () => {
-    const { deps, delivered } = harness(tick(5000));
+    const { deps, delivered } = harness(tick(12001));
     expect(await runSlowTickCheck(sendEnv, deps)).toEqual({
       action: 'sent',
       recipients: 2,
-      rpcMs: 5000,
+      rpcMs: 12001,
     });
     expect(delivered.map((d) => d.to).sort()).toEqual(['a@example.invalid', 'b@example.invalid']);
     expect(new Set(delivered.map((d) => d.eventId))).toEqual(
@@ -95,30 +95,30 @@ describe('runSlowTickCheck', () => {
     ['true', 'true'],
     ['padded', ' send'],
   ])('🔴 ALERTS_SEND %s sends nothing (only the exact word send does)', async (_, value) => {
-    const { deps, delivered } = harness(tick(5000));
+    const { deps, delivered } = harness(tick(12001));
     const env = { ...sendEnv, ...(value === undefined ? {} : { ALERTS_SEND: value }) };
     if (value === undefined) delete (env as Record<string, unknown>)['ALERTS_SEND'];
     expect(await runSlowTickCheck(env, deps)).toEqual({
       action: 'dry-run',
       reason: 'alerts_send_off',
-      rpcMs: 5000,
+      rpcMs: 12001,
     });
     expect(delivered).toEqual([]);
   });
 
   it('🔴 sending on with nobody on the allowlist is a dry run', async () => {
-    const { deps, delivered } = harness(tick(5000));
+    const { deps, delivered } = harness(tick(12001));
     expect(await runSlowTickCheck({ ALERTS_SEND: 'send' }, deps)).toEqual({
       action: 'dry-run',
       reason: 'no_operator',
-      rpcMs: 5000,
+      rpcMs: 12001,
     });
     expect(delivered).toEqual([]);
   });
 
   it.each([
     ['fine', tick(1200), 'fine'],
-    ['at the threshold', tick(3000), 'fine'],
+    ['at the threshold', tick(12000), 'fine'],
     ['unmeasured', tick(undefined), 'unmeasured'],
     ['nothing recorded', undefined, 'no_tick'],
   ] as const)('%s sends nothing', async (_, latest, reason) => {
@@ -128,7 +128,7 @@ describe('runSlowTickCheck', () => {
   });
 
   it('🔴 a stale slow tick is not mailed by F9 (F11 owns it)', async () => {
-    const { deps, delivered } = harness(tick(9000, 5000));
+    const { deps, delivered } = harness(tick(12001, 5000));
     expect(await runSlowTickCheck({ ...sendEnv, HEARTBEAT_STALE_SECONDS: '900' }, deps)).toEqual({
       action: 'none',
       reason: 'stale',
