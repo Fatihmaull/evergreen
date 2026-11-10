@@ -169,10 +169,10 @@ Each `wrangler deploy` in [`api-deploy.yml`](../../.github/workflows/api-deploy.
 
 | Flag | Value | Annotation |
 |---|---|---|
-| `--tag` | first 7 characters of `github.sha` | `workers/tag` (maximum 100 bytes) |
-| `--message` | the full `github.sha`, one space, then `github.run_id` | `workers/message` (truncated at 1000 bytes) |
+| `--tag` | first 7 characters of `DEPLOY_COMMIT` | `workers/tag` (maximum 100 bytes) |
+| `--message` | the full `DEPLOY_COMMIT`, one space, then `github.run_id` | `workers/message` (truncated at 1000 bytes) |
 
-These are `github.sha`, the commit the job checked out. On an API preview deploy from a pull request, `DEPLOY_COMMIT` is the PR head and `github.sha` is GitHub's merge commit, so the two differ. `DEPLOY_COMMIT` stays a plain var. `wrangler versions view` still shows that var as `(hidden)`.
+`--tag` and `--message` name `DEPLOY_COMMIT`, the same commit the workflow injects as the plain var. On an API preview deploy from a pull request, `DEPLOY_COMMIT` is the PR head. `wrangler versions view` still shows that var as `(hidden)`.
 
 Wrangler 4.156.0 writes the flags as `annotations["workers/tag"]` and `annotations["workers/message"]`, and reads those same keys back from the Workers versions API:
 
