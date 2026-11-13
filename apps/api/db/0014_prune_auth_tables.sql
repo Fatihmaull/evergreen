@@ -1,0 +1,69 @@
+-- 0014_prune_auth_tables.sql  (#421)
+--
+-- 1. Index on wallet_challenges.session_hash: the FK child side of the ON DELETE CASCADE
+--    from sessions, so a session delete no longer scans wallet_challenges.
+-- 2. public.prune_auth_tables(retention interval DEFAULT '1 day'): hard-deletes
+--      - wallet_challenges whose expires_at has passed (expires_at < now()), and
+--      - auth_rate_counters whose windowStart (the last ':' segment of key, epoch seconds,
+--        see apps/api/src/auth/rate-limit.ts) is more than `retention` old
+--        (to_timestamp(windowStart) < now() - retention).
+--    Keys whose last segment is missing or not 1-12 digits (13+ digits would overflow to_timestamp) are skipped (kept), so one
+--    malformed key never errors the whole prune.
+--    A NULL retention or one below 1 day is refused (22023), so EXECUTE cannot be used to
+--    wipe live rate-limit counters (#584 review). The 1-day floor is safe only while
+--    EMAIL_SENDS_PER_ADDRESS_WINDOW and EMAIL_SENDS_PER_IP_WINDOW (apps/api/src/auth/config.ts,
+--    env-settable; defaults 15 min and 1 hour) stay under a day.
+--    Returns one row (challenges_deleted, counters_deleted).
+--
+-- SECURITY DEFINER, owned by the role that runs this file (the database owner, as for
+-- every migration), with search_path pinned to pg_catalog, pg_temp and schema-qualified
+-- table names. EXECUTE is revoked from PUBLIC and granted to eg_scheduler only.
+-- eg_scheduler gets NO table grants on auth tables (0008: the scheduler never reads
+-- sessions or auth state); the function is its only way in. eg_api is unchanged.
+--
+-- The call from the scheduler tick is a follow-up (not in this file).
+--
+-- Apply after 0008 and 0013 (needs eg_scheduler, and schema_migrations from 0013).
+-- Re-running 0008 does not touch function grants. The ledger INSERT at the end records
+-- this file in the same transaction; applied before 0013 it fails closed (the table is
+-- missing and the transaction rolls back). A re-run bumps last_applied_at and apply_count.
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0014_prune_auth_tables.sql
+--
+-- Idempotent: CREATE INDEX IF NOT EXISTS, CREATE OR REPLACE FUNCTION, REVOKE/GRANT re-run,
+-- and the ledger INSERT upserts.
+
+CREATE INDEX IF NOT EXISTS wallet_challenges_session_hash_idx ON wallet_challenges (session_hash);
+
+CREATE OR REPLACE FUNCTION public.prune_auth_tables(retention interval DEFAULT interval '1 day')
+RETURNS TABLE (challenges_deleted bigint, counters_deleted bigint)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+AS $fn$
+BEGIN
+  IF retention IS NULL OR retention < interval '1 day' THEN
+    RAISE EXCEPTION 'prune_auth_tables: retention must be at least 1 day, got %', retention
+      USING ERRCODE = '22023';
+  END IF;
+
+  DELETE FROM public.wallet_challenges WHERE expires_at < now();
+  GET DIAGNOSTICS challenges_deleted = ROW_COUNT;
+
+  DELETE FROM public.auth_rate_counters c
+  -- A malformed key gives substring() NULL, so the comparison is NULL and the row is kept.
+  WHERE to_timestamp(substring(c.key FROM ':([0-9]{1,12})$')::bigint) < now() - retention;
+  GET DIAGNOSTICS counters_deleted = ROW_COUNT;
+
+  RETURN NEXT;
+END
+$fn$;
+
+REVOKE ALL ON FUNCTION public.prune_auth_tables(interval) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.prune_auth_tables(interval) TO eg_scheduler;
+
+-- Ledger line (PH2-E2-07). Same statement as 0013, this file's name.
+INSERT INTO schema_migrations (filename, source)
+VALUES ('0014_prune_auth_tables.sql', 'applied')
+ON CONFLICT (filename) DO UPDATE
+  SET last_applied_at = now(),
+      apply_count     = schema_migrations.apply_count + 1;
