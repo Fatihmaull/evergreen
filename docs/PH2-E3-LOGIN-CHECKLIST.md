@@ -250,7 +250,7 @@ Lock Freighter, then start the action.
 ### Step C5 — Leave the prompt open past the deadline
 
 Start the action and leave the Freighter prompt open without answering until the screen gives up.
-**Expected:** `possibly-signed`. The screen must **not** offer a plain retry. It should tell you to check the account first. Close the prompt with Reject afterwards. If you approve it late by mistake, report the hash, because that is exactly the case this state exists for.
+**Expected:** `possibly-signed`. The screen must **not** offer a plain retry. It should tell you to check the account first. Close the prompt with Reject afterwards. A late approval is not submitted: the page has already abandoned that signature, so there is no transaction and no hash to report.
 
 ### Not tested by hand
 

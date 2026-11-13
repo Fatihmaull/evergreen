@@ -17,7 +17,8 @@ import {
   type TestnetResetEnv,
 } from './alerts/testnet-reset.js';
 import { LATEST_OK_TICK_SQL, runSlowTickCheck, type SlowTickEnv } from './alerts/slow-tick.js';
-import { configCheck } from './alerts/config-check.js';
+import { configCheck, runConfigProblemAlert } from './alerts/config-check.js';
+import { runDatabaseUnavailableAlert } from './alerts/database-unavailable.js';
 
 export { API_BASE, API_VERSION, SERVICE, apiError, handle, json, notFound } from './router.js';
 export type { Env, HandleOptions } from './router.js';
@@ -29,16 +30,27 @@ export default {
   fetch(request: Request, env: Env): Promise<Response> {
     return handle(request, env);
   },
-  // F11, then F10, then F9 (PH2-E4-05). Runs only if a cron trigger is configured
-  // for this Worker. Each check logs its outcome and contains a failed Resend
-  // send (the next operator and the next check still run). Logs never carry an
-  // address or a key.
+  // F17/F18, then F11, F10, F9, then at most one F14 (PH2-E4-05). Runs only if a
+  // cron trigger is configured for this Worker. A failed Resend call stays inside
+  // one recipient (the next operator and the next check still run). Logs never
+  // carry an address, a key, or a setting value.
   async scheduled(
     _event: unknown,
     env: Env & HeartbeatEnv & TestnetResetEnv & SlowTickEnv,
   ): Promise<void> {
-    // F17/F18 (PH2-E4-05): config check, log only, setting names never values.
-    console.log(JSON.stringify(configCheck(env as unknown as Record<string, unknown>)));
+    const nowSeconds = (): number => Math.floor(Date.now() / 1000);
+    const transportFor = (to: string) =>
+      resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
+        fetch(u, i),
+      );
+    // F17/F18: detection log is names only. The email, when problem is true, is
+    // separate and does not read the database.
+    const config = configCheck(env as unknown as Record<string, unknown>);
+    console.log(JSON.stringify(config));
+    const configAlert = await runConfigProblemAlert(env, config, { nowSeconds, transportFor });
+    if (configAlert.action !== 'none') {
+      console.log(JSON.stringify({ event: 'alerts.f17_f18_config', ...configAlert }));
+    }
     const databaseUrl = env.DATABASE_URL;
     const outcome = await runHeartbeatCheck(env, {
       latestTickedAt: async () => {
@@ -47,11 +59,8 @@ export default {
         const t = rows[0]?.['t'];
         return t === null || t === undefined ? undefined : Number(t);
       },
-      nowSeconds: () => Math.floor(Date.now() / 1000),
-      transportFor: (to) =>
-        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
-          fetch(u, i),
-        ),
+      nowSeconds,
+      transportFor,
     });
     console.log(JSON.stringify({ event: 'alerts.f11_heartbeat', ...outcome }));
     // F10 signal 1 (PH2-E4-05): observed ledger decreased between ticks.
@@ -64,10 +73,7 @@ export default {
           observedLedger: BigInt(String(r['l'])),
         }));
       },
-      transportFor: (to) =>
-        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
-          fetch(u, i),
-        ),
+      transportFor,
     });
     console.log(JSON.stringify({ event: 'alerts.f10_testnet_reset', ...f10 }));
     // F9 slow-tick (PH2-E4-05): the newest successful tick's RPC time is above the threshold.
@@ -83,13 +89,17 @@ export default {
           rpcMs: ms === null || ms === undefined ? undefined : Number(ms),
         };
       },
-      nowSeconds: () => Math.floor(Date.now() / 1000),
-      transportFor: (to) =>
-        resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (u, i) =>
-          fetch(u, i),
-        ),
+      nowSeconds,
+      transportFor,
     });
     console.log(JSON.stringify({ event: 'alerts.f9_slow_tick', ...f9 }));
+    // F14: one email for this invocation, however many of the three reads failed.
+    // The alert function has no database client.
+    const readFailures = [outcome, f10, f9].filter((item) => item.action === 'read_failed').length;
+    if (readFailures > 0) {
+      const f14 = await runDatabaseUnavailableAlert(env, { nowSeconds, transportFor });
+      console.log(JSON.stringify({ event: 'alerts.f14_database', ...f14, readFailures }));
+    }
   },
 };
 
@@ -304,8 +314,28 @@ export {
   runTestnetResetCheck,
   testnetResetNotification,
 } from './alerts/testnet-reset.js';
-export { configCheck } from './alerts/config-check.js';
-export type { ConfigCheckLog } from './alerts/config-check.js';
+export {
+  EMAIL_CHANNEL_SETTINGS,
+  THRESHOLD_FLOOR_SETTING,
+  configCheck,
+  configProblemDay,
+  configProblemEventId,
+  configProblemNames,
+  configProblemNotification,
+  emailChannelBlocked,
+  runConfigProblemAlert,
+} from './alerts/config-check.js';
+export type { ConfigAlertDeps, ConfigAlertOutcome, ConfigCheckLog } from './alerts/config-check.js';
+export {
+  databaseUnavailableEventId,
+  databaseUnavailableHour,
+  databaseUnavailableNotification,
+  runDatabaseUnavailableAlert,
+} from './alerts/database-unavailable.js';
+export type {
+  DatabaseUnavailableDeps,
+  DatabaseUnavailableOutcome,
+} from './alerts/database-unavailable.js';
 export type {
   TestnetResetDeps,
   TestnetResetEnv,
