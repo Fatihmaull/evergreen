@@ -8,6 +8,11 @@ import { neonSqlClient } from '../auth/pg-store.js';
 import { PgAlertPreferencesStore } from './pg-store.js';
 import type { AlertPreferenceDeps } from './routes.js';
 import type { AlertPreferencesStore } from './preferences.js';
+import {
+  alertPreferencesPageUrl,
+  unsubscribeSecret,
+  type AlertUnsubscribeDeps,
+} from './unsubscribe.js';
 
 export type AlertPreferencesStoreFactory = (
   databaseUrl: string,
@@ -33,4 +38,33 @@ export function alertPreferencesDepsFor(
   )(databaseUrl);
   if (store === undefined) return undefined;
   return { auth, store, now: auth.now };
+}
+
+/**
+ * The one-click route. Database and `ALERTS_UNSUBSCRIBE_SECRET` only: it does
+ * not need the dashboard origin, the mailer, or the challenge key. A missing
+ * secret is the same as a missing database — the route answers 503 and names
+ * nothing. Session routes keep working without the secret.
+ */
+export function alertUnsubscribeDepsFor(
+  env: AuthEnv,
+  options: AlertMountOptions,
+): AlertUnsubscribeDeps | undefined {
+  const secret = unsubscribeSecret(env.ALERTS_UNSUBSCRIBE_SECRET);
+  const databaseUrl = env.DATABASE_URL;
+  if (secret === undefined || databaseUrl === undefined || databaseUrl === '') return undefined;
+  const auth = authDepsFor(env, options, ['database']);
+  if (auth === undefined) return undefined;
+  const store = (
+    options.createAlertPreferencesStore ??
+    ((url: string) => new PgAlertPreferencesStore(neonSqlClient(url)))
+  )(databaseUrl);
+  if (store === undefined) return undefined;
+  return {
+    store,
+    secret,
+    now: auth.now,
+    userActive: async (userId) => (await auth.store.getUser(userId)) !== undefined,
+    preferencesUrl: alertPreferencesPageUrl(env.DASHBOARD_ORIGIN),
+  };
 }

@@ -75,6 +75,57 @@ describe('renderAlertEmail', () => {
       renderAlertEmail('testnet_reset', { entry: '  ', network: 'testnet' }).subject,
     ).toContain('undetermined');
   });
+
+  it('optional alerts link the preferences page and carry RFC 8058 headers, with no mailto', () => {
+    const preferencesUrl = 'https://dashboard.example.test/dashboard/alerts/';
+    const unsubscribeUrl = 'https://dashboard.example.test/api/v1/alerts/unsubscribe?token=abc.def';
+    for (const kind of [
+      'allowance_expiring',
+      'approaching_critical',
+      'extend_succeeded',
+    ] as const) {
+      const e = renderAlertEmail(kind, {
+        entry: 'C',
+        network: 'testnet',
+        preferencesUrl,
+        unsubscribeUrl,
+      });
+      expect(e.body).toContain(preferencesUrl);
+      expect(e.html).toContain(`href="${preferencesUrl}"`);
+      expect(e.headers).toEqual({
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      });
+      expect(e.body).not.toContain('mailto:');
+      expect(e.html).not.toContain('mailto:');
+      expect(JSON.stringify(e.headers)).not.toContain('mailto:');
+    }
+  });
+
+  it('a required alert ignores an unsubscribe URL and says why it stays on', () => {
+    const e = renderAlertEmail('refund_delayed', {
+      entry: 'C',
+      network: 'testnet',
+      preferencesUrl: 'https://dashboard.example.test/dashboard/alerts/',
+      unsubscribeUrl: 'https://dashboard.example.test/api/v1/alerts/unsubscribe?token=abc.def',
+    });
+    expect(e.body).toContain('cannot be turned off');
+    expect(e.body).not.toContain('/dashboard/alerts/');
+    expect(e.headers).toBeUndefined();
+    expect(e.body).not.toContain('mailto:');
+  });
+
+  it('drops an unsubscribe URL that is not https', () => {
+    const e = renderAlertEmail('extend_succeeded', {
+      entry: 'C',
+      network: 'testnet',
+      preferencesUrl: 'https://dashboard.example.test/dashboard/alerts/',
+      unsubscribeUrl: 'mailto:unsubscribe@example.test',
+    });
+    expect(e.headers).toBeUndefined();
+    expect(e.body).not.toContain('mailto:');
+    expect(e.body).toContain('https://dashboard.example.test/dashboard/alerts/');
+  });
 });
 
 describe('runPreviewTestSend guards', () => {

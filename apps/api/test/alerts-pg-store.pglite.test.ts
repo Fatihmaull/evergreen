@@ -14,6 +14,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { SqlClient } from '../src/auth/pg-store.js';
 import { dispatchUserAlert, type DispatchRequest } from '../src/alerts/dispatch.js';
 import { PgAlertOutboxStore, PgAlertPreferencesStore } from '../src/alerts/pg-store.js';
+import {
+  ALERT_UNSUBSCRIBE_PATH,
+  UNSUBSCRIBE_TTL_SECONDS,
+  handleAlertUnsubscribe,
+  mintUnsubscribeToken,
+} from '../src/alerts/unsubscribe.js';
 import { ALERT_SPECS, type AlertKind } from '../src/alerts/policy.js';
 import type { AlertNotification, AlertTransport } from '../src/alerts/sender.js';
 
@@ -39,14 +45,19 @@ const sql: SqlClient = {
   query: (text, params) =>
     asApi(async () => (await pg.query<Record<string, unknown>>(text, [...params])).rows),
   transaction: async (queries) => {
-    const out: Record<string, unknown>[][] = [];
-    for (const q of queries)
-      out.push(
-        await asApi(
-          async () => (await pg.query<Record<string, unknown>>(q.text, [...q.params])).rows,
-        ),
-      );
-    return out;
+    await pg.exec('BEGIN');
+    try {
+      await pg.exec('SET LOCAL ROLE eg_api');
+      const out: Record<string, unknown>[][] = [];
+      for (const q of queries) {
+        out.push((await pg.query<Record<string, unknown>>(q.text, [...q.params])).rows);
+      }
+      await pg.exec('COMMIT');
+      return out;
+    } catch (error) {
+      await pg.exec('ROLLBACK');
+      throw error;
+    }
   },
 };
 const outbox = new PgAlertOutboxStore(sql);
@@ -424,6 +435,114 @@ describe('PgAlertPreferencesStore under the eg_api grants', () => {
         [U1],
       ),
     ).rejects.toThrow(/check constraint/);
+  });
+});
+
+describe('one-click unsubscribe through PgAlertPreferencesStore', () => {
+  const SECRET = 'test-unsubscribe-secret';
+  const NOW = 1_800_000_000;
+  const active = async (userId: string): Promise<boolean> => {
+    const rows = await pg.query<{ n: number }>(
+      'SELECT 1 AS n FROM users WHERE id = $1::uuid AND deactivated_at IS NULL',
+      [userId],
+    );
+    return rows.rows.length === 1;
+  };
+  const deps = (now: number) => ({
+    store: prefs,
+    secret: SECRET,
+    now: () => now,
+    userActive: active,
+    preferencesUrl: 'https://dashboard.example.test/dashboard/alerts/',
+  });
+  const call = async (
+    method: string,
+    token: string,
+    now = NOW,
+    body?: string,
+    contentType = 'application/x-www-form-urlencoded',
+  ) =>
+    handleAlertUnsubscribe(
+      new Request(
+        `https://dashboard.example.test/api/v1${ALERT_UNSUBSCRIBE_PATH}?token=${encodeURIComponent(token)}`,
+        {
+          method,
+          headers: { 'content-type': contentType },
+          ...(method === 'GET' ? {} : { body: body ?? 'List-Unsubscribe=One-Click' }),
+        },
+      ),
+      ALERT_UNSUBSCRIBE_PATH,
+      deps(now),
+    );
+
+  it('a valid token sets every optional kind to false, and a second POST stays there', async () => {
+    const token = await mintUnsubscribeToken(SECRET, U1, NOW);
+    expect(token).toBeDefined();
+    expect((await call('POST', token!)).status).toBe(200);
+    expect(await prefs.get(U1)).toEqual({
+      allowance_expiring: false,
+      approaching_critical: false,
+      extend_succeeded: false,
+    });
+    expect(await count('alert_preferences')).toBe(3);
+    expect((await call('POST', token!)).status).toBe(200);
+    expect(await count('alert_preferences')).toBe(3);
+    expect(await prefs.get(U1)).toEqual({
+      allowance_expiring: false,
+      approaching_critical: false,
+      extend_succeeded: false,
+    });
+    expect(await prefs.get(U2)).toEqual({});
+  });
+
+  it('invalid, tampered, expired and GET write nothing', async () => {
+    const token = (await mintUnsubscribeToken(SECRET, U1, NOW))!;
+    const tampered = `${token.slice(0, -1)}${token.endsWith('a') ? 'b' : 'a'}`;
+    expect((await call('POST', tampered)).status).toBe(400);
+    expect((await call('POST', token, NOW + UNSUBSCRIBE_TTL_SECONDS + 1)).status).toBe(400);
+    expect((await call('POST', token, NOW, 'List-Unsubscribe=No')).status).toBe(400);
+    expect((await call('GET', token)).status).toBe(200);
+    expect(await count('alert_preferences')).toBe(0);
+  });
+
+  it('RFC 8058 §8.3 multipart writes the three optional rows, and a bad multipart writes none', async () => {
+    const body = [
+      '---FormBoundaryjWmhtjORrn',
+      'Content-Disposition: form-data; name="List-Unsubscribe"',
+      '',
+      'One-Click',
+      '---FormBoundaryjWmhtjORrn--',
+    ].join('\r\n');
+    expect(new TextEncoder().encode(body).byteLength).toBe(124);
+    const type = 'multipart/form-data; boundary=-FormBoundaryjWmhtjORrn';
+    const token = (await mintUnsubscribeToken(SECRET, U1, NOW))!;
+    const bad = await call('POST', token, NOW, body.replace('One-Click', 'Please'), type);
+    expect(bad.status).toBe(400);
+    expect(await count('alert_preferences')).toBe(0);
+    expect((await call('POST', token, NOW, body, type)).status).toBe(200);
+    expect(await prefs.get(U1)).toEqual({
+      allowance_expiring: false,
+      approaching_critical: false,
+      extend_succeeded: false,
+    });
+    expect(await count('alert_preferences')).toBe(3);
+  });
+
+  it('a deactivated user and an unknown user write nothing', async () => {
+    await pg.exec(`UPDATE users SET deactivated_at = now() WHERE id = '${U2}'`);
+    try {
+      const token = (await mintUnsubscribeToken(SECRET, U2, NOW))!;
+      expect((await call('POST', token)).status).toBe(200);
+      const unknown = (await mintUnsubscribeToken(
+        SECRET,
+        '33333333-3333-4333-8333-333333333333',
+        NOW,
+      ))!;
+      expect((await call('POST', unknown)).status).toBe(200);
+      expect(await count('alert_preferences')).toBe(0);
+    } finally {
+      await pg.exec(`UPDATE users SET deactivated_at = NULL WHERE id = '${U2}'`);
+    }
   });
 });
 
