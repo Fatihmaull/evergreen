@@ -147,8 +147,11 @@ Subtotal so far, 2026-11-04 onward: **1 approved (1 deployed), 0 rejected, 1 can
 
 | Date (UTC) | Run | Target | Commit | Result |
 |---|---|---|---|---|
-| 2026-10-31 04:32 | [41168994480](https://github.com/Fatihmaull/evergreen/actions/runs/41168994480) | **production** | `e7fb0aa` | approved by `Fatihmaull`, success; Worker version `2429392b` created 04:33. The Worker's first `scheduler_ticks` row is at 04:45. |
+| 2026-10-31 04:32 | [41168994480](https://github.com/Fatihmaull/evergreen/actions/runs/41168994480) | **production** | `e7fb0aa` | approved by `Fatihmaull`, success; Worker version `2429392b` created 04:33. Superseded by `fb8b331` (version `80fc3e24`). The Worker's first `scheduler_ticks` row is at 04:45. |
 | 2026-10-31 06:20 | [41176200443](https://github.com/Fatihmaull/evergreen/actions/runs/41176200443) | preview | `4210757` | success; the production job was skipped |
+| 2026-11-10 04:20 | [42754953873](https://github.com/Fatihmaull/evergreen/actions/runs/42754953873) | **production** | `fb8b331` | approved by `Fatihmaull`, success; `workflow_dispatch` on `main`. `wrangler deploy (production)` 04:20:17 to 04:20:31 UTC (11:20:17 to 11:20:31 WIB). Worker version `80fc3e24` at 100% is what is serving now, created 04:20 UTC (11:20 WIB, UTC+7); annotation `fb8b331b68b2c3e39a11d4f337ec8567c19b4420 42754953873`. It superseded `2429392b` (`e7fb0aa`). The preview job was skipped. |
+
+The Date column is UTC. 2026-11-10 04:20 UTC is 11:20 WIB (Western Indonesian Time, UTC+7). What is serving now is `fb8b331`, Worker version `80fc3e24-e94e-45f5-96e4-6eab04830398` (the table's `80fc3e24`), from run [42754953873](https://github.com/Fatihmaull/evergreen/actions/runs/42754953873). The 2026-10-31 production row stays as history: `e7fb0aa`, version `2429392b`, is superseded.
 
 Its secrets are in [`secrets.md`](secrets.md#inventory-now-read-2026-11-01-1525-to-1535-utc-names-only): production has `DATABASE_URL` only and **must not** have `TICK_TOKEN`.
 
