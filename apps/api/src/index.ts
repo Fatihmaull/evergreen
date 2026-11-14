@@ -3,7 +3,7 @@
  * amendment). Reached from the dashboard through a Pages Function that
  * forwards `/api/*` over the service binding `API`.
  */
-import { handle, type Env } from './router.js';
+import { handle, type Env, type HandleOptions } from './router.js';
 import { neonSqlClient } from './auth/pg-store.js';
 import {
   LATEST_TICK_SQL,
@@ -27,8 +27,31 @@ export type { Env, HandleOptions } from './router.js';
 // Worker's handler object as the default export.
 // eslint-disable-next-line no-restricted-syntax
 export default {
-  fetch(request: Request, env: Env): Promise<Response> {
-    return handle(request, env);
+  // F16 (sign-in only): a mailer failure schedules an operator email on
+  // `ctx.waitUntil` and returns the sign-in response without awaiting it.
+  // Call `ctx.waitUntil` as a method. Taking it off `ctx` throws
+  // "Illegal invocation" on Workers. `mount` is a test seam; the runtime
+  // does not set it, and it is not a route or a setting.
+  fetch(
+    request: Request,
+    env: Env,
+    ctx?: {
+      waitUntil?(promise: Promise<unknown>): void;
+      mount?: HandleOptions;
+    },
+  ): Promise<Response> {
+    const mount = ctx?.mount;
+    let waitUntil: ((promise: Promise<unknown>) => void) | undefined;
+    if (ctx !== undefined && typeof ctx.waitUntil === 'function') {
+      const execution = ctx;
+      waitUntil = (promise) => {
+        execution.waitUntil?.(promise);
+      };
+    }
+    return handle(request, env, {
+      ...(mount ?? {}),
+      ...(waitUntil === undefined ? {} : { waitUntil }),
+    });
   },
   // F17/F18, then F11, F10, F9, then at most one F14 (PH2-E4-05). Runs only if a
   // cron trigger is configured for this Worker. A failed Resend call stays inside
@@ -332,6 +355,18 @@ export {
   databaseUnavailableNotification,
   runDatabaseUnavailableAlert,
 } from './alerts/database-unavailable.js';
+export {
+  runSigninEmailFailedAlert,
+  signinEmailChannelBlocked,
+  signinEmailFailedEventId,
+  signinEmailFailedHour,
+  signinEmailFailedNotification,
+} from './alerts/signin-email-failed.js';
+export type {
+  SigninEmailFailedDeps,
+  SigninEmailFailedEnv,
+  SigninEmailFailedOutcome,
+} from './alerts/signin-email-failed.js';
 export type {
   DatabaseUnavailableDeps,
   DatabaseUnavailableOutcome,

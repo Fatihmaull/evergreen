@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-05 F16 sign-in operator email, 2026-11-14
+
+A sign-in `MailerError` still logs `auth.email_send_failed` and still answers 502 or 503. The request then schedules an operator email with `ctx.waitUntil` and does not await it. The cron is not the detector: the failure is not stored, and reading Workers Logs from `scheduled()` is not available here. Key: `f16-signin-email-failed:<UTC hour>/<recipient hash>`. Gate: `ALERTS_SEND` exactly `send`. Recipients: `ALERTS_ALLOWLIST`. No database read. Missing `EMAIL_API_KEY` or `EMAIL_FROM` logs `action: 'email_channel_down'` and does not call Resend. The same channel means a Resend outage fails this email too. Telegram (decided 2026-10-29) is not wired. No user alert. **Has fired on production: undetermined** — not in the Worker `b98b8aa` that health reported earlier today, and no inbox was read. The stale backlog clause "F10/F11 on production wait on migration `0009`" is removed. `0009` is recorded applied on preview and production (`docs/ops/neon-migrations.md`, 2026-10-31) and as Met in `docs/ops/secrets.md`. This session did not query Neon. The card stays `[~]`. Notion sync pending for PH2-E4-05.
+
 ## Current — PH2-E2-06 one-click unsubscribe, PM review, 2026-11-14
 
 PM review 5903652258 accepted the path, the all-optional switch, the 90-day token, and `ALERTS_UNSUBSCRIBE_SECRET`. Fatih still reviews the public API before merge. The POST now accepts RFC 8058 §3.2 multipart as well as urlencoded. The §8.3 body is used with verified errata 5117's boundary. GET returns an HTML page that says opening the link does not change alerts, and it does not write. The three optional writes are one database transaction on the existing store. No migration. The card stays `[~]`. Notion sync pending for PH2-E2-06.
