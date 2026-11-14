@@ -1,7 +1,8 @@
 /**
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
  * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), alert preferences
- * (`PH2-E2-06`, §6a), the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
+ * (`PH2-E2-06`, §6a), the unauthenticated one-click unsubscribe (RFC 8058, §6a),
+ * the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
  */
 import {
   authDepsFor,
@@ -12,8 +13,13 @@ import {
 } from './auth/mount.js';
 import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
-import { alertPreferencesDepsFor, type AlertMountOptions } from './alerts/mount.js';
+import {
+  alertPreferencesDepsFor,
+  alertUnsubscribeDepsFor,
+  type AlertMountOptions,
+} from './alerts/mount.js';
 import { handleAlertPreferences, alertPreferenceMethods } from './alerts/routes.js';
+import { alertUnsubscribeMethods, handleAlertUnsubscribe } from './alerts/unsubscribe.js';
 import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
 import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
 import { WatchItemCapReached } from './watchlist/store.js';
@@ -128,6 +134,29 @@ export async function handle(
           }
         }
         return unavailable();
+      }
+    }
+  }
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
+    // RFC 8058: no session and no CSRF. The token is the authorisation.
+    // Do not route this through `requireSession`.
+    const unsubscribeMethods = alertUnsubscribeMethods(path);
+    if (unsubscribeMethods !== undefined) {
+      const method = request.method.toUpperCase();
+      if (!unsubscribeMethods.includes(method)) {
+        return apiError('METHOD_NOT_ALLOWED', `Use ${unsubscribeMethods.join(' or ')}.`, 405, {
+          headers: { allow: unsubscribeMethods.join(', ') },
+        });
+      }
+      const deps = alertUnsubscribeDepsFor(env, options);
+      if (deps === undefined) {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Unsubscribe is not available right now.', 503);
+      }
+      try {
+        return (await handleAlertUnsubscribe(request, path, deps)) ?? notFound();
+      } catch {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Unsubscribe is not available right now.', 503);
       }
     }
   }

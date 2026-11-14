@@ -352,7 +352,11 @@ export {
   handleAlertPreferences,
 } from './alerts/routes.js';
 export type { AlertPreferenceDeps } from './alerts/routes.js';
-export { ALERT_PREFERENCE_NEEDS, alertPreferencesDepsFor } from './alerts/mount.js';
+export {
+  ALERT_PREFERENCE_NEEDS,
+  alertPreferencesDepsFor,
+  alertUnsubscribeDepsFor,
+} from './alerts/mount.js';
 export type { AlertMountOptions, AlertPreferencesStoreFactory } from './alerts/mount.js';
 export { MemoryAlertPreferencesStore } from './alerts/memory-store.js';
 export type { PreferenceRow } from './alerts/memory-store.js';
@@ -365,6 +369,24 @@ export type {
   PreferenceWrite,
 } from './alerts/preferences.js';
 export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
+export {
+  ALERT_PREFERENCES_PAGE_PATH,
+  ALERT_UNSUBSCRIBE_METHODS,
+  ALERT_UNSUBSCRIBE_PATH,
+  PUBLIC_API_BASE,
+  UNSUBSCRIBE_PURPOSE,
+  UNSUBSCRIBE_TTL_SECONDS,
+  alertPreferencesPageUrl,
+  alertUnsubscribeMethods,
+  alertUnsubscribeUrl,
+  disableOptionalAlerts,
+  handleAlertUnsubscribe,
+  httpsOrigin,
+  mintUnsubscribeToken,
+  unsubscribeSecret,
+  verifyUnsubscribeToken,
+} from './alerts/unsubscribe.js';
+export type { AlertUnsubscribeDeps, UnsubscribeClaims } from './alerts/unsubscribe.js';
 export {
   MAX_EVENT_ID_LENGTH,
   dispatchUserAlertEvent,

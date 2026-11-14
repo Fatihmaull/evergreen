@@ -13,11 +13,18 @@ import {
   type AlertKind,
 } from './policy.js';
 
-/** Same shape as `Notification` in packages/core. */
+/**
+ * Same subject, body and severity as `Notification` in packages/core.
+ * `headers`, when present, are the RFC 8058 one-click pair for an optional
+ * alert. A sender copies them onto the message and does not log them: the
+ * URL contains the unsubscribe token. No sender in this package sends a
+ * user alert yet; the headers travel on the rendered message until one does.
+ */
 export interface AlertNotification {
   readonly subject: string;
   readonly body: string;
   readonly severity: 'info' | 'warn' | 'critical';
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
 /** Structural match for `EmailChannel` built with mode 'send' for `recipient`. */

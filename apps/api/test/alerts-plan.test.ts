@@ -53,8 +53,8 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('planUserAlert', () => {
-  it('renders the notification from templates.ts', () => {
-    const p = planUserAlert(ev());
+  it('renders the notification from templates.ts', async () => {
+    const p = await planUserAlert(ev());
     expect(p.ok).toBe(true);
     if (!p.ok) return;
     const e = renderAlertEmail('refund_delayed', { entry: 'CABC', network: 'testnet' });
@@ -72,13 +72,72 @@ describe('planUserAlert', () => {
     ['job:j1 refund', 'whitespace'],
     ['job:j1\r\nX: y', 'whitespace'],
     [`job:${RECIPIENT}`, 'contains_at'],
-  ])('refuses event id %j (%s)', (id, problem) => {
+  ])('refuses event id %j (%s)', async (id, problem) => {
     expect(eventIdProblem(id)).toBe(problem);
-    expect(planUserAlert(ev({ eventId: id }))).toEqual({
+    expect(await planUserAlert(ev({ eventId: id }))).toEqual({
       ok: false,
       reason: 'invalid_event_id',
       problem,
     });
+  });
+
+  it('an optional alert carries the preferences link and the one-click headers', async () => {
+    const p = await planUserAlert(
+      ev({
+        kind: 'extend_succeeded',
+        eventId: 'job:j2:extended',
+        userId: 'user-1',
+        dashboardOrigin: 'https://dashboard.example.test',
+        unsubscribeSecret: 'test-unsubscribe-secret',
+        nowSeconds: 1_800_000_000,
+      }),
+    );
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.request.notification.body).toContain(
+      'https://dashboard.example.test/dashboard/alerts/',
+    );
+    expect(p.request.notification.body).not.toContain('mailto:');
+    const headers = p.request.notification.headers;
+    expect(headers?.['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
+    expect(headers?.['List-Unsubscribe']).toMatch(
+      /^<https:\/\/dashboard\.example\.test\/api\/v1\/alerts\/unsubscribe\?token=[A-Za-z0-9_-]+\.[0-9a-f]{64}>$/,
+    );
+    expect(JSON.stringify(headers)).not.toContain('mailto:');
+    expect(JSON.stringify(p.request.notification)).not.toContain('test-unsubscribe-secret');
+  });
+
+  it('a required alert does not gain an unsubscribe header when the secret is set', async () => {
+    const p = await planUserAlert(
+      ev({
+        dashboardOrigin: 'https://dashboard.example.test',
+        unsubscribeSecret: 'test-unsubscribe-secret',
+        nowSeconds: 1_800_000_000,
+      }),
+    );
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.request.notification.headers).toBeUndefined();
+    expect(p.request.notification.body).toContain('cannot be turned off');
+    expect(p.request.notification.body).not.toContain('/dashboard/alerts/');
+    expect(p.request.notification.body).not.toContain('mailto:');
+  });
+
+  it('a missing secret still links the preferences page and adds no one-click header', async () => {
+    const p = await planUserAlert(
+      ev({
+        kind: 'extend_succeeded',
+        eventId: 'job:j2:extended',
+        dashboardOrigin: 'https://dashboard.example.test',
+        nowSeconds: 1_800_000_000,
+      }),
+    );
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.request.notification.body).toContain(
+      'https://dashboard.example.test/dashboard/alerts/',
+    );
+    expect(p.request.notification.headers).toBeUndefined();
   });
 });
 
@@ -167,5 +226,32 @@ describe('dispatchUserAlertEvent', () => {
       reason: 'deactivated',
     });
     expect(t.calls).toEqual([]);
+  });
+
+  it('a planned optional alert hands the one-click headers to the transport', async () => {
+    const seen: { headers?: Readonly<Record<string, string>> }[] = [];
+    const t: AlertTransport = {
+      deliver(n) {
+        seen.push({ headers: n.headers });
+        return Promise.resolve({ id: 'em_1' });
+      },
+    };
+    const out = await dispatchUserAlertEvent(
+      SEND,
+      ev({
+        kind: 'extend_succeeded',
+        eventId: 'job:j2:extended',
+        userId: 'user-1',
+        dashboardOrigin: 'https://dashboard.example.test',
+        unsubscribeSecret: 'test-unsubscribe-secret',
+        nowSeconds: 1_800_000_000,
+      }),
+      deps(t),
+    );
+    expect(out).toEqual({ action: 'sent' });
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.headers?.['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click');
+    expect(JSON.stringify(seen)).not.toContain('test-unsubscribe-secret');
+    expect(JSON.stringify(seen)).not.toContain(RECIPIENT);
   });
 });
