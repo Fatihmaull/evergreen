@@ -18,6 +18,12 @@ export interface AlertPreferencesStore {
    * (`eg_api` has no DELETE). No row means the kind is already at its default.
    */
   reset(userId: string, kind: AlertKind, nowSeconds: number): Promise<void>;
+  /**
+   * Turns every optional kind off. The Postgres store sends the three writes
+   * in one database transaction. This is not a ledger transaction and moves
+   * no XLM. Required kinds are not written.
+   */
+  disableOptional(userId: string, nowSeconds: number): Promise<void>;
 }
 
 export interface PreferenceItem {

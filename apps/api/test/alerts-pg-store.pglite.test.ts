@@ -45,14 +45,19 @@ const sql: SqlClient = {
   query: (text, params) =>
     asApi(async () => (await pg.query<Record<string, unknown>>(text, [...params])).rows),
   transaction: async (queries) => {
-    const out: Record<string, unknown>[][] = [];
-    for (const q of queries)
-      out.push(
-        await asApi(
-          async () => (await pg.query<Record<string, unknown>>(q.text, [...q.params])).rows,
-        ),
-      );
-    return out;
+    await pg.exec('BEGIN');
+    try {
+      await pg.exec('SET LOCAL ROLE eg_api');
+      const out: Record<string, unknown>[][] = [];
+      for (const q of queries) {
+        out.push((await pg.query<Record<string, unknown>>(q.text, [...q.params])).rows);
+      }
+      await pg.exec('COMMIT');
+      return out;
+    } catch (error) {
+      await pg.exec('ROLLBACK');
+      throw error;
+    }
   },
 };
 const outbox = new PgAlertOutboxStore(sql);
@@ -448,14 +453,21 @@ describe('one-click unsubscribe through PgAlertPreferencesStore', () => {
     secret: SECRET,
     now: () => now,
     userActive: active,
+    preferencesUrl: 'https://dashboard.example.test/dashboard/alerts/',
   });
-  const call = async (method: string, token: string, now = NOW, body?: string) =>
+  const call = async (
+    method: string,
+    token: string,
+    now = NOW,
+    body?: string,
+    contentType = 'application/x-www-form-urlencoded',
+  ) =>
     handleAlertUnsubscribe(
       new Request(
         `https://dashboard.example.test/api/v1${ALERT_UNSUBSCRIBE_PATH}?token=${encodeURIComponent(token)}`,
         {
           method,
-          headers: { 'content-type': 'application/x-www-form-urlencoded' },
+          headers: { 'content-type': contentType },
           ...(method === 'GET' ? {} : { body: body ?? 'List-Unsubscribe=One-Click' }),
         },
       ),
@@ -491,6 +503,29 @@ describe('one-click unsubscribe through PgAlertPreferencesStore', () => {
     expect((await call('POST', token, NOW, 'List-Unsubscribe=No')).status).toBe(400);
     expect((await call('GET', token)).status).toBe(200);
     expect(await count('alert_preferences')).toBe(0);
+  });
+
+  it('RFC 8058 §8.3 multipart writes the three optional rows, and a bad multipart writes none', async () => {
+    const body = [
+      '---FormBoundaryjWmhtjORrn',
+      'Content-Disposition: form-data; name="List-Unsubscribe"',
+      '',
+      'One-Click',
+      '---FormBoundaryjWmhtjORrn--',
+    ].join('\r\n');
+    expect(new TextEncoder().encode(body).byteLength).toBe(124);
+    const type = 'multipart/form-data; boundary=-FormBoundaryjWmhtjORrn';
+    const token = (await mintUnsubscribeToken(SECRET, U1, NOW))!;
+    const bad = await call('POST', token, NOW, body.replace('One-Click', 'Please'), type);
+    expect(bad.status).toBe(400);
+    expect(await count('alert_preferences')).toBe(0);
+    expect((await call('POST', token, NOW, body, type)).status).toBe(200);
+    expect(await prefs.get(U1)).toEqual({
+      allowance_expiring: false,
+      approaching_critical: false,
+      extend_succeeded: false,
+    });
+    expect(await count('alert_preferences')).toBe(3);
   });
 
   it('a deactivated user and an unknown user write nothing', async () => {

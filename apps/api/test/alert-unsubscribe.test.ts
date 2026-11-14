@@ -13,6 +13,7 @@ import {
   CSRF_HEADER,
   MemoryAlertPreferencesStore,
   MemoryAuthStore,
+  PgAlertPreferencesStore,
   PUBLIC_API_BASE,
   UNSUBSCRIBE_TTL_SECONDS,
   alertPreferencesPageUrl,
@@ -22,6 +23,7 @@ import {
   type AlertKind,
   type Env,
   type HandleOptions,
+  type SqlClient,
 } from '../src/index.js';
 
 const ORIGIN = 'https://dashboard.example.test';
@@ -29,6 +31,19 @@ const START = 1_800_000_000;
 const SECRET = 'test-unsubscribe-secret';
 const EMAIL = 'a@alerts.example.test';
 const PATH = ALERT_UNSUBSCRIBE_PATH;
+/**
+ * RFC 8058 §8.3 body as published (Content-Length 124, no trailing CRLF).
+ * Verified errata 5117 changes the boundary parameter to one leading dash
+ * so these lines are the MIME delimiters. The published parameter does not parse.
+ */
+const RFC8058_MULTIPART_BODY = [
+  '---FormBoundaryjWmhtjORrn',
+  'Content-Disposition: form-data; name="List-Unsubscribe"',
+  '',
+  'One-Click',
+  '---FormBoundaryjWmhtjORrn--',
+].join('\r\n');
+const RFC8058_MULTIPART_TYPE = 'multipart/form-data; boundary=-FormBoundaryjWmhtjORrn';
 
 let clock: number;
 let auth: MemoryAuthStore;
@@ -146,6 +161,29 @@ describe('unsubscribe URL', () => {
   });
 });
 
+describe('PgAlertPreferencesStore.disableOptional', () => {
+  it('sends the three optional kinds in one transaction and does not autocommit', async () => {
+    const seen: unknown[][] = [];
+    let queries = 0;
+    const sql: SqlClient = {
+      query: () => {
+        queries += 1;
+        return Promise.resolve([]);
+      },
+      transaction: (batch) => {
+        seen.push(batch.map((query) => query.params[1]));
+        return Promise.resolve(batch.map(() => []));
+      },
+    };
+    await new PgAlertPreferencesStore(sql).disableOptional(
+      '11111111-1111-4111-8111-111111111111',
+      START,
+    );
+    expect(queries).toBe(0);
+    expect(seen).toEqual([['allowance_expiring', 'approaching_critical', 'extend_succeeded']]);
+  });
+});
+
 describe('POST /alerts/unsubscribe', () => {
   it('a valid token sets every optional kind to false and leaves a required kind enabled', async () => {
     const s = await signIn();
@@ -256,7 +294,7 @@ describe('POST /alerts/unsubscribe', () => {
     expect(prefsRes.status).toBe(200);
   });
 
-  it('GET does not write, including with a valid token and a one-click body', async () => {
+  it('GET does not write, and the page does not say the alerts are already off', async () => {
     const s = await signIn();
     await prefs.set(s.userId, 'extend_succeeded', true, 1);
     const token = await tokenFor(s.userId);
@@ -267,7 +305,16 @@ describe('POST /alerts/unsubscribe', () => {
       options,
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(res.headers.get('content-type')).toMatch(/^text\/html/);
+    const text = await res.text();
+    expect(text).toContain('does not change your alerts');
+    expect(text).toContain(`${ORIGIN}/dashboard/alerts/`);
+    expect(text).not.toContain('{ ok: true }');
+    expect(text).not.toContain('"ok"');
+    expect(text).not.toContain(token);
+    expect(text).not.toContain(s.userId);
+    expect(text).not.toContain(EMAIL);
+    expect(text).not.toContain(SECRET);
     expect(stored()).toBe(before);
   });
 
@@ -312,6 +359,47 @@ describe('POST /alerts/unsubscribe', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('set-cookie')).toBeNull();
     expect(prefs.rows.get(s.userId)?.get('allowance_expiring')?.enabled).toBe(false);
+  });
+
+  it('RFC 8058 §8.3 multipart writes every optional kind, and a bad multipart does not', async () => {
+    expect(new TextEncoder().encode(RFC8058_MULTIPART_BODY).byteLength).toBe(124);
+    const s = await signIn();
+    await prefs.set(s.userId, 'preflight_failed', true, 1);
+    const token = await tokenFor(s.userId);
+    const before = stored();
+    const bad = await post(token, {
+      contentType: RFC8058_MULTIPART_TYPE,
+      body: RFC8058_MULTIPART_BODY.replace('One-Click', 'Please'),
+    });
+    expect(bad.status).toBe(400);
+    expect(stored()).toBe(before);
+    const extra = RFC8058_MULTIPART_BODY.replace(
+      '---FormBoundaryjWmhtjORrn--',
+      [
+        '---FormBoundaryjWmhtjORrn',
+        'Content-Disposition: form-data; name="kind"',
+        '',
+        'extend_succeeded',
+        '---FormBoundaryjWmhtjORrn--',
+      ].join('\r\n'),
+    );
+    expect((await post(token, { contentType: RFC8058_MULTIPART_TYPE, body: extra })).status).toBe(
+      400,
+    );
+    expect(stored()).toBe(before);
+    const ok = await post(token, {
+      contentType: RFC8058_MULTIPART_TYPE,
+      body: RFC8058_MULTIPART_BODY,
+    });
+    expect(ok.status).toBe(200);
+    const okText = await ok.text();
+    expect(JSON.parse(okText)).toEqual({ ok: true });
+    expect(okText).not.toContain(token);
+    const mine = prefs.rows.get(s.userId);
+    expect(mine?.get('allowance_expiring')?.enabled).toBe(false);
+    expect(mine?.get('approaching_critical')?.enabled).toBe(false);
+    expect(mine?.get('extend_succeeded')?.enabled).toBe(false);
+    expect(mine?.get('preflight_failed')?.enabled).toBe(true);
   });
 
   it('refuses the wrong content type and an extra form field without writing', async () => {

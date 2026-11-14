@@ -8,7 +8,11 @@ import { neonSqlClient } from '../auth/pg-store.js';
 import { PgAlertPreferencesStore } from './pg-store.js';
 import type { AlertPreferenceDeps } from './routes.js';
 import type { AlertPreferencesStore } from './preferences.js';
-import { unsubscribeSecret, type AlertUnsubscribeDeps } from './unsubscribe.js';
+import {
+  alertPreferencesPageUrl,
+  unsubscribeSecret,
+  type AlertUnsubscribeDeps,
+} from './unsubscribe.js';
 
 export type AlertPreferencesStoreFactory = (
   databaseUrl: string,
@@ -61,5 +65,6 @@ export function alertUnsubscribeDepsFor(
     secret,
     now: auth.now,
     userActive: async (userId) => (await auth.store.getUser(userId)) !== undefined,
+    preferencesUrl: alertPreferencesPageUrl(env.DASHBOARD_ORIGIN),
   };
 }

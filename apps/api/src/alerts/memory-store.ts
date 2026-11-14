@@ -35,4 +35,11 @@ export class MemoryAlertPreferencesStore implements AlertPreferencesStore {
     if (mine === undefined || row === undefined) return;
     mine.set(kind, { enabled: ALERT_SPECS[kind].defaultOn, updatedAt: nowSeconds });
   }
+
+  async disableOptional(userId: string, nowSeconds: number): Promise<void> {
+    for (const kind of Object.keys(ALERT_SPECS) as AlertKind[]) {
+      if (ALERT_SPECS[kind].class !== 'optional') continue;
+      await this.set(userId, kind, false, nowSeconds);
+    }
+  }
 }

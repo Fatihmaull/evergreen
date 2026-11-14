@@ -3,8 +3,8 @@
  *
  * Unauthenticated on purpose: a mail client POSTs the HTTPS URL from
  * `List-Unsubscribe` with no session cookie and no CSRF header. The HMAC is
- * the authorisation. POST is the only method that writes. GET returns the
- * same `{ ok: true }` and does not read or write a preference.
+ * the authorisation. POST is the only method that writes. GET returns a
+ * page that says nothing has changed, and does not read or write a preference.
  *
  * The write turns every optional kind off for that user. It does not send
  * mail and does not build or submit a transaction: email never authorises
@@ -12,15 +12,15 @@
  * A missing, invalid, tampered or expired token writes nothing. The response
  * never contains an address, the token, or the signing secret.
  *
- * Token TTL is 90 days from mint (a decision for Fatih; the alternative is
- * no expiry until `ALERTS_UNSUBSCRIBE_SECRET` rotates). The secret is its
- * own Worker secret, not `SIGNIN_CODE_PEPPER`: rotating sign-in codes must
- * not invalidate unsubscribe links, and a leak of one must not expose the
- * other. Unset, blank, or containing whitespace fails closed.
+ * Token TTL is 90 days from mint. PM accepted that, the path, the
+ * all-optional switch, and a separate `ALERTS_UNSUBSCRIBE_SECRET` (review
+ * 5903652258). Fatih still reviews the public API before merge. The secret
+ * is not `SIGNIN_CODE_PEPPER`: rotating sign-in codes must not invalidate
+ * unsubscribe links, and a leak of one must not expose the other. Unset,
+ * blank, or containing whitespace fails closed.
  */
 import { base64url, hmacSha256Hex, timingSafeEqual } from '../auth/crypto.js';
 import { apiError, json } from '../router.js';
-import { ALERT_SPECS, canUnsubscribe, type AlertKind } from './policy.js';
 import type { AlertPreferencesStore } from './preferences.js';
 
 /** Fixed purpose bound into the HMAC. One list: every optional kind. */
@@ -184,16 +184,13 @@ export async function verifyUnsubscribeToken(
   return { userId };
 }
 
-/** Sets every optional kind to false. Required kinds are not passed to `set`. */
+/** Sets every optional kind to false. The store writes them in one transaction. */
 export async function disableOptionalAlerts(
   store: AlertPreferencesStore,
   userId: string,
   nowSeconds: number,
 ): Promise<void> {
-  for (const kind of Object.keys(ALERT_SPECS) as AlertKind[]) {
-    if (!canUnsubscribe(kind)) continue;
-    await store.set(userId, kind, false, nowSeconds);
-  }
+  await store.disableOptional(userId, nowSeconds);
 }
 
 export interface AlertUnsubscribeDeps {
@@ -209,6 +206,11 @@ export interface AlertUnsubscribeDeps {
    * the response does not say which.
    */
   readonly userActive: (userId: string) => Promise<boolean>;
+  /**
+   * Absolute `/dashboard/alerts/` URL when `DASHBOARD_ORIGIN` is usable.
+   * Undefined omits the link. GET never invents a host.
+   */
+  readonly preferencesUrl: string | undefined;
 }
 
 const UNSUBSCRIBED = { ok: true } as const;
@@ -217,18 +219,75 @@ function invalid(): Response {
   return apiError('INVALID_REQUEST', 'This unsubscribe link is not valid.', 400);
 }
 
+const ONE_CLICK_MEDIA = new Set(['application/x-www-form-urlencoded', 'multipart/form-data']);
+/** A one-click body is a short form. Anything larger is refused before parse. */
+const MAX_ONE_CLICK_BYTES = 8192;
+
+/**
+ * RFC 8058 §3.2: the POST SHOULD be `multipart/form-data` and MAY be
+ * `application/x-www-form-urlencoded`. Exactly one field, name
+ * `List-Unsubscribe`, value `One-Click`. Any other type or body is refused.
+ * The published §8.3 boundary parameter does not parse; verified errata 5117
+ * corrects it, and `formData` then reads that example.
+ */
 async function isOneClick(request: Request): Promise<boolean> {
   const media = (request.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase();
-  if (media !== 'application/x-www-form-urlencoded') return false;
-  let text: string;
+  if (media === undefined || !ONE_CLICK_MEDIA.has(media)) return false;
+  let bytes: ArrayBuffer;
   try {
-    text = await request.text();
+    bytes = await request.arrayBuffer();
   } catch {
     return false;
   }
-  text = text.trim();
-  // RFC 8058's body, exactly: one field, no extra pairs.
-  return text === 'List-Unsubscribe=One-Click';
+  if (bytes.byteLength === 0 || bytes.byteLength > MAX_ONE_CLICK_BYTES) return false;
+  let form: FormData;
+  try {
+    form = await new Request(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: bytes,
+    }).formData();
+  } catch {
+    return false;
+  }
+  const names: string[] = [];
+  // The WebWorker lib's FormData has no iterator. Workers and Node both do.
+  for (const [name] of form as unknown as Iterable<[string, FormDataEntryValue]>) names.push(name);
+  if (names.length !== 1 || names[0] !== 'List-Unsubscribe') return false;
+  const value = form.get('List-Unsubscribe');
+  return typeof value === 'string' && value === 'One-Click';
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Opening the link is not an unsubscribe. The page does not repeat the
+ * token, an address, or a user id. WEBF owns the real preferences screen.
+ */
+function confirmPage(preferencesUrl: string | undefined): Response {
+  const link =
+    preferencesUrl === undefined
+      ? '<p>To choose kinds one by one, open the alert preferences page in the dashboard.</p>'
+      : `<p>To choose kinds one by one, open <a href="${escapeHtml(preferencesUrl)}">alert preferences</a>.</p>`;
+  const html = [
+    '<!doctype html><html lang="en"><head><meta charset="utf-8">',
+    '<title>Optional alerts</title></head><body>',
+    '<p>Opening this link does not change your alerts.</p>',
+    '<p>One-click unsubscribe is a POST from your mail client. It turns off every optional alert.</p>',
+    link,
+    '</body></html>',
+  ].join('');
+  return new Response(html, {
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+  });
 }
 
 function tokenFrom(request: Request): string | undefined {
@@ -251,7 +310,7 @@ export async function handleAlertUnsubscribe(
 ): Promise<Response | undefined> {
   if (path !== ALERT_UNSUBSCRIBE_PATH) return undefined;
   const method = request.method.toUpperCase();
-  if (method === 'GET') return json(UNSUBSCRIBED);
+  if (method === 'GET') return confirmPage(deps.preferencesUrl);
   if (method !== 'POST') return undefined;
   const token = tokenFrom(request);
   if (token === undefined || !(await isOneClick(request))) return invalid();

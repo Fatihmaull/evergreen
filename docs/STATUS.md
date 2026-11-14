@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E2-06 one-click unsubscribe, PM review, 2026-11-14
+
+PM review 5903652258 accepted the path, the all-optional switch, the 90-day token, and `ALERTS_UNSUBSCRIBE_SECRET`. Fatih still reviews the public API before merge. The POST now accepts RFC 8058 §3.2 multipart as well as urlencoded. The §8.3 body is used with verified errata 5117's boundary. GET returns an HTML page that says opening the link does not change alerts, and it does not write. The three optional writes are one database transaction on the existing store. No migration. The card stays `[~]`. Notion sync pending for PH2-E2-06.
+
 ## Current — PH2-E2-06 one-click unsubscribe, 2026-11-10
 
 `POST /api/v1/alerts/unsubscribe` (RFC 8058) turns off every optional alert kind for the user in the token. GET does not write. Required kinds stay on. The route does not send mail and does not move XLM. No caller was added for `approaching_critical` or `allowance_expiring`. `GET` and `PATCH /me/alert-preferences` are unchanged. The card stays `[~]`: nothing in the API cron calls `dispatchUserAlert`, and production sending still waits on Fatih. Decisions for him, not accepted: 90-day token TTL, list-level (all optional kinds) rather than per-kind, and a new secret `ALERTS_UNSUBSCRIBE_SECRET` instead of `SIGNIN_CODE_PEPPER`. DevOps: set that secret on `evergreen-api-preview` first; production waits for Fatih. No value is in the repo. Notion sync pending for PH2-E2-06 and PH2-E4-05: the tasks data source returned `object_not_found` for this session's integration, so the mirror was not read or written. A full presence diff was not run.
