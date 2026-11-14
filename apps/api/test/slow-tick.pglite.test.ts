@@ -68,18 +68,18 @@ describe('F9 LATEST_OK_TICK_SQL on PGlite', () => {
   });
 
   it('🔴 a slow tick is mailed once per tick, with the tick time in the event id', async () => {
-    await insert(NOW - 60, 1000, 4200, true);
+    await insert(NOW - 60, 1000, 12001, true);
     expect(await runSlowTickCheck(env, deps)).toEqual({
       action: 'sent',
       recipients: 1,
-      rpcMs: 4200,
+      rpcMs: 12001,
     });
     expect(sent[0]!.eventId).toBe(`f9-slow-tick:${NOW - 60}`);
   });
 
   it('🔴 a failed tick with a long rpc_ms is not a slow tick: F9 reads the newest ok row', async () => {
     await insert(NOW - 900, 1000, 200, true);
-    await insert(NOW - 10, null, 9000, false); // an answer that came back unusable after 9 s
+    await insert(NOW - 10, null, 13160, false); // above the slow line, but not an ok row
     expect(await latestOkTick()).toEqual({ tickedAt: NOW - 900, rpcMs: 200 });
     expect(await runSlowTickCheck(env, deps)).toEqual({ action: 'none', reason: 'fine' });
     expect(sent).toEqual([]);

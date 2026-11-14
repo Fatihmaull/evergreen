@@ -54,6 +54,8 @@ export {
   routerFeeStroops,
 } from './fee.js';
 export type { HostedFeeConfig } from './fee.js';
+export { pullAmountStroops } from './pull-amount.js';
+export type { PullAmountBreakdown, PullAmountInput } from './pull-amount.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
