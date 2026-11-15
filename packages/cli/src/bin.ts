@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import process from 'node:process';
 import console from 'node:console';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { rpc } from '@stellar/stellar-sdk';
 import {
   connectNetwork,
@@ -25,6 +27,43 @@ import { runCli } from './command.js';
 import { takeNetworkFlag } from './network-args.js';
 import type { NetworkChoice } from '@evergreen-stellar/core';
 import { EXIT_ERROR } from './scan.js';
+import {
+  dismissSupportTip,
+  parseSupportTipState,
+  supportTip,
+  type SupportTipState,
+} from './support-tip.js';
+
+// PH2-E1-08: where the "Support Evergreen" tip remembers the month it last showed.
+const SUPPORT_TIP_STATE = join(
+  process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'),
+  'evergreen',
+  'support-tip.json',
+);
+
+async function writeTipState(state: SupportTipState): Promise<void> {
+  await mkdir(dirname(SUPPORT_TIP_STATE), { recursive: true });
+  await writeFile(SUPPORT_TIP_STATE, `${JSON.stringify(state)}\n`, 'utf8');
+}
+
+/** Best effort: a tip must never change a command's output or exit code. */
+async function maybeShowSupportTip(args: readonly string[]): Promise<void> {
+  try {
+    const raw = await readFile(SUPPORT_TIP_STATE, 'utf8').catch(() => undefined);
+    const decision = supportTip({
+      args,
+      stderrIsTTY: process.stderr.isTTY === true,
+      env: process.env,
+      now: new Date(),
+      state: parseSupportTipState(raw),
+    });
+    if (decision.text === undefined) return;
+    console.error(decision.text);
+    if (decision.nextState !== undefined) await writeTipState(decision.nextState);
+  } catch {
+    // Ignored on purpose.
+  }
+}
 
 async function main(): Promise<number> {
   // `--network` is global, so it is lifted out before a command parses argv.
@@ -51,6 +90,15 @@ async function main(): Promise<number> {
   // evidence stay clean, and NO_COLOR is honoured (no-color.org). The health
   // WORD prints either way — colour is never the only carrier of the state.
   const color = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
+  if (args[0] === 'tip') {
+    if (args.length === 2 && args[1] === '--dismiss') {
+      await writeTipState(dismissSupportTip(new Date()));
+      console.error('The Support Evergreen tip is hidden until next month.');
+      return 0;
+    }
+    console.error('usage: evergreen tip --dismiss');
+    return EXIT_ERROR;
+  }
   const output = await runCli(args, {
     extend: {
       ...(process.env.EVERGREEN_SOURCE_ACCOUNT
@@ -81,6 +129,7 @@ async function main(): Promise<number> {
   });
   if (output.stdout) console.log(output.stdout);
   if (output.stderr) console.error(output.stderr);
+  await maybeShowSupportTip(args);
   return output.exitCode;
 }
 
