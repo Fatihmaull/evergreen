@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-08 router audit preparation, 2026-11-15
+
+Audit preparation for the production router is [`docs/PH2-E4-08-ROUTER-AUDIT-PREP.md`](PH2-E4-08-ROUTER-AUDIT-PREP.md). The card stays `[~]`. The contract, the tests, and Rust CI were already on `main`. This page does not choose a treasury address, does not change the Wasm, and is not the written audit `PH2-E5-02` requires before mainnet. Notion sync pending for PH2-E4-08.
+
 ## Current — PH2-E4-05 F16 sign-in operator email, 2026-11-14
 
 A sign-in `MailerError` still logs `auth.email_send_failed` and still answers 502 or 503. The request then schedules an operator email with `ctx.waitUntil` and does not await it. The cron is not the detector: the failure is not stored, and reading Workers Logs from `scheduled()` is not available here. Key: `f16-signin-email-failed:<UTC hour>/<recipient hash>`. Gate: `ALERTS_SEND` exactly `send`. Recipients: `ALERTS_ALLOWLIST`. No database read. Missing `EMAIL_API_KEY` or `EMAIL_FROM` logs `action: 'email_channel_down'` and does not call Resend. The same channel means a Resend outage fails this email too. Telegram (decided 2026-10-29) is not wired. No user alert. **Has fired on production: undetermined** — not in the Worker `b98b8aa` that health reported earlier today, and no inbox was read. The stale backlog clause "F10/F11 on production wait on migration `0009`" is removed. `0009` is recorded applied on preview and production (`docs/ops/neon-migrations.md`, 2026-10-31) and as Met in `docs/ops/secrets.md`. This session did not query Neon. The card stays `[~]`. Notion sync pending for PH2-E4-05.
