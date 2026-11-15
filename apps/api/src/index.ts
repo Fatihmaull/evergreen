@@ -3,7 +3,7 @@
  * amendment). Reached from the dashboard through a Pages Function that
  * forwards `/api/*` over the service binding `API`.
  */
-import { handle, type Env } from './router.js';
+import { handle, type Env, type HandleOptions } from './router.js';
 import { neonSqlClient } from './auth/pg-store.js';
 import {
   LATEST_TICK_SQL,
@@ -27,8 +27,31 @@ export type { Env, HandleOptions } from './router.js';
 // Worker's handler object as the default export.
 // eslint-disable-next-line no-restricted-syntax
 export default {
-  fetch(request: Request, env: Env): Promise<Response> {
-    return handle(request, env);
+  // F16 (sign-in only): a mailer failure schedules an operator email on
+  // `ctx.waitUntil` and returns the sign-in response without awaiting it.
+  // Call `ctx.waitUntil` as a method. Taking it off `ctx` throws
+  // "Illegal invocation" on Workers. `mount` is a test seam; the runtime
+  // does not set it, and it is not a route or a setting.
+  fetch(
+    request: Request,
+    env: Env,
+    ctx?: {
+      waitUntil?(promise: Promise<unknown>): void;
+      mount?: HandleOptions;
+    },
+  ): Promise<Response> {
+    const mount = ctx?.mount;
+    let waitUntil: ((promise: Promise<unknown>) => void) | undefined;
+    if (ctx !== undefined && typeof ctx.waitUntil === 'function') {
+      const execution = ctx;
+      waitUntil = (promise) => {
+        execution.waitUntil?.(promise);
+      };
+    }
+    return handle(request, env, {
+      ...(mount ?? {}),
+      ...(waitUntil === undefined ? {} : { waitUntil }),
+    });
   },
   // F17/F18, then F11, F10, F9, then at most one F14 (PH2-E4-05). Runs only if a
   // cron trigger is configured for this Worker. A failed Resend call stays inside
@@ -332,6 +355,18 @@ export {
   databaseUnavailableNotification,
   runDatabaseUnavailableAlert,
 } from './alerts/database-unavailable.js';
+export {
+  runSigninEmailFailedAlert,
+  signinEmailChannelBlocked,
+  signinEmailFailedEventId,
+  signinEmailFailedHour,
+  signinEmailFailedNotification,
+} from './alerts/signin-email-failed.js';
+export type {
+  SigninEmailFailedDeps,
+  SigninEmailFailedEnv,
+  SigninEmailFailedOutcome,
+} from './alerts/signin-email-failed.js';
 export type {
   DatabaseUnavailableDeps,
   DatabaseUnavailableOutcome,
@@ -352,7 +387,11 @@ export {
   handleAlertPreferences,
 } from './alerts/routes.js';
 export type { AlertPreferenceDeps } from './alerts/routes.js';
-export { ALERT_PREFERENCE_NEEDS, alertPreferencesDepsFor } from './alerts/mount.js';
+export {
+  ALERT_PREFERENCE_NEEDS,
+  alertPreferencesDepsFor,
+  alertUnsubscribeDepsFor,
+} from './alerts/mount.js';
 export type { AlertMountOptions, AlertPreferencesStoreFactory } from './alerts/mount.js';
 export { MemoryAlertPreferencesStore } from './alerts/memory-store.js';
 export type { PreferenceRow } from './alerts/memory-store.js';
@@ -365,6 +404,24 @@ export type {
   PreferenceWrite,
 } from './alerts/preferences.js';
 export { resendFetchClient, runPreviewTestSend } from './alerts/test-send.js';
+export {
+  ALERT_PREFERENCES_PAGE_PATH,
+  ALERT_UNSUBSCRIBE_METHODS,
+  ALERT_UNSUBSCRIBE_PATH,
+  PUBLIC_API_BASE,
+  UNSUBSCRIBE_PURPOSE,
+  UNSUBSCRIBE_TTL_SECONDS,
+  alertPreferencesPageUrl,
+  alertUnsubscribeMethods,
+  alertUnsubscribeUrl,
+  disableOptionalAlerts,
+  handleAlertUnsubscribe,
+  httpsOrigin,
+  mintUnsubscribeToken,
+  unsubscribeSecret,
+  verifyUnsubscribeToken,
+} from './alerts/unsubscribe.js';
+export type { AlertUnsubscribeDeps, UnsubscribeClaims } from './alerts/unsubscribe.js';
 export {
   MAX_EVENT_ID_LENGTH,
   dispatchUserAlertEvent,

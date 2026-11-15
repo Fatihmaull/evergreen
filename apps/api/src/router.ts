@@ -1,7 +1,8 @@
 /**
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
  * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), alert preferences
- * (`PH2-E2-06`, §6a), the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
+ * (`PH2-E2-06`, §6a), the unauthenticated one-click unsubscribe (RFC 8058, §6a),
+ * the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
  */
 import {
   authDepsFor,
@@ -12,8 +13,15 @@ import {
 } from './auth/mount.js';
 import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
-import { alertPreferencesDepsFor, type AlertMountOptions } from './alerts/mount.js';
+import { resendOperatorTransport } from './alerts/heartbeat.js';
+import {
+  alertPreferencesDepsFor,
+  alertUnsubscribeDepsFor,
+  type AlertMountOptions,
+} from './alerts/mount.js';
 import { handleAlertPreferences, alertPreferenceMethods } from './alerts/routes.js';
+import { runSigninEmailFailedAlert } from './alerts/signin-email-failed.js';
+import { alertUnsubscribeMethods, handleAlertUnsubscribe } from './alerts/unsubscribe.js';
 import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
 import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
 import { WatchItemCapReached } from './watchlist/store.js';
@@ -80,6 +88,37 @@ export function notFound(): Response {
   return apiError('NOT_FOUND', 'No such route.', 404);
 }
 
+/**
+ * F16 operator email for this sign-in failure. Scheduled only, never awaited.
+ * A throw here would turn the sign-in answer into the generic 503, so the whole
+ * function swallows. The alert itself also does not throw.
+ */
+function scheduleSigninEmailAlert(env: Env, options: HandleOptions): void {
+  try {
+    const waitUntil = options.waitUntil;
+    if (waitUntil === undefined) return;
+    const fetcher = options.fetch ?? fetch;
+    const task = runSigninEmailFailedAlert(
+      {
+        ALERTS_SEND: env.ALERTS_SEND,
+        ALERTS_ALLOWLIST: env.ALERTS_ALLOWLIST,
+        EMAIL_API_KEY: env.EMAIL_API_KEY,
+        EMAIL_FROM: env.EMAIL_FROM,
+      },
+      {
+        nowSeconds: () => options.now?.() ?? Math.floor(Date.now() / 1000),
+        transportFor: (to) =>
+          resendOperatorTransport(env.EMAIL_API_KEY ?? '', env.EMAIL_FROM ?? '', to, (url, init) =>
+            fetcher(url, init),
+          ),
+      },
+    );
+    waitUntil(task);
+  } catch {
+    // A diagnosis aid must never change the answer.
+  }
+}
+
 function logSendFailure(
   error: MailerError,
   env: Env,
@@ -98,7 +137,14 @@ function logSendFailure(
   }
 }
 
-export type HandleOptions = WatchlistMountOptions & AlertMountOptions;
+export type HandleOptions = WatchlistMountOptions &
+  AlertMountOptions & {
+    /**
+     * Keeps work alive after the response. The sign-in F16 operator email uses
+     * it. Absent: that email is not scheduled.
+     */
+    readonly waitUntil?: (promise: Promise<unknown>) => void;
+  };
 
 export async function handle(
   request: Request,
@@ -123,11 +169,37 @@ export async function handle(
         // name, our reason token, two domains) goes to the log, never the wire.
         if (error instanceof MailerError) {
           logSendFailure(error, env, request, options);
+          // After the log, before the return. Must not throw and must not be awaited:
+          // the status and the body below are the sign-in answer.
+          scheduleSigninEmailAlert(env, options);
           if (error.kind === 'rejected') {
             return apiError('EMAIL_NOT_SENT', 'The sign-in code could not be sent.', 502);
           }
         }
         return unavailable();
+      }
+    }
+  }
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
+    // RFC 8058: no session and no CSRF. The token is the authorisation.
+    // Do not route this through `requireSession`.
+    const unsubscribeMethods = alertUnsubscribeMethods(path);
+    if (unsubscribeMethods !== undefined) {
+      const method = request.method.toUpperCase();
+      if (!unsubscribeMethods.includes(method)) {
+        return apiError('METHOD_NOT_ALLOWED', `Use ${unsubscribeMethods.join(' or ')}.`, 405, {
+          headers: { allow: unsubscribeMethods.join(', ') },
+        });
+      }
+      const deps = alertUnsubscribeDepsFor(env, options);
+      if (deps === undefined) {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Unsubscribe is not available right now.', 503);
+      }
+      try {
+        return (await handleAlertUnsubscribe(request, path, deps)) ?? notFound();
+      } catch {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Unsubscribe is not available right now.', 503);
       }
     }
   }

@@ -126,6 +126,10 @@ WHERE user_id = $1::uuid AND status = 'sent' AND kind IN (${OPTIONAL_KINDS_SQL})
   }
 }
 
+const PREFERENCE_UPSERT = `INSERT INTO alert_preferences (user_id, kind, enabled, updated_at)
+VALUES ($1::uuid, $2, $3, to_timestamp($4))
+ON CONFLICT (user_id, kind) DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = EXCLUDED.updated_at`;
+
 /** The user's choices for the optional kinds. A missing row means the kind's default. */
 export class PgAlertPreferencesStore implements AlertPreferencesStore {
   constructor(private readonly sql: SqlClient) {}
@@ -144,11 +148,21 @@ export class PgAlertPreferencesStore implements AlertPreferencesStore {
   /** Sets one optional kind. A required kind is refused here and again by the table's CHECK. */
   async set(userId: string, kind: AlertKind, enabled: boolean, nowSeconds: number): Promise<void> {
     this.optional(kind);
-    await this.sql.query(
-      `INSERT INTO alert_preferences (user_id, kind, enabled, updated_at)
-VALUES ($1::uuid, $2, $3, to_timestamp($4))
-ON CONFLICT (user_id, kind) DO UPDATE SET enabled = EXCLUDED.enabled, updated_at = EXCLUDED.updated_at`,
-      [userId, kind, enabled, nowSeconds],
+    await this.sql.query(PREFERENCE_UPSERT, [userId, kind, enabled, nowSeconds]);
+  }
+
+  /**
+   * Every optional kind, `enabled = false`, in one `SqlClient.transaction`.
+   * `eg_api` already has INSERT and UPDATE on these columns (migration 0011).
+   * No new grant and no DELETE. A required kind is not in the list.
+   */
+  async disableOptional(userId: string, nowSeconds: number): Promise<void> {
+    const kinds = (Object.keys(ALERT_SPECS) as AlertKind[]).filter((kind) => !isRequired(kind));
+    await this.sql.transaction(
+      kinds.map((kind) => ({
+        text: PREFERENCE_UPSERT,
+        params: [userId, kind, false, nowSeconds],
+      })),
     );
   }
 

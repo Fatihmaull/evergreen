@@ -47,6 +47,13 @@ export interface AuthEnv {
   EMAIL_FROM?: string;
   /** The dashboard's origin, e.g. https://evergreen-stellar.pages.dev (var). CSRF and SEP-10 domains derive from it. */
   DASHBOARD_ORIGIN?: string;
+  /**
+   * HMAC key for RFC 8058 optional-alert unsubscribe links (secret). Not one
+   * of `AUTH_SECRET_NAMES`: auth keeps working when it is unset. The value
+   * is never logged. DevOps sets it with `wrangler secret put`; production
+   * waits for Fatih.
+   */
+  ALERTS_UNSUBSCRIBE_SECRET?: string;
   [setting: string]: string | undefined;
 }
 
