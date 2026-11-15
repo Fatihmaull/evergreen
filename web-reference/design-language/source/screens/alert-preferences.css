@@ -278,6 +278,17 @@ main.main {
   color: var(--ink-3);
 }
 
+.severity-rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.severity-rule .note {
+  flex: 1 1 28ch;
+}
+
 .required-line {
   display: flex;
   flex-wrap: wrap;

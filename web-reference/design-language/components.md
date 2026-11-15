@@ -275,17 +275,30 @@ is not a route this screen calls.
    next frame. Hover changes colour only, over the existing 150ms, and this
    screen's switch has no hover move. Focus is the shipping ring: `2px solid
    --pine`, offset 2px, radius 3px.
-7. **Ledgers are the truth, dates are estimates.** #611 named the rule.
-   `approaching_critical` is 17,280 ledgers remaining or fewer
-   (`DEFAULT_CRITICAL_LEDGERS`). `allowance_expiring` is three crossings,
-   at 518,400, 120,960 and 17,280 ledgers (30, 7 and 1 days × 86,400 ÷ 5).
-   The screen prints the ledger count first and the day as an estimate, at
-   5 seconds a ledger (`SECONDS_PER_LEDGER`), with the word *about*. 518,400
-   is not a protocol constant. Nothing is sent until those ledgers are
-   stored (#612). Still **undetermined**, and the screen says so: a close of
-   about 6 seconds, a separate line for a temporary entry, the event ids,
-   and how often a saved choice is checked. `watch_items.threshold_ledgers`
-   is the autopilot threshold and is not this alert's ledger.
+7. **Ledgers are the truth, dates are estimates.** #611 named the rule, and
+   Fatih confirmed the lead times on 15 Nov 2026. The screen prints the
+   ledger count first and the day as an estimate, with the word *about*.
+   - **Persistent expiry warning.** 17,280 ledgers remaining or fewer.
+     That is `DEFAULT_CRITICAL_LEDGERS` in `packages/core/src/health.ts`
+     and the CLI's `DEFAULT_THRESHOLD_LEDGERS` in `packages/cli/src/scan.ts`.
+     About 1 day, at `SECONDS_PER_LEDGER` (5) in `packages/core/src/ttl.ts`.
+   - **Allowance reminders.** 30, 7 and 1 days.
+     `docs/adr/ADR-007-allowance-funded-hosted-engine.md` says "Renewal
+     reminders go out at 30, 7 and 1 days." ADR-007 states the days, not a
+     ledger count. At 5 seconds a ledger the estimates are 518,400, 120,960
+     and 17,280 (days × 86,400 ÷ 5). 518,400 is that arithmetic, not a
+     protocol constant. 120,960 and 17,280 are also `DEFAULT_WARN_LEDGERS`
+     and `DEFAULT_CRITICAL_LEDGERS`.
+   - **Temporary entries.** No expiry email during beta. Rakha's proposal
+     of about 180 ledgers was considered and is deferred to post-beta. It
+     is not a threshold on this screen. The only committed "about 180
+     ledgers" in the repo is a 15-minute tick (`packages/core/test/scheduler-gap.test.ts`),
+     not an alert threshold.
+   Nothing is sent until the persistent and allowance ledgers are stored
+   (#612). Still **undetermined**, and the screen says so where it has a
+   sentence for it: a close of about 6 seconds, the event ids, and how often
+   a saved choice is checked. `watch_items.threshold_ledgers` is the
+   autopilot threshold and is not this alert's ledger.
 8. **Three-state honesty.** Unknown delivery and unknown verification render
    the undetermined chip: hollow ring, `--und` / `--und-ink`, the word
    `undetermined`. Never a healthy chip, never a check. A known `sent` is
@@ -360,21 +373,34 @@ read.
 
 | Kind | Title | Switch sentence |
 |---|---|---|
-| `allowance_expiring` | Allowance about to expire | The allowance autopilot uses is about to expire. Once a send exists, the reminders are at 518,400, 120,960 and 17,280 ledgers remaining, about 30, 7 and 1 days at 5 seconds a ledger. 518,400 is not a protocol constant. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored. |
-| `approaching_critical` | Approaching expiry | Email when an entry you watch has 17,280 ledgers or fewer remaining and autopilot is off for it. About 1 day, at 5 seconds a ledger, the display assumption. A close of about 6 seconds is undetermined, and a separate line for a temporary entry is undetermined. Nothing is sent until that ledger is stored. The day is an estimate. |
+| `allowance_expiring` | Allowance about to expire | The allowance autopilot uses is about to expire. Reminders go out at 30, 7 and 1 days, about 518,400, 120,960 and 17,280 ledgers at 5 seconds a ledger. The days are the rule. The ledgers are the estimate. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored. |
+| `approaching_critical` | Approaching expiry | Email when a persistent entry you watch has 17,280 ledgers or fewer remaining and autopilot is off for it. About 1 day. The day is an estimate. The email is warning, or critical when that entry is shared or already expired. A temporary entry is not emailed during beta. Nothing is sent until that ledger is stored. |
 | `extend_succeeded` | Extend succeeded | Autopilot extended this entry. The email is a receipt of that extend. It is not a payment, and this page does not move XLM. |
 
 Intro, under the `Optional` heading: "On unless you turn one off. A missing
 saved choice means on."
 
 Under Approaching expiry, always, once the row is shown: "One choice for
-every entry you watch. There is no per-contract switch."
+every persistent entry you watch. There is no per-contract switch."
 
-The optional rows wear no severity chip. `extend_succeeded` and
-`allowance_expiring` are `info`, and `info` is not a health state.
-`approaching_critical` takes its severity from `assessEntry` (#611, accepted
-item 6). That is warning or critical depending on the entry, so the row
-does not wear one chip. No send exists until the ledger is stored.
+`extend_succeeded` and `allowance_expiring` wear no severity chip. Those
+emails are `info` in `templates.ts`, and `info` is not a health state.
+
+`approaching_critical` follows the CLI health check (Fatih, 15 Nov 2026).
+`packages/cli/src/scan.ts` `healthReport` and `formatHuman` call
+`assessEntryWithThresholds`, which calls `assessEntry` in
+`packages/core/src/health.ts`. The CLI prints `WARNING` and `CRITICAL`
+(`LABEL` in `scan.ts`). This screen uses the existing chip words `warning`
+and `critical` for those two, and no new colour. Below the 17,280-ledger
+lead, a persistent entry that is not shared is warning. It is critical when
+the entry is shared and low, or already expired: `assessEntry` returns
+critical for an expired entry, for a shared entry at or below the threshold,
+and for a temporary entry at or below the threshold (`endBehavior` deleted);
+a single low persistent entry is warning. During beta a temporary entry is
+not emailed, so that critical case has no message yet. The row shows both
+chips as the rule for the email, not as one contract's health. `templates.ts`
+still hard-codes `warn`. That file is not changed here. No send exists until
+the ledger is stored.
 
 **Required.** No switches. Intro: "These alerts are required for autopilot
 users and cannot be turned off. The mark is the email's severity, not a
@@ -415,18 +441,16 @@ target. On: `--pine` fill, cream knob. Off: `--paper` fill, `1px` border
 `off` in Space Mono 12px, `--ink` when on and `--ink-3` when off. The word
 is the signal the colour is not allowed to be alone.
 
-There is no second control. One-click unsubscribe (RFC 8058) is an email
-mechanism for optional kinds; its route is undetermined and it is not a
-button on this page. Turning a switch off is the opt-out.
+There is no second control. One-click unsubscribe is
+`POST /alerts/unsubscribe` (`docs/API.md` §6a, RFC 8058). It is a mail-client
+POST, not a button on this page. Turning a switch off is the per-kind opt-out.
 
 ### States
 
 The preference read is in `docs/API.md` §6a. A signed-in read renders the
 panel and both lists from that response. The unread line is only while the
 request is in flight. Do not hard-code the three switches on. The PNG is the
-success picture so the layout has a target. It was drawn before #611 named
-the ledger rule, so its sentences are the older "undetermined" lines. The
-screen's sentences are the ones in the table above.
+success picture, and its sentences are the ones in the table above.
 
 | State | What renders |
 |---|---|
@@ -459,6 +483,26 @@ Do not build the list until the route is in `docs/API.md`.
 Numbers on this screen, if a count is ever shown, are pinned to `en-US`.
 An unpinned `toLocaleString()` is already a known defect in this product.
 
+### F3 and F5 have no email of their own
+
+DoD-2 asks every failure mode to alert the user
+(`phase-2/PHASE2-PLAN.md`). F3 and F5 meet that by the final-outcome email,
+not by an email of their own (Fatih, 15 Nov 2026). The codes are the ones in
+`docs/PH2-E4-05-FAILURE-MODES.md`. This screen adds no row for F3 or F5.
+
+| Code | As that page defines it | What the user receives |
+|---|---|---|
+| F3 | Pull submitted, outcome unknown | No dedicated email. The user hears the outcome below. |
+| F5 | Extend fails transiently or times out | No dedicated email, and none per attempt. |
+| Success | The extend completed | `extend_succeeded`, optional, on unless turned off. |
+| F4 | Pull succeeded, extend finally failed | `extend_failed_refund`, required. The whole pull is refunded, fee included. The entry is still unprotected. |
+| F6 | Refund fails, or is submitted with its outcome unknown | `refund_delayed`, required. The refund is owed and delayed. The 15 Nov decision calls this the refund-pending email. It is this mode. |
+
+`docs/PH2-E4-05-FAILURE-MODES.md` still says F3's earlier "pending" notice
+and F5's delay notice are undetermined, and F3's user line names F5 as one
+way the outcome is told. This section follows the 15 Nov decision: those
+notices are not sent. The failure-modes page was not edited here.
+
 ### Open questions for CEF
 
 1. **The read and the write.** Answered by #603, `docs/API.md` §6a. The
@@ -472,17 +516,14 @@ An unpinned `toLocaleString()` is already a known defect in this product.
    line stays undetermined. The read has to preserve the byte comparison:
    only exactly `send` is on.
 4. **Outbox history.** Not built. Do not add it from the table.
-5. **The ledger count for `approaching_critical`, and the lead time for
-   `allowance_expiring`.** #611 named both: 17,280, and 518,400 / 120,960 /
-   17,280. The screen prints them and says nothing is sent until the ledger
-   store exists (#612). Still undetermined: a close of about 6 seconds, a
-   separate line for a temporary entry, the event ids, and how often a
-   saved choice is checked. The screen says so and does not invent a number
-   for any of those.
-6. **Which severity `approaching_critical` sends.** #611 takes it from
-   `assessEntry`, which is warning or critical per entry. The row wears no
-   single chip. `templates.ts` still hard-codes `warn`; that file is not
-   changed here.
-7. **F3 and F5.** The alerts design leaves them undetermined and sends no
-   user email for them today. They are not rows on this screen.
+5. **Lead times.** Answered 15 Nov 2026. Persistent expiry warning: 17,280
+   ledgers, about 1 day. Allowance reminders: 30, 7 and 1 days (ADR-007).
+   Temporary entries: no email during beta. Still undetermined, and the
+   screen says so: a close of about 6 seconds, the event ids, and how often
+   a saved choice is checked. The screen does not invent a number for those.
+6. **Which severity `approaching_critical` sends.** Answered 15 Nov 2026.
+   It follows `assessEntry`, warning or critical as that function returns.
+   `templates.ts` still hard-codes `warn`; that file is not changed here.
+7. **F3 and F5.** Answered 15 Nov 2026. No dedicated email. The user is
+   told by success, F4, or F6. See the section above.
 

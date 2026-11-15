@@ -101,7 +101,9 @@
                 <div class="pref-copy">
                   <p class="row-title">Allowance about to expire</p>
                   <p class="note">
-                    The allowance autopilot uses is about to expire. How far ahead is undetermined.
+                    The allowance autopilot uses is about to expire. Reminders go out at 30, 7 and 1
+                    days, about 518,400, 120,960 and 17,280 ledgers at 5 seconds a ledger. The days
+                    are the rule. The ledgers are the estimate.
                   </p>
                 </div>
                 <div class="control">
@@ -121,12 +123,21 @@
                 <div class="pref-copy">
                   <p class="row-title">Approaching expiry</p>
                   <p class="note">
-                    Email when an entry you watch is approaching expiry and autopilot is off for it.
-                    The ledger count is undetermined. Any day count is an estimate; the ledger is
-                    the truth.
+                    Email when a persistent entry you watch has 17,280 ledgers or fewer remaining
+                    and autopilot is off for it. About 1 day. The day is an estimate. A temporary
+                    entry is not emailed during beta.
                   </p>
+                  <div class="severity-rule">
+                    <span class="chip warning"><span class="shape"></span>warning</span>
+                    <span class="chip critical"><span class="shape"></span>critical</span>
+                    <p class="note">
+                      The email is warning, or critical when that entry is shared or already
+                      expired.
+                    </p>
+                  </div>
                   <p class="note standing">
-                    One choice for every entry you watch. There is no per-contract switch.
+                    Those marks are the email's severity, not this contract's health. One choice for
+                    every persistent entry you watch. There is no per-contract switch.
                   </p>
                 </div>
                 <div class="control">
