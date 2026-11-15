@@ -2,6 +2,7 @@
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
  * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), alert preferences
  * (`PH2-E2-06`, §6a), the unauthenticated one-click unsubscribe (RFC 8058, §6a),
+ * the operator channel test (`PH2-E4-09`, §6b; absent unless `TICK_TOKEN` is set),
  * the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
  */
 import {
@@ -14,6 +15,11 @@ import {
 import { MailerError, consoleLogger, emailSendFailedLog } from './auth/mailer-error.js';
 import { handleAuth } from './auth/routes.js';
 import { resendOperatorTransport } from './alerts/heartbeat.js';
+import {
+  operatorTestAuthorized,
+  operatorTestRouteOpen,
+  runOperatorChannelTest,
+} from './alerts/operator-test.js';
 import {
   alertPreferencesDepsFor,
   alertUnsubscribeDepsFor,
@@ -39,6 +45,13 @@ export interface Env extends AuthEnv {
    * wrangler.jsonc: a value committed there is a guess that goes stale.
    */
   DEPLOY_COMMIT?: string;
+  /**
+   * Bearer for `POST /api/v1/operator/alert-test` (PH2-E4-09). Same name as the
+   * preview scheduler's manual tick. Unset or empty: that route does not exist.
+   * The value is never logged. The API Worker does not have this binding until
+   * DevOps sets it. Not a new secret name.
+   */
+  TICK_TOKEN?: string;
 }
 
 /**
@@ -261,6 +274,44 @@ export async function handle(
         // The database did not answer: absence is not health, and the error names nothing (§9).
         return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
       }
+    }
+  }
+  if (pathname === `${API_BASE}/operator/alert-test`) {
+    // Off unless a token is configured: with none, the route does not exist.
+    // Same rule as the preview scheduler's POST /tick. Do not read the body
+    // or the query: neither may change recipients, subject, or body.
+    if (!operatorTestRouteOpen(env.TICK_TOKEN)) return notFound();
+    const token = env.TICK_TOKEN;
+    if (token === undefined || token === '') return notFound();
+    if (!(await operatorTestAuthorized(request.headers.get('authorization'), token))) {
+      return apiError('UNAUTHENTICATED', 'That request is not authorized.', 401);
+    }
+    if (request.method !== 'POST') {
+      return apiError('METHOD_NOT_ALLOWED', 'Use POST.', 405, { headers: { allow: 'POST' } });
+    }
+    const fetcher = options.fetch ?? fetch;
+    try {
+      const outcome = await runOperatorChannelTest(
+        {
+          ALERTS_SEND: env.ALERTS_SEND,
+          ALERTS_ALLOWLIST: env.ALERTS_ALLOWLIST,
+          EMAIL_API_KEY: env.EMAIL_API_KEY,
+          EMAIL_FROM: env.EMAIL_FROM,
+        },
+        {
+          nowSeconds: () => options.now?.() ?? Math.floor(Date.now() / 1000),
+          transportFor: (to) =>
+            resendOperatorTransport(
+              env.EMAIL_API_KEY ?? '',
+              env.EMAIL_FROM ?? '',
+              to,
+              (url, init) => fetcher(url, init),
+            ),
+        },
+      );
+      return json(outcome);
+    } catch {
+      return apiError('UPSTREAM_UNAVAILABLE', 'The operator test could not be run.', 503);
     }
   }
   if (pathname === `${API_BASE}/health`) {

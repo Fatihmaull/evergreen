@@ -13,7 +13,8 @@ export type OperatorCheckEvent =
   | 'alerts.f11_heartbeat'
   | 'alerts.f14_database'
   | 'alerts.f16_signin_email'
-  | 'alerts.f17_f18_config';
+  | 'alerts.f17_f18_config'
+  | 'alerts.operator_test';
 
 /**
  * The message `resendOperatorTransport` throws on a non-OK answer. Status

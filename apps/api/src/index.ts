@@ -54,7 +54,9 @@ export default {
     });
   },
   // F17/F18, then F11, F10, F9, then at most one F14 (PH2-E4-05). Runs only if a
-  // cron trigger is configured for this Worker. A failed Resend call stays inside
+  // cron trigger is configured for this Worker. The operator channel test
+  // (PH2-E4-09) is not on this cron: a 15-minute tick must not send TEST mail.
+  // A failed Resend call stays inside
   // one recipient (the next operator and the next check still run). Logs never
   // carry an address, a key, or a setting value.
   async scheduled(
@@ -242,6 +244,17 @@ export {
 } from './alerts/heartbeat.js';
 export { operatorSendFailedLog } from './alerts/operator-send.js';
 export type { OperatorCheckEvent, OperatorSendFailedLog } from './alerts/operator-send.js';
+export {
+  OPERATOR_TEST_EVENT,
+  operatorTestAuthorized,
+  operatorTestEventId,
+  operatorTestHour,
+  operatorTestNotification,
+  operatorTestRouteOpen,
+  resetOperatorTestHourGuard,
+  runOperatorChannelTest,
+} from './alerts/operator-test.js';
+export type { OperatorTestEnv, OperatorTestOutcome } from './alerts/operator-test.js';
 export type {
   HeartbeatDeps,
   HeartbeatEnv,

@@ -232,6 +232,25 @@ type AlertPreference = {
 - **No separate rate limit** is defined. A bad token does not touch the database. A valid token's write is idempotent.
 - `PUT`, `PATCH` and `DELETE` are `405` with `Allow: GET, POST`.
 
+## 6b · Operator channel test (`PH2-E4-09`, CEF)
+
+**Public API change, for Fatih's review before merge.** This is not a dashboard screen and not a session route. It does not send a user alert and it does not move XLM.
+
+| Route | Auth | Does |
+|---|---|---|
+| `POST /operator/alert-test` | `Authorization: Bearer` matching the Worker secret `TICK_TOKEN` | Sends one fixed TEST email to each `ALERTS_ALLOWLIST` address, or records why it did not |
+
+- **The route does not exist unless `TICK_TOKEN` is set** to a non-empty string. Unset or `''` is `404 NOT_FOUND` with the same body as any unknown path (`No such route.`). That is the preview scheduler's rule for `POST /tick` (`apps/scheduler/src/worker.ts`). The API Worker does not have this binding today. Binding it is a DevOps action and, on production, waits for Fatih. No new secret name.
+- **Auth, only after the route exists.** A missing header, a header that is not `Bearer <token>` (the space and the capital B are required), or a token that does not match, is one `401 UNAUTHENTICATED`. The message does not say which. A session cookie does not authorize this route. CSRF does not apply: the route does not read the session. `GET` and any method other than `POST` are `405` with `Allow: POST`, and only after the bearer matches, so an unauthenticated caller does not learn the method.
+- **No request field is an input.** The query string and the body are not read. They cannot change the recipients, the subject, or the body. There is no recipient parameter.
+- **Same send path as F14, F16, F17 and F18.** `ALERTS_SEND` must be exactly `send`. Any other value, including `SEND`, ` send`, `send ` and `Send`, is `{ "action": "dry-run", "reason": "alerts_send_off" }` and does not call Resend. Recipients are `parseAllowlist(ALERTS_ALLOWLIST)` and nobody else. An empty allowlist is `{ "action": "dry-run", "reason": "no_operator" }`. Missing or blank `EMAIL_API_KEY` or `EMAIL_FROM` is `{ "action": "email_channel_down", "blockedBy": ["EMAIL_API_KEY"] }` (names only) and does not call Resend. One recipient's failure does not skip the next. The Resend call is `resendOperatorTransport`, including its idempotency key.
+- **Hourly dedupe.** The key is `operator-test:<UTC hour YYYY-MM-DDTHH>/<recipient hash>`. The hash is the same 8-byte SHA-256 prefix `operatorIdempotencyKey` already uses, so the address is not in the header. A second call in the same hour on the same isolate is `{ "action": "dry-run", "reason": "hour_deduped" }` and does not call Resend. A new UTC hour sends again. A dry-run or a down channel does not consume the hour.
+- **Fixed body.** Subject `Evergreen operator alert: TEST`. The text starts with `TEST` and says it is not a user alert. It has no address, no account, and no secret. The response is the action and a count. It has no address, no key, and no token.
+- **Log.** One JSON line, event `alerts.operator_test`, action `sent`, `send_failed`, `dry-run`, or `email_channel_down`. A failed recipient adds the closed `operatorSendFailedLog` line (`httpStatus` or `errorName` only). The lines do not contain an address, the API key, or the bearer token.
+- **Not on the cron.** `scheduled()` does not call this. Production `ALERTS_SEND` is exactly `send` (K4), so a live route would send real mail. Until `TICK_TOKEN` is set, production has no such route.
+
+How to run it once the secret is bound: [`PH2-E4-09-OPERATOR-CHANNEL-TEST.md`](PH2-E4-09-OPERATOR-CHANNEL-TEST.md).
+
 ## 7 · Allowance state, jobs and history
 
 ### Allowance

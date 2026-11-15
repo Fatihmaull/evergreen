@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-09 operator channel test, 2026-11-15
+
+`POST /api/v1/operator/alert-test` sends a fixed TEST message through the F14/F16/F17/F18 path (`resendOperatorTransport`). Recipients are `ALERTS_ALLOWLIST` only. No request field is read. `ALERTS_SEND` must be exactly `send`. Missing `EMAIL_API_KEY` or `EMAIL_FROM` logs `action: 'email_channel_down'` and does not call Resend. Resend key: `operator-test:<UTC hour>/<recipient hash>`. The route does not exist unless `TICK_TOKEN` is set (the preview scheduler's bearer; no new secret name). The API Worker does not have that binding. Production binding waits for Fatih. Not on the cron. No user alert. Has fired on production: **undetermined**. The card stays `[~]`. Notion sync pending for PH2-E4-09. How to run it: `docs/PH2-E4-09-OPERATOR-CHANNEL-TEST.md`. Public API, Fatih reviews before merge (`docs/API.md` §6b).
+
 ## Current — PH2-E4-05 F16 sign-in operator email, 2026-11-14
 
 A sign-in `MailerError` still logs `auth.email_send_failed` and still answers 502 or 503. The request then schedules an operator email with `ctx.waitUntil` and does not await it. The cron is not the detector: the failure is not stored, and reading Workers Logs from `scheduled()` is not available here. Key: `f16-signin-email-failed:<UTC hour>/<recipient hash>`. Gate: `ALERTS_SEND` exactly `send`. Recipients: `ALERTS_ALLOWLIST`. No database read. Missing `EMAIL_API_KEY` or `EMAIL_FROM` logs `action: 'email_channel_down'` and does not call Resend. The same channel means a Resend outage fails this email too. Telegram (decided 2026-10-29) is not wired. No user alert. **Has fired on production: undetermined** — not in the Worker `b98b8aa` that health reported earlier today, and no inbox was read. The stale backlog clause "F10/F11 on production wait on migration `0009`" is removed. `0009` is recorded applied on preview and production (`docs/ops/neon-migrations.md`, 2026-10-31) and as Met in `docs/ops/secrets.md`. This session did not query Neon. The card stays `[~]`. Notion sync pending for PH2-E4-05.
