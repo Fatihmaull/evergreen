@@ -38,6 +38,24 @@
 
 ---
 
+## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
+
+`PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
+
+`PH2-E2-07` is `[x]`. The same log records `schema_migrations` with 14 rows on preview and 14 rows on production, identical.
+
+`PH2-E4-01` stays `[~]`. The no-container SQL test on `main` is `packages/engine/test/pg-tenant-store.pglite.test.ts` ([#449](https://github.com/Fatihmaull/evergreen/pull/449), `a53d843`), with `packages/engine/test/pg-tenant-store.reactivation.pglite.test.ts` ([#477](https://github.com/Fatihmaull/evergreen/pull/477), `15aefdb`). Wiring into an engine run and per-tenant failure isolation stay open. `PH2-E4-05` was not edited on this branch. [#622](https://github.com/Fatihmaull/evergreen/pull/622) merged as `e111ba58`; live in production ([api-deploy run 43662640202](https://github.com/Fatihmaull/evergreen/actions/runs/43662640202), production job success). PM/DevOps reported that production health is serving `e111ba58`; this session did not read that endpoint.
+
+`PH2-E2-06` stays `[~]`. The only open item on the card is Fatih's "ya" to install the production `ALERTS_UNSUBSCRIBE_SECRET`. This note does not say Fatih accepted the 90-day TTL. Whether he accepted it is undetermined: `docs/API.md` records PM review 5903652258, and `apps/api/src/alerts/unsubscribe.ts` still marks the TTL as a decision for Fatih. No secret value is in the repo.
+
+`apps/api/db/NOTES.md` was not edited. Its opening still says the `schema.sql` candidate is "not applied to Neon yet" (that sentence is about `schema.sql`, not 0013/0014). Its migration-ledger section still ends the backfill proposal with "Undetermined until then." The proposed replacement for Rakha is in the PR, not in his file.
+
+`PH2-E3-09` is `[x]`. [#605](https://github.com/Fatihmaull/evergreen/pull/605) (`efed7fa`) meets the card: 16:9 online and offline slide templates, plus announce, reminder and recap event cards (`web-reference/design-language/formats.md`). Slides language is English. Placeholder conversion is a separate DES PR. Decision relayed by Evergreen PM as Fatih's of 2026-11-15 17:19 WIB; not recorded in the repo by Fatih himself.
+
+`PH2-E3-10` is `[ ]`, owner `(F · DES)`, with Fatih for the event details. Remainder: real details for the six events, a projector check in the real room before the first offline workshop, and one combined PDF deck. Workshop dates are undetermined (`web-reference/design-language/formats.md`: no title, date, place or link is on record).
+
+Notion sync pending for `PH2-E0-16`, `PH2-E2-07`, `PH2-E4-01`, `PH2-E2-06`, `PH2-E3-09` and `PH2-E3-10`. This session did not write the mirror.
+
 ## Current — PH2-E4-08 router audit preparation, 2026-11-15
 
 Audit preparation for the production router is [`docs/PH2-E4-08-ROUTER-AUDIT-PREP.md`](PH2-E4-08-ROUTER-AUDIT-PREP.md). The card stays `[~]`. The contract, the tests, and Rust CI were already on `main`. This page does not choose a treasury address, does not change the Wasm, and is not the written audit `PH2-E5-02` requires before mainnet. Notion sync pending for PH2-E4-08.
