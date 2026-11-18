@@ -56,6 +56,25 @@ export {
 export type { HostedFeeConfig } from './fee.js';
 export { pullAmountStroops } from './pull-amount.js';
 export type { PullAmountBreakdown, PullAmountInput } from './pull-amount.js';
+export {
+  EXTEND_NOW_DAILY_LIMIT,
+  HOSTED_EXTEND_TRANSIENT_RETRIES,
+  ledgerUnexplained,
+  preflightHostedJob,
+  settleHostedJob,
+} from './hosted-job.js';
+export type {
+  BudgetAnswer,
+  HostedKind,
+  LedgerKind,
+  NetworkFeeEvidence,
+  PreflightHosted,
+  PreflightHostedInput,
+  PreflightReason,
+  SettleHosted,
+  SettleHostedInput,
+  SettleLedgerRow,
+} from './hosted-job.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
