@@ -38,6 +38,28 @@
 
 ---
 
+## Current — PH2-BL-03 bundle remeasure, fix not applied, 2026-11-18
+
+Measured on `origin/main` at `81d88354` after `pnpm build && node apps/web/build.mjs`. Bytes are raw, then gzip level 9.
+
+| bundle | raw | gzip-9 |
+|---|---:|---:|
+| `overview.js` | 792,489 | 171,491 |
+| `scanner.js` | 788,843 | 170,529 |
+| `blast-radius.js` | 777,096 | 166,695 |
+| `watchlist.js` | 774,822 | 166,682 |
+| `allowance.js` | 771,378 | 165,044 |
+| `archival.js` | 750,435 | 159,086 |
+| **six SDK bundles** | **4,655,063** | **999,527** |
+| `login.js` | 26,665 | 8,524 |
+| `chrome.js` | 633 | 430 |
+
+The build log still attributes 86–91% of each of the six to `@stellar/stellar-sdk`. `login.js` does not carry it. The backlog's "three bundles of 732–768 KB" is stale: it is six, and `watchlist.js` and `allowance.js` joined the four from #321.
+
+A throwaway esbuild of those six entries with `splitting: true` and `format: 'esm'` (same minify, target and defines as `apps/web/build.mjs`; output under `/tmp`, not in the repo) wrote 17 files, 810,959 raw / 180,977 gzip-9. The largest chunk was 671,401 / 133,897. Across all six that is 810,959 against 4,655,063 raw, and 180,977 against 999,527 gzip-9. A single page still has to fetch that chunk. One page's gzip today is 159,086 to 171,491, and the shared chunk alone is 133,897, so the first load is not the thing that gets smaller. The saving is the second and later pages.
+
+The shared-chunk change was not made. Fatih's comment on #321 (2026-10-18) defers it until after the beta, and the questions at the bottom of that issue were not agreed. The change would rewrite `apps/web/build.mjs` and the script tags in `chrome.mjs` and `site.mjs`, which is how the scan, watchlist and docs pages load. Those pages are WEBF's. `login.js` has to stay a separate classic bundle because the login guard refuses the money path. The card stays `[ ]`. Notion sync pending for PH2-BL-03.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
