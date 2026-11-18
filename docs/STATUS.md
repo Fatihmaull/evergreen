@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-02 money path, 2026-11-18
+
+`PH2-E4-02` is `[~]`. The draft on `cursor/e4-02-money-path-8791` (based on #629) adds migration **0016** `jobs.shortfall_stroops` and the hosted job path: preflight, one pull, extend with one transient retry, reconcile, refund from the engine pool. Dry-run submits nothing. Live is opt-in; the deployed scheduler does not attach it and holds no signer. A shortfall is the column, not a ledger row. `eg_scheduler` still cannot read `users.email`. Deferred: assembling the SEP-41 `transfer_from` and the extend envelope (the chain is a port; no new RPC is invented here), sending the user email and the P1 (the scheduler role cannot write `alert_outbox`), the retry-margin size (unset margin does not pull), and the treasury sweep (`PH2-E4-03`). 0016 is numbered after 0015 (#621) and does not read that file's tables. Not applied. Notion sync pending for `PH2-E4-02`.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
