@@ -38,6 +38,18 @@
 
 ---
 
+## Current — PH2-E3-05 allowance estimate, approve guards, reminders, stopped, 2026-11-18
+
+`/allowance/` still revokes with `approve(0)` when a spender exists. This slice adds the cap estimate, the approve path, the reminder dates and the expired-as-stopped reading. The card stays `[~]`.
+
+The estimate takes simulated rent in stroops, one contract per line, and a count of hosted extends. The fee is `hostedFeeStroops` of each extend, so the 25,000-stroop minimum binds per extend. Rent and the fee are separate lines. The allowance amount is that rent, that fee and `pullAmountStroops`' retry margin, times the extends. `ALLOWANCE_RETRY_MARGIN_STROOPS` is unset, so the amount is undetermined and the Approve button stays disabled. No percentage was substituted for the margin.
+
+Approve, when both the spender and the margin are set, re-reads the chain and refuses to sign if that read is not the amount on screen. It refuses zero (that is the revoke), and it refuses an expiry past the ledger the allowance was read at plus 3,110,399. The only expiry the page offers is that ceiling. A new approve replaces the cap. The copy says the signature authorises a payment, never access to a contract.
+
+Renewal dates are 30, 7 and 1 days before a known expiry ledger. The page says it does not send them. `GET /wallets/{account}/allowance` is still not served (`apps/api/test/watchlist.test.ts` asserts no allowance route). A missing or unrecognisable answer stays undetermined. A body that parses as `expired`, with `lastKnown`, renders **Stopped** and does not say protected.
+
+`ENGINE_SPENDER` is still unset. Nothing was submitted. Freighter on testnet was not used: **undetermined**. Not branched from #629 (`cursor/e4-01-dry-run-tenants-8791`): that branch does not publish a spender or the allowance route. Notion sync pending for PH2-E3-05.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
