@@ -60,6 +60,9 @@ function allowanceChain(): AllowanceChain & { reads: number; builds: string[][] 
       c.builds.push([from, spender]);
       return 'REVOKE';
     },
+    buildApprove: async () => {
+      throw new Error('revoke tests must not build an approve');
+    },
   };
   return c;
 }
@@ -139,6 +142,7 @@ describe('a configured spender (tests only)', () => {
         observedAtLedger: 5,
       }),
       buildRevoke: async () => 'X',
+      buildApprove: async () => 'X',
     };
     const html = text(readHtml(await readAllowance(ME, { spender: SPENDER, chain: zero })));
     expect(html).toContain('undetermined');
@@ -152,6 +156,7 @@ describe('a configured spender (tests only)', () => {
         throw new Error('rpc down');
       },
       buildRevoke: async () => 'X',
+      buildApprove: async () => 'X',
     };
     const read = await readAllowance(ME, { spender: SPENDER, chain: broken });
     expect(read).toEqual({ kind: 'read-failed', detail: 'rpc down' });
