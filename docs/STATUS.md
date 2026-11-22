@@ -38,6 +38,10 @@
 
 ---
 
+## Current — operator alert test sender, 2026-11-22
+
+`runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). The HTTP trigger is not mounted: this Worker has no operator authenticator, and a user session is not one. No new secret. No route was added, so the public API is unchanged until that decision. The card has no row in `BACKLOG.md`; no row was added. Notion sync is pending because there is no registered ID to write. Whether a deployed Worker has sent the test is **undetermined**.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
