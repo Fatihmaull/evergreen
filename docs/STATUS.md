@@ -38,11 +38,37 @@
 
 ---
 
-## Current — PH2-E4-05 F3/F5 user email, and approaching severity, 2026-11-22
+## Current — PH2-E2-06 F3/F5 user map and required approaching observation, 2026-11-22
 
-F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. Searched `BACKLOG.md`, `docs/PH2-E2-06-DECISIONS.md` §7 (a recommendation to leave the sentences, not this decision), `docs/API.md`, `docs/PH2-E2-06-ALERTS-DESIGN.md`, and #602 (draft; the same relay is in the PR body, not on `main`). `FAILURE_MODE_ALERTS` still lists F3 via F4 and F5; that code was not changed. Whether it should name success and F6 is undetermined.
+F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. `FAILURE_MODE_ALERTS` records F3 and F5 as `final-outcome`. That does not point at F4 or at any other mode's user email. F4 stays `extend_failed_refund`: the failure-mode page requires that email. Whether the map should name success and F6 is still undetermined. Operator alerts for F3 and F5 are unchanged. Those final-outcome sends have no caller.
 
-`approaching_critical` in `apps/api/src/alerts/templates.ts` takes its severity from `assessEntry` when the caller passes the entry and the threshold. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. With no observation the rendered severity stays `warn`, and whether that matches the entry is undetermined. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both.
+`approaching_critical` takes its severity from `assessEntry`. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. `renderAlertEmail` for that kind, `planUserAlert`, and the preview test send require the entry and the threshold. Omitting them does not render `warn`: planning returns `missing_approaching` and does not deliver, and rendering throws. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both. `docs/PH2-E2-06-ALERTS-DESIGN.md` §3 and §9, `docs/API.md` §6a, and `docs/PH2-E2-06-DECISIONS.md` §7 still call an F3 or F5 user email undetermined or say to leave the sentences. This change follows `docs/PH2-E4-05-FAILURE-MODES.md`.
+
+## Current — PH2-E4-09 operator alert test sender, 2026-11-22
+
+`PH2-E4-09` is `[~]` `(F · CEF)` **S**. `runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). **Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih:** the HTTP trigger stays unwired. There is no operator authenticator, and a user session is not one. No new secret. Fatih reviews [#635](https://github.com/Fatihmaull/evergreen/pull/635) before merge. Whether a deployed Worker has sent the test is **undetermined**. Notion sync is pending for `PH2-E4-09`.
+
+## Current — PH2-BL-03 bundle remeasure, fix not applied, 2026-11-18
+
+Measured on `origin/main` at `81d88354` after `pnpm build && node apps/web/build.mjs`. Bytes are raw, then gzip level 9.
+
+| bundle | raw | gzip-9 |
+|---|---:|---:|
+| `overview.js` | 792,489 | 171,491 |
+| `scanner.js` | 788,843 | 170,529 |
+| `blast-radius.js` | 777,096 | 166,695 |
+| `watchlist.js` | 774,822 | 166,682 |
+| `allowance.js` | 771,378 | 165,044 |
+| `archival.js` | 750,435 | 159,086 |
+| **six SDK bundles** | **4,655,063** | **999,527** |
+| `login.js` | 26,665 | 8,524 |
+| `chrome.js` | 633 | 430 |
+
+The build log still attributes 86–91% of each of the six to `@stellar/stellar-sdk`. `login.js` does not carry it. The backlog's "three bundles of 732–768 KB" is stale: it is six, and `watchlist.js` and `allowance.js` joined the four from #321.
+
+A throwaway esbuild of those six entries with `splitting: true` and `format: 'esm'` (same minify, target and defines as `apps/web/build.mjs`; output under `/tmp`, not in the repo) wrote 17 files, 810,959 raw / 180,977 gzip-9. The largest chunk was 671,401 / 133,897. Across all six that is 810,959 against 4,655,063 raw, and 180,977 against 999,527 gzip-9. A single page still has to fetch that chunk. One page's gzip today is 159,086 to 171,491, and the shared chunk alone is 133,897, so the first load is not the thing that gets smaller. The saving is the second and later pages.
+
+The shared-chunk change was not made. Fatih's comment on #321 (2026-10-18) defers it until after the beta, and the questions at the bottom of that issue were not agreed. The change would rewrite `apps/web/build.mjs` and the script tags in `chrome.mjs` and `site.mjs`, which is how the scan, watchlist and docs pages load. Those pages are WEBF's. `login.js` has to stay a separate classic bundle because the login guard refuses the money path. The card stays `[ ]`. Notion sync pending for PH2-BL-03.
 
 ## Current — PH2-E3-05 allowance estimate, approve guards, reminders, stopped, 2026-11-18
 

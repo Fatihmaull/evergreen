@@ -28,15 +28,20 @@ export interface AlertContext {
    */
   readonly unsubscribeUrl?: string | undefined;
   /**
-   * Ledger observation for `approaching_critical` only. Other kinds ignore it.
+   * Ledger observation for `approaching_critical`. Other kinds ignore it.
    * Severity is `assessEntry` on `entry` and `thresholdLedgers`: an expired
    * entry is critical, and a shared or temporary entry is critical only when
    * remaining ledgers are at or below the threshold. A lone recoverable entry
-   * stays a warning. Absent: the copy's `warn` is what is rendered, and
-   * whether that matches the entry is undetermined.
+   * stays a warning. A send of `approaching_critical` requires this. Omitting
+   * it does not render the copy's `warn`.
    */
-  readonly approaching?:
-    { readonly entry: LedgerEntryTTL; readonly thresholdLedgers: number } | undefined;
+  readonly approaching?: ApproachingObservation | undefined;
+}
+
+/** Entry and threshold `assessEntry` grades for an approaching alert. */
+export interface ApproachingObservation {
+  readonly entry: LedgerEntryTTL;
+  readonly thresholdLedgers: number;
 }
 
 export interface AlertEmail extends AlertNotification {
@@ -89,8 +94,8 @@ const COPY: Readonly<Record<AlertKind, { subject: string; lead: string; severity
   approaching_critical: {
     subject: '{entry} is approaching expiry',
     lead: 'This entry is approaching its expiry and autopilot is off for it. Extend it, or turn autopilot on.',
-    // Fallback when `ctx.approaching` is absent. With an observation,
-    // `severityFor` uses `assessEntry` and this literal is not the severity.
+    // Not a send path. `severityFor` uses `assessEntry` and throws if the
+    // observation is missing, so this literal is never the rendered severity.
     severity: 'warn',
   },
   extend_succeeded: {
@@ -146,11 +151,23 @@ function severityForApproaching(entry: LedgerEntryTTL, thresholdLedgers: number)
 }
 
 function severityFor(kind: AlertKind, ctx: AlertContext, fallback: Severity): Severity {
-  if (kind !== 'approaching_critical' || ctx.approaching === undefined) return fallback;
+  if (kind !== 'approaching_critical') return fallback;
+  if (ctx.approaching === undefined) {
+    throw new Error('approaching_critical requires ctx.approaching');
+  }
   return severityForApproaching(ctx.approaching.entry, ctx.approaching.thresholdLedgers);
 }
 
-export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail {
+/**
+ * `approaching_critical` requires `ctx.approaching`. Other kinds do not.
+ * A missing observation is a caller bug, not severity `warn`.
+ */
+export function renderAlertEmail<K extends AlertKind>(
+  kind: K,
+  ctx: K extends 'approaching_critical'
+    ? AlertContext & { readonly approaching: ApproachingObservation }
+    : AlertContext,
+): AlertEmail {
   const c = COPY[kind];
   const entry = oneLine(ctx.entry) || 'undetermined';
   const fill = (t: string) => t.replace(/\{entry\}/g, entry);
@@ -213,9 +230,21 @@ export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail
     subject,
     body: text,
     html,
-    severity: severityFor(kind, ctx, c.severity),
+    severity: severityFor(kind, ctx as AlertContext, c.severity),
     ...(headers === undefined ? {} : { headers }),
   };
 }
 
 export const ALERT_TEMPLATE_KINDS: readonly AlertKind[] = Object.keys(COPY) as AlertKind[];
+
+/**
+ * Compile-time witness: `renderAlertEmail('approaching_critical', …)` requires
+ * the observation. `pnpm typecheck` fails if that argument becomes optional.
+ */
+type ApproachingCallRequiresObservation = Parameters<
+  typeof renderAlertEmail<'approaching_critical'>
+>[1] extends { readonly approaching: ApproachingObservation }
+  ? true
+  : false;
+
+export const approachingCallRequiresObservation: ApproachingCallRequiresObservation = true;

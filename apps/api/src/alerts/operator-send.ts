@@ -1,9 +1,9 @@
 /**
- * What a failed operator-alert send (F9, F10, F11, F14, F16, F17/F18) is allowed to
- * look like in Workers Logs. The provider body and the thrown message are never
- * kept: Resend's text can embed an address, and a fetch error can embed the key
- * or the URL. The line is `action: 'send_failed'` plus, at most, our own status
- * or a closed error name.
+ * What a failed operator-alert send (F9, F10, F11, F14, F16, F17/F18, and the
+ * operator-channel test) is allowed to look like in Workers Logs. The provider
+ * body and the thrown message are never kept: Resend's text can embed an
+ * address, and a fetch error can embed the key or the URL. The line is
+ * `action: 'send_failed'` plus, at most, our own status or a closed error name.
  */
 import { safeFetchErrorName } from '../auth/mailer-error.js';
 
@@ -13,7 +13,8 @@ export type OperatorCheckEvent =
   | 'alerts.f11_heartbeat'
   | 'alerts.f14_database'
   | 'alerts.f16_signin_email'
-  | 'alerts.f17_f18_config';
+  | 'alerts.f17_f18_config'
+  | 'alerts.operator_test';
 
 /**
  * The message `resendOperatorTransport` throws on a non-OK answer. Status

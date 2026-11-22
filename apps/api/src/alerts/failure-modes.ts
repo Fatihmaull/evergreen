@@ -66,6 +66,14 @@ export type UserAlert =
   | { readonly kind: 'email'; readonly alerts: readonly AlertKind[] }
   /** No email of its own; the user hears about it if it becomes `via`. */
   | { readonly kind: 'via'; readonly modes: readonly FailureMode[] }
+  /**
+   * No user email for this mode (F3, F5). The user hears a later final outcome:
+   * success, F4 `extend_failed_refund`, or F6 `refund_delayed`. Those emails
+   * belong to that outcome. This mode does not name them, and it does not
+   * point at another mode's user email. Whether the map should name success
+   * and F6 is undetermined (`docs/PH2-E4-05-FAILURE-MODES.md`).
+   */
+  | { readonly kind: 'final-outcome' }
   /** The affected screen renders undetermined (docs/API.md:390). */
   | { readonly kind: 'dashboard' }
   /** Nothing: an absorbed event is not an event for the user (F12). */
@@ -104,17 +112,20 @@ export const FAILURE_MODE_ALERTS: Readonly<Record<FailureMode, FailureModeAlerts
     detector: 'pending: allowance() read and checkBudget run in scheduler evaluation (PH2-E4-04)',
   },
   F3: {
-    user: { kind: 'via', modes: ['F4', 'F5'] },
+    // No pending email. Final-outcome mail is success, F4, or F6 — not this mode.
+    user: { kind: 'final-outcome' },
     operator: thr('job submitted-unconfirmed older than the envelope bound'),
     detector: 'pending: submitted-hash column (#466, migration 0006) and the per-step bound',
   },
   F4: {
+    // Required: the extend failed and the whole pull, fee included, is returned.
     user: { kind: 'email', alerts: ['extend_failed_refund'] },
     operator: { when: 'every' },
     detector: 'isPulledThenFailed; rate breach: pulledThenFailedBreaches (operator only)',
   },
   F5: {
-    user: { kind: 'via', modes: ['F4'] },
+    // No delay email. Same final outcome as F3; this mode does not email.
+    user: { kind: 'final-outcome' },
     // Retries per job/hour: threshold undetermined. TRY_AGAIN_LATER: any occurrence (isTryAgainLater).
     operator: thr('extend retries per job and per hour; any TRY_AGAIN_LATER'),
     detector: 'isTryAgainLater (retry counting pending on PH2-E4-02)',

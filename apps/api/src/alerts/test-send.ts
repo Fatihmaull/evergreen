@@ -10,9 +10,31 @@
  * here logs or returns an address. Run via apps/api/scripts/alert-test-send.mjs
  * (docs/ops/alerts-test-send.md).
  */
+import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import { operatorIdempotencyKey } from './heartbeat.js';
 import { alertsMode, parseAllowlist, type AlertKind } from './policy.js';
-import { ALERT_TEMPLATE_KINDS, renderAlertEmail, type AlertEmail } from './templates.js';
+import {
+  ALERT_TEMPLATE_KINDS,
+  renderAlertEmail,
+  type AlertEmail,
+  type ApproachingObservation,
+} from './templates.js';
+
+/**
+ * Preview template sample, not a watched contract. Expired, so `assessEntry`
+ * is critical. The send passes this so `approaching_critical` cannot take a
+ * missing-observation path.
+ */
+export const PREVIEW_APPROACHING_OBSERVATION: ApproachingObservation = {
+  thresholdLedgers: 1,
+  entry: {
+    kind: 'persistent',
+    endBehavior: 'archived',
+    contracts: ['TEST-ENTRY'],
+    observedAtLedger: 1,
+    ttl: { status: 'expired' },
+  } satisfies LedgerEntryTTL,
+};
 
 export interface TestSendEnv {
   readonly ENVIRONMENT?: string;
@@ -55,11 +77,15 @@ export async function runPreviewTestSend(
   let sent = 0;
   let failed = 0;
   for (const kind of kinds) {
-    const e: AlertEmail = renderAlertEmail(kind, {
+    const base = {
       entry: 'TEST-ENTRY (preview test send)',
-      network: 'testnet',
+      network: 'testnet' as const,
       detail: `Test send ${deps.runId}; no real event.`,
-    });
+    };
+    const e: AlertEmail =
+      kind === 'approaching_critical'
+        ? renderAlertEmail(kind, { ...base, approaching: PREVIEW_APPROACHING_OBSERVATION })
+        : renderAlertEmail(kind, base);
     for (const r of to) {
       const key = await operatorIdempotencyKey(`e2-06-test:${deps.runId}:${kind}`, r);
       try {
