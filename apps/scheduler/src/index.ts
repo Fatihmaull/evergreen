@@ -6,6 +6,7 @@ import { NETWORKS } from '@evergreen-stellar/core';
 import { neon } from '@neondatabase/serverless';
 import { createFetchReader } from './due.js';
 import { evaluate } from './evaluate.js';
+import { dryRunTenantPlans } from './tenant-dry-run.js';
 import { DEFAULT_RPC_TIMEOUT_MS, TickError, runTick } from './tick.js';
 import { handleFetch, handleScheduled, type Env, type Runtime } from './worker.js';
 
@@ -22,18 +23,26 @@ export function productionRuntime(env: Env): Runtime {
     // so DATABASE_URL is present by then.
     evaluate: async () => {
       const sql = neon(databaseUrl());
-      return (
-        await evaluate(
-          async (text, params) =>
-            (await sql.query(text, [...params])) as readonly Record<string, unknown>[],
-          // Stage 1b: the same RPC the tick just verified as testnet, same per-read timeout.
-          createFetchReader({
-            rpcUrl: env.SOROBAN_RPC_URL ?? NETWORKS.testnet.defaultRpcUrl,
-            fetch: (url, init) => fetch(url, init),
-            timeoutMs: DEFAULT_RPC_TIMEOUT_MS,
-          }),
-        )
-      ).summary;
+      const reader = createFetchReader({
+        rpcUrl: env.SOROBAN_RPC_URL ?? NETWORKS.testnet.defaultRpcUrl,
+        fetch: (url, init) => fetch(url, init),
+        timeoutMs: DEFAULT_RPC_TIMEOUT_MS,
+      });
+      return evaluate(
+        async (text, params) =>
+          (await sql.query(text, [...params])) as readonly Record<string, unknown>[],
+        // Stage 1b: the same RPC the tick just verified as testnet, same per-read timeout.
+        reader,
+      );
+    },
+    // PH2-E4-01: dry-run only. No pull estimate, so checkBudget stays undetermined.
+    dryRunTenants: (plans) => {
+      const reader = createFetchReader({
+        rpcUrl: env.SOROBAN_RPC_URL ?? NETWORKS.testnet.defaultRpcUrl,
+        fetch: (url, init) => fetch(url, init),
+        timeoutMs: DEFAULT_RPC_TIMEOUT_MS,
+      });
+      return dryRunTenantPlans(plans, reader, `tick-${Date.now()}`);
     },
     runTick: () => {
       const databaseUrl = env.DATABASE_URL;
