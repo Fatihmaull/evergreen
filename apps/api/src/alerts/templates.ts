@@ -4,6 +4,8 @@
  * clock, no transport. Wording states only what the event says; values the
  * caller does not know are rendered as "undetermined", never invented.
  */
+import { assessEntry } from '@evergreen-stellar/core';
+import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import { canUnsubscribe, type AlertKind } from './policy.js';
 import type { AlertNotification } from './sender.js';
 
@@ -25,6 +27,16 @@ export interface AlertContext {
    * `List-Unsubscribe`. Required alerts ignore it. Never a `mailto:`.
    */
   readonly unsubscribeUrl?: string | undefined;
+  /**
+   * Ledger observation for `approaching_critical` only. Other kinds ignore it.
+   * Severity is `assessEntry` on `entry` and `thresholdLedgers`: an expired
+   * entry is critical, and a shared or temporary entry is critical only when
+   * remaining ledgers are at or below the threshold. A lone recoverable entry
+   * stays a warning. Absent: the copy's `warn` is what is rendered, and
+   * whether that matches the entry is undetermined.
+   */
+  readonly approaching?:
+    { readonly entry: LedgerEntryTTL; readonly thresholdLedgers: number } | undefined;
 }
 
 export interface AlertEmail extends AlertNotification {
@@ -77,6 +89,8 @@ const COPY: Readonly<Record<AlertKind, { subject: string; lead: string; severity
   approaching_critical: {
     subject: '{entry} is approaching expiry',
     lead: 'This entry is approaching its expiry and autopilot is off for it. Extend it, or turn autopilot on.',
+    // Fallback when `ctx.approaching` is absent. With an observation,
+    // `severityFor` uses `assessEntry` and this literal is not the severity.
     severity: 'warn',
   },
   extend_succeeded: {
@@ -120,6 +134,20 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/**
+ * Email severity for an approaching entry. `critical` only when `assessEntry`
+ * says so; `warning`, `healthy` and `unknown` are `warn` on this channel,
+ * which has no fourth grade. The threshold comparison stays in `assessEntry`.
+ */
+function severityForApproaching(entry: LedgerEntryTTL, thresholdLedgers: number): Severity {
+  return assessEntry(entry, thresholdLedgers).health === 'critical' ? 'critical' : 'warn';
+}
+
+function severityFor(kind: AlertKind, ctx: AlertContext, fallback: Severity): Severity {
+  if (kind !== 'approaching_critical' || ctx.approaching === undefined) return fallback;
+  return severityForApproaching(ctx.approaching.entry, ctx.approaching.thresholdLedgers);
 }
 
 export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail {
@@ -185,7 +213,7 @@ export function renderAlertEmail(kind: AlertKind, ctx: AlertContext): AlertEmail
     subject,
     body: text,
     html,
-    severity: c.severity,
+    severity: severityFor(kind, ctx, c.severity),
     ...(headers === undefined ? {} : { headers }),
   };
 }

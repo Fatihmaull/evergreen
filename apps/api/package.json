@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@evergreen-stellar/core": "workspace:*",
+    "@evergreen-stellar/shared-types": "workspace:*",
     "@neondatabase/serverless": "1.2.0",
     "@stellar/stellar-sdk": "17.0.1"
   },
