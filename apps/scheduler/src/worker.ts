@@ -11,6 +11,8 @@
  *
  * Nothing here signs, submits or reads a secret other than the two it is given.
  */
+import type { TenantPlan } from '@evergreen/engine/dist/tenants.js';
+import type { TenantRunReport } from '@evergreen/engine/dist/tenant-run.js';
 import { EvaluationError, type EvaluationSummary } from './evaluate.js';
 import { TickError } from './tick.js';
 
@@ -34,7 +36,15 @@ export interface Runtime {
    * Stage 1: the read-only, dry-run evaluation, run after the heartbeat is recorded. Absent
    * means Stage 0 only. Its failure never fails the tick: the heartbeat already measured the gap.
    */
-  readonly evaluate?: () => Promise<EvaluationSummary>;
+  readonly evaluate?: () => Promise<{
+    readonly summary: EvaluationSummary;
+    readonly plans: readonly TenantPlan[];
+  }>;
+  /**
+   * PH2-E4-01: dry-run tenant run after evaluation. No estimate, so nothing is pulled.
+   * Absent on a Stage 0 tick. A failure here never fails the tick.
+   */
+  readonly dryRunTenants?: (plans: readonly TenantPlan[]) => Promise<TenantRunReport>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -70,19 +80,22 @@ export async function tokenMatches(presented: string | null, expected: string): 
 /** Runs the evaluation and logs counts or a code. A fault of ours (not an EvaluationError) is rethrown. */
 async function evaluateStep(
   env: Env,
-  evaluate: () => Promise<EvaluationSummary>,
+  evaluate: NonNullable<Runtime['evaluate']>,
   runtime: Runtime,
   trigger: 'cron' | 'manual',
-): Promise<EvaluationSummary | { readonly ok: false; readonly code: string }> {
+): Promise<
+  | Awaited<ReturnType<NonNullable<Runtime['evaluate']>>>
+  | { readonly ok: false; readonly code: string }
+> {
   try {
-    const summary = await evaluate();
+    const result = await evaluate();
     runtime.log({
       event: 'scheduler.evaluate',
       trigger,
       environment: environmentOf(env),
-      ...summary,
+      ...result.summary,
     });
-    return summary;
+    return result;
   } catch (error) {
     if (!(error instanceof EvaluationError)) throw error;
     runtime.log({
@@ -92,6 +105,45 @@ async function evaluateStep(
       code: error.code,
     });
     return { ok: false as const, code: error.code };
+  }
+}
+
+/** Dry-run tenant pass. Counts only. A tenant failure stays in the report; a bug is rethrown. */
+async function tenantStep(
+  env: Env,
+  dryRunTenants: NonNullable<Runtime['dryRunTenants']>,
+  plans: readonly TenantPlan[],
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<void> {
+  try {
+    const report = await dryRunTenants(plans);
+    let ok = 0;
+    let failed = 0;
+    let skipped = 0;
+    for (const tenant of report.tenants) {
+      if (tenant.status === 'ok') ok += 1;
+      else if (tenant.status === 'failed') failed += 1;
+      else skipped += 1;
+    }
+    runtime.log({
+      event: 'scheduler.tenants',
+      trigger,
+      environment: environmentOf(env),
+      dryRun: true,
+      submitted: 0,
+      ok,
+      failed,
+      skipped,
+    });
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) throw error;
+    runtime.log({
+      event: 'scheduler.tenants_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: 'TENANT_RUN_FAILED',
+    });
   }
 }
 
@@ -108,11 +160,16 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
       ...(rpcMs === undefined ? {} : { rpcMs }),
     });
     if (runtime.evaluate === undefined) return { ok: true as const, observedLedger };
-    return {
-      ok: true as const,
-      observedLedger,
-      evaluation: await evaluateStep(env, runtime.evaluate, runtime, trigger),
-    };
+    const evaluation = await evaluateStep(env, runtime.evaluate, runtime, trigger);
+    if (!('summary' in evaluation) || runtime.dryRunTenants === undefined) {
+      return {
+        ok: true as const,
+        observedLedger,
+        evaluation: 'summary' in evaluation ? evaluation.summary : evaluation,
+      };
+    }
+    await tenantStep(env, runtime.dryRunTenants, evaluation.plans, runtime, trigger);
+    return { ok: true as const, observedLedger, evaluation: evaluation.summary };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';
     runtime.log({
