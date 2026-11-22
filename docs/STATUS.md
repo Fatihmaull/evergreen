@@ -62,6 +62,10 @@ F3 has no dedicated pending email and F5 has no delay email. The user-facing ale
 
 Notion sync pending for `PH2-E0-16`, `PH2-E2-07`, `PH2-E4-01`, `PH2-E2-06`, `PH2-E3-09` and `PH2-E3-10`. This session did not write the mirror.
 
+## Current — PH2-E4-08 router audit preparation, 2026-11-15
+
+Audit preparation for the production router is [`docs/PH2-E4-08-ROUTER-AUDIT-PREP.md`](PH2-E4-08-ROUTER-AUDIT-PREP.md). The card stays `[~]`. The contract, the tests, and Rust CI were already on `main`. This page does not choose a treasury address, does not change the Wasm, and is not the written audit `PH2-E5-02` requires before mainnet. Notion sync pending for PH2-E4-08.
+
 ## Current — PH2-E4-05 F16 sign-in operator email, 2026-11-14
 
 A sign-in `MailerError` still logs `auth.email_send_failed` and still answers 502 or 503. The request then schedules an operator email with `ctx.waitUntil` and does not await it. The cron is not the detector: the failure is not stored, and reading Workers Logs from `scheduled()` is not available here. Key: `f16-signin-email-failed:<UTC hour>/<recipient hash>`. Gate: `ALERTS_SEND` exactly `send`. Recipients: `ALERTS_ALLOWLIST`. No database read. Missing `EMAIL_API_KEY` or `EMAIL_FROM` logs `action: 'email_channel_down'` and does not call Resend. The same channel means a Resend outage fails this email too. Telegram (decided 2026-10-29) is not wired. No user alert. **Has fired on production: undetermined** — not in the Worker `b98b8aa` that health reported earlier today, and no inbox was read. The stale backlog clause "F10/F11 on production wait on migration `0009`" is removed. `0009` is recorded applied on preview and production (`docs/ops/neon-migrations.md`, 2026-10-31) and as Met in `docs/ops/secrets.md`. This session did not query Neon. The card stays `[~]`. Notion sync pending for PH2-E4-05.
@@ -81,6 +85,10 @@ Checkpoint 1 of `PH2-E4-05`. The API cron emails operators for F14 (`read_failed
 ## Current — PH2-E4-05 F9 slow-tick threshold is 12000 ms, 2026-11-10
 
 `SLOW_TICK_RPC_MS` is 12000. The comparison stays strictly above. PM decision 2026-11-10, revisable by Fatih. Production `rpc_ms` on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359, 10057, 13160), median 7852 ms, max 13160 ms. That value is the sum of getNetwork and getLatestLedger, each with a 10 s timeout, so 3000 ms alerted on every successful tick. The card stays `[~]`: DoD-2's alert clause is not met. The serving production API includes this 12000 ms constant (`SLOW_TICK_RPC_MS` at `b98b8aa8`, health 2026-11-14T11:13:50Z). Whether an alert has fired is **undetermined**. Notion note sync pending for PH2-E4-05. A full Notion presence diff was not run this session; the task was this constant only.
+
+## Current — PH2-E2-06 alert preferences screen, 2026-11-10
+
+Draft #602 builds `/dashboard/alerts/`. The page reads and writes optional preferences through `GET`/`PATCH /me/alert-preferences` and does not send mail. Copy: a persistent entry warns at 1 day, about 17,280 ledgers; allowance reminders are 30, 7 and 1 days; a temporary entry is not emailed during beta; approaching shows the warning and critical chips. The sidebar item is not added (`chrome.mjs` is shared). A 6-second close, event ids, send cadence, the sender address, and `ALERTS_SEND` stay undetermined. Nothing calls `dispatchUserAlert` from this screen. The card stays `[~]`. Notion sync pending for PH2-E2-06.
 
 ## Current — PH2-E2-06 alert preferences route, 2026-11-08
 

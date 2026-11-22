@@ -704,6 +704,12 @@ const PAGES = [
     to: 'dashboard/watchlist/index.html',
   },
   {
+    module: 'src/pages/alerts.mjs',
+    entry: 'src/pages/alerts.ts',
+    js: 'assets/alerts.js',
+    to: 'dashboard/alerts/index.html',
+  },
+  {
     module: 'src/pages/blast-radius.mjs',
     entry: 'src/pages/blast-radius.ts',
     js: 'assets/blast-radius.js',
@@ -1154,7 +1160,7 @@ function commissionAssetGuards() {
  * This read "building the twelve-page preview into apps/dashboard/public" — a
  * fixed string, so it named the wrong directory whenever `EVERGREEN_WEB_OUT`
  * redirected the output, which is every run of `check-published.mjs`. There
- * are 31 routes, not twelve. Same rule as the per-page line below: report the
+ * are `ROUTES.length`, not twelve. Same rule as the per-page line below: report the
  * output, not the intention.
  */
 const where = relative(repo, out);
