@@ -4,11 +4,11 @@
 
 ## Inventory now (read 2026-11-01 15:25 to 15:35 UTC, names only)
 
-Read with `wrangler secret list --name <worker>`, `gh secret list`, `gh variable list` and the GitHub environments API. Secret **values** cannot be read and are never recorded.
+Read with `wrangler secret list --name <worker>`, `gh secret list`, `gh variable list` and the GitHub environments API. Secret **values** cannot be read and are never recorded. The production API Worker row below was updated from the OPS Cloudflare API reading on 2026-11-15. The other rows in this table were not re-read that day and stay the 2026-11-01 reading.
 
 | Where | Names |
 |---|---|
-| Worker `evergreen-api` (production) | `ALERTS_ALLOWLIST`, `ALERTS_SEND`, `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (six). The four auth secrets have been set since 2026-10-29. Last secret change: 2026-10-31 10:41 UTC. |
+| Worker `evergreen-api` (production) | `ALERTS_ALLOWLIST`, `ALERTS_SEND`, `ALERTS_UNSUBSCRIBE_SECRET`, `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (seven). `ALERTS_UNSUBSCRIBE_SECRET` was installed 2026-11-15 10:20:04 UTC (17:20 WIB, UTC+7). Details: [`ALERTS_UNSUBSCRIBE_SECRET`](#alerts_unsubscribe_secret-ph2-e2-06-installed-on-production-2026-11-15). The four auth secrets have been set since 2026-10-29. On 2026-11-01 this row was the other six. The previous secret change was 2026-10-31 10:41 UTC. |
 | Worker `evergreen-api-preview` | `ALERTS_ALLOWLIST`, `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (no `ALERTS_SEND`) |
 | Worker `evergreen-scheduler` (**production**, deployed 2026-10-31 04:33 UTC by [run 41168994480](https://github.com/Fatihmaull/evergreen/actions/runs/41168994480), approved by `Fatihmaull`) | `DATABASE_URL` only. **No `TICK_TOKEN`**, as required: production ticks from its cron, and `TICK_TOKEN` is the preview-only switch that turns on `POST /tick`. |
 | Worker `evergreen-scheduler-preview` | `DATABASE_URL`, `TICK_TOKEN` |
@@ -104,7 +104,7 @@ Only `apps/api/src/alerts` reads `ALERTS_ALLOWLIST`, so it lives on the API Work
 |---|---|---|
 | `evergreen-api-preview` | **not set** (dry-run), checked 2026-11-01 | Worker **secret**, set 2026-10-30 (comma-separated operator emails), so no address is in the repo |
 | `evergreen-scheduler-preview`, `evergreen-scheduler` (production) | not set | not set (the scheduler code does not read either) |
-| `evergreen-api` (production) | **exactly `send`** (K4, Fatih, 2026-11-02), set by Fatih as a secret (the last secret change on the Worker is 2026-10-31 10:41 UTC). The value cannot be read back; this is Fatih's statement, and the API cron's logs cannot show it (a healthy heartbeat returns before `ALERTS_SEND` is consulted). | a secret named `ALERTS_ALLOWLIST` exists (contents unreadable): the operator addresses F10 and F11 emails go to |
+| `evergreen-api` (production) | **exactly `send`** (K4, Fatih, 2026-11-02), set by Fatih as a secret on 2026-10-31 10:41 UTC. The value cannot be read back; this is Fatih's statement, and the API cron's logs cannot show it (a healthy heartbeat returns before `ALERTS_SEND` is consulted). A later production secret, `ALERTS_UNSUBSCRIBE_SECRET`, was added 2026-11-15 (see below). | a secret named `ALERTS_ALLOWLIST` exists (contents unreadable): the operator addresses F10 and F11 emails go to |
 
 **Production sends operator emails for real (K4).** The F10 testnet-reset check and the F11 stale-heartbeat check run in the API Worker's 15-minute cron; when one fires, the email goes to the allowlist. **User alerts stay off** until migration 0011 ([#571](https://github.com/Fatihmaull/evergreen/pull/571)) is applied and CEF's dispatcher lands. This replaces the rule this page used to state ("nothing set in production"); the design's own rule, that production sending needs Fatih's ya, is met by K4.
 
@@ -124,6 +124,21 @@ Only `apps/api/src/alerts` reads `ALERTS_ALLOWLIST`, so it lives on the API Work
 The production API cron is running: the tail on 2026-11-01 15:30:16 UTC showed `alerts.f17_f18_config` (`problem: false`), `alerts.f11_heartbeat` (`action: none`, `reason: fresh`) and `alerts.f10_testnet_reset` (`action: none`, `reason: no_decrease`), outcome `ok`.
 
 Preview test send ([`alerts-test-send.md`](alerts-test-send.md), #545, `08e5114`): the runner reads `ALERTS_TEST_ALLOWLIST` and `ALERTS_SEND` from the **local shell env** of the one run, not from Worker secrets. `ALERTS_SEND` is not set on any Worker (checked 2026-10-30). Note: the design calls both names DevOps settings, not secrets; the allowlist is kept as a secret anyway because it holds email addresses.
+
+### `ALERTS_UNSUBSCRIBE_SECRET` (PH2-E2-06), installed on production 2026-11-15
+
+Installed on Worker `evergreen-api` (production). Names only. No value is written here.
+
+The rows in the table are the OPS Cloudflare API reading of 2026-11-15. This docs session re-read the public routes at 2026-11-15 10:23:24 UTC (17:23 WIB, UTC+7). `GET https://evergreen-stellar.pages.dev/api/v1/health` returned HTTP 200, `service` `evergreen-api`, `environment` `production`, `commit` `e111ba58ba10fc52a4bf2ecb658891921209f90e`. `POST /api/v1/alerts/unsubscribe` with an invalid token and a one-click form body returned HTTP 400 `INVALID_REQUEST` (`This unsubscribe link is not valid.`). While the secret was absent that route returned 503. A valid token was not sent: that needs a minted token for a real user, so the valid-token path is **undetermined**.
+
+| | |
+|---|---|
+| Approval | PM GO relaying Fatih's explicit "ya" at 2026-11-15 17:19 WIB (UTC+7; 10:19 UTC). |
+| Method | Cloudflare API `PUT /accounts/{account}/workers/scripts/evergreen-api/secrets`, type `secret_text`. 48 random bytes from `crypto.getRandomValues`, encoded base64url (64 characters), generated inside the API call and never returned, printed, or stored. Same method as the preview install on 2026-11-14. The OPS box had no logged-in wrangler, so the call was the secrets API rather than `wrangler secret put`. |
+| Deployment | `fcd06564-1bc7-4b09-be4c-01cbf3348921`, source `api`, `triggered_by` `secret`, version `c99833cb-f3e4-4c65-85e0-737582086c58` at 100%. Created 2026-11-15 10:20:04 UTC (17:20 WIB, UTC+7). |
+| Previous deployment | `5f27c3c7` (version `cc1ed89a`, commit `e111ba58`, GitHub Actions run [43662640202](https://github.com/Fatihmaull/evergreen/actions/runs/43662640202)). |
+| Production secret names after | `ALERTS_ALLOWLIST`, `ALERTS_SEND`, `ALERTS_UNSUBSCRIBE_SECRET`, `CHALLENGE_SIGNING_KEY`, `DATABASE_URL`, `EMAIL_API_KEY`, `SIGNIN_CODE_PEPPER` (seven). |
+| Preview inventory row | Not re-listed on 2026-11-15. It remains the 2026-11-01 reading (five names, no `ALERTS_SEND`). |
 
 ## Residual risk: the Cloudflare token is repo-level (accepted, Fatih, 2026-10-27)
 
