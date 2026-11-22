@@ -4,12 +4,15 @@
  * global fetch throws and the transport is a fake.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { assessEntry } from '@evergreen-stellar/core';
+import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import {
   dispatchUserAlertEvent,
   eventIdProblem,
   memoryOutboxStore,
   planUserAlert,
   renderAlertEmail,
+  type AlertKind,
   type AlertTransport,
   type UserAlertEvent,
 } from '../src/index.js';
@@ -17,15 +20,19 @@ import {
 const RECIPIENT = 'tester@alerts.example.test';
 const SEND = { ALERTS_SEND: 'send', ALERTS_ALLOWLIST: RECIPIENT };
 
-const ev = (over: Partial<UserAlertEvent> = {}): UserAlertEvent => ({
+type RoutineEvent = Extract<UserAlertEvent, { kind: Exclude<AlertKind, 'approaching_critical'> }>;
+
+const ev = (over: Partial<RoutineEvent> = {}): RoutineEvent => ({
   userId: 'u1',
-  kind: 'refund_delayed',
-  eventId: 'job:j1:refund-delayed',
-  recipient: RECIPIENT,
-  context: { entry: 'CABC', network: 'testnet' },
-  prefs: {},
-  deactivated: false,
-  ...over,
+  kind: over.kind ?? 'refund_delayed',
+  eventId: over.eventId ?? 'job:j1:refund-delayed',
+  recipient: over.recipient ?? RECIPIENT,
+  context: over.context ?? { entry: 'CABC', network: 'testnet' },
+  prefs: over.prefs ?? {},
+  deactivated: over.deactivated ?? false,
+  ...(over.dashboardOrigin === undefined ? {} : { dashboardOrigin: over.dashboardOrigin }),
+  ...(over.unsubscribeSecret === undefined ? {} : { unsubscribeSecret: over.unsubscribeSecret }),
+  ...(over.nowSeconds === undefined ? {} : { nowSeconds: over.nowSeconds }),
 });
 
 function fake(): AlertTransport & { calls: string[] } {
@@ -121,6 +128,55 @@ describe('planUserAlert', () => {
     expect(p.request.notification.body).toContain('cannot be turned off');
     expect(p.request.notification.body).not.toContain('/dashboard/alerts/');
     expect(p.request.notification.body).not.toContain('mailto:');
+  });
+
+  it('approaching_critical severity is assessEntry, and a missing observation does not send', async () => {
+    const entry: LedgerEntryTTL = {
+      kind: 'persistent',
+      endBehavior: 'archived',
+      contracts: ['C'],
+      observedAtLedger: 1_000_000,
+      ttl: { status: 'expired' },
+    };
+    const observed: UserAlertEvent = {
+      userId: 'u1',
+      kind: 'approaching_critical',
+      eventId: 'entry:u1:testnet:C:approaching:1',
+      recipient: RECIPIENT,
+      context: { entry: 'CABC', network: 'testnet', approaching: { entry, thresholdLedgers: 10 } },
+      prefs: {},
+      deactivated: false,
+    };
+    const p = await planUserAlert(observed);
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.request.notification.severity).toBe(
+      assessEntry(entry, 10).health === 'critical' ? 'critical' : 'warn',
+    );
+    expect(p.request.notification.severity).toBe('critical');
+
+    const missing = await planUserAlert({
+      ...ev({ eventId: 'entry:u1:testnet:C:approaching:2' }),
+      kind: 'approaching_critical',
+      context: { entry: 'CABC', network: 'testnet' },
+    } as UserAlertEvent);
+    expect(missing).toEqual({ ok: false, reason: 'missing_approaching' });
+
+    const t = fake();
+    const d = deps(t);
+    expect(
+      await dispatchUserAlertEvent(
+        SEND,
+        {
+          ...ev({ eventId: 'entry:u1:testnet:C:approaching:3' }),
+          kind: 'approaching_critical',
+          context: { entry: 'CABC', network: 'testnet' },
+        } as UserAlertEvent,
+        d,
+      ),
+    ).toEqual({ action: 'invalid', reason: 'missing_approaching' });
+    expect(t.calls).toEqual([]);
+    expect(d.store.rows.size).toBe(0);
   });
 
   it('a missing secret still links the preferences page and adds no one-click header', async () => {
