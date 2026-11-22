@@ -130,17 +130,17 @@ The offline cover and the offline closing sit on `--surface`, so the type is ink
 
 An announcement, a day-before reminder, and a post-event recap, each on the four canvases a post uses: square, story, landscape, and the link card. Portrait and the A3 poster are not event formats.
 
-The programme these templates are for is two offline events and four online events. The templates are not those six events. No title, date, place or link is on record, so every field is a placeholder and is meant to be replaced:
+The programme these templates are for is two offline events and four online events. The templates are not those six events. No title, date, place or link is on record, so every field is a placeholder and is meant to be replaced. The placeholders are English (Fatih, 15 Nov 2026):
 
 | Field | Placeholder |
 |---|---|
-| Title | Judul acara |
-| Date | Tanggal |
-| Mode | Daring atau luring |
-| Place or link | Tempat atau tautan |
-| Call to action | Ajakan |
+| Title | Event title |
+| Date | Date |
+| Mode | Online or offline |
+| Place or link | Place or link |
+| Call to action | Call to action |
 
-The eyebrow names the card, not the event: **Pengumuman**, **Sehari sebelumnya**, **Setelah acara**.
+The eyebrow names the card, not the event: **Announcement**, **The day before**, **After the event**.
 
 Nothing on an event card is a measured number. The lockup and the line "Stellar testnet · evergreen-stellar.pages.dev" are there because the card shows the product. The dominant element is the display line. Nothing is over 80px.
 

@@ -38,6 +38,12 @@
 
 ---
 
+## Current — PH2-E4-05 F3/F5 user email, and approaching severity, 2026-11-22
+
+F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. Searched `BACKLOG.md`, `docs/PH2-E2-06-DECISIONS.md` §7 (a recommendation to leave the sentences, not this decision), `docs/API.md`, `docs/PH2-E2-06-ALERTS-DESIGN.md`, and #602 (draft; the same relay is in the PR body, not on `main`). `FAILURE_MODE_ALERTS` still lists F3 via F4 and F5; that code was not changed. Whether it should name success and F6 is undetermined.
+
+`approaching_critical` in `apps/api/src/alerts/templates.ts` takes its severity from `assessEntry` when the caller passes the entry and the threshold. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. With no observation the rendered severity stays `warn`, and whether that matches the entry is undetermined. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
@@ -55,6 +61,10 @@
 `PH2-E3-10` is `[ ]`, owner `(F · DES)`, with Fatih for the event details. Remainder: real details for the six events, a projector check in the real room before the first offline workshop, and one combined PDF deck. Workshop dates are undetermined (`web-reference/design-language/formats.md`: no title, date, place or link is on record).
 
 Notion sync pending for `PH2-E0-16`, `PH2-E2-07`, `PH2-E4-01`, `PH2-E2-06`, `PH2-E3-09` and `PH2-E3-10`. This session did not write the mirror.
+
+## Current — PH2-E4-08 router audit preparation, 2026-11-15
+
+Audit preparation for the production router is [`docs/PH2-E4-08-ROUTER-AUDIT-PREP.md`](PH2-E4-08-ROUTER-AUDIT-PREP.md). The card stays `[~]`. The contract, the tests, and Rust CI were already on `main`. This page does not choose a treasury address, does not change the Wasm, and is not the written audit `PH2-E5-02` requires before mainnet. Notion sync pending for PH2-E4-08.
 
 ## Current — PH2-E4-05 F16 sign-in operator email, 2026-11-14
 
@@ -75,6 +85,10 @@ Checkpoint 1 of `PH2-E4-05`. The API cron emails operators for F14 (`read_failed
 ## Current — PH2-E4-05 F9 slow-tick threshold is 12000 ms, 2026-11-10
 
 `SLOW_TICK_RPC_MS` is 12000. The comparison stays strictly above. PM decision 2026-11-10, revisable by Fatih. Production `rpc_ms` on 10 Nov 2026 since 11:30 WIB, 10 samples (4435, 5303, 6415, 7329, 7493, 8211, 9026, 9359, 10057, 13160), median 7852 ms, max 13160 ms. That value is the sum of getNetwork and getLatestLedger, each with a 10 s timeout, so 3000 ms alerted on every successful tick. The card stays `[~]`: DoD-2's alert clause is not met. The serving production API includes this 12000 ms constant (`SLOW_TICK_RPC_MS` at `b98b8aa8`, health 2026-11-14T11:13:50Z). Whether an alert has fired is **undetermined**. Notion note sync pending for PH2-E4-05. A full Notion presence diff was not run this session; the task was this constant only.
+
+## Current — PH2-E2-06 alert preferences screen, 2026-11-10
+
+Draft #602 builds `/dashboard/alerts/`. The page reads and writes optional preferences through `GET`/`PATCH /me/alert-preferences` and does not send mail. Copy: a persistent entry warns at 1 day, about 17,280 ledgers; allowance reminders are 30, 7 and 1 days; a temporary entry is not emailed during beta; approaching shows the warning and critical chips. The sidebar item is not added (`chrome.mjs` is shared). A 6-second close, event ids, send cadence, the sender address, and `ALERTS_SEND` stay undetermined. Nothing calls `dispatchUserAlert` from this screen. The card stays `[~]`. Notion sync pending for PH2-E2-06.
 
 ## Current — PH2-E2-06 alert preferences route, 2026-11-08
 
