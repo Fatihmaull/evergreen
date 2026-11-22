@@ -180,7 +180,7 @@ F3 and F5 send no user email. The user hears the final outcome only: success (`e
 
 The design lists no user email for F3 or F5 (`docs/PH2-E2-06-ALERTS-DESIGN.md` §3). The failure-mode list records the same decision (`docs/PH2-E4-05-FAILURE-MODES.md`).
 
-In code on `main`, F3's user alert is `via` F4 and F5, and F5's is `via` F4 (`apps/api/src/alerts/failure-modes.ts`). That `via` link is not a dedicated F3 or F5 email. F4's user email stays `extend_failed_refund`. `ALERT_SPECS` has no F3 or F5 kind (`apps/api/src/alerts/policy.ts:59-71`). The 0011 kind check would reject a new kind until a migration replaces it (`apps/api/db/0011_alert_outbox_and_prefs.sql:34-38`).
+In code on `main`, after [#636](https://github.com/Fatihmaull/evergreen/pull/636) (squash `b7a8237a`), `FAILURE_MODE_ALERTS` records F3 and F5 as `final-outcome` (`apps/api/src/alerts/failure-modes.ts`). F4 keeps `extend_failed_refund`. `ALERT_SPECS` has no F3 or F5 kind (`apps/api/src/alerts/policy.ts:59-71`). The 0011 kind check would reject a new kind until a migration replaces it (`apps/api/db/0011_alert_outbox_and_prefs.sql:34-38`).
 
 #603 said F3 and F5 have no kind (`docs/API.md` §6a; `docs/PH2-E2-06-ALERTS-DESIGN.md` §3). The spec has no row for them (`components.md:477` on #602).
 
