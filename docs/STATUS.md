@@ -44,6 +44,44 @@ F3 has no dedicated pending email and F5 has no delay email. The user-facing ale
 
 `approaching_critical` in `apps/api/src/alerts/templates.ts` takes its severity from `assessEntry` when the caller passes the entry and the threshold. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. With no observation the rendered severity stays `warn`, and whether that matches the entry is undetermined. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both.
 
+## Current — PH2-E4-09 operator alert test sender, 2026-11-22
+
+`PH2-E4-09` is `[~]` `(F · CEF)` **S**. `runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). **Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih:** the HTTP trigger stays unwired. There is no operator authenticator, and a user session is not one. No new secret. Fatih reviews [#635](https://github.com/Fatihmaull/evergreen/pull/635) before merge. Whether a deployed Worker has sent the test is **undetermined**. Notion sync is pending for `PH2-E4-09`.
+
+## Current — PH2-BL-03 bundle remeasure, fix not applied, 2026-11-18
+
+Measured on `origin/main` at `81d88354` after `pnpm build && node apps/web/build.mjs`. Bytes are raw, then gzip level 9.
+
+| bundle | raw | gzip-9 |
+|---|---:|---:|
+| `overview.js` | 792,489 | 171,491 |
+| `scanner.js` | 788,843 | 170,529 |
+| `blast-radius.js` | 777,096 | 166,695 |
+| `watchlist.js` | 774,822 | 166,682 |
+| `allowance.js` | 771,378 | 165,044 |
+| `archival.js` | 750,435 | 159,086 |
+| **six SDK bundles** | **4,655,063** | **999,527** |
+| `login.js` | 26,665 | 8,524 |
+| `chrome.js` | 633 | 430 |
+
+The build log still attributes 86–91% of each of the six to `@stellar/stellar-sdk`. `login.js` does not carry it. The backlog's "three bundles of 732–768 KB" is stale: it is six, and `watchlist.js` and `allowance.js` joined the four from #321.
+
+A throwaway esbuild of those six entries with `splitting: true` and `format: 'esm'` (same minify, target and defines as `apps/web/build.mjs`; output under `/tmp`, not in the repo) wrote 17 files, 810,959 raw / 180,977 gzip-9. The largest chunk was 671,401 / 133,897. Across all six that is 810,959 against 4,655,063 raw, and 180,977 against 999,527 gzip-9. A single page still has to fetch that chunk. One page's gzip today is 159,086 to 171,491, and the shared chunk alone is 133,897, so the first load is not the thing that gets smaller. The saving is the second and later pages.
+
+The shared-chunk change was not made. Fatih's comment on #321 (2026-10-18) defers it until after the beta, and the questions at the bottom of that issue were not agreed. The change would rewrite `apps/web/build.mjs` and the script tags in `chrome.mjs` and `site.mjs`, which is how the scan, watchlist and docs pages load. Those pages are WEBF's. `login.js` has to stay a separate classic bundle because the login guard refuses the money path. The card stays `[ ]`. Notion sync pending for PH2-BL-03.
+
+## Current — PH2-E3-05 allowance estimate, approve guards, reminders, stopped, 2026-11-18
+
+`/allowance/` still revokes with `approve(0)` when a spender exists. This slice adds the cap estimate, the approve path, the reminder dates and the expired-as-stopped reading. The card stays `[~]`.
+
+The estimate takes simulated rent in stroops, one contract per line, and a count of hosted extends. The fee is `hostedFeeStroops` of each extend, so the 25,000-stroop minimum binds per extend. Rent and the fee are separate lines. The allowance amount is that rent, that fee and `pullAmountStroops`' retry margin, times the extends. `ALLOWANCE_RETRY_MARGIN_STROOPS` is unset, so the amount is undetermined and the Approve button stays disabled. No percentage was substituted for the margin.
+
+Approve, when both the spender and the margin are set, re-reads the chain and refuses to sign if that read is not the amount on screen. It refuses zero (that is the revoke), and it refuses an expiry past the ledger the allowance was read at plus 3,110,399. The only expiry the page offers is that ceiling. A new approve replaces the cap. The copy says the signature authorises a payment, never access to a contract.
+
+Renewal dates are 30, 7 and 1 days before a known expiry ledger. The page says it does not send them. `GET /wallets/{account}/allowance` is still not served (`apps/api/test/watchlist.test.ts` asserts no allowance route). A missing or unrecognisable answer stays undetermined. A body that parses as `expired`, with `lastKnown`, renders **Stopped** and does not say protected.
+
+`ENGINE_SPENDER` is still unset. Nothing was submitted. Freighter on testnet was not used: **undetermined**. Not branched from #629 (`cursor/e4-01-dry-run-tenants-8791`): that branch does not publish a spender or the allowance route. Notion sync pending for PH2-E3-05.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
