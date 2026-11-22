@@ -172,15 +172,19 @@ The template change is CEF (`apps/api/src/alerts/templates.ts`). Calling `assess
 
 ## 7. Whether F3 and F5 are delivered by email
 
+### Decision
+
+F3 and F5 send no user email. The user hears the final outcome only: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. F4 keeps `extend_failed_refund`. No new kind. Recorded in [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md) and [#634](https://github.com/Fatihmaull/evergreen/pull/634). Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. This is option 1 below. It replaces the recommendation to leave the failure-mode sentences unwritten. The [#608](https://github.com/Fatihmaull/evergreen/pull/608#pullrequestreview-5818648963) review had accepted that earlier recommendation.
+
 ### Current state
 
-The design lists no user email for F3 or F5, and leaves a pending notice and a delay notice **undetermined** (`docs/PH2-E2-06-ALERTS-DESIGN.md:48`). The failure-mode list says the same: F3 tells the user once the outcome is known, and whether to say "pending" earlier is undetermined (`docs/PH2-E4-05-FAILURE-MODES.md:79-85`); F5 sends nothing per attempt, F4 if it finally fails, and a delay notice is undetermined (`:95-101`).
+The design lists no user email for F3 or F5 (`docs/PH2-E2-06-ALERTS-DESIGN.md` §3). The failure-mode list records the same decision (`docs/PH2-E4-05-FAILURE-MODES.md`).
 
-In code, F3's user alert is `via` F4 and F5, and F5's is `via` F4 (`apps/api/src/alerts/failure-modes.ts:106-120`). `ALERT_SPECS` has no F3 or F5 kind (`apps/api/src/alerts/policy.ts:59-71`). The 0011 kind check would reject a new kind until a migration replaces it (`apps/api/db/0011_alert_outbox_and_prefs.sql:34-38`).
+In code on `main`, F3's user alert is `via` F4 and F5, and F5's is `via` F4 (`apps/api/src/alerts/failure-modes.ts`). That `via` link is not a dedicated F3 or F5 email. F4's user email stays `extend_failed_refund`. `ALERT_SPECS` has no F3 or F5 kind (`apps/api/src/alerts/policy.ts:59-71`). The 0011 kind check would reject a new kind until a migration replaces it (`apps/api/db/0011_alert_outbox_and_prefs.sql:34-38`).
 
-#603 repeats that F3 and F5 have no kind and are not decided (`docs/API.md:212` on that branch; `docs/PH2-E2-06-ALERTS-DESIGN.md:48` and `:114` on that branch). The spec has no row for them (`components.md:477` on #602).
+#603 said F3 and F5 have no kind (`docs/API.md` §6a; `docs/PH2-E2-06-ALERTS-DESIGN.md` §3). The spec has no row for them (`components.md:477` on #602).
 
-F3's submitted-hash column is not on `main` (`docs/PH2-E4-05-FAILURE-MODES.md:80`). F5's retry count is **undetermined** (`:100`).
+F3's submitted-hash column is not on `main` (`docs/PH2-E4-05-FAILURE-MODES.md`). F5's retry count is **undetermined**.
 
 ### Options
 
@@ -194,11 +198,11 @@ Option 1 matches the design's "no user email" list and the `via` links in code. 
 
 ### Recommendation
 
-Option 1. Do not email F3 or F5. Leave the failure-mode sentences as they are until the PM reopens them. No new kind.
+Superseded by the decision above. Option 1. F3 and F5 send no user email. F4 keeps `extend_failed_refund`. No new kind. The recommendation to leave the failure-mode sentences unwritten is withdrawn. Recorded in [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md) and [#634](https://github.com/Fatihmaull/evergreen/pull/634).
 
 ### Owner
 
-No change. If the PM later picks option 2 or 3, the kind CHECK is a migration on `apps/api/db` (Rakha) and the emit is the scheduler (Rakha). Both need an issue that names Rakha. The screen row would be a separate WEBF change after `docs/API.md` names the kind.
+No new kind. A later choice of option 2 or 3 would be a migration on `apps/api/db` (Rakha) and an emit in the scheduler (Rakha). Both would need an issue that names Rakha. The screen row would be a separate WEBF change after `docs/API.md` names the kind.
 
 ## Per-contract overrides
 

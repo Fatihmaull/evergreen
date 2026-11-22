@@ -212,7 +212,7 @@ type AlertPreference = {
 - **No outbox history.** This slice does not list `alert_outbox`. If a later route does, `sent` means Resend accepted the message. Inbox delivery stays unverified (`receivedInInbox: 'unverified'`). The word is accepted, not delivered and not received.
 - **`POST`, `PUT` and `DELETE` are `405`** with `Allow: GET, PATCH`.
 - A missing database or dashboard origin, or a store the Worker could not build, is `503 UPSTREAM_UNAVAILABLE`. The message names no setting.
-- **Not decided here:** when `allowance_expiring` is sent, the ledger count for `approaching_critical`, and whether F3 or F5 send a user email. None of those is a field on this route. F3 and F5 have no alert kind.
+- **Not decided here:** when `allowance_expiring` is sent, and the ledger count for `approaching_critical`. Neither is a field on this route. F3 and F5 send no user email. The user hears the final outcome only: success (`extend_succeeded`), F4 `extend_failed_refund` (the whole pull, fee included), or F6 `refund_delayed`. F4 keeps `extend_failed_refund`. F3 and F5 have no alert kind. Recorded in [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md) and [#634](https://github.com/Fatihmaull/evergreen/pull/634).
 
 ### One-click unsubscribe (RFC 8058)
 

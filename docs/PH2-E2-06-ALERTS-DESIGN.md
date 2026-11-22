@@ -37,7 +37,7 @@ Every row maps to a mode in [`PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MOD
 | Pre-flight failed, with its reason | F1 | required | warn | Nothing was pulled. Whether a repeated reason sends again or is suppressed until the user acts is **undetermined** (F1's retry). |
 | Allowance missing or expired; 30-day budget exhausted | F2 | required | warn | Includes how long autopilot has been stopped (`docs/API.md:413`). |
 | Allowance about to expire | F2 | optional, on by default | info | Lead time **undetermined**. |
-| Extend failed after the pull, full refund under way | F4 | required | critical | "Whole pull, fee included" (#469, #470). The entry is still unprotected. |
+| Extend failed after the pull, full refund under way | F4 | required | critical | Kind `extend_failed_refund`. "Whole pull, fee included" (#469, #470). The entry is still unprotected. |
 | Refund delayed | F6 | required | critical | The amount is owed and delayed. Never refunded from treasury. |
 | Unexplained charge on the user's own money | F7 | required | critical | Sent only after reconcile confirms a difference against the chain. |
 | Testnet reset | F10 | required | warn | Protection state is reset. |
@@ -45,7 +45,7 @@ Every row maps to a mode in [`PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MOD
 | Entry approaching critical with autopilot off | — | optional, on by default | warn/critical | Not one severity. Core's `approachingCritical` is `critical` when `assessEntry` health is `critical`, and `warn` otherwise (including `unknown`). The hosted draft in `templates.ts` is fixed at `warn`. The preference screen shows no chip for this kind until one rule is the sent value. Which rule is sent is a decision for Fatih (§9). |
 | Extend succeeded | — | optional, **on by default** | info | Shown as a receipt. Default ON decided by Tih, 2026-10-29, for a clearer user flow. Still optional: the user can turn it off or unsubscribe. |
 
-There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. Those modes surface to the user only when they become F1, F4 or F6, or as undetermined on the dashboard (`docs/API.md:390`). This matches the user column of each mode in the E4-05 list. Whether F3's "pending" or F5's delay should also be emailed is still **undetermined** there, and this design follows whatever is decided.
+There is **no user email** for F3, F5, F8, F9 or F11–F15, F17 and F18. F3 and F5 send no user email of their own. The user hears the final outcome only: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. F4 keeps `extend_failed_refund`. Recorded in [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md) and [#634](https://github.com/Fatihmaull/evergreen/pull/634). F8, F9, F11–F15, F17 and F18 surface to the user only when they become F1, F4 or F6, or as undetermined on the dashboard (`docs/API.md:390`).
 
 ## 4. Channel
 
@@ -104,6 +104,8 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 
 ## 9. Undetermined
 
+F3 and F5 are not in this list. They send no user email. The user hears the final outcome only: success (`extend_succeeded`), F4 `extend_failed_refund` (the whole pull, fee included), or F6 `refund_delayed`. Recorded in [`docs/PH2-E4-05-FAILURE-MODES.md`](PH2-E4-05-FAILURE-MODES.md) and [#634](https://github.com/Fatihmaull/evergreen/pull/634).
+
 - When the scheduler emits each event. `PH2-E4-04` has a heartbeat and a dry-run evaluation; it does not call `dispatchUserAlert`. The money path (`PH2-E4-02`) is not built.
 - The allowance-expiry lead time. Plan §3.3 says allowance renewal reminders at 30, 7 and 1 days before expiry (`PHASE2-PLAN.md`, Renewal). That schedule is not wired to `allowance_expiring`, and this design does not adopt it until Fatih says those three reminders are this email. The ledger count for `approaching_critical` is not a stored number: core grades the entry with `assessEntry` against that entry's threshold. `17,280` is the CLI default threshold, not this alert's setting.
 - Retries are 3 (`DEFAULT_ALERT_MAX_ATTEMPTS`). Resend keeps an idempotency key for 24 hours (`docs/PH2-E4-05-FAILURE-MODES.md`).
@@ -111,5 +113,4 @@ Live proof on preview (Stage B) happens only after the code merges and DevOps se
 - Whether alerts use a separate sender address.
 - When the Telegram backup channel for F16 is wired (the channel itself is decided).
 - The outbox and preferences schema. Landed as migration 0011 (Rakha's call, applied 2026-11-05). Who the F10 user email is addressed to is still **undetermined**: `testnetResetUserEvents` returns event ids only.
-- Whether F3 "pending" and F5 "delay" are emailed (open in E4-05).
 - Alert copy. Draft subjects and bodies are in `apps/api/src/alerts/templates.ts`. Whether they move to `packages/core` (recommendation 2) is still open.
