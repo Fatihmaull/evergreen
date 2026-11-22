@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EvaluationError } from '../src/evaluate.js';
+import { EvaluationError, type EvaluationSummary } from '../src/evaluate.js';
 import { TickError } from '../src/tick.js';
 import {
   deployedCommit,
@@ -250,14 +250,19 @@ describe('tokenMatches', () => {
 describe('Stage 1 evaluation step', () => {
   const SUMMARY = { dryRun: true as const, payers: 1, items: 2, itemsWithoutBudget: 1 };
   const withEval = (
-    evaluate: Runtime['evaluate'],
+    evaluate?: () => Promise<EvaluationSummary>,
     tick = () => Promise.resolve({ observedLedger: 7 }),
   ) => {
     const logs: Record<string, unknown>[] = [];
     let evals = 0;
     const rt: Runtime = {
       runTick: tick,
-      evaluate: evaluate && (() => (evals++, evaluate())),
+      evaluate:
+        evaluate &&
+        (async () => {
+          evals++;
+          return { summary: await evaluate(), plans: [] };
+        }),
       log: (entry) => logs.push({ ...entry }),
     };
     return { rt, logs, evals: () => evals };
@@ -304,5 +309,63 @@ describe('Stage 1 evaluation step', () => {
   it('a fault of ours in evaluation is not hidden', async () => {
     const { rt } = withEval(() => Promise.reject(new TypeError('bug')));
     await expect(handleScheduled({}, rt)).rejects.toBeInstanceOf(TypeError);
+  });
+
+  it('runs the dry-run tenant pass after evaluation and submits nothing', async () => {
+    const plans = [
+      {
+        network: 'testnet' as const,
+        payerAccount: 'G-not-logged',
+        items: [],
+      },
+    ];
+    const seen: unknown[] = [];
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans }),
+      dryRunTenants: (received) => {
+        seen.push(received);
+        return Promise.resolve({
+          runId: 'tick-7',
+          tenants: [{ payerAccount: 'G-not-logged', status: 'ok', decisions: [], items: [] }],
+          warnings: [],
+        });
+      },
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(seen).toEqual([plans]);
+    expect(logs.map((entry) => entry['event'])).toEqual([
+      'scheduler.tick',
+      'scheduler.evaluate',
+      'scheduler.tenants',
+    ]);
+    expect(logs[2]).toEqual({
+      event: 'scheduler.tenants',
+      trigger: 'cron',
+      environment: 'preview',
+      dryRun: true,
+      submitted: 0,
+      ok: 1,
+      failed: 0,
+      skipped: 0,
+    });
+    expect(JSON.stringify(logs)).not.toContain('G-not-logged');
+  });
+
+  it('does not run tenants when the heartbeat failed', async () => {
+    let ran = false;
+    const rt: Runtime = {
+      runTick: () => Promise.reject(new TickError('DB_FAILED')),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [] }),
+      dryRunTenants: () => {
+        ran = true;
+        return Promise.resolve({ runId: 'x', tenants: [], warnings: [] });
+      },
+      log: () => {},
+    };
+    await expect(handleScheduled({}, rt)).rejects.toMatchObject({ code: 'DB_FAILED' });
+    expect(ran).toBe(false);
   });
 });
