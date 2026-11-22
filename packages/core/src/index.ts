@@ -56,6 +56,22 @@ export {
 export type { HostedFeeConfig } from './fee.js';
 export { pullAmountStroops } from './pull-amount.js';
 export type { PullAmountBreakdown, PullAmountInput } from './pull-amount.js';
+export {
+  ALLOWANCE_EXPIRING_BANDS,
+  TEMPORARY_APPROACHING_LEDGERS,
+  allowanceExpiringDue,
+  allowanceExpiringEventId,
+  approachingCriticalDue,
+  approachingCriticalEventId,
+  approachingCriticalThresholdLedgers,
+} from './alert-ledger.js';
+export type {
+  AlertEntryKind,
+  AllowanceExpiringBand,
+  AllowanceExpiringEventId,
+  AllowanceSeverity,
+  ApproachingCriticalEventId,
+} from './alert-ledger.js';
 export type { ConfigLoadResult } from './config.js';
 export {
   DEFAULT_CRITICAL_LEDGERS,
