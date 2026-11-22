@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:evidence-inventory && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:action",
+    "test": "vitest run --coverage && pnpm test:ttl && pnpm test:email && pnpm test:persistence && pnpm test:notion-sync && pnpm test:evidence-integrity && pnpm test:evidence-inventory && pnpm test:engine-output && pnpm test:engine-recorder && pnpm test:alert-journal && pnpm test:scheduler-watch && pnpm test:action && pnpm test:retry-margin",
     "test:ttl": "node --test --test-isolation=none scripts/verify-ttl-boundary.test.mjs",
     "test:pglite": "vitest run --coverage.enabled=false pglite pg-store",
     "test:watch": "vitest",
@@ -57,6 +57,8 @@
     "measure:cadence": "pnpm build && node scripts/measure-scheduler-cadence.mjs",
     "ready:fresh": "node scripts/ready-fresh-machine.mjs",
     "test:action": "node --test --test-isolation=none scripts/action.test.mjs",
+    "test:retry-margin": "node --test --test-isolation=none scripts/retry-margin.test.mjs",
+    "measure:retry-margin": "node scripts/measure-retry-margin.mjs",
     "check:evidence-integrity": "node scripts/check-evidence-integrity.mjs",
     "test:evidence-inventory": "node --test --test-isolation=none scripts/check-evidence-integrity.test.mjs",
     "verify:bundle-links": "node scripts/verify-bundle-links.mjs"
