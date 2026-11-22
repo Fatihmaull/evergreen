@@ -2,12 +2,13 @@
  * The alert-preferences screen (web-reference/design-language/components.md
  * § Alert preferences). Copy only. No request leaves this file.
  *
- * #611 named the ledger rule and left these undetermined. The reversible
- * default is stated beside each one; nothing here picks a send.
+ * 15 Nov 2026 copy. Nothing here picks a send.
  *
- * - temporary-entry line: same 17,280 comparison, labelled undetermined
- * - a close other than 5 seconds: the screen uses 5, the display assumption,
- *   and says about 6 seconds is undetermined
+ * - persistent expiry: 1 day is the rule; about 17,280 ledgers is the
+ *   estimate at 5 seconds a ledger
+ * - allowance: 30, 7 and 1 days are the rule; the ledger counts are the estimate
+ * - temporary entries: no email during beta, and no switch
+ * - a close other than 5 seconds stays undetermined
  * - event ids: not shown
  * - how often a saved choice is checked: not a number; the page only stores
  * - sender address: not printed
@@ -68,8 +69,8 @@ function esc(value: string): string {
 }
 
 const LEADS: Readonly<Record<AlertKindName, string>> = {
-  allowance_expiring: `The allowance autopilot uses is about to expire. Once a send exists, the reminders are at ${ALLOWANCE_LEAD_LEDGERS.map(ledgerCount).join(', ')} ledgers remaining, about 30, 7 and 1 days at ${LEDGER_SECONDS_ASSUMED} seconds a ledger. ${ledgerCount(518_400)} is not a protocol constant. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored.`,
-  approaching_critical: `Email when an entry you watch has ${ledgerCount(APPROACHING_AT_OR_BELOW_LEDGERS)} ledgers or fewer remaining and autopilot is off for it. About 1 day, at ${LEDGER_SECONDS_ASSUMED} seconds a ledger, the display assumption. A close of about 6 seconds is undetermined, and a separate line for a temporary entry is undetermined. Nothing is sent until that ledger is stored. The day is an estimate.`,
+  allowance_expiring: `The allowance autopilot uses is about to expire. Reminders go out at 30, 7 and 1 days, about ${ALLOWANCE_LEAD_LEDGERS.map(ledgerCount).join(', ')} ledgers at ${LEDGER_SECONDS_ASSUMED} seconds a ledger. The days are the rule. The ledgers are the estimate. ${ledgerCount(518_400)} is that arithmetic, not a protocol constant. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored.`,
+  approaching_critical: `Email when a persistent entry you watch is within 1 day of expiry and autopilot is off for it. About ${ledgerCount(APPROACHING_AT_OR_BELOW_LEDGERS)} ledgers, at ${LEDGER_SECONDS_ASSUMED} seconds a ledger. The day is the rule. The ledgers are the estimate. The email is warning, or critical when that entry is shared or already expired. A temporary entry is not emailed during beta. Nothing is sent until that ledger is stored.`,
   extend_succeeded:
     'Autopilot extended this entry. The email is a receipt of that extend. It is not a payment, and this page does not move XLM.',
   preflight_failed:
@@ -152,8 +153,8 @@ function switchHtml(kind: OptionalKind, enabled: boolean, title: string): string
 function optionalRow(kind: OptionalKind, item: PreferenceItem, watchlist: WatchlistFact): string {
   const title = TITLES[kind];
   const extra =
-    item.kind === 'approaching_critical'
-      ? `<p class="fine">One choice for every entry you watch. There is no per-contract switch.</p><p class="fine">The email's severity follows that entry's health: warning or critical. This row does not wear one mark, because the sent value is not one value, and no send exists until the ledger is stored.</p><div data-watchlist-note>${watchlistNoteHtml(watchlist)}</div>`
+    kind === 'approaching_critical'
+      ? `<p class="fine">${CHIP.warning} ${CHIP.critical} Those marks are the email's severity, not this contract's health. One choice for every persistent entry you watch. There is no per-contract switch.</p><div data-watchlist-note>${watchlistNoteHtml(watchlist)}</div>`
       : '';
   return `<div class="pref-row" data-kind="${kind}">
       ${switchHtml(kind, item.enabled, title)}
@@ -231,5 +232,6 @@ export function alertsHtml(
     </section>
     <p class="fine">At most 5 optional emails are sent in 24 hours. Required emails are not counted in that 5.</p>
     <p class="fine">No alert email is not health. It can mean nothing happened, or that sending did not.</p>
+    <p class="fine">A pull whose outcome is still unknown, and an extend that fails only for a while, have no email of their own. You hear the final outcome: the extend succeeded, the whole pull is being refunded, or the refund is delayed.</p>
     <p class="fine">How often a saved choice is checked for a send is undetermined. This page only stores the choice. It does not send mail.</p>`;
 }

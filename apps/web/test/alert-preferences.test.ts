@@ -166,6 +166,16 @@ describe('the screen', () => {
     expect(html).toContain('Email is the channel. No other channel is on this page.');
     expect(html).toContain('Which address a message would come from is undetermined.');
     expect(html).toContain('Nothing is sent until');
+    expect(html).toContain('The day is the rule. The ledgers are the estimate.');
+    expect(html).toContain('The days are the rule. The ledgers are the estimate.');
+    expect(html).toContain('A temporary entry is not emailed during beta.');
+    expect(html).toContain('have no email of their own');
+    expect(html).not.toContain('separate line for a temporary');
+    const marks = html.indexOf("Those marks are the email's severity");
+    expect(marks).toBeGreaterThan(0);
+    const beforeMarks = html.slice(Math.max(0, marks - 240), marks);
+    expect(beforeMarks).toContain('chip warning');
+    expect(beforeMarks).toContain('chip critical');
     for (const kind of ['preflight_failed', 'refund_delayed', 'testnet_reset']) {
       expect(html).not.toMatch(new RegExp(`role="switch"[^>]*${kind}`));
       expect(html).toContain(`data-kind="${kind}"`);

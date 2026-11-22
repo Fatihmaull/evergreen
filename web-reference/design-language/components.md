@@ -276,12 +276,13 @@ is not a route this screen calls.
    screen's switch has no hover move. Focus is the shipping ring: `2px solid
    --pine`, offset 2px, radius 3px.
 7. **Ledgers are the truth, dates are estimates.** #611 named the rule, and
-   Fatih confirmed the lead times on 15 Nov 2026. The screen prints the
-   ledger count first and the day as an estimate, with the word *about*.
-   - **Persistent expiry warning.** 17,280 ledgers remaining or fewer.
-     That is `DEFAULT_CRITICAL_LEDGERS` in `packages/core/src/health.ts`
-     and the CLI's `DEFAULT_THRESHOLD_LEDGERS` in `packages/cli/src/scan.ts`.
-     About 1 day, at `SECONDS_PER_LEDGER` (5) in `packages/core/src/ttl.ts`.
+   Fatih confirmed the lead times on 15 Nov 2026. The screen states the
+   day as the rule and the ledger count as the estimate, with the word
+   *about* on the ledger count.
+   - **Persistent expiry warning.** 1 day. About 17,280 ledgers, at
+     `SECONDS_PER_LEDGER` (5) in `packages/core/src/ttl.ts`. 17,280 is
+     `DEFAULT_CRITICAL_LEDGERS` in `packages/core/src/health.ts` and the
+     CLI's `DEFAULT_THRESHOLD_LEDGERS` in `packages/cli/src/scan.ts`.
    - **Allowance reminders.** 30, 7 and 1 days.
      `docs/adr/ADR-007-allowance-funded-hosted-engine.md` says "Renewal
      reminders go out at 30, 7 and 1 days." ADR-007 states the days, not a
@@ -374,7 +375,7 @@ read.
 | Kind | Title | Switch sentence |
 |---|---|---|
 | `allowance_expiring` | Allowance about to expire | The allowance autopilot uses is about to expire. Reminders go out at 30, 7 and 1 days, about 518,400, 120,960 and 17,280 ledgers at 5 seconds a ledger. The days are the rule. The ledgers are the estimate. A close of about 6 seconds is undetermined. Nothing is sent until the expiry ledger is stored. |
-| `approaching_critical` | Approaching expiry | Email when a persistent entry you watch has 17,280 ledgers or fewer remaining and autopilot is off for it. About 1 day. The day is an estimate. The email is warning, or critical when that entry is shared or already expired. A temporary entry is not emailed during beta. Nothing is sent until that ledger is stored. |
+| `approaching_critical` | Approaching expiry | Email when a persistent entry you watch is within 1 day of expiry and autopilot is off for it. About 17,280 ledgers, at 5 seconds a ledger. The day is the rule. The ledgers are the estimate. The email is warning, or critical when that entry is shared or already expired. A temporary entry is not emailed during beta. Nothing is sent until that ledger is stored. |
 | `extend_succeeded` | Extend succeeded | Autopilot extended this entry. The email is a receipt of that extend. It is not a payment, and this page does not move XLM. |
 
 Intro, under the `Optional` heading: "On unless you turn one off. A missing
@@ -516,8 +517,8 @@ notices are not sent. The failure-modes page was not edited here.
    line stays undetermined. The read has to preserve the byte comparison:
    only exactly `send` is on.
 4. **Outbox history.** Not built. Do not add it from the table.
-5. **Lead times.** Answered 15 Nov 2026. Persistent expiry warning: 17,280
-   ledgers, about 1 day. Allowance reminders: 30, 7 and 1 days (ADR-007).
+5. **Lead times.** Answered 15 Nov 2026. Persistent expiry warning: 1 day,
+   about 17,280 ledgers. Allowance reminders: 30, 7 and 1 days (ADR-007).
    Temporary entries: no email during beta. Still undetermined, and the
    screen says so: a close of about 6 seconds, the event ids, and how often
    a saved choice is checked. The screen does not invent a number for those.
