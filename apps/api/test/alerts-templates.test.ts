@@ -3,6 +3,7 @@
  * fetch throws and the Resend client is a fake.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import {
   ALERT_SPECS,
   ALERT_TEMPLATE_KINDS,
@@ -125,6 +126,88 @@ describe('renderAlertEmail', () => {
     expect(e.headers).toBeUndefined();
     expect(e.body).not.toContain('mailto:');
     expect(e.body).toContain('https://dashboard.example.test/dashboard/alerts/');
+  });
+});
+
+const LEDGERS = 10;
+
+function archived(
+  kind: 'persistent' | 'code',
+  remaining: number,
+  contracts: readonly string[],
+): LedgerEntryTTL {
+  return {
+    kind,
+    endBehavior: 'archived',
+    contracts,
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'known', endsAtLedger: 1_000_000 + remaining, remainingLedgers: remaining },
+  };
+}
+
+function temporary(remaining: number): LedgerEntryTTL {
+  return {
+    kind: 'temporary',
+    endBehavior: 'deleted',
+    contracts: ['C'],
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'known', endsAtLedger: 1_000_000 + remaining, remainingLedgers: remaining },
+  };
+}
+
+function expiredLone(): LedgerEntryTTL {
+  return {
+    kind: 'persistent',
+    endBehavior: 'archived',
+    contracts: ['C'],
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'expired' },
+  };
+}
+
+function approaching(entry: LedgerEntryTTL, thresholdLedgers = LEDGERS) {
+  return renderAlertEmail('approaching_critical', {
+    entry: 'C',
+    network: 'testnet',
+    approaching: { entry, thresholdLedgers },
+  });
+}
+
+describe('approaching_critical severity follows assessEntry', () => {
+  it('an expired lone persistent entry is critical', () => {
+    // Dropping the expired-is-critical rule grades this warning: it is not shared and not temporary.
+    expect(approaching(expiredLone()).severity).toBe('critical');
+  });
+
+  it('a shared entry is critical at the threshold and not one ledger above', () => {
+    expect(approaching(archived('code', LEDGERS - 1, ['C1', 'C2'])).severity).toBe('critical');
+    expect(approaching(archived('code', LEDGERS, ['C1', 'C2'])).severity).toBe('critical');
+    expect(approaching(archived('code', LEDGERS + 1, ['C1', 'C2'])).severity).toBe('warn');
+  });
+
+  it('a temporary entry is critical at the threshold and not one ledger above', () => {
+    expect(approaching(temporary(LEDGERS - 1)).severity).toBe('critical');
+    expect(approaching(temporary(LEDGERS)).severity).toBe('critical');
+    expect(approaching(temporary(LEDGERS + 1)).severity).toBe('warn');
+  });
+
+  it('a lone recoverable entry at the threshold stays warn', () => {
+    expect(approaching(archived('persistent', LEDGERS, ['C'])).severity).toBe('warn');
+  });
+
+  it('does not apply the observation to another kind', () => {
+    const e = renderAlertEmail('extend_succeeded', {
+      entry: 'C',
+      network: 'testnet',
+      approaching: { entry: expiredLone(), thresholdLedgers: LEDGERS },
+    });
+    expect(e.severity).toBe('info');
+  });
+
+  it('without an observation the rendered severity stays warn', () => {
+    expect(
+      renderAlertEmail('approaching_critical', { entry: 'C', network: 'testnet' }).severity,
+    ).toBe('warn');
   });
 });
 
