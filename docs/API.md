@@ -232,9 +232,9 @@ type AlertPreference = {
 - **No separate rate limit** is defined. A bad token does not touch the database. A valid token's write is idempotent.
 - `PUT`, `PATCH` and `DELETE` are `405` with `Allow: GET, POST`.
 
-### Operator alert test (not a route)
+### Operator alert test (`PH2-E4-09`, not a route)
 
-`runOperatorTestAlert` (`apps/api/src/alerts/operator-test.ts`) mails the operator channel a fixed body whose subject and first word are `TEST`. It is not a failure report and it does not move XLM. **It is not mounted.** `handle` and `scheduled` do not call it. `GET`, `POST` and `PUT /api/v1/alerts/operator-test` answer `404 NOT_FOUND`, including when the query or the body names a recipient (`to`). A session cookie does not change that. There is no operator authenticator in this Worker. A user session is not one.
+`runOperatorTestAlert` (`apps/api/src/alerts/operator-test.ts`, `PH2-E4-09`) mails the operator channel a fixed body whose subject and first word are `TEST`. It is not a failure report and it does not move XLM. **It is not mounted.** Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih: the HTTP trigger stays unwired. `handle` and `scheduled` do not call it. `GET`, `POST` and `PUT /api/v1/alerts/operator-test` answer `404 NOT_FOUND`, including when the query or the body names a recipient (`to`). A session cookie does not change that. There is no operator authenticator in this Worker. A user session is not one. No new secret.
 
 The sender, when called, follows the same gate as the F16 sign-in operator email:
 
@@ -374,7 +374,7 @@ The exact row split is Rakha's schema; this shape is the read view.
 - **Return a health or TTL without its observation.**
 - **Accept an RPC URL from a client.** RPC endpoints are server configuration, as for the MCP server (`PH2-E1-07`): a URL can carry a provider key.
 - **Serve mainnet writes** before DoD-2 is met (`PH2-E5-02`).
-- **Offer an operator-alert test route.** The sender exists and is not mounted (§6a). A request cannot choose a recipient.
+- **Offer an operator-alert test route.** `PH2-E4-09`: the sender exists and is not mounted (§6a). Evergreen PM (relayed), 2026-11-22, not Fatih: the trigger stays unwired. A request cannot choose a recipient.
 
 ## 9 · The error envelope (CEF)
 

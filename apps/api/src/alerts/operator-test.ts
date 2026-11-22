@@ -1,5 +1,7 @@
 /**
- * Operator-channel test send. Not a failure mode and not a user alert.
+ * PH2-E4-09 operator-channel test send. Not a failure mode and not a user alert.
+ * Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih: the HTTP
+ * trigger stays unwired.
  *
  * Recipients come only from `ALERTS_ALLOWLIST`. This function takes no
  * recipient argument and does not read a request, so a query or a body cannot

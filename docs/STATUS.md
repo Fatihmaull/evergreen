@@ -38,9 +38,9 @@
 
 ---
 
-## Current — operator alert test sender, 2026-11-22
+## Current — PH2-E4-09 operator alert test sender, 2026-11-22
 
-`runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). The HTTP trigger is not mounted: this Worker has no operator authenticator, and a user session is not one. No new secret. No route was added, so the public API is unchanged until that decision. The card has no row in `BACKLOG.md`; no row was added. Notion sync is pending because there is no registered ID to write. Whether a deployed Worker has sent the test is **undetermined**.
+`PH2-E4-09` is `[~]` `(F · CEF)` **S**. `runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). **Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih:** the HTTP trigger stays unwired. There is no operator authenticator, and a user session is not one. No new secret. Fatih reviews [#635](https://github.com/Fatihmaull/evergreen/pull/635) before merge. Whether a deployed Worker has sent the test is **undetermined**. Notion sync is pending for `PH2-E4-09`.
 
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
