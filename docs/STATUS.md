@@ -38,6 +38,12 @@
 
 ---
 
+## Current — PH2-E4-05 F3/F5 user email, and approaching severity, 2026-11-22
+
+F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. Searched `BACKLOG.md`, `docs/PH2-E2-06-DECISIONS.md` §7 (a recommendation to leave the sentences, not this decision), `docs/API.md`, `docs/PH2-E2-06-ALERTS-DESIGN.md`, and #602 (draft; the same relay is in the PR body, not on `main`). `FAILURE_MODE_ALERTS` still lists F3 via F4 and F5; that code was not changed. Whether it should name success and F6 is undetermined.
+
+`approaching_critical` in `apps/api/src/alerts/templates.ts` takes its severity from `assessEntry` when the caller passes the entry and the threshold. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. With no observation the rendered severity stays `warn`, and whether that matches the entry is undetermined. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
