@@ -44,6 +44,10 @@ F3 has no dedicated pending email and F5 has no delay email. The user-facing ale
 
 `approaching_critical` in `apps/api/src/alerts/templates.ts` takes its severity from `assessEntry` when the caller passes the entry and the threshold. An expired entry is critical. A shared or temporary entry is critical at or below the threshold and not one ledger above. A lone recoverable entry stays `warn`. With no observation the rendered severity stays `warn`, and whether that matches the entry is undetermined. No sender was added. CLI `--json` fields, exit codes and flags are unchanged. Subject and body text are unchanged. `PH2-E4-05` and `PH2-E2-06` stay `[~]`. Notion sync pending for both.
 
+## Current — PH2-E4-09 operator alert test sender, 2026-11-22
+
+`PH2-E4-09` is `[~]` `(F · CEF)` **S**. `runOperatorTestAlert` mails `ALERTS_ALLOWLIST` a fixed TEST body on the same gate as the operator alerts (`ALERTS_SEND` exactly `send`, per-recipient catch, Resend key `operator-test:<UTC hour>/<recipient hash>`, `email_channel_down` when `EMAIL_API_KEY` or `EMAIL_FROM` is missing). **Decided by Evergreen PM (relayed), 2026-11-22, not by Fatih:** the HTTP trigger stays unwired. There is no operator authenticator, and a user session is not one. No new secret. Fatih reviews [#635](https://github.com/Fatihmaull/evergreen/pull/635) before merge. Whether a deployed Worker has sent the test is **undetermined**. Notion sync is pending for `PH2-E4-09`.
+
 ## Current — PH2-BL-03 bundle remeasure, fix not applied, 2026-11-18
 
 Measured on `origin/main` at `81d88354` after `pnpm build && node apps/web/build.mjs`. Bytes are raw, then gzip level 9.

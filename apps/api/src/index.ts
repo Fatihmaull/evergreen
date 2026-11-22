@@ -367,6 +367,18 @@ export type {
   SigninEmailFailedEnv,
   SigninEmailFailedOutcome,
 } from './alerts/signin-email-failed.js';
+export {
+  operatorTestChannelBlocked,
+  operatorTestEventId,
+  operatorTestHour,
+  operatorTestNotification,
+  runOperatorTestAlert,
+} from './alerts/operator-test.js';
+export type {
+  OperatorTestDeps,
+  OperatorTestEnv,
+  OperatorTestOutcome,
+} from './alerts/operator-test.js';
 export type {
   DatabaseUnavailableDeps,
   DatabaseUnavailableOutcome,
