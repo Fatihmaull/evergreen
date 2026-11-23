@@ -2,7 +2,7 @@
  * /allowance/ (PH2-E3-05): the unset spender, the raw read, the revoke flow
  * against stand-ins, and one distinct sentence per outcome.
  */
-import { StrKey } from '@stellar/stellar-sdk';
+import { StrKey, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { describe, expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -18,6 +18,7 @@ vi.mock('../src/lib/evergreen', () => ({
 import {
   ENGINE_SPENDER,
   TESTNET_ENGINE_SPENDER,
+  allowanceValue,
   readAllowance,
   type AllowanceChain,
 } from '../src/lib/allowance';
@@ -313,5 +314,39 @@ describe('every outcome renders distinctly', () => {
 
   test('the unset-spender sentence is the one the read panel shows', () => {
     expect(text(revokeOutcomeHtml({ kind: 'spender-unset' }))).toContain(SPENDER_UNSET_TEXT);
+  });
+});
+
+describe('the stored allowance value', () => {
+  const entry = (fields: [string, xdr.ScVal][]) =>
+    xdr.ScVal.scvMap(
+      fields.map(([k, v]) => new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol(k), val: v })),
+    );
+  const amount = nativeToScVal(17_499_704n, { type: 'i128' });
+
+  test('the built-in SAC stores live_until_ledger (first real approve, 2026-11-23)', () => {
+    expect(
+      allowanceValue(
+        entry([
+          ['amount', amount],
+          ['live_until_ledger', xdr.ScVal.scvU32(8_993_626)],
+        ]),
+      ),
+    ).toEqual({ amountStroops: '17499704', liveUntilLedger: 8_993_626 });
+  });
+
+  test('the older expiration_ledger spelling is read too', () => {
+    expect(
+      allowanceValue(
+        entry([
+          ['amount', amount],
+          ['expiration_ledger', xdr.ScVal.scvU32(9)],
+        ]),
+      ),
+    ).toEqual({ amountStroops: '17499704', liveUntilLedger: 9 });
+  });
+
+  test('an entry with no expiry field is undetermined, never "no entry"', () => {
+    expect(() => allowanceValue(entry([['amount', amount]]))).toThrow(/unexpected shape.*amount/);
   });
 });

@@ -5,9 +5,12 @@ import { estimateAllowanceCap } from '../src/lib/allowance-cap';
 import type { CapRow } from '../src/lib/allowance-candidates';
 import {
   BUDGET_RULE_TEXT,
+  MARGIN_UNSET_TEXT,
+  approveOffReasons,
   THRESHOLD_UNPUBLISHED_TEXT,
   autopilotOnOutcomeHtml,
   autopilotRowsHtml,
+  budgetFigure,
   budgetProblem,
   coverageSentence,
   defaultBudget,
@@ -220,6 +223,25 @@ describe('step D', () => {
     expect(autopilotRowsHtml([])).toContain(BUDGET_RULE_TEXT);
   });
 
+  test('each budget field says its stroops grouped and in XLM', () => {
+    expect(budgetFigure(8_749_852n)).toBe('8,749,852 stroops · 0.8749852 XLM');
+    expect(budgetFigure(undefined)).toBe('');
+    const html = autopilotRowsHtml([
+      {
+        contractId: A,
+        label: undefined,
+        thresholdLedgers: 4320,
+        extendToLedgers: 120_000,
+        perJobMaxStroops: 8_749_852n,
+        per30DaysMaxStroops: 17_499_704n,
+      },
+    ]);
+    expect(html).toContain('8,749,852 stroops · 0.8749852 XLM');
+    expect(html).toContain('17,499,704 stroops · 1.7499704 XLM');
+    // Every cell carries its column name, for the stacked phone layout.
+    expect(html.match(/<td [^>]*data-label="/g)?.length).toBe(5);
+  });
+
   test('the floor is quoted from the API and offered, never applied', () => {
     const refusal = {
       kind: 'error',
@@ -310,5 +332,42 @@ describe('step D', () => {
       fetchImpl,
     );
     expect(floorFrom(outcome)).toBe(4329);
+  });
+});
+
+describe('why the sign button is off', () => {
+  const ready = {
+    spenderSet: true,
+    marginSet: true,
+    connected: true,
+    read: true,
+    linked: true,
+    capNamed: true,
+  };
+
+  test('a fresh reload asks for the wallet, and never says the margin is unset when it is set', () => {
+    const r = approveOffReasons({ ...ready, connected: false, read: false, capNamed: false });
+    expect(r).toEqual(['Connect your wallet in step 1.']);
+    expect(r.join(' ')).not.toContain(MARGIN_UNSET_TEXT);
+  });
+
+  test('each missing piece names itself, and a ready page has no reason', () => {
+    expect(approveOffReasons(ready)).toEqual([]);
+    expect(approveOffReasons({ ...ready, capNamed: false })[0]).toMatch(
+      /Choose at least one contract/,
+    );
+    expect(approveOffReasons({ ...ready, marginSet: false })).toContain(MARGIN_UNSET_TEXT);
+    expect(approveOffReasons({ ...ready, linked: false })[0]).toMatch(/not linked/);
+    expect(approveOffReasons({ ...ready, spenderSet: false })).toContain(SPENDER_UNSET_TEXT);
+  });
+});
+
+describe('submitted', () => {
+  test('the hash links to the explorer, and no reload is asked for', async () => {
+    const { submittedHtml } = await import('../src/lib/allowance-review');
+    const html = submittedHtml({ hash: 'abc123', ledger: 5_883_380 });
+    expect(html).toContain('href="https://stellar.expert/explorer/testnet/tx/abc123"');
+    expect(text(html)).toContain('Submitted in ledger 5,883,380.');
+    expect(html).not.toMatch(/reload/i);
   });
 });
