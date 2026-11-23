@@ -741,7 +741,7 @@ Not decisions. Replace each with the configured or read value.
 |---|---|
 | Rents `61,234` and `48,903` stroops | In-browser simulation per contract. |
 | 6 extends per contract | The person's input; the product default is 2. |
-| Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`, unset today (from #630 / `PH2-E4-02`). |
+| Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`: 100,000 stroops on testnet (CEF, 2026-11-23, PR #643). With it, one contract at 103,849 stroops rent and 2 extends is a cap of 457,698 stroops (0.0457698 XLM). |
 | Read at ledger `5,400,000`, until `8,510,399` | Chain read + `MAX_ALLOWANCE_EXTENSION_LEDGERS` (3,110,399). |
 | Spender `GENGINE…` | `ENGINE_SPENDER`, unpublished until `PH2-E4-03`. |
 | Wallet `GABC12…XYZ789` | The connected wallet. |
