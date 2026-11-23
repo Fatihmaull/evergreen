@@ -86,7 +86,8 @@ function ports(
 
 const okExtend = (): Promise<ExtendMove> =>
   Promise.resolve({
-    ...tx('extend-tx', 8_000n),
+    // Soroban charges the rent inside the fee: 1,000,000 rent + 8,000 network fee.
+    ...tx('extend-tx', 1_008_000n),
     succeeded: true,
     transient: false,
     chargedRentStroops: 1_000_000n,
@@ -312,6 +313,16 @@ describe('review of #630', () => {
       ['evergreen-fee', 25_000n],
       ['refund', 10_000n],
     ]);
+  });
+
+  it('records the extend network fee without the rent charged inside it', async () => {
+    const job = ports({ chain: chain(okExtend) });
+    await runHostedJob(job);
+    const fees = job.ledger
+      .filter((row) => row.kind === 'network-fee')
+      .map((row) => [row.txHash, row.amountStroops]);
+    expect(fees).toContainEqual(['extend-tx', 8_000n]);
+    expect(job.ledger.find((row) => row.kind === 'rent')?.amountStroops).toBe(1_000_000n);
   });
 
   it('P2.2: the pull row is written in the same save as the pulled status', async () => {

@@ -171,7 +171,8 @@ export function saveStatements(next: HostedJobSnapshot, rows: readonly LedgerWri
   refund_tx_hash = $7,
   shortfall_stroops = $8::numeric,
   preflight = CASE WHEN $9::jsonb IS NULL THEN preflight
-                   ELSE $9::jsonb || jsonb_build_object('at', now()) END
+                   ELSE $9::jsonb || jsonb_build_object('at', now()) END,
+  refund_amount = coalesce($10::numeric, refund_amount)
 WHERE id = $1::uuid`,
     params: [
       next.id,
@@ -183,6 +184,7 @@ WHERE id = $1::uuid`,
       next.refundTxHash,
       dec(next.shortfallStroops),
       preflightJson(next.preflight),
+      dec(next.refundAmountStroops ?? null),
     ],
   };
   const inserts = rows.map((row): Statement => ({
