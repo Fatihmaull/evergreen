@@ -48,7 +48,7 @@ Until all four are set, the auth routes answer `503 UPSTREAM_UNAVAILABLE`; that 
 | `DEPLOY_COMMIT` | the deployed SHA | the PR head SHA | injected by the workflow, not committed |
 | `HEARTBEAT_STALE_SECONDS` | `2700` (3 x the 900 s tick) | `900` | `apps/api/wrangler.jsonc`; the F11 check treats a newer `scheduler_ticks` row than this as fresh |
 | `TESTNET_RESET_LOOKBACK_TICKS` | `12` | `12` | same |
-| `THRESHOLD_FLOOR_LEDGERS` | `4320` | `4320` | same; 6 hours, so 4 × the worst gap holds up to a 1080-ledger gap. The measured worst is 541 ledgers (K19; re-measured 2026-11-23, #644). Was 2165 = 4 × 541 + 1 until 2026-11-23 |
+| `THRESHOLD_FLOOR_LEDGERS` | `4329` | `4329` | same; 4 × 1082 + 1 (about 6 hours), so the 4× rule holds up to a 1082-ledger gap (twice the worst). The measured worst is 541 ledgers (K19; re-measured 2026-11-23, #644). Was 2165 = 4 × 541 + 1 until 2026-11-23 |
 | scheduler `ENVIRONMENT`, `DEPLOY_COMMIT` | `production`, the deployed SHA | `preview`, the dispatched SHA | `apps/scheduler/wrangler.jsonc`; `scheduler-deploy.yml` injects the SHA |
 
 ### GitHub
