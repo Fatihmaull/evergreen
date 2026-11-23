@@ -12,7 +12,7 @@
  * NEVER TWICE. The same lock as the revoker: once an approve may have reached
  * the network, this page will not build another until it is reloaded.
  */
-import { ENGINE_SPENDER, rpcAllowanceChain, type AllowanceChain } from './allowance';
+import { rpcAllowanceChain, spenderFrom, type AllowanceChain } from './allowance';
 import { refusalForApprove, type ApproveRefusal } from './allowance-cap';
 import type { Wallet } from './wallet';
 import { signAndSubmit, type ChainPort, type MoneyResult } from './wallet-money';
@@ -59,7 +59,7 @@ export function approveMayHaveSent(outcome: ApproveOutcome): boolean {
 
 export interface ApproverDeps {
   wallet: Wallet;
-  spender?: string;
+  spender?: string | undefined;
   allowanceChain?: AllowanceChain;
   moneyChain?: ChainPort;
   sleep?: (ms: number) => Promise<void>;
@@ -72,13 +72,9 @@ export interface Approver {
   approve(from: string, terms: ApproveTerms): Promise<ApproveOutcome>;
 }
 
-export function createApprover({
-  wallet,
-  spender = ENGINE_SPENDER,
-  allowanceChain,
-  moneyChain,
-  sleep,
-}: ApproverDeps): Approver {
+export function createApprover(deps: ApproverDeps): Approver {
+  const { wallet, allowanceChain, moneyChain, sleep } = deps;
+  const spender = spenderFrom(deps);
   let busy = false;
   let locked = false;
   const chain = () => allowanceChain ?? rpcAllowanceChain();

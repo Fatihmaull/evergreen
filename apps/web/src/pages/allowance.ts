@@ -11,13 +11,14 @@
  * not a login page and must never be flagged as one (`LOGIN_FORBIDDEN`).
  * Nothing is stored: no browser storage of any kind.
  *
- * Approve stays disabled while the spender is unpublished or the safety margin
- * is unset. Both reasons are printed. A disabled control here is the feature,
+ * Approve stays disabled while the spender or the retry margin is unset (any
+ * non-testnet build), and until a linked wallet is connected and read. Every
+ * reason is printed. A disabled control here is the feature,
  * built, and not configured.
  *
  * Turn on autopilot (step D) appears only after the chain reads back exactly
  * what was signed, or reads a live allowance at least the cap. Both need the
- * spender, so while it is unpublished step D cannot be reached.
+ * spender, which only a testnet build has.
  */
 import { esc, short } from '../lib/format';
 import { apiRequest } from '../lib/api';

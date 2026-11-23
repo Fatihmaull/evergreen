@@ -11,7 +11,7 @@
  * saying no (`rejected`, kept apart from every failure), a wallet that is not
  * ready, a failed simulation or a required restore, and a build that failed.
  */
-import { ENGINE_SPENDER, rpcAllowanceChain, type AllowanceChain } from './allowance';
+import { rpcAllowanceChain, spenderFrom, type AllowanceChain } from './allowance';
 import type { Wallet } from './wallet';
 import { signAndSubmit, type ChainPort, type MoneyResult } from './wallet-money';
 
@@ -42,7 +42,7 @@ export function mayHaveSent(outcome: RevokeOutcome): boolean {
 
 export interface RevokerDeps {
   wallet: Wallet;
-  spender?: string;
+  spender?: string | undefined;
   allowanceChain?: AllowanceChain;
   /** Test seam for `signAndSubmit`'s chain; the site always uses the real one. */
   moneyChain?: ChainPort;
@@ -57,13 +57,9 @@ export interface Revoker {
   revoke(from: string): Promise<RevokeOutcome>;
 }
 
-export function createRevoker({
-  wallet,
-  spender = ENGINE_SPENDER,
-  allowanceChain,
-  moneyChain,
-  sleep,
-}: RevokerDeps): Revoker {
+export function createRevoker(deps: RevokerDeps): Revoker {
+  const { wallet, allowanceChain, moneyChain, sleep } = deps;
+  const spender = spenderFrom(deps);
   let busy = false;
   let locked = false;
   return {
