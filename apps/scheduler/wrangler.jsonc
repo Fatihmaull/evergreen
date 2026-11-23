@@ -25,8 +25,10 @@
       "name": "evergreen-scheduler-preview",
       // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
       "workers_dev": true,
-      // Preview: no cron (F9 24h data done, PR #519); tick manually via POST /tick. Production is */15 above.
-      "triggers": { "crons": [] },
+      // Preview: */15 like production, from 2026-11-23 (PH2-E4-04). Hosted autopilot is live here on
+      // testnet (HOSTED_MODE=live), so top-ups must run without a manual tick. Workers Paid (30 s CPU).
+      // POST /tick still works for a manual tick. Was [] since PR #519.
+      "triggers": { "crons": ["*/15 * * * *"] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
