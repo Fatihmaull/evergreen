@@ -740,6 +740,12 @@ const PAGES = [
     js: 'assets/allowance.js',
     to: 'allowance/index.html',
   },
+  {
+    module: 'src/pages/extend.mjs',
+    entry: 'src/pages/extend.ts',
+    js: 'assets/extend.js',
+    to: 'extend/index.html',
+  },
 ];
 
 for (const page of DOC_PAGES) {

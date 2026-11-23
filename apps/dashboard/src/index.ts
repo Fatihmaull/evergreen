@@ -60,6 +60,11 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'live',
   },
   {
+    route: '/extend/',
+    does: 'Queue one hosted extend for a watched contract. Does not sign a transaction.',
+    reads: 'live',
+  },
+  {
     route: '/dashboard/blast-radius/',
     does: 'Scan several contracts together to resolve what one scan cannot.',
     reads: 'live',

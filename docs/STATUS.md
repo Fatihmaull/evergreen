@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E3-04 Extend now screen, 2026-11-23
+
+`/extend/` queues one hosted extend per click for a watched testnet contract whose autopilot is on. The page does not sign, and it does not build a router call or a second signature. `POST /jobs` is specified in `docs/API.md` §7 and is not mounted in `apps/api`, so a click that gets an HTML 404 reports that nothing was queued. The retry margin stays unset, so the screen shows rent and the provisional fee on separate lines and does not name a pull amount. `ROUTER_CONTRACT_ID` is unset. Unknown job statuses are not shown as extended, which leaves room for #643 (`claude/e4-04-stage2`) without copying its scheduler code. The card stays `[~]`. The email notice is specified and not sent from this page; whether one has been sent is undetermined. `/docs/account/` still says nothing on the site submits an extension. That page is WEBF's. Notion sync pending for PH2-E3-04. No testnet transaction.
+
 ## Current — PH2-E2-06 F3/F5 user map and required approaching observation, 2026-11-22
 
 F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. `FAILURE_MODE_ALERTS` records F3 and F5 as `final-outcome`. That does not point at F4 or at any other mode's user email. F4 stays `extend_failed_refund`: the failure-mode page requires that email. Whether the map should name success and F6 is still undetermined. Operator alerts for F3 and F5 are unchanged. Those final-outcome sends have no caller.
