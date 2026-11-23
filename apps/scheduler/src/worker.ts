@@ -45,6 +45,17 @@ export interface Runtime {
    * Absent on a Stage 0 tick. A failure here never fails the tick.
    */
   readonly dryRunTenants?: (plans: readonly TenantPlan[]) => Promise<TenantRunReport>;
+  /**
+   * PH2-E4-02. Absent on the deployed tick, which stays dry-run. When present, the
+   * counts are logged and nothing else: no payer, user or contract.
+   */
+  readonly hostedJobs?: () => Promise<{
+    readonly dryRun: boolean;
+    readonly jobs: number;
+    readonly submitted: number;
+    readonly refunded: number;
+    readonly shortfall: number;
+  }>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -147,6 +158,36 @@ async function tenantStep(
   }
 }
 
+/** Money path counts. A bug is rethrown. Any other failure stays off the heartbeat. */
+async function moneyStep(
+  env: Env,
+  hostedJobs: NonNullable<Runtime['hostedJobs']>,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<void> {
+  try {
+    const counts = await hostedJobs();
+    runtime.log({
+      event: 'scheduler.money',
+      trigger,
+      environment: environmentOf(env),
+      dryRun: counts.dryRun,
+      jobs: counts.jobs,
+      submitted: counts.submitted,
+      refunded: counts.refunded,
+      shortfall: counts.shortfall,
+    });
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) throw error;
+    runtime.log({
+      event: 'scheduler.money_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: 'MONEY_PATH_FAILED',
+    });
+  }
+}
+
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
@@ -169,6 +210,9 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
       };
     }
     await tenantStep(env, runtime.dryRunTenants, evaluation.plans, runtime, trigger);
+    if (runtime.hostedJobs !== undefined) {
+      await moneyStep(env, runtime.hostedJobs, runtime, trigger);
+    }
     return { ok: true as const, observedLedger, evaluation: evaluation.summary };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';
