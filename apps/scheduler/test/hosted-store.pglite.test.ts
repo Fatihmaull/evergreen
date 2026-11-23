@@ -115,8 +115,9 @@ describe('Stage 2 store as eg_scheduler', () => {
       extend: () =>
         Promise.resolve({
           hash: 'b'.repeat(64),
-          feeDeclaredStroops: 9_000n,
-          feeChargedStroops: 8_000n,
+          // The rent is charged inside the fee: 990,000 rent + 8,000 network fee.
+          feeDeclaredStroops: 1_200_000n,
+          feeChargedStroops: 998_000n,
           succeeded: true,
           transient: false,
           chargedRentStroops: 990_000n,
@@ -149,6 +150,19 @@ describe('Stage 2 store as eg_scheduler', () => {
       [job!.id],
     );
     expect(String(balance[0]?.['unexplained'])).toBe('0');
+    // DoD-2 zero subsidy: the extend's rent is not counted again as network fee.
+    const subsidy = await pg.query<{ network_fee: string; subsidised: boolean }>(
+      'SELECT network_fee, subsidised FROM fee_ledger_job_subsidy WHERE job_id = $1::uuid',
+      [job!.id],
+    );
+    expect(String(subsidy.rows[0]?.network_fee)).toBe(String(150 + 8_000 + 100));
+    expect(subsidy.rows[0]?.subsidised).toBe(false);
+    const refund = await pg.query<{ refund_amount: string }>(
+      'SELECT refund_amount FROM jobs WHERE id = $1::uuid',
+      [job!.id],
+    );
+    // pull 1,035,000 - rent 990,000 - fee 25,000
+    expect(String(refund.rows[0]?.refund_amount)).toBe('20000');
     const pre = await pg.query<{ preflight: Record<string, unknown> }>(
       'SELECT preflight FROM jobs WHERE id = $1::uuid',
       [job!.id],

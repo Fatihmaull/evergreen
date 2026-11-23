@@ -84,6 +84,8 @@ export interface HostedJobSnapshot {
    * its reason, or ok with the simulated rent before the pull.
    */
   readonly preflight?: PreflightRecord | null;
+  /** `jobs.refund_amount`, set by the settle save. Absent or null keeps what is stored. */
+  readonly refundAmountStroops?: bigint | null;
 }
 
 /** `jobs.preflight` without `at` (schema.sql: `{at, ok, reason?, rentStroops?}`). Counts only. */
@@ -216,6 +218,19 @@ function evidence(job: HostedJobSnapshot, move: ConfirmedMove): LedgerWrite[] {
   ];
 }
 
+/**
+ * Network-fee evidence for an extend. Soroban charges the rent inside the transaction fee
+ * (`feeCharged` includes `rentFeeCharged`), and that rent is recorded as its own `rent` row.
+ * Counting it again here made `fee_ledger_job_subsidy` flag a normal extend as subsidised
+ * (preview, 2026-11-23: fee 9,884,644 of which rent 9,883,312). Only the rest is network fee.
+ */
+function extendEvidence(job: HostedJobSnapshot, move: ExtendMove): LedgerWrite[] {
+  const rent = move.succeeded && move.chargedRentStroops > 0n ? move.chargedRentStroops : 0n;
+  // Never negative: the extend is already confirmed, so a bad meta must not stop its save.
+  const fee = move.feeChargedStroops > rent ? move.feeChargedStroops - rent : 0n;
+  return evidence(job, { ...move, feeChargedStroops: fee });
+}
+
 function finished(
   job: HostedJobSnapshot,
   mode: 'dry-run' | 'live',
@@ -280,6 +295,7 @@ async function settle(
     ...job,
     status: settled.status,
     refundTxHash: refundTx,
+    refundAmountStroops: settled.refundStroops,
     shortfallStroops: settled.shortfallStroops,
   };
   await ports.save(next, rows);
@@ -415,7 +431,7 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
         if (rows.length > 0) await ports.save(job, rows);
         return { ...stopped(job, 'live', 'EXTEND_UNCERTAIN', 'pulled'), submitted };
       }
-      rows.push(...evidence(job, extend));
+      rows.push(...extendEvidence(job, extend));
       if (extend.succeeded || !extend.transient) break;
     }
     if (extend === undefined) return { ...stopped(job, 'live', 'INTERNAL', 'pulled'), submitted };
