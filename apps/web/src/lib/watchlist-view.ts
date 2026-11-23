@@ -19,7 +19,7 @@ import type {
   NetworkName,
 } from '../../../../packages/shared-types/src/index';
 import type { ApiOutcome } from './api';
-import type { RemoveOutcome } from './watchlist';
+import type { AutopilotOffOutcome, RemoveOutcome } from './watchlist';
 import { report, type EntryHealth, type ScanResult } from './evergreen';
 import { approxDate, esc, formatCount, stamp } from './format';
 import { bindingEntry, entryView } from './view';
@@ -224,11 +224,46 @@ const short = (g: string): string => `${g.slice(0, 6)}…${g.slice(-6)}`;
  * engine has acted: with no observation the cell says the engine has not
  * stored a check of this contract, so nothing has been decided for it yet.
  */
-export function autopilotCell(item: WatchItem): string {
+/**
+ * What the watchlist knows about the account's linked wallets, from `GET /me`.
+ * `undefined` when `/me` did not answer: the cell then offers the turn-on
+ * path, and `/allowance/` checks the wallet itself (components.md, step 1).
+ */
+export interface AutopilotContext {
+  readonly linkedWallets?: readonly string[];
+}
+
+/** After a successful `Turn off` (components.md § A). */
+export const AUTOPILOT_OFF_TEXT =
+  'Autopilot is off for this contract. Your allowance is unchanged; revoke it on <a href="/allowance/">the Allowance page</a>.';
+
+/**
+ * The allowance part of an `On` row. The engine's spender is unpublished
+ * (`ENGINE_SPENDER`, PH2-E4-03), so no allowance can be read for it yet: the
+ * part is undetermined, never healthy, and says why.
+ */
+const ALLOWANCE_NOT_READ =
+  '<br /><span class="chip undetermined"><span class="shape"></span>undetermined</span> <span class="small muted">Allowance not read: the engine\'s spender address is not published yet.</span>';
+
+/**
+ * The autopilot cell (components.md § A, PH2-E3-05). It stays a cell: the
+ * stored state, then at most one control. Nothing here moves XLM. Turning on
+ * goes to `/allowance/?for=…`, where the wallet signs; turning off is a
+ * `PATCH` that leaves the allowance on chain, and the row says so.
+ */
+export function autopilotCell(item: WatchItem, ctx: AutopilotContext = {}): string {
   const a = item.autopilot;
   if (a === undefined || a === null || typeof a.enabled !== 'boolean')
     return '<span class="chip undetermined"><span class="shape"></span>undetermined</span>';
-  if (!a.enabled) return '<span class="small">Off</span>';
+  const ids = `data-autopilot-network="${esc(item.network)}" data-autopilot-contract="${esc(item.contractId)}"`;
+  const status = '<span class="small" data-autopilot-status role="status"></span>';
+  if (!a.enabled) {
+    if (item.network !== 'testnet')
+      return '<span class="small">Off</span> <span class="small muted">Autopilot is testnet-only until beta ends.</span>';
+    if (ctx.linkedWallets !== undefined && ctx.linkedWallets.length === 0)
+      return '<span class="small">Off</span> <a class="small" href="/login/">Link a wallet first →</a>';
+    return `<span class="small">Off</span> <button type="button" class="secondary" data-autopilot-on ${ids}>Turn on autopilot</button>`;
+  }
   const parts: string[] = [];
   if (Number.isInteger(a.thresholdLedgers) && (a.thresholdLedgers as number) > 0)
     parts.push(
@@ -244,7 +279,8 @@ export function autopilotCell(item: WatchItem): string {
     item.lastObservation === null
       ? '<br /><span class="small muted">No engine check of this contract is stored yet, so autopilot has not decided anything for it.</span>'
       : '';
-  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${pending}`;
+  const off = `<br /><button type="button" class="secondary" data-autopilot-off ${ids}>Turn off</button> ${status}`;
+  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${ALLOWANCE_NOT_READ}${pending}${off}`;
 }
 
 export function bindingCell(b: Binding, source?: 'engine' | 'browser'): string {
@@ -270,7 +306,7 @@ function coverage(item: WatchItem): string {
     : `${formatCount(item.scope.dataKeys.length)} data key${item.scope.dataKeys.length === 1 ? '' : 's'} declared`;
 }
 
-export function rowHtml(r: Row): string {
+export function rowHtml(r: Row, ctx: AutopilotContext = {}): string {
   const { item } = r;
   const obs = item.lastObservation;
   const seen =
@@ -288,7 +324,7 @@ export function rowHtml(r: Row): string {
       <td>${name}</td>
       <td class="small">${seen}</td>
       <td class="small muted">${esc(coverage(item))}</td>
-      <td>${autopilotCell(item)}</td>
+      <td data-autopilot-cell>${autopilotCell(item, ctx)}</td>
       <td><button type="button" class="btn" data-remove-network="${esc(item.network)}" data-remove-contract="${esc(item.contractId)}">Remove</button> <span class="small" data-remove-status role="status"></span></td>
     </tr>`;
 }
@@ -297,6 +333,7 @@ export function tableHtml(
   items: readonly WatchItem[],
   now = new Date(),
   browserScans: ReadonlyMap<string, ScanResult> = new Map(),
+  ctx: AutopilotContext = {},
 ): string {
   if (items.length === 0) {
     return '<p class="muted">Your watchlist is empty. Add a contract from <a href="/dashboard/scanner/">the scanner</a>.</p>';
@@ -304,7 +341,7 @@ export function tableHtml(
   const rows = orderRows(items.map((i) => rowFor(i, now, browserScans.get(i.contractId))));
   return `<div class="table-wrap"><table>
       <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Autopilot</th><th scope="col">Remove</th></tr></thead>
-      <tbody>${rows.map(rowHtml).join('')}</tbody></table></div>
+      <tbody>${rows.map((r) => rowHtml(r, ctx)).join('')}</tbody></table></div>
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
 
@@ -337,6 +374,7 @@ export function watchlistScreenHtml(
   outcome: ApiOutcome<{ items?: unknown }>,
   now = new Date(),
   browserScans: ReadonlyMap<string, ScanResult> = new Map(),
+  ctx: AutopilotContext = {},
 ): string {
   if (outcome.kind === 'ok' && Array.isArray(outcome.data?.items)) {
     const items = outcome.data.items as WatchItem[];
@@ -344,7 +382,7 @@ export function watchlistScreenHtml(
     // the only thing "signed in" rests on here. It says nothing about contracts.
     return items.length === 0
       ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
-      : tableHtml(items, now, browserScans);
+      : tableHtml(items, now, browserScans, ctx);
   }
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
     return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
@@ -406,6 +444,31 @@ export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
   if (outcome.code === 'NOT_FOUND') return REMOVE_NOTHING_TO_REMOVE_TEXT;
   // Not "it is still listed": a failed call does not establish that either way.
   return `The API did not confirm this removal (${outcome.code}, HTTP ${outcome.status}).`;
+}
+
+/**
+ * What the autopilot cell says after `Turn off` answers. `undefined` for
+ * `off`: the cell is redrawn as Off with `AUTOPILOT_OFF_TEXT` beside it. Every
+ * other answer leaves the row as it was and says autopilot was not confirmed
+ * off, never that it is still on: a failed call establishes neither.
+ */
+export function autopilotOffOutcomeText(outcome: AutopilotOffOutcome): string | undefined {
+  if (outcome.kind === 'off') return undefined;
+  if (outcome.kind === 'unavailable') {
+    return outcome.reason === 'network'
+      ? 'The Evergreen API did not answer, so autopilot was not confirmed off.'
+      : 'The Evergreen API is not available on this site yet, so autopilot was not confirmed off.';
+  }
+  if (outcome.code === 'UNAUTHENTICATED') {
+    return 'This browser is signed out, so autopilot was not turned off. Sign in and try again.';
+  }
+  if (outcome.code === 'RATE_LIMITED') {
+    const s = outcome.retryAfterSeconds;
+    return s === undefined
+      ? 'Too many attempts. Autopilot was not confirmed off. Try again later.'
+      : `Too many attempts. Autopilot was not confirmed off. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
+  }
+  return `The API did not confirm autopilot off (${outcome.code}, HTTP ${outcome.status}).`;
 }
 
 /**
