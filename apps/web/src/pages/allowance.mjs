@@ -56,8 +56,8 @@ export function render() {
       <div class="card card-pad stack">
         <div id="review" aria-live="polite"></div>
         <div id="approve-disclosure" aria-live="polite"></div>
-        <div class="row"><button id="approve-button" type="button" disabled>Sign approve in Freighter →</button></div>
-        <p class="small muted">
+        <div id="sign-row" class="row"><button id="approve-button" type="button" disabled>Sign approve in Freighter →</button></div>
+        <p id="sign-help" class="small muted">
           Your wallet shows the same amount and ledger. If it does not, reject it there.
           A new approve replaces the cap: it does not add to it, and it is never access to a contract.
           The longest expiry this page offers is 3,110,399 ledgers after the ledger the allowance is read at.

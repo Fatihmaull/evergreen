@@ -1,7 +1,8 @@
 /**
  * The only script the shell loads on every page: fill in the live ledger in
- * the status bar, and on a phone bring the active nav item into view. No SDK,
- * no core, nothing signed.
+ * the status bar, on a phone bring the active nav item into view, and label
+ * the sign-in item "Account" when a session exists. No SDK, no core, nothing
+ * signed.
  *
  * TWO READS, not one, and the first is the network. A URL that says testnet
  * proves nothing about what it serves, and this script runs on every page of a
@@ -67,5 +68,28 @@ function revealActiveNavItem(): void {
   strip.scrollLeft += item.left - box.left - (box.width - item.width) / 2;
 }
 
+/**
+ * The nav says "Sign in" in the static page. Signed in, the same page is where
+ * you sign out and manage wallets, so the item reads "Account" (coordinator,
+ * 2026-11-23). One `GET /me`, only on pages that carry that item. Anything but
+ * a 200 with a session body leaves "Sign in": a failed read is not a session.
+ */
+async function labelAccountItem(): Promise<void> {
+  const item = document.querySelector<HTMLElement>('.sidebar nav a.nav-item[href="/login/"]');
+  if (!item) return;
+  try {
+    const res = await fetch('/api/v1/me', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status !== 200) return;
+    const body = (await res.json()) as { csrfToken?: unknown } | null;
+    if (typeof body?.csrfToken === 'string' && body.csrfToken !== '') item.textContent = 'Account';
+  } catch {
+    // Leave "Sign in".
+  }
+}
+
 revealActiveNavItem();
 void fillLiveLedger();
+void labelAccountItem();

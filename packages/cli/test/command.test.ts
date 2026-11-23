@@ -224,13 +224,14 @@ describe('top-level help, version and unknown commands (DES spec, PH2-E1)', () =
     expect(result.stderr).toBe('');
     const lines = result.stdout.split('\n');
     expect(lines[0]).toBe(
-      'evergreen 9.8.7 — Soroban state TTL, read and extended. Stellar testnet by default.',
+      'evergreen 9.8.7 — Soroban state TTL, read and extended. Testnet by default.',
     );
-    // Fits an 80×24 terminal without scrolling: at most 20 lines.
+    // Fits an 80×24 terminal without scrolling or wrapping: at most 20 lines and 79 columns.
     expect(lines.length).toBeLessThanOrEqual(20);
+    for (const line of lines) expect(line.length).toBeLessThanOrEqual(79);
     expect(result.stdout).toContain('scan <contract-id>...');
     expect(result.stdout).toContain('extend <contract-id>');
-    expect(result.stdout).toContain('518400 simulate adding about 30 days');
+    expect(result.stdout).toContain('518400  simulate adding about 30 days');
     expect(result.stdout).toContain('docs  https://evergreen-stellar.pages.dev/docs/cli/');
     // No colour on this screen.
     expect(result.stdout).not.toContain('\u001b[');

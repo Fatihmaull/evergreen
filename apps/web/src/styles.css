@@ -2552,8 +2552,11 @@ body.app .alerts .mark-incomplete {
   font-size: 12px;
   color: var(--ink-3);
 }
-.review-lines .wrap {
+.addr {
   overflow-wrap: anywhere;
+}
+#autopilot-rows td.mono {
+  white-space: nowrap;
 }
 .crit-ink {
   color: var(--crit-ink);
@@ -2576,5 +2579,44 @@ body.app .alerts .mark-incomplete {
   }
   #approve-button {
     width: 100%;
+  }
+}
+/* The result replaces the sign button after an approve (DES, #660). `.row`
+   is flex and would beat [hidden]. */
+#sign-row[hidden],
+#sign-help[hidden] {
+  display: none;
+}
+/* Step D at phone width: each row stacks label over value, like the review
+   panel, so the budget fields are never off screen (DES, #660). */
+@media (max-width: 640px) {
+  #autopilot-rows table,
+  #autopilot-rows tbody,
+  #autopilot-rows tr,
+  #autopilot-rows td {
+    display: block;
+  }
+  #autopilot-rows thead {
+    display: none;
+  }
+  #autopilot-rows tr {
+    padding: 12px 0;
+    border-top: 1px solid var(--rule);
+  }
+  #autopilot-rows td {
+    padding: 4px 12px;
+    border: 0;
+  }
+  #autopilot-rows td::before {
+    content: attr(data-label);
+    display: block;
+    font: 400 12px/1.6 var(--sans);
+    color: var(--ink-3);
+  }
+  #autopilot-rows td.mono {
+    white-space: normal;
+  }
+  #autopilot-rows td:first-child {
+    overflow-wrap: anywhere;
   }
 }
