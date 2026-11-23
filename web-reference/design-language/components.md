@@ -159,6 +159,14 @@ separated by 12px Space Mono labels. The current page is `--pine`; the rest are
 warm-white fill with pine text, and **only the fill marks it** — it is not also
 heavier, because nothing on this site is.
 
+**Your account** reads, in order: Watchlist, Alerts, the account item,
+Allowance (shipped in #642 and #660). The account item links `/login/` and
+its label follows the session: `Account` when `GET /me` answers with a
+session, `Sign in` when it answers without one. Until `/me` answers, and when
+it does not answer at all, the label is `Sign in`. A label that guesses
+"signed in" would claim a session nobody has confirmed (decided by the
+orchestrator, 2026-11-23; accepted by DES).
+
 ## Chart
 
 Hairline bands for thresholds with their values labelled at the end of the
@@ -267,8 +275,7 @@ is not a route this screen calls.
 5. **`body.app`.** Pine sidebar 264px, status bar, the existing nav. The
    screen's place in the nav is one item, `Alerts`, in **Your account**,
    after Watchlist. The active item is a warm-white fill with pine text,
-   and only the fill marks it. That item is not added in this change:
-   `apps/web/src/chrome.mjs` is the shared layout. The route is
+   and only the fill marks it. The item shipped in #642. The route is
    `/dashboard/alerts/`, linked from `/docs/account/`.
 6. **No motion the person did not ask for.** No entrance, no shimmer, no
    skeleton, no knob that travels. A click paints the other position on the
