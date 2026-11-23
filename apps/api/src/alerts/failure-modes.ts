@@ -15,7 +15,11 @@
 import { AUTH_SECRET_NAMES } from '../auth/mount.js';
 import { wholeNumber } from '../watchlist/mount.js';
 import { ALERT_SPECS, type AlertKind } from './policy.js';
-import { belowGapMargin, gapMarginHolds as coreGapMarginHolds } from '@evergreen-stellar/core';
+import {
+  assessFloat,
+  belowGapMargin,
+  gapMarginHolds as coreGapMarginHolds,
+} from '@evergreen-stellar/core';
 
 export type FailureMode =
   | 'F1'
@@ -560,7 +564,7 @@ export interface FloatFacts {
   readonly balanceStroops: bigint | undefined;
   /** Sum of the pulls in flight (pulled, not yet extended or refunded): the refund headroom. */
   readonly inFlightPullsStroops: bigint;
-  /** Sweep buffer, decided at PH2-E4-03; undefined until then. */
+  /** Sweep buffer. No default: undefined until the owner sets the number. */
   readonly sweepBufferStroops: bigint | undefined;
 }
 
@@ -576,13 +580,7 @@ export interface FloatCheck {
  * buffer. Unknown inputs give undefined, never false (absence is not health).
  */
 export function floatCheck(f: FloatFacts): FloatCheck {
-  if (f.balanceStroops === undefined) return { belowHeadroom: undefined, aboveCap: undefined };
-  const belowHeadroom = f.balanceStroops < f.inFlightPullsStroops;
-  const aboveCap =
-    f.sweepBufferStroops === undefined
-      ? undefined
-      : f.balanceStroops > f.inFlightPullsStroops + f.sweepBufferStroops;
-  return { belowHeadroom, aboveCap };
+  return assessFloat(f);
 }
 
 /** The part of an email send failure F16 needs (apps/api/src/auth/mailer-error.ts). */

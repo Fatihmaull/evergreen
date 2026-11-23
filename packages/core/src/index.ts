@@ -54,6 +54,16 @@ export {
   routerFeeStroops,
 } from './fee.js';
 export type { HostedFeeConfig } from './fee.js';
+export { assessFloat, planSweep, runSweep, TESTNET_TREASURY_ADDRESS } from './float-sweep.js';
+export type {
+  FloatAssessment,
+  FloatAssessmentInput,
+  SweepInput,
+  SweepPlan,
+  SweepReason,
+  SweepRun,
+  SweepSend,
+} from './float-sweep.js';
 export { pullAmountStroops } from './pull-amount.js';
 export type { PullAmountBreakdown, PullAmountInput } from './pull-amount.js';
 export {

@@ -74,6 +74,7 @@ export type {
   TenantRunResult,
   TenantRunStatus,
 } from './tenant-run.js';
+export { IN_FLIGHT_PULLS_SQL } from './float-headroom.js';
 export { runHostedJob, runHostedJobs, hostedJobCounts } from './money-path.js';
 export type {
   ConfirmedMove,

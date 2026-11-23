@@ -131,7 +131,7 @@ Each row: **detection signal** · **user alert** · **operator alert** · **mone
 - Owner: `PH2-E4-02` (reconcile); alert `PH2-E4-05`.
 
 **F8. Engine float low or refund headroom short** (`BACKLOG.md:652`, `PH2-E4-03`).
-- Detection: engine account balance read against the float cap and headroom. **Headroom = the pulls in flight; cap = headroom + a sweep buffer** (Fatih, 2026-10-29, option 2). The buffer is decided at `PH2-E4-03`; until then only the low side can be checked. Detector: `floatCheck`; the balance read waits on `PH2-E4-02`.
+- Detection: engine account balance read against the float cap and headroom. **Headroom = the pulls in flight; cap = headroom + a sweep buffer** (Fatih, 2026-10-29, option 2). The buffer's size is still unset: `planSweep` (`packages/core/src/float-sweep.ts`) sends nothing while it is unset, and it has no mainnet treasury address. Detector: `floatCheck` (the same rule, via `assessFloat`). The in-flight sum is `IN_FLIGHT_PULLS_SQL` (jobs with status `pulled`).
 - User: none unless a job is blocked by it, then as F1. Whether a refund can be blocked by low float is **undetermined**; if it can, F6 applies.
 - Operator: required. DoD-2 also needs "the float never exceeded its cap" (`phase-2/PHASE2-PLAN.md:52`), so the cap's upper side alerts too.
 - Money: fees accumulate until the sweep; refunds draw on the pool.

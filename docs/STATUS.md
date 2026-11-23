@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-03 float, headroom, sweep, 2026-11-23
+
+`PH2-E4-03` is `[~]`. `assessFloat` / `planSweep` / `runSweep` decide the refund headroom and the sweep. Headroom is the sum of jobs still `pulled` (`IN_FLIGHT_PULLS_SQL`). The cap is headroom plus a sweep buffer. The buffer has no default, and a sweep sends nothing while it is unset. Dry-run never sends. Live sends only to the testnet treasury `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ` and does not take that account's key. Mainnet has no address here. This does not edit the scheduler files in #643. The sweep is not called from the tick. Notion sync pending for `PH2-E4-03`.
+
 ## Current — PH2-E2-06 F3/F5 user map and required approaching observation, 2026-11-22
 
 F3 has no dedicated pending email and F5 has no delay email. The user-facing alert for both is the final-outcome email: success (`extend_succeeded`), F4 failed with a full refund including the fee (`extend_failed_refund`), or F6 `refund_delayed`. Decision relayed by Evergreen PM as Fatih's of 2026-11-15; not recorded in the repo by Fatih himself. `FAILURE_MODE_ALERTS` records F3 and F5 as `final-outcome`. That does not point at F4 or at any other mode's user email. F4 stays `extend_failed_refund`: the failure-mode page requires that email. Whether the map should name success and F6 is still undetermined. Operator alerts for F3 and F5 are unchanged. Those final-outcome sends have no caller.
