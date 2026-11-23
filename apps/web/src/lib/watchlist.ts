@@ -208,3 +208,35 @@ export async function removeFromWatchlist(
   if (res.status === 204) return { kind: 'removed' };
   return { kind: 'error', status: res.status, code: 'UNRECOGNISED' };
 }
+
+export type AutopilotOffOutcome =
+  { readonly kind: 'off' } | Exclude<ApiOutcome<unknown>, { kind: 'ok' }>;
+
+/**
+ * `PATCH /watchlist/{network}/{contractId}` with `autopilot: { enabled: false }`
+ * (`docs/API.md` §6). It changes the stored setting only. It does not touch
+ * the allowance on chain: only the wallet's own `approve(0)` revokes that.
+ * Only a 2xx reads as off.
+ */
+export async function turnAutopilotOff(
+  network: 'testnet',
+  contractId: string,
+  fetchImpl?: FetchLike,
+): Promise<AutopilotOffOutcome> {
+  const me = await apiRequest<Me>('/me', { method: 'GET' }, fetchImpl);
+  if (me.kind !== 'ok') return me;
+  if (typeof me.data?.csrfToken !== 'string' || me.data.csrfToken === '') {
+    return { kind: 'error', status: me.status, code: 'UNRECOGNISED' };
+  }
+  const res = await apiRequest<unknown>(
+    `/watchlist/${encodeURIComponent(network)}/${encodeURIComponent(contractId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Evergreen-CSRF': me.data.csrfToken },
+      body: JSON.stringify({ autopilot: { enabled: false } }),
+    },
+    fetchImpl,
+  );
+  if (res.kind !== 'ok') return res;
+  return { kind: 'off' };
+}

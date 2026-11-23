@@ -23,6 +23,7 @@ import { countVerdicts, dueVerdicts, timedReader, type DueCounts, type RpcTiming
 import {
   planExtendRequests,
   summariseWouldSubmit,
+  type ExtendPlan,
   type WouldSubmitSummary,
 } from './extend-plan.js';
 
@@ -93,7 +94,12 @@ export async function evaluate(
   query: TenantQuery,
   reader?: LedgerEntryReader,
   now: () => number = Date.now,
-): Promise<{ readonly plans: readonly TenantPlan[]; readonly summary: EvaluationSummary }> {
+): Promise<{
+  readonly plans: readonly TenantPlan[];
+  readonly summary: EvaluationSummary;
+  /** Stage 2: the due items with budget, per payer. Absent with no reader. */
+  readonly extendPlan?: ExtendPlan;
+}> {
   const store = new PgTenantStore(readOnlyQuery(query));
   let plans: TenantPlan[];
   try {
@@ -108,9 +114,11 @@ export async function evaluate(
   // core's scan turns a failed read into an issue (so the item is undetermined), never a throw.
   const timed = timedReader(reader, now);
   const verdicts = await dueVerdicts(plans, timed.reader);
-  const wouldSubmit = summariseWouldSubmit(planExtendRequests(plans, verdicts));
+  const extendPlan = planExtendRequests(plans, verdicts);
+  const wouldSubmit = summariseWouldSubmit(extendPlan);
   return {
     plans,
+    extendPlan,
     summary: { ...summary, due: countVerdicts(verdicts), rpc: timed.timing(), wouldSubmit },
   };
 }

@@ -9,16 +9,19 @@
  *   only thing here that takes a request.
  * - `GET /health`: the service and the deployed commit, as the API reports it (#460).
  *
- * Nothing here signs, submits or reads a secret other than the two it is given.
+ * Nothing here signs or submits. The money step (`Runtime.hostedJobs`, src/hosted-run.ts) does,
+ * only with `HOSTED_MODE=live` and `ENGINE_SECRET`.
  */
 import type { TenantPlan } from '@evergreen/engine/dist/tenants.js';
 import type { TenantRunReport } from '@evergreen/engine/dist/tenant-run.js';
 import { EvaluationError, type EvaluationSummary } from './evaluate.js';
+import type { ExtendPlan } from './extend-plan.js';
+import type { HostedEnv, HostedStageInput, HostedStageSummary } from './hosted-run.js';
 import { TickError } from './tick.js';
 
 export const SERVICE = 'evergreen-scheduler';
 
-export interface Env {
+export interface Env extends HostedEnv {
   /** Secret. The scheduler's own role, never the owner's (docs/ops/neon-migrations.md). */
   DATABASE_URL?: string;
   /** Optional override; the RPC must still report the testnet passphrase. */
@@ -39,12 +42,19 @@ export interface Runtime {
   readonly evaluate?: () => Promise<{
     readonly summary: EvaluationSummary;
     readonly plans: readonly TenantPlan[];
+    readonly extendPlan?: ExtendPlan;
   }>;
   /**
    * PH2-E4-01: dry-run tenant run after evaluation. No estimate, so nothing is pulled.
    * Absent on a Stage 0 tick. A failure here never fails the tick.
    */
   readonly dryRunTenants?: (plans: readonly TenantPlan[]) => Promise<TenantRunReport>;
+  /**
+   * Stage 2 (PH2-E4-04 over PH2-E4-02's money path): enqueue due items, then resume or start
+   * open jobs. Dry-run unless `HOSTED_MODE=live` with an engine key (src/hosted-run.ts). Only
+   * counts are logged: no payer, user or contract. A failure never fails the tick.
+   */
+  readonly hostedJobs?: (input: HostedStageInput) => Promise<HostedStageSummary>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -147,6 +157,43 @@ async function tenantStep(
   }
 }
 
+/** Money path counts. A bug is rethrown. Any other failure stays off the heartbeat. */
+async function moneyStep(
+  env: Env,
+  hostedJobs: NonNullable<Runtime['hostedJobs']>,
+  input: HostedStageInput,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<void> {
+  try {
+    const counts = await hostedJobs(input);
+    runtime.log({
+      event: 'scheduler.money',
+      trigger,
+      environment: environmentOf(env),
+      dryRun: counts.dryRun,
+      due: counts.due,
+      enqueued: counts.enqueued,
+      jobs: counts.jobs,
+      submitted: counts.submitted,
+      refunded: counts.refunded,
+      shortfall: counts.shortfall,
+      preflightFailed: counts.preflightFailed,
+      failed: counts.failed,
+      orphaned: counts.orphaned,
+      deadlineHit: counts.deadlineHit,
+    });
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) throw error;
+    runtime.log({
+      event: 'scheduler.money_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: 'MONEY_PATH_FAILED',
+    });
+  }
+}
+
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
@@ -169,6 +216,15 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
       };
     }
     await tenantStep(env, runtime.dryRunTenants, evaluation.plans, runtime, trigger);
+    if (runtime.hostedJobs !== undefined && evaluation.extendPlan !== undefined) {
+      await moneyStep(
+        env,
+        runtime.hostedJobs,
+        { observedLedger, plans: evaluation.plans, extendPlan: evaluation.extendPlan },
+        runtime,
+        trigger,
+      );
+    }
     return { ok: true as const, observedLedger, evaluation: evaluation.summary };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';

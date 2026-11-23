@@ -1,6 +1,7 @@
 /**
  * The only script the shell loads on every page: fill in the live ledger in
- * the status bar. No SDK, no core, nothing signed.
+ * the status bar, and on a phone bring the active nav item into view. No SDK,
+ * no core, nothing signed.
  *
  * TWO READS, not one, and the first is the network. A URL that says testnet
  * proves nothing about what it serves, and this script runs on every page of a
@@ -50,4 +51,21 @@ async function fillLiveLedger(): Promise<void> {
   }
 }
 
+/**
+ * Below 960px the sidebar nav is one strip that scrolls sideways. It opened at
+ * its left end on every page, so on Watchlist, Alerts or Allowance the item
+ * marking where you are was off screen. Centre it in the strip. The strip
+ * scrolls only itself, never the page, and on a desktop (no overflow) this
+ * does nothing.
+ */
+function revealActiveNavItem(): void {
+  const active = document.querySelector<HTMLElement>('.sidebar nav .nav-item.active');
+  const strip = active?.closest('nav');
+  if (!active || !strip || strip.scrollWidth <= strip.clientWidth) return;
+  const item = active.getBoundingClientRect();
+  const box = strip.getBoundingClientRect();
+  strip.scrollLeft += item.left - box.left - (box.width - item.width) / 2;
+}
+
+revealActiveNavItem();
 void fillLiveLedger();

@@ -36,10 +36,13 @@
     "HEARTBEAT_STALE_SECONDS": "2700",
     // Same as preview (PM-approved 2026-10-31).
     "TESTNET_RESET_LOOKBACK_TICKS": "12",
-    // Watchlist floor (src/watchlist/mount.ts): 4 x the worst production tick gap + 1
-    // (packages/core/src/scheduler-gap.ts). 2165 = 4 x 541 + 1; 541 ledgers is the 45-minute gap
-    // seen on 2026-11-03 (measured by DevOps, K19). Lower it only if that gap is explained as a one-off.
-    "THRESHOLD_FLOOR_LEDGERS": "2165",
+    // Watchlist floor (src/watchlist/mount.ts). The rule is 4 x the worst production tick gap
+    // (packages/core/src/scheduler-gap.ts); the worst gap is 541 ledgers (2026-11-03, K19, re-measured
+    // by DevOps 2026-11-23, PR #644). 2165 = 4 x 541 + 1 left a 1-ledger margin, so the floor is now
+    // 4329 = 4 x 1082 + 1 ledgers (about 6 hours): the rule still holds if the worst gap doubles to
+    // 1082 (about 90 minutes).
+    // Raised 2026-11-23 (CEF, under Fatih's standing authority). Lower it only with a new measurement.
+    "THRESHOLD_FLOOR_LEDGERS": "4329",
     "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
     "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
   },
@@ -61,9 +64,9 @@
         "HEARTBEAT_STALE_SECONDS": "900",
         // F10 testnet-reset check (src/alerts/testnet-reset.ts): compare the last 12 ticks (~1 h at */5).
         "TESTNET_RESET_LOOKBACK_TICKS": "12",
-        // Watchlist floor (src/watchlist/mount.ts): the same as production, 2165 = 4 x 541 + 1 (K19), so
-        // preview accepts and refuses what production will. It was 4 x the preview gap of 259 + 1.
-        "THRESHOLD_FLOOR_LEDGERS": "2165",
+        // Watchlist floor (src/watchlist/mount.ts): the same as production (4329, see above), so
+        // preview accepts and refuses what production will.
+        "THRESHOLD_FLOOR_LEDGERS": "4329",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
