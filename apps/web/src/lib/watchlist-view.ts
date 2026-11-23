@@ -338,46 +338,47 @@ export function watchlistScreenHtml(
   now = new Date(),
   browserScans: ReadonlyMap<string, ScanResult> = new Map(),
 ): string {
-  if (outcome.kind === 'ok') {
-    const items = outcome.data?.items;
-    if (!Array.isArray(items)) {
-      return undeterminedBox(
-        'The API answered, but not with a watchlist this page can read. We could not establish this.',
-      );
-    }
+  if (outcome.kind === 'ok' && Array.isArray(outcome.data?.items)) {
+    const items = outcome.data.items as WatchItem[];
     // A 200 with a list is the API answering an authenticated session, which is
     // the only thing "signed in" rests on here. It says nothing about contracts.
     return items.length === 0
       ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
-      : tableHtml(items as WatchItem[], now, browserScans);
+      : tableHtml(items, now, browserScans);
+  }
+  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
+    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+  }
+  return undeterminedBox(noWatchlistSentence(outcome));
+}
+
+/**
+ * Why there is no list to show, for every outcome that is neither a list nor
+ * "signed out". One home for these sentences, so the watchlist screen and the
+ * Overview's panel cannot disagree about it.
+ */
+function noWatchlistSentence(outcome: ApiOutcome<{ items?: unknown }>): string {
+  if (outcome.kind === 'ok') {
+    return 'The API answered, but not with a watchlist this page can read. We could not establish this.';
   }
   if (outcome.kind === 'unavailable') {
-    return undeterminedBox(
-      outcome.reason === 'network'
-        ? 'The Evergreen API did not answer, so there is no watchlist to show. This says nothing about your contracts: it is about us.'
-        : 'The Evergreen API is not available on this site yet, so there is no watchlist to show. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.',
-    );
-  }
-  if (outcome.code === 'UNAUTHENTICATED') {
-    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+    return outcome.reason === 'network'
+      ? 'The Evergreen API did not answer, so there is no watchlist to show. This says nothing about your contracts: it is about us.'
+      : 'The Evergreen API is not available on this site yet, so there is no watchlist to show. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.';
   }
   if (outcome.code === 'NOT_FOUND' || outcome.code === 'METHOD_NOT_ALLOWED') {
     // The API answered in its own envelope, but not with this route. That is all
     // it says: no cause, no date for when the route will exist.
-    return undeterminedBox(ROUTE_NOT_AVAILABLE);
+    return ROUTE_NOT_AVAILABLE;
   }
-  if (outcome.code === 'UPSTREAM_UNAVAILABLE') {
-    return undeterminedBox(GET_UPSTREAM_UNAVAILABLE_TEXT);
-  }
+  if (outcome.code === 'UPSTREAM_UNAVAILABLE') return GET_UPSTREAM_UNAVAILABLE_TEXT;
   if (outcome.code === 'RATE_LIMITED') {
     const s = outcome.retryAfterSeconds;
-    return undeterminedBox(
-      s === undefined
-        ? 'Too many attempts. Try again later.'
-        : `Too many attempts. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`,
-    );
+    return s === undefined
+      ? 'Too many attempts. Try again later.'
+      : `Too many attempts. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
   }
-  return undeterminedBox('We could not establish this.');
+  return 'We could not establish this.';
 }
 
 /**
@@ -405,4 +406,47 @@ export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
   if (outcome.code === 'NOT_FOUND') return REMOVE_NOTHING_TO_REMOVE_TEXT;
   // Not "it is still listed": a failed call does not establish that either way.
   return `The API did not confirm this removal (${outcome.code}, HTTP ${outcome.status}).`;
+}
+
+/**
+ * The Overview's watchlist panel (`/dashboard/`), from the same one
+ * `GET /watchlist` outcome as the watchlist screen.
+ *
+ * It counts rows by conclusion, through `rowFor`, so it can never call a row
+ * healthy that the watchlist screen would not. It reads no chain itself: a row
+ * the engine has not observed counts as undetermined here, as it does on the
+ * screen before this browser's own read lands. Every other outcome (API
+ * absent, an error) uses the watchlist screen's own sentence, so the two pages
+ * cannot disagree about why nothing is shown.
+ */
+export function watchlistSummaryHtml(
+  outcome: ApiOutcome<{ items?: unknown }>,
+  now = new Date(),
+): string {
+  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
+    return '<p class="muted">This browser is not signed in, so no watchlist is shown. <a href="/login/">Sign in</a> with your email to keep one. Scanning needs no session.</p>';
+  }
+  if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
+    // The watchlist screen's sentence, without its verdict box and chip: on
+    // the Overview this panel sits under the scan, and the sentence is about
+    // the API, not about any contract, so it carries no contract state.
+    return `<p class="muted">${noWatchlistSentence(outcome)}</p>`;
+  }
+  const items = outcome.data.items as WatchItem[];
+  if (items.length === 0) {
+    return `<p class="small" role="status">${SIGNED_IN_EMPTY}</p><p class="muted">Scan a contract above, then press <strong>Add to watchlist</strong>.</p>`;
+  }
+  const rows = items.map((i) => rowFor(i, now));
+  const count = (c: Conclusion): number => rows.filter((r) => r.conclusion === c).length;
+  const chips = (['at-risk', 'undetermined', 'healthy'] as const)
+    .map(
+      (c) =>
+        `<span class="chip ${CHIP[c]}"><span class="shape"></span>${formatCount(count(c))} ${WORD[c]}</span>`,
+    )
+    .join(' ');
+  const watched =
+    items.length === 1 ? '1 contract watched' : `${formatCount(items.length)} contracts watched`;
+  return `<div class="row">${chips}</div>
+    <p class="small">${watched}. <a href="/dashboard/watchlist/">Open the watchlist</a> for each contract's binding expiry, ordered by the entry that expires first.</p>
+    <p class="small muted">Counted from the engine's last scan of each contract. A contract the engine has not checked yet counts as undetermined, never as healthy.</p>`;
 }
