@@ -165,7 +165,7 @@ export function reviewPanelHtml(args: ReviewArgs, now = new Date()): string {
         )}. The ledger is the rule. The date is an estimate.`;
   const spender =
     args.spender === undefined
-      ? `<span class="small">${esc(SPENDER_UNSET_TEXT)}</span>`
+      ? '<span>Not published yet.</span>'
       : `<span>Evergreen's engine</span><span class="mono wrap">${esc(args.spender)}</span>`;
   const sac = nativeSac();
   return `<dl class="review-lines">

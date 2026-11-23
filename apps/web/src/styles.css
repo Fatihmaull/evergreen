@@ -2558,6 +2558,14 @@ body.app .alerts .mark-incomplete {
 .crit-ink {
   color: var(--crit-ink);
 }
+/* Step D is a `.stack` (display: grid), which beats the UA's [hidden] rule.
+   It must stay out of the page until a matching read-back (DES, #654). */
+#autopilot-step[hidden] {
+  display: none;
+}
+#hosted-actions {
+  max-width: 200px;
+}
 .stop-section {
   border-top: 1px solid var(--rule);
   padding-top: 24px;

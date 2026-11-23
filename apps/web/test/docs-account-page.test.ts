@@ -115,6 +115,9 @@ describe('the two statements that go stale', () => {
     expect(callers.map((f) => f.slice(ROOT.length))).toEqual(['apps/web/src/pages/allowance.ts']);
     const allowancePage = readFileSync(join(ROOT, 'apps/web/src/pages/allowance.mjs'), 'utf8');
     expect(allowancePage).toMatch(/id="autopilot-step"[^>]*hidden/);
+    // `.stack` is display: grid, which beats the UA's [hidden]; the page CSS must restore it (DES, #654).
+    const css = readFileSync(join(ROOT, 'apps/web/src/styles.css'), 'utf8');
+    expect(css).toMatch(/#autopilot-step\[hidden\]\s*\{\s*display:\s*none;/);
     const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
     expect(prefs).toContain("'/me/alert-preferences'");
     expect(prefs).not.toMatch(/\/watchlist/);

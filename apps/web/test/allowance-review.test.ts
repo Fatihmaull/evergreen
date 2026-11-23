@@ -167,7 +167,9 @@ describe('review panel', () => {
     expect(t).toContain('The retry margin is not set');
     expect(t).toContain('Retry margin: not set');
     expect(t).toContain('Not known until the allowance is read.');
-    expect(t).toContain(SPENDER_UNSET_TEXT);
+    // The full reason is printed once, with the sign button's other reasons.
+    expect(t).toContain('Not published yet.');
+    expect(t).not.toContain(SPENDER_UNSET_TEXT);
     expect(t).toContain('Whatever it is, this cap replaces it.');
   });
 });
