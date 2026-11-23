@@ -2,6 +2,7 @@
 import process from 'node:process';
 import console from 'node:console';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { rpc } from '@stellar/stellar-sdk';
 import {
   connectNetwork,
@@ -25,6 +26,19 @@ import { runCli } from './command.js';
 import { takeNetworkFlag } from './network-args.js';
 import type { NetworkChoice } from '@evergreen-stellar/core';
 import { EXIT_ERROR } from './scan.js';
+
+/**
+ * The installed version, from the package.json shipped beside dist/ (npm always packs it).
+ * Read, never typed, so `--version` cannot drift from what was published.
+ */
+function installedVersion(): string | undefined {
+  try {
+    const pkg = createRequire(import.meta.url)('../package.json') as { version?: unknown };
+    return typeof pkg.version === 'string' ? pkg.version : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 async function main(): Promise<number> {
   // `--network` is global, so it is lifted out before a command parses argv.
@@ -51,7 +65,9 @@ async function main(): Promise<number> {
   // evidence stay clean, and NO_COLOR is honoured (no-color.org). The health
   // WORD prints either way — colour is never the only carrier of the state.
   const color = process.stdout.isTTY === true && process.env.NO_COLOR === undefined;
+  const version = installedVersion();
   const output = await runCli(args, {
+    ...(version === undefined ? {} : { version }),
     extend: {
       ...(process.env.EVERGREEN_SOURCE_ACCOUNT
         ? { sourceAccount: process.env.EVERGREEN_SOURCE_ACCOUNT }
