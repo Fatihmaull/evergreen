@@ -290,6 +290,17 @@ export interface AutopilotRow {
   readonly per30DaysMaxStroops: bigint;
 }
 
+/**
+ * The line under a budget field: the typed stroops grouped, and the XLM they
+ * are. Nothing when the field does not hold a whole number of stroops, since
+ * the row's own refusal says why when the person turns autopilot on.
+ */
+export function budgetFigure(stroops: bigint | undefined): string {
+  if (stroops === undefined || stroops < 0n) return '';
+  const exact = exactXlm(stroops);
+  return `${exact.stroops} · ${exact.xlm}`;
+}
+
 export function autopilotRowsHtml(rows: readonly AutopilotRow[]): string {
   return `<p class="small muted">${esc(BUDGET_RULE_TEXT)}</p>
     <div class="table-wrap"><table>
@@ -301,11 +312,11 @@ export function autopilotRowsHtml(rows: readonly AutopilotRow[]): string {
             ? `${esc(r.label)} <span class="small muted mono">${esc(short(r.contractId))}</span>`
             : `<span class="mono" title="${esc(r.contractId)}">${esc(short(r.contractId))}</span>`;
           return `<tr data-auto-index="${index}">
-            <td>${name}<br /><span class="small" data-auto-result aria-live="polite"></span></td>
-            <td class="mono">${esc(formatCount(r.thresholdLedgers))}</td>
-            <td class="mono">${esc(formatCount(r.extendToLedgers))}</td>
-            <td><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-job="${index}" aria-label="Per-job budget, ${esc(who)}" value="${r.perJobMaxStroops.toString()}" /></td>
-            <td><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-30="${index}" aria-label="Per 30 days, ${esc(who)}" value="${r.per30DaysMaxStroops.toString()}" /></td>
+            <td data-label="Contract">${name}<br /><span class="small" data-auto-result aria-live="polite"></span></td>
+            <td class="mono" data-label="Act below">${esc(formatCount(r.thresholdLedgers))}</td>
+            <td class="mono" data-label="Extend to">${esc(formatCount(r.extendToLedgers))}</td>
+            <td data-label="Per-job budget, stroops"><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-job="${index}" aria-label="Per-job budget, ${esc(who)}" value="${r.perJobMaxStroops.toString()}" /><br /><span class="small muted mono" data-auto-fmt>${esc(budgetFigure(r.perJobMaxStroops))}</span></td>
+            <td data-label="Per 30 days, stroops"><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-30="${index}" aria-label="Per 30 days, ${esc(who)}" value="${r.per30DaysMaxStroops.toString()}" /><br /><span class="small muted mono" data-auto-fmt>${esc(budgetFigure(r.per30DaysMaxStroops))}</span></td>
           </tr>`;
         })
         .join('')}</tbody></table></div>`;

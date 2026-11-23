@@ -55,6 +55,7 @@ import {
   defaultBudget,
   liveCovers,
   parseStroops,
+  budgetFigure,
   readBack,
   readBackHtml,
   submittedHtml,
@@ -343,8 +344,20 @@ function estimate(): void {
   afterEstimate();
 }
 
+/**
+ * After a successful approve the result takes the button's place (spec §
+ * "After signing"). The button and its help come back only for a new
+ * approve: a cap that is not the one just signed.
+ */
+function syncSignControls(): void {
+  const done = signed !== undefined && cap?.amountStroops === signed.amountStroops;
+  $('sign-row').hidden = done;
+  $('sign-help').hidden = done;
+}
+
 function afterEstimate(): void {
   syncApproveButton();
+  syncSignControls();
   showReview();
   syncAutopilotStep();
 }
@@ -413,6 +426,7 @@ $('approve-button').addEventListener('click', async () => {
   }
   // Included in a ledger: read the chain back and compare with what was signed.
   signed = terms;
+  syncSignControls();
   $('approve-result').innerHTML =
     submittedHtml(outcome) + '<p class="small muted">Reading the allowance back…</p>';
   await readStanding(account);
@@ -515,6 +529,14 @@ $('autopilot-button').addEventListener('click', async () => {
         }.${failed > 0 ? ' The others are still off; each row says why.' : ''} <a href="/dashboard/watchlist/">Back to the watchlist →</a></p>`;
   $('autopilot-result').innerHTML = summary;
   button.disabled = false;
+});
+
+$('autopilot-rows').addEventListener('input', (ev) => {
+  const field = ev.target;
+  if (!(field instanceof HTMLInputElement)) return;
+  if (field.dataset.autoPerJob === undefined && field.dataset.autoPer30 === undefined) return;
+  const line = field.parentElement?.querySelector<HTMLElement>('[data-auto-fmt]');
+  if (line) line.textContent = budgetFigure(parseStroops(field.value));
 });
 
 /**

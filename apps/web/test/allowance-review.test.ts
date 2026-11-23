@@ -10,6 +10,7 @@ import {
   THRESHOLD_UNPUBLISHED_TEXT,
   autopilotOnOutcomeHtml,
   autopilotRowsHtml,
+  budgetFigure,
   budgetProblem,
   coverageSentence,
   defaultBudget,
@@ -220,6 +221,25 @@ describe('step D', () => {
     expect(budgetProblem(undefined, 1n)).toBe(BUDGET_RULE_TEXT);
     expect(budgetProblem(1n, 1n)).toBeUndefined();
     expect(autopilotRowsHtml([])).toContain(BUDGET_RULE_TEXT);
+  });
+
+  test('each budget field says its stroops grouped and in XLM', () => {
+    expect(budgetFigure(8_749_852n)).toBe('8,749,852 stroops · 0.8749852 XLM');
+    expect(budgetFigure(undefined)).toBe('');
+    const html = autopilotRowsHtml([
+      {
+        contractId: A,
+        label: undefined,
+        thresholdLedgers: 4320,
+        extendToLedgers: 120_000,
+        perJobMaxStroops: 8_749_852n,
+        per30DaysMaxStroops: 17_499_704n,
+      },
+    ]);
+    expect(html).toContain('8,749,852 stroops · 0.8749852 XLM');
+    expect(html).toContain('17,499,704 stroops · 1.7499704 XLM');
+    // Every cell carries its column name, for the stacked phone layout.
+    expect(html.match(/<td [^>]*data-label="/g)?.length).toBe(5);
   });
 
   test('the floor is quoted from the API and offered, never applied', () => {
