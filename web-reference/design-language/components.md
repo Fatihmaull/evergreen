@@ -786,3 +786,84 @@ a limit.
   runs Stage 2 (`PH2-E4-04`). If the median item needs more than 2 extends per
   allowance lifetime, raise the default to that median and record the
   evidence here.
+
+## CLI help and version (PH2-E1)
+
+Specified 2026-11-23 by DES. CEF owns `packages/cli` and implements this. The
+CLI is the product most beta users meet first (it is the recommended path), so
+its first screen follows the same rules as the dashboard's: one dominant
+thing, nothing claimed that was not measured, the state word always printed.
+
+### What is wrong today (`cli-v0.2.0`, read 2026-11-23)
+
+1. `evergreen --version` prints the usage, not the version. There is no way
+   to ask the installed CLI which version it is, which is the first question
+   in any support thread.
+2. `evergreen --help` prints 77 lines, all of them about
+   `scan`. `extend` is one line near the top. A person who wanted to know what
+   the tool does gets the scan manual.
+
+### Top-level help
+
+`evergreen --help` and `evergreen help` print this, and nothing else, to
+stdout, exit 0. Bare `evergreen` (no command) prints the same screen to
+stderr and exits 2, as today's usage error does, so a script that forgot its
+command still fails. At most 20 lines, so it fits an 80×24 terminal
+without scrolling. Plain text, no colour, no box drawing.
+
+```
+evergreen 0.2.0 — Soroban state TTL, read and extended. Stellar testnet by default.
+
+usage: evergreen <command> [options]
+
+commands
+  scan <contract-id>...        read TTL health of every entry it is given; nothing is signed
+  extend <contract-id>         simulate an extend; --submit signs, testnet only
+
+examples
+  evergreen scan C...                    health of one contract
+  evergreen scan C... C... --json        two contracts, shared code resolved, JSON
+  evergreen scan C... --cost             what 30 more days would cost, simulated
+  evergreen extend C... --ledgers 518400 simulate adding about 30 days
+
+global options
+  --network testnet|mainnet    or EVERGREEN_NETWORK; reads only on mainnet
+  --version                    print the version and exit
+  --help                       this screen; evergreen <command> --help for one command
+
+docs  https://evergreen-stellar.pages.dev/docs/cli/
+```
+
+Rules for that text:
+
+- The version on line 1 is read from `package.json` at build time, never typed.
+- "about 30 days" stays beside the ledger number. The ledger is the rule; the
+  days are the estimate (518,400 × 5 s).
+- Command descriptions say what is **not** done (nothing is signed, simulate
+  by default). That is the CLI's safety claim and it leads, as on the site.
+- The docs URL is the deployed docs origin. If CEF knows a canonical domain
+  that differs, use that one; do not print two.
+
+### Per-command help
+
+`evergreen scan --help` prints today's full scan text unchanged. It is good
+reference text; it was only in the wrong place. `evergreen extend --help`
+stays as it is.
+
+### Version
+
+`evergreen --version` and `evergreen -v` print exactly `0.2.0` (the bare
+version, one line, stdout, exit 0), so scripts can compare it. No banner, no
+update check, no network call.
+
+### Unknown command
+
+`evergreen frobnicate` prints to stderr
+`evergreen: unknown command "frobnicate". Commands: scan, extend. See evergreen --help.`
+and exits 2, the CLI's existing error code. Today it already exits 2 with the
+two-line usage; only the message changes.
+
+### Not changing
+
+Exit codes, `--json` output, the scan and extend option names, and colour
+rules (TTY only, `NO_COLOR` honoured). The top-level screen adds no colour.
