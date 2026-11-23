@@ -32,7 +32,9 @@
         "head_sampling_rate": 1,
         "logs": { "invocation_logs": false },
       },
-      "vars": { "ENVIRONMENT": "preview" },
+      // Stage 2 (PH2-E4-04, #643). Retry margin on testnet decided 2026-11-23 (CEF, recorded on
+      // #643). Read only by Stage 2 code; HOSTED_MODE stays unset, so preview remains dry-run.
+      "vars": { "ENVIRONMENT": "preview", "ALLOWANCE_RETRY_MARGIN_STROOPS": "100000" },
     },
   },
 }
