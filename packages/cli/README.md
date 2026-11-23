@@ -93,7 +93,9 @@ A scan of a single contract says so explicitly, because it *cannot* know who els
 --no-data-keys             assert this contract has none beyond its instance
 --require-declared-scope   also exit 3 when scope was not declared (for CI on a contract you own)
 --threshold N              act-now threshold in ledgers (default 17,280)
---help                     usage, without connecting
+--help                     short overview of both commands, without connecting
+                           (evergreen scan --help for the full scan reference)
+--version, -v              print the installed version and exit
 ```
 
 ### Choosing the network
