@@ -61,6 +61,7 @@ function ports(
     pullTxHash: null,
     pullAmountStroops: null,
     extendTxHash: null,
+    extendRentChargedStroops: null,
     refundTxHash: null,
     shortfallStroops: null,
   };
@@ -71,13 +72,10 @@ function ports(
     extendNowUsedToday: () => Promise.resolve(0),
     chain: over.chain,
     load: () => Promise.resolve(current),
-    save: (next) => {
+    save: (next, rows) => {
       current = next;
       saved.push(next);
-      return Promise.resolve();
-    },
-    insertLedger: (row) => {
-      ledger.push(row);
+      ledger.push(...rows);
       return Promise.resolve();
     },
     ...over,
@@ -144,6 +142,7 @@ describe('runHostedJob', () => {
         pullTxHash: 'pull-tx',
         pullAmountStroops: 1_035_000n,
         extendTxHash: null,
+        extendRentChargedStroops: null,
         refundTxHash: null,
         shortfallStroops: null,
       },
@@ -240,6 +239,7 @@ describe('runHostedJob', () => {
         pullTxHash: null,
         pullAmountStroops: null,
         extendTxHash: null,
+        extendRentChargedStroops: null,
         refundTxHash: null,
         shortfallStroops: null,
       },
@@ -269,5 +269,78 @@ describe('runHostedJobs', () => {
     expect(counts.jobs).toBe(2);
     expect(counts.failed).toBe(1);
     expect(counts.submitted).toBe(0);
+  });
+});
+
+describe('review of #630', () => {
+  it('P1: a failed refund after a confirmed extend resumes with the refund only', async () => {
+    let refunds = 0;
+    const refunded: bigint[] = [];
+    const c = chain(okExtend);
+    c.refund = (amount) => {
+      c.calls.refund += 1;
+      refunds += 1;
+      if (refunds === 1) return Promise.reject(new Error('rpc down'));
+      refunded.push(amount);
+      return Promise.resolve(tx('refund-tx'));
+    };
+    const job = ports({ chain: c });
+    const first = await runHostedJob(job);
+    expect(first.code).toBe('REFUND_FAILED');
+    expect(job.saved.at(-1)).toMatchObject({
+      status: 'pulled',
+      extendTxHash: 'extend-tx',
+      extendRentChargedStroops: 1_000_000n,
+    });
+
+    const second = await runHostedJob(job);
+    expect(second.status).toBe('extended');
+    expect(c.calls.extend).toBe(1);
+    // pull 1,035,000 = rent 1,000,000 + fee 25,000 + margin 10,000: only the margin goes back.
+    expect(refunded).toEqual([10_000n]);
+    const rows = job.ledger.filter((row) => row.kind !== 'network-fee');
+    expect(rows.map((row) => [row.kind, row.amountStroops])).toEqual([
+      ['pull', 1_035_000n],
+      ['rent', 1_000_000n],
+      ['evergreen-fee', 25_000n],
+      ['refund', 10_000n],
+    ]);
+  });
+
+  it('P2.2: the pull row is written in the same save as the pulled status', async () => {
+    const c = chain(() => Promise.reject(new Error('timeout')));
+    const saves: { status: string; kinds: string[] }[] = [];
+    const job = ports({ chain: c });
+    const base = job.save;
+    const wrapped: HostedJobPorts = {
+      ...job,
+      save: (next, rows) => {
+        saves.push({ status: next.status, kinds: rows.map((row) => row.kind) });
+        return base(next, rows);
+      },
+    };
+    await runHostedJob(wrapped);
+    expect(saves[0]).toEqual({ status: 'pulled', kinds: ['pull', 'network-fee'] });
+  });
+
+  it('P2.4: dry-run writes nothing, even when preflight fails', async () => {
+    const c = chain(okExtend);
+    const job = ports({ mode: 'dry-run', chain: c, retryMarginStroops: undefined });
+    const outcome = await runHostedJob(job);
+    expect(outcome.preflightReason).toBe('margin-unset');
+    expect(job.saved).toEqual([]);
+    expect(job.ledger).toEqual([]);
+  });
+
+  it('P3: a resumed job keeps the pull evidence and settles once', async () => {
+    const c = chain(okExtend);
+    const job = ports({ chain: c });
+    await runHostedJob(job);
+    const evidence = job.ledger
+      .filter((row) => row.kind === 'network-fee')
+      .map((row) => row.txHash);
+    expect(evidence).toEqual(['pull-tx', 'extend-tx', 'refund-tx']);
+    await runHostedJob(job);
+    expect(job.ledger.filter((row) => row.kind === 'rent')).toHaveLength(1);
   });
 });
