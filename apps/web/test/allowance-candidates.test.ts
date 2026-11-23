@@ -4,6 +4,8 @@ import {
   DEFAULT_EXTEND_TO_LEDGERS,
   DEFAULT_THRESHOLD_LEDGERS,
   parseLedgers,
+  rowRentHtml,
+  rowUsable,
   settingsProblem,
   capContracts,
   capRows,
@@ -115,5 +117,20 @@ describe('what enters the cap', () => {
   });
   test('no eligible contract says so and points to the scanner', () => {
     expect(capRowsHtml([])).toContain('href="/dashboard/scanner/"');
+  });
+});
+
+describe('one row is redrawn in place (DES review of #651)', () => {
+  test('the rent cell and box state come from the row alone, and rows are addressable', () => {
+    const [row] = capRows([offItem(A)], ME, A);
+    expect(rowRentHtml(row!)).toContain('simulating…');
+    expect(rowUsable(row!)).toBe(false);
+    const priced = { ...row!, rent: { kind: 'ok', stroops: 61_234n, atLedger: 1 } } as CapRow;
+    expect(rowUsable(priced)).toBe(true);
+    expect(rowRentHtml(priced)).toContain('61,234 stroops');
+    expect(rowRentHtml({ ...priced, extendToLedgers: 1 })).toMatch(/more than Act below/);
+    const html = capRowsHtml([priced]);
+    expect(html).toContain('data-cap-index="0"');
+    expect(html).toContain('<td data-cap-rent>');
   });
 });

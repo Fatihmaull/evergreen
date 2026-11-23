@@ -144,6 +144,23 @@ function ledgersField(
   return `<input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="9" data-cap-${kind}="${index}" aria-label="${esc(label)}" value="${value === undefined ? '' : String(value)}" />`;
 }
 
+/** Whether a row's box can be ticked: fully simulated rent and usable settings. */
+export function rowUsable(row: CapRow): boolean {
+  return row.rent.kind === 'ok' && settingsProblem(row) === undefined;
+}
+
+/**
+ * The rent cell of one row. The page swaps only this cell and the row's box
+ * after a simulation or a settings change, never the inputs, so a number being
+ * typed in another row keeps its value and its focus (DES review, #651).
+ */
+export function rowRentHtml(row: CapRow): string {
+  const problem = settingsProblem(row);
+  return problem === undefined
+    ? rentCell(row.rent)
+    : `<span class="small">${esc(problem)} This contract is left out of the cap.</span>`;
+}
+
 export function capRowsHtml(rows: readonly CapRow[]): string {
   if (rows.length === 0) {
     return '<p class="small muted">No contract on your watchlist can be paid for by this wallet. Add one from <a href="/dashboard/scanner/">the scanner</a>, or enter rent by hand below.</p>';
@@ -152,18 +169,17 @@ export function capRowsHtml(rows: readonly CapRow[]): string {
       <thead><tr><th scope="col">Include</th><th scope="col">Contract</th><th scope="col">Act below, ledgers left</th><th scope="col">Extend to, ledgers</th><th scope="col">Rent, one extend</th></tr></thead>
       <tbody>${rows
         .map((r, index) => {
-          const problem = settingsProblem(r);
-          const usable = r.rent.kind === 'ok' && problem === undefined;
+          const usable = rowUsable(r);
           const who = r.item.label ?? r.item.contractId;
           const name = r.item.label
             ? `${esc(r.item.label)} <span class="small muted mono">${esc(short(r.item.contractId))}</span>`
             : `<span class="mono" title="${esc(r.item.contractId)}">${esc(short(r.item.contractId))}</span>`;
-          return `<tr>
+          return `<tr data-cap-index="${index}">
             <td><input type="checkbox" data-cap-row="${index}" aria-label="Include ${esc(who)}"${r.checked && usable ? ' checked' : ''}${usable ? '' : ' disabled'} /></td>
             <td>${name}</td>
             <td>${ledgersField('threshold', index, r.thresholdLedgers, `Act below, ${who}`)}</td>
             <td>${ledgersField('extend-to', index, r.extendToLedgers, `Extend to, ${who}`)}</td>
-            <td>${problem === undefined ? rentCell(r.rent) : `<span class="small">${esc(problem)} This contract is left out of the cap.</span>`}</td>
+            <td data-cap-rent>${rowRentHtml(r)}</td>
           </tr>`;
         })
         .join('')}</tbody></table></div>

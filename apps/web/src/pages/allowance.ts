@@ -22,6 +22,8 @@ import {
   capRows,
   capRowsHtml,
   parseLedgers,
+  rowRentHtml,
+  rowUsable,
   settingsProblem,
   type CapRow,
 } from '../lib/allowance-candidates';
@@ -210,6 +212,24 @@ async function loadCapRows(connected: string): Promise<void> {
   await Promise.all(rows.map((_, index) => simulate(index)));
 }
 
+/**
+ * Redraw one row's rent cell and box in place. The inputs are left alone, so
+ * a value being typed elsewhere keeps its text and focus.
+ */
+function refreshRow(index: number): void {
+  const row = rows[index];
+  const tr = $('cap-rows').querySelector<HTMLElement>(`tr[data-cap-index="${index}"]`);
+  if (row === undefined || tr === null) return;
+  const cell = tr.querySelector<HTMLElement>('[data-cap-rent]');
+  if (cell !== null) cell.innerHTML = rowRentHtml(row);
+  const box = tr.querySelector<HTMLInputElement>('input[data-cap-row]');
+  if (box !== null) {
+    const usable = rowUsable(row);
+    box.disabled = !usable;
+    box.checked = usable && row.checked;
+  }
+}
+
 /** One scan per contract, kept, so changing Extend to re-prices without re-reading. */
 const scans = new Map<string, Promise<ScanResult>>();
 
@@ -218,12 +238,12 @@ async function simulate(index: number): Promise<void> {
   if (row === undefined) return;
   const extendTo = row.extendToLedgers;
   if (settingsProblem(row) !== undefined || extendTo === undefined) {
-    $('cap-rows').innerHTML = capRowsHtml(rows);
+    refreshRow(index);
     estimate();
     return;
   }
   rows[index] = { ...row, rent: { kind: 'simulating' } };
-  $('cap-rows').innerHTML = capRowsHtml(rows);
+  refreshRow(index);
   let rent: CapRow['rent'];
   try {
     const id = row.item.contractId;
@@ -243,7 +263,7 @@ async function simulate(index: number): Promise<void> {
   // A newer Extend to may have been typed while this one was pricing.
   if (rows[index]?.extendToLedgers !== extendTo) return;
   rows[index] = { ...rows[index]!, rent };
-  $('cap-rows').innerHTML = capRowsHtml(rows);
+  refreshRow(index);
   estimate();
 }
 
@@ -304,7 +324,7 @@ $('cap-rows').addEventListener('change', (ev) => {
     if (row === undefined) return;
     rows[index] = { ...row, thresholdLedgers: parseLedgers(field.value) };
     // Act below does not change the rent of one extend, only whether the row is usable.
-    $('cap-rows').innerHTML = capRowsHtml(rows);
+    refreshRow(index);
     estimate();
     return;
   }
