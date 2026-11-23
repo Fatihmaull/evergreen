@@ -60,7 +60,7 @@ describe('/docs/account/', () => {
 
   test('says Revoke is disabled, and it is', () => {
     const allowance = readFileSync(join(ROOT, 'apps/web/src/pages/allowance.mjs'), 'utf8');
-    expect(allowance).toMatch(/id="revoke-button" type="button" disabled>Revoke allowance</);
+    expect(allowance).toMatch(/id="revoke-button"[^>]*disabled>Revoke allowance</);
     expect(page).toContain('Revoke allowance');
     expect(page).toContain('stays disabled');
   });
@@ -90,17 +90,31 @@ describe('the two statements that go stale', () => {
       ...sources(join(ROOT, 'apps/web/src'), /\.(ts|mjs)$/),
       ...sources(join(ROOT, 'apps/dashboard/src'), /\.(ts|mjs)$/),
     ];
-    // Autopilot is PATCH /watchlist (docs/API.md §6). Two PATCHes exist: alert
-    // preferences, a boolean that does not touch autopilot, and the watchlist
-    // row's Turn off, which only ever sends `enabled: false`.
+    // Autopilot is PATCH /watchlist (docs/API.md §6). Three PATCHes exist: alert
+    // preferences, a boolean that does not touch autopilot; the watchlist
+    // row's Turn off, which only ever sends `enabled: false`; and step D of
+    // /allowance/, the one place that sends `enabled: true`.
     const setters = files.filter((f) => /method:\s*['"]PATCH['"]/.test(readFileSync(f, 'utf8')));
     expect(setters.map((f) => f.slice(ROOT.length)).sort()).toEqual([
       'apps/web/src/lib/alert-preferences.ts',
+      'apps/web/src/lib/autopilot-on.ts',
       'apps/web/src/lib/watchlist.ts',
     ]);
     const watch = readFileSync(join(ROOT, 'apps/web/src/lib/watchlist.ts'), 'utf8');
     expect(watch).toContain('autopilot: { enabled: false }');
     expect(watch).not.toMatch(/enabled:\s*true/);
+    // An object literal that sets it (a type's `enabled: true;` is not one).
+    const turnsOn = files.filter((f) => /enabled:\s*true\s*,/.test(readFileSync(f, 'utf8')));
+    expect(turnsOn.map((f) => f.slice(ROOT.length))).toEqual(['apps/web/src/lib/autopilot-on.ts']);
+    // Only /allowance/ imports it, and only its step D calls it: that step is
+    // hidden in the static page and shows after a matching read-back, which
+    // needs the engine's spender address.
+    const callers = files.filter((f) =>
+      /from '\.\.\/lib\/autopilot-on'/.test(readFileSync(f, 'utf8')),
+    );
+    expect(callers.map((f) => f.slice(ROOT.length))).toEqual(['apps/web/src/pages/allowance.ts']);
+    const allowancePage = readFileSync(join(ROOT, 'apps/web/src/pages/allowance.mjs'), 'utf8');
+    expect(allowancePage).toMatch(/id="autopilot-step"[^>]*hidden/);
     const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
     expect(prefs).toContain("'/me/alert-preferences'");
     expect(prefs).not.toMatch(/\/watchlist/);
