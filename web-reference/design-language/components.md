@@ -640,6 +640,21 @@ allowance nothing can use.
   uses. While it runs the cell says `simulating…`. If it fails, the row says
   "Rent could not be simulated, so this contract is left out of the cap." and
   its checkbox is disabled. It is never filled with a guess.
+- Each row also carries the item's two autopilot settings, as mono fields the
+  person can change: **Act below** (`thresholdLedgers`, prefilled `17,280`,
+  about 1 day) and **Extend to** (`extendToLedgers`, prefilled `518,400`,
+  about 30 days). These are the CLI's and the example config's defaults, so a
+  person who has used the CLI sees the same numbers. An item that already has
+  them shows its own. The row's simulated rent is the rent of extending to
+  **Extend to**, so changing it re-simulates that row. The API needs both
+  (`extendToLedgers` above `thresholdLedgers`, `thresholdLedgers` at or above
+  `THRESHOLD_FLOOR_LEDGERS`), so they are set here, where the rent depends on
+  them, and sent unchanged in step D.
+- If step D's `PATCH` is refused because **Act below** is under the engine's
+  floor, the row shows the floor the API names and the sentence "The engine
+  acts no earlier than N ledgers left. Use N?" with a secondary button
+  `Use N`. The value is never raised silently: it changes when the engine acts,
+  so the person sees it change.
 - One field: **Extends to cover, per contract**. Whole number, mono,
   **prefilled with `2`** (decided 2026-11-23, see "The default of 2" below).
   Helper: "Each extend is one pull: rent, the Evergreen fee and the retry
@@ -696,8 +711,9 @@ the existing `approveOutcomeHtml` kinds; only the layout is new.
 **Step D · Turn on autopilot** appears only after a matching read-back, or
 when the standing line is Live and covers the checked contracts.
 
-- The checked contracts from step 2, one hairline row each, with two mono
-  fields: **Per-job budget** (prefilled with that contract's pull total:
+- The checked contracts from step 2, one hairline row each. The `PATCH`
+  sends `payerWallet` (the connected, linked wallet), the row's **Act below**
+  and **Extend to** from step 2, and `budget` from two mono fields: **Per-job budget** (prefilled with that contract's pull total:
   rent + fee + margin) and **Per 30 days** (prefilled with per-job ×
   extends-to-cover, capped at the cap). The API's rule is printed once:
   "Per job cannot be more than per 30 days, and neither can be 0."
@@ -741,7 +757,7 @@ Not decisions. Replace each with the configured or read value.
 |---|---|
 | Rents `61,234` and `48,903` stroops | In-browser simulation per contract. |
 | 6 extends per contract | The person's input; the product default is 2. |
-| Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`, unset today (from #630 / `PH2-E4-02`). |
+| Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`: 100,000 stroops on testnet (CEF, 2026-11-23, PR #643). With it, one contract at 103,849 stroops rent and 2 extends is a cap of 457,698 stroops (0.0457698 XLM). |
 | Read at ledger `5,400,000`, until `8,510,399` | Chain read + `MAX_ALLOWANCE_EXTENSION_LEDGERS` (3,110,399). |
 | Spender `GENGINE…` | `ENGINE_SPENDER`, unpublished until `PH2-E4-03`. |
 | Wallet `GABC12…XYZ789` | The connected wallet. |
@@ -786,3 +802,84 @@ a limit.
   runs Stage 2 (`PH2-E4-04`). If the median item needs more than 2 extends per
   allowance lifetime, raise the default to that median and record the
   evidence here.
+
+## CLI help and version (PH2-E1)
+
+Specified 2026-11-23 by DES. CEF owns `packages/cli` and implements this. The
+CLI is the product most beta users meet first (it is the recommended path), so
+its first screen follows the same rules as the dashboard's: one dominant
+thing, nothing claimed that was not measured, the state word always printed.
+
+### What is wrong today (`cli-v0.2.0`, read 2026-11-23)
+
+1. `evergreen --version` prints the usage, not the version. There is no way
+   to ask the installed CLI which version it is, which is the first question
+   in any support thread.
+2. `evergreen --help` prints 77 lines, all of them about
+   `scan`. `extend` is one line near the top. A person who wanted to know what
+   the tool does gets the scan manual.
+
+### Top-level help
+
+`evergreen --help` and `evergreen help` print this, and nothing else, to
+stdout, exit 0. Bare `evergreen` (no command) prints the same screen to
+stderr and exits 2, as today's usage error does, so a script that forgot its
+command still fails. At most 20 lines, so it fits an 80×24 terminal
+without scrolling. Plain text, no colour, no box drawing.
+
+```
+evergreen 0.2.0 — Soroban state TTL, read and extended. Stellar testnet by default.
+
+usage: evergreen <command> [options]
+
+commands
+  scan <contract-id>...        read TTL health of every entry it is given; nothing is signed
+  extend <contract-id>         simulate an extend; --submit signs, testnet only
+
+examples
+  evergreen scan C...                    health of one contract
+  evergreen scan C... C... --json        two contracts, shared code resolved, JSON
+  evergreen scan C... --cost             what 30 more days would cost, simulated
+  evergreen extend C... --ledgers 518400 simulate adding about 30 days
+
+global options
+  --network testnet|mainnet    or EVERGREEN_NETWORK; reads only on mainnet
+  --version                    print the version and exit
+  --help                       this screen; evergreen <command> --help for one command
+
+docs  https://evergreen-stellar.pages.dev/docs/cli/
+```
+
+Rules for that text:
+
+- The version on line 1 is read from `package.json` at build time, never typed.
+- "about 30 days" stays beside the ledger number. The ledger is the rule; the
+  days are the estimate (518,400 × 5 s).
+- Command descriptions say what is **not** done (nothing is signed, simulate
+  by default). That is the CLI's safety claim and it leads, as on the site.
+- The docs URL is the deployed docs origin. If CEF knows a canonical domain
+  that differs, use that one; do not print two.
+
+### Per-command help
+
+`evergreen scan --help` prints today's full scan text unchanged. It is good
+reference text; it was only in the wrong place. `evergreen extend --help`
+stays as it is.
+
+### Version
+
+`evergreen --version` and `evergreen -v` print exactly `0.2.0` (the bare
+version, one line, stdout, exit 0), so scripts can compare it. No banner, no
+update check, no network call.
+
+### Unknown command
+
+`evergreen frobnicate` prints to stderr
+`evergreen: unknown command "frobnicate". Commands: scan, extend. See evergreen --help.`
+and exits 2, the CLI's existing error code. Today it already exits 2 with the
+two-line usage; only the message changes.
+
+### Not changing
+
+Exit codes, `--json` output, the scan and extend option names, and colour
+rules (TTY only, `NO_COLOR` honoured). The top-level screen adds no colour.
