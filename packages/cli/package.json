@@ -1,6 +1,6 @@
 {
   "name": "@evergreen-stellar/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "description": "Scan Soroban contracts for TTL health, projected archival, and rent cost.",
   "license": "MIT",
