@@ -1,5 +1,6 @@
 /**
- * Overview. A stat strip over our three contracts, then their cards.
+ * Overview. The scan panel, a summary of the signed-in watchlist, then our
+ * three contracts as a worked example: a stat strip and their cards.
  *
  * Live reads can fail in front of an audience, so everything here falls back
  * to the snapshot committed with the build and says which ledger it was
@@ -17,6 +18,8 @@ import { approxDateShort, esc, formatCount, stamp } from '../lib/format';
 import { bindingEntry, contractCard } from '../lib/ui';
 import { entryView } from '../lib/view';
 import { mountScanPanel } from '../lib/scan-panel';
+import { apiRequest } from '../lib/api';
+import { watchlistSummaryHtml } from '../lib/watchlist-view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -136,4 +139,16 @@ async function load(): Promise<void> {
 // mounts, not a second implementation.
 mountScanPanel();
 
+// One `GET /watchlist`, the same request the watchlist screen makes. Signed
+// out or without an API, the panel says so in the watchlist screen's words.
+async function loadWatchlistSummary(): Promise<void> {
+  const out = document.getElementById('wl-summary');
+  if (out === null) return;
+  const outcome = await apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(
+    () => ({ kind: 'unavailable', reason: 'network' }) as const,
+  );
+  out.innerHTML = watchlistSummaryHtml(outcome);
+}
+
+void loadWatchlistSummary();
 void load();
