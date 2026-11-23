@@ -771,9 +771,10 @@ a limit.
 
 - **The cap is the worst case the person signs for.** A default sets what most
   people sign, so it leans low. With the provisional fee floor (25,000 stroops
-  per extend) and today's measured testnet rents (tens of thousands of stroops
-  per extend), 2 extends per contract keep a typical cap well under 1 XLM
-  for a handful of contracts.
+  per extend) and the testnet rents on record (53,196 and 103,849 stroops for
+  one extend, `docs/evidence/2026-09-11-storage-advice-validation/blend/human.txt`), 2 extends per contract are roughly 0.03 XLM per
+  contract before the retry margin, so a handful of contracts stays well under
+  1 XLM.
 - **One extend is not enough.** A pull whose extend fails is refunded, but a
   cap sized for exactly one pull leaves no room for the next scheduled extend,
   and the person gets `allowance_missing` straight after their first success.
