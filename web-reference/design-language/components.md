@@ -528,3 +528,358 @@ notices are not sent. The failure-modes page was not edited here.
 7. **F3 and F5.** Answered 15 Nov 2026. No dedicated email. The user is
    told by success, F4, or F6. See the section above.
 
+
+## Autopilot setup and allowance approve (PH2-E3-05)
+
+Specified 2026-11-23 by DES. This is the money path's only screen a person
+signs on, so it is specified end to end: from a watchlist row that says
+`Off` to a row that says `On` with a live allowance behind it. WEBF or WEBR
+implement it in `apps/web`. The logic already built stays (`allowance-cap.ts`,
+`allowance-approve.ts`, `allowance-revoke.ts`, `allowance-view.ts`); this
+section changes **order, entry points and what is prefilled**, not the
+arithmetic and not the refusals.
+
+The reference render of the **ready to sign** state is
+[`source/screens/autopilot-approve.html`](source/screens/autopilot-approve.html).
+Every number in it is a **stand-in** and is listed under "Stand-ins in the
+render" below. None of them is a decision.
+
+### What is wrong today (audit, 23 Nov 2026)
+
+1. **The watchlist has no way to turn autopilot on.** The row prints `Off`
+   (`autopilotCell`) and nothing else. `PATCH /watchlist/{network}/{contractId}`
+   with `autopilot` exists (`docs/API.md` §5) and no screen calls it.
+2. **`/allowance/` asks the person to type simulated rent in stroops, one
+   contract per line.** A beta user does not have that number. The watchlist
+   already knows which contracts are theirs, and the scanner already simulates
+   the rent of one extend in the browser.
+3. **The page is five equal steps.** Sizing and approving read as a form; the
+   revoke has the same weight as the approve, directly under it.
+4. **The two halves are not joined.** An approve does not lead to turning
+   autopilot on, and turning autopilot on (when it exists) does not lead to
+   an approve.
+5. **There is no single line that says where this wallet stands.** The read
+   is a definition list in step 2, with the reminders below it.
+
+### The journey
+
+Three places, one direction. No step is skipped, and none moves XLM except
+the wallet's own signature in step C.
+
+| | Where | What the person does | What changes |
+|---|---|---|---|
+| A | `/dashboard/watchlist/`, the row | `Turn on autopilot` | Nothing yet. Goes to `/allowance/?for=<contractId>`. |
+| B | `/allowance/`, Cap | Confirms the contracts and how many extends to cover | Nothing. In-browser estimate only. |
+| C | `/allowance/`, Review and sign | Reads the review panel, then signs one `approve` in Freighter | The allowance on chain. |
+| D | `/allowance/`, after the read-back | `Turn on autopilot for these contracts` | `PATCH` per contract, with `payerWallet` and `budget`. |
+| E | Back on the watchlist | Nothing | The row reads `On`, with the payer and the allowance's end ledger. |
+
+If the wallet already has a live allowance that covers the new contract's
+pull, A goes straight to D: the page says so and offers no new approve. A new
+approve **replaces** the cap, so the page never offers one that would lower a
+live allowance without saying, in the review panel, from what to what.
+
+### A · The watchlist row
+
+The autopilot cell gains one control. It stays a cell, not a panel.
+
+| Stored state | Cell |
+|---|---|
+| `enabled: false` | `Off` and a secondary button `Turn on autopilot`. |
+| `enabled: true`, allowance read live | `On` · acts below … · extends to … · paid by `GABC12…XYZ789` · allowance until ledger `8,510,399` (~date). |
+| `enabled: true`, allowance reads 0 or is missing | The warning chip, `allowance missing`, and the inline link `Approve an allowance →` to `/allowance/?for=<contractId>`. Same words as the `allowance_missing` alert. |
+| `enabled: true`, allowance not read | `On` and the undetermined chip on the allowance part only. Never healthy. |
+| `autopilot` absent or malformed | The undetermined chip, as today. |
+| No linked wallet | `Off`, and instead of the button: `Link a wallet first →` to `/login/`. |
+| Item on `mainnet` | `Off` and the sentence "Autopilot is testnet-only until beta ends." No button. |
+
+Turning autopilot **off** is a secondary button `Turn off` in the same cell.
+It is a `PATCH` with `enabled: false`. It does **not** revoke the allowance,
+and the row says so after it succeeds: "Autopilot is off for this contract.
+Your allowance is unchanged; revoke it on the Allowance page."
+
+### B, C, D · `/allowance/`
+
+**Page head** (unchanged route and title)
+
+| | |
+|---|---|
+| Eyebrow | Account · Stellar testnet |
+| Heading | Allowance |
+| Lead | An allowance lets Evergreen's engine pull native XLM from your wallet, up to a cap and until a ledger you approve. Your wallet signs it. Signing in with email cannot move XLM. |
+
+**Standing line**, directly under the lead, before any step. One sentence and
+one chip. This is the answer to "where am I", so it comes first.
+
+| Read | Chip | Sentence |
+|---|---|---|
+| Not connected | none | Connect a wallet to read its allowance. |
+| Reading | none | `reading…` in `--ink-3`. |
+| Live | none (a fact, not a health state) | `0.1080822 XLM` (`1,080,822 stroops`) until ledger `8,510,399`, about May 22, 2027. |
+| Zero, history says expired | expired | Stopped. The allowance expired at ledger … . |
+| Zero, history says revoked | expired | Stopped. The allowance was revoked. |
+| Zero, no history | undetermined | The chain reads zero. Whether it expired, was revoked or never existed is undetermined. |
+| Spender unpublished | undetermined | `SPENDER_UNSET_TEXT`, verbatim. |
+| Read failed | undetermined | The allowance could not be read. (detail) |
+
+**Step 1 · Wallet.** As today: `Connect Freighter`, then the connected
+account in mono. One addition: when the connected account is **not** one of
+the account's linked wallets (`GET /me`), say "This wallet is not linked to
+your account, so autopilot cannot name it as payer. Link it on the Sign in
+page." and stop at step 1. Approving from an unlinked wallet would produce an
+allowance nothing can use.
+
+**Step 2 · Cap.** Prefilled, not typed.
+
+- One hairline row per watch item that is autopilot-eligible (testnet,
+  this wallet as payer or no payer yet). The `?for=` contract is first and
+  pre-checked. Others are listed unchecked. Each row: a checkbox, the label (or
+  the short contract ID), the binding entry, and **simulated rent for one
+  extend** in mono stroops with "simulated at ledger …".
+- The rent comes from the same in-browser simulation the scanner's cost read
+  uses. While it runs the cell says `simulating…`. If it fails, the row says
+  "Rent could not be simulated, so this contract is left out of the cap." and
+  its checkbox is disabled. It is never filled with a guess.
+- Each row also carries the item's two autopilot settings, as mono fields the
+  person can change: **Act below** (`thresholdLedgers`, prefilled `17,280`,
+  about 1 day) and **Extend to** (`extendToLedgers`, prefilled `518,400`,
+  about 30 days). These are the CLI's and the example config's defaults, so a
+  person who has used the CLI sees the same numbers. An item that already has
+  them shows its own. The row's simulated rent is the rent of extending to
+  **Extend to**, so changing it re-simulates that row. The API needs both
+  (`extendToLedgers` above `thresholdLedgers`, `thresholdLedgers` at or above
+  `THRESHOLD_FLOOR_LEDGERS`), so they are set here, where the rent depends on
+  them, and sent unchanged in step D.
+- If step D's `PATCH` is refused because **Act below** is under the engine's
+  floor, the row shows the floor the API names and the sentence "The engine
+  acts no earlier than N ledgers left. Use N?" with a secondary button
+  `Use N`. The value is never raised silently: it changes when the engine acts,
+  so the person sees it change.
+- One field: **Extends to cover, per contract**. Whole number, mono,
+  **prefilled with `2`** (decided 2026-11-23, see "The default of 2" below).
+  Helper: "Each extend is one pull: rent, the Evergreen fee and the retry
+  margin." When the checked item has `thresholdLedgers` and `extendToLedgers`,
+  one more line per row says what the number covers at that item's settings:
+  "One extend adds about N ledgers (~D days), so 2 extends cover about …
+  ledgers. The allowance itself ends at ledger …". The ledgers are the rule;
+  the days are the estimate. Without those settings the line is absent, not
+  guessed.
+- `Enter rent by hand` is a `<details>` under the rows. It holds today's
+  textarea, for a contract that is not on the watchlist. It is not the main
+  path.
+- The per-job budget textarea is removed from this step. Budgets are set in
+  step D, where they are used.
+- The estimate updates when an input changes. There is no `Show the estimate`
+  button. Updating is not motion: the numbers replace, nothing animates.
+
+**Step 3 · Review and sign.** This is the signing step from "Phase 2
+components" above, made concrete. One panel. It is the screen's dominant
+element, so it is the only panel on the page with the figure: the cap in
+`--t-sub` (20px) serif, unrounded.
+
+| Line | Content |
+|---|---|
+| Cap | `0.1080822 XLM` and, under it in mono 12px, `1,080,822 stroops`. |
+| Made of | Three lines, never summed into one: Rent `660,822 stroops` · Evergreen fee `300,000 stroops` (provisional: 2% of rent, at least 25,000 stroops per extend) · Retry margin `120,000 stroops`. Then: "Rent and the fee are charged on what each extend actually costs. An unused pull is refunded." |
+| Replaces | "Your current allowance, `0 XLM`, is replaced by this cap. It is not added to it." Always shown, also when the current amount is zero. |
+| Until | Ledger `8,510,399`, about May 22, 2027. "The ledger is the rule. The date is an estimate." |
+| Spender | Evergreen's engine, the full G-address in mono, wrapped, not shortened. |
+| Contract | The native XLM contract, short ID with the full one in `title`. |
+| What it is | "This authorises a payment from your wallet, never access to a contract. You can revoke it at any time below." |
+
+Then the one primary button: `Sign approve in Freighter →`. Under it, in 12px
+`--ink-3`: "Your wallet shows the same amount and ledger. If it does not,
+reject it there."
+
+When the button is disabled, every reason is printed above it, as today
+(`showWhyApproveIsOff`), one sentence each. A disabled button with no reason
+is a defect.
+
+**After signing**, in the same panel, replacing the button. The outcomes are
+the existing `approveOutcomeHtml` kinds; only the layout is new.
+
+| State | What renders |
+|---|---|
+| Waiting for wallet | "Waiting for your wallet…" No spinner. |
+| Rejected in wallet | "You rejected it in your wallet. Nothing was signed." Button back. |
+| Possibly signed | Undetermined chip, the existing sentence, and `Read the allowance again` instead of the sign button. |
+| Submitted | "Submitted. Transaction" + hash in mono, linked to the explorer. "Reading the allowance back…" |
+| Read back, matches | The standing line updates. In the panel: "The chain now reads `0.1080822 XLM` until ledger `8,510,399`." Then step D appears. No healthy chip: an allowance is a permission, not health. |
+| Read back, differs | Critical mark: "The chain reads a different amount or ledger than you signed. Do not turn on autopilot. (both values)". Step D does not appear. |
+| Failed | The existing error sentences, and "Nothing was signed" or "Nothing was submitted" as the kind says. |
+
+**Step D · Turn on autopilot** appears only after a matching read-back, or
+when the standing line is Live and covers the checked contracts.
+
+- The checked contracts from step 2, one hairline row each. The `PATCH`
+  sends `payerWallet` (the connected, linked wallet), the row's **Act below**
+  and **Extend to** from step 2, and `budget` from two mono fields: **Per-job budget** (prefilled with that contract's pull total:
+  rent + fee + margin) and **Per 30 days** (prefilled with per-job ×
+  extends-to-cover, capped at the cap). The API's rule is printed once:
+  "Per job cannot be more than per 30 days, and neither can be 0."
+- One primary button: `Turn on autopilot for these contracts →`. One `PATCH`
+  per row, each with its own result line under its row (`On.` in 12px
+  `--ink-3`, or the API's refusal in `--crit-ink`). One failure does not undo
+  the others, and the page says which rows succeeded.
+- `503 UPSTREAM_UNAVAILABLE` (threshold floor not configured) reads: "Autopilot
+  cannot be turned on yet: the engine has not published its threshold. Your
+  allowance is approved and stays on chain."
+- After at least one success: the inline link `Back to the watchlist →`.
+
+**Stop autopilot (revoke).** Moved below a hairline, after the steps, under
+the `h2` `Stop`. It is not step 4 or 5. Copy as today. The button is
+secondary, not primary: it is the reverse action and must not compete with
+the sign button. It is always enabled when the read is Live, whatever the
+rest of the page says.
+
+### Mobile
+
+At 390px the steps stack in the same order. The review panel's lines become
+label-over-value. The spender address wraps in mono, never truncated, because
+the person compares it with the wallet prompt. The sign button is full width.
+The top nav strip must scroll its active item into view on load (today
+`Allowance` is off-screen to the right on this page).
+
+### Constraints that hold
+
+The seven rules, and in particular: weight 400 everywhere; one dominant
+element (the cap figure in the review panel, 20px, the page's only serif
+number); amounts unrounded with their unit every time; rent and fee never one
+summed figure; dates are estimates beside ledgers; nothing animates; a
+disabled control only when the action is built and not configured, with its
+reason printed; no healthy chip anywhere on this screen.
+
+### Stand-ins in the render
+
+Not decisions. Replace each with the configured or read value.
+
+| Value in the render | Real source |
+|---|---|
+| Rents `61,234` and `48,903` stroops | In-browser simulation per contract. |
+| 6 extends per contract | The person's input; the product default is 2. |
+| Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`: 100,000 stroops on testnet (CEF, 2026-11-23, PR #643). With it, one contract at 103,849 stroops rent and 2 extends is a cap of 457,698 stroops (0.0457698 XLM). |
+| Read at ledger `5,400,000`, until `8,510,399` | Chain read + `MAX_ALLOWANCE_EXTENSION_LEDGERS` (3,110,399). |
+| Spender `GENGINE…` | `ENGINE_SPENDER`, unpublished until `PH2-E4-03`. |
+| Wallet `GABC12…XYZ789` | The connected wallet. |
+
+The cap in the render, `1,080,822` stroops, is `pullAmountStroops` from core
+summed over the stand-ins (2 contracts × 6 extends × (rent + 25,000 + 10,000)),
+so the arithmetic in the picture is the product's, not hand-made.
+
+### Open questions
+
+1. **Answered 2026-11-23:** the default for "extends to cover" is 2. See
+   below.
+2. **CEF:** does `GET /watchlist` (or a new field) carry a simulated rent per
+   item, or does the browser simulate it? This spec assumes the browser, as the
+   scanner does, so no API change is needed.
+3. **CEF:** the allowance history route (`GET /wallets/{account}/allowance`)
+   is what tells expired from revoked in the standing line. Until it is served,
+   zero reads as the undetermined row.
+4. **CEF:** `ALLOWANCE_RETRY_MARGIN_STROOPS` and `ENGINE_SPENDER`. Until both
+   exist the sign button stays disabled with its reasons, which is correct.
+
+### The default of 2
+
+Decided 2026-11-23 by DES under the standing authority Fatih gave the
+orchestrator that day. It is a default in a field the person can change, not
+a limit.
+
+- **The cap is the worst case the person signs for.** A default sets what most
+  people sign, so it leans low. With the provisional fee floor (25,000 stroops
+  per extend) and the testnet rents on record (53,196 and 103,849 stroops for
+  one extend, `docs/evidence/2026-09-11-storage-advice-validation/blend/human.txt`), 2 extends per contract are roughly 0.03 XLM per
+  contract before the retry margin, so a handful of contracts stays well under
+  1 XLM.
+- **One extend is not enough.** A pull whose extend fails is refunded, but a
+  cap sized for exactly one pull leaves no room for the next scheduled extend,
+  and the person gets `allowance_missing` straight after their first success.
+  2 is the smallest number that survives one full cycle.
+- **The allowance expires anyway.** It ends at most 3,110,399 ledgers (about
+  180 days) after it is read, and renewal reminders go out at 30, 7 and 1 days.
+  A low cap is renewed with the same signature the expiry already asks for.
+- **What would change it:** measured extend frequency per item once the engine
+  runs Stage 2 (`PH2-E4-04`). If the median item needs more than 2 extends per
+  allowance lifetime, raise the default to that median and record the
+  evidence here.
+
+## CLI help and version (PH2-E1)
+
+Specified 2026-11-23 by DES. CEF owns `packages/cli` and implements this. The
+CLI is the product most beta users meet first (it is the recommended path), so
+its first screen follows the same rules as the dashboard's: one dominant
+thing, nothing claimed that was not measured, the state word always printed.
+
+### What is wrong today (`cli-v0.2.0`, read 2026-11-23)
+
+1. `evergreen --version` prints the usage, not the version. There is no way
+   to ask the installed CLI which version it is, which is the first question
+   in any support thread.
+2. `evergreen --help` prints 77 lines, all of them about
+   `scan`. `extend` is one line near the top. A person who wanted to know what
+   the tool does gets the scan manual.
+
+### Top-level help
+
+`evergreen --help` and `evergreen help` print this, and nothing else, to
+stdout, exit 0. Bare `evergreen` (no command) prints the same screen to
+stderr and exits 2, as today's usage error does, so a script that forgot its
+command still fails. At most 20 lines, so it fits an 80×24 terminal
+without scrolling. Plain text, no colour, no box drawing.
+
+```
+evergreen 0.2.0 — Soroban state TTL, read and extended. Stellar testnet by default.
+
+usage: evergreen <command> [options]
+
+commands
+  scan <contract-id>...        read TTL health of every entry it is given; nothing is signed
+  extend <contract-id>         simulate an extend; --submit signs, testnet only
+
+examples
+  evergreen scan C...                    health of one contract
+  evergreen scan C... C... --json        two contracts, shared code resolved, JSON
+  evergreen scan C... --cost             what 30 more days would cost, simulated
+  evergreen extend C... --ledgers 518400 simulate adding about 30 days
+
+global options
+  --network testnet|mainnet    or EVERGREEN_NETWORK; reads only on mainnet
+  --version                    print the version and exit
+  --help                       this screen; evergreen <command> --help for one command
+
+docs  https://evergreen-stellar.pages.dev/docs/cli/
+```
+
+Rules for that text:
+
+- The version on line 1 is read from `package.json` at build time, never typed.
+- "about 30 days" stays beside the ledger number. The ledger is the rule; the
+  days are the estimate (518,400 × 5 s).
+- Command descriptions say what is **not** done (nothing is signed, simulate
+  by default). That is the CLI's safety claim and it leads, as on the site.
+- The docs URL is the deployed docs origin. If CEF knows a canonical domain
+  that differs, use that one; do not print two.
+
+### Per-command help
+
+`evergreen scan --help` prints today's full scan text unchanged. It is good
+reference text; it was only in the wrong place. `evergreen extend --help`
+stays as it is.
+
+### Version
+
+`evergreen --version` and `evergreen -v` print exactly `0.2.0` (the bare
+version, one line, stdout, exit 0), so scripts can compare it. No banner, no
+update check, no network call.
+
+### Unknown command
+
+`evergreen frobnicate` prints to stderr
+`evergreen: unknown command "frobnicate". Commands: scan, extend. See evergreen --help.`
+and exits 2, the CLI's existing error code. Today it already exits 2 with the
+two-line usage; only the message changes.
+
+### Not changing
+
+Exit codes, `--json` output, the scan and extend option names, and colour
+rules (TTY only, `NO_COLOR` honoured). The top-level screen adds no colour.

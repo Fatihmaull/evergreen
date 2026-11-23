@@ -1,0 +1,137 @@
+/* PH2-E3-05 reference. Loaded after alert-preferences.css, which carries the
+   shell. No colour, face, or weight is introduced here. */
+
+.mono {
+  font-family: var(--mono);
+}
+
+.standing-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+  max-width: 62ch;
+  color: var(--ink-2);
+}
+
+.cap-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.cap-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: var(--pine);
+}
+
+.cap-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.amount {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.text-input {
+  max-width: 200px;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 15, 15, 0.5);
+  border-radius: 6px;
+  background: var(--paper);
+  font: 400 14px/1.2 var(--mono);
+  color: var(--ink);
+}
+
+.by-hand summary {
+  cursor: pointer;
+  color: var(--ink-2);
+}
+
+.review-lines {
+  margin: 4px 0 0;
+  display: grid;
+}
+
+.review-lines > div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.review-lines dd {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.cap-figure {
+  font: 400 20px/1.3 var(--serif);
+  color: var(--ink);
+}
+
+.cap-stroops {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.wrap {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.sign {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding-top: 8px;
+}
+
+button.primary,
+button.secondary {
+  font: 400 14px/1 var(--sans);
+  letter-spacing: 0.01em;
+  padding: 12px 20px;
+  border-radius: 100vw;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--pine);
+  color: var(--surface);
+  border: 1px solid var(--pine);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stop {
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 640px) {
+  .review-lines > div {
+    grid-template-columns: 1fr;
+  }
+  .sign button.primary {
+    width: 100%;
+  }
+}

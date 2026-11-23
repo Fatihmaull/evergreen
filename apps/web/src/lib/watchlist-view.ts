@@ -238,6 +238,11 @@ export const AUTOPILOT_OFF_TEXT =
   'Autopilot is off for this contract. Your allowance is unchanged; revoke it on <a href="/allowance/">the Allowance page</a>.';
 
 /**
+ * TODO(PH2-E3-05, once ENGINE_SPENDER is published): read the payer's
+ * allowance and render components.md § A instead of this constant: live →
+ * "allowance until ledger …"; zero → the warning chip "allowance missing" with
+ * "Approve an allowance →" to /allowance/?for=…; read failed → undetermined.
+ *
  * The allowance part of an `On` row. The engine's spender is unpublished
  * (`ENGINE_SPENDER`, PH2-E4-03), so no allowance can be read for it yet: the
  * part is undetermined, never healthy, and says why.

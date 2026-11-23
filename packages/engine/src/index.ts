@@ -74,5 +74,18 @@ export type {
   TenantRunResult,
   TenantRunStatus,
 } from './tenant-run.js';
+export { runHostedJob, runHostedJobs, hostedJobCounts } from './money-path.js';
+export type {
+  ConfirmedMove,
+  ExtendMove,
+  HostedChain,
+  HostedJobCounts,
+  HostedJobOutcome,
+  HostedJobPorts,
+  HostedJobSnapshot,
+  HostedJobStatus,
+  HostedStopCode,
+  LedgerWrite,
+} from './money-path.js';
 export { MemoryTenantJournal } from './tenant-journal.js';
 export type { TenantJournal, TenantJournalEntry } from './tenant-journal.js';

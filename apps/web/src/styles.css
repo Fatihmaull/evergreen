@@ -224,6 +224,9 @@ textarea {
 }
 button {
   font: 500 14px/1 var(--sans);
+  /* A pill label never wraps (DES, 2026-11-23); a narrow table scrolls in
+     .table-wrap instead. */
+  white-space: nowrap;
   cursor: pointer;
   padding: 12px 20px;
   border-radius: 100vw;

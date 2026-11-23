@@ -10,6 +10,12 @@
 # The header is written to a file and passed as `curl --header @file`, so the
 # token is not in the process argv. This script does not use `set -x`.
 #
+# Timeouts: --connect-timeout 10, --max-time 60 (was 30). POST /tick answers only
+# after the heartbeat, the evaluation and the dry-run tenant pass (#629), not after one
+# RPC call. Run 45051310920 (2026-11-22 17:46 UTC, 27 s after a preview deploy) hit the
+# old 30 s cap with http_status=000; the same code answered in about 3 s on
+# 2026-11-23 05:06 UTC (run 45115727196). timeout-minutes stays 2.
+#
 # POST /tick JSON (apps/scheduler/src/worker.ts handleFetch / tick):
 #   success: ok (boolean), observedLedger (number), evaluation (object; not printed)
 #   failure: ok (boolean), code (string)
@@ -111,7 +117,8 @@ jobs:
             curl \
               --silent \
               --fail-with-body \
-              --max-time 30 \
+              --connect-timeout 10 \
+              --max-time 60 \
               --retry 0 \
               --proto '=https' \
               --request POST \
@@ -126,6 +133,9 @@ jobs:
             status=000
           fi
           printf 'http_status=%s\n' "$status"
+          # curl's exit code tells a client timeout (28) from a connect or TLS
+          # failure (6, 7, 35) when http_status is 000.
+          printf 'curl_rc=%s\n' "$curl_rc"
 
           if jq -e 'type == "object"' "$body" >/dev/null 2>&1; then
             jq -c '
