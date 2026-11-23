@@ -38,18 +38,20 @@ export function render() {
       <h2 class="section">3 · Size the cap</h2>
       <div class="card card-pad stack">
         <p class="small muted">
-          The estimate is the simulated rent of one extend, for each contract, times how many hosted
-          extends this cap should cover, plus the provisional fee on each extend. Rent and the fee stay
-          on separate lines. A new approve replaces the cap: it does not add to it. One allowance covers
-          every contract. A per-contract budget is not enforced on the chain.
+          The contracts on your watchlist that this wallet can pay for. Rent is simulated in this browser
+          for one extend of each. The cap is that rent times how many extends it should cover, plus the
+          provisional fee on each extend. Rent and the fee stay on separate lines.
+          A new approve replaces the cap: it does not add to it. One allowance covers every contract.
         </p>
-        <label class="field-label" for="rent-lines">Estimated rent for one extend, in stroops, one contract per line</label>
-        <textarea id="rent-lines" class="mono" rows="4" spellcheck="false" autocomplete="off"></textarea>
-        <label class="field-label" for="hosted-actions">Hosted extends this cap should cover</label>
-        <input id="hosted-actions" class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" />
-        <label class="field-label" for="budget-lines">Per-job budget in stroops, one contract per line, same order. Leave blank if you do not have it.</label>
-        <textarea id="budget-lines" class="mono" rows="3" spellcheck="false" autocomplete="off"></textarea>
-        <div class="row"><button id="estimate-button" class="secondary" type="button">Show the estimate</button></div>
+        <div id="cap-rows" aria-live="polite"><p class="small muted">Connect a wallet to list the contracts it can pay for.</p></div>
+        <label class="field-label" for="hosted-actions">Extends to cover, per contract</label>
+        <input id="hosted-actions" class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="2" />
+        <p class="small muted">Each extend is one pull: rent, the Evergreen fee and the retry margin.</p>
+        <details>
+          <summary>Enter rent by hand</summary>
+          <p class="small muted">For a contract that is not on your watchlist. Estimated rent for one extend, in stroops, one contract per line.</p>
+          <textarea id="rent-lines" class="mono" rows="3" spellcheck="false" autocomplete="off"></textarea>
+        </details>
         <div id="estimate-result" aria-live="polite"></div>
       </div>
     </section>

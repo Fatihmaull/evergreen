@@ -1,6 +1,11 @@
 /**
  * /allowance/ in the browser: connect, read, estimate, approve, revoke (PH2-E3-05).
  *
+ * The cap is prefilled from the watchlist (components.md § "B, C, D"): the
+ * contracts this wallet can pay for, `?for=` first and checked, each with its
+ * rent for one extend simulated in this browser. Typed rent is the fallback,
+ * under "Enter rent by hand".
+ *
  * Imports `wallet-money.ts` (through the approve and revoke modules), so this is
  * not a login page and must never be flagged as one (`LOGIN_FORBIDDEN`).
  * Nothing is stored: no browser storage of any kind.
@@ -10,14 +15,23 @@
  * built, and not configured.
  */
 import { esc, short } from '../lib/format';
+import { apiRequest } from '../lib/api';
 import { ENGINE_SPENDER, readAllowance } from '../lib/allowance';
+import {
+  capContracts,
+  capRows,
+  capRowsHtml,
+  extendToFor,
+  type CapRow,
+} from '../lib/allowance-candidates';
+import { quoteRent, scanOne } from '../lib/evergreen';
+import { readSession } from '../lib/login';
+import type { WatchItem } from '../lib/watchlist-view';
 import { createApprover } from '../lib/allowance-approve';
 import {
   ALLOWANCE_RETRY_MARGIN_STROOPS,
-  actionFitsBudget,
   estimateAllowanceCap,
   maxLiveUntilLedger,
-  parseBudgetLines,
   parseHostedActions,
   parseRentLines,
   refusalForApprove,
@@ -47,6 +61,8 @@ let account: string | undefined;
 let observedAtLedger: number | undefined;
 let currentAmountStroops: string | undefined;
 let cap: CapEstimate | undefined;
+let rows: CapRow[] = [];
+const forContract = new URLSearchParams(window.location.search).get('for') ?? undefined;
 
 function liveUntilFor(observed: number): number {
   return maxLiveUntilLedger(observed);
@@ -107,6 +123,7 @@ $('connect-button').addEventListener('click', async () => {
   $('wallet-result').innerHTML = `<p class="small">Connected <span class="mono" title="${esc(
     account,
   )}">${esc(short(account))}</span>.</p>`;
+  void loadCapRows(account);
   $('allowance-read').innerHTML = '<p class="muted">Reading the chain…</p>';
   const read = await readAllowance(account);
   $('allowance-read').innerHTML = readHtml(read);
@@ -154,49 +171,119 @@ function showDisclosure(): void {
   });
 }
 
-$('estimate-button').addEventListener('click', () => {
-  const rents = parseRentLines($<HTMLTextAreaElement>('rent-lines').value);
-  if (!rents.ok) {
-    cap = undefined;
-    $('estimate-result').innerHTML = `<p class="small">${esc(rents.detail)}</p>`;
-    syncApproveButton();
-    showDisclosure();
+/**
+ * The watchlist rows this wallet can pay for, then one rent simulation per row.
+ * Signed out, or a wallet that is not linked, lists nothing and says why: an
+ * allowance from an unlinked wallet is one autopilot cannot name as payer.
+ */
+async function loadCapRows(connected: string): Promise<void> {
+  const out = $('cap-rows');
+  out.innerHTML = '<p class="small muted">Asking the Evergreen API…</p>';
+  const [session, listed] = await Promise.all([
+    readSession().catch(() => undefined),
+    apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(() => undefined),
+  ]);
+  if (session?.kind !== 'signed-in') {
+    rows = [];
+    out.innerHTML =
+      '<p class="small">This browser is not signed in, so no watchlist is listed. <a href="/login/">Sign in</a> to size the cap from your contracts, or enter rent by hand below.</p>';
+    estimate();
     return;
   }
+  if (!session.me.wallets.some((w) => w.account === connected)) {
+    rows = [];
+    out.innerHTML =
+      '<p class="small">This wallet is not linked to your account, so autopilot cannot name it as payer. Link it on <a href="/login/">the Sign in page</a>.</p>';
+    estimate();
+    return;
+  }
+  if (listed === undefined || listed.kind !== 'ok' || !Array.isArray(listed.data?.items)) {
+    rows = [];
+    out.innerHTML =
+      '<p class="small">The watchlist could not be read, so no contract is listed. You can enter rent by hand below.</p>';
+    estimate();
+    return;
+  }
+  rows = capRows(listed.data.items as WatchItem[], connected, forContract);
+  out.innerHTML = capRowsHtml(rows);
+  await Promise.all(
+    rows.map(async (row, index) => {
+      let rent: CapRow['rent'];
+      try {
+        const keys = 'dataKeys' in row.item.scope ? row.item.scope.dataKeys : [];
+        const quote = await quoteRent(
+          await scanOne(row.item.contractId, keys),
+          extendToFor(row.item),
+        );
+        rent =
+          quote.excluded.length > 0
+            ? { kind: 'partial', excluded: quote.excluded.length }
+            : {
+                kind: 'ok',
+                stroops: BigInt(quote.totalRentStroops),
+                atLedger: quote.pricedAtLedger,
+              };
+      } catch {
+        rent = { kind: 'failed' };
+      }
+      rows[index] = { ...rows[index]!, rent };
+      out.innerHTML = capRowsHtml(rows);
+      estimate();
+    }),
+  );
+}
+
+/** Runs on every change. Updating is not motion: the numbers replace. */
+function estimate(): void {
+  const result = $('estimate-result');
   const actions = parseHostedActions($<HTMLInputElement>('hosted-actions').value);
   if (actions === undefined) {
     cap = undefined;
-    $('estimate-result').innerHTML =
-      '<p class="small">Enter how many hosted extends this cap should cover, as a whole number above zero.</p>';
+    result.innerHTML =
+      '<p class="small">Enter how many extends this cap should cover, as a whole number above zero.</p>';
     syncApproveButton();
     showDisclosure();
     return;
   }
-  const budgets = parseBudgetLines(
-    $<HTMLTextAreaElement>('budget-lines').value,
-    rents.rents.length,
-  );
-  if (!budgets.ok) {
+  const contracts = capContracts(rows, actions);
+  const typed = $<HTMLTextAreaElement>('rent-lines').value;
+  if (typed.trim() !== '') {
+    const rents = parseRentLines(typed);
+    if (!rents.ok) {
+      cap = undefined;
+      result.innerHTML = `<p class="small">${esc(rents.detail)}</p>`;
+      syncApproveButton();
+      showDisclosure();
+      return;
+    }
+    for (const simulatedRentStroops of rents.rents)
+      contracts.push({ simulatedRentStroops, hostedActions: actions });
+  }
+  if (contracts.length === 0) {
     cap = undefined;
-    $('estimate-result').innerHTML = `<p class="small">${esc(budgets.detail)}</p>`;
+    result.innerHTML =
+      '<p class="small muted">Choose at least one contract, or enter rent by hand, to see the estimate.</p>';
     syncApproveButton();
     showDisclosure();
     return;
   }
-  cap = estimateAllowanceCap(
-    rents.rents.map((simulatedRentStroops) => ({ simulatedRentStroops, hostedActions: actions })),
-    ALLOWANCE_RETRY_MARGIN_STROOPS,
-  );
-  const fits =
-    budgets.budgets === undefined
-      ? []
-      : rents.rents.map((rent, index) =>
-          actionFitsBudget(budgets.budgets?.[index] ?? 0n, rent, ALLOWANCE_RETRY_MARGIN_STROOPS),
-        );
-  $('estimate-result').innerHTML = capHtml(cap, fits);
+  cap = estimateAllowanceCap(contracts, ALLOWANCE_RETRY_MARGIN_STROOPS);
+  result.innerHTML = capHtml(cap);
   syncApproveButton();
   showDisclosure();
+}
+
+$('cap-rows').addEventListener('change', (ev) => {
+  const box = ev.target;
+  if (!(box instanceof HTMLInputElement) || box.dataset.capRow === undefined) return;
+  const index = Number(box.dataset.capRow);
+  const row = rows[index];
+  if (row === undefined) return;
+  rows[index] = { ...row, checked: box.checked };
+  estimate();
 });
+$('hosted-actions').addEventListener('input', estimate);
+$('rent-lines').addEventListener('input', estimate);
 
 $('approve-button').addEventListener('click', async () => {
   if (
