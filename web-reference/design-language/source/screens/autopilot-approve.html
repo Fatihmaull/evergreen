@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Allowance — Evergreen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=Newsreader:opsz,wght@6..72,400&amp;family=Space+Mono&amp;display=swap"
+    />
+    <link rel="stylesheet" href="../templates/base.css" />
+    <link rel="stylesheet" href="alert-preferences.css" />
+    <link rel="stylesheet" href="autopilot-approve.css" />
+  </head>
+  <body class="app">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/">
+          <span class="mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-name">Evergreen</span>
+            <span class="brand-sub">Soroban state</span>
+          </span>
+        </a>
+        <nav aria-label="Sections">
+          <div class="nav-group">
+            <p class="nav-section">Live reads</p>
+            <a class="nav-item" href="/dashboard/">Overview</a>
+            <a class="nav-item" href="/dashboard/scanner/">Contract scanner</a>
+            <a class="nav-item" href="/dashboard/blast-radius/">Blast radius</a>
+            <a class="nav-item" href="/dashboard/decay/">TTL decay</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Your account</p>
+            <a class="nav-item" href="/dashboard/watchlist/">Watchlist</a>
+            <a class="nav-item" href="/dashboard/alerts/">Alerts</a>
+            <a class="nav-item" href="/login/">Sign in</a>
+            <a class="nav-item active" href="/allowance/" aria-current="page">Allowance</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Our own record</p>
+            <a class="nav-item" href="/dashboard/contracts/">Our contracts</a>
+            <a class="nav-item" href="/dashboard/engine/">Engine runs</a>
+            <a class="nav-item" href="/dashboard/history/">Extension history</a>
+          </div>
+          <div class="nav-group">
+            <p class="nav-section">Reference</p>
+            <a class="nav-item" href="/docs/">Documentation</a>
+          </div>
+        </nav>
+        <div class="sidebar-foot">testnet only</div>
+      </aside>
+      <div class="content">
+        <div class="statusbar">
+          <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+          <span class="status-item">ledger <span class="dim">reading…</span></span>
+          <span class="status-item dim"
+            >ledger close 5.000000 s ± 0.000050 · measured, not assumed</span
+          >
+        </div>
+        <main id="main" class="main">
+          <!-- PH2-E3-05 reference, state: ready to sign. Every number below is a
+               stand-in listed in components.md § "Stand-ins in the render". -->
+          <header class="page-head">
+            <p class="eyebrow">Account · Stellar testnet</p>
+            <h1>Allowance</h1>
+            <p class="lead">
+              An allowance lets Evergreen's engine pull native XLM from your wallet, up to a cap and
+              until a ledger you approve. Your wallet signs it. Signing in with email cannot move
+              XLM.
+            </p>
+            <p class="standing-line">
+              <span class="chip undetermined"><span class="shape"></span>undetermined</span>
+              The chain reads zero. Whether it expired, was revoked or never existed is
+              undetermined.
+            </p>
+          </header>
+
+          <section class="section" aria-labelledby="wallet-heading">
+            <h2 id="wallet-heading">1 · Wallet</h2>
+            <p class="note">
+              Connected <span class="mono">GABC12…XYZ789</span>, linked to your account.
+            </p>
+          </section>
+
+          <section class="section" aria-labelledby="cap-heading">
+            <h2 id="cap-heading">2 · Cap</h2>
+            <p class="note">
+              Contracts on your watchlist that this wallet can pay for. Rent is simulated in this
+              browser for one extend.
+            </p>
+            <ul class="rows">
+              <li class="cap-row">
+                <input type="checkbox" checked aria-label="Include guinea-pig A" />
+                <div class="cap-copy">
+                  <p class="row-title">guinea-pig A</p>
+                  <p class="note standing">
+                    binds on code · simulated at ledger <span class="mono">5,400,000</span>
+                  </p>
+                </div>
+                <p class="mono amount">61,234 stroops</p>
+              </li>
+              <li class="cap-row">
+                <input type="checkbox" checked aria-label="Include payments-v2" />
+                <div class="cap-copy">
+                  <p class="row-title">payments-v2</p>
+                  <p class="note standing">
+                    binds on instance · simulated at ledger <span class="mono">5,400,000</span>
+                  </p>
+                </div>
+                <p class="mono amount">48,903 stroops</p>
+              </li>
+            </ul>
+            <label class="field-label" for="extends">Extends to cover, per contract</label>
+            <input id="extends" class="text-input mono" type="text" inputmode="numeric" value="6" />
+            <p class="note standing">
+              Each extend is one pull: rent, the Evergreen fee and the retry margin.
+            </p>
+            <details class="by-hand"><summary>Enter rent by hand</summary></details>
+          </section>
+
+          <section class="panel review" aria-labelledby="review-heading">
+            <h2 id="review-heading">3 · Review and sign</h2>
+            <dl class="review-lines">
+              <div>
+                <dt class="field-label">Cap</dt>
+                <dd>
+                  <span class="cap-figure">0.1080822 XLM</span>
+                  <span class="mono cap-stroops">1,080,822 stroops</span>
+                </dd>
+              </div>
+              <div>
+                <dt class="field-label">Made of</dt>
+                <dd>
+                  <span class="mono">Rent 660,822 stroops</span>
+                  <span class="mono">Evergreen fee 300,000 stroops</span>
+                  <span class="mono">Retry margin 120,000 stroops</span>
+                  <span class="note"
+                    >Fee is provisional: 2% of rent, at least 25,000 stroops per extend. Rent and
+                    the fee are charged on what each extend actually costs. An unused pull is
+                    refunded.</span
+                  >
+                </dd>
+              </div>
+              <div>
+                <dt class="field-label">Replaces</dt>
+                <dd>
+                  <p class="note">
+                    Your current allowance, <span class="mono">0 XLM</span>, is replaced by this
+                    cap. It is not added to it.
+                  </p>
+                </dd>
+              </div>
+              <div>
+                <dt class="field-label">Until</dt>
+                <dd>
+                  <p class="note">
+                    Ledger <span class="mono">8,510,399</span>, about May 22, 2027. The ledger is
+                    the rule. The date is an estimate.
+                  </p>
+                </dd>
+              </div>
+              <div>
+                <dt class="field-label">Spender</dt>
+                <dd class="mono wrap">GENGINESTANDINXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</dd>
+              </div>
+              <div>
+                <dt class="field-label">What it is</dt>
+                <dd>
+                  <p class="note">
+                    This authorises a payment from your wallet, never access to a contract. You can
+                    revoke it at any time below.
+                  </p>
+                </dd>
+              </div>
+            </dl>
+            <div class="sign">
+              <button class="primary" type="button">
+                Sign approve in Freighter <span aria-hidden="true">→</span>
+              </button>
+              <p class="note standing">
+                Your wallet shows the same amount and ledger. If it does not, reject it there.
+              </p>
+            </div>
+          </section>
+
+          <section class="section stop" aria-labelledby="stop-heading">
+            <h2 id="stop-heading">Stop</h2>
+            <p class="note">
+              Revoking is one transaction, <span class="mono">approve</span> with amount 0, signed
+              by your wallet. After it lands the engine can pull nothing. Unlinking a wallet does
+              not do this.
+            </p>
+            <div><button class="secondary" type="button" disabled>Revoke allowance</button></div>
+            <p class="note standing">Nothing to revoke: the chain reads zero.</p>
+          </section>
+        </main>
+        <footer class="site">
+          <div class="foot-row">
+            <p>Built for Stellar, backed by Instawards.</p>
+            <p>
+              <a href="https://github.com/Fatihmaull/evergreen">github.com/Fatihmaull/evergreen</a>
+            </p>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>
