@@ -640,9 +640,15 @@ allowance nothing can use.
   uses. While it runs the cell says `simulating…`. If it fails, the row says
   "Rent could not be simulated, so this contract is left out of the cap." and
   its checkbox is disabled. It is never filled with a guess.
-- One field: **Extends to cover, per contract**. Whole number, mono. No
-  default is printed until Fatih picks one (open question 1). Helper:
-  "Each extend is one pull: rent, the Evergreen fee and the retry margin."
+- One field: **Extends to cover, per contract**. Whole number, mono,
+  **prefilled with `2`** (decided 2026-11-23, see "The default of 2" below).
+  Helper: "Each extend is one pull: rent, the Evergreen fee and the retry
+  margin." When the checked item has `thresholdLedgers` and `extendToLedgers`,
+  one more line per row says what the number covers at that item's settings:
+  "One extend adds about N ledgers (~D days), so 2 extends cover about …
+  ledgers. The allowance itself ends at ledger …". The ledgers are the rule;
+  the days are the estimate. Without those settings the line is absent, not
+  guessed.
 - `Enter rent by hand` is a `<details>` under the rows. It holds today's
   textarea, for a contract that is not on the watchlist. It is not the main
   path.
@@ -734,7 +740,7 @@ Not decisions. Replace each with the configured or read value.
 | Value in the render | Real source |
 |---|---|
 | Rents `61,234` and `48,903` stroops | In-browser simulation per contract. |
-| 6 extends per contract | The person's input (open question 1). |
+| 6 extends per contract | The person's input; the product default is 2. |
 | Retry margin `10,000` stroops per extend | `ALLOWANCE_RETRY_MARGIN_STROOPS`, unset today (from #630 / `PH2-E4-02`). |
 | Read at ledger `5,400,000`, until `8,510,399` | Chain read + `MAX_ALLOWANCE_EXTENSION_LEDGERS` (3,110,399). |
 | Spender `GENGINE…` | `ENGINE_SPENDER`, unpublished until `PH2-E4-03`. |
@@ -746,9 +752,8 @@ so the arithmetic in the picture is the product's, not hand-made.
 
 ### Open questions
 
-1. **Fatih:** a default for "extends to cover"? Without one the field starts
-   empty. A default changes how much people sign for, so it is a product
-   decision, not a design one.
+1. **Answered 2026-11-23:** the default for "extends to cover" is 2. See
+   below.
 2. **CEF:** does `GET /watchlist` (or a new field) carry a simulated rent per
    item, or does the browser simulate it? This spec assumes the browser, as the
    scanner does, so no API change is needed.
@@ -757,3 +762,26 @@ so the arithmetic in the picture is the product's, not hand-made.
    zero reads as the undetermined row.
 4. **CEF:** `ALLOWANCE_RETRY_MARGIN_STROOPS` and `ENGINE_SPENDER`. Until both
    exist the sign button stays disabled with its reasons, which is correct.
+
+### The default of 2
+
+Decided 2026-11-23 by DES under the standing authority Fatih gave the
+orchestrator that day. It is a default in a field the person can change, not
+a limit.
+
+- **The cap is the worst case the person signs for.** A default sets what most
+  people sign, so it leans low. With the provisional fee floor (25,000 stroops
+  per extend) and today's measured testnet rents (tens of thousands of stroops
+  per extend), 2 extends per contract keep a typical cap well under 1 XLM
+  for a handful of contracts.
+- **One extend is not enough.** A pull whose extend fails is refunded, but a
+  cap sized for exactly one pull leaves no room for the next scheduled extend,
+  and the person gets `allowance_missing` straight after their first success.
+  2 is the smallest number that survives one full cycle.
+- **The allowance expires anyway.** It ends at most 3,110,399 ledgers (about
+  180 days) after it is read, and renewal reminders go out at 30, 7 and 1 days.
+  A low cap is renewed with the same signature the expiry already asks for.
+- **What would change it:** measured extend frequency per item once the engine
+  runs Stage 2 (`PH2-E4-04`). If the median item needs more than 2 extends per
+  allowance lifetime, raise the default to that median and record the
+  evidence here.
