@@ -332,3 +332,40 @@ export function autopilotOnOutcomeHtml(outcome: AutopilotOnOutcome): string {
     return '<span class="crit-ink">Autopilot is testnet-only until beta ends, so it is still off.</span>';
   return `<span class="crit-ink">The API did not turn autopilot on (${esc(outcome.code)}), so it is still off for this contract.</span>`;
 }
+
+export const MARGIN_UNSET_TEXT =
+  'The safety margin is not set, so this page will not name an allowance amount and will not ask you to sign one.';
+
+/**
+ * Every reason the sign button is off, one sentence each, in the order the
+ * person fixes them. Each names its own cause: a page that has not been
+ * connected yet must not say the margin is unset (Fatih's preview reload,
+ * 2026-11-23).
+ */
+export function approveOffReasons(s: {
+  readonly spenderSet: boolean;
+  readonly marginSet: boolean;
+  readonly connected: boolean;
+  readonly read: boolean;
+  readonly linked: boolean;
+  readonly capNamed: boolean;
+}): string[] {
+  const reasons: string[] = [];
+  if (!s.spenderSet) reasons.push(SPENDER_UNSET_TEXT);
+  if (!s.marginSet) reasons.push(MARGIN_UNSET_TEXT);
+  if (!s.connected) {
+    reasons.push('Connect your wallet in step 1.');
+    return reasons;
+  }
+  if (!s.linked)
+    reasons.push(
+      'This wallet is not linked to your account, so an allowance from it is one autopilot cannot use.',
+    );
+  if (s.spenderSet && !s.read)
+    reasons.push(
+      'The allowance has not been read, so the expiry ledger and its date are not known.',
+    );
+  if (s.marginSet && !s.capNamed)
+    reasons.push('Choose at least one contract in step 2, or enter rent by hand, to name a cap.');
+  return reasons;
+}

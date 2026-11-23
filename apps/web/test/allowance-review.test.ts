@@ -5,6 +5,8 @@ import { estimateAllowanceCap } from '../src/lib/allowance-cap';
 import type { CapRow } from '../src/lib/allowance-candidates';
 import {
   BUDGET_RULE_TEXT,
+  MARGIN_UNSET_TEXT,
+  approveOffReasons,
   THRESHOLD_UNPUBLISHED_TEXT,
   autopilotOnOutcomeHtml,
   autopilotRowsHtml,
@@ -310,5 +312,32 @@ describe('step D', () => {
       fetchImpl,
     );
     expect(floorFrom(outcome)).toBe(4329);
+  });
+});
+
+describe('why the sign button is off', () => {
+  const ready = {
+    spenderSet: true,
+    marginSet: true,
+    connected: true,
+    read: true,
+    linked: true,
+    capNamed: true,
+  };
+
+  test('a fresh reload asks for the wallet, and never says the margin is unset when it is set', () => {
+    const r = approveOffReasons({ ...ready, connected: false, read: false, capNamed: false });
+    expect(r).toEqual(['Connect your wallet in step 1.']);
+    expect(r.join(' ')).not.toContain(MARGIN_UNSET_TEXT);
+  });
+
+  test('each missing piece names itself, and a ready page has no reason', () => {
+    expect(approveOffReasons(ready)).toEqual([]);
+    expect(approveOffReasons({ ...ready, capNamed: false })[0]).toMatch(
+      /Choose at least one contract/,
+    );
+    expect(approveOffReasons({ ...ready, marginSet: false })).toContain(MARGIN_UNSET_TEXT);
+    expect(approveOffReasons({ ...ready, linked: false })[0]).toMatch(/not linked/);
+    expect(approveOffReasons({ ...ready, spenderSet: false })).toContain(SPENDER_UNSET_TEXT);
   });
 });

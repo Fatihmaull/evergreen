@@ -47,6 +47,7 @@ import {
   type CapEstimate,
 } from '../lib/allowance-cap';
 import {
+  approveOffReasons,
   autopilotOnOutcomeHtml,
   autopilotRowsHtml,
   budgetProblem,
@@ -114,23 +115,14 @@ function syncApproveButton(): void {
 }
 
 function showWhyApproveIsOff(): void {
-  const reasons: string[] = [];
-  if (ENGINE_SPENDER === undefined) reasons.push(SPENDER_UNSET_TEXT);
-  if (cap?.amountStroops === undefined) {
-    reasons.push(
-      'The safety margin is not set, so this page will not name an allowance amount and will not ask you to sign one.',
-    );
-  }
-  if (account !== undefined && observedAtLedger === undefined && ENGINE_SPENDER !== undefined) {
-    reasons.push(
-      'The allowance has not been read, so the expiry ledger and its date are not known.',
-    );
-  }
-  if (account !== undefined && !linked) {
-    reasons.push(
-      'This wallet is not linked to your account, so an allowance from it is one autopilot cannot use.',
-    );
-  }
+  const reasons = approveOffReasons({
+    spenderSet: ENGINE_SPENDER !== undefined,
+    marginSet: ALLOWANCE_RETRY_MARGIN_STROOPS !== undefined,
+    connected: account !== undefined,
+    read: observedAtLedger !== undefined,
+    linked,
+    capNamed: cap?.amountStroops !== undefined,
+  });
   $('approve-disclosure').innerHTML = reasons
     .map((reason) => `<p class="small muted">${esc(reason)}</p>`)
     .join('');
