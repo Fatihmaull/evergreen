@@ -341,3 +341,13 @@ describe('why the sign button is off', () => {
     expect(approveOffReasons({ ...ready, spenderSet: false })).toContain(SPENDER_UNSET_TEXT);
   });
 });
+
+describe('submitted', () => {
+  test('the hash links to the explorer, and no reload is asked for', async () => {
+    const { submittedHtml } = await import('../src/lib/allowance-review');
+    const html = submittedHtml({ hash: 'abc123', ledger: 5_883_380 });
+    expect(html).toContain('href="https://stellar.expert/explorer/testnet/tx/abc123"');
+    expect(text(html)).toContain('Submitted in ledger 5,883,380.');
+    expect(html).not.toMatch(/reload/i);
+  });
+});

@@ -166,7 +166,7 @@ export function reviewPanelHtml(args: ReviewArgs, now = new Date()): string {
   const spender =
     args.spender === undefined
       ? '<span>Not published yet.</span>'
-      : `<span>Evergreen's engine</span><span class="mono wrap">${esc(args.spender)}</span>`;
+      : `<span>Evergreen's engine</span><span class="mono addr">${esc(args.spender)}</span>`;
   const sac = nativeSac();
   return `<dl class="review-lines">
       <div><dt>Cap</dt>${capLine}</div>
@@ -207,6 +207,18 @@ export function readBack(
   )
     return { kind: 'matches' };
   return { kind: 'differs', amountStroops, liveUntilLedger };
+}
+
+/**
+ * "Submitted" (components.md § C, after signing): the hash, linked to the
+ * explorer. The page reads the allowance back itself, so it never asks for a
+ * reload here.
+ */
+export function submittedHtml(o: { readonly hash: string; readonly ledger: number }): string {
+  const url = `https://stellar.expert/explorer/testnet/tx/${encodeURIComponent(o.hash)}`;
+  return `<p class="small">Submitted in ${ledgerText(o.ledger)}. Transaction <a class="mono addr" href="${esc(
+    url,
+  )}" rel="noopener">${esc(o.hash)}</a></p>`;
 }
 
 export function readBackHtml(

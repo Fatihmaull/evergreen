@@ -57,6 +57,7 @@ import {
   parseStroops,
   readBack,
   readBackHtml,
+  submittedHtml,
   reviewPanelHtml,
   standingLineHtml,
   type AutopilotRow,
@@ -405,19 +406,19 @@ $('approve-button').addEventListener('click', async () => {
     observedAtLedger,
     shownCurrentStroops: currentAmountStroops,
   });
-  $('approve-result').innerHTML = approveOutcomeHtml(outcome);
   syncApproveButton();
-  if ('kind' in outcome) return;
+  if ('kind' in outcome) {
+    $('approve-result').innerHTML = approveOutcomeHtml(outcome);
+    return;
+  }
   // Included in a ledger: read the chain back and compare with what was signed.
   signed = terms;
-  $('approve-result').insertAdjacentHTML(
-    'beforeend',
-    '<p class="small muted">Reading the allowance back…</p>',
-  );
+  $('approve-result').innerHTML =
+    submittedHtml(outcome) + '<p class="small muted">Reading the allowance back…</p>';
   await readStanding(account);
   const back = readBack(lastRead ?? { kind: 'read-failed', detail: 'not read' }, signed);
   readBackMatched = back.kind === 'matches';
-  $('approve-result').innerHTML = approveOutcomeHtml(outcome) + readBackHtml(back, signed);
+  $('approve-result').innerHTML = submittedHtml(outcome) + readBackHtml(back, signed);
   syncAutopilotStep();
 });
 

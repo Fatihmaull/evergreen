@@ -2552,8 +2552,11 @@ body.app .alerts .mark-incomplete {
   font-size: 12px;
   color: var(--ink-3);
 }
-.review-lines .wrap {
+.addr {
   overflow-wrap: anywhere;
+}
+#autopilot-rows td.mono {
+  white-space: nowrap;
 }
 .crit-ink {
   color: var(--crit-ink);
