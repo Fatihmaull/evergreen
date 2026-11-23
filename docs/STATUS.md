@@ -82,6 +82,10 @@ Renewal dates are 30, 7 and 1 days before a known expiry ledger. The page says i
 
 `ENGINE_SPENDER` is still unset. Nothing was submitted. Freighter on testnet was not used: **undetermined**. Not branched from #629 (`cursor/e4-01-dry-run-tenants-8791`): that branch does not publish a spender or the allowance route. Notion sync pending for PH2-E3-05.
 
+## Current — PH2-E3-11 Overview for real users, 2026-11-23
+
+`PH2-E3-11` is registered `[~]`, owner `(F · WEBF)`, in [#642](https://github.com/Fatihmaull/evergreen/pull/642): `/dashboard/` now leads with the scan and a three-state watchlist summary, with our three contracts as a worked example; Alerts joins the nav. CI green on the PR head. Not yet seen on the Pages preview or production (the agent's container cannot reach pages.dev). Notion sync pending for `PH2-E3-11`.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.
