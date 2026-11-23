@@ -90,12 +90,17 @@ describe('the two statements that go stale', () => {
       ...sources(join(ROOT, 'apps/web/src'), /\.(ts|mjs)$/),
       ...sources(join(ROOT, 'apps/dashboard/src'), /\.(ts|mjs)$/),
     ];
-    // Autopilot is PATCH /watchlist (docs/API.md §6). The only PATCH in this
-    // tree is alert preferences, a boolean that does not turn autopilot on.
+    // Autopilot is PATCH /watchlist (docs/API.md §6). Two PATCHes exist: alert
+    // preferences, a boolean that does not touch autopilot, and the watchlist
+    // row's Turn off, which only ever sends `enabled: false`.
     const setters = files.filter((f) => /method:\s*['"]PATCH['"]/.test(readFileSync(f, 'utf8')));
-    expect(setters.map((f) => f.slice(ROOT.length))).toEqual([
+    expect(setters.map((f) => f.slice(ROOT.length)).sort()).toEqual([
       'apps/web/src/lib/alert-preferences.ts',
+      'apps/web/src/lib/watchlist.ts',
     ]);
+    const watch = readFileSync(join(ROOT, 'apps/web/src/lib/watchlist.ts'), 'utf8');
+    expect(watch).toContain('autopilot: { enabled: false }');
+    expect(watch).not.toMatch(/enabled:\s*true/);
     const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
     expect(prefs).toContain("'/me/alert-preferences'");
     expect(prefs).not.toMatch(/\/watchlist/);

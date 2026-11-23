@@ -87,6 +87,10 @@ Renewal dates are 30, 7 and 1 days before a known expiry ledger. The page says i
 
 **Review fixes, 2026-11-23 (CEF, at Fatih's request, review on #630):** the extend outcome (`extendTxHash`, charged rent) is persisted before any refund, so a failed refund resumes with the refund only and never extends again (it used to refund 1,010,000 instead of 10,000 in the reproduced case). `save` now takes the snapshot and its ledger rows together, so the store writes them in one transaction (the pull row lands with `pulled`; a settle cannot half-write). Network-fee evidence is written as each transaction confirms, so a resumed job keeps the pull's. Dry-run writes nothing, not even a failed preflight. A thrown job is counted `INTERNAL`. The chain port's idempotency contract now names the 0006 submitted-hash columns; the port itself is Stage 2 (`PH2-E4-04`).
 
+## Current — PH2-E3-11 Overview for real users, 2026-11-23
+
+`PH2-E3-11` is registered `[~]`, owner `(F · WEBF)`, in [#642](https://github.com/Fatihmaull/evergreen/pull/642): `/dashboard/` now leads with the scan and a three-state watchlist summary, with our three contracts as a worked example; Alerts joins the nav. CI green on the PR head. Not yet seen on the Pages preview or production (the agent's container cannot reach pages.dev). Same PR, `PH2-E3-05` part A of the DES spec (`components.md` § "Autopilot setup and allowance approve"): the watchlist row's autopilot cell now offers **Turn on autopilot** (opens `/allowance/?for=…`; no call) or **Turn off** (`PATCH` with `enabled: false` only; the allowance stays on chain and the row says so). The allowance part of an `On` row is undetermined until `ENGINE_SPENDER` is published. `/allowance/` does not read `?for=` yet (parts B to D). Notion sync pending for `PH2-E3-11` and `PH2-E3-05`.
+
 ## Current — backlog sync for 0012–0014, the ledger, and the unsubscribe secret, 2026-11-15
 
 `PH2-E0-16` stays `[~]`. `docs/ops/neon-migrations.md` and [#624](https://github.com/Fatihmaull/evergreen/pull/624) (`6c1b870`) record 0012, 0013 and 0014 applied on preview and production. The card stays open as the apply queue for 0015. No `0015_*.sql` is on `main`.

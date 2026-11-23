@@ -19,7 +19,7 @@ import type {
   NetworkName,
 } from '../../../../packages/shared-types/src/index';
 import type { ApiOutcome } from './api';
-import type { RemoveOutcome } from './watchlist';
+import type { AutopilotOffOutcome, RemoveOutcome } from './watchlist';
 import { report, type EntryHealth, type ScanResult } from './evergreen';
 import { approxDate, esc, formatCount, stamp } from './format';
 import { bindingEntry, entryView } from './view';
@@ -224,11 +224,51 @@ const short = (g: string): string => `${g.slice(0, 6)}…${g.slice(-6)}`;
  * engine has acted: with no observation the cell says the engine has not
  * stored a check of this contract, so nothing has been decided for it yet.
  */
-export function autopilotCell(item: WatchItem): string {
+/**
+ * What the watchlist knows about the account's linked wallets, from `GET /me`.
+ * `undefined` when `/me` did not answer: the cell then offers the turn-on
+ * path, and `/allowance/` checks the wallet itself (components.md, step 1).
+ */
+export interface AutopilotContext {
+  readonly linkedWallets?: readonly string[];
+}
+
+/** After a successful `Turn off` (components.md § A). */
+export const AUTOPILOT_OFF_TEXT =
+  'Autopilot is off for this contract. Your allowance is unchanged; revoke it on <a href="/allowance/">the Allowance page</a>.';
+
+/**
+ * TODO(PH2-E3-05, once ENGINE_SPENDER is published): read the payer's
+ * allowance and render components.md § A instead of this constant: live →
+ * "allowance until ledger …"; zero → the warning chip "allowance missing" with
+ * "Approve an allowance →" to /allowance/?for=…; read failed → undetermined.
+ *
+ * The allowance part of an `On` row. The engine's spender is unpublished
+ * (`ENGINE_SPENDER`, PH2-E4-03), so no allowance can be read for it yet: the
+ * part is undetermined, never healthy, and says why.
+ */
+const ALLOWANCE_NOT_READ =
+  '<br /><span class="chip undetermined"><span class="shape"></span>undetermined</span> <span class="small muted">Allowance not read: the engine\'s spender address is not published yet.</span>';
+
+/**
+ * The autopilot cell (components.md § A, PH2-E3-05). It stays a cell: the
+ * stored state, then at most one control. Nothing here moves XLM. Turning on
+ * goes to `/allowance/?for=…`, where the wallet signs; turning off is a
+ * `PATCH` that leaves the allowance on chain, and the row says so.
+ */
+export function autopilotCell(item: WatchItem, ctx: AutopilotContext = {}): string {
   const a = item.autopilot;
   if (a === undefined || a === null || typeof a.enabled !== 'boolean')
     return '<span class="chip undetermined"><span class="shape"></span>undetermined</span>';
-  if (!a.enabled) return '<span class="small">Off</span>';
+  const ids = `data-autopilot-network="${esc(item.network)}" data-autopilot-contract="${esc(item.contractId)}"`;
+  const status = '<span class="small" data-autopilot-status role="status"></span>';
+  if (!a.enabled) {
+    if (item.network !== 'testnet')
+      return '<span class="small">Off</span> <span class="small muted">Autopilot is testnet-only until beta ends.</span>';
+    if (ctx.linkedWallets !== undefined && ctx.linkedWallets.length === 0)
+      return '<span class="small">Off</span> <a class="small" href="/login/">Link a wallet first →</a>';
+    return `<span class="small">Off</span> <button type="button" class="secondary" data-autopilot-on ${ids}>Turn on autopilot</button>`;
+  }
   const parts: string[] = [];
   if (Number.isInteger(a.thresholdLedgers) && (a.thresholdLedgers as number) > 0)
     parts.push(
@@ -244,7 +284,8 @@ export function autopilotCell(item: WatchItem): string {
     item.lastObservation === null
       ? '<br /><span class="small muted">No engine check of this contract is stored yet, so autopilot has not decided anything for it.</span>'
       : '';
-  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${pending}`;
+  const off = `<br /><button type="button" class="secondary" data-autopilot-off ${ids}>Turn off</button> ${status}`;
+  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${ALLOWANCE_NOT_READ}${pending}${off}`;
 }
 
 export function bindingCell(b: Binding, source?: 'engine' | 'browser'): string {
@@ -270,7 +311,7 @@ function coverage(item: WatchItem): string {
     : `${formatCount(item.scope.dataKeys.length)} data key${item.scope.dataKeys.length === 1 ? '' : 's'} declared`;
 }
 
-export function rowHtml(r: Row): string {
+export function rowHtml(r: Row, ctx: AutopilotContext = {}): string {
   const { item } = r;
   const obs = item.lastObservation;
   const seen =
@@ -288,7 +329,7 @@ export function rowHtml(r: Row): string {
       <td>${name}</td>
       <td class="small">${seen}</td>
       <td class="small muted">${esc(coverage(item))}</td>
-      <td>${autopilotCell(item)}</td>
+      <td data-autopilot-cell>${autopilotCell(item, ctx)}</td>
       <td><button type="button" class="btn" data-remove-network="${esc(item.network)}" data-remove-contract="${esc(item.contractId)}">Remove</button> <span class="small" data-remove-status role="status"></span></td>
     </tr>`;
 }
@@ -297,6 +338,7 @@ export function tableHtml(
   items: readonly WatchItem[],
   now = new Date(),
   browserScans: ReadonlyMap<string, ScanResult> = new Map(),
+  ctx: AutopilotContext = {},
 ): string {
   if (items.length === 0) {
     return '<p class="muted">Your watchlist is empty. Add a contract from <a href="/dashboard/scanner/">the scanner</a>.</p>';
@@ -304,7 +346,7 @@ export function tableHtml(
   const rows = orderRows(items.map((i) => rowFor(i, now, browserScans.get(i.contractId))));
   return `<div class="table-wrap"><table>
       <thead><tr><th scope="col">Binding expiry</th><th scope="col">Health</th><th scope="col">Contract</th><th scope="col">Last observed</th><th scope="col">Coverage</th><th scope="col">Autopilot</th><th scope="col">Remove</th></tr></thead>
-      <tbody>${rows.map(rowHtml).join('')}</tbody></table></div>
+      <tbody>${rows.map((r) => rowHtml(r, ctx)).join('')}</tbody></table></div>
     <p class="small muted">Each row is the engine's last scan, not now: the ledger it was read at is beside it. Ledgers are the truth, dates are a convenience. A scan without declared data keys covers the instance and code only, and absence is not health.</p>`;
 }
 
@@ -337,47 +379,49 @@ export function watchlistScreenHtml(
   outcome: ApiOutcome<{ items?: unknown }>,
   now = new Date(),
   browserScans: ReadonlyMap<string, ScanResult> = new Map(),
+  ctx: AutopilotContext = {},
 ): string {
-  if (outcome.kind === 'ok') {
-    const items = outcome.data?.items;
-    if (!Array.isArray(items)) {
-      return undeterminedBox(
-        'The API answered, but not with a watchlist this page can read. We could not establish this.',
-      );
-    }
+  if (outcome.kind === 'ok' && Array.isArray(outcome.data?.items)) {
+    const items = outcome.data.items as WatchItem[];
     // A 200 with a list is the API answering an authenticated session, which is
     // the only thing "signed in" rests on here. It says nothing about contracts.
     return items.length === 0
       ? `<p class="small" role="status">${SIGNED_IN_EMPTY}</p>${tableHtml([], now)}`
-      : tableHtml(items as WatchItem[], now, browserScans);
+      : tableHtml(items, now, browserScans, ctx);
+  }
+  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
+    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+  }
+  return undeterminedBox(noWatchlistSentence(outcome));
+}
+
+/**
+ * Why there is no list to show, for every outcome that is neither a list nor
+ * "signed out". One home for these sentences, so the watchlist screen and the
+ * Overview's panel cannot disagree about it.
+ */
+function noWatchlistSentence(outcome: ApiOutcome<{ items?: unknown }>): string {
+  if (outcome.kind === 'ok') {
+    return 'The API answered, but not with a watchlist this page can read. We could not establish this.';
   }
   if (outcome.kind === 'unavailable') {
-    return undeterminedBox(
-      outcome.reason === 'network'
-        ? 'The Evergreen API did not answer, so there is no watchlist to show. This says nothing about your contracts: it is about us.'
-        : 'The Evergreen API is not available on this site yet, so there is no watchlist to show. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.',
-    );
-  }
-  if (outcome.code === 'UNAUTHENTICATED') {
-    return '<div class="card card-pad"><p>A watchlist belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a> with your email to see yours.</p><p class="small muted"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>';
+    return outcome.reason === 'network'
+      ? 'The Evergreen API did not answer, so there is no watchlist to show. This says nothing about your contracts: it is about us.'
+      : 'The Evergreen API is not available on this site yet, so there is no watchlist to show. This says nothing about any contract. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly and works now.';
   }
   if (outcome.code === 'NOT_FOUND' || outcome.code === 'METHOD_NOT_ALLOWED') {
     // The API answered in its own envelope, but not with this route. That is all
     // it says: no cause, no date for when the route will exist.
-    return undeterminedBox(ROUTE_NOT_AVAILABLE);
+    return ROUTE_NOT_AVAILABLE;
   }
-  if (outcome.code === 'UPSTREAM_UNAVAILABLE') {
-    return undeterminedBox(GET_UPSTREAM_UNAVAILABLE_TEXT);
-  }
+  if (outcome.code === 'UPSTREAM_UNAVAILABLE') return GET_UPSTREAM_UNAVAILABLE_TEXT;
   if (outcome.code === 'RATE_LIMITED') {
     const s = outcome.retryAfterSeconds;
-    return undeterminedBox(
-      s === undefined
-        ? 'Too many attempts. Try again later.'
-        : `Too many attempts. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`,
-    );
+    return s === undefined
+      ? 'Too many attempts. Try again later.'
+      : `Too many attempts. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
   }
-  return undeterminedBox('We could not establish this.');
+  return 'We could not establish this.';
 }
 
 /**
@@ -405,4 +449,72 @@ export function removeOutcomeText(outcome: RemoveOutcome): string | undefined {
   if (outcome.code === 'NOT_FOUND') return REMOVE_NOTHING_TO_REMOVE_TEXT;
   // Not "it is still listed": a failed call does not establish that either way.
   return `The API did not confirm this removal (${outcome.code}, HTTP ${outcome.status}).`;
+}
+
+/**
+ * What the autopilot cell says after `Turn off` answers. `undefined` for
+ * `off`: the cell is redrawn as Off with `AUTOPILOT_OFF_TEXT` beside it. Every
+ * other answer leaves the row as it was and says autopilot was not confirmed
+ * off, never that it is still on: a failed call establishes neither.
+ */
+export function autopilotOffOutcomeText(outcome: AutopilotOffOutcome): string | undefined {
+  if (outcome.kind === 'off') return undefined;
+  if (outcome.kind === 'unavailable') {
+    return outcome.reason === 'network'
+      ? 'The Evergreen API did not answer, so autopilot was not confirmed off.'
+      : 'The Evergreen API is not available on this site yet, so autopilot was not confirmed off.';
+  }
+  if (outcome.code === 'UNAUTHENTICATED') {
+    return 'This browser is signed out, so autopilot was not turned off. Sign in and try again.';
+  }
+  if (outcome.code === 'RATE_LIMITED') {
+    const s = outcome.retryAfterSeconds;
+    return s === undefined
+      ? 'Too many attempts. Autopilot was not confirmed off. Try again later.'
+      : `Too many attempts. Autopilot was not confirmed off. Try again in ${Math.max(1, Math.ceil(s / 60))} minute(s).`;
+  }
+  return `The API did not confirm autopilot off (${outcome.code}, HTTP ${outcome.status}).`;
+}
+
+/**
+ * The Overview's watchlist panel (`/dashboard/`), from the same one
+ * `GET /watchlist` outcome as the watchlist screen.
+ *
+ * It counts rows by conclusion, through `rowFor`, so it can never call a row
+ * healthy that the watchlist screen would not. It reads no chain itself: a row
+ * the engine has not observed counts as undetermined here, as it does on the
+ * screen before this browser's own read lands. Every other outcome (API
+ * absent, an error) uses the watchlist screen's own sentence, so the two pages
+ * cannot disagree about why nothing is shown.
+ */
+export function watchlistSummaryHtml(
+  outcome: ApiOutcome<{ items?: unknown }>,
+  now = new Date(),
+): string {
+  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
+    return '<p class="muted">This browser is not signed in, so no watchlist is shown. <a href="/login/">Sign in</a> with your email to keep one. Scanning needs no session.</p>';
+  }
+  if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
+    // The watchlist screen's sentence, without its verdict box and chip: on
+    // the Overview this panel sits under the scan, and the sentence is about
+    // the API, not about any contract, so it carries no contract state.
+    return `<p class="muted">${noWatchlistSentence(outcome)}</p>`;
+  }
+  const items = outcome.data.items as WatchItem[];
+  if (items.length === 0) {
+    return `<p class="small" role="status">${SIGNED_IN_EMPTY}</p><p class="muted">Scan a contract above, then press <strong>Add to watchlist</strong>.</p>`;
+  }
+  const rows = items.map((i) => rowFor(i, now));
+  const count = (c: Conclusion): number => rows.filter((r) => r.conclusion === c).length;
+  const chips = (['at-risk', 'undetermined', 'healthy'] as const)
+    .map(
+      (c) =>
+        `<span class="chip ${CHIP[c]}"><span class="shape"></span>${formatCount(count(c))} ${WORD[c]}</span>`,
+    )
+    .join(' ');
+  const watched =
+    items.length === 1 ? '1 contract watched' : `${formatCount(items.length)} contracts watched`;
+  return `<div class="row">${chips}</div>
+    <p class="small">${watched}. <a href="/dashboard/watchlist/">Open the watchlist</a> for each contract's binding expiry, ordered by the entry that expires first.</p>
+    <p class="small muted">Counted from the engine's last scan of each contract. A contract the engine has not checked yet counts as undetermined, never as healthy.</p>`;
 }

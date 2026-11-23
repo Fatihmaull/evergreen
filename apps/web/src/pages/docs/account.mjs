@@ -102,10 +102,12 @@ export function render() {
 
     <h2 id="autopilot">Autopilot and the allowance</h2>
     <p class="note">
-      As of 2026-11-05, on <span class="mono">origin/main</span> at
-      <span class="mono">9ef4094</span>: the <strong>Autopilot</strong> column shows the setting
-      the API holds for each row, and nothing more. <strong>No control on this site turns autopilot
-      on, and no step on it grants an allowance.</strong>
+      As of 2026-11-23 (<a href="https://github.com/Fatihmaull/evergreen/pull/642">#642</a>): the
+      <strong>Autopilot</strong> column shows the setting the API holds for each row. A row that is
+      off has <strong>Turn on autopilot</strong>, which only opens the allowance page. A row that is
+      on has <strong>Turn off</strong>, which changes the stored setting and leaves any allowance
+      on the chain. <strong>No control on this site turns autopilot on, and no step on it grants an
+      allowance.</strong>
     </p>
     <p>
       <a href="/allowance/">The allowance page</a> reads a wallet's allowance and can revoke one.

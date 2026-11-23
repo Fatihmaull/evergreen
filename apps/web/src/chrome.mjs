@@ -30,6 +30,8 @@ export const NAV = [
     section: 'Your account',
     items: [
       { href: '/dashboard/watchlist/', label: 'Watchlist' },
+      // After Watchlist, per the alert preferences spec (components.md §5).
+      { href: '/dashboard/alerts/', label: 'Alerts' },
       { href: '/login/', label: 'Sign in' },
       { href: '/allowance/', label: 'Allowance' },
     ],

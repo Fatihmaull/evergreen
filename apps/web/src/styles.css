@@ -224,6 +224,9 @@ textarea {
 }
 button {
   font: 500 14px/1 var(--sans);
+  /* A pill label never wraps (DES, 2026-11-23); a narrow table scrolls in
+     .table-wrap instead. */
+  white-space: nowrap;
   cursor: pointer;
   padding: 12px 20px;
   border-radius: 100vw;
@@ -1896,6 +1899,10 @@ body.app {
 main.main {
   padding: 32px clamp(16px, 4vw, 40px) 64px;
   display: grid;
+  /* `.content` gives main the 1fr row, so on a short page the grid stretched
+     its rows to fill the screen and pushed eyebrow, heading and lead apart
+     (the watchlist's empty state showed it worst). Rows sit at the top. */
+  align-content: start;
   gap: 28px;
   max-width: 1180px;
   width: 100%;
