@@ -156,12 +156,19 @@ describe('scan CLI', () => {
     expect(declared.exitCode).toBe(0);
   });
 
-  it.each([['--help'], ['scan', '--help']])('help performs no I/O: %j', async (...args) => {
-    const deps = dependencies();
-    const result = await runCli(args, deps);
-    expect(result.exitCode).toBe(0);
+  it.each([['--help'], ['help'], ['--version'], ['scan', '--help']])(
+    'help performs no I/O: %j',
+    async (...args) => {
+      const deps = dependencies();
+      const result = await runCli(args, deps);
+      expect(result.exitCode).toBe(0);
+      expect(deps.connect).not.toHaveBeenCalled();
+    },
+  );
+
+  it('scan --help documents the scan options', async () => {
+    const result = await runCli(['scan', '--help'], dependencies());
     expect(result.stdout).toContain('--keys-file');
-    expect(deps.connect).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -210,14 +217,51 @@ describe('scan CLI', () => {
   });
 });
 
-describe('usage', () => {
-  it('names both commands when the command is not recognised', async () => {
-    // `extend` shipped in 0.1.0 and the usage line still named only `scan`.
-    for (const args of [[], ['scna'], ['--version']]) {
-      const result = await runCli(args, dependencies());
-      expect(result.exitCode).toBe(2);
-      expect(result.stderr).toContain('usage: evergreen scan <contract-id>');
-      expect(result.stderr).toContain('evergreen extend <contract-id> --ledgers N');
+describe('top-level help, version and unknown commands (DES spec, PH2-E1)', () => {
+  it.each([['--help'], ['help']])('%s prints the short screen to stdout, exit 0', async (arg) => {
+    const result = await runCli([arg], { ...dependencies(), version: '9.8.7' });
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    const lines = result.stdout.split('\n');
+    expect(lines[0]).toBe(
+      'evergreen 9.8.7 — Soroban state TTL, read and extended. Stellar testnet by default.',
+    );
+    // Fits an 80×24 terminal without scrolling: at most 20 lines.
+    expect(lines.length).toBeLessThanOrEqual(20);
+    expect(result.stdout).toContain('scan <contract-id>...');
+    expect(result.stdout).toContain('extend <contract-id>');
+    expect(result.stdout).toContain('518400 simulate adding about 30 days');
+    expect(result.stdout).toContain('docs  https://evergreen-stellar.pages.dev/docs/cli/');
+    // No colour on this screen.
+    expect(result.stdout).not.toContain('\u001b[');
+  });
+
+  it('bare evergreen prints the same screen to stderr and exits 2', async () => {
+    const result = await runCli([], { ...dependencies(), version: '9.8.7' });
+    expect(result.exitCode).toBe(2);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toContain('usage: evergreen <command> [options]');
+  });
+
+  it.each([['--version'], ['-v']])('%s prints the bare version', async (arg) => {
+    const result = await runCli([arg], { ...dependencies(), version: '9.8.7' });
+    expect(result).toEqual({ stdout: '9.8.7', stderr: '', exitCode: 0 });
+  });
+
+  it('names the commands for an unknown one and exits 2', async () => {
+    const result = await runCli(['frobnicate'], dependencies());
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toBe(
+      'evergreen: unknown command "frobnicate". Commands: scan, extend. See evergreen --help.',
+    );
+  });
+
+  it('scan --help keeps the full scan reference', async () => {
+    const result = await runCli(['scan', '--help'], dependencies());
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('usage: evergreen scan <contract-id>');
+    for (const state of ['HEALTHY', 'WARNING', 'CRITICAL', 'UNKNOWN']) {
+      expect(result.stdout).toContain(state);
     }
   });
 });
@@ -253,8 +297,8 @@ describe('scan on a chosen network (PH2-E1-03)', () => {
     expect(result.stderr).toContain('Test SDF Network');
   });
 
-  it('documents --network and the mainnet RPC requirement in --help', async () => {
-    const result = await runCli(['--help'], dependencies());
+  it('documents --network and the mainnet RPC requirement in scan --help', async () => {
+    const result = await runCli(['scan', '--help'], dependencies());
     expect(result.stdout).toContain('[--network testnet|mainnet]');
     expect(result.stdout).toContain('EVERGREEN_NETWORK');
     expect(result.stdout).toContain('Mainnet has no default RPC');
