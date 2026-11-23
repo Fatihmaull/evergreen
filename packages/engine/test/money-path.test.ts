@@ -224,6 +224,12 @@ describe('runHostedJob', () => {
     const refused = await runHostedJob(noMargin);
     expect(refused.preflightReason).toBe('margin-unset');
     expect(unset.calls.pull).toBe(0);
+    // Live records why it stopped on `jobs.preflight` (preview, 2026-11-23: it was left null).
+    expect(noMargin.saved).toHaveLength(1);
+    expect(noMargin.saved[0]).toMatchObject({
+      status: 'preflight-failed',
+      preflight: { ok: false, reason: 'margin-unset' },
+    });
 
     const mainnet = chain(okExtend);
     const off = ports({
@@ -245,6 +251,7 @@ describe('runHostedJob', () => {
       },
     });
     expect((await runHostedJob(off)).preflightReason).toBe('not-testnet');
+    expect(off.saved[0]?.preflight).toEqual({ ok: false, reason: 'not-testnet' });
     expect(mainnet.calls.simulate).toBe(0);
     expect(mainnet.calls.pull).toBe(0);
   });
@@ -321,6 +328,17 @@ describe('review of #630', () => {
     };
     await runHostedJob(wrapped);
     expect(saves[0]).toEqual({ status: 'pulled', kinds: ['pull', 'network-fee'] });
+  });
+
+  it('records an ok preflight with the simulated rent on the pull save, and only there', async () => {
+    const c = chain(okExtend);
+    const job = ports({ chain: c });
+    await runHostedJob(job);
+    expect(job.saved[0]).toMatchObject({
+      status: 'pulled',
+      preflight: { ok: true, rentStroops: 1_000_000n },
+    });
+    for (const later of job.saved.slice(1)) expect(later.preflight).toBeNull();
   });
 
   it('P2.4: dry-run writes nothing, even when preflight fails', async () => {

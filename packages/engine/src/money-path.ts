@@ -78,6 +78,19 @@ export interface HostedJobSnapshot {
   readonly extendRentChargedStroops: bigint | null;
   readonly refundTxHash: string | null;
   readonly shortfallStroops: bigint | null;
+  /**
+   * The preflight result to record on `jobs.preflight` with this save (the store stamps `at`).
+   * Absent or null keeps what is stored. Written once, when preflight decides: a failure with
+   * its reason, or ok with the simulated rent before the pull.
+   */
+  readonly preflight?: PreflightRecord | null;
+}
+
+/** `jobs.preflight` without `at` (schema.sql: `{at, ok, reason?, rentStroops?}`). Counts only. */
+export interface PreflightRecord {
+  readonly ok: boolean;
+  readonly reason?: PreflightReason;
+  readonly rentStroops?: bigint;
 }
 
 export interface LedgerWrite {
@@ -296,7 +309,10 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
   }
   if (job.network !== 'testnet') {
     if (ports.mode === 'live' && job.pullTxHash === null) {
-      await ports.save({ ...job, status: 'preflight-failed' }, []);
+      await ports.save(
+        { ...job, status: 'preflight-failed', preflight: { ok: false, reason: 'not-testnet' } },
+        [],
+      );
     }
     return {
       jobId: job.id,
@@ -332,7 +348,13 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
       extendNowUsedToday: used,
     });
     if (!pre.ok) {
-      if (ports.mode === 'live') await ports.save({ ...job, status: 'preflight-failed' }, []);
+      if (ports.mode === 'live') {
+        const preflight: PreflightRecord =
+          simulated === undefined
+            ? { ok: false, reason: pre.reason }
+            : { ok: false, reason: pre.reason, rentStroops: simulated };
+        await ports.save({ ...job, status: 'preflight-failed', preflight }, []);
+      }
       return {
         jobId: job.id,
         mode: ports.mode,
@@ -368,12 +390,16 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
       status: 'pulled',
       pullTxHash: pulled.hash,
       pullAmountStroops: pre.pull.totalStroops,
+      // `simulated` is defined here: preflight refuses an undefined simulation.
+      preflight: simulated === undefined ? { ok: true } : { ok: true, rentStroops: simulated },
     };
     // The pull row, its evidence and the `pulled` status land together.
     await ports.save(job, [
       ledgerWrite(job, { kind: 'pull', amountStroops: pre.pull.totalStroops, txHash: pulled.hash }),
       ...evidence(job, pulled),
     ]);
+    // Recorded with the pull; later saves of this job leave `jobs.preflight` as it is.
+    job = { ...job, preflight: null };
     submitted = true;
   }
   if (ports.mode !== 'live') return finished(job, ports.mode, false);
