@@ -36,6 +36,8 @@ export function productionRuntime(env: Env): Runtime {
       );
     },
     // PH2-E4-01: dry-run only. No pull estimate, so checkBudget stays undetermined.
+    // PH2-E4-02's live path is not attached: this Worker does not hold a signer,
+    // and a tick submits nothing until a caller opts in.
     dryRunTenants: (plans) => {
       const reader = createFetchReader({
         rpcUrl: env.SOROBAN_RPC_URL ?? NETWORKS.testnet.defaultRpcUrl,

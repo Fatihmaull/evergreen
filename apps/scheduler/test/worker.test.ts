@@ -368,4 +368,56 @@ describe('Stage 1 evaluation step', () => {
     await expect(handleScheduled({}, rt)).rejects.toMatchObject({ code: 'DB_FAILED' });
     expect(ran).toBe(false);
   });
+
+  it('logs money-path counts and does not log a payer', async () => {
+    let ran = false;
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [] }),
+      dryRunTenants: () => Promise.resolve({ runId: 'tick-7', tenants: [], warnings: [] }),
+      hostedJobs: () => {
+        ran = true;
+        return Promise.resolve({
+          dryRun: false,
+          jobs: 1,
+          submitted: 1,
+          refunded: 1,
+          shortfall: 0,
+        });
+      },
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(ran).toBe(true);
+    expect(logs.map((entry) => entry['event'])).toEqual([
+      'scheduler.tick',
+      'scheduler.evaluate',
+      'scheduler.tenants',
+      'scheduler.money',
+    ]);
+    expect(logs[3]).toEqual({
+      event: 'scheduler.money',
+      trigger: 'cron',
+      environment: 'preview',
+      dryRun: false,
+      jobs: 1,
+      submitted: 1,
+      refunded: 1,
+      shortfall: 0,
+    });
+    expect(JSON.stringify(logs)).not.toContain('G');
+  });
+
+  it('does not run the money path when the runtime has none', async () => {
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [] }),
+      dryRunTenants: () => Promise.resolve({ runId: 'tick-7', tenants: [], warnings: [] }),
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await handleScheduled({}, rt);
+    expect(logs.map((entry) => entry['event'])).not.toContain('scheduler.money');
+  });
 });
