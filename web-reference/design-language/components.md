@@ -159,6 +159,14 @@ separated by 12px Space Mono labels. The current page is `--pine`; the rest are
 warm-white fill with pine text, and **only the fill marks it** — it is not also
 heavier, because nothing on this site is.
 
+**Your account** reads, in order: Watchlist, Alerts, the account item,
+Allowance (shipped in #642 and #660). The account item links `/login/` and
+its label follows the session: `Account` when `GET /me` answers with a
+session, `Sign in` when it answers without one. Until `/me` answers, and when
+it does not answer at all, the label is `Sign in`. A label that guesses
+"signed in" would claim a session nobody has confirmed (decided by the
+orchestrator, 2026-11-23; accepted by DES).
+
 ## Chart
 
 Hairline bands for thresholds with their values labelled at the end of the
@@ -267,8 +275,7 @@ is not a route this screen calls.
 5. **`body.app`.** Pine sidebar 264px, status bar, the existing nav. The
    screen's place in the nav is one item, `Alerts`, in **Your account**,
    after Watchlist. The active item is a warm-white fill with pine text,
-   and only the fill marks it. That item is not added in this change:
-   `apps/web/src/chrome.mjs` is the shared layout. The route is
+   and only the fill marks it. The item shipped in #642. The route is
    `/dashboard/alerts/`, linked from `/docs/account/`.
 6. **No motion the person did not ask for.** No entrance, no shimmer, no
    skeleton, no knob that travels. A click paints the other position on the
@@ -824,28 +831,28 @@ thing, nothing claimed that was not measured, the state word always printed.
 `evergreen --help` and `evergreen help` print this, and nothing else, to
 stdout, exit 0. Bare `evergreen` (no command) prints the same screen to
 stderr and exits 2, as today's usage error does, so a script that forgot its
-command still fails. At most 20 lines, so it fits an 80×24 terminal
-without scrolling. Plain text, no colour, no box drawing.
+command still fails. At most 20 lines and 79 columns, so it fits an 80×24
+terminal without scrolling or wrapping (CEF found the first version at 83). Plain text, no colour, no box drawing.
 
 ```
-evergreen 0.2.0 — Soroban state TTL, read and extended. Stellar testnet by default.
+evergreen 0.2.0 — Soroban state TTL, read and extended. Testnet by default.
 
 usage: evergreen <command> [options]
 
 commands
-  scan <contract-id>...        read TTL health of every entry it is given; nothing is signed
-  extend <contract-id>         simulate an extend; --submit signs, testnet only
+  scan <contract-id>...   read TTL health of each entry given; signs nothing
+  extend <contract-id>    simulate an extend; --submit signs, testnet only
 
 examples
-  evergreen scan C...                    health of one contract
-  evergreen scan C... C... --json        two contracts, shared code resolved, JSON
-  evergreen scan C... --cost             what 30 more days would cost, simulated
-  evergreen extend C... --ledgers 518400 simulate adding about 30 days
+  evergreen scan C...                     health of one contract
+  evergreen scan C... C... --json         two contracts, shared code resolved
+  evergreen scan C... --cost              rent for 30 more days, simulated
+  evergreen extend C... --ledgers 518400  simulate adding about 30 days
 
 global options
-  --network testnet|mainnet    or EVERGREEN_NETWORK; reads only on mainnet
-  --version                    print the version and exit
-  --help                       this screen; evergreen <command> --help for one command
+  --network testnet|mainnet   or EVERGREEN_NETWORK; reads only on mainnet
+  --version                   print the version and exit
+  --help                      this screen; <command> --help for one command
 
 docs  https://evergreen-stellar.pages.dev/docs/cli/
 ```
