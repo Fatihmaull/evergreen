@@ -166,7 +166,7 @@ export function reviewPanelHtml(args: ReviewArgs, now = new Date()): string {
   const spender =
     args.spender === undefined
       ? '<span>Not published yet.</span>'
-      : `<span>Evergreen's engine</span><span class="mono wrap">${esc(args.spender)}</span>`;
+      : `<span>Evergreen's engine</span><span class="mono addr">${esc(args.spender)}</span>`;
   const sac = nativeSac();
   return `<dl class="review-lines">
       <div><dt>Cap</dt>${capLine}</div>
@@ -207,6 +207,18 @@ export function readBack(
   )
     return { kind: 'matches' };
   return { kind: 'differs', amountStroops, liveUntilLedger };
+}
+
+/**
+ * "Submitted" (components.md § C, after signing): the hash, linked to the
+ * explorer. The page reads the allowance back itself, so it never asks for a
+ * reload here.
+ */
+export function submittedHtml(o: { readonly hash: string; readonly ledger: number }): string {
+  const url = `https://stellar.expert/explorer/testnet/tx/${encodeURIComponent(o.hash)}`;
+  return `<p class="small">Submitted in ${ledgerText(o.ledger)}. Transaction <a class="mono addr" href="${esc(
+    url,
+  )}" rel="noopener">${esc(o.hash)}</a></p>`;
 }
 
 export function readBackHtml(
@@ -278,6 +290,17 @@ export interface AutopilotRow {
   readonly per30DaysMaxStroops: bigint;
 }
 
+/**
+ * The line under a budget field: the typed stroops grouped, and the XLM they
+ * are. Nothing when the field does not hold a whole number of stroops, since
+ * the row's own refusal says why when the person turns autopilot on.
+ */
+export function budgetFigure(stroops: bigint | undefined): string {
+  if (stroops === undefined || stroops < 0n) return '';
+  const exact = exactXlm(stroops);
+  return `${exact.stroops} · ${exact.xlm}`;
+}
+
 export function autopilotRowsHtml(rows: readonly AutopilotRow[]): string {
   return `<p class="small muted">${esc(BUDGET_RULE_TEXT)}</p>
     <div class="table-wrap"><table>
@@ -289,11 +312,11 @@ export function autopilotRowsHtml(rows: readonly AutopilotRow[]): string {
             ? `${esc(r.label)} <span class="small muted mono">${esc(short(r.contractId))}</span>`
             : `<span class="mono" title="${esc(r.contractId)}">${esc(short(r.contractId))}</span>`;
           return `<tr data-auto-index="${index}">
-            <td>${name}<br /><span class="small" data-auto-result aria-live="polite"></span></td>
-            <td class="mono">${esc(formatCount(r.thresholdLedgers))}</td>
-            <td class="mono">${esc(formatCount(r.extendToLedgers))}</td>
-            <td><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-job="${index}" aria-label="Per-job budget, ${esc(who)}" value="${r.perJobMaxStroops.toString()}" /></td>
-            <td><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-30="${index}" aria-label="Per 30 days, ${esc(who)}" value="${r.per30DaysMaxStroops.toString()}" /></td>
+            <td data-label="Contract">${name}<br /><span class="small" data-auto-result aria-live="polite"></span></td>
+            <td class="mono" data-label="Act below">${esc(formatCount(r.thresholdLedgers))}</td>
+            <td class="mono" data-label="Extend to">${esc(formatCount(r.extendToLedgers))}</td>
+            <td data-label="Per-job budget, stroops"><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-job="${index}" aria-label="Per-job budget, ${esc(who)}" value="${r.perJobMaxStroops.toString()}" /><br /><span class="small muted mono" data-auto-fmt>${esc(budgetFigure(r.perJobMaxStroops))}</span></td>
+            <td data-label="Per 30 days, stroops"><input class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" size="10" data-auto-per-30="${index}" aria-label="Per 30 days, ${esc(who)}" value="${r.per30DaysMaxStroops.toString()}" /><br /><span class="small muted mono" data-auto-fmt>${esc(budgetFigure(r.per30DaysMaxStroops))}</span></td>
           </tr>`;
         })
         .join('')}</tbody></table></div>`;
@@ -331,4 +354,41 @@ export function autopilotOnOutcomeHtml(outcome: AutopilotOnOutcome): string {
   if (outcome.code === 'NETWORK_NOT_WRITABLE')
     return '<span class="crit-ink">Autopilot is testnet-only until beta ends, so it is still off.</span>';
   return `<span class="crit-ink">The API did not turn autopilot on (${esc(outcome.code)}), so it is still off for this contract.</span>`;
+}
+
+export const MARGIN_UNSET_TEXT =
+  'The safety margin is not set, so this page will not name an allowance amount and will not ask you to sign one.';
+
+/**
+ * Every reason the sign button is off, one sentence each, in the order the
+ * person fixes them. Each names its own cause: a page that has not been
+ * connected yet must not say the margin is unset (Fatih's preview reload,
+ * 2026-11-23).
+ */
+export function approveOffReasons(s: {
+  readonly spenderSet: boolean;
+  readonly marginSet: boolean;
+  readonly connected: boolean;
+  readonly read: boolean;
+  readonly linked: boolean;
+  readonly capNamed: boolean;
+}): string[] {
+  const reasons: string[] = [];
+  if (!s.spenderSet) reasons.push(SPENDER_UNSET_TEXT);
+  if (!s.marginSet) reasons.push(MARGIN_UNSET_TEXT);
+  if (!s.connected) {
+    reasons.push('Connect your wallet in step 1.');
+    return reasons;
+  }
+  if (!s.linked)
+    reasons.push(
+      'This wallet is not linked to your account, so an allowance from it is one autopilot cannot use.',
+    );
+  if (s.spenderSet && !s.read)
+    reasons.push(
+      'The allowance has not been read, so the expiry ledger and its date are not known.',
+    );
+  if (s.marginSet && !s.capNamed)
+    reasons.push('Choose at least one contract in step 2, or enter rent by hand, to name a cap.');
+  return reasons;
 }

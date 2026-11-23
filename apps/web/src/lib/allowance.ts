@@ -71,7 +71,7 @@ export function nativeSac(): string {
 export type RawAllowance = {
   /** Whole stroops as read; "0" when the entry is absent. */
   amountStroops: string;
-  /** The entry's `expiration_ledger`, or null when there is no entry. */
+  /** The entry's `live_until_ledger`, or null when there is no entry. */
   liveUntilLedger: number | null;
   /** The ledger the read was taken at. */
   observedAtLedger: number;
@@ -163,6 +163,35 @@ export function allowanceKey(from: string, spender: string): xdr.LedgerKey {
   );
 }
 
+/**
+ * The stored value of a SAC allowance entry. The built-in Stellar Asset
+ * Contract stores `AllowanceValue { amount, live_until_ledger }`; the field was
+ * `expiration_ledger` in pre-release protocol-20 hosts and in token examples,
+ * so that spelling is read too. Fatih's first approve on testnet (2026-11-23,
+ * ledger 5,883,380) read the amount and no expiry because only
+ * `expiration_ledger` was read here.
+ *
+ * An entry with neither field is not "no entry": it throws, so the read is
+ * undetermined rather than a claim about the expiry.
+ */
+export function allowanceValue(val: xdr.ScVal): {
+  amountStroops: string;
+  liveUntilLedger: number;
+} {
+  const value = scValToNative(val) as Record<string, unknown> | null;
+  if (value === null || typeof value !== 'object') {
+    throw new Error('the allowance entry is not a map');
+  }
+  const amount = value.amount;
+  const until = value.live_until_ledger ?? value.expiration_ledger;
+  if (typeof amount !== 'bigint' || typeof until !== 'number' || !Number.isInteger(until)) {
+    throw new Error(
+      `the allowance entry has an unexpected shape (fields: ${Object.keys(value).join(', ') || 'none'})`,
+    );
+  }
+  return { amountStroops: amount.toString(), liveUntilLedger: until };
+}
+
 /** The real chain, through `verifiedServer()` only. */
 export function rpcAllowanceChain(): AllowanceChain {
   return {
@@ -176,16 +205,7 @@ export function rpcAllowanceChain(): AllowanceChain {
       if (entry.val.type !== 'contractData') {
         throw new Error(`unexpected ledger entry type ${entry.val.type}`);
       }
-      const value = scValToNative(entry.val.contractData.val) as {
-        amount?: bigint;
-        expiration_ledger?: number;
-      };
-      return {
-        amountStroops: String(value.amount ?? 0n),
-        liveUntilLedger:
-          typeof value.expiration_ledger === 'number' ? value.expiration_ledger : null,
-        observedAtLedger: r.latestLedger,
-      };
+      return { ...allowanceValue(entry.val.contractData.val), observedAtLedger: r.latestLedger };
     },
     async buildRevoke(from, spender) {
       const server = await verifiedServer();

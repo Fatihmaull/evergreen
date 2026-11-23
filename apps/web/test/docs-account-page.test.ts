@@ -118,6 +118,10 @@ describe('the two statements that go stale', () => {
     // `.stack` is display: grid, which beats the UA's [hidden]; the page CSS must restore it (DES, #654).
     const css = readFileSync(join(ROOT, 'apps/web/src/styles.css'), 'utf8');
     expect(css).toMatch(/#autopilot-step\[hidden\]\s*\{\s*display:\s*none;/);
+    // After an approve the result replaces the sign button; `.row` is flex (DES, #660).
+    expect(allowancePage).toMatch(/id="sign-row"/);
+    expect(allowancePage).toMatch(/id="sign-help"/);
+    expect(css).toMatch(/#sign-row\[hidden\],\s*#sign-help\[hidden\]\s*\{\s*display:\s*none;/);
     const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
     expect(prefs).toContain("'/me/alert-preferences'");
     expect(prefs).not.toMatch(/\/watchlist/);
