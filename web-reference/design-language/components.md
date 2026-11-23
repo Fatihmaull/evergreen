@@ -640,6 +640,21 @@ allowance nothing can use.
   uses. While it runs the cell says `simulating…`. If it fails, the row says
   "Rent could not be simulated, so this contract is left out of the cap." and
   its checkbox is disabled. It is never filled with a guess.
+- Each row also carries the item's two autopilot settings, as mono fields the
+  person can change: **Act below** (`thresholdLedgers`, prefilled `17,280`,
+  about 1 day) and **Extend to** (`extendToLedgers`, prefilled `518,400`,
+  about 30 days). These are the CLI's and the example config's defaults, so a
+  person who has used the CLI sees the same numbers. An item that already has
+  them shows its own. The row's simulated rent is the rent of extending to
+  **Extend to**, so changing it re-simulates that row. The API needs both
+  (`extendToLedgers` above `thresholdLedgers`, `thresholdLedgers` at or above
+  `THRESHOLD_FLOOR_LEDGERS`), so they are set here, where the rent depends on
+  them, and sent unchanged in step D.
+- If step D's `PATCH` is refused because **Act below** is under the engine's
+  floor, the row shows the floor the API names and the sentence "The engine
+  acts no earlier than N ledgers left. Use N?" with a secondary button
+  `Use N`. The value is never raised silently: it changes when the engine acts,
+  so the person sees it change.
 - One field: **Extends to cover, per contract**. Whole number, mono,
   **prefilled with `2`** (decided 2026-11-23, see "The default of 2" below).
   Helper: "Each extend is one pull: rent, the Evergreen fee and the retry
@@ -696,8 +711,9 @@ the existing `approveOutcomeHtml` kinds; only the layout is new.
 **Step D · Turn on autopilot** appears only after a matching read-back, or
 when the standing line is Live and covers the checked contracts.
 
-- The checked contracts from step 2, one hairline row each, with two mono
-  fields: **Per-job budget** (prefilled with that contract's pull total:
+- The checked contracts from step 2, one hairline row each. The `PATCH`
+  sends `payerWallet` (the connected, linked wallet), the row's **Act below**
+  and **Extend to** from step 2, and `budget` from two mono fields: **Per-job budget** (prefilled with that contract's pull total:
   rent + fee + margin) and **Per 30 days** (prefilled with per-job ×
   extends-to-cover, capped at the cap). The API's rule is printed once:
   "Per job cannot be more than per 30 days, and neither can be 0."
