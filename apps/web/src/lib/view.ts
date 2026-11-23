@@ -226,13 +226,25 @@ export function bindingEntry(
  * Ledgers are the truth; the date travels with `~`. A ledger already passed
  * gets no date.
  */
+/**
+ * The instant `approxDateOfLedger` formats. Undefined when the ledger is not an
+ * integer or is already behind the ledger the read was taken at — the same
+ * refusal, so a caller cannot show a date the formatter would call undetermined.
+ */
+export function ledgerInstant(
+  ledger: number,
+  observedAtLedger: number,
+  now = new Date(),
+): Date | undefined {
+  if (!Number.isInteger(ledger) || ledger < observedAtLedger) return undefined;
+  return new Date(now.getTime() + (ledger - observedAtLedger) * SECONDS_PER_LEDGER * 1000);
+}
+
 export function approxDateOfLedger(
   ledger: number,
   observedAtLedger: number,
   now = new Date(),
 ): string {
-  if (!Number.isInteger(ledger) || ledger < observedAtLedger) return 'date undetermined';
-  return approxDate(
-    new Date(now.getTime() + (ledger - observedAtLedger) * SECONDS_PER_LEDGER * 1000),
-  );
+  const at = ledgerInstant(ledger, observedAtLedger, now);
+  return at ? approxDate(at) : 'date undetermined';
 }
