@@ -29,6 +29,11 @@ export interface ConfirmedMove {
   readonly hash: string;
   readonly feeDeclaredStroops: bigint;
   readonly feeChargedStroops: bigint;
+  /**
+   * Stroops this transaction moved. A pull sets the `transfer_from` amount of the
+   * transaction that actually landed, which a later estimate must not replace.
+   */
+  readonly amountStroops?: bigint;
 }
 
 export interface ExtendMove extends ConfirmedMove {
@@ -68,6 +73,12 @@ export interface HostedJobSnapshot {
   readonly status: HostedJobStatus;
   readonly pullTxHash: string | null;
   readonly pullAmountStroops: bigint | null;
+  /**
+   * 0006. Set once the pull envelope is signed, before it confirms. A later tick
+   * resolves this hash before any new preflight, so a pull that landed is not
+   * closed as `preflight-failed`.
+   */
+  readonly pullSubmittedHash: string | null;
   readonly extendTxHash: string | null;
   /**
    * Charged rent of the confirmed extend (`jobs.extend_rent_charged`). Set together with
@@ -295,7 +306,7 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
     return finished(job, ports.mode, false);
   }
   if (job.network !== 'testnet') {
-    if (ports.mode === 'live' && job.pullTxHash === null) {
+    if (ports.mode === 'live' && job.pullTxHash === null && job.pullSubmittedHash === null) {
       await ports.save({ ...job, status: 'preflight-failed' }, []);
     }
     return {
@@ -312,6 +323,38 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
   }
 
   let submitted = false;
+  if (job.pullTxHash === null) {
+    // A signed pull is resolved before preflight. The amount is the one that
+    // landed (`ConfirmedMove.amountStroops`), never a fresh estimate.
+    let resumed: ConfirmedMove | undefined;
+    if (job.pullSubmittedHash !== null && ports.mode === 'live') {
+      try {
+        resumed = await ports.chain.pull(0n, job.id);
+      } catch (error) {
+        // The prior envelope failed or expired and moved nothing. Preflight may
+        // build another. Anything else (still unconfirmed, a bug) must not close
+        // the job: the pull may still land.
+        if (!(error instanceof Error) || error.message !== 'STEP_FAILED') {
+          return stopped(job, 'live', 'PULL_FAILED', job.status);
+        }
+      }
+    }
+    if (resumed !== undefined) {
+      const amount = resumed.amountStroops;
+      if (amount === undefined || amount <= 0n) return stopped(job, 'live', 'INTERNAL', job.status);
+      job = {
+        ...job,
+        status: 'pulled',
+        pullTxHash: resumed.hash,
+        pullAmountStroops: amount,
+      };
+      await ports.save(job, [
+        ledgerWrite(job, { kind: 'pull', amountStroops: amount, txHash: resumed.hash }),
+        ...evidence(job, resumed),
+      ]);
+      submitted = true;
+    }
+  }
   if (job.pullTxHash === null) {
     const simulated = await ports.chain.simulateRent();
     const allowance = await ports.chain.allowanceRemaining();
@@ -363,15 +406,16 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
     } catch {
       return stopped(job, 'live', 'PULL_FAILED', 'queued');
     }
+    const amount = pulled.amountStroops ?? pre.pull.totalStroops;
     job = {
       ...job,
       status: 'pulled',
       pullTxHash: pulled.hash,
-      pullAmountStroops: pre.pull.totalStroops,
+      pullAmountStroops: amount,
     };
     // The pull row, its evidence and the `pulled` status land together.
     await ports.save(job, [
-      ledgerWrite(job, { kind: 'pull', amountStroops: pre.pull.totalStroops, txHash: pulled.hash }),
+      ledgerWrite(job, { kind: 'pull', amountStroops: amount, txHash: pulled.hash }),
       ...evidence(job, pulled),
     ]);
     submitted = true;

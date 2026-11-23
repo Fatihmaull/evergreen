@@ -32,11 +32,11 @@ import {
   SorobanDataBuilder,
   StrKey,
   TransactionBuilder,
+  type Transaction,
   nativeToScVal,
   rpc,
   scValToNative,
   xdr,
-  type Transaction,
 } from '@stellar/stellar-sdk';
 import { NETWORKS } from '@evergreen-stellar/core';
 import type { ConfirmedMove, ExtendMove, HostedChain } from '@evergreen/engine/dist/money-path.js';
@@ -52,6 +52,11 @@ export interface ChainRpc {
     status: string;
     resultXdr?: { toXdrObject(): unknown };
     resultMetaXdr?: { toXdrObject(): unknown };
+    /**
+     * Envelope of a confirmed transaction. The RPC object has `toXDR`; tests may
+     * pass the base64 string.
+     */
+    envelopeXdr?: string | { toXDR(encoding: 'base64'): string };
   }>;
 }
 
@@ -81,6 +86,32 @@ export interface HostedChainOptions {
   readonly sleep?: (ms: number) => Promise<void>;
   /** Rent quote for the entries; the default simulates through `rpc`. */
   readonly quoteRent?: () => Promise<bigint>;
+}
+
+/**
+ * The `transfer_from` amount on a pull envelope. A resumed SUCCESS has to report
+ * this, not a later estimate. Returns undefined when the envelope is missing or
+ * is not that invoke.
+ */
+export function pullAmountFromEnvelope(envelopeXdr: string | undefined): bigint | undefined {
+  if (envelopeXdr === undefined || envelopeXdr === '') return undefined;
+  try {
+    const parsed = TransactionBuilder.fromXDR(envelopeXdr, PASSPHRASE);
+    if (!('operations' in parsed)) return undefined;
+    const op = parsed.operations[0];
+    if (op === undefined || op.type !== 'invokeHostFunction') return undefined;
+    // The SDK's parsed host function JSON-serialises the amount as `"i128":"<digits>"`.
+    // Reading the field directly is a BigNumber-like object whose String() is not the digits.
+    const invoke = op.func as { invokeContract?: { args?: readonly unknown[] } };
+    const dumped = JSON.stringify(invoke.invokeContract?.args?.at(-1));
+    const digits = dumped?.match(/"i128":"(\d+)"/)?.[1];
+    if (digits === undefined) return undefined;
+    const value = BigInt(digits);
+    if (value <= 0n) return undefined;
+    return value;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Seconds a transaction may wait for inclusion. */
@@ -168,6 +199,7 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
     name: SubmitStep,
     build: () => Promise<Transaction>,
     rebuildOnFailed: boolean,
+    amountStroops?: bigint,
   ): Promise<Included> {
     const prior = await submitted.read(name);
     if (prior !== null) {
@@ -185,7 +217,11 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
     const hash = hex(tx.hash());
     const maxTime = Number(tx.timeBounds?.maxTime ?? '0');
     if (!Number.isSafeInteger(maxTime) || maxTime <= 0) throw new ChainStepError('BAD_RESULT');
-    await submitted.record(name, { hash, expiresAt: maxTime });
+    await submitted.record(name, {
+      hash,
+      expiresAt: maxTime,
+      ...(amountStroops === undefined ? {} : { amountStroops }),
+    });
     const sent = await server.sendTransaction(tx);
     if (sent.status === 'ERROR' || sent.status === 'TRY_AGAIN_LATER') {
       await submitted.clear(name);
@@ -265,7 +301,29 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
     allowanceRemaining: () => readSac('allowance', [addr(payerAccount), addr(enginePublic)]),
     balance: () => readSac('balance', [addr(payerAccount)]),
     async pull(amount) {
-      if (amount <= 0n) throw new ChainStepError('STEP_REJECTED');
+      const prior = await submitted.read('pull');
+      if (prior !== null) {
+        const response = await server.getTransaction(prior.hash);
+        if (response.status === 'SUCCESS') {
+          const envelope =
+            typeof response.envelopeXdr === 'string'
+              ? response.envelopeXdr
+              : response.envelopeXdr?.toXDR('base64');
+          const landed = prior.amountStroops ?? pullAmountFromEnvelope(envelope);
+          if (landed === undefined) throw new ChainStepError('BAD_RESULT');
+          return { ...moved(included(prior.hash, 0n, response)), amountStroops: landed };
+        }
+        if (response.status === 'NOT_FOUND' && now() <= prior.expiresAt + EXPIRY_GRACE_SECONDS)
+          throw new ChainStepError('STEP_UNCERTAIN');
+        if (response.status !== 'NOT_FOUND' && response.status !== 'FAILED')
+          throw new ChainStepError('BAD_RESULT');
+        await submitted.clear('pull');
+        // Nothing moved. `amount <= 0` means "resolve only": the caller preflights
+        // before building a replacement.
+        if (amount <= 0n) throw new ChainStepError('STEP_FAILED');
+      } else if (amount <= 0n) {
+        throw new ChainStepError('STEP_REJECTED');
+      }
       const done = await step(
         'pull',
         async () =>
@@ -284,9 +342,10 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
               .build(),
           ),
         true,
+        amount,
       );
       if (done.status !== 'SUCCESS') throw new ChainStepError('STEP_FAILED');
-      return moved(done);
+      return { ...moved(done), amountStroops: amount };
     },
     async extend(): Promise<ExtendMove> {
       // A send the RPC refused, or an outcome not known yet, throws: the job stays `pulled` and
@@ -297,9 +356,13 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
         false,
       );
       const rent = done.status === 'SUCCESS' ? findBigint(done.meta, 'rentFeeCharged') : 0n;
-      if (rent === undefined || rent < 0n) throw new ChainStepError('BAD_RESULT');
+      if (rent === undefined || rent < 0n || rent > done.feeChargedStroops)
+        throw new ChainStepError('BAD_RESULT');
+      // `feeCharged` includes `rentFeeCharged`. The rent is its own ledger row, so the
+      // network-fee evidence is the rest. Otherwise fee_ledger_job_subsidy flags every job.
       return {
         ...moved(done),
+        feeChargedStroops: done.feeChargedStroops - rent,
         succeeded: done.status === 'SUCCESS',
         transient: false,
         chargedRentStroops: rent,

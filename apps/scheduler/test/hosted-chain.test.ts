@@ -6,6 +6,7 @@ import {
   EXPIRY_GRACE_SECONDS,
   createHostedChain,
   findBigint,
+  pullAmountFromEnvelope,
   stroopsToXlm,
   type ChainRpc,
 } from '../src/hosted-chain.js';
@@ -80,13 +81,14 @@ function make(server: ChainRpc, store: SubmittedStore, now = () => 1_000) {
 
 describe('hosted chain port', () => {
   it('reads the charged fee and the rent from the result and meta', async () => {
-    const { server } = fakeRpc({ rent: 990_000n });
+    const { server } = fakeRpc({ rent: 200n });
     const chain = make(server, memoryStore());
     const extend = await chain.extend(1, 'job');
     expect(extend).toMatchObject({
       succeeded: true,
-      chargedRentStroops: 990_000n,
-      feeChargedStroops: 1_234n,
+      chargedRentStroops: 200n,
+      // feeCharged 1_234 includes the rent. The evidence row is the rest.
+      feeChargedStroops: 1_034n,
     });
     expect(CONTRACT).toHaveLength(56);
   });
@@ -99,6 +101,36 @@ describe('hosted chain port', () => {
     expect(store.data.get('pull')?.hash).toBe(first.hash);
     const again = await make(server, store).pull(1_035_000n, 'job');
     expect(again.hash).toBe(first.hash);
+    expect(again.amountStroops).toBe(1_035_000n);
+    expect(sent).toHaveLength(1);
+    // A later call that asks for a different amount still reports what landed.
+    const changed = await make(server, store).pull(9n, 'job');
+    expect(changed.amountStroops).toBe(1_035_000n);
+    expect(sent).toHaveLength(1);
+  });
+
+  it('reads the landed amount from the envelope when pull_amount was not stored', async () => {
+    const store = memoryStore();
+    const envelopes = new Map<string, string>();
+    const { server, sent } = fakeRpc({});
+    const send = server.sendTransaction.bind(server);
+    server.sendTransaction = (tx) => {
+      envelopes.set(Buffer.from(tx.hash()).toString('hex'), tx.toXDR());
+      return send(tx);
+    };
+    const first = await make(server, store).pull(1_035_000n, 'job');
+    const recorded = store.data.get('pull');
+    store.data.set('pull', { hash: recorded!.hash, expiresAt: recorded!.expiresAt });
+    server.getTransaction = (hash) =>
+      Promise.resolve({
+        status: 'SUCCESS',
+        resultXdr: { toXdrObject: () => ({ feeCharged: 1_234n, result: {} }) },
+        resultMetaXdr: { toXdrObject: () => ({}) },
+        envelopeXdr: envelopes.get(hash),
+      });
+    expect(pullAmountFromEnvelope(envelopes.get(first.hash))).toBe(1_035_000n);
+    const again = await make(server, store).pull(9n, 'job');
+    expect(again.amountStroops).toBe(1_035_000n);
     expect(sent).toHaveLength(1);
   });
 

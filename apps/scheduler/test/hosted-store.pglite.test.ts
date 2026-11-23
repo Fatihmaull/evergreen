@@ -198,6 +198,18 @@ describe('Stage 2 store as eg_scheduler', () => {
     expect(await store.read('pull')).toEqual({ hash: 'e'.repeat(64), expiresAt: 1_800_000_000 });
     await store.clear('pull');
     expect(await store.read('pull')).toBeNull();
+    await store.record('pull', {
+      hash: 'f'.repeat(64),
+      expiresAt: 1_800_000_000,
+      amountStroops: 42n,
+    });
+    expect(await store.read('pull')).toEqual({
+      hash: 'f'.repeat(64),
+      expiresAt: 1_800_000_000,
+      amountStroops: 42n,
+    });
+    const amount = await asScheduler('SELECT pull_amount FROM jobs WHERE id = $1::uuid', [job!.id]);
+    expect(String(amount[0]?.['pull_amount'])).toBe('42');
   });
 });
 
@@ -310,6 +322,27 @@ describe('Stage 2 money step (runHostedStage) as eg_scheduler', () => {
     );
     expect(summary).toMatchObject({ jobs: 0, orphaned: 0 });
     expect(await openJobs(asScheduler, 5)).toEqual([]);
+  });
+
+  it('does not close an orphan whose pull was already submitted', async () => {
+    await runHostedStage({ observedLedger: 5_701_000, plans, extendPlan }, deps({ deadlineMs: 0 }));
+    const [job] = await openJobs(asScheduler, 1);
+    await asScheduler(
+      `UPDATE jobs SET pull_submitted_hash = $2, pull_submitted_expires_at = now() + interval '1 minute' WHERE id = $1::uuid`,
+      [job!.id, 'e'.repeat(64)],
+    );
+    const summary = await runHostedStage(
+      { observedLedger: 5_701_000, plans: [], extendPlan: { ...extendPlan, requests: [] } },
+      { ...deps(), chainFor: () => Promise.reject(new Error('must not be called')) },
+    );
+    expect(summary.orphaned).toBe(1);
+    expect((await loadJob(asScheduler, job!.id)).status).toBe('queued');
+    expect((await loadJob(asScheduler, job!.id)).pullSubmittedHash).toBe('e'.repeat(64));
+    // An open job blocks later windows. Close it so the next test can enqueue.
+    await asScheduler(
+      `UPDATE jobs SET status = 'preflight-failed', pull_submitted_hash = NULL, pull_submitted_expires_at = NULL WHERE id = $1::uuid`,
+      [job!.id],
+    );
   });
 
   it('stops starting jobs at the deadline', async () => {

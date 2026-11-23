@@ -30,9 +30,9 @@ function chain(extend: (attempt: number) => Promise<ExtendMove>): HostedChain & 
     },
     allowanceRemaining: () => Promise.resolve(5_000_000n),
     balance: () => Promise.resolve(5_000_000n),
-    pull: () => {
+    pull: (amount) => {
       calls.pull += 1;
-      return Promise.resolve(tx('pull-tx'));
+      return Promise.resolve({ ...tx('pull-tx'), amountStroops: amount });
     },
     extend: (attempt) => {
       calls.extend += 1;
@@ -60,6 +60,7 @@ function ports(
     status: 'queued',
     pullTxHash: null,
     pullAmountStroops: null,
+    pullSubmittedHash: null,
     extendTxHash: null,
     extendRentChargedStroops: null,
     refundTxHash: null,
@@ -141,6 +142,7 @@ describe('runHostedJob', () => {
         status: 'pulled',
         pullTxHash: 'pull-tx',
         pullAmountStroops: 1_035_000n,
+        pullSubmittedHash: null,
         extendTxHash: null,
         extendRentChargedStroops: null,
         refundTxHash: null,
@@ -218,6 +220,74 @@ describe('runHostedJob', () => {
     expect(thrown.calls.pull).toBe(1);
   });
 
+  it('a landed pull keeps its amount when the estimate has changed', async () => {
+    const c = chain(okExtend);
+    let asked = 0n;
+    c.simulateRent = () => {
+      throw new Error('preflight must not run');
+    };
+    c.pull = (amount) => {
+      asked = amount;
+      return Promise.resolve({ ...tx('old-pull'), amountStroops: 500_000n });
+    };
+    const job = ports({
+      chain: c,
+      snapshot: {
+        id: 'job-1',
+        userId: '00000000-0000-4000-8000-000000000001',
+        network: 'testnet',
+        contractId: CONTRACT,
+        kind: 'autopilot',
+        payerAccount: PAYER,
+        status: 'queued',
+        pullTxHash: null,
+        pullAmountStroops: null,
+        pullSubmittedHash: 'old-pull',
+        extendTxHash: null,
+        extendRentChargedStroops: null,
+        refundTxHash: null,
+        shortfallStroops: null,
+      },
+    });
+    const outcome = await runHostedJob(job);
+    expect(asked).toBe(0n);
+    expect(outcome.status).toBe('extended');
+    expect(job.saved[0]?.pullAmountStroops).toBe(500_000n);
+    const pull = job.ledger.find((row) => row.kind === 'pull');
+    expect(pull?.amountStroops).toBe(500_000n);
+  });
+
+  it('does not close a job as preflight-failed when the pull already landed', async () => {
+    const c = chain(okExtend);
+    c.simulateRent = () => Promise.resolve(undefined);
+    c.allowanceRemaining = () => Promise.resolve(0n);
+    c.pull = () => Promise.resolve({ ...tx('landed'), amountStroops: 500_000n });
+    const job = ports({
+      chain: c,
+      snapshot: {
+        id: 'job-1',
+        userId: '00000000-0000-4000-8000-000000000001',
+        network: 'testnet',
+        contractId: CONTRACT,
+        kind: 'autopilot',
+        payerAccount: PAYER,
+        status: 'queued',
+        pullTxHash: null,
+        pullAmountStroops: null,
+        pullSubmittedHash: 'landed',
+        extendTxHash: null,
+        extendRentChargedStroops: null,
+        refundTxHash: null,
+        shortfallStroops: null,
+      },
+    });
+    const outcome = await runHostedJob(job);
+    expect(outcome.status).not.toBe('preflight-failed');
+    expect(outcome.preflightReason).toBeUndefined();
+    expect(job.saved[0]?.status).toBe('pulled');
+    expect(job.saved[0]?.pullAmountStroops).toBe(500_000n);
+  });
+
   it('does not pull when the margin is unset or the network is not testnet', async () => {
     const unset = chain(okExtend);
     const noMargin = ports({ chain: unset, retryMarginStroops: undefined });
@@ -238,6 +308,7 @@ describe('runHostedJob', () => {
         status: 'queued',
         pullTxHash: null,
         pullAmountStroops: null,
+        pullSubmittedHash: null,
         extendTxHash: null,
         extendRentChargedStroops: null,
         refundTxHash: null,

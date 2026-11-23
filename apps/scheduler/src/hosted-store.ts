@@ -76,7 +76,8 @@ export async function enqueueAutopilotJobs(
 }
 
 const JOB_COLUMNS = `id, user_id, network, contract_id, kind, payer_account, status,
-  pull_tx_hash, pull_amount, extend_tx_hash, extend_rent_charged, refund_tx_hash, shortfall_stroops`;
+  pull_tx_hash, pull_amount, pull_submitted_hash, extend_tx_hash, extend_rent_charged,
+  refund_tx_hash, shortfall_stroops`;
 
 export const OPEN_JOBS_SQL = `SELECT ${JOB_COLUMNS} FROM jobs
 WHERE network = 'testnet' AND kind = 'autopilot' AND status IN ('queued', 'pulled')
@@ -120,6 +121,7 @@ export function rowToSnapshot(row: Readonly<Record<string, unknown>>): HostedJob
     status: status as HostedJobSnapshot['status'],
     pullTxHash: textOrNull(row['pull_tx_hash']),
     pullAmountStroops: stroopsOrNull(row['pull_amount']),
+    pullSubmittedHash: textOrNull(row['pull_submitted_hash']),
     extendTxHash: textOrNull(row['extend_tx_hash']),
     extendRentChargedStroops: stroopsOrNull(row['extend_rent_charged']),
     refundTxHash: textOrNull(row['refund_tx_hash']),
@@ -190,6 +192,8 @@ export interface SubmittedTx {
   readonly hash: string;
   /** Unix seconds: the transaction's `maxTime`. After it the hash can never be included. */
   readonly expiresAt: number;
+  /** Pull only: stroops the envelope moves. Kept in `pull_amount` (no new column). */
+  readonly amountStroops?: bigint;
 }
 
 /** Where the chain port keeps a step's submitted hash (0006 columns). */
@@ -209,18 +213,31 @@ export function pgSubmittedStore(query: Query, jobId: string): SubmittedStore {
   return {
     async read(step) {
       const [hash, expires] = STEP_COLUMNS[step];
+      const amount = step === 'pull' ? ', pull_amount AS amount' : '';
       const rows = await query(
-        `SELECT ${hash} AS hash, extract(epoch FROM ${expires})::bigint AS expires FROM jobs WHERE id = $1::uuid`,
+        `SELECT ${hash} AS hash, extract(epoch FROM ${expires})::bigint AS expires${amount} FROM jobs WHERE id = $1::uuid`,
         [jobId],
       );
       const row = rows[0];
       if (row === undefined || row['hash'] === null) return null;
       const expiresAt = Number(row['expires']);
       if (!Number.isSafeInteger(expiresAt)) throw new Error('JOB_ROW_SHAPE');
-      return { hash: text(row['hash']), expiresAt };
+      const amountStroops = step === 'pull' ? stroopsOrNull(row['amount']) : null;
+      return {
+        hash: text(row['hash']),
+        expiresAt,
+        ...(amountStroops === null ? {} : { amountStroops }),
+      };
     },
     async record(step, tx) {
       const [hash, expires] = STEP_COLUMNS[step];
+      if (step === 'pull' && tx.amountStroops !== undefined) {
+        await query(
+          `UPDATE jobs SET ${hash} = $2, ${expires} = to_timestamp($3), pull_amount = $4::numeric, updated_at = now() WHERE id = $1::uuid`,
+          [jobId, tx.hash, tx.expiresAt, tx.amountStroops.toString(10)],
+        );
+        return;
+      }
       await query(
         `UPDATE jobs SET ${hash} = $2, ${expires} = to_timestamp($3), updated_at = now() WHERE id = $1::uuid`,
         [jobId, tx.hash, tx.expiresAt],
