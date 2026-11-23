@@ -3,13 +3,19 @@
  * fetch throws and the Resend client is a fake.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { assessEntry } from '@evergreen-stellar/core';
+import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
 import {
   ALERT_SPECS,
   ALERT_TEMPLATE_KINDS,
   renderAlertEmail,
+  type AlertKind,
+} from '../src/index.js';
+import {
+  PREVIEW_APPROACHING_OBSERVATION,
   runPreviewTestSend,
   type ResendLikeClient,
-} from '../src/index.js';
+} from '../src/alerts/test-send.js';
 
 const ADDR = 'tester@alerts.example.test';
 const OK = { ENVIRONMENT: 'preview', ALERTS_SEND: 'send', ALERTS_TEST_ALLOWLIST: ADDR };
@@ -41,7 +47,7 @@ describe('renderAlertEmail', () => {
   });
 
   it.each(ALERT_TEMPLATE_KINDS)('%s renders text and html with the entry', (kind) => {
-    const e = renderAlertEmail(kind, { entry: 'CABC', network: 'testnet', detail: 'x' });
+    const e = renderSample(kind);
     expect(e.subject).toContain('CABC');
     expect(e.subject).not.toMatch(/[\r\n]/);
     expect(e.body).toContain('Entry: CABC');
@@ -84,12 +90,16 @@ describe('renderAlertEmail', () => {
       'approaching_critical',
       'extend_succeeded',
     ] as const) {
-      const e = renderAlertEmail(kind, {
+      const shared = {
         entry: 'C',
-        network: 'testnet',
+        network: 'testnet' as const,
         preferencesUrl,
         unsubscribeUrl,
-      });
+      };
+      const e =
+        kind === 'approaching_critical'
+          ? renderAlertEmail(kind, { ...shared, approaching: sampleObservation() })
+          : renderAlertEmail(kind, shared);
       expect(e.body).toContain(preferencesUrl);
       expect(e.html).toContain(`href="${preferencesUrl}"`);
       expect(e.headers).toEqual({
@@ -127,6 +137,120 @@ describe('renderAlertEmail', () => {
     expect(e.body).toContain('https://dashboard.example.test/dashboard/alerts/');
   });
 });
+
+const LEDGERS = 10;
+
+function archived(
+  kind: 'persistent' | 'code',
+  remaining: number,
+  contracts: readonly string[],
+): LedgerEntryTTL {
+  return {
+    kind,
+    endBehavior: 'archived',
+    contracts,
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'known', endsAtLedger: 1_000_000 + remaining, remainingLedgers: remaining },
+  };
+}
+
+function temporary(remaining: number): LedgerEntryTTL {
+  return {
+    kind: 'temporary',
+    endBehavior: 'deleted',
+    contracts: ['C'],
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'known', endsAtLedger: 1_000_000 + remaining, remainingLedgers: remaining },
+  };
+}
+
+function expiredLone(): LedgerEntryTTL {
+  return {
+    kind: 'persistent',
+    endBehavior: 'archived',
+    contracts: ['C'],
+    observedAtLedger: 1_000_000,
+    ttl: { status: 'expired' },
+  };
+}
+
+function approaching(entry: LedgerEntryTTL, thresholdLedgers = LEDGERS) {
+  return renderAlertEmail('approaching_critical', {
+    entry: 'C',
+    network: 'testnet',
+    approaching: { entry, thresholdLedgers },
+  });
+}
+
+describe('approaching_critical severity follows assessEntry', () => {
+  it('an expired lone persistent entry is critical', () => {
+    // Dropping the expired-is-critical rule grades this warning: it is not shared and not temporary.
+    expect(approaching(expiredLone()).severity).toBe('critical');
+  });
+
+  it('a shared entry is critical at the threshold and not one ledger above', () => {
+    expect(approaching(archived('code', LEDGERS - 1, ['C1', 'C2'])).severity).toBe('critical');
+    expect(approaching(archived('code', LEDGERS, ['C1', 'C2'])).severity).toBe('critical');
+    expect(approaching(archived('code', LEDGERS + 1, ['C1', 'C2'])).severity).toBe('warn');
+  });
+
+  it('a temporary entry is critical at the threshold and not one ledger above', () => {
+    expect(approaching(temporary(LEDGERS - 1)).severity).toBe('critical');
+    expect(approaching(temporary(LEDGERS)).severity).toBe('critical');
+    expect(approaching(temporary(LEDGERS + 1)).severity).toBe('warn');
+  });
+
+  it('a lone recoverable entry at the threshold stays warn', () => {
+    expect(approaching(archived('persistent', LEDGERS, ['C'])).severity).toBe('warn');
+  });
+
+  it('does not apply the observation to another kind', () => {
+    const e = renderAlertEmail('extend_succeeded', {
+      entry: 'C',
+      network: 'testnet',
+      approaching: { entry: expiredLone(), thresholdLedgers: LEDGERS },
+    });
+    expect(e.severity).toBe('info');
+  });
+
+  it('without an observation it does not render warn', () => {
+    const observation = undefined as unknown as ReturnType<typeof sampleObservation>;
+    expect(() =>
+      renderAlertEmail('approaching_critical', {
+        entry: 'C',
+        network: 'testnet',
+        approaching: observation,
+      }),
+    ).toThrow(/requires ctx\.approaching/);
+  });
+
+  it('the preview observation is graded by assessEntry, not the copy warn', () => {
+    const graded = assessEntry(
+      PREVIEW_APPROACHING_OBSERVATION.entry,
+      PREVIEW_APPROACHING_OBSERVATION.thresholdLedgers,
+    );
+    expect(graded.health).toBe('critical');
+    expect(
+      renderAlertEmail('approaching_critical', {
+        entry: 'TEST-ENTRY (preview test send)',
+        network: 'testnet',
+        approaching: PREVIEW_APPROACHING_OBSERVATION,
+      }).severity,
+    ).toBe('critical');
+  });
+});
+
+function sampleObservation() {
+  return { entry: expiredLone(), thresholdLedgers: LEDGERS };
+}
+
+function renderSample(kind: AlertKind) {
+  const base = { entry: 'CABC', network: 'testnet' as const, detail: 'x' };
+  if (kind === 'approaching_critical') {
+    return renderAlertEmail(kind, { ...base, approaching: sampleObservation() });
+  }
+  return renderAlertEmail(kind, base);
+}
 
 describe('runPreviewTestSend guards', () => {
   it('guard removal: with every guard satisfied it sends one email per kind', async () => {

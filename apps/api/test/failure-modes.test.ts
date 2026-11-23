@@ -54,6 +54,21 @@ describe('failure-mode mapping', () => {
     expect(emailed).toEqual(['F1', 'F2', 'F4', 'F6', 'F7', 'F10', 'F19']);
   });
 
+  it('F3 and F5 do not map to a user email; F4 stays the refund email', () => {
+    // F4's user email is required: extend failed, whole pull returned, fee included.
+    expect(FAILURE_MODE_ALERTS.F4.user).toEqual({
+      kind: 'email',
+      alerts: ['extend_failed_refund'],
+    });
+    // Reverting either mode to `via` F4 (or F5) maps it to that user email again.
+    expect(FAILURE_MODE_ALERTS.F3.user).toEqual({ kind: 'final-outcome' });
+    expect(FAILURE_MODE_ALERTS.F5.user).toEqual({ kind: 'final-outcome' });
+    expect(FAILURE_MODE_ALERTS.F3.user.kind).not.toBe('email');
+    expect(FAILURE_MODE_ALERTS.F5.user.kind).not.toBe('email');
+    expect(FAILURE_MODE_ALERTS.F3.user.kind).not.toBe('via');
+    expect(FAILURE_MODE_ALERTS.F5.user.kind).not.toBe('via');
+  });
+
   it('marks F6 as the highest-severity operator alert', () => {
     expect(FAILURE_MODE_ALERTS.F6.operator).toEqual({ when: 'every', highest: true });
   });

@@ -16,20 +16,23 @@ import {
 } from './dispatch.js';
 import { canUnsubscribe, type AlertKind } from './policy.js';
 import type { AlertEnv } from './sender.js';
-import { renderAlertEmail, type AlertContext } from './templates.js';
+import {
+  renderAlertEmail,
+  type AlertContext,
+  type AlertEmail,
+  type ApproachingObservation,
+} from './templates.js';
 import {
   alertPreferencesPageUrl,
   alertUnsubscribeUrl,
   mintUnsubscribeToken,
 } from './unsubscribe.js';
 
-export interface UserAlertEvent {
+interface UserAlertEventBase {
   readonly userId: string;
-  readonly kind: AlertKind;
   /** Stable per fact, not per tick (§5), e.g. `job:<job_id>:refund-delayed`. */
   readonly eventId: string;
   readonly recipient: string;
-  readonly context: AlertContext;
   /** Optional kinds the user has set; empty until the preferences store exists. */
   readonly prefs: Readonly<Partial<Record<AlertKind, boolean>>>;
   readonly deactivated: boolean;
@@ -48,6 +51,29 @@ export interface UserAlertEvent {
   readonly nowSeconds?: number | undefined;
 }
 
+export type UserAlertEvent =
+  | (UserAlertEventBase & {
+      readonly kind: 'approaching_critical';
+      readonly context: AlertContext & { readonly approaching: ApproachingObservation };
+    })
+  | (UserAlertEventBase & {
+      readonly kind: Exclude<AlertKind, 'approaching_critical'>;
+      readonly context: AlertContext;
+    });
+
+/**
+ * Compile-time witness: an `approaching_critical` event requires the
+ * observation. `pnpm typecheck` fails if that field becomes optional.
+ */
+type PlanApproachingRequiresObservation = Extract<
+  UserAlertEvent,
+  { kind: 'approaching_critical' }
+>['context'] extends { readonly approaching: ApproachingObservation }
+  ? true
+  : false;
+
+export const planApproachingRequiresObservation: PlanApproachingRequiresObservation = true;
+
 /** Event ids reach the outbox key and Resend's idempotency key, so they stay address-free. */
 export const MAX_EVENT_ID_LENGTH = 200;
 
@@ -64,7 +90,8 @@ export function eventIdProblem(eventId: string): EventIdProblem | null {
 
 export type PlanResult =
   | { readonly ok: true; readonly request: DispatchRequest }
-  | { readonly ok: false; readonly reason: 'invalid_event_id'; readonly problem: EventIdProblem };
+  | { readonly ok: false; readonly reason: 'invalid_event_id'; readonly problem: EventIdProblem }
+  | { readonly ok: false; readonly reason: 'missing_approaching' };
 
 async function contextFor(event: UserAlertEvent): Promise<AlertContext> {
   if (!canUnsubscribe(event.kind)) return event.context;
@@ -86,10 +113,7 @@ async function contextFor(event: UserAlertEvent): Promise<AlertContext> {
   };
 }
 
-export async function planUserAlert(event: UserAlertEvent): Promise<PlanResult> {
-  const problem = eventIdProblem(event.eventId);
-  if (problem) return { ok: false, reason: 'invalid_event_id', problem };
-  const email = renderAlertEmail(event.kind, await contextFor(event));
+function planned(event: UserAlertEvent, email: AlertEmail): PlanResult {
   return {
     ok: true,
     request: {
@@ -109,13 +133,26 @@ export async function planUserAlert(event: UserAlertEvent): Promise<PlanResult> 
   };
 }
 
+export async function planUserAlert(event: UserAlertEvent): Promise<PlanResult> {
+  const problem = eventIdProblem(event.eventId);
+  if (problem) return { ok: false, reason: 'invalid_event_id', problem };
+  const ctx = await contextFor(event);
+  if (event.kind === 'approaching_critical') {
+    // A missing observation must not become the copy's `warn`.
+    if (ctx.approaching === undefined) return { ok: false, reason: 'missing_approaching' };
+    return planned(event, renderAlertEmail(event.kind, { ...ctx, approaching: ctx.approaching }));
+  }
+  return planned(event, renderAlertEmail(event.kind, ctx));
+}
+
 export type PlannedDispatchOutcome =
   | DispatchOutcome
   | {
       readonly action: 'invalid';
       readonly reason: 'invalid_event_id';
       readonly problem: EventIdProblem;
-    };
+    }
+  | { readonly action: 'invalid'; readonly reason: 'missing_approaching' };
 
 /** Plan, then dispatch through the injected store and transport. */
 export async function dispatchUserAlertEvent(
@@ -124,6 +161,11 @@ export async function dispatchUserAlertEvent(
   deps: DispatchDeps,
 ): Promise<PlannedDispatchOutcome> {
   const plan = await planUserAlert(event);
-  if (!plan.ok) return { action: 'invalid', reason: plan.reason, problem: plan.problem };
+  if (!plan.ok) {
+    if (plan.reason === 'missing_approaching') {
+      return { action: 'invalid', reason: 'missing_approaching' };
+    }
+    return { action: 'invalid', reason: plan.reason, problem: plan.problem };
+  }
   return dispatchUserAlert(env, plan.request, deps);
 }

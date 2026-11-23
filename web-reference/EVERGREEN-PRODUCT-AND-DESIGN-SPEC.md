@@ -689,3 +689,20 @@ not wrong when taken; the build and the chain moved.*
 3. **An extension between two observations.** Proposed: draw the step at the transaction's ledger from its recorded before-and-after values; where those were not recorded, leave the two observations unconnected rather than draw a line that is not arithmetic.
 4. **Observations after an expiry**, when the entry is absent. Proposed: annotations on the permanent expiry marker, with their ledgers and evidence links — never points on the line, which ends at the expiry.
 5. **Provenance for engine steps.** Proposed: each engine step also names its trigger. `W3-D18-02a` ran on a local timer rather than the production scheduler, and its own record says so.
+
+## Amendment — 2026-11-08 — alert preferences (PH2-E2-06)
+
+The screen where a signed-in user chooses optional alert emails is specified
+in [`design-language/components.md`](design-language/components.md) under
+**Alert preferences**. That section is what WEBF implements. It is a
+`body.app` screen at `/dashboard/alerts/`, pine sidebar 264px, in the
+**Your account** group after Watchlist.
+
+Part Nine's "there is no stored user state" describes the sprint dashboard.
+Phase 2 stores an account. This screen reads that account. It does not move
+XLM, and the lead says so: "Signing in with email cannot move XLM."
+
+The route is a design-authority choice so WEBF has one page to build. The
+HTTP shape of the preference read and write is **undetermined**. It is not
+in `docs/API.md`. The questions for CEF are in that section. The reference
+render is `design-language/source/renders/screens/alert-preferences.png`.
