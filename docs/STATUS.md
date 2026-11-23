@@ -38,6 +38,10 @@
 
 ---
 
+## Current — PH2-E4-04 Stage 2, the money step, 2026-11-23
+
+`PH2-E4-04` stays `[~]`. Stage 2 is built on top of the #630 money path (with the #640 review fixes) and ships **dry-run**: `HOSTED_MODE=live` with `ENGINE_SECRET` is needed before anything is enqueued, signed or sent. `apps/scheduler/src/hosted-store.ts` enqueues one autopilot job per due item per 180-ledger window, resumes open jobs and saves state plus ledger rows in one transaction; `hosted-chain.ts` implements `HostedChain` (SEP-41 `transfer_from` on the native SAC, `ExtendFootprintTTL` with rent read from the meta's `rentFeeCharged`, refund by native payment) with the 0006 submitted-hash rule; `hosted-run.ts` caps a tick at 3 jobs and 300 s, and the tenant pass is cut at 120 s (DevOps, 2026-11-23). Tested on PGlite as `eg_scheduler` end to end with a fake chain; not yet run against testnet. Open before live: Fatih's retry margin, the engine key (`PH2-E4-03`), the Workers plan's CPU limit (DevOps checking), and 0016 applied. Notion sync pending for `PH2-E4-04`.
+
 ## Current — PH2-E4-02 money path, 2026-11-18
 
 `PH2-E4-02` is `[~]`. The draft on `cursor/e4-02-money-path-8791` (based on #629) adds migration **0016** `jobs.shortfall_stroops` and the hosted job path: preflight, one pull, extend with one transient retry, reconcile, refund from the engine pool. Dry-run submits nothing. Live is opt-in; the deployed scheduler does not attach it and holds no signer. A shortfall is the column, not a ledger row. `eg_scheduler` still cannot read `users.email`. Deferred: assembling the SEP-41 `transfer_from` and the extend envelope (the chain is a port; no new RPC is invented here), sending the user email and the P1 (the scheduler role cannot write `alert_outbox`), the retry-margin size (unset margin does not pull), and the treasury sweep (`PH2-E4-03`). 0016 is numbered after 0015 (#621) and does not read that file's tables. Not applied. Notion sync pending for `PH2-E4-02`.

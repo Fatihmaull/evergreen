@@ -28,7 +28,7 @@ const plan: TenantPlan = {
 describe('dryRunTenantPlans', () => {
   it('does not pass a pull estimate', async () => {
     const seen: TenantRunDeps[] = [];
-    await dryRunTenantPlans([plan], reader, 'tick-1', async (plans, deps) => {
+    await dryRunTenantPlans([plan], reader, 'tick-1', undefined, async (plans, deps) => {
       seen.push(deps);
       return { runId: deps.runId, tenants: [], warnings: [], plans };
     });
@@ -39,7 +39,7 @@ describe('dryRunTenantPlans', () => {
 
   it('hands the engine a dry-run config and never a secret', async () => {
     const modes: string[] = [];
-    await dryRunTenantPlans([plan], reader, 'tick-2', (plans, deps) =>
+    await dryRunTenantPlans([plan], reader, 'tick-2', undefined, (plans, deps) =>
       runTenantPlan(plans, {
         ...deps,
         engine: async (_reader, config: EvergreenConfig) => {

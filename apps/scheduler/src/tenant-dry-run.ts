@@ -14,10 +14,11 @@ export async function dryRunTenantPlans(
   plans: readonly TenantPlan[],
   reader: LedgerEntryReader,
   runId: string,
+  runDeadlineMs?: number,
   run: (
     plans: readonly TenantPlan[],
     deps: TenantRunDeps,
   ) => Promise<TenantRunReport> = runTenantPlan,
 ): Promise<TenantRunReport> {
-  return run(plans, { reader, runId });
+  return run(plans, { reader, runId, ...(runDeadlineMs === undefined ? {} : { runDeadlineMs }) });
 }
