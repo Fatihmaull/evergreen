@@ -149,6 +149,12 @@ describe('Stage 2 store as eg_scheduler', () => {
       [job!.id],
     );
     expect(String(balance[0]?.['unexplained'])).toBe('0');
+    const pre = await pg.query<{ preflight: Record<string, unknown> }>(
+      'SELECT preflight FROM jobs WHERE id = $1::uuid',
+      [job!.id],
+    );
+    expect(pre.rows[0]?.preflight).toMatchObject({ ok: true, rentStroops: '1000000' });
+    expect(typeof pre.rows[0]?.preflight['at']).toBe('string');
     const kinds = await asScheduler(
       'SELECT kind FROM fee_ledger WHERE job_id = $1::uuid ORDER BY id',
       [job!.id],
@@ -188,6 +194,48 @@ describe('Stage 2 store as eg_scheduler', () => {
     };
     await expect(txAsScheduler(saveStatements(next, [bad]))).rejects.toThrow();
     expect((await loadJob(asScheduler, job!.id)).status).toBe('queued');
+  });
+
+  it('a failed preflight records its reason on jobs.preflight', async () => {
+    // Its own job (another window), so the queued one the next test reads stays open.
+    const inserted = await pg.query<{ id: string }>(
+      `INSERT INTO jobs (user_id, network, contract_id, kind, payer_account, autopilot_window)
+       VALUES ($1::uuid, 'testnet', $2, 'autopilot', $3, 1) RETURNING id`,
+      [U, C, G],
+    );
+    const id = inserted.rows[0]?.id;
+    const job = { id: id! };
+    const chain: HostedChain = {
+      simulateRent: () => Promise.resolve(1_000_000n),
+      allowanceRemaining: () => Promise.resolve(0n),
+      balance: () => Promise.resolve(9_000_000n),
+      pull: () => Promise.reject(new Error('must not pull')),
+      extend: () => Promise.reject(new Error('must not extend')),
+      refund: () => Promise.reject(new Error('must not refund')),
+    };
+    const outcome = await runHostedJob({
+      mode: 'live',
+      retryMarginStroops: 10_000n,
+      chain,
+      budget: () => 'ok',
+      extendNowUsedToday: () => Promise.resolve(0),
+      load: () => loadJob(asScheduler, job!.id),
+      save: (next, rows) => txAsScheduler(saveStatements(next, rows)),
+    });
+    expect(outcome).toMatchObject({
+      status: 'preflight-failed',
+      preflightReason: 'allowance-short',
+    });
+    const row = await pg.query<{ status: string; preflight: Record<string, unknown> }>(
+      'SELECT status, preflight FROM jobs WHERE id = $1::uuid',
+      [job!.id],
+    );
+    expect(row.rows[0]?.status).toBe('preflight-failed');
+    expect(row.rows[0]?.preflight).toMatchObject({
+      ok: false,
+      reason: 'allowance-short',
+      rentStroops: '1000000',
+    });
   });
 
   it('records, reads and clears a submitted hash', async () => {
