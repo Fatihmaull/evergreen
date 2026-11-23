@@ -2,6 +2,9 @@
 import { describe, expect, test } from 'vitest';
 import {
   DEFAULT_EXTEND_TO_LEDGERS,
+  DEFAULT_THRESHOLD_LEDGERS,
+  parseLedgers,
+  settingsProblem,
   capContracts,
   capRows,
   capRowsHtml,
@@ -47,19 +50,55 @@ describe('the extend horizon of one pull', () => {
   });
 });
 
+describe('Act below and Extend to (#648)', () => {
+  test('an Off row starts at 17,280 and 518,400; an On row keeps its own', () => {
+    const [on, off] = capRows([onItem(B, ME, 120_960), offItem(A)], ME, B);
+    expect([on!.thresholdLedgers, on!.extendToLedgers]).toEqual([17_280, 120_960]);
+    expect([off!.thresholdLedgers, off!.extendToLedgers]).toEqual([
+      DEFAULT_THRESHOLD_LEDGERS,
+      DEFAULT_EXTEND_TO_LEDGERS,
+    ]);
+  });
+
+  test('only whole ledgers above zero parse; commas are allowed, nothing is coerced', () => {
+    expect(parseLedgers('518,400')).toBe(518_400);
+    expect(parseLedgers('0')).toBeUndefined();
+    expect(parseLedgers('1.5')).toBeUndefined();
+    expect(parseLedgers('')).toBeUndefined();
+  });
+
+  test('Extend to at or under Act below is refused and the row leaves the cap', () => {
+    const row: CapRow = {
+      item: offItem(A),
+      checked: true,
+      rent: { kind: 'ok', stroops: 1_000n, atLedger: 1 },
+      thresholdLedgers: 17_280,
+      extendToLedgers: 17_280,
+    };
+    expect(settingsProblem(row)).toBe('Extend to must be more than Act below.');
+    expect(capContracts([row], 2n)).toEqual([]);
+    expect(capRowsHtml([row])).toMatch(/data-cap-row="0"[^>]*disabled/);
+    expect(settingsProblem({ ...row, extendToLedgers: 17_281 })).toBeUndefined();
+    expect(settingsProblem({ ...row, thresholdLedgers: undefined })).toMatch(/whole numbers/);
+  });
+});
+
 describe('what enters the cap', () => {
+  const set = { thresholdLedgers: 17_280, extendToLedgers: 518_400 };
   const rows: CapRow[] = [
     {
       item: offItem(A),
       checked: true,
       rent: { kind: 'ok', stroops: 61_234n, atLedger: 5_400_000 },
+      ...set,
     },
     {
       item: offItem(B),
       checked: false,
       rent: { kind: 'ok', stroops: 48_903n, atLedger: 5_400_000 },
+      ...set,
     },
-    { item: offItem(C), checked: true, rent: { kind: 'failed' } },
+    { item: offItem(C), checked: true, rent: { kind: 'failed' }, ...set },
   ];
   test('only checked rows with a fully simulated rent, never a guess', () => {
     expect(capContracts(rows, 2n)).toEqual([{ simulatedRentStroops: 61_234n, hostedActions: 2n }]);

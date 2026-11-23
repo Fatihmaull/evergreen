@@ -21,10 +21,11 @@ import {
   capContracts,
   capRows,
   capRowsHtml,
-  extendToFor,
+  parseLedgers,
+  settingsProblem,
   type CapRow,
 } from '../lib/allowance-candidates';
-import { quoteRent, scanOne } from '../lib/evergreen';
+import { quoteRent, scanOne, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
 import type { WatchItem } from '../lib/watchlist-view';
 import { createApprover } from '../lib/allowance-approve';
@@ -206,31 +207,44 @@ async function loadCapRows(connected: string): Promise<void> {
   }
   rows = capRows(listed.data.items as WatchItem[], connected, forContract);
   out.innerHTML = capRowsHtml(rows);
-  await Promise.all(
-    rows.map(async (row, index) => {
-      let rent: CapRow['rent'];
-      try {
-        const keys = 'dataKeys' in row.item.scope ? row.item.scope.dataKeys : [];
-        const quote = await quoteRent(
-          await scanOne(row.item.contractId, keys),
-          extendToFor(row.item),
-        );
-        rent =
-          quote.excluded.length > 0
-            ? { kind: 'partial', excluded: quote.excluded.length }
-            : {
-                kind: 'ok',
-                stroops: BigInt(quote.totalRentStroops),
-                atLedger: quote.pricedAtLedger,
-              };
-      } catch {
-        rent = { kind: 'failed' };
-      }
-      rows[index] = { ...rows[index]!, rent };
-      out.innerHTML = capRowsHtml(rows);
-      estimate();
-    }),
-  );
+  await Promise.all(rows.map((_, index) => simulate(index)));
+}
+
+/** One scan per contract, kept, so changing Extend to re-prices without re-reading. */
+const scans = new Map<string, Promise<ScanResult>>();
+
+async function simulate(index: number): Promise<void> {
+  const row = rows[index];
+  if (row === undefined) return;
+  const extendTo = row.extendToLedgers;
+  if (settingsProblem(row) !== undefined || extendTo === undefined) {
+    $('cap-rows').innerHTML = capRowsHtml(rows);
+    estimate();
+    return;
+  }
+  rows[index] = { ...row, rent: { kind: 'simulating' } };
+  $('cap-rows').innerHTML = capRowsHtml(rows);
+  let rent: CapRow['rent'];
+  try {
+    const id = row.item.contractId;
+    if (!scans.has(id)) {
+      const keys = 'dataKeys' in row.item.scope ? row.item.scope.dataKeys : [];
+      scans.set(id, scanOne(id, keys));
+    }
+    const quote = await quoteRent(await scans.get(id)!, extendTo);
+    rent =
+      quote.excluded.length > 0
+        ? { kind: 'partial', excluded: quote.excluded.length }
+        : { kind: 'ok', stroops: BigInt(quote.totalRentStroops), atLedger: quote.pricedAtLedger };
+  } catch {
+    scans.delete(row.item.contractId);
+    rent = { kind: 'failed' };
+  }
+  // A newer Extend to may have been typed while this one was pricing.
+  if (rows[index]?.extendToLedgers !== extendTo) return;
+  rows[index] = { ...rows[index]!, rent };
+  $('cap-rows').innerHTML = capRowsHtml(rows);
+  estimate();
 }
 
 /** Runs on every change. Updating is not motion: the numbers replace. */
@@ -274,13 +288,33 @@ function estimate(): void {
 }
 
 $('cap-rows').addEventListener('change', (ev) => {
-  const box = ev.target;
-  if (!(box instanceof HTMLInputElement) || box.dataset.capRow === undefined) return;
-  const index = Number(box.dataset.capRow);
-  const row = rows[index];
-  if (row === undefined) return;
-  rows[index] = { ...row, checked: box.checked };
-  estimate();
+  const field = ev.target;
+  if (!(field instanceof HTMLInputElement)) return;
+  if (field.dataset.capRow !== undefined) {
+    const index = Number(field.dataset.capRow);
+    const row = rows[index];
+    if (row === undefined) return;
+    rows[index] = { ...row, checked: field.checked };
+    estimate();
+    return;
+  }
+  if (field.dataset.capThreshold !== undefined) {
+    const index = Number(field.dataset.capThreshold);
+    const row = rows[index];
+    if (row === undefined) return;
+    rows[index] = { ...row, thresholdLedgers: parseLedgers(field.value) };
+    // Act below does not change the rent of one extend, only whether the row is usable.
+    $('cap-rows').innerHTML = capRowsHtml(rows);
+    estimate();
+    return;
+  }
+  if (field.dataset.capExtendTo !== undefined) {
+    const index = Number(field.dataset.capExtendTo);
+    const row = rows[index];
+    if (row === undefined) return;
+    rows[index] = { ...row, extendToLedgers: parseLedgers(field.value) };
+    void simulate(index);
+  }
 });
 $('hosted-actions').addEventListener('input', estimate);
 $('rent-lines').addEventListener('input', estimate);
