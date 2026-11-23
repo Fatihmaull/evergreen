@@ -22,7 +22,7 @@ import type { ApiOutcome } from './api';
 import type { AutopilotOffOutcome, RemoveOutcome } from './watchlist';
 import { report, type EntryHealth, type ScanResult } from './evergreen';
 import { approxDate, esc, formatCount, stamp } from './format';
-import { bindingEntry, entryView } from './view';
+import { approxDateOfLedger, bindingEntry, entryView } from './view';
 
 /** §6, verbatim in shape. Only the fields this screen renders are relied on. */
 export interface WatchItem {
@@ -231,24 +231,55 @@ const short = (g: string): string => `${g.slice(0, 6)}…${g.slice(-6)}`;
  */
 export interface AutopilotContext {
   readonly linkedWallets?: readonly string[];
+  /**
+   * The chain's answer for each payer wallet, keyed by account. Absent until
+   * the page has read it. The page converts the chain read to this shape so
+   * this module stays free of the Stellar SDK (it is in the Overview bundle).
+   */
+  readonly allowances?: ReadonlyMap<string, PayerAllowance>;
 }
+
+/** One payer's allowance to the engine, as the watchlist row needs it. */
+export type PayerAllowance =
+  | {
+      readonly kind: 'live';
+      readonly liveUntilLedger: number;
+      readonly observedAtLedger: number;
+    }
+  /** The chain reads zero, or the expiry is behind the read. */
+  | { readonly kind: 'missing' }
+  | { readonly kind: 'unread' };
 
 /** After a successful `Turn off` (components.md § A). */
 export const AUTOPILOT_OFF_TEXT =
   'Autopilot is off for this contract. Your allowance is unchanged; revoke it on <a href="/allowance/">the Allowance page</a>.';
 
+const UNDETERMINED =
+  '<span class="chip undetermined"><span class="shape"></span>undetermined</span>';
+
 /**
- * TODO(PH2-E3-05, once ENGINE_SPENDER is published): read the payer's
- * allowance and render components.md § A instead of this constant: live →
- * "allowance until ledger …"; zero → the warning chip "allowance missing" with
- * "Approve an allowance →" to /allowance/?for=…; read failed → undetermined.
- *
- * The allowance part of an `On` row. The engine's spender is unpublished
- * (`ENGINE_SPENDER`, PH2-E4-03), so no allowance can be read for it yet: the
- * part is undetermined, never healthy, and says why.
+ * The allowance part of an `On` row (components.md § A). Live: until which
+ * ledger. Zero: the warning chip and the way to approve, same words as the
+ * `allowance_missing` alert. Not read (yet, or the read failed): undetermined,
+ * never healthy. An allowance is a permission, so there is no healthy chip.
  */
-const ALLOWANCE_NOT_READ =
-  '<br /><span class="chip undetermined"><span class="shape"></span>undetermined</span> <span class="small muted">Allowance not read: the engine\'s spender address is not published yet.</span>';
+export function allowancePartHtml(
+  read: PayerAllowance | undefined,
+  contractId: string,
+  now = new Date(),
+): string {
+  if (read === undefined)
+    return `<br />${UNDETERMINED} <span class="small muted">Allowance not read yet.</span>`;
+  if (read.kind === 'unread')
+    return `<br />${UNDETERMINED} <span class="small muted">Allowance not read: the chain did not answer.</span>`;
+  if (read.kind === 'missing')
+    return `<br /><span class="chip warning"><span class="shape"></span>allowance missing</span> <a class="small" href="/allowance/?for=${encodeURIComponent(
+      contractId,
+    )}">Approve an allowance →</a>`;
+  return `<br /><span class="small muted">allowance until ledger <span class="mono">${esc(
+    formatCount(read.liveUntilLedger),
+  )}</span> (${esc(approxDateOfLedger(read.liveUntilLedger, read.observedAtLedger, now))})</span>`;
+}
 
 /**
  * The autopilot cell (components.md § A, PH2-E3-05). It stays a cell: the
@@ -284,8 +315,12 @@ export function autopilotCell(item: WatchItem, ctx: AutopilotContext = {}): stri
     item.lastObservation === null
       ? '<br /><span class="small muted">No engine check of this contract is stored yet, so autopilot has not decided anything for it.</span>'
       : '';
+  const allowance =
+    typeof a.payerWallet === 'string'
+      ? allowancePartHtml(ctx.allowances?.get(a.payerWallet), item.contractId)
+      : `<br />${UNDETERMINED} <span class="small muted">No payer wallet is stored, so no allowance can be read.</span>`;
   const off = `<br /><button type="button" class="secondary" data-autopilot-off ${ids}>Turn off</button> ${status}`;
-  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${ALLOWANCE_NOT_READ}${pending}${off}`;
+  return `<span class="small">On</span>${parts.length ? ` <span class="small muted">${parts.join(' · ')}</span>` : ''}${allowance}${pending}${off}`;
 }
 
 export function bindingCell(b: Binding, source?: 'engine' | 'browser'): string {
