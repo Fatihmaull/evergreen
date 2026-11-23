@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -17,6 +17,11 @@ import { describe, expect, it } from 'vitest';
  */
 
 const BIN = new URL('../dist/bin.js', import.meta.url).pathname;
+const PACKAGE_VERSION = (
+  JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+    version: string;
+  }
+).version;
 
 function run(args: string[]): { stdout: string; stderr: string; status: number } {
   try {
@@ -38,7 +43,14 @@ describe.skipIf(!existsSync(BIN))('the built artifact runs', () => {
     // `dist`, or an ESM specifier that only works under the bundler.
     const { stdout, status } = run(['--help']);
     expect(status).toBe(0);
-    expect(stdout).toContain('usage: evergreen scan');
+    expect(stdout).toContain('usage: evergreen <command>');
+  });
+
+  it('prints the version from the shipped package.json', () => {
+    const { stdout, status } = run(['--version']);
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe(PACKAGE_VERSION);
+    expect(run(['--help']).stdout.split('\n')[0]).toContain(`evergreen ${PACKAGE_VERSION} `);
   });
 
   it('rejects a malformed contract ID without touching the network', () => {
@@ -56,7 +68,7 @@ describe.skipIf(!existsSync(BIN))('the built artifact runs', () => {
 
   it('documents the four health states in its own help output', () => {
     // Keeps the shipped help honest about the states the shipped code emits.
-    const { stdout } = run(['--help']);
+    const { stdout } = run(['scan', '--help']);
     for (const state of ['HEALTHY', 'WARNING', 'CRITICAL', 'UNKNOWN']) {
       expect(stdout).toContain(state);
     }
