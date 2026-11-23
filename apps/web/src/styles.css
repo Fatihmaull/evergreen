@@ -2507,3 +2507,74 @@ body.app .alerts .mark-incomplete {
   outline: 1px solid var(--rule);
   vertical-align: middle;
 }
+
+/* /allowance/ (PH2-E3-05, components.md § "B, C, D"). The standing line is one
+   sentence and at most one chip; the review panel is label-over-value lines on
+   hairlines, and its cap is the page's only serif number. */
+.standing-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+  max-width: 62ch;
+  margin: 0;
+  color: var(--ink-2);
+}
+.review-lines {
+  margin: 0;
+  display: grid;
+}
+.review-lines > div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+}
+.review-lines dt {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.review-lines dd {
+  margin: 0;
+  min-width: 0;
+}
+.review-lines dd.lines {
+  display: grid;
+  gap: 4px;
+}
+.cap-figure {
+  font: 400 20px/1.3 var(--serif);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.cap-stroops {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.review-lines .wrap {
+  overflow-wrap: anywhere;
+}
+.crit-ink {
+  color: var(--crit-ink);
+}
+/* Step D is a `.stack` (display: grid), which beats the UA's [hidden] rule.
+   It must stay out of the page until a matching read-back (DES, #654). */
+#autopilot-step[hidden] {
+  display: none;
+}
+#hosted-actions {
+  max-width: 200px;
+}
+.stop-section {
+  border-top: 1px solid var(--rule);
+  padding-top: 24px;
+}
+@media (max-width: 600px) {
+  .review-lines > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #approve-button {
+    width: 100%;
+  }
+}
