@@ -62,7 +62,7 @@ describe('/docs/account/', () => {
     const allowance = readFileSync(join(ROOT, 'apps/web/src/pages/allowance.mjs'), 'utf8');
     expect(allowance).toMatch(/id="revoke-button"[^>]*disabled>Revoke allowance</);
     expect(page).toContain('Revoke allowance');
-    expect(page).toContain('stays disabled');
+    expect(page).toContain('stays disabled until a wallet is connected');
   });
 });
 
@@ -130,6 +130,8 @@ describe('the two statements that go stale', () => {
     expect(readFileSync(join(ROOT, 'apps/web/src/lib/allowance.ts'), 'utf8')).toContain(
       "nativeToScVal(0n, { type: 'i128' })",
     );
-    expect(page).toContain('No control on this site turns autopilot on');
+    expect(page).toContain(
+      'No control on this site turns autopilot on except the last step of the allowance page',
+    );
   });
 });

@@ -2,13 +2,14 @@
  * The allowance screen's chain side (PH2-E3-05): read the native-XLM SAC
  * allowance a wallet has granted the engine, and revoke it.
  *
- * THE SPENDER IS NOT PUBLISHED YET. `allowance(from, spender)` and
- * `approve(from, spender, 0, 0)` both need the engine's public account, and it
- * comes from the engine key work (PH2-E4-01, PH2-E4-03), which has not
- * published one (Rakha, 2026-10-31). `ENGINE_SPENDER` below is the ONE place it
- * is configured, and it stays `undefined` until CER publishes it. While it is
- * unset this module makes no chain call at all and refuses to build a revoke:
- * a revoke aimed at the wrong spender would leave the real allowance in place
+ * THE SPENDER IS THE ENGINE'S TESTNET ACCOUNT. `allowance(from, spender)` and
+ * `approve(from, spender, amount, liveUntil)` both need the engine's public
+ * account. Fatih created it on 2026-11-23 (PH2-E4-03), separate from the
+ * treasury, and it is the account the preview scheduler signs as.
+ * `ENGINE_SPENDER` below is the ONE place it is configured, and only a testnet
+ * build gets it: any other network resolves to `undefined`, and then this
+ * module makes no chain call and refuses to build a revoke or an approve. A
+ * revoke aimed at the wrong spender would leave the real allowance in place
  * while the screen said it was gone. Never fill it with a spike address.
  *
  * THE CHAIN READ STAYS UNDETERMINED. The chain reads zero (or no entry)
@@ -35,11 +36,31 @@ import { verifiedServer } from './evergreen';
 import { NETWORK } from './network';
 
 /**
- * The engine's public account, the allowance's spender. UNSET until the engine
- * key work (PH2-E4-01 / PH2-E4-03) publishes it. This is the single
- * configuration point; nothing else in `apps/web` names a spender.
+ * The engine's testnet account (Fatih, 2026-11-23, PH2-E4-03). A public key,
+ * not a secret: the scheduler holds the matching `ENGINE_SECRET`.
  */
-export const ENGINE_SPENDER: string | undefined = undefined;
+export const TESTNET_ENGINE_SPENDER = 'GBNCEF5FV44CFHVFGJKRG7SK3QPJYFI34J7PPRHBCHWZYCU5VCOCJ6AM';
+
+/**
+ * The allowance's spender for this build. Testnet only until DoD-2: any other
+ * network has no published engine account, so it is unset there. This is the
+ * single configuration point; nothing else in `apps/web` names a spender.
+ */
+export const ENGINE_SPENDER: string | undefined =
+  NETWORK.name === 'testnet' ? TESTNET_ENGINE_SPENDER : undefined;
+
+/**
+ * The spender a caller asked for. A caller that passes `spender` at all, even
+ * as `undefined`, gets exactly that; only a caller that leaves it out gets
+ * `ENGINE_SPENDER`. Tests use the explicit `undefined` to exercise the unset path.
+ */
+export function spenderFrom(options: {
+  readonly spender?: string | undefined;
+}): string | undefined {
+  return Object.prototype.hasOwnProperty.call(options, 'spender')
+    ? options.spender
+    : ENGINE_SPENDER;
+}
 
 /** The native XLM SAC on the network this build is for, derived, never typed. */
 export function nativeSac(): string {
@@ -103,8 +124,10 @@ const message = (error: unknown) => (error instanceof Error ? error.message : St
 
 export async function readAllowance(
   from: string,
-  { spender = ENGINE_SPENDER, chain }: { spender?: string; chain?: AllowanceChain } = {},
+  options: { spender?: string | undefined; chain?: AllowanceChain } = {},
 ): Promise<ReadResult> {
+  const spender = spenderFrom(options);
+  const { chain } = options;
   if (spender === undefined) return { kind: 'spender-unset' };
   try {
     return {
