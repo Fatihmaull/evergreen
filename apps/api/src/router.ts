@@ -2,7 +2,8 @@
  * The API Worker's router (docs/API.md §1–§2). Base path `/api/v1`, JSON in
  * and out. Health, the auth group (`PH2-E2-04`, docs/API.md §4), alert preferences
  * (`PH2-E2-06`, §6a), the unauthenticated one-click unsubscribe (RFC 8058, §6a),
- * the watchlist group (`PH2-E2-05`, §6) and a JSON 404.
+ * the watchlist group (`PH2-E2-05`, §6), the job and fee-ledger reads
+ * (`PH2-E2-08`, §7) and a JSON 404.
  */
 import {
   authDepsFor,
@@ -25,6 +26,8 @@ import { alertUnsubscribeMethods, handleAlertUnsubscribe } from './alerts/unsubs
 import { watchlistDepsFor, type WatchlistMountOptions } from './watchlist/mount.js';
 import { handleWatchlist, watchlistMethods } from './watchlist/routes.js';
 import { WatchItemCapReached } from './watchlist/store.js';
+import { jobsDepsFor, type JobsMountOptions } from './jobs/mount.js';
+import { handleJobs, jobsMethods } from './jobs/routes.js';
 
 export const API_BASE = '/api/v1';
 export const API_VERSION = 'v1';
@@ -138,6 +141,7 @@ function logSendFailure(
 }
 
 export type HandleOptions = WatchlistMountOptions &
+  JobsMountOptions &
   AlertMountOptions & {
     /**
      * Keeps work alive after the response. The sign-in F16 operator email uses
@@ -260,6 +264,29 @@ export async function handle(
         }
         // The database did not answer: absence is not health, and the error names nothing (§9).
         return apiError('UPSTREAM_UNAVAILABLE', 'The watchlist is not available right now.', 503);
+      }
+    }
+  }
+  if (pathname.startsWith(`${API_BASE}/`)) {
+    const path = pathname.slice(API_BASE.length);
+    // Job history and the fee ledger (PH2-E2-08, §7): reads only. POST /jobs
+    // is not built until its design is agreed, so /jobs allows GET alone.
+    const allowed = jobsMethods(path);
+    if (allowed !== undefined) {
+      if (!allowed.includes(request.method.toUpperCase())) {
+        return apiError('METHOD_NOT_ALLOWED', `Use ${allowed.join(' or ')}.`, 405, {
+          headers: { allow: allowed.join(', ') },
+        });
+      }
+      const deps = jobsDepsFor(env, options);
+      if (deps === undefined) {
+        return apiError('UPSTREAM_UNAVAILABLE', 'Job history is not available right now.', 503);
+      }
+      try {
+        return (await handleJobs(request, path, deps)) ?? notFound();
+      } catch {
+        // The database did not answer: absence is not health, and the error names nothing (§9).
+        return apiError('UPSTREAM_UNAVAILABLE', 'Job history is not available right now.', 503);
       }
     }
   }
