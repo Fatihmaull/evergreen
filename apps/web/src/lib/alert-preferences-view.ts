@@ -150,29 +150,40 @@ function switchHtml(kind: OptionalKind, enabled: boolean, title: string): string
   return `<button type="button" class="alert-switch" role="switch" aria-checked="${enabled ? 'true' : 'false'}" aria-label="${esc(title)}" data-kind="${kind}"><span class="track" aria-hidden="true"><span class="knob"></span></span></button>`;
 }
 
+/** The short "when" beside each optional switch; the full rule is under "How alerts work". */
+const WHEN: Readonly<Record<OptionalKind, string>> = {
+  allowance_expiring: 'at 30, 7 and 1 days',
+  approaching_critical: 'at 1 day, autopilot off',
+  extend_succeeded: 'one email per extend',
+};
+
 function optionalRow(kind: OptionalKind, item: PreferenceItem, watchlist: WatchlistFact): string {
   const title = TITLES[kind];
   const extra =
     kind === 'approaching_critical'
-      ? `<p class="fine">${CHIP.warning} ${CHIP.critical} Those marks are the email's severity, not this contract's health. One choice for every persistent entry you watch. There is no per-contract switch.</p><div data-watchlist-note>${watchlistNoteHtml(watchlist)}</div>`
+      ? `<div class="pref-extra" data-watchlist-note>${watchlistNoteHtml(watchlist)}</div>`
       : '';
-  return `<div class="pref-row" data-kind="${kind}">
+  return `<li class="pref-row" data-kind="${kind}">
+      <span class="pref-title">${esc(title)}</span>
+      <span class="note">${WHEN[kind]}</span>
+      <span class="switch-word" data-word data-on="${item.enabled ? 'true' : 'false'}">${item.enabled ? 'on' : 'off'}</span>
       ${switchHtml(kind, item.enabled, title)}
-      <div class="pref-copy">
-        <p class="pref-title">${esc(title)} <span class="switch-word" data-word data-on="${item.enabled ? 'true' : 'false'}">${item.enabled ? 'on' : 'off'}</span></p>
-        <p class="fine">${LEADS[item.kind]}</p>
-        ${extra}
-        <p class="fine" data-status></p>
-      </div>
-    </div>`;
+      <span class="note pref-status" data-status></span>
+      ${extra}
+    </li>`;
 }
 
 function requiredRow(item: PreferenceItem): string {
   const tone = REQUIRED_TONE[item.kind] ?? 'warning';
-  return `<div class="req-row" data-kind="${item.kind}">
-      <p class="pref-title">${CHIP[tone]} ${esc(TITLES[item.kind])}</p>
-      <p class="fine">${LEADS[item.kind]}</p>
-    </div>`;
+  return `<li class="req-row" data-kind="${item.kind}">${CHIP[tone]} <span>${esc(TITLES[item.kind])}</span></li>`;
+}
+
+function leadHtml(kind: AlertKindName): string {
+  const marks =
+    kind === 'approaching_critical'
+      ? ` ${CHIP.warning} ${CHIP.critical} Those marks are the email's severity, not this contract's health. One choice for every persistent entry you watch. There is no per-contract switch.`
+      : '';
+  return `<div><dt>${esc(TITLES[kind])}</dt><dd>${LEADS[kind]}${marks}</dd></div>`;
 }
 
 function byKind(items: readonly PreferenceItem[]): ReadonlyMap<AlertKindName, PreferenceItem> {
@@ -212,26 +223,31 @@ export function alertsHtml(
   );
   const required = REQUIRED_ORDER.map((kind) => requiredRow(items.get(kind) as PreferenceItem));
 
-  return `<div class="panel note">
-      <h2>Email</h2>
-      <p class="field-label">To</p>
-      ${emailHtml(read.email, verification)}
-      ${sendingHtml(sending)}
-      <p class="fine">Which address a message would come from is undetermined.</p>
-      <p class="fine">Email is the channel. No other channel is on this page.</p>
-    </div>
-    <section>
-      <h2>Optional</h2>
-      <p class="fine">On unless you turn one off. A missing saved choice means on.</p>
-      ${optional.join('')}
+  return `<dl class="kv wide-kv">
+      <div><dt>Sent to</dt><dd>${read.email === null ? CHIP.undetermined : `<span class="mono email-to">${esc(read.email)}</span>`} · <a href="/login/">account</a></dd></div>
+    </dl>
+    <section class="block" aria-labelledby="opt-h">
+      <div class="block-head"><h2 id="opt-h">You choose</h2></div>
+      <p class="note">On unless you turn one off. A missing saved choice means on.</p>
+      <ul class="toggles">${optional.join('')}</ul>
     </section>
-    <section>
-      <h2>Required</h2>
-      <p class="fine">These alerts are required for autopilot users and cannot be turned off. The mark is the email's severity, not a contract's health.</p>
-      ${required.join('')}
+    <section class="block" aria-labelledby="req-h">
+      <div class="block-head"><h2 id="req-h">Always sent</h2></div>
+      <p class="note">These alerts are required for autopilot users and cannot be turned off. The mark is the email's severity, not a contract's health.</p>
+      <ul class="toggles fixed">${required.join('')}</ul>
     </section>
-    <p class="fine">At most 5 optional emails are sent in 24 hours. Required emails are not counted in that 5.</p>
-    <p class="fine">No alert email is not health. It can mean nothing happened, or that sending did not.</p>
-    <p class="fine">A pull whose outcome is still unknown, and an extend that fails only for a while, have no email of their own. You hear the final outcome: the extend succeeded, the whole pull is being refunded, or the refund is delayed.</p>
-    <p class="fine">How often a saved choice is checked for a send is undetermined. This page only stores the choice. It does not send mail.</p>`;
+    <details class="block alerts-how">
+      <summary>How alerts work</summary>
+      <div class="stack">
+        ${emailHtml(read.email, verification)}
+        ${sendingHtml(sending)}
+        <p class="fine">Which address a message would come from is undetermined.</p>
+        <p class="fine">Email is the channel. No other channel is on this page.</p>
+        <dl class="kv">${[...OPTIONAL_ORDER, ...REQUIRED_ORDER].map(leadHtml).join('')}</dl>
+        <p class="fine">At most 5 optional emails are sent in 24 hours. Required emails are not counted in that 5.</p>
+        <p class="fine">No alert email is not health. It can mean nothing happened, or that sending did not.</p>
+        <p class="fine">A pull whose outcome is still unknown, and an extend that fails only for a while, have no email of their own. You hear the final outcome: the extend succeeded, the whole pull is being refunded, or the refund is delayed.</p>
+        <p class="fine">How often a saved choice is checked for a send is undetermined. This page only stores the choice. It does not send mail.</p>
+      </div>
+    </details>`;
 }

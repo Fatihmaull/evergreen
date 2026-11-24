@@ -7,8 +7,15 @@ export const meta = {
   eyebrow: 'Settings',
   heading: 'Alerts',
   script: '/assets/alerts.js',
+  bare: true,
 };
 
 export function render() {
-  return `<section class="alerts" id="alerts" aria-live="polite"><p class="fine">reading…</p><noscript><p class="muted">This page needs JavaScript to ask the Evergreen API.</p></noscript></section>`;
+  return `<div class="ov-head">
+      <div>
+        <p class="eyebrow">Settings</p>
+        <h1>Alerts</h1>
+      </div>
+    </div>
+    <div class="alerts stack" id="alerts" aria-live="polite"><p class="fine">reading…</p><noscript><p class="muted">This page needs JavaScript to ask the Evergreen API.</p></noscript></div>`;
 }
