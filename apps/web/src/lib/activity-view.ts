@@ -190,7 +190,7 @@ export function listHtml(
           : `<td class="num mono hide-m">${esc(n(v))}</td>`;
       return `<tr data-open="${esc(j.id)}" tabindex="0"${j.id === openId ? ' class="open" aria-current="true"' : ''}>
         <td class="mono muted-cell nowrap">${esc(when(j.createdAt))}</td>
-        <td class="nowrap">${esc(nameOf(labels, j.contractId))}</td>
+        <td class="nowrap clip">${esc(nameOf(labels, j.contractId))}</td>
         <td>${EVENT[j.kind]}${
           j.status === 'extended' ? '' : `<span class="only-m"><br />${statusHtml(j.status)}</span>`
         }</td>

@@ -3771,6 +3771,12 @@ body.panel-open #ac-facts {
   table.list .only-m {
     display: inline;
   }
+  /* Long names end in an ellipsis rather than pushing the page wider than the phone. */
+  body.app table.list td.clip {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 /* Activity panel steps: a narrower label column so "charged 141,960" fits beside its tx link. */
 #side-panel .steps li {
