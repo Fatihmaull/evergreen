@@ -8,6 +8,7 @@
  * screen would not. An undetermined contract is never shown with a figure,
  * and a value with no source yet says "not yet available", never zero.
  */
+import { extendNowPanelHtml } from './extend-now';
 import { approxDate, approxDateShort, esc, formatCount, short, stamp } from './format';
 import { approxDateOfLedger } from './view';
 import { orderRows, type Row } from './watchlist-view';
@@ -257,7 +258,7 @@ export function filtersHtml(rows: readonly Row[], active: StateFilter): string {
 const kv = (pairs: readonly (readonly [string, string])[]): string =>
   `<dl class="kv">${pairs.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 
-/** The side panel for one contract. No Extend now: `POST /jobs` is not built. */
+/** The side panel for one contract. Extend now is `extend-now.ts`'s block, under Autopilot. */
 export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): string {
   const { item } = r;
   const obs = item.lastObservation;
@@ -335,6 +336,7 @@ export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): 
     <p class="panel-h">Autopilot</p>
     ${kv(ap)}
     ${actions}
+    ${extendNowPanelHtml(r)}
     <p class="panel-h">Last runs</p>
     <p class="note unavailable">${NOT_YET_AVAILABLE}</p>
     <p class="panel-links">${details}<button type="button" class="linkish" data-remove="${esc(

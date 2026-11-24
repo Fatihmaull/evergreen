@@ -15,6 +15,7 @@ import {
   panelHtml,
   type StateFilter,
 } from '../lib/overview-view';
+import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
@@ -49,6 +50,29 @@ function render(): void {
   renderList();
   panel.render();
 }
+
+const bumpUsed = (id: string): void => {
+  items = items.map((i) =>
+    i.contractId === id && i.extendNow
+      ? {
+          ...i,
+          extendNow: {
+            ...i.extendNow,
+            usedToday: i.extendNow.usedToday + 1,
+            resetsAt: new Date(Date.now() + 86_400_000).toISOString(),
+          },
+        }
+      : i,
+  );
+};
+
+mountExtendNow({
+  rows,
+  queued: (id) => {
+    bumpUsed(id);
+    render();
+  },
+});
 
 const panel = mountPanel({
   rows,

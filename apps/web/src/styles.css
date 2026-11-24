@@ -3783,3 +3783,56 @@ body.panel-open #ac-facts {
   grid-template-columns: 84px minmax(0, 1fr) auto;
   column-gap: 10px;
 }
+
+/* Extend now (option A). A native dialog: the confirmation is a decision, so
+   it takes focus and Escape cancels. No slide, no fade. */
+dialog.extend-now {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid var(--rule-strong);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+dialog.extend-now::backdrop {
+  background: rgba(15, 15, 15, 0.32);
+}
+
+dialog.extend-now > div {
+  display: grid;
+  gap: 16px;
+}
+
+dialog.extend-now h2 {
+  margin: 0;
+  font: 400 var(--step-2) / 1.15 var(--serif);
+  overflow-wrap: anywhere;
+}
+
+dialog.extend-now p {
+  margin: 0;
+}
+
+dialog.extend-now .kv > div {
+  grid-template-columns: 120px minmax(0, 1fr);
+}
+
+dialog.extend-now .kv .total {
+  font-weight: 600;
+  border-top-color: var(--rule-strong);
+}
+
+.warn-line {
+  color: var(--warn-ink);
+}
+
+@media (max-width: 480px) {
+  dialog.extend-now .kv > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
