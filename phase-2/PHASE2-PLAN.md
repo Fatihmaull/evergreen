@@ -46,6 +46,10 @@ Met when:
 
 **The window.** 14 days, starting at the first real autopilot extend: a job that pulls from a user's allowance and lands an `extendTTL` on testnet. It does not wait for the rest of DoD-1, so recruiting users runs alongside it. **A testnet reset excludes the affected days from the count** instead of restarting the window; the window ends once 14 unaffected days are counted.
 
+**Window start, decided by Fatih on 2026-11-24:** the window started at **2026-11-23 13:30 UTC (20:30 WIB)**, the first real autopilot extend on preview testnet (job `15f87fd6-2860-42cd-89ae-427d2bf68962`, autopilot window 32685: one allowance pull, `extendTTL` landed, margin refunded, fee ledger balanced). It ends around **2026-12-07**, later by one day for each day excluded by a testnet reset.
+
+**Where it is measured: preview.** DoD-2's metrics are read from the preview environment (testnet, `HOSTED_MODE=live`), not production, which stays dry-run until DoD-2. From the window start, **every preview job counts**: each job that fails, is refunded, is subsidised (`fee_ledger_job_subsidy`), or leaves the float above its cap counts against the window. There is no allow-list of test or guinea-pig jobs.
+
 Measured over the window:
 - zero missed protections (no watched entry archived while its allowance was valid and funded);
 - ≥99% of autopilot jobs succeed and 100% of pulls whose extend finally failed are refunded from the engine pool;

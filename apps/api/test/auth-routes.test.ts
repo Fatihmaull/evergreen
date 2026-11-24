@@ -187,6 +187,36 @@ describe('wallet linking (SEP-10)', () => {
     });
   });
 
+  it('from an extra origin: CSRF passes and the challenge names that host', async () => {
+    const extra = 'https://revamp-dashboard.example.test';
+    deps = { ...deps, extraOrigins: [extra] };
+    const s = await signIn();
+    const kp = Keypair.random();
+    const chRes = await call('POST', '/wallets/challenge', {
+      ...s,
+      origin: extra,
+      body: { account: kp.publicKey() },
+    });
+    expect(chRes.status).toBe(200);
+    const ch = (await chRes.json()) as { challengeXdr: string };
+    const tx = TransactionBuilder.fromXDR(ch.challengeXdr, Networks.TESTNET);
+    expect(JSON.stringify(tx.operations[0])).toContain('revamp-dashboard.example.test auth');
+    tx.sign(kp);
+    const res = await call('POST', '/wallets', {
+      ...s,
+      origin: extra,
+      body: { challengeXdr: tx.toXDR() },
+    });
+    expect(res.status).toBe(201);
+    // An origin not on the list is still refused.
+    const refused = await call('POST', '/wallets/challenge', {
+      ...s,
+      origin: 'https://other.example.test',
+      body: { account: kp.publicKey() },
+    });
+    expect(refused.status).toBe(403);
+  });
+
   it('refuses a challenge the wallet did not sign', async () => {
     const s = await signIn();
     const ch = (await (

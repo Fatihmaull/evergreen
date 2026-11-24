@@ -6,6 +6,7 @@
 //   CHALLENGE_SIGNING_KEY  S… seed of the unfunded SEP-10 challenge-signing key
 // Plain vars auth also needs (not secret):
 //   DASHBOARD_ORIGIN  set below per environment (one exact origin, no wildcard)
+//   DASHBOARD_EXTRA_ORIGINS  optional, preview only (exact origins, comma-separated)
 //   EMAIL_FROM        alerts@mail.evergreenstellar.biz.id on both environments
 //                     (Resend domain mail.evergreenstellar.biz.id, verified)
 // Until all of these are set, the auth routes answer 503 UPSTREAM_UNAVAILABLE.
@@ -45,6 +46,10 @@
     "THRESHOLD_FLOOR_LEDGERS": "4329",
     "DASHBOARD_ORIGIN": "https://evergreen-stellar.pages.dev",
     "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
+    // Extend now (POST /jobs): OFF in production until DoD-2 ends (Fatih, 2026-11-24).
+    // Only the exact string "true" turns it on.
+    "EXTEND_NOW_ENABLED": "false",
+    "EXTEND_NOW_PER_USER_CONTRACT_PER_DAY": "1",
   },
   "env": {
     "preview": {
@@ -68,7 +73,16 @@
         // preview accepts and refuses what production will.
         "THRESHOLD_FLOOR_LEDGERS": "4329",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
+        // Extra exact origins CSRF accepts besides DASHBOARD_ORIGIN (comma-separated, no
+        // wildcard, no path). Preview only: the dashboard revamp branch (Fatih, 2026-11-24).
+        // Production leaves it unset.
+        "DASHBOARD_EXTRA_ORIGINS": "https://revamp-dashboard.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
+        // Extend now on preview testnet (Fatih, 2026-11-24, option A): queues an extend-now job
+        // that the hosted engine runs through the autopilot money path. 1 per (user, contract)
+        // per rolling 24 h, the same as core's EXTEND_NOW_DAILY_LIMIT.
+        "EXTEND_NOW_ENABLED": "true",
+        "EXTEND_NOW_PER_USER_CONTRACT_PER_DAY": "1",
       },
     },
   },

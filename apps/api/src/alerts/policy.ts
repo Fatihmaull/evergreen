@@ -45,7 +45,8 @@ export type AlertKind =
   | 'testnet_reset'
   | 'restore_lost_changes'
   | 'approaching_critical'
-  | 'extend_succeeded';
+  | 'extend_succeeded'
+  | 'extend_now_requested';
 
 export type AlertClass = 'required' | 'optional';
 
@@ -68,6 +69,9 @@ export const ALERT_SPECS: Readonly<Record<AlertKind, AlertSpec>> = {
   approaching_critical: { mode: null, class: 'optional', defaultOn: true },
   // Default ON decided by Tih, 2026-10-29; still optional (§3).
   extend_succeeded: { mode: null, class: 'optional', defaultOn: true },
+  // Fatih, 2026-11-24: every Extend now is announced (docs/API.md §7). Required,
+  // because a session takeover must not be able to silence it.
+  extend_now_requested: { mode: null, class: 'required', defaultOn: true },
 };
 
 export const isRequired = (kind: AlertKind): boolean => ALERT_SPECS[kind].class === 'required';

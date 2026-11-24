@@ -10,6 +10,7 @@ import { apiRequest } from '../lib/api';
 import { isValidContractId, scanOne, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
 import { factsHtml, listHtml, nextHtml, panelHtml, type AllowanceFact } from '../lib/overview-view';
+import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
 import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
@@ -21,6 +22,29 @@ const scans = new Map<string, ScanResult>();
 let allowance: AllowanceFact = { kind: 'reading' };
 
 const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
+
+const bumpUsed = (id: string): void => {
+  items = items.map((i) =>
+    i.contractId === id && i.extendNow
+      ? {
+          ...i,
+          extendNow: {
+            ...i.extendNow,
+            usedToday: i.extendNow.usedToday + 1,
+            resetsAt: new Date(Date.now() + 86_400_000).toISOString(),
+          },
+        }
+      : i,
+  );
+};
+
+mountExtendNow({
+  rows,
+  queued: (id) => {
+    bumpUsed(id);
+    renderSummary();
+  },
+});
 
 const panel = mountPanel({
   rows,

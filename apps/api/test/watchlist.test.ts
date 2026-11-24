@@ -454,7 +454,8 @@ describe('GET /watchlist', () => {
     await add(s, C1);
     const [item] = await listOf(s);
     expect(item!.extendNow).toEqual({
-      limitPerDay: 3,
+      enabled: false,
+      limitPerDay: 1,
       usedToday: 0,
       resetsAt: new Date(START * 1000).toISOString(),
     });

@@ -45,6 +45,11 @@ export interface AuthDeps {
   readonly challengeTimeoutSeconds: number;
   /** The dashboard's origin; CSRF's `Origin` check compares against it. */
   readonly allowedOrigin: string;
+  /**
+   * Further exact origins CSRF accepts (`DASHBOARD_EXTRA_ORIGINS`, preview
+   * only, e.g. a branch preview of the dashboard). Empty or absent in production.
+   */
+  readonly extraOrigins?: readonly string[];
   /** Unix seconds. */
   readonly now: () => number;
 }
@@ -125,6 +130,7 @@ export async function requireSession(request: Request, deps: AuthDeps): Promise<
     method: request.method,
     origin: request.headers.get('origin'),
     allowedOrigin: deps.allowedOrigin,
+    ...(deps.extraOrigins === undefined ? {} : { extraOrigins: deps.extraOrigins }),
     headerToken: request.headers.get(CSRF_HEADER),
     sessionCsrfToken: row.csrfToken,
   });
@@ -240,6 +246,19 @@ async function me(request: Request, deps: AuthDeps): Promise<Response> {
   });
 }
 
+/**
+ * SEP-10 domains for this request: the extra origin's host when the request
+ * came from one of `extraOrigins` (CSRF has already accepted that Origin),
+ * else the dashboard's. Challenge and link come from the same page, so both
+ * use the same host.
+ */
+function domainsFor(request: Request, deps: AuthDeps): ChallengeDomains {
+  const origin = request.headers.get('origin');
+  if (origin === null || !(deps.extraOrigins ?? []).includes(origin)) return deps.domains;
+  const host = new URL(origin).host;
+  return { homeDomain: host, webAuthDomain: host };
+}
+
 async function walletChallenge(request: Request, deps: AuthDeps): Promise<Response> {
   const authed = await requireSession(request, deps);
   if (authed instanceof Response) return authed;
@@ -252,7 +271,7 @@ async function walletChallenge(request: Request, deps: AuthDeps): Promise<Respon
   const issued = await issueWalletChallenge({
     serverKeypair: deps.challengeKeypair,
     account,
-    domains: deps.domains,
+    domains: domainsFor(request, deps),
     timeoutSeconds: deps.challengeTimeoutSeconds,
     sessionTokenHash: authed.row.tokenHash,
     now,
@@ -275,7 +294,7 @@ async function walletLink(request: Request, deps: AuthDeps): Promise<Response> {
   const account = await verifyWalletChallenge({
     signedXdr,
     serverPublicKey: deps.challengeKeypair.publicKey(),
-    domains: deps.domains,
+    domains: domainsFor(request, deps),
     sessionTokenHash: authed.row.tokenHash,
     store: deps.store.challenges,
   });

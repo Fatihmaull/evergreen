@@ -40,6 +40,8 @@ export interface WatchItem {
         readonly extendToLedgers?: number;
       };
   readonly extendNow: {
+    /** `EXTEND_NOW_ENABLED` on the API. Absent from older APIs: then off. */
+    readonly enabled?: boolean;
     readonly limitPerDay: number;
     readonly usedToday: number;
     readonly resetsAt: string;
