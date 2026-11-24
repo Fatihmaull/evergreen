@@ -703,6 +703,7 @@ const PAGES = [
     js: 'assets/watchlist.js',
     to: 'dashboard/watchlist/index.html',
   },
+  { module: 'src/pages/activity.mjs', to: 'dashboard/activity/index.html' },
   {
     module: 'src/pages/alerts.mjs',
     entry: 'src/pages/alerts.ts',
@@ -896,6 +897,8 @@ async function buildPage(page) {
     body,
     script: page.entry ? `/${page.js}` : (meta.script ?? null),
     cadence: CADENCE,
+    bare: meta.bare === true,
+    panel: meta.panel === true,
   });
   const target = join(out, page.to);
   mkdirSync(dirname(target), { recursive: true });
@@ -1143,10 +1146,7 @@ function commissionAssetGuards() {
     }
   };
   walk(out);
-  for (const [name, reader] of [
-    ['snapshot.json', 'overview.ts fetches it'],
-    ['evergreen-logo-mask.svg', 'styles.css masks with it'],
-  ]) {
+  for (const [name, reader] of [['evergreen-logo-mask.svg', 'styles.css masks with it']]) {
     if (html.some((page) => page.includes(`/assets/${name}`))) {
       console.error(
         `✗ ${name} is now referenced from HTML, so the clean build no longer proves ` +
@@ -1232,7 +1232,6 @@ for (const file of [
 ]) {
   cpSync(join(repo, 'web-reference/design-language/source/favicon', file), join(out, file));
 }
-cpSync(join(here, 'data/snapshot.json'), join(out, 'assets/snapshot.json'));
 cpSync(join(here, 'data/archival.json'), join(out, 'assets/archival.json'));
 if (heroImage) {
   for (const file of [heroImage.file, heroImage.posterFile, heroImage.smallFile].filter(Boolean)) {

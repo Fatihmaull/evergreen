@@ -435,7 +435,7 @@ export function watchlistScreenHtml(
  * "signed out". One home for these sentences, so the watchlist screen and the
  * Overview's panel cannot disagree about it.
  */
-function noWatchlistSentence(outcome: ApiOutcome<{ items?: unknown }>): string {
+export function noWatchlistSentence(outcome: ApiOutcome<{ items?: unknown }>): string {
   if (outcome.kind === 'ok') {
     return 'The API answered, but not with a watchlist this page can read. We could not establish this.';
   }

@@ -1,0 +1,72 @@
+<main id="main" class="main overview">
+  <div class="ov-head">
+    <div>
+      <p class="eyebrow">Scanner · Stellar testnet</p>
+      <h1>Scan a contract</h1>
+    </div>
+  </div>
+
+  <form class="scan-row" onsubmit="return false;">
+    <label class="skip" for="cid">Contract ID</label>
+    <input
+      id="cid"
+      class="search wide mono"
+      type="text"
+      value="CDQ8MZ7WQH4TB2NREXK6Y3PV9AFJSD0LG5UCO1I8WE2N"
+      spellcheck="false"
+    />
+    <button class="primary" type="submit">Scan</button>
+  </form>
+  <details class="by-hand">
+    <summary>Data keys (optional)</summary>
+  </details>
+
+  <section class="next" aria-label="Result">
+    <div>
+      <p class="label">Binding expiry</p>
+      <p><span class="next-figure ok">412,872</span><span class="next-unit">ledgers left</span></p>
+      <p class="caption">
+        <span class="chip healthy"><span class="shape"></span>healthy</span>
+        binds on code · ends ~Dec 18, 2026 · read at ledger <span class="mono">5,399,992</span>
+      </p>
+    </div>
+    <div class="actions">
+      <button class="secondary" type="button">Copy CLI command</button>
+      <button class="primary" type="button">Add to watchlist</button>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="entries-h">
+    <div class="block-head">
+      <h2 id="entries-h">Entries read</h2>
+    </div>
+    <table class="list">
+      <thead>
+        <tr>
+          <th>Entry</th>
+          <th class="num">Ends at ledger</th>
+          <th class="num">Ledgers left</th>
+          <th class="num hide-m">Rent to extend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>contract code</td>
+          <td class="num mono">5,812,872</td>
+          <td class="num mono">412,872</td>
+          <td class="num mono hide-m">58,402</td>
+        </tr>
+        <tr>
+          <td>contract instance</td>
+          <td class="num mono">6,401,330</td>
+          <td class="num mono">1,001,330</td>
+          <td class="num mono hide-m">2,811</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">
+      Data entries were not read: no keys given. Rent to extend is simulated for the default extend
+      to <span class="mono">518,400</span> ledgers.
+    </p>
+  </section>
+</main>

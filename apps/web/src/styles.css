@@ -501,35 +501,35 @@ td.num {
   border-radius: 8px;
   padding: 12px;
 }
-svg.graph {
+.graph-wrap svg.graph {
   display: block;
   min-width: 640px;
 }
-svg.graph .edge {
+.graph-wrap svg.graph .edge {
   stroke: var(--sage);
   stroke-width: 1.5;
   fill: none;
 }
-svg.graph .node {
+.graph-wrap svg.graph .node {
   fill: var(--paper);
   stroke: var(--rule-strong);
 }
-svg.graph .node.shared {
+.graph-wrap svg.graph .node.shared {
   fill: var(--pine);
   stroke: var(--pine);
 }
-svg.graph text {
+.graph-wrap svg.graph text {
   font-family: var(--mono);
   font-size: 11px;
   fill: var(--ink);
 }
-svg.graph text.on-pine {
+.graph-wrap svg.graph text.on-pine {
   fill: var(--surface);
 }
-svg.graph text.dim {
+.graph-wrap svg.graph text.dim {
   fill: var(--ink-3);
 }
-svg.graph text.dim.on-pine {
+.graph-wrap svg.graph text.dim.on-pine {
   fill: rgba(252, 249, 248, 0.8);
 }
 
@@ -2618,5 +2618,1032 @@ body.app .alerts .mark-incomplete {
   }
   #autopilot-rows td:first-child {
     overflow-wrap: anywhere;
+  }
+}
+
+/* ==== Dashboard revamp (components.md § "Dashboard revamp", 2026-11-24) ==== */
+/* Dashboard revamp reference, every screen. Loaded after
+   alert-preferences.css (the shell) and autopilot-approve.css (buttons, mono).
+   No colour, face, or weight is introduced here. */
+
+/* The site token (apps/web/src/styles.css); templates/base.css has no copy. */
+
+main.main.overview {
+  max-width: none;
+}
+
+.ov-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: end;
+  justify-content: space-between;
+}
+
+/* The one dominant element: the contract that needs attention first. */
+.next {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 24px;
+  align-items: end;
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.next .label {
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.next .next-figure {
+  font: 400 72px/1 var(--serif);
+  letter-spacing: -0.02em;
+  color: var(--warn-ink);
+}
+
+.next .next-unit {
+  font: 400 20px/1 var(--serif);
+  color: var(--ink-2);
+  margin-left: 8px;
+}
+
+.next .who {
+  font: 400 20px/1.3 var(--serif);
+}
+
+.next .caption {
+  color: var(--ink-2);
+}
+
+/* Four small facts. Space separates them; no boxes. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px 32px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fact-cell {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.fact-cell .k {
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.fact-cell .v {
+  font: 400 28px/1.15 var(--serif);
+}
+
+.fact-cell .s {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.block {
+  display: grid;
+  gap: 12px;
+  padding-top: 28px;
+}
+
+.block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+/* The contracts list. One line per contract; the whole row opens the panel. */
+table.list {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.list th {
+  text-align: left;
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 0 12px 8px 0;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+table.list td {
+  padding: 14px 12px 14px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+table.list td.num,
+table.list th.num {
+  text-align: right;
+}
+
+table.list tr.open td {
+  background: rgba(15, 15, 15, 0.04);
+}
+
+table.list .name {
+  display: grid;
+  gap: 2px;
+}
+
+table.list .id {
+  font: 400 12px/1.3 var(--mono);
+  color: var(--ink-3);
+}
+
+.chev {
+  color: var(--ink-3);
+}
+
+table.list .chip {
+  font-size: 12px;
+}
+
+/* Recent activity: one line per job. */
+.activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.activity li {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.activity .when {
+  font: 400 12px/1.6 var(--mono);
+  color: var(--ink-3);
+}
+
+/* The side panel. Opens because the person asked; no slide-in. */
+.with-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
+}
+
+body.panel-open .with-panel {
+  grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+/* Inside the narrow panel each job stacks. */
+.panel-side .activity li {
+  grid-template-columns: 1fr auto;
+}
+
+.panel-side .activity .when {
+  grid-column: 1 / -1;
+}
+
+.panel-side {
+  border-left: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+}
+
+.panel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.close {
+  font: 400 14px/1 var(--sans);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 100vw;
+  padding: 8px 14px;
+  color: var(--ink);
+}
+
+.kv {
+  margin: 0;
+  display: grid;
+}
+
+.kv > div {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.kv dt {
+  color: var(--ink-3);
+}
+
+.kv dd {
+  margin: 0;
+}
+
+.panel-h {
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .next {
+    grid-template-columns: 1fr;
+  }
+
+  .next .next-figure {
+    font-size: 56px;
+  }
+
+  .sidebar .nav-section,
+  .sidebar-foot {
+    display: none;
+  }
+
+  main.main.overview {
+    padding: 24px 16px;
+  }
+
+  table.list .hide-m {
+    display: none;
+  }
+
+  .activity li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .activity .when {
+    grid-column: 1 / -1;
+  }
+
+  body.panel-open .with-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-side {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+}
+
+/* ---- Shared by the other revamp screens ---- */
+
+.next .next-figure.ink {
+  color: var(--ink);
+}
+
+.next .next-figure.ok {
+  color: var(--ok-ink);
+}
+
+.fact-cell .v.mono-v {
+  font: 400 20px/1.4 var(--mono);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.app a.filter {
+  padding: 7px 14px;
+  border-radius: 100vw;
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+body.app a.filter.active {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.filter .mono {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-left: 4px;
+}
+
+.search {
+  padding: 10px 14px;
+  border: 1px solid rgba(15, 15, 15, 0.5);
+  border-radius: 6px;
+  background: var(--paper);
+  font: 400 14px/1.2 var(--sans);
+  color: var(--ink);
+  min-width: 0;
+}
+
+.search.mono {
+  font-family: var(--mono);
+}
+
+.scan-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.scan-row .wide {
+  flex: 1 1 360px;
+}
+
+.muted-cell {
+  color: var(--ink-3);
+}
+
+.when-cell {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.chart-wrap {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  padding-top: 24px;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart .t {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.chart .band {
+  stroke: var(--warn);
+  stroke-width: 1;
+}
+
+.chart .line {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+}
+
+.chart .proj {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.chart .dot {
+  fill: var(--pine);
+}
+
+.kv.wide-kv {
+  max-width: 640px;
+}
+
+.kv.wide-kv > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.toggles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 720px;
+}
+
+.toggles li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.toggles.fixed li {
+  grid-template-columns: 1fr;
+  color: var(--ink-2);
+}
+
+.toggle {
+  font: 400 12px/1 var(--mono);
+  padding: 6px 12px;
+  border-radius: 100vw;
+  border: 1px solid var(--rule-strong);
+  min-width: 36px;
+  text-align: center;
+}
+
+.toggle.on {
+  background: var(--pine);
+  border-color: var(--pine);
+  color: var(--surface);
+}
+
+.signin-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.empty {
+  display: grid;
+  gap: 14px;
+  padding: 28px 0;
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 760px) {
+  .toggles li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .toggles li .note {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .steps li {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+/* Text cells may wrap; figures, times and chips do not. */
+table.list td {
+  white-space: normal;
+}
+
+table.list td.num,
+table.list td.when-cell,
+table.list td .chip {
+  white-space: nowrap;
+}
+
+.fact-cell .v {
+  overflow-wrap: anywhere;
+}
+
+/* ---- Blast radius: the dependency map ---- */
+
+.graph-head {
+  display: flex;
+  justify-content: space-between;
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.graph {
+  width: 100%;
+  height: auto;
+}
+
+.graph .edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.graph .edge.on {
+  stroke: var(--pine);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.graph .node {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.graph .node.sel {
+  fill: var(--pine);
+  stroke: var(--pine);
+}
+
+.graph .node.arch {
+  fill: var(--ink);
+  stroke: var(--ink);
+}
+
+.graph .n {
+  font: 400 14px var(--sans);
+  fill: var(--ink);
+}
+
+.graph .d {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.graph .inv {
+  fill: var(--surface);
+}
+
+.graph .d.inv {
+  fill: rgba(252, 249, 248, 0.78);
+}
+
+.graph .dim-node {
+  opacity: 0.5;
+}
+
+.graph .s-ok {
+  fill: var(--ok);
+}
+
+.graph .s-warn {
+  fill: var(--warn);
+}
+
+.graph .s-und {
+  fill: none;
+  stroke: var(--und);
+  stroke-width: 2;
+}
+
+.graph .s-exp {
+  fill: var(--ink);
+}
+
+/* ---- TTL decay ---- */
+
+.chart-card {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.chart-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.chart-top .label {
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.sel-figure {
+  font: 400 36px/1.1 var(--serif);
+  color: var(--ok-ink);
+}
+
+.sel-unit {
+  color: var(--ink-2);
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font: 400 12px/1 var(--mono);
+  color: var(--ink-2);
+}
+
+.legend span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.legend i {
+  display: inline-block;
+}
+
+.lg-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pine);
+}
+
+.lg-ext {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--pine);
+  background: var(--surface);
+}
+
+.lg-proj {
+  width: 18px;
+  border-top: 2px dashed var(--sage);
+}
+
+.chart.big .grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.chart.big .future {
+  fill: rgba(15, 15, 15, 0.03);
+}
+
+.chart .warn-b {
+  stroke: var(--warn);
+  stroke-dasharray: 2 4;
+}
+
+.chart .act-b,
+.spark .act-b {
+  stroke: var(--warn);
+  stroke-width: 1;
+}
+
+.chart .band-t {
+  fill: var(--warn-ink);
+}
+
+.chart .now {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.chart .now-t {
+  fill: var(--ink-2);
+}
+
+.chart .step {
+  stroke: var(--pine);
+  stroke-width: 1.5;
+}
+
+.chart .ext {
+  fill: var(--surface);
+  stroke: var(--pine);
+  stroke-width: 2;
+}
+
+.chart .ext-t {
+  fill: var(--pine);
+}
+
+.chart .tip rect {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+}
+
+.chart .tt {
+  font: 400 13px var(--sans);
+  fill: var(--ink);
+}
+
+.chart .tt.d {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.strips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 110px 110px;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.strip.open {
+  background: rgba(15, 15, 15, 0.04);
+}
+
+.strip .name {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.spark {
+  width: 100%;
+  height: 44px;
+  display: block;
+}
+
+.spark .line {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+}
+
+.spark .dot {
+  fill: var(--pine);
+}
+
+.num-cell {
+  text-align: right;
+}
+
+.end-cell {
+  color: var(--ink-2);
+}
+
+@media (max-width: 760px) {
+  .strip {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .strip .spark-cell {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .strip .end-cell {
+    display: none;
+  }
+
+  .legend {
+    display: none;
+  }
+}
+
+/* Sparklines stretch to their cell; strokes keep their width. */
+.spark line,
+.spark polyline {
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- Dashboard revamp, site glue (WEBF) ---- */
+/* A link that looks like the button beside it. */
+a.pill {
+  display: inline-block;
+  font: 500 14px/1 var(--sans);
+  white-space: nowrap;
+  padding: 12px 20px;
+  border-radius: 100vw;
+  border: 1px solid var(--pine);
+  background: var(--pine);
+  color: var(--surface);
+  text-decoration: none;
+}
+a.pill.secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+/* A value whose API route is not built yet: the words, never a zero. */
+.unavailable,
+.fact-cell .v.unavailable {
+  font: 400 14px/1.6 var(--sans);
+  color: var(--ink-3);
+}
+button.linkish {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+table.list tbody tr {
+  cursor: pointer;
+}
+table.list tbody tr:hover td {
+  background: rgba(15, 15, 15, 0.03);
+}
+/* `.stack`, `.facts` and the panel are grid boxes; [hidden] must still hide them. */
+#ov-signed-out[hidden],
+#ov-add[hidden],
+#ov-summary[hidden],
+#ov-actions[hidden],
+#side-panel[hidden] {
+  display: none;
+}
+.with-panel > main.main {
+  min-width: 0;
+}
+main.main.overview {
+  max-width: none;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .sidebar-foot {
+    display: none;
+  }
+}
+.ov-head h1 {
+  margin: 0;
+  font: 400 var(--step-3)/1.12 var(--serif);
+  letter-spacing: -0.02em;
+}
+.ov-head {
+  margin-bottom: 8px;
+}
+main.overview h2,
+.panel-side h2 {
+  margin: 0;
+  font: 400 var(--step-2)/1.2 var(--serif);
+  letter-spacing: -0.015em;
+}
+/* The revamp spaces blocks itself; the prose rule `p + p` adds a gap here. */
+main.overview p + p,
+.panel-side p + p {
+  margin-top: 0;
+}
+.scan-row input[type='text'] {
+  width: auto;
+  flex: 0 1 220px;
+}
+.scan-row input[type='text'].wide {
+  flex: 1 1 360px;
+}
+/* `body.app p` sets the prose size and measure; the revamp's labels, figures
+   and notes are not prose, so they restate theirs at the same specificity. */
+body.app main.overview p,
+body.app .panel-side p {
+  max-width: none;
+}
+body.app .panel-h,
+body.app .next .label,
+body.app .fact-cell .k,
+body.app .chart-top .label {
+  font-size: 12px;
+}
+body.app .fact-cell .s {
+  font-size: 13px;
+}
+body.app .note,
+body.app .fact-cell .v.unavailable,
+body.app .unavailable {
+  font-size: 14px;
+}
+body.app .next .who {
+  font-size: 20px;
+}
+body.app .fact-cell .v {
+  font-size: 28px;
+}
+.ov-head > div:first-child {
+  display: grid;
+  gap: 8px;
+}
+#cl-body[hidden] {
+  display: none;
+}
+#cl-body {
+  display: grid;
+  gap: 16px;
+}
+.toolbar .search {
+  width: 260px;
+  max-width: 100%;
+}
+/* An empty figure: the em dash in the sans face (DES, #670). */
+.none {
+  font-family: var(--sans);
+  color: var(--ink-3);
+}
+body.app .panel-links,
+body.app .panel-links a,
+body.app .panel-links button {
+  font-size: 14px;
+}
+/* One line on a phone: the cadence note stays on desktop only (DES, #670). */
+@media (max-width: 760px) {
+  .statusbar .status-item.dim {
+    display: none;
+  }
+}
+body.app a.filter {
+  font-size: 14px;
+}
+#al-flow > summary {
+  font: 400 var(--step-2)/1.2 var(--serif);
+  color: var(--ink);
+  padding: 8px 0;
+}
+.al-flow-body {
+  padding-top: 16px;
+  gap: 28px;
+}
+/* `.main > section` sets one column for blowout safety; the facts row keeps four. */
+.main > section.facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.main > section.next {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+@media (max-width: 760px) {
+  .main > section.facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .main > section.next {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+body.app .fact-cell .v.mono-v {
+  font-size: 20px;
+}
+
+/* Blast radius map: nodes are the controls. */
+#br-add[hidden],
+#br-next[hidden],
+#br-map[hidden],
+#br-status[hidden] {
+  display: none;
+}
+.graph.map {
+  display: block;
+  max-width: 716px;
+}
+.graph.map [data-select] {
+  cursor: pointer;
+}
+.graph.map [data-select]:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+.graph.map .dim-node:hover {
+  opacity: 0.8;
+}
+#br-add textarea {
+  min-height: 96px;
+}
+/* "Copy CLI command" is a pill, not the small inline copy control. */
+button.secondary.copy {
+  font: 500 14px/1 var(--sans);
+  padding: 12px 20px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+button.secondary.copy {
+  border-radius: 100vw;
+}
+/* On a phone the map keeps a readable size and scrolls sideways in its box. */
+#br-svg {
+  overflow-x: auto;
+}
+@media (max-width: 760px) {
+  .graph.map {
+    min-width: 560px;
   }
 }
