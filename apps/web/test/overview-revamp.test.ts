@@ -98,3 +98,14 @@ describe('Contracts', () => {
     expect(panelHtml(pending, 'contracts')).toContain('Scan again');
   });
 });
+
+test('the scanner leads with the binding expiry and offers the CLI command and Add', async () => {
+  const { resultHead } = await import('../src/lib/scan-panel');
+  const { report } = await import('../src/lib/evergreen');
+  const { scanOf } = await import('./fixtures/watchlist-example');
+  const scan = scanOf(A);
+  const html = resultHead(scan, report(scan), `npx @evergreen-stellar/cli scan ${A}`);
+  expect(html).toContain('Binding expiry');
+  expect(html).toContain('Copy CLI command');
+  expect(html).toContain('id="watch-button"');
+});
