@@ -10,8 +10,11 @@
 import { hostedFeeStroops, type HostedFeeConfig, PROVISIONAL_HOSTED_FEE } from './fee.js';
 import { pullAmountStroops, type PullAmountBreakdown } from './pull-amount.js';
 
-/** Plan §3.3, per (user, contract) per rolling 24 hours. Only pulled jobs count. */
-export const EXTEND_NOW_DAILY_LIMIT = 3;
+/**
+ * Plan §3.3, per (user, contract) per rolling 24 hours. Only pulled jobs count.
+ * 1 since Fatih, 2026-11-24 (Extend now option A); was 3.
+ */
+export const EXTEND_NOW_DAILY_LIMIT = 1;
 
 /**
  * Transient extend attempts after the first. The fee note sizes the engine's
