@@ -314,6 +314,12 @@ type Job = {
 };
 ```
 
+**As built (`PH2-E2-08`, 2026-11-24).** `GET /jobs` and `GET /jobs/{jobId}` are live; **`POST /jobs` is not built** and `/jobs` answers `405` with `Allow: GET` until its design is agreed with Fatih. What the read routes return, beyond the type above:
+- `GET /jobs` answers `{ items: Job[], nextCursor }` (§2 pagination; `limit` defaults to 50, at most 100). `GET /jobs/{jobId}` answers `{ job }`; another user's job is `404`, the same as no job.
+- Each `Job` also carries `payerWallet` and `updatedAt`. Additive; clients may ignore them.
+- `steps.extendTx: { txHash, rentChargedStroops | null }` is the extend transaction as the engine stores it today (`jobs.extend_tx_hash`, `extend_rent_charged`). `rentChargedStroops` is null when that extend did not confirm. `steps.extend` (`BumpRecord[]`) appears only once the engine writes `jobs.extend_records`.
+- A step is present only when its data is. `pull.amountStroops` and `refund.amountStroops` are left out, never zero, when the column is null. `refund.at` is the refund's `fee_ledger` row time and is left out until that row exists. `reconcile` appears only when every one of its amounts is stored.
+
 **`steps.extend` is the engine's existing `BumpRecord`.** It is not a new shape:
 - `succeeded` means a confirmed transaction **and** a verified post-extend observation;
 - `submitted` is never shown as success.
@@ -357,6 +363,8 @@ type LedgerRow = {
   recordedAt: string;
 };
 ```
+
+**As built (`PH2-E2-08`, 2026-11-24).** `GET /ledger` answers `{ items: LedgerRow[], nextCursor }`, newest first (`recorded_at`, then `id`), `limit` 1 to 100 (default 50). It also takes `jobId=` to show one job's rows. **Ownership is the job's user**, not the wallet's current owner: `wallets` is keyed on `(network, account)`, so a wallet re-linked to another account does not take its old rows along. `?wallet=` only narrows the caller's own rows. Needs migration 0017 (`eg_api` SELECT on `fee_ledger`).
 
 This is what DoD-2's **zero subsidy** is measured from. Every XLM the engine moves for a user has a row, and the rows reconcile against the transactions:
 - per job, `pull` = `rent` + `evergreen-fee` + `refund` + `difference`, where `rent` is the **charged** rent and `evergreen-fee` is the ADR-007 fee on the **charged** rent, `max(2% × charged rent, 25,000 stroops)`: the fee inside the pull is an estimate and the final fee is set at reconcile (K11, Fatih, 2026-11-03). **`refund` is everything returned on-chain to the user** (the unused part of the pull), and **`difference` is only what was not returned**, normally 0, so each stroop is counted once and the balance view double-counts nothing. **`network-fee` is not in this sum** (Fatih, 2026-10-28, #414, which changes what an earlier draft of this section said): a `network-fee` row records what one of the job's transactions (the pull, the extend, a refund) cost the engine. It is **evidence of the engine's cost and is never billed to the user**. The user pays the rent plus the Evergreen fee, and the fee is what covers the engine's network costs;
