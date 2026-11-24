@@ -28,6 +28,7 @@
  * NO MONEY. This page imports `lib/wallet.ts` only; `build.mjs` refuses the
  * build if `wallet-money.ts` reaches this bundle (`LOGIN_FORBIDDEN`).
  */
+import { apiRequest } from '../lib/api';
 import { esc, short } from '../lib/format';
 import {
   linkWallet as postWallet,
@@ -55,6 +56,7 @@ import {
 import { NETWORK } from '../lib/network';
 import { createWallet, isWalletFailure, type WalletFailure } from '../lib/wallet';
 import { freighterPort } from '../lib/wallet-freighter';
+import type { WatchItem } from '../lib/watchlist-view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -77,25 +79,57 @@ function note(html: string): string {
 
 function signedOut(): void {
   me = undefined;
+  $('account-h').textContent = 'Sign in';
+  $('account-actions').innerHTML = '';
+  $('email-section').hidden = false;
+  $('wallet-list').innerHTML = '';
   $('session').innerHTML = note('You are not signed in.');
+}
+
+/** Wallet → contracts whose autopilot it pays for, from the watchlist. Undefined when unread. */
+let paysFor: ReadonlyMap<string, number> | undefined;
+
+async function readPaysFor(): Promise<void> {
+  const o = await apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(
+    () => undefined,
+  );
+  if (o?.kind !== 'ok' || !Array.isArray(o.data?.items)) return;
+  const counts = new Map<string, number>();
+  for (const i of o.data.items as WatchItem[]) {
+    const payer = i.autopilot?.enabled === true ? i.autopilot.payerWallet : undefined;
+    if (typeof payer === 'string') counts.set(payer, (counts.get(payer) ?? 0) + 1);
+  }
+  paysFor = counts;
+  if (me) renderSession();
+}
+
+function paysForCell(account: string): string {
+  if (paysFor === undefined) return '<span class="none">—</span>';
+  const n = paysFor.get(account) ?? 0;
+  return n === 0 ? 'no contracts' : `${n} contract${n === 1 ? '' : 's'}`;
 }
 
 function renderSession(): void {
   const out = $('session');
   if (me) {
+    $('account-h').textContent = 'Account';
+    $('account-actions').innerHTML =
+      '<button id="logout-button" class="secondary" type="button">Sign out</button>';
+    $('email-section').hidden = true;
+    out.innerHTML = `<dl class="kv wide-kv"><div><dt>Email</dt><dd><span class="mono">${esc(me.user.email)}</span></dd></div></dl>`;
     // One Unlink per wallet. The full account rides in a data attribute because
     // `short()` is for reading, not for sending.
-    const linked = me.wallets.map(
-      (w) =>
-        `<span class="mono">${esc(short(w.account))}</span> <button class="secondary unlink-button" type="button" data-account="${esc(w.account)}">Unlink</button>`,
-    );
-    out.innerHTML = note(
-      `Signed in as <strong>${esc(me.user.email)}</strong>. ${
-        linked.length ? `Linked: ${linked.join(' ')}` : 'No wallet linked.'
-      }</p><p><button id="logout-button" class="secondary" type="button">Sign out</button>`,
-    );
+    $('wallet-list').innerHTML =
+      me.wallets.length === 0
+        ? '<p class="note">No wallet linked.</p>'
+        : `<table class="list"><thead><tr><th>Wallet</th><th>Pays for</th><th><span class="skip">Unlink</span></th></tr></thead><tbody>${me.wallets
+            .map(
+              (w) =>
+                `<tr><td class="mono">${esc(short(w.account, 4, 4))}</td><td>${paysForCell(w.account)}</td><td class="num"><button class="linkish unlink-button" type="button" data-account="${esc(w.account)}">Unlink</button></td></tr>`,
+            )
+            .join('')}</tbody></table>`;
     $('logout-button').addEventListener('click', () => void signOut());
-    for (const button of out.querySelectorAll<HTMLButtonElement>('.unlink-button')) {
+    for (const button of $('wallet-list').querySelectorAll<HTMLButtonElement>('.unlink-button')) {
       button.addEventListener('click', () => void unlink(button));
     }
     // Signed in: the code was used. Its form goes, and so does what was typed in it.
@@ -154,6 +188,7 @@ async function loadMe(): Promise<void> {
   if (r.kind === 'signed-in') {
     me = r.me;
     renderSession();
+    void readPaysFor();
   } else if (r.kind === 'signed-out') {
     signedOut();
   } else {
