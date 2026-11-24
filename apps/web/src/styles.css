@@ -501,35 +501,35 @@ td.num {
   border-radius: 8px;
   padding: 12px;
 }
-svg.graph {
+.graph-wrap svg.graph {
   display: block;
   min-width: 640px;
 }
-svg.graph .edge {
+.graph-wrap svg.graph .edge {
   stroke: var(--sage);
   stroke-width: 1.5;
   fill: none;
 }
-svg.graph .node {
+.graph-wrap svg.graph .node {
   fill: var(--paper);
   stroke: var(--rule-strong);
 }
-svg.graph .node.shared {
+.graph-wrap svg.graph .node.shared {
   fill: var(--pine);
   stroke: var(--pine);
 }
-svg.graph text {
+.graph-wrap svg.graph text {
   font-family: var(--mono);
   font-size: 11px;
   fill: var(--ink);
 }
-svg.graph text.on-pine {
+.graph-wrap svg.graph text.on-pine {
   fill: var(--surface);
 }
-svg.graph text.dim {
+.graph-wrap svg.graph text.dim {
   fill: var(--ink-3);
 }
-svg.graph text.dim.on-pine {
+.graph-wrap svg.graph text.dim.on-pine {
   fill: rgba(252, 249, 248, 0.8);
 }
 
@@ -3602,4 +3602,48 @@ body.app a.filter {
 }
 body.app .fact-cell .v.mono-v {
   font-size: 20px;
+}
+
+/* Blast radius map: nodes are the controls. */
+#br-add[hidden],
+#br-next[hidden],
+#br-map[hidden],
+#br-status[hidden] {
+  display: none;
+}
+.graph.map {
+  display: block;
+  max-width: 716px;
+}
+.graph.map [data-select] {
+  cursor: pointer;
+}
+.graph.map [data-select]:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: 2px;
+}
+.graph.map .dim-node:hover {
+  opacity: 0.8;
+}
+#br-add textarea {
+  min-height: 96px;
+}
+/* "Copy CLI command" is a pill, not the small inline copy control. */
+button.secondary.copy {
+  font: 500 14px/1 var(--sans);
+  padding: 12px 20px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+}
+button.secondary.copy {
+  border-radius: 100vw;
+}
+/* On a phone the map keeps a readable size and scrolls sideways in its box. */
+#br-svg {
+  overflow-x: auto;
+}
+@media (max-width: 760px) {
+  .graph.map {
+    min-width: 560px;
+  }
 }
