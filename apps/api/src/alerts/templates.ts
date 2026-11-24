@@ -103,6 +103,11 @@ const COPY: Readonly<Record<AlertKind, { subject: string; lead: string; severity
     lead: 'Autopilot extended this entry. This is your receipt.',
     severity: 'info',
   },
+  extend_now_requested: {
+    subject: 'Extend now was requested for {entry}',
+    lead: 'Someone signed in to your Evergreen account pressed Extend now for {entry}. The extend is queued and runs within about 15 minutes, through autopilot: it pulls from your allowance, extends the entry, and refunds what is not used. If this was not you, revoke the allowance in your wallet and sign out.',
+    severity: 'warn',
+  },
 };
 
 /** One line; refuses CR/LF so a caller value cannot inject a header. */

@@ -63,8 +63,10 @@ beforeAll(async () => {
   for (const f of [
     '0012_jobs_autopilot_uq_per_user.sql',
     '0013_schema_migrations.sql',
+    '0011_alert_outbox_and_prefs.sql',
     '0016_jobs_shortfall_stroops.sql',
     '0017_api_fee_ledger_select.sql',
+    '0018_api_extend_now.sql',
   ])
     await pg.exec(db(f));
 
@@ -207,6 +209,81 @@ describe('PgJobsStore as eg_api', () => {
         `INSERT INTO fee_ledger (job_id, network, wallet, contract_id, kind, amount, tx_hash) VALUES ($1::uuid, 'testnet', $2, $3, 'pull', 1, 'x')`,
         [J3, GA, CA],
       ),
+    ).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('createExtendNow as eg_api (0018)', () => {
+  const KEY = 'aaaaaaaa-0000-4000-8000-000000000001';
+  const KEY2 = 'aaaaaaaa-0000-4000-8000-000000000002';
+  const HASH = 'ab'.repeat(32);
+  const NOW = Date.parse('2026-11-24T16:00:00Z') / 1000;
+  const req = (o: Partial<Parameters<typeof store.createExtendNow>[1]> = {}) => ({
+    contractId: CB,
+    idempotencyKey: KEY,
+    requestHash: HASH,
+    limitPerDay: 1,
+    now: NOW,
+    ...o,
+  });
+
+  beforeAll(async () => {
+    // A's second item gets autopilot, paid by GA.
+    await pg.exec(`UPDATE watch_items SET autopilot_enabled = true, payer_network = 'testnet',
+      payer_account = '${GA}', threshold_ledgers = 4329, extend_to_ledgers = 20000,
+      budget_per_job_max = 1000000, budget_per_30d_max = 5000000
+      WHERE user_id = '${A}' AND contract_id = '${CB}'`);
+  });
+
+  it('🔴 writes one queued extend-now job with the item’s payer, as eg_api', async () => {
+    const r = await store.createExtendNow(A, req());
+    expect(r.kind).toBe('created');
+    if (r.kind !== 'created') return;
+    expect(r.job).toMatchObject({
+      kind: 'extend-now',
+      status: 'queued',
+      payerWallet: GA,
+      contractId: CB,
+    });
+    const row = (
+      await pg.query<{ k: string; h: string; w: string | null }>(
+        `SELECT idempotency_key::text AS k, encode(request_hash, 'hex') AS h, autopilot_window::text AS w FROM jobs WHERE id = $1::uuid`,
+        [r.job.id],
+      )
+    ).rows[0]!;
+    expect(row).toEqual({ k: KEY, h: HASH, w: null });
+  });
+
+  it('🔴 the same key returns the same job; a different body is key-reused', async () => {
+    const again = await store.createExtendNow(A, req());
+    expect(again.kind).toBe('existing');
+    expect((await store.createExtendNow(A, req({ requestHash: 'cd'.repeat(32) }))).kind).toBe(
+      'key-reused',
+    );
+  });
+
+  it('🔴 a second key inside 24 hours is refused by the limit, with when it resets', async () => {
+    const r = await store.createExtendNow(A, req({ idempotencyKey: KEY2, now: NOW + 60 }));
+    expect(r.kind).toBe('daily-limit');
+    if (r.kind === 'daily-limit') {
+      expect(r.used).toBe(1);
+      expect(r.resetsAt).toBeGreaterThan(NOW + 60);
+    }
+  });
+
+  it('autopilot off and another user’s contract write nothing', async () => {
+    expect(
+      (await store.createExtendNow(A, req({ contractId: CA, idempotencyKey: KEY2 }))).kind,
+    ).toBe('autopilot-off');
+    const C9 = `C${'Z'.repeat(55)}`;
+    expect(
+      (await store.createExtendNow(B, req({ contractId: C9, idempotencyKey: KEY2 }))).kind,
+    ).toBe('not-found');
+  });
+
+  it('eg_api still cannot change a job’s money columns', async () => {
+    await expect(
+      asApi.query(`UPDATE jobs SET pull_amount = 1 WHERE user_id = $1::uuid`, [A]),
     ).rejects.toThrow(/permission denied/);
   });
 });

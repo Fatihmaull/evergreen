@@ -105,6 +105,34 @@ export interface LedgerQuery {
   readonly after?: PageKey;
 }
 
+/** A request to queue one "Extend now" (§7). The caller has validated every field. */
+export interface ExtendNowRequest {
+  readonly contractId: string;
+  /** The client's `Idempotency-Key`, a lowercase UUID v4. */
+  readonly idempotencyKey: string;
+  /** sha256 of the canonical request body, 64 lowercase hex characters. */
+  readonly requestHash: string;
+  /** Extend now uses allowed per (user, contract) in a rolling 24 hours. */
+  readonly limitPerDay: number;
+  /** Unix seconds. */
+  readonly now: number;
+}
+
+/**
+ * - `created`: a new `queued` job of kind `extend-now`.
+ * - `existing`: this key was already used with the same body; the same job, never a second.
+ * - `key-reused`: this key was used with a different body (409).
+ * - `not-found`: no live watch item for this contract on this account.
+ * - `autopilot-off`: the item has no autopilot, so there is no payer or allowance to use.
+ * - `daily-limit`: the limit is reached. Counted: this user's extend-now jobs for
+ *   the contract created in the last 24 hours, except `preflight-failed` and
+ *   `cancelled` ones (a refusal before money moves is not a use, §7).
+ */
+export type ExtendNowResult =
+  | { readonly kind: 'created' | 'existing'; readonly job: Job }
+  | { readonly kind: 'key-reused' | 'not-found' | 'autopilot-off' }
+  | { readonly kind: 'daily-limit'; readonly used: number; readonly resetsAt: number };
+
 export interface JobsStore {
   /** The caller's jobs, newest first (`created_at DESC, id DESC`). */
   listJobs(userId: string, query: JobQuery): Promise<Page<Job>>;
@@ -118,4 +146,11 @@ export interface JobsStore {
    * follow it there.
    */
   listLedger(userId: string, query: LedgerQuery): Promise<Page<LedgerRow>>;
+  /**
+   * Queues one "Extend now" for the caller's own watch item (§7, Fatih's option
+   * A, 2026-11-24): an `extend-now` job that the hosted engine runs through the
+   * same money path as autopilot, paid by the item's autopilot payer. Writes
+   * one `jobs` row and nothing else; it never moves XLM.
+   */
+  createExtendNow(userId: string, req: ExtendNowRequest): Promise<ExtendNowResult>;
 }

@@ -26,6 +26,8 @@ export interface WatchlistDeps {
   readonly store: WatchlistStore;
   /** `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` (§3). */
   readonly extendNowLimitPerDay: number;
+  /** `EXTEND_NOW_ENABLED` is exactly `true` (jobs/mount.ts). Shown on each item so the UI can hide the button. */
+  readonly extendNowEnabled?: boolean;
   /**
    * The lowest `thresholdLedgers` the API accepts (§6). The value is the
    * engine's and Rakha's to publish (`PH2-E4-04`, `B-D31-01`): undefined until
@@ -104,7 +106,7 @@ async function readJson(request: Request): Promise<unknown> {
 const iso = (seconds: number): string => new Date(seconds * 1000).toISOString();
 
 /** The §6 `WatchItem`. `lastObservation` carries its own ledger and time (§2). */
-function itemJson(r: WatchRecord, limitPerDay: number, now: number) {
+function itemJson(r: WatchRecord, limitPerDay: number, now: number, enabled = false) {
   return {
     network: r.network,
     contractId: r.contractId,
@@ -125,6 +127,7 @@ function itemJson(r: WatchRecord, limitPerDay: number, now: number) {
             },
           },
     extendNow: {
+      enabled,
       limitPerDay,
       usedToday: r.extendNow.usedToday,
       // When the oldest counted use leaves the rolling window (§6). With no use
@@ -161,7 +164,11 @@ async function list(request: Request, deps: WatchlistDeps): Promise<Response> {
   if (authed instanceof Response) return authed;
   const now = deps.now();
   const items = await deps.store.list(authed.user.id, now);
-  return json(200, { items: items.map((r) => itemJson(r, deps.extendNowLimitPerDay, now)) });
+  return json(200, {
+    items: items.map((r) =>
+      itemJson(r, deps.extendNowLimitPerDay, now, deps.extendNowEnabled === true),
+    ),
+  });
 }
 
 async function add(request: Request, deps: WatchlistDeps): Promise<Response> {
@@ -183,7 +190,7 @@ async function add(request: Request, deps: WatchlistDeps): Promise<Response> {
   if (record === undefined) throw new Error('The watch item vanished after it was added.');
   // 201 for a new row or a restored one, 200 for one already on the list (§6).
   return json(outcome === 'existing' ? 200 : 201, {
-    item: itemJson(record, deps.extendNowLimitPerDay, now),
+    item: itemJson(record, deps.extendNowLimitPerDay, now, deps.extendNowEnabled === true),
   });
 }
 
@@ -283,7 +290,9 @@ async function patch(
   }
   const record = await deps.store.get(userId, key.network, key.contractId, now);
   if (record === undefined) return notFound();
-  return json(200, { item: itemJson(record, deps.extendNowLimitPerDay, now) });
+  return json(200, {
+    item: itemJson(record, deps.extendNowLimitPerDay, now, deps.extendNowEnabled === true),
+  });
 }
 
 async function remove(

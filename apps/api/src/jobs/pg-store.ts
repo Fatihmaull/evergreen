@@ -12,6 +12,8 @@
  */
 import type { SqlClient, SqlRow } from '../auth/pg-store.js';
 import type {
+  ExtendNowRequest,
+  ExtendNowResult,
   Job,
   JobQuery,
   JobStatus,
@@ -64,6 +66,44 @@ WHERE j.user_id = $1::uuid
   AND ($5::int8 IS NULL OR (${US('f.recorded_at')}, f.id) < ($5::int8, $6::int8))
 ORDER BY f.recorded_at DESC, f.id DESC
 LIMIT $7::int4`;
+
+/** The job a key already made for this user, with its body hash. `$1` user, `$2` key. */
+export const JOB_BY_KEY_SQL = `${SELECT_JOBS.replace(
+  'SELECT j.id::text AS id,',
+  "SELECT encode(j.request_hash, 'hex') AS request_hash, j.id::text AS id,",
+)} AND j.idempotency_key = $2::uuid`;
+
+/** The live item and its payer. `$1` user, `$2` contract. */
+export const EXTEND_NOW_ITEM_SQL = `SELECT w.autopilot_enabled, w.payer_account::text AS payer_account
+FROM watch_items w
+WHERE w.user_id = $1::uuid AND w.network = 'testnet' AND w.contract_id = $2::text
+  AND w.removed_at IS NULL`;
+
+/**
+ * The uses that count against the limit (store.ts). `$1` user, `$2` contract,
+ * `$3` now (unix seconds).
+ */
+const COUNTED = `FROM jobs c
+  WHERE c.user_id = $1::uuid AND c.network = 'testnet' AND c.contract_id = $2::text
+    AND c.kind = 'extend-now' AND c.status NOT IN ('preflight-failed', 'cancelled')
+    AND c.created_at > to_timestamp($3::float8) - interval '24 hours'`;
+
+export const EXTEND_NOW_USED_SQL = `SELECT count(*)::int AS used,
+  extract(epoch from min(c.created_at))::int8::text AS oldest ${COUNTED}`;
+
+/**
+ * One row, only while the limit allows it. The limit is re-checked inside the
+ * INSERT, so two different keys sent together cannot both pass a count taken
+ * before either was written (one may still race; the engine's pre-flight
+ * checks the limit again before any pull). `$4` payer, `$5` key, `$6` hash hex,
+ * `$7` limit.
+ */
+export const INSERT_EXTEND_NOW_SQL = `INSERT INTO jobs
+  (user_id, network, contract_id, kind, payer_account, idempotency_key, request_hash)
+SELECT $1::uuid, 'testnet', $2::text, 'extend-now', $4::text, $5::uuid, decode($6::text, 'hex')
+WHERE (SELECT count(*) ${COUNTED}) < $7::int
+ON CONFLICT (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING
+RETURNING id::text AS id`;
 
 const text = (v: unknown): string | undefined =>
   v === null || v === undefined ? undefined : String(v);
@@ -240,6 +280,49 @@ export class PgJobsStore implements JobsStore {
     const rows = await this.sql.query(GET_JOB_SQL, [userId, jobId]);
     const row = rows[0];
     return row === undefined ? undefined : jobFromRow(row);
+  }
+
+  async createExtendNow(userId: string, req: ExtendNowRequest): Promise<ExtendNowResult> {
+    const byKey = async (): Promise<ExtendNowResult | undefined> => {
+      const row = (await this.sql.query(JOB_BY_KEY_SQL, [userId, req.idempotencyKey]))[0];
+      if (row === undefined) return undefined;
+      return String(row['request_hash']) === req.requestHash
+        ? { kind: 'existing', job: jobFromRow(row) }
+        : { kind: 'key-reused' };
+    };
+    const prior = await byKey();
+    if (prior !== undefined) return prior;
+
+    const item = (await this.sql.query(EXTEND_NOW_ITEM_SQL, [userId, req.contractId]))[0];
+    if (item === undefined) return { kind: 'not-found' };
+    const payer = text(item['payer_account']);
+    if (item['autopilot_enabled'] !== true || payer === undefined) return { kind: 'autopilot-off' };
+
+    const inserted = await this.sql.query(INSERT_EXTEND_NOW_SQL, [
+      userId,
+      req.contractId,
+      req.now,
+      payer,
+      req.idempotencyKey,
+      req.requestHash,
+      req.limitPerDay,
+    ]);
+    const id = inserted[0]?.['id'];
+    if (typeof id === 'string') {
+      const job = await this.getJob(userId, id);
+      if (job === undefined) throw new Error('The job vanished after it was written.');
+      return { kind: 'created', job };
+    }
+    // Either the same key landed first (a double click), or the limit held.
+    const raced = await byKey();
+    if (raced !== undefined) return raced;
+    const used = (await this.sql.query(EXTEND_NOW_USED_SQL, [userId, req.contractId, req.now]))[0];
+    const oldest = Number(used?.['oldest'] ?? req.now);
+    return {
+      kind: 'daily-limit',
+      used: Number(used?.['used'] ?? req.limitPerDay),
+      resetsAt: oldest + 86_400,
+    };
   }
 
   async listLedger(userId: string, q: LedgerQuery): Promise<Page<LedgerRow>> {

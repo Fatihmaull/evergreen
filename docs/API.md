@@ -314,7 +314,7 @@ type Job = {
 };
 ```
 
-**As built (`PH2-E2-08`, 2026-11-24).** `GET /jobs` and `GET /jobs/{jobId}` are live; **`POST /jobs` is not built** and `/jobs` answers `405` with `Allow: GET` until its design is agreed with Fatih. What the read routes return, beyond the type above:
+**As built (`PH2-E2-08`, 2026-11-24).** `GET /jobs` and `GET /jobs/{jobId}` are live. What the read routes return, beyond the type above:
 - `GET /jobs` answers `{ items: Job[], nextCursor }` (§2 pagination; `limit` defaults to 50, at most 100). `GET /jobs/{jobId}` answers `{ job }`; another user's job is `404`, the same as no job.
 - Each `Job` also carries `payerWallet` and `updatedAt`. Additive; clients may ignore them.
 - `steps.extendTx: { txHash, rentChargedStroops | null }` is the extend transaction as the engine stores it today (`jobs.extend_tx_hash`, `extend_rent_charged`). `rentChargedStroops` is null when that extend did not confirm. `steps.extend` (`BumpRecord[]`) appears only once the engine writes `jobs.extend_records`.
@@ -340,6 +340,15 @@ type Job = {
 | `422 ALLOWANCE_MISSING` / `ALLOWANCE_EXPIRED` | the payer wallet has no live allowance |
 | `429 DAILY_LIMIT_REACHED` | the caller's "Extend now" uses of this contract in the rolling 24 hours have reached `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`; other users watching the same contract are unaffected. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
+| `403 EXTEND_NOW_DISABLED` | `EXTEND_NOW_ENABLED` is not exactly `true` on this Worker. Production keeps it off until DoD-2 (Fatih, 2026-11-24); preview testnet has it on |
+
+**`POST /jobs` as built (Fatih, 2026-11-24, option A).** "Extend now" always goes through autopilot, so the XLM flow is the one users already approved:
+- The route writes one `jobs` row, `kind = 'extend-now'`, `status = 'queued'`, paid by the item's autopilot `payerWallet`. The hosted engine runs it at its next tick (about every 15 minutes) through the same money path as autopilot: pre-flight (allowance, balance, budget, daily limit), one pull, extend, reconcile, refund of the unused part. The API never moves XLM.
+- Only the caller's own live watch item, on testnet, with autopilot on (`422 AUTOPILOT_OFF` otherwise, `404` for a contract not on their list).
+- The limit is **1 per (user, contract) per rolling 24 hours** (`EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`, default 1, the same as core's `EXTEND_NOW_DAILY_LIMIT`). The route counts this user's extend-now jobs on the contract created in the last 24 hours, except `preflight-failed` and `cancelled` ones; the engine's pre-flight counts pulled ones again before any pull.
+- `202 { job }` for a new job, `200 { job }` for the same `Idempotency-Key` and body. Each new job sends the user the required alert `extend_now_requested` (it cannot be turned off), so a session takeover cannot use Extend now silently.
+- The dashboard shows the estimate (simulated rent, the Evergreen fee and the retry margin) and checks the allowance left before it sends the request. The engine's pre-flight is the authority; the dashboard check only saves a refused run.
+- Each `WatchItem.extendNow` carries `enabled`, so the dashboard shows the button only where the flag is on.
 
 Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1). It does not count against the daily limit.
 
