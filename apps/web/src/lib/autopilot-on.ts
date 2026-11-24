@@ -5,8 +5,8 @@
  *
  * The only caller is `pages/allowance.ts`, and only after the chain reads back
  * exactly the allowance that was signed, or reads a live allowance at least
- * the cap. Both need the engine's spender address, so while `ENGINE_SPENDER`
- * is unpublished this is unreachable. It is its own module so that the guard
+ * the cap. Both need `ENGINE_SPENDER`, which only a testnet build has. It is
+ * its own module so that the guard
  * in `test/docs-account-page.test.ts` can name the one place that sends it.
  *
  * Each contract is its own request. The API checks the payer is linked, the

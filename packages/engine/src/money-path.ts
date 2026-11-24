@@ -89,6 +89,21 @@ export interface HostedJobSnapshot {
   readonly extendRentChargedStroops: bigint | null;
   readonly refundTxHash: string | null;
   readonly shortfallStroops: bigint | null;
+  /**
+   * The preflight result to record on `jobs.preflight` with this save (the store stamps `at`).
+   * Absent or null keeps what is stored. Written once, when preflight decides: a failure with
+   * its reason, or ok with the simulated rent before the pull.
+   */
+  readonly preflight?: PreflightRecord | null;
+  /** `jobs.refund_amount`, set by the settle save. Absent or null keeps what is stored. */
+  readonly refundAmountStroops?: bigint | null;
+}
+
+/** `jobs.preflight` without `at` (schema.sql: `{at, ok, reason?, rentStroops?}`). Counts only. */
+export interface PreflightRecord {
+  readonly ok: boolean;
+  readonly reason?: PreflightReason;
+  readonly rentStroops?: bigint;
 }
 
 export interface LedgerWrite {
@@ -214,6 +229,19 @@ function evidence(job: HostedJobSnapshot, move: ConfirmedMove): LedgerWrite[] {
   ];
 }
 
+/**
+ * Network-fee evidence for an extend. Soroban charges the rent inside the transaction fee
+ * (`feeCharged` includes `rentFeeCharged`), and that rent is recorded as its own `rent` row.
+ * Counting it again here made `fee_ledger_job_subsidy` flag a normal extend as subsidised
+ * (preview, 2026-11-23: fee 9,884,644 of which rent 9,883,312). Only the rest is network fee.
+ */
+function extendEvidence(job: HostedJobSnapshot, move: ExtendMove): LedgerWrite[] {
+  const rent = move.succeeded && move.chargedRentStroops > 0n ? move.chargedRentStroops : 0n;
+  // Never negative: the extend is already confirmed, so a bad meta must not stop its save.
+  const fee = move.feeChargedStroops > rent ? move.feeChargedStroops - rent : 0n;
+  return evidence(job, { ...move, feeChargedStroops: fee });
+}
+
 function finished(
   job: HostedJobSnapshot,
   mode: 'dry-run' | 'live',
@@ -278,6 +306,7 @@ async function settle(
     ...job,
     status: settled.status,
     refundTxHash: refundTx,
+    refundAmountStroops: settled.refundStroops,
     shortfallStroops: settled.shortfallStroops,
   };
   await ports.save(next, rows);
@@ -307,7 +336,10 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
   }
   if (job.network !== 'testnet') {
     if (ports.mode === 'live' && job.pullTxHash === null && job.pullSubmittedHash === null) {
-      await ports.save({ ...job, status: 'preflight-failed' }, []);
+      await ports.save(
+        { ...job, status: 'preflight-failed', preflight: { ok: false, reason: 'not-testnet' } },
+        [],
+      );
     }
     return {
       jobId: job.id,
@@ -375,7 +407,13 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
       extendNowUsedToday: used,
     });
     if (!pre.ok) {
-      if (ports.mode === 'live') await ports.save({ ...job, status: 'preflight-failed' }, []);
+      if (ports.mode === 'live') {
+        const preflight: PreflightRecord =
+          simulated === undefined
+            ? { ok: false, reason: pre.reason }
+            : { ok: false, reason: pre.reason, rentStroops: simulated };
+        await ports.save({ ...job, status: 'preflight-failed', preflight }, []);
+      }
       return {
         jobId: job.id,
         mode: ports.mode,
@@ -412,12 +450,16 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
       status: 'pulled',
       pullTxHash: pulled.hash,
       pullAmountStroops: amount,
+      // `simulated` is defined here: preflight refuses an undefined simulation.
+      preflight: simulated === undefined ? { ok: true } : { ok: true, rentStroops: simulated },
     };
     // The pull row, its evidence and the `pulled` status land together.
     await ports.save(job, [
       ledgerWrite(job, { kind: 'pull', amountStroops: amount, txHash: pulled.hash }),
       ...evidence(job, pulled),
     ]);
+    // Recorded with the pull; later saves of this job leave `jobs.preflight` as it is.
+    job = { ...job, preflight: null };
     submitted = true;
   }
   if (ports.mode !== 'live') return finished(job, ports.mode, false);
@@ -433,7 +475,7 @@ export async function runHostedJob(ports: HostedJobPorts): Promise<HostedJobOutc
         if (rows.length > 0) await ports.save(job, rows);
         return { ...stopped(job, 'live', 'EXTEND_UNCERTAIN', 'pulled'), submitted };
       }
-      rows.push(...evidence(job, extend));
+      rows.push(...extendEvidence(job, extend));
       if (extend.succeeded || !extend.transient) break;
     }
     if (extend === undefined) return { ...stopped(job, 'live', 'INTERNAL', 'pulled'), submitted };

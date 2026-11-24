@@ -356,13 +356,11 @@ export function createHostedChain(options: HostedChainOptions): HostedChain {
         false,
       );
       const rent = done.status === 'SUCCESS' ? findBigint(done.meta, 'rentFeeCharged') : 0n;
-      if (rent === undefined || rent < 0n || rent > done.feeChargedStroops)
-        throw new ChainStepError('BAD_RESULT');
-      // `feeCharged` includes `rentFeeCharged`. The rent is its own ledger row, so the
-      // network-fee evidence is the rest. Otherwise fee_ledger_job_subsidy flags every job.
+      if (rent === undefined || rent < 0n) throw new ChainStepError('BAD_RESULT');
+      // Rent stays inside feeCharged here. extendEvidence (#661) subtracts it once,
+      // when the network-fee row is written, so it is not subtracted twice.
       return {
         ...moved(done),
-        feeChargedStroops: done.feeChargedStroops - rent,
         succeeded: done.status === 'SUCCESS',
         transient: false,
         chargedRentStroops: rent,

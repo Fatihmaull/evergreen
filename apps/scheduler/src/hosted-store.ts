@@ -15,7 +15,11 @@
  *
  * Nothing here logs a payer, user or contract.
  */
-import type { HostedJobSnapshot, LedgerWrite } from '@evergreen/engine/dist/money-path.js';
+import type {
+  HostedJobSnapshot,
+  LedgerWrite,
+  PreflightRecord,
+} from '@evergreen/engine/dist/money-path.js';
 
 export interface Statement {
   readonly text: string;
@@ -146,6 +150,16 @@ const dec = (v: bigint | null): string | null => (v === null ? null : v.toString
  * The job's new state. `pulled_at` is set once, with the pull hash (schema CHECK pairs them),
  * and only the columns 0008/0016 grant to `eg_scheduler` are written.
  */
+/** `jobs.preflight` as JSON text, or null to keep the stored value. Stroops as decimal strings. */
+function preflightJson(record: PreflightRecord | null | undefined): string | null {
+  if (record === undefined || record === null) return null;
+  return JSON.stringify({
+    ok: record.ok,
+    ...(record.reason === undefined ? {} : { reason: record.reason }),
+    ...(record.rentStroops === undefined ? {} : { rentStroops: record.rentStroops.toString(10) }),
+  });
+}
+
 export function saveStatements(next: HostedJobSnapshot, rows: readonly LedgerWrite[]): Statement[] {
   const update: Statement = {
     text: `UPDATE jobs SET
@@ -157,7 +171,10 @@ export function saveStatements(next: HostedJobSnapshot, rows: readonly LedgerWri
   extend_tx_hash = $5,
   extend_rent_charged = $6::numeric,
   refund_tx_hash = $7,
-  shortfall_stroops = $8::numeric
+  shortfall_stroops = $8::numeric,
+  preflight = CASE WHEN $9::jsonb IS NULL THEN preflight
+                   ELSE $9::jsonb || jsonb_build_object('at', now()) END,
+  refund_amount = coalesce($10::numeric, refund_amount)
 WHERE id = $1::uuid`,
     params: [
       next.id,
@@ -168,6 +185,8 @@ WHERE id = $1::uuid`,
       dec(next.extendRentChargedStroops),
       next.refundTxHash,
       dec(next.shortfallStroops),
+      preflightJson(next.preflight),
+      dec(next.refundAmountStroops ?? null),
     ],
   };
   const inserts = rows.map((row): Statement => ({

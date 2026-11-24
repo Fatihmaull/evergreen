@@ -183,6 +183,7 @@ export {
   AuthUnavailableError,
   ResendMailer,
   authDepsFor,
+  parseExtraOrigins,
   authDepsFromEnv,
   authRouteNeeds,
   isAuthPath,

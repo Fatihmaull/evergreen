@@ -87,7 +87,8 @@ function ports(
 
 const okExtend = (): Promise<ExtendMove> =>
   Promise.resolve({
-    ...tx('extend-tx', 8_000n),
+    // Soroban charges the rent inside the fee: 1,000,000 rent + 8,000 network fee.
+    ...tx('extend-tx', 1_008_000n),
     succeeded: true,
     transient: false,
     chargedRentStroops: 1_000_000n,
@@ -294,6 +295,12 @@ describe('runHostedJob', () => {
     const refused = await runHostedJob(noMargin);
     expect(refused.preflightReason).toBe('margin-unset');
     expect(unset.calls.pull).toBe(0);
+    // Live records why it stopped on `jobs.preflight` (preview, 2026-11-23: it was left null).
+    expect(noMargin.saved).toHaveLength(1);
+    expect(noMargin.saved[0]).toMatchObject({
+      status: 'preflight-failed',
+      preflight: { ok: false, reason: 'margin-unset' },
+    });
 
     const mainnet = chain(okExtend);
     const off = ports({
@@ -316,6 +323,7 @@ describe('runHostedJob', () => {
       },
     });
     expect((await runHostedJob(off)).preflightReason).toBe('not-testnet');
+    expect(off.saved[0]?.preflight).toEqual({ ok: false, reason: 'not-testnet' });
     expect(mainnet.calls.simulate).toBe(0);
     expect(mainnet.calls.pull).toBe(0);
   });
@@ -378,6 +386,16 @@ describe('review of #630', () => {
     ]);
   });
 
+  it('records the extend network fee without the rent charged inside it', async () => {
+    const job = ports({ chain: chain(okExtend) });
+    await runHostedJob(job);
+    const fees = job.ledger
+      .filter((row) => row.kind === 'network-fee')
+      .map((row) => [row.txHash, row.amountStroops]);
+    expect(fees).toContainEqual(['extend-tx', 8_000n]);
+    expect(job.ledger.find((row) => row.kind === 'rent')?.amountStroops).toBe(1_000_000n);
+  });
+
   it('P2.2: the pull row is written in the same save as the pulled status', async () => {
     const c = chain(() => Promise.reject(new Error('timeout')));
     const saves: { status: string; kinds: string[] }[] = [];
@@ -392,6 +410,17 @@ describe('review of #630', () => {
     };
     await runHostedJob(wrapped);
     expect(saves[0]).toEqual({ status: 'pulled', kinds: ['pull', 'network-fee'] });
+  });
+
+  it('records an ok preflight with the simulated rent on the pull save, and only there', async () => {
+    const c = chain(okExtend);
+    const job = ports({ chain: c });
+    await runHostedJob(job);
+    expect(job.saved[0]).toMatchObject({
+      status: 'pulled',
+      preflight: { ok: true, rentStroops: 1_000_000n },
+    });
+    for (const later of job.saved.slice(1)) expect(later.preflight).toBeNull();
   });
 
   it('P2.4: dry-run writes nothing, even when preflight fails', async () => {

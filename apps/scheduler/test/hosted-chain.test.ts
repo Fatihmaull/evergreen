@@ -81,14 +81,13 @@ function make(server: ChainRpc, store: SubmittedStore, now = () => 1_000) {
 
 describe('hosted chain port', () => {
   it('reads the charged fee and the rent from the result and meta', async () => {
-    const { server } = fakeRpc({ rent: 200n });
+    const { server } = fakeRpc({ rent: 990_000n });
     const chain = make(server, memoryStore());
     const extend = await chain.extend(1, 'job');
     expect(extend).toMatchObject({
       succeeded: true,
-      chargedRentStroops: 200n,
-      // feeCharged 1_234 includes the rent. The evidence row is the rest.
-      feeChargedStroops: 1_034n,
+      chargedRentStroops: 990_000n,
+      feeChargedStroops: 1_234n,
     });
     expect(CONTRACT).toHaveLength(56);
   });

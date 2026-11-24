@@ -11,13 +11,14 @@
  * not a login page and must never be flagged as one (`LOGIN_FORBIDDEN`).
  * Nothing is stored: no browser storage of any kind.
  *
- * Approve stays disabled while the spender is unpublished or the safety margin
- * is unset. Both reasons are printed. A disabled control here is the feature,
+ * Approve stays disabled while the spender or the retry margin is unset (any
+ * non-testnet build), and until a linked wallet is connected and read. Every
+ * reason is printed. A disabled control here is the feature,
  * built, and not configured.
  *
  * Turn on autopilot (step D) appears only after the chain reads back exactly
  * what was signed, or reads a live allowance at least the cap. Both need the
- * spender, so while it is unpublished step D cannot be reached.
+ * spender, which only a testnet build has.
  */
 import { esc, short } from '../lib/format';
 import { apiRequest } from '../lib/api';
@@ -46,6 +47,7 @@ import {
   type CapEstimate,
 } from '../lib/allowance-cap';
 import {
+  approveOffReasons,
   autopilotOnOutcomeHtml,
   autopilotRowsHtml,
   budgetProblem,
@@ -53,8 +55,10 @@ import {
   defaultBudget,
   liveCovers,
   parseStroops,
+  budgetFigure,
   readBack,
   readBackHtml,
+  submittedHtml,
   reviewPanelHtml,
   standingLineHtml,
   type AutopilotRow,
@@ -113,23 +117,14 @@ function syncApproveButton(): void {
 }
 
 function showWhyApproveIsOff(): void {
-  const reasons: string[] = [];
-  if (ENGINE_SPENDER === undefined) reasons.push(SPENDER_UNSET_TEXT);
-  if (cap?.amountStroops === undefined) {
-    reasons.push(
-      'The safety margin is not set, so this page will not name an allowance amount and will not ask you to sign one.',
-    );
-  }
-  if (account !== undefined && observedAtLedger === undefined && ENGINE_SPENDER !== undefined) {
-    reasons.push(
-      'The allowance has not been read, so the expiry ledger and its date are not known.',
-    );
-  }
-  if (account !== undefined && !linked) {
-    reasons.push(
-      'This wallet is not linked to your account, so an allowance from it is one autopilot cannot use.',
-    );
-  }
+  const reasons = approveOffReasons({
+    spenderSet: ENGINE_SPENDER !== undefined,
+    marginSet: ALLOWANCE_RETRY_MARGIN_STROOPS !== undefined,
+    connected: account !== undefined,
+    read: observedAtLedger !== undefined,
+    linked,
+    capNamed: cap?.amountStroops !== undefined,
+  });
   $('approve-disclosure').innerHTML = reasons
     .map((reason) => `<p class="small muted">${esc(reason)}</p>`)
     .join('');
@@ -349,8 +344,20 @@ function estimate(): void {
   afterEstimate();
 }
 
+/**
+ * After a successful approve the result takes the button's place (spec §
+ * "After signing"). The button and its help come back only for a new
+ * approve: a cap that is not the one just signed.
+ */
+function syncSignControls(): void {
+  const done = signed !== undefined && cap?.amountStroops === signed.amountStroops;
+  $('sign-row').hidden = done;
+  $('sign-help').hidden = done;
+}
+
 function afterEstimate(): void {
   syncApproveButton();
+  syncSignControls();
   showReview();
   syncAutopilotStep();
 }
@@ -412,19 +419,20 @@ $('approve-button').addEventListener('click', async () => {
     observedAtLedger,
     shownCurrentStroops: currentAmountStroops,
   });
-  $('approve-result').innerHTML = approveOutcomeHtml(outcome);
   syncApproveButton();
-  if ('kind' in outcome) return;
+  if ('kind' in outcome) {
+    $('approve-result').innerHTML = approveOutcomeHtml(outcome);
+    return;
+  }
   // Included in a ledger: read the chain back and compare with what was signed.
   signed = terms;
-  $('approve-result').insertAdjacentHTML(
-    'beforeend',
-    '<p class="small muted">Reading the allowance back…</p>',
-  );
+  syncSignControls();
+  $('approve-result').innerHTML =
+    submittedHtml(outcome) + '<p class="small muted">Reading the allowance back…</p>';
   await readStanding(account);
   const back = readBack(lastRead ?? { kind: 'read-failed', detail: 'not read' }, signed);
   readBackMatched = back.kind === 'matches';
-  $('approve-result').innerHTML = approveOutcomeHtml(outcome) + readBackHtml(back, signed);
+  $('approve-result').innerHTML = submittedHtml(outcome) + readBackHtml(back, signed);
   syncAutopilotStep();
 });
 
@@ -521,6 +529,14 @@ $('autopilot-button').addEventListener('click', async () => {
         }.${failed > 0 ? ' The others are still off; each row says why.' : ''} <a href="/dashboard/watchlist/">Back to the watchlist →</a></p>`;
   $('autopilot-result').innerHTML = summary;
   button.disabled = false;
+});
+
+$('autopilot-rows').addEventListener('input', (ev) => {
+  const field = ev.target;
+  if (!(field instanceof HTMLInputElement)) return;
+  if (field.dataset.autoPerJob === undefined && field.dataset.autoPer30 === undefined) return;
+  const line = field.parentElement?.querySelector<HTMLElement>('[data-auto-fmt]');
+  if (line) line.textContent = budgetFigure(parseStroops(field.value));
 });
 
 /**

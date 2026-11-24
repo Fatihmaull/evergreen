@@ -62,7 +62,7 @@ describe('/docs/account/', () => {
     const allowance = readFileSync(join(ROOT, 'apps/web/src/pages/allowance.mjs'), 'utf8');
     expect(allowance).toMatch(/id="revoke-button"[^>]*disabled>Revoke allowance</);
     expect(page).toContain('Revoke allowance');
-    expect(page).toContain('stays disabled');
+    expect(page).toContain('stays disabled until a wallet is connected');
   });
 });
 
@@ -118,6 +118,10 @@ describe('the two statements that go stale', () => {
     // `.stack` is display: grid, which beats the UA's [hidden]; the page CSS must restore it (DES, #654).
     const css = readFileSync(join(ROOT, 'apps/web/src/styles.css'), 'utf8');
     expect(css).toMatch(/#autopilot-step\[hidden\]\s*\{\s*display:\s*none;/);
+    // After an approve the result replaces the sign button; `.row` is flex (DES, #660).
+    expect(allowancePage).toMatch(/id="sign-row"/);
+    expect(allowancePage).toMatch(/id="sign-help"/);
+    expect(css).toMatch(/#sign-row\[hidden\],\s*#sign-help\[hidden\]\s*\{\s*display:\s*none;/);
     const prefs = readFileSync(join(ROOT, 'apps/web/src/lib/alert-preferences.ts'), 'utf8');
     expect(prefs).toContain("'/me/alert-preferences'");
     expect(prefs).not.toMatch(/\/watchlist/);
@@ -130,6 +134,8 @@ describe('the two statements that go stale', () => {
     expect(readFileSync(join(ROOT, 'apps/web/src/lib/allowance.ts'), 'utf8')).toContain(
       "nativeToScVal(0n, { type: 'i128' })",
     );
-    expect(page).toContain('No control on this site turns autopilot on');
+    expect(page).toContain(
+      'No control on this site turns autopilot on except the last step of the allowance page',
+    );
   });
 });

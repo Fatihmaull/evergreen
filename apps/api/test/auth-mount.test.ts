@@ -510,6 +510,32 @@ describe('Worker mount: each route requires only its own settings', () => {
     },
   );
 
+  it('parses DASHBOARD_EXTRA_ORIGINS as exact https origins only', async () => {
+    const { parseExtraOrigins } = await import('../src/index.js');
+    expect(parseExtraOrigins(undefined)).toEqual([]);
+    expect(parseExtraOrigins(' ')).toEqual([]);
+    expect(parseExtraOrigins('https://a.pages.dev, https://b.pages.dev')).toEqual([
+      'https://a.pages.dev',
+      'https://b.pages.dev',
+    ]);
+    for (const bad of [
+      'https://*.pages.dev',
+      'https://a.pages.dev/',
+      'https://a.pages.dev/login',
+      'http://a.pages.dev',
+      'a.pages.dev',
+    ]) {
+      expect(parseExtraOrigins(bad)).toBeUndefined();
+    }
+  });
+
+  it('a malformed DASHBOARD_EXTRA_ORIGINS makes session routes answer 503', async () => {
+    env.DASHBOARD_EXTRA_ORIGINS = 'https://*.pages.dev';
+    for (const [m, p] of [...CHALLENGE, ...SESSION_ONLY]) {
+      expect((await call(m, concrete(p), m === 'GET' ? {} : { body: {} })).status).toBe(503);
+    }
+  });
+
   it('without DASHBOARD_ORIGIN: session and wallet routes answer 503, email start does not need it', async () => {
     delete env.DASHBOARD_ORIGIN;
     for (const [m, p] of [...CHALLENGE, ...SESSION_ONLY]) {
