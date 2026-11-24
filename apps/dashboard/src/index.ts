@@ -71,6 +71,11 @@ export const ROUTES: readonly DashboardRoute[] = [
   },
   {
     route: '/dashboard/decay/',
+    does: "The signed-in user's watched contracts: one reading each and its projection to zero, until the API keeps observations.",
+    reads: 'live',
+  },
+  {
+    route: '/dashboard/decay/evidence/',
     does: 'Recorded TTL observations for all three subjects, with the expiry that happened.',
     reads: 'committed',
   },
