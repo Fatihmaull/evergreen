@@ -17,10 +17,13 @@
 # 2026-11-23 05:06 UTC (run 45115727196). timeout-minutes stays 2.
 #
 # POST /tick JSON (apps/scheduler/src/worker.ts handleFetch / tick):
-#   success: ok (boolean), observedLedger (number), evaluation (object; not printed)
+#   success: ok (boolean), observedLedger (number), evaluation (object, or a failure code)
 #   failure: ok (boolean), code (string)
 # runTick in tick.ts also returns rpcMs, and the worker logs it, but the HTTP
 # body does not include rpcMs. Printed scalars are only ok, observedLedger, and code.
+# From `evaluation` only numbers and booleans are printed, as `evaluation.<path>=<value>`
+# lines (counts such as due and wouldSubmit.skipped.not-due), plus evaluation.ok/code when
+# it is a failure. No strings from it are printed, so no address or message reaches the log.
 name: Scheduler preview tick
 
 on:
@@ -143,6 +146,13 @@ jobs:
               def pick($k):
                 if has($k) and (.[$k] | scalar) then {($k): .[$k]} else {} end;
               pick("ok") + pick("observedLedger") + pick("code")
+            ' "$body"
+            jq -r '
+              if (.evaluation | type) == "object" then
+                .evaluation
+                | paths(type == "number" or type == "boolean") as $p
+                | "evaluation.\($p | map(tostring) | join("."))=\(getpath($p))"
+              else empty end
             ' "$body"
           else
             bytes="$(wc -c <"$body" | tr -d ' ')"

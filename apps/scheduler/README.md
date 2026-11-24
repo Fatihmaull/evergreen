@@ -2,7 +2,7 @@
 
 The scheduler Worker of `PH2-E4-04`: **Stage 0**, a heartbeat, and **Stage 1**, a read-only, dry-run evaluation of the autopilot plan. Design and the reasons for each choice: [`docs/PH2-E4-04-SCHEDULER-DESIGN.md`](../../docs/PH2-E4-04-SCHEDULER-DESIGN.md).
 
-**It signs nothing, submits nothing and holds no key.** Each tick reads the chain's latest ledger and records it in `scheduler_ticks` (migration 0005). That row is what the scheduler gap, DoD-2's check and `THRESHOLD_FLOOR_LEDGERS` are measured from. The money path (Stage 2) is not here yet.
+**By default it signs nothing, submits nothing and holds no key.** Each tick reads the chain's latest ledger and records it in `scheduler_ticks` (migration 0005). That row is what the scheduler gap, DoD-2's check and `THRESHOLD_FLOOR_LEDGERS` are measured from. **Stage 2, the money step, is here but dry-run** unless `HOSTED_MODE=live` with `ENGINE_SECRET` (see below).
 
 ## What it does
 
@@ -26,6 +26,18 @@ What it reads, all inside 0008's `eg_scheduler` grants: `watch_items` (the twelv
 
 The engine is imported by file (`@evergreen/engine/dist/…`), not through its index, which also exports channels that import `node:crypto`.
 
+## Stage 2: the money step (dry-run unless switched on)
+
+After the dry-run tenant pass (cut at 120 s), the tick runs `src/hosted-run.ts`:
+
+1. **Enqueue** one autopilot job per due item with budget (`jobs_autopilot_uq`, window = `floor(ledger / 180)`), never while the same (user, contract) already has a `queued` or `pulled` job.
+2. **Resume or start** open jobs oldest first through PH2-E4-02's `runHostedJob`: preflight, one SEP-41 `transfer_from` of rent + fee + margin, `ExtendFootprintTTL` paid by the engine, reconcile, refund of the excess by native payment. **At most 3 jobs per tick, none started after 300 s**, one after another, since one engine account signs everything.
+3. Log `scheduler.money` with counts only (`due`, `enqueued`, `jobs`, `submitted`, `refunded`, `shortfall`, `preflightFailed`, `failed`, `orphaned`, `deadlineHit`).
+
+**Safe to interrupt.** Each save writes the job's state and its ledger rows in one transaction (`src/hosted-store.ts`), and each chain step records its transaction hash and `maxTime` in the 0006 columns before sending (`src/hosted-chain.ts`). A resumed step asks the chain about that hash first and never sends a second pull or refund for the same job. A queued job whose item left the plan is closed as `preflight-failed`; a *pulled* one is counted as `orphaned` for an operator.
+
+**Dry-run** (the default, and whenever the key is missing or malformed) only counts `due`: no database write, no chain call. Tests: `test/hosted-store.pglite.test.ts` (as `eg_scheduler` under 0008 + 0012 + 0013 + 0016), `test/hosted-chain.test.ts` (idempotency with a fake RPC).
+
 ## Settings (for the Worker config, which DevOps owns)
 
 | Name | Kind | Needed | Meaning |
@@ -35,6 +47,10 @@ The engine is imported by file (`@evergreen/engine/dist/…`), not through its i
 | `TICK_TOKEN` | secret | preview only | Turns on `POST /tick` |
 | `ENVIRONMENT` | var | yes | `production` or `preview` |
 | `DEPLOY_COMMIT` | var | yes | Injected by the deploy workflow, as for the API (#462) |
+| `HOSTED_MODE` | var | no | `live` turns the money step on; anything else is dry-run. Fatih decides per environment |
+| `ENGINE_SECRET` | secret | live only | The testnet engine account's S-key (PH2-E4-03), never the treasury's. Fatih runs `wrangler secret put` himself |
+| `ALLOWANCE_RETRY_MARGIN_STROOPS` | var | live only | The retry margin in stroops. No default: unset means every preflight fails `margin-unset` and nothing is pulled |
+| `HOSTED_MAX_JOBS_PER_TICK` | var | no | 1–10, default 3 |
 
 There is no `wrangler.jsonc` in this package yet: the Worker name, the cron expression and the bindings are DevOps' (design §8). Import `NETWORKS` from core costs about 400 bytes in a bundle (the Stellar SDK is tree-shaken out).
 

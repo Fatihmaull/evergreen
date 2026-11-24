@@ -22,6 +22,7 @@ import {
   pullAmountStroops,
   type HostedFeeConfig,
 } from '../../../../packages/core/src/index';
+import { NETWORK } from './network';
 
 /**
  * `current + this` was accepted on testnet; `current + this + 1` was rejected.
@@ -35,10 +36,14 @@ export const MAX_ALLOWANCE_EXTENSION_LEDGERS = 3_110_399;
 export const RENEWAL_REMINDER_DAYS = [30, 7, 1] as const;
 
 /**
- * Unset on purpose. The pull's retry margin has no default, and a cap that
- * multiplied it in anyway would be a number this page must not ask anyone to sign.
+ * The pull's retry margin on testnet: 100,000 stroops per extend, the same as
+ * the preview scheduler's `ALLOWANCE_RETRY_MARGIN_STROOPS` (decided 2026-11-23
+ * under Fatih's standing authority; CEF, #643). Core gives it no default, and
+ * no other network has a measured one, so any other build leaves it unset and
+ * the page names no cap there.
  */
-export const ALLOWANCE_RETRY_MARGIN_STROOPS: bigint | undefined = undefined;
+export const ALLOWANCE_RETRY_MARGIN_STROOPS: bigint | undefined =
+  NETWORK.name === 'testnet' ? 100_000n : undefined;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -75,7 +80,8 @@ export interface CapEstimate {
 
 export function estimateAllowanceCap(
   contracts: readonly ContractRent[],
-  retryMarginStroops: bigint | undefined = ALLOWANCE_RETRY_MARGIN_STROOPS,
+  /** Required, so a caller's explicit `undefined` is never replaced by the configured margin. */
+  retryMarginStroops: bigint | undefined,
   config: HostedFeeConfig = PROVISIONAL_HOSTED_FEE,
 ): CapEstimate {
   if (retryMarginStroops !== undefined && retryMarginStroops < 0n) {

@@ -25,16 +25,24 @@
       "name": "evergreen-scheduler-preview",
       // workers.dev so POST /tick and GET /health are reachable; no route, no custom domain.
       "workers_dev": true,
-      // Preview: no cron (F9 24h data done, PR #519); tick manually via POST /tick. Production is */15 above.
-      "triggers": { "crons": [] },
+      // Preview: */15 like production, from 2026-11-23 (PH2-E4-04). Hosted autopilot is live here on
+      // testnet (HOSTED_MODE=live), so top-ups must run without a manual tick. Workers Paid (30 s CPU).
+      // POST /tick still works for a manual tick. Was [] since PR #519.
+      "triggers": { "crons": ["*/15 * * * *"] },
       "observability": {
         "enabled": true,
         "head_sampling_rate": 1,
         "logs": { "invocation_logs": false },
       },
       // Stage 2 (PH2-E4-04, #643). Retry margin on testnet decided 2026-11-23 (CEF, recorded on
-      // #643). Read only by Stage 2 code; HOSTED_MODE stays unset, so preview remains dry-run.
-      "vars": { "ENVIRONMENT": "preview", "ALLOWANCE_RETRY_MARGIN_STROOPS": "100000" },
+      // #643). HOSTED_MODE=live on preview only (testnet), 2026-11-23, after fatih set the
+      // preview ENGINE_SECRET (spender GBNCEF5F...J6AM). Production has no HOSTED_MODE and no
+      // engine secret, so it stays dry-run until DoD-2.
+      "vars": {
+        "ENVIRONMENT": "preview",
+        "ALLOWANCE_RETRY_MARGIN_STROOPS": "100000",
+        "HOSTED_MODE": "live",
+      },
     },
   },
 }

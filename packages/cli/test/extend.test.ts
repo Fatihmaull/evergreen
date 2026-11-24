@@ -57,7 +57,8 @@ describe('extend CLI contract', () => {
       readKeysFile: async () => '',
       now: () => new Date(),
     });
-    expect(output.stdout).toContain('evergreen extend --help');
+    expect(output.stdout).toContain('extend <contract-id>');
+    expect(output.stdout).toContain('<command> --help for one command');
     expect(connect).not.toHaveBeenCalled();
   });
   it('prints the prepared hash before sending so interruption does not hide the reconciliation key', () => {

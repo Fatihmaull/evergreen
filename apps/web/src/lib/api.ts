@@ -55,6 +55,8 @@ export type ApiOutcome<T> =
       readonly retryAfterSeconds?: number;
       /** §9's `retryable`, only when the envelope carried a boolean. Never acted on silently. */
       readonly retryable?: boolean;
+      /** §9's `details`, only when the envelope carried a non-empty object. */
+      readonly details?: Readonly<Record<string, unknown>>;
     }
   | {
       readonly kind: 'unavailable';
@@ -66,6 +68,15 @@ export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
 function isKnownCode(code: unknown): code is ApiErrorCode {
   return typeof code === 'string' && (API_ERROR_CODES as readonly string[]).includes(code);
+}
+
+function isDetails(value: unknown): value is Readonly<Record<string, unknown>> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length > 0
+  );
 }
 
 function retryAfter(res: Response): number | undefined {
@@ -119,7 +130,9 @@ export async function apiRequest<T>(
 
   if (res.ok) return { kind: 'ok', status: res.status, data: body as T };
 
-  const envelope = (body as { error?: { code?: unknown; retryable?: unknown } } | null)?.error;
+  const envelope = (
+    body as { error?: { code?: unknown; retryable?: unknown; details?: unknown } } | null
+  )?.error;
   if (envelope === undefined || envelope === null || typeof envelope !== 'object') {
     // JSON without §9's envelope is not an API answer either.
     return { kind: 'unavailable', reason: 'no-api' };
@@ -131,6 +144,7 @@ export async function apiRequest<T>(
     code: isKnownCode(envelope.code) ? envelope.code : 'UNRECOGNISED',
     ...(seconds === undefined ? {} : { retryAfterSeconds: seconds }),
     ...(typeof envelope.retryable === 'boolean' ? { retryable: envelope.retryable } : {}),
+    ...(isDetails(envelope.details) ? { details: envelope.details } : {}),
   };
 }
 

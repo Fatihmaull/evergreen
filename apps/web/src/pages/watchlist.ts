@@ -1,8 +1,10 @@
 /**
  * `/dashboard/watchlist/` — one `GET /watchlist` and one `GET /me` (for the
- * linked wallets the autopilot cell needs), plus one `DELETE` per Remove click
+ * linked wallets the autopilot cell needs), one chain read per payer wallet
+ * (its allowance to the engine, components.md § A), plus one `DELETE` per Remove click
  * and one `PATCH` per autopilot Turn off (spec #350 §6, §9b; components.md § A).
  */
+import { readAllowance, type ReadResult } from '../lib/allowance';
 import { apiRequest } from '../lib/api';
 import { scanOne, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
@@ -13,8 +15,18 @@ import {
   removeOutcomeText,
   watchlistScreenHtml,
   type AutopilotContext,
+  type PayerAllowance,
   type WatchItem,
 } from '../lib/watchlist-view';
+
+/** The chain read, reduced to what the row says. Live only when the expiry is ahead. */
+function payerAllowance(read: ReadResult): PayerAllowance {
+  if (read.kind !== 'read') return { kind: 'unread' };
+  const { amountStroops, liveUntilLedger, observedAtLedger } = read.raw;
+  if (BigInt(amountStroops) > 0n && liveUntilLedger !== null && liveUntilLedger > observedAtLedger)
+    return { kind: 'live', liveUntilLedger, observedAtLedger };
+  return { kind: 'missing' };
+}
 
 const out = document.getElementById('watchlist');
 if (out !== null) {
@@ -25,27 +37,44 @@ if (out !== null) {
     // cell then offers the turn-on path; /allowance/ checks the wallet itself.
     readSession().catch(() => undefined),
   ]).then(([outcome, session]) => {
-    const ctx: AutopilotContext =
+    const linked: AutopilotContext =
       session?.kind === 'signed-in'
         ? { linkedWallets: session.me.wallets.map((w) => w.account) }
         : {};
-    out.innerHTML = watchlistScreenHtml(outcome, new Date(), new Map(), ctx);
+    const scans = new Map<string, ScanResult>();
+    const allowances = new Map<string, PayerAllowance>();
+    const render = () =>
+      (out.innerHTML = watchlistScreenHtml(outcome, new Date(), scans, { ...linked, allowances }));
+    render();
+    if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) return;
+    const items = outcome.data.items as WatchItem[];
     // Stage 1: the engine has stored no observation yet. Read the chain from
     // this browser for those rows, same scope as the item, so the binding
     // expiry has a value. A failed read leaves the row undetermined.
-    if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) return;
-    const items = outcome.data.items as WatchItem[];
     const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
-    if (pending.length === 0) return;
-    const scans = new Map<string, ScanResult>();
-    void Promise.all(
+    const scanned = Promise.all(
       pending.map((i) =>
         scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
           .then((s) => void scans.set(i.contractId, s))
           .catch(() => undefined),
       ),
-    ).then(() => {
-      if (scans.size > 0) out.innerHTML = watchlistScreenHtml(outcome, new Date(), scans, ctx);
+    );
+    // Each payer's allowance to the engine, one chain read per wallet (§ A).
+    const payers = new Set(
+      items
+        .filter((i) => i.network === 'testnet' && i.autopilot?.enabled === true)
+        .map((i) => (i.autopilot as { payerWallet?: unknown }).payerWallet)
+        .filter((p): p is string => typeof p === 'string'),
+    );
+    const read = Promise.all(
+      [...payers].map((payer) =>
+        readAllowance(payer)
+          .catch((e: unknown) => ({ kind: 'read-failed', detail: String(e) }) as const)
+          .then((r) => void allowances.set(payer, payerAllowance(r))),
+      ),
+    );
+    void Promise.all([scanned, read]).then(() => {
+      if (scans.size > 0 || allowances.size > 0) render();
     });
   });
 

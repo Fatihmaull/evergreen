@@ -104,7 +104,41 @@ Health states, printed per entry and as a worst-of summary:
 Colour is added only for an interactive terminal and honours NO_COLOR. The state
 word always prints, so piped output and screenshots lose nothing.`;
 
+/** Deployed docs origin (apps/web). One URL, never two. */
+const DOCS_URL = 'https://evergreen-stellar.pages.dev/docs/cli/';
+
+/**
+ * The first screen (DES spec, web-reference/design-language/components.md § "CLI help and
+ * version"): what the tool does, both commands, four examples, at most 20 lines and 79 columns,
+ * no colour.
+ * The full scan reference moved to `evergreen scan --help`.
+ */
+export function topLevelHelp(version: string | undefined): string {
+  return `evergreen${version === undefined ? '' : ` ${version}`} — Soroban state TTL, read and extended. Testnet by default.
+
+usage: evergreen <command> [options]
+
+commands
+  scan <contract-id>...   read TTL health of each entry given; signs nothing
+  extend <contract-id>    simulate an extend; --submit signs, testnet only
+
+examples
+  evergreen scan C...                     health of one contract
+  evergreen scan C... C... --json         two contracts, shared code resolved
+  evergreen scan C... --cost              rent for 30 more days, simulated
+  evergreen extend C... --ledgers 518400  simulate adding about 30 days
+
+global options
+  --network testnet|mainnet   or EVERGREEN_NETWORK; reads only on mainnet
+  --version                   print the version and exit
+  --help                      this screen; <command> --help for one command
+
+docs  ${DOCS_URL}`;
+}
+
 export interface CliDependencies {
+  /** The installed version, read from package.json by bin.ts. Never typed in source. */
+  readonly version?: string;
   readonly extend?: ExtendCliDependencies;
   connect(): Promise<LedgerEntryReader>;
   readStorageSettings?(): Promise<StorageSettings | undefined>;
@@ -130,6 +164,25 @@ export async function runCli(
   args: readonly string[],
   dependencies: CliDependencies,
 ): Promise<CliOutput> {
+  if (args.length === 1 && (args[0] === '--version' || args[0] === '-v')) {
+    // Bare version so scripts can compare it. No banner, no update check, no network.
+    return { stdout: dependencies.version ?? 'unknown', stderr: '', exitCode: 0 };
+  }
+  if (args.length === 1 && (args[0] === '--help' || args[0] === 'help')) {
+    return { stdout: topLevelHelp(dependencies.version), stderr: '', exitCode: 0 };
+  }
+  // No command: the same screen, but on stderr with the usage exit code, so a script
+  // that forgot its command still fails.
+  if (args.length === 0) {
+    return { stdout: '', stderr: topLevelHelp(dependencies.version), exitCode: EXIT_ERROR };
+  }
+  if (args[0] !== 'scan' && args[0] !== 'extend') {
+    return {
+      stdout: '',
+      stderr: `evergreen: unknown command "${args[0]}". Commands: scan, extend. See evergreen --help.`,
+      exitCode: EXIT_ERROR,
+    };
+  }
   if (args[0] === 'extend') {
     if (args[1] === '--help' && args.length === 2)
       return { stdout: EXTEND_HELP, stderr: '', exitCode: 0 };
@@ -146,17 +199,13 @@ export async function runCli(
     stderr: message,
     exitCode: EXIT_ERROR,
   });
-  if (
-    (args.length === 1 && args[0] === '--help') ||
-    (args.length === 2 && args[0] === 'scan' && args[1] === '--help')
-  ) {
+  if (args.length === 2 && args[0] === 'scan' && args[1] === '--help') {
     return {
       stdout: HELP + '\n\nManual extension: evergreen extend --help',
       stderr: '',
       exitCode: 0,
     };
   }
-  if (args[0] !== 'scan') return fail(USAGE);
   // N contract IDs, because the tool's own advice requires it (`W2-D10-01c`).
   //
   // A single-contract scan structurally CANNOT establish that a shared code
