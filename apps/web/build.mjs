@@ -703,7 +703,12 @@ const PAGES = [
     js: 'assets/watchlist.js',
     to: 'dashboard/watchlist/index.html',
   },
-  { module: 'src/pages/activity.mjs', to: 'dashboard/activity/index.html' },
+  {
+    module: 'src/pages/activity.mjs',
+    entry: 'src/pages/activity.ts',
+    js: 'assets/activity.js',
+    to: 'dashboard/activity/index.html',
+  },
   {
     module: 'src/pages/alerts.mjs',
     entry: 'src/pages/alerts.ts',

@@ -3748,3 +3748,8 @@ body.app p.legend {
 #stop-section[hidden] {
   display: none;
 }
+
+/* Activity: room between the pills and the list, as on Contracts' toolbar. */
+body.app #ac-filters {
+  margin-bottom: 20px;
+}
