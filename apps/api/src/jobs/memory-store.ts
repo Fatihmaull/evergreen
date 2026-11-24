@@ -3,7 +3,17 @@
  * caller's rows only, newest first, keyset pages strictly older than `after`.
  * Tests seed it with `addJob` / `addLedgerRow`; the API itself never writes.
  */
-import type { Job, JobQuery, JobsStore, LedgerQuery, LedgerRow, Page, PageKey } from './store.js';
+import type {
+  ExtendNowRequest,
+  ExtendNowResult,
+  Job,
+  JobQuery,
+  JobsStore,
+  LedgerQuery,
+  LedgerRow,
+  Page,
+  PageKey,
+} from './store.js';
 
 interface Held<T> {
   readonly userId: string;
@@ -49,6 +59,64 @@ const rowId = (r: LedgerRow): bigint => BigInt(r.id);
 export class MemoryJobsStore implements JobsStore {
   private readonly jobs: Held<Job>[] = [];
   private readonly ledger: Held<LedgerRow>[] = [];
+  /** `${userId} ${contractId}` → the item's autopilot payer, or null when autopilot is off. */
+  private readonly items = new Map<string, string | null>();
+  private readonly keys = new Map<string, { hash: string; jobId: string }>();
+  private seq = 0;
+
+  /** Seeds a live watch item, as `watch_items` would hold it. */
+  setItem(userId: string, contractId: string, payer: string | null): void {
+    this.items.set(`${userId} ${contractId}`, payer);
+  }
+
+  createExtendNow(userId: string, req: ExtendNowRequest): Promise<ExtendNowResult> {
+    const key = this.keys.get(`${userId} ${req.idempotencyKey}`);
+    if (key !== undefined) {
+      const job = this.jobs.find((h) => h.item.id === key.jobId)?.item;
+      if (job === undefined) throw new Error('key without job');
+      return Promise.resolve(
+        key.hash === req.requestHash ? { kind: 'existing', job } : { kind: 'key-reused' },
+      );
+    }
+    const itemKey = `${userId} ${req.contractId}`;
+    if (!this.items.has(itemKey)) return Promise.resolve({ kind: 'not-found' });
+    const payer = this.items.get(itemKey);
+    if (payer === null || payer === undefined) return Promise.resolve({ kind: 'autopilot-off' });
+    const since = (req.now - 86_400) * 1_000_000;
+    const counted = this.jobs.filter(
+      (h) =>
+        h.userId === userId &&
+        h.item.contractId === req.contractId &&
+        h.item.kind === 'extend-now' &&
+        h.item.status !== 'preflight-failed' &&
+        h.item.status !== 'cancelled' &&
+        h.us > BigInt(since),
+    );
+    if (counted.length >= req.limitPerDay) {
+      const oldest = counted.reduce((a, h) => (h.us < a ? h.us : a), counted[0]!.us);
+      return Promise.resolve({
+        kind: 'daily-limit',
+        used: counted.length,
+        resetsAt: Number(oldest / 1_000_000n) + 86_400,
+      });
+    }
+    this.seq += 1;
+    const at = new Date(req.now * 1000 + this.seq).toISOString();
+    const job: Job = {
+      id: `00000000-0000-4000-9000-${String(this.seq).padStart(12, '0')}`,
+      network: 'testnet',
+      contractId: req.contractId,
+      kind: 'extend-now',
+      payerWallet: payer,
+      createdAt: at,
+      updatedAt: at,
+      status: 'queued',
+      steps: {},
+    };
+    this.addJob(userId, job);
+    this.keys.set(`${userId} ${req.idempotencyKey}`, { hash: req.requestHash, jobId: job.id });
+    return Promise.resolve({ kind: 'created', job });
+  }
 
   addJob(userId: string, job: Job): void {
     this.jobs.push({ userId, us: micros(job.createdAt), item: job });

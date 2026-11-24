@@ -39,6 +39,7 @@ Applied in order:
 | `0015_alert_ledger_facts.sql` | Current facts for `approaching_critical` (`entry_ttl_facts`) and `allowance_expiring` (`allowance_expiry_facts`). One row per entry, and one per `(account, spender)`. No `user_id` and no email. `eg_api` gets `SELECT`. `eg_scheduler` gets `SELECT` plus column `INSERT`/`UPDATE` for the upsert, no `DELETE`, and nothing on `users`. Testnet only. Apply after 0014. Ends with its own `schema_migrations` INSERT. Does not send mail. PH2-E2-06. |
 | `0016_jobs_shortfall_stroops.sql` | `jobs.shortfall_stroops` (`stroops` NULL until reconcile, `CHECK >= 0`, partial index `WHERE shortfall_stroops > 0`). K15: charged rent + final fee − pull, when positive. `0` is reconciled with no shortfall. DoD-2 counts `shortfall_stroops > 0`. Not a `fee_ledger` row. `eg_scheduler` gains `UPDATE` on that column only. No grant on `users` or `users.email`. Numbered 0016 because 0015 is #621; this file does not read 0015's tables. Apply after 0014 and 0013. Re-run after any 0008 re-run. Ends with its own `schema_migrations` INSERT. PH2-E4-02. |
 | `0017_api_fee_ledger_select.sql` | `eg_api` gains `SELECT` on `fee_ledger` and on the view `fee_ledger_job_balance`, for `GET /ledger` and each job's refund time on `GET /jobs` (API §7, `PH2-E2-08`). Resolves 0008's UNDETERMINED line for a job-history route. Read only: no `INSERT`, `UPDATE`, `DELETE` or `TRUNCATE`, so the ledger stays append-only. Apply after 0008 and 0013. Re-run after any 0008 re-run. Ends with its own `schema_migrations` INSERT. |
+| `0018_api_extend_now.sql` | `eg_api` gains column `INSERT (user_id, network, contract_id, kind, payer_account, idempotency_key, request_hash)` on `jobs` for `POST /jobs` ("Extend now", option A, Fatih 2026-11-24). `alert_outbox_kind_check` is replaced to add the required kind `extend_now_requested`. No `UPDATE` beyond 0008's cancel grant. Production keeps `EXTEND_NOW_ENABLED` off until DoD-2, so the grant is unused there until then. Apply after 0008, 0011 and 0013. Re-run after any 0008 re-run. Ends with its own `schema_migrations` INSERT. |
 
 ```
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0002_jobs_daily_limit_per_user.sql
@@ -57,6 +58,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0014
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0015_alert_ledger_facts.sql  # after 0014
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0016_jobs_shortfall_stroops.sql  # after 0014; number 0016 is after 0015 (#621)
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0017_api_fee_ledger_select.sql  # after 0008 and 0013; before the API that serves GET /ledger
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 --single-transaction -f apps/api/db/0018_api_extend_now.sql  # after 0008, 0011 and 0013
 ```
 
 ### Checklist for every new migration

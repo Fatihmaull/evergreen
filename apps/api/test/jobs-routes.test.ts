@@ -17,6 +17,7 @@ import {
   handle,
   type Env,
   type HandleOptions,
+  memoryOutboxStore,
   type Job,
   type LedgerRow,
 } from '../src/index.js';
@@ -178,28 +179,6 @@ describe('GET /jobs', () => {
     });
   });
 
-  it('🔴 POST /jobs is not built: 405 with Allow: GET, and nothing is queued', async () => {
-    const a = await signIn('a@example.test');
-    const res = await handle(
-      new Request(`${ORIGIN}${API_BASE}/jobs`, {
-        method: 'POST',
-        headers: {
-          origin: ORIGIN,
-          cookie: a.cookie,
-          [CSRF_HEADER]: a.csrf,
-          'content-type': 'application/json',
-          'idempotency-key': uuid(9),
-        },
-        body: JSON.stringify({ network: 'testnet', contractId: C1, kind: 'extend-now' }),
-      }),
-      env,
-      options,
-    );
-    expect(res.status).toBe(405);
-    expect(res.headers.get('allow')).toBe('GET');
-    expect((await body<ListBody<Job>>(await call('GET', '/jobs', a.cookie))).items).toEqual([]);
-  });
-
   it('answers 503 when the database is not configured, naming nothing', async () => {
     const a = await signIn('a@example.test');
     options = { ...options, createJobsStore: () => undefined };
@@ -295,5 +274,165 @@ describe('cursor', () => {
     expect(decodeCursor(encodeCursor(key), /^[0-9a-f-]{36}$/)).toEqual(key);
     expect(decodeCursor('e30', /./)).toBeUndefined(); // {}
     expect(decodeCursor('a'.repeat(201), /./)).toBeUndefined();
+  });
+});
+
+describe('POST /jobs (Extend now, option A)', () => {
+  const KEY = '3b241101-e2bb-4255-8caf-4136c566a962';
+  const KEY2 = '9b2d1c3e-1f2a-4b5c-9d6e-7f8a9b0c1d2e';
+  const G = Keypair.random().publicKey();
+  const extendBody = { network: 'testnet', contractId: C1, kind: 'extend-now' };
+
+  async function post(
+    s: Session,
+    o: { key?: string | null; body?: unknown; csrf?: string | null } = {},
+  ): Promise<Response> {
+    const headers: Record<string, string> = {
+      origin: ORIGIN,
+      cookie: s.cookie,
+      'content-type': 'application/json',
+    };
+    if (o.csrf !== null) headers[CSRF_HEADER] = o.csrf ?? s.csrf;
+    if (o.key !== null) headers['idempotency-key'] = o.key ?? KEY;
+    return handle(
+      new Request(`${ORIGIN}${API_BASE}/jobs`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(o.body ?? extendBody),
+      }),
+      env,
+      options,
+    );
+  }
+  const code = async (res: Response): Promise<string> =>
+    (await body<{ error: { code: string } }>(res)).error.code;
+
+  let outbox: ReturnType<typeof memoryOutboxStore>;
+  beforeEach(() => {
+    outbox = memoryOutboxStore();
+    env = {
+      ...env,
+      EXTEND_NOW_ENABLED: 'true',
+      ALERTS_SEND: 'send',
+      ALERTS_ALLOWLIST: 'a@example.test',
+    } as Env;
+    options = { ...options, createAlertOutboxStore: () => outbox };
+  });
+
+  it('🔴 queues one extend-now job paid by the item’s autopilot payer, and emails the user', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    const before = sent.length;
+    const res = await post(a);
+    expect(res.status).toBe(202);
+    const { job } = await body<{ job: Job }>(res);
+    expect(job).toMatchObject({
+      contractId: C1,
+      kind: 'extend-now',
+      payerWallet: G,
+      status: 'queued',
+      steps: {},
+    });
+    const mail = sent.slice(before).map((b) => JSON.parse(b) as { subject: string; text: string });
+    expect(mail).toHaveLength(1);
+    expect(mail[0]!.subject).toContain('Extend now was requested');
+    expect(mail[0]!.text).toContain('runs within about 15 minutes');
+    expect([...outbox.rows.values()][0]).toMatchObject({ status: 'sent' });
+  });
+
+  it('🔴 the same key and body return the same job, never a second one, and email once', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    const first = await body<{ job: Job }>(await post(a));
+    const before = sent.length;
+    const again = await post(a);
+    expect(again.status).toBe(200);
+    expect((await body<{ job: Job }>(again)).job.id).toBe(first.job.id);
+    expect(sent.length).toBe(before);
+    expect((await body<ListBody<Job>>(await call('GET', '/jobs', a.cookie))).items).toHaveLength(1);
+  });
+
+  it('the same key with a different body is 409', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    jobs.setItem(a.userId, C2, G);
+    await post(a);
+    const res = await post(a, { body: { ...extendBody, contractId: C2 } });
+    expect(res.status).toBe(409);
+    expect(await code(res)).toBe('IDEMPOTENCY_KEY_REUSED');
+  });
+
+  it('🔴 a second Extend now on the same contract within 24 hours is 429 with when it resets', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    await post(a);
+    clock += 3600;
+    const res = await post(a, { key: KEY2 });
+    expect(res.status).toBe(429);
+    const err = (await body<{ error: { code: string; details: Record<string, unknown> } }>(res))
+      .error;
+    expect(err.code).toBe('DAILY_LIMIT_REACHED');
+    expect(err.details).toMatchObject({ limit: 1, used: 1 });
+    expect(typeof err.details['resetsAt']).toBe('string');
+  });
+
+  it('a pre-flight failure does not use the day’s Extend now', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    jobs.addJob(a.userId, {
+      ...job(1, { kind: 'extend-now', status: 'preflight-failed' }),
+      createdAt: new Date(clock * 1000 - 60_000).toISOString(),
+    });
+    expect((await post(a)).status).toBe(202);
+  });
+
+  it('🔴 refuses an item with autopilot off (422) and a contract not on the caller’s list (404)', async () => {
+    const a = await signIn('a@example.test');
+    const b = await signIn('b@example.test');
+    jobs.setItem(a.userId, C1, null);
+    jobs.setItem(b.userId, C2, G);
+    const off = await post(a);
+    expect(off.status).toBe(422);
+    expect(await code(off)).toBe('AUTOPILOT_OFF');
+    const other = await post(a, { key: KEY2, body: { ...extendBody, contractId: C2 } });
+    expect(other.status).toBe(404);
+  });
+
+  it('🔴 is off unless EXTEND_NOW_ENABLED is exactly "true"', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    for (const flag of [undefined, '', 'TRUE', '1', 'yes']) {
+      env = { ...env, EXTEND_NOW_ENABLED: flag } as Env;
+      const res = await post(a);
+      expect(res.status).toBe(403);
+      expect(await code(res)).toBe('EXTEND_NOW_DISABLED');
+    }
+    expect((await body<ListBody<Job>>(await call('GET', '/jobs', a.cookie))).items).toEqual([]);
+  });
+
+  it('🔴 needs CSRF, an Idempotency-Key (UUID v4), testnet and kind extend-now', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    expect((await post(a, { csrf: null })).status).toBe(403);
+    const nokey = await post(a, { key: null });
+    expect(nokey.status).toBe(400);
+    expect(await code(nokey)).toBe('IDEMPOTENCY_KEY_REQUIRED');
+    expect((await post(a, { key: 'not-a-uuid' })).status).toBe(400);
+    const main = await post(a, { body: { ...extendBody, network: 'mainnet' } });
+    expect(main.status).toBe(422);
+    expect(await code(main)).toBe('NETWORK_NOT_WRITABLE');
+    expect((await post(a, { body: { ...extendBody, kind: 'autopilot' } })).status).toBe(400);
+    expect((await body<ListBody<Job>>(await call('GET', '/jobs', a.cookie))).items).toEqual([]);
+  });
+
+  it('a failed email never changes the answer', async () => {
+    const a = await signIn('a@example.test');
+    jobs.setItem(a.userId, C1, G);
+    options = {
+      ...options,
+      fetch: (() => Promise.reject(new Error('resend down'))) as unknown as typeof fetch,
+    };
+    // Sign-in already happened, so only the notice uses this fetch.
+    expect((await post(a)).status).toBe(202);
   });
 });

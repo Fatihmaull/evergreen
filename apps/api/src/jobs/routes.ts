@@ -8,20 +8,39 @@
  * - `GET /ledger?wallet=&contractId=&jobId=&cursor=&limit=`: fee-ledger rows of
  *   the caller's own jobs, newest first.
  *
- * Every route needs a session (`requireSession`); the user id comes from the
- * session row, never the request. **No route here writes or moves XLM.**
- * `POST /jobs` is deliberately not built (Fatih, 2026-11-24: its design is
- * discussed with him first), so `/jobs` answers `405` with `Allow: GET`.
+ * - `POST /jobs`: queues one "Extend now" (Fatih, 2026-11-24, option A),
+ *   behind `EXTEND_NOW_ENABLED`. It writes one `jobs` row; the engine moves
+ *   the XLM, through the autopilot money path, after its own pre-flight.
+ *
+ * Every route needs a session (`requireSession`, which also passes CSRF for
+ * the POST); the user id comes from the session row, never the request.
  */
 import { StrKey } from '@stellar/stellar-sdk';
 import { apiError } from '../router.js';
 import { requireSession, withRotatedCookie, type AuthDeps } from '../auth/routes.js';
 import { parseContractId } from '../watchlist/validate.js';
-import type { JobsStore, PageKey } from './store.js';
+import type { User } from '../auth/store.js';
+import type { Job, JobsStore, PageKey } from './store.js';
 
 export interface JobsDeps {
   readonly auth: AuthDeps;
   readonly store: JobsStore;
+  /**
+   * `EXTEND_NOW_ENABLED` is exactly `true`. Off, `POST /jobs` answers
+   * `403 EXTEND_NOW_DISABLED` and writes nothing (Fatih, 2026-11-24: on for
+   * preview testnet, off in production until DoD-2).
+   */
+  readonly extendNowEnabled: boolean;
+  /** `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY` (§3). */
+  readonly extendNowLimitPerDay: number;
+  /** Unix seconds. */
+  readonly now: () => number;
+  /**
+   * Emails the user that Extend now was used (§7: an email notice on every
+   * use). Scheduled after the job is written, never awaited by the answer.
+   */
+  readonly announce?: (user: User, job: Job) => Promise<unknown>;
+  readonly waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 /** `limit` when the request names none, and the most it may name (§2: 1..100). */
@@ -46,7 +65,114 @@ function match(path: string): Match | undefined {
 
 /** The methods a jobs or ledger path answers, for `405` and its `Allow` header. */
 export function jobsMethods(path: string): readonly string[] | undefined {
-  return match(path) === undefined ? undefined : ['GET'];
+  const m = match(path);
+  if (m === undefined) return undefined;
+  return m.kind === 'jobs' ? ['GET', 'POST'] : ['GET'];
+}
+
+/** The state-changing job route, listed so tests can prove it is guarded. */
+export const JOBS_WRITE_ROUTES = [['POST', '/jobs']] as const;
+
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * `POST /jobs` (§7): queues one "Extend now". Option A (Fatih, 2026-11-24): the
+ * job runs through the autopilot money path, so the item must have autopilot
+ * on, and its payer and allowance are the ones that pay. Refused before
+ * anything is written: flag off, no key, malformed body, not testnet, not the
+ * caller's item, autopilot off, or the limit reached. Nothing here moves XLM:
+ * the engine does, after its own pre-flight.
+ */
+async function createJob(request: Request, deps: JobsDeps): Promise<Response> {
+  const authed = await requireSession(request, deps.auth);
+  if (authed instanceof Response) return authed;
+  if (!deps.extendNowEnabled) {
+    return apiError('EXTEND_NOW_DISABLED', 'Extend now is not available here yet.', 403);
+  }
+  const keyRaw = request.headers.get('idempotency-key');
+  if (keyRaw === null || keyRaw.trim() === '') {
+    return apiError('IDEMPOTENCY_KEY_REQUIRED', 'Send an Idempotency-Key header.', 400);
+  }
+  const key = keyRaw.trim().toLowerCase();
+  if (!UUID_V4.test(key)) return invalid('Idempotency-Key', 'Idempotency-Key must be a UUID v4.');
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return invalid('body', 'The body must be JSON.');
+  }
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return invalid('body', 'The body must be a JSON object.');
+  }
+  const b = body as Record<string, unknown>;
+  if (b['kind'] !== 'extend-now') return invalid('kind', "kind must be 'extend-now'.");
+  const contract = parseContractId(b['contractId'], 'contractId');
+  if (!contract.ok) return invalid(contract.field, contract.message);
+  if (b['network'] !== 'testnet') {
+    return apiError('NETWORK_NOT_WRITABLE', 'Only testnet can be written until DoD-2.', 422);
+  }
+  // Canonical body: fixed key order, so the same intent hashes the same.
+  const requestHash = await sha256Hex(
+    JSON.stringify({ network: 'testnet', contractId: contract.value, kind: 'extend-now' }),
+  );
+
+  const result = await deps.store.createExtendNow(authed.user.id, {
+    contractId: contract.value,
+    idempotencyKey: key,
+    requestHash,
+    limitPerDay: deps.extendNowLimitPerDay,
+    now: deps.now(),
+  });
+  switch (result.kind) {
+    case 'created': {
+      const announce = deps.announce;
+      if (announce !== undefined) {
+        try {
+          const task = announce(authed.user, result.job).catch(() => undefined);
+          if (deps.waitUntil === undefined) await task;
+          else deps.waitUntil(task);
+        } catch {
+          // The notice must never change the answer; the job is already queued.
+        }
+      }
+      return json(202, { job: result.job });
+    }
+    case 'existing':
+      return json(200, { job: result.job });
+    case 'key-reused':
+      return apiError(
+        'IDEMPOTENCY_KEY_REUSED',
+        'This Idempotency-Key was already used for a different request.',
+        409,
+      );
+    case 'not-found':
+      return apiError('NOT_FOUND', 'No such watch item.', 404);
+    case 'autopilot-off':
+      return apiError(
+        'AUTOPILOT_OFF',
+        'Turn on autopilot for this contract first. Extend now uses its payer and allowance.',
+        422,
+      );
+    case 'daily-limit':
+      return apiError(
+        'DAILY_LIMIT_REACHED',
+        'Extend now was already used for this contract today.',
+        429,
+        {
+          details: {
+            limit: deps.extendNowLimitPerDay,
+            used: result.used,
+            resetsAt: new Date(result.resetsAt * 1000).toISOString(),
+          },
+        },
+      );
+  }
 }
 
 function json(status: number, body: unknown): Response {
@@ -180,7 +306,12 @@ export async function handleJobs(
   deps: JobsDeps,
 ): Promise<Response | undefined> {
   const m = match(path);
-  if (m === undefined || request.method.toUpperCase() !== 'GET') return undefined;
+  if (m === undefined) return undefined;
+  const method = request.method.toUpperCase();
+  if (method === 'POST' && m.kind === 'jobs') {
+    return withRotatedCookie(request, await createJob(request, deps));
+  }
+  if (method !== 'GET') return undefined;
   let res: Response;
   if (m.kind === 'jobs') res = await listJobs(request, deps);
   else if (m.kind === 'job') res = await getJob(request, deps, m.id);

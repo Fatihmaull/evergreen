@@ -314,7 +314,7 @@ type Job = {
 };
 ```
 
-**As built (`PH2-E2-08`, 2026-11-24).** `GET /jobs` and `GET /jobs/{jobId}` are live; **`POST /jobs` is not built** and `/jobs` answers `405` with `Allow: GET` until its design is agreed with Fatih. What the read routes return, beyond the type above:
+**As built (`PH2-E2-08`, 2026-11-24).** `GET /jobs` and `GET /jobs/{jobId}` are live. What the read routes return, beyond the type above:
 - `GET /jobs` answers `{ items: Job[], nextCursor }` (§2 pagination; `limit` defaults to 50, at most 100). `GET /jobs/{jobId}` answers `{ job }`; another user's job is `404`, the same as no job.
 - Each `Job` also carries `payerWallet` and `updatedAt`. Additive; clients may ignore them.
 - `steps.extendTx: { txHash, rentChargedStroops | null }` is the extend transaction as the engine stores it today (`jobs.extend_tx_hash`, `extend_rent_charged`). `rentChargedStroops` is null when that extend did not confirm. `steps.extend` (`BumpRecord[]`) appears only once the engine writes `jobs.extend_records`.
@@ -340,6 +340,15 @@ type Job = {
 | `422 ALLOWANCE_MISSING` / `ALLOWANCE_EXPIRED` | the payer wallet has no live allowance |
 | `429 DAILY_LIMIT_REACHED` | the caller's "Extend now" uses of this contract in the rolling 24 hours have reached `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`; other users watching the same contract are unaffected. `details: { limit, used, resetsAt }` |
 | `422 NETWORK_NOT_WRITABLE` | any network but testnet |
+| `403 EXTEND_NOW_DISABLED` | `EXTEND_NOW_ENABLED` is not exactly `true` on this Worker. Production keeps it off until DoD-2 (Fatih, 2026-11-24); preview testnet has it on |
+
+**`POST /jobs` as built (Fatih, 2026-11-24, option A).** "Extend now" always goes through autopilot, so the XLM flow is the one users already approved:
+- The route writes one `jobs` row, `kind = 'extend-now'`, `status = 'queued'`, paid by the item's autopilot `payerWallet`. The hosted engine runs it at its next tick (about every 15 minutes) through the same money path as autopilot: pre-flight (allowance, balance, budget, daily limit), one pull, extend, reconcile, refund of the unused part. The API never moves XLM.
+- Only the caller's own live watch item, on testnet, with autopilot on (`422 AUTOPILOT_OFF` otherwise, `404` for a contract not on their list).
+- The limit is **1 per (user, contract) per rolling 24 hours** (`EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`, default 1, the same as core's `EXTEND_NOW_DAILY_LIMIT`). The route counts this user's extend-now jobs on the contract created in the last 24 hours, except `preflight-failed` and `cancelled` ones; the engine's pre-flight counts pulled ones again before any pull.
+- `202 { job }` for a new job, `200 { job }` for the same `Idempotency-Key` and body. Each new job sends the user the required alert `extend_now_requested` (it cannot be turned off), so a session takeover cannot use Extend now silently.
+- The dashboard shows the estimate (simulated rent, the Evergreen fee and the retry margin) and checks the allowance left before it sends the request. The engine's pre-flight is the authority; the dashboard check only saves a refused run.
+- Each `WatchItem.extendNow` carries `enabled`, so the dashboard shows the button only where the flag is on.
 
 Balance and exact rent are checked by the engine's pre-flight, not here. A pre-flight failure is a job in `preflight-failed` with its reason, and the user is alerted (§3.3 step 1). It does not count against the daily limit.
 
@@ -395,7 +404,7 @@ The exact row split is Rakha's schema; this shape is the read view.
 - `retryable`: true only where retrying the same request can succeed: `RATE_LIMITED`, `UPSTREAM_UNAVAILABLE`.
 - **An error never echoes a secret, an RPC URL, an email that isn't the caller's own, or another user's data.**
 
-Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
+Codes used above: `CSRF_FAILED`, `RATE_LIMITED`, `CODE_INVALID`, `WALLET_LINKED_ELSEWHERE`, `WALLET_PAYS_FOR_WATCHED_CONTRACT`, `CHALLENGE_INVALID`, `NETWORK_UNAVAILABLE`, `NETWORK_NOT_WRITABLE`, `THRESHOLD_BELOW_FLOOR`, `AUTOPILOT_OFF`, `ALLOWANCE_MISSING`, `ALLOWANCE_EXPIRED`, `DAILY_LIMIT_REACHED`, `EXTEND_NOW_DISABLED`, `IDEMPOTENCY_KEY_REQUIRED`, `IDEMPOTENCY_KEY_REUSED`, `INVALID_REQUEST`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNAUTHENTICATED`, `UPSTREAM_UNAVAILABLE`, `EMAIL_NOT_SENT`.
 
 `INVALID_REQUEST` is the generic validation code (added with `PH2-E2-05`; the watchlist routes use it). `retryable: false`. `details.field` names the offending field and never echoes the value sent.
 - `400`: the request is malformed. The body is not a JSON object, a field has the wrong type or shape, an unknown field was sent, a path segment is not a valid network or contract ID, a `budget` amount is `"0"`, or `perJobMaxStroops` is above `per30DaysMaxStroops` (§6).
@@ -490,6 +499,7 @@ emits `'healthy' | 'warning' | 'critical' | 'unknown'` plus `isExpired`, and
 | `ALLOWANCE_MISSING` | "No allowance yet. Approve one to let Evergreen extend for you." | Approve, in the user's wallet — **with the full §3.3 disclosure, every time**: amount in XLM *and* stroops, the spender, the expiry as a date *and* a ledger, and that a new approve **replaces** the current cap |
 | `ALLOWANCE_EXPIRED` | the amount and the ledger it expired at, not just the word | Re-approve, same disclosure. Shown with how long the autopilot has been stopped, because an expired allowance silently not protecting a contract is the failure this product names |
 | `DAILY_LIMIT_REACHED` | "You have used today's extends for this contract (N of N)." with the reset time, from `details` or the item's `extendNow` | Wait, or let the autopilot handle it. **The screen states the limit before it is reached** (Fatih, 2026-10-21) — a limit a user discovers by hitting it reads as a fault, so the count is shown beside the control from the first use, not only on refusal |
+| `EXTEND_NOW_DISABLED` | "Extend now is switched off on this network for now. Autopilot still extends on its own schedule." | Nothing. The dashboard hides the button while the item's `extendNow.enabled` is false, so this is reached only by a stale page |
 | `THRESHOLD_BELOW_FLOOR` | the floor, and that it comes from the engine's measured scheduler gap | Raise the threshold. **The floor's number is quoted from the API, never typed into the client** |
 | `NETWORK_NOT_WRITABLE` | "That network cannot be written to from here. Nothing was added." (the web client's copy, `apps/web/src/lib/watchlist.ts`; names no network and gives no date) | Nothing. **Should be unreachable from this UI** — see below |
 | `NETWORK_UNAVAILABLE` | "That network cannot be read here yet." | Switch back to testnet |
