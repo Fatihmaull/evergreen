@@ -72,7 +72,7 @@ export function render() {
     </section>
       </div>
     </details>
-    <section class="stack stop-section">
+    <section class="stack stop-section" id="stop-section" hidden>
       <h2 class="section">Stop</h2>
       <p class="small muted">Revoking is one <span class="mono">approve</span> with amount 0, signed by your wallet. After it lands the engine can pull nothing.</p>
       <div class="row"><button id="revoke-button" class="secondary" type="button" disabled>Revoke allowance</button></div>

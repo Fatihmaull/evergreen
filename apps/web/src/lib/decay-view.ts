@@ -194,7 +194,8 @@ export function stripsHtml(
         cell = `<p class="note">${esc(r.binding.word)}: nothing left to decay.</p>`;
         end = esc(r.binding.word);
       } else {
-        cell = `<p class="note">No expiry to draw: ${esc((r.why ?? 'it could not be established').replace(/\.$/, ''))}.</p>`;
+        const why = (r.why ?? 'it could not be established').replace(/\.$/, '');
+        cell = `<p class="note">No expiry to draw: ${esc(why.charAt(0).toLowerCase() + why.slice(1))}.</p>`;
       }
       return `<li class="strip${open}" data-open="${esc(id)}" tabindex="0" role="button" aria-label="${esc(`Chart ${nameOf(r)}`)}">
         <div class="name"><span>${esc(nameOf(r))}</span>${stateChip(r)}</div>
