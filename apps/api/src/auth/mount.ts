@@ -48,6 +48,14 @@ export interface AuthEnv {
   /** The dashboard's origin, e.g. https://evergreen-stellar.pages.dev (var). CSRF and SEP-10 domains derive from it. */
   DASHBOARD_ORIGIN?: string;
   /**
+   * Optional further dashboard origins (var): exact origins, comma-separated,
+   * no wildcard, no path, e.g. a branch preview of the dashboard. CSRF accepts
+   * them besides `DASHBOARD_ORIGIN`, and the wallet challenge uses the
+   * requesting one's host. Set on preview only; production leaves it unset.
+   * One malformed entry makes the session routes answer 503.
+   */
+  DASHBOARD_EXTRA_ORIGINS?: string;
+  /**
    * HMAC key for RFC 8058 optional-alert unsubscribe links (secret). Not one
    * of `AUTH_SECRET_NAMES`: auth keeps working when it is unset. The value
    * is never logged. DevOps sets it with `wrangler secret put`; production
@@ -292,6 +300,9 @@ export function authDepsFor(
     }
     deps['allowedOrigin'] = origin.origin;
     deps['domains'] = { homeDomain: origin.host, webAuthDomain: origin.host };
+    const extra = parseExtraOrigins(env.DASHBOARD_EXTRA_ORIGINS);
+    if (extra === undefined) return undefined;
+    deps['extraOrigins'] = extra;
   } else {
     lazy('allowedOrigin');
     lazy('domains');
@@ -307,6 +318,30 @@ export function authDepsFor(
   } else deps['challengeKeypair'] = unavailable<Keypair>();
 
   return deps as unknown as AuthDeps;
+}
+
+/**
+ * `DASHBOARD_EXTRA_ORIGINS` as a list of exact https origins, `[]` when unset,
+ * or `undefined` when any entry is not an exact origin (a wildcard, a path, a
+ * trailing slash, or not https).
+ */
+export function parseExtraOrigins(value: string | undefined): readonly string[] | undefined {
+  if (value === undefined || value.trim() === '') return [];
+  const out: string[] = [];
+  for (const raw of value.split(',')) {
+    const entry = raw.trim();
+    if (entry === '') continue;
+    if (entry.includes('*')) return undefined;
+    let url: URL;
+    try {
+      url = new URL(entry);
+    } catch {
+      return undefined;
+    }
+    if (url.protocol !== 'https:' || url.origin !== entry) return undefined;
+    out.push(entry);
+  }
+  return out;
 }
 
 /** `DATABASE_URL` set and no factory injected: Postgres on Neon over schema.sql. */

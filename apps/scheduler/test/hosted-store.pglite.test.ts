@@ -11,6 +11,7 @@ import { runHostedJob, type HostedChain } from '@evergreen/engine/dist/money-pat
 import {
   autopilotWindow,
   enqueueAutopilotJobs,
+  extendNowUsedToday,
   loadJob,
   openJobs,
   pgSubmittedStore,
@@ -403,5 +404,56 @@ describe('parseHostedConfig', () => {
     ).toBeUndefined();
     expect(parseHostedConfig({ HOSTED_MAX_JOBS_PER_TICK: '50' }).maxJobs).toBe(3);
     expect(parseHostedConfig({ HOSTED_MAX_JOBS_PER_TICK: '5' }).maxJobs).toBe(5);
+  });
+});
+
+describe('extend-now jobs (Fatih, 2026-11-24, option A)', () => {
+  const insertExtendNow = async (pulledHoursAgo: number | null, status = 'queued') => {
+    const pulled = pulledHoursAgo === null ? null : `now() - interval '${pulledHoursAgo} hours'`;
+    const r = await pg.query<{ id: string }>(
+      `INSERT INTO jobs (user_id, network, contract_id, kind, payer_account, idempotency_key,
+         status, pull_tx_hash, pulled_at)
+       VALUES ($1::uuid, 'testnet', $2, 'extend-now', $3, gen_random_uuid(), $4::job_status,
+         ${pulled === null ? 'NULL' : `'h-' || gen_random_uuid()`}, ${pulled ?? 'NULL'})
+       RETURNING id`,
+      [U, C, G, status],
+    );
+    return r.rows[0]!.id;
+  };
+
+  it('the money step opens them, and the daily limit (1 per 24 h) counts only other pulled ones', async () => {
+    const id = await insertExtendNow(null);
+    const open = await openJobs(asScheduler, 10);
+    const job = open.find((j) => j.id === id);
+    expect(job).toMatchObject({ kind: 'extend-now', status: 'queued' });
+    expect(await extendNowUsedToday(asScheduler, job!)).toBe(0);
+    await insertExtendNow(25, 'extended'); // outside the rolling 24 hours
+    expect(await extendNowUsedToday(asScheduler, job!)).toBe(0);
+    await insertExtendNow(1, 'extended');
+    expect(await extendNowUsedToday(asScheduler, job!)).toBe(1);
+
+    const chain: HostedChain = {
+      simulateRent: () => Promise.resolve(1_000_000n),
+      allowanceRemaining: () => Promise.resolve(9_000_000n),
+      balance: () => Promise.resolve(9_000_000n),
+      pull: () => Promise.reject(new Error('must not pull')),
+      extend: () => Promise.reject(new Error('must not extend')),
+      refund: () => Promise.reject(new Error('must not refund')),
+    };
+    const outcome = await runHostedJob({
+      mode: 'live',
+      retryMarginStroops: 10_000n,
+      chain,
+      budget: () => 'ok',
+      extendNowUsedToday: () => extendNowUsedToday(asScheduler, job!),
+      load: () => loadJob(asScheduler, id),
+      save: (next, rows) => txAsScheduler(saveStatements(next, rows)),
+    });
+    expect(outcome).toMatchObject({ status: 'preflight-failed', submitted: false });
+    const row = await pg.query<{ preflight: { ok: boolean; reason: string } }>(
+      'SELECT preflight FROM jobs WHERE id = $1::uuid',
+      [id],
+    );
+    expect(row.rows[0]?.preflight).toMatchObject({ ok: false, reason: 'daily-limit' });
   });
 });

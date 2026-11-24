@@ -6,7 +6,8 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
  * Both checks from docs/API.md §3, for every state-changing request:
- * - `Origin` must equal the dashboard's origin. A missing `Origin` fails:
+ * - `Origin` must equal the dashboard's origin, or one of `extraOrigins`
+ *   (exact origins from `DASHBOARD_EXTRA_ORIGINS`, preview only). A missing `Origin` fails:
  *   browsers send it on cross-origin and on every non-GET `fetch`, so its
  *   absence on a state change is not a request this API should honour.
  * - `X-Evergreen-CSRF` must equal the session's synchronizer token.
@@ -19,12 +20,16 @@ export function csrfAllows(args: {
   readonly method: string;
   readonly origin: string | null;
   readonly allowedOrigin: string;
+  readonly extraOrigins?: readonly string[];
   readonly headerToken: string | null;
   readonly sessionCsrfToken: string;
 }): boolean {
   if (SAFE_METHODS.has(args.method.toUpperCase())) return true;
-  // A missing Origin (null) never equals the allowed one, so it fails here.
-  if (args.origin !== args.allowedOrigin) return false;
+  // A missing Origin (null) fails here.
+  if (args.origin === null) return false;
+  if (args.origin !== args.allowedOrigin && !(args.extraOrigins ?? []).includes(args.origin)) {
+    return false;
+  }
   if (args.headerToken === null) return false;
   return timingSafeEqual(args.headerToken, args.sessionCsrfToken);
 }

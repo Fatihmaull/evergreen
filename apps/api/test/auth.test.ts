@@ -227,6 +227,22 @@ describe('CSRF', () => {
   ])('🔴 refuses %s', (_, change) => {
     expect(csrfAllows({ ...ok, ...change })).toBe(false);
   });
+
+  it('accepts an exact extra origin, and nothing near it', () => {
+    const extra = { ...ok, extraOrigins: ['https://revamp-dashboard.evergreen-stellar.pages.dev'] };
+    expect(
+      csrfAllows({ ...extra, origin: 'https://revamp-dashboard.evergreen-stellar.pages.dev' }),
+    ).toBe(true);
+    expect(csrfAllows(extra)).toBe(true);
+    for (const origin of [
+      'https://other.evergreen-stellar.pages.dev',
+      'https://revamp-dashboard.evergreen-stellar.pages.dev.evil.test',
+      'http://revamp-dashboard.evergreen-stellar.pages.dev',
+      null,
+    ]) {
+      expect(csrfAllows({ ...extra, origin })).toBe(false);
+    }
+  });
 });
 
 describe('rate limits', () => {
