@@ -552,3 +552,294 @@ table.list td .chip {
 .fact-cell .v {
   overflow-wrap: anywhere;
 }
+
+/* ---- Blast radius: the dependency map ---- */
+
+.graph-head {
+  display: flex;
+  justify-content: space-between;
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.graph {
+  width: 100%;
+  height: auto;
+}
+
+.graph .edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.graph .edge.on {
+  stroke: var(--pine);
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.graph .node {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.graph .node.sel {
+  fill: var(--pine);
+  stroke: var(--pine);
+}
+
+.graph .node.arch {
+  fill: var(--ink);
+  stroke: var(--ink);
+}
+
+.graph .n {
+  font: 400 14px var(--sans);
+  fill: var(--ink);
+}
+
+.graph .d {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.graph .inv {
+  fill: var(--surface);
+}
+
+.graph .d.inv {
+  fill: rgba(252, 249, 248, 0.78);
+}
+
+.graph .dim-node {
+  opacity: 0.5;
+}
+
+.graph .s-ok {
+  fill: var(--ok);
+}
+
+.graph .s-warn {
+  fill: var(--warn);
+}
+
+.graph .s-und {
+  fill: none;
+  stroke: var(--und);
+  stroke-width: 2;
+}
+
+.graph .s-exp {
+  fill: var(--ink);
+}
+
+/* ---- TTL decay ---- */
+
+.chart-card {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.chart-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.chart-top .label {
+  font: 400 12px/1.4 var(--sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.sel-figure {
+  font: 400 36px/1.1 var(--serif);
+  color: var(--ok-ink);
+}
+
+.sel-unit {
+  color: var(--ink-2);
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font: 400 12px/1 var(--mono);
+  color: var(--ink-2);
+}
+
+.legend span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.legend i {
+  display: inline-block;
+}
+
+.lg-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pine);
+}
+
+.lg-ext {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--pine);
+  background: var(--surface);
+}
+
+.lg-proj {
+  width: 18px;
+  border-top: 2px dashed var(--sage);
+}
+
+.chart.big .grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.chart.big .future {
+  fill: rgba(15, 15, 15, 0.03);
+}
+
+.chart .warn-b {
+  stroke: var(--warn);
+  stroke-dasharray: 2 4;
+}
+
+.chart .act-b,
+.spark .act-b {
+  stroke: var(--warn);
+  stroke-width: 1;
+}
+
+.chart .band-t {
+  fill: var(--warn-ink);
+}
+
+.chart .now {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.chart .now-t {
+  fill: var(--ink-2);
+}
+
+.chart .step {
+  stroke: var(--pine);
+  stroke-width: 1.5;
+}
+
+.chart .ext {
+  fill: var(--surface);
+  stroke: var(--pine);
+  stroke-width: 2;
+}
+
+.chart .ext-t {
+  fill: var(--pine);
+}
+
+.chart .tip rect {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+}
+
+.chart .tt {
+  font: 400 13px var(--sans);
+  fill: var(--ink);
+}
+
+.chart .tt.d {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.strips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 110px 110px;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.strip.open {
+  background: rgba(15, 15, 15, 0.04);
+}
+
+.strip .name {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.spark {
+  width: 100%;
+  height: 44px;
+  display: block;
+}
+
+.spark .line {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+}
+
+.spark .dot {
+  fill: var(--pine);
+}
+
+.num-cell {
+  text-align: right;
+}
+
+.end-cell {
+  color: var(--ink-2);
+}
+
+@media (max-width: 760px) {
+  .strip {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .strip .spark-cell {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .strip .end-cell {
+    display: none;
+  }
+
+  .legend {
+    display: none;
+  }
+}
+
+/* Sparklines stretch to their cell; strokes keep their width. */
+.spark line,
+.spark polyline {
+  vector-effect: non-scaling-stroke;
+}
