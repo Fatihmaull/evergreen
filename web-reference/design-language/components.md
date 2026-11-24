@@ -890,3 +890,36 @@ two-line usage; only the message changes.
 
 Exit codes, `--json` output, the scan and extend option names, and colour
 rules (TTY only, `NO_COLOR` honoured). The top-level screen adds no colour.
+
+## Dashboard revamp: overview (2026-11-24, branch `revamp-dashboard`)
+
+Reference: `source/screens/dashboard-overview.html`, renders `source/renders/screens/dashboard-overview.png` (desktop, side panel open) and `dashboard-overview-mobile.png` (390 px).
+
+**Why.** Fatih, 2026-11-24: the dashboard reads like a document. It shows our example contracts, explains itself in paragraphs, and scrolls a long way. A dashboard summarises the person's own data. Detail opens on demand: a click, or a side panel.
+
+**Rules for every dashboard screen.**
+
+- **The person's data, not ours.** No guinea-pig or example contract appears in the signed-in dashboard. Our own contracts, engine runs and extension history leave the dashboard nav and live under `/about/` (or the docs) as public evidence.
+- **No lead paragraph.** A page has an eyebrow and a heading. Explanations move to the empty state, a tooltip-free one-line note, or the docs. At most one line of `note` text per block.
+- **Summary first, detail on request.** A list shows one line per item. The whole row opens the side panel. The full page remains for deep links.
+- **Fits one screen on desktop.** With up to 5 contracts, the overview fits within 1440 × 900 without the activity block. Lists beyond 5 rows link to the full list.
+
+**Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed), Activity (jobs and fee ledger, new), Allowance. *Tools*: Scanner, Blast radius, TTL decay. *Settings*: Alerts, Account (Sign in when signed out), Documentation. Below 760 px the sidebar becomes a horizontal scrolling tab row with the top group first, section labels hidden.
+
+**Overview, signed in, from the top.**
+
+1. Head: eyebrow `Overview · Stellar testnet`, h1 `Your contracts`, buttons *Scan a contract* (secondary) and *Add contract* (primary).
+2. **Needs attention first** (the one dominant element). The contract with the fewest ledgers left among those not healthy; if all are healthy, the one ending first, with the figure in ink instead of the warning colour. Figure 72 px serif, coloured by state; caption: binding entry, `~date`, and the autopilot threshold when autopilot is on. *Open* opens the side panel. An undetermined contract is never chosen as "first" over an at-risk one, and is never shown with a figure.
+3. **Four facts**, no boxes, separated by space: Watching (count, then needs-attention · undetermined · archived counts), Autopilot (`N of M`, next scheduler check), Allowance left (stroops, until ledger, `~date`; *Not approved* links to /allowance/ when there is none), Last 30 days (extends count; rent and fee as separate figures, from `GET /ledger`).
+4. **Contracts**: table, ordered as `orderRows` already orders them. Columns: Contract (label over the short ID), State chip, Ledgers left (mono, right-aligned, `—` when archived or undetermined), Ends (est.), Autopilot on/off. Below 760 px only the first three columns remain.
+5. **Recent activity**: the last 4 events (extend, allowance approve, add, failed job), one line each: mono time, sentence, amount. *All activity* goes to the new Activity page.
+
+**Side panel.** 380 px, `--paper`, a 1 px `--rule` left border, no shadow, no slide animation (rule 7). It opens on row click or *Open*, and closes with *Close*, Escape, or clicking the open row again. The URL carries `?c=<contractId>` so a reload or shared link reopens it. Contents: label, full ID (mono), state chip; Binds on, Ledgers left, Ends, Read at; Autopilot (state and payer, Act below, Extend to); *Extend now* (primary, only when autopilot is on) and *Edit autopilot*; extend-now uses left; the last 2 extends with rent and fee on separate figures; links *Full details* and *Remove*. Below 760 px the panel is a full-width page section under the list.
+
+**Overview, signed out.** The scan field and one line, "Sign in to watch your contracts and turn on autopilot." with a *Sign in* button. No example contracts, no paragraphs.
+
+**Overview, signed in with nothing watched.** The heading, an *Add contract* field (contract ID, optional label) and one line pointing to the scanner. No facts row and no tables until there is a contract.
+
+**Stand-ins in the render.** Every contract name, ID, ledger, date, amount and the payer are invented for the render: current ledger 5,400,000; payments-v2 41,208 left; allowance 812,400 stroops until 5,912,000. Wire them to `GET /watchlist`, `GET /wallets/{account}/allowance`, `GET /jobs` and `GET /ledger`.
+
+**Open.** The Activity page and the move of "Our own record" to `/about/` are specified next. Whether the scheduler's next check time is readable from the API is undetermined; until it is, that fact cell shows only `N of M`.
