@@ -216,6 +216,7 @@ describe('PgJobsStore as eg_api', () => {
 describe('createExtendNow as eg_api (0018)', () => {
   const KEY = 'aaaaaaaa-0000-4000-8000-000000000001';
   const KEY2 = 'aaaaaaaa-0000-4000-8000-000000000002';
+  const KEY3 = 'aaaaaaaa-0000-4000-8000-000000000003';
   const HASH = 'ab'.repeat(32);
   const NOW = Date.parse('2026-11-24T16:00:00Z') / 1000;
   const req = (o: Partial<Parameters<typeof store.createExtendNow>[1]> = {}) => ({
@@ -271,13 +272,27 @@ describe('createExtendNow as eg_api (0018)', () => {
     }
   });
 
+  it('🔴 a job that pulled late counts from its pull, the same window the engine uses', async () => {
+    // Created 30 h before NOW but pulled 2 h before: the engine still counts it, so the API does.
+    await pg.exec(`UPDATE jobs SET status = 'pulled', created_at = to_timestamp(${NOW - 30 * 3600}),
+      pull_tx_hash = '${'e'.repeat(64)}', pulled_at = to_timestamp(${NOW - 2 * 3600}), pull_amount = 1
+      WHERE user_id = '${A}' AND idempotency_key = '${KEY}'`);
+    const limited = await store.createExtendNow(A, req({ idempotencyKey: KEY2 }));
+    expect(limited.kind).toBe('daily-limit');
+    if (limited.kind === 'daily-limit') expect(limited.resetsAt).toBe(NOW - 2 * 3600 + 86_400);
+    // Pulled 25 h before NOW: outside the window, so a new key is accepted.
+    await pg.exec(`UPDATE jobs SET pulled_at = to_timestamp(${NOW - 25 * 3600})
+      WHERE user_id = '${A}' AND idempotency_key = '${KEY}'`);
+    expect((await store.createExtendNow(A, req({ idempotencyKey: KEY2 }))).kind).toBe('created');
+  });
+
   it('autopilot off and another user’s contract write nothing', async () => {
     expect(
-      (await store.createExtendNow(A, req({ contractId: CA, idempotencyKey: KEY2 }))).kind,
+      (await store.createExtendNow(A, req({ contractId: CA, idempotencyKey: KEY3 }))).kind,
     ).toBe('autopilot-off');
     const C9 = `C${'Z'.repeat(55)}`;
     expect(
-      (await store.createExtendNow(B, req({ contractId: C9, idempotencyKey: KEY2 }))).kind,
+      (await store.createExtendNow(B, req({ contractId: C9, idempotencyKey: KEY3 }))).kind,
     ).toBe('not-found');
   });
 

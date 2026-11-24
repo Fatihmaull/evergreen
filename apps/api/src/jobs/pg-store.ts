@@ -86,10 +86,10 @@ WHERE w.user_id = $1::uuid AND w.network = 'testnet' AND w.contract_id = $2::tex
 const COUNTED = `FROM jobs c
   WHERE c.user_id = $1::uuid AND c.network = 'testnet' AND c.contract_id = $2::text
     AND c.kind = 'extend-now' AND c.status NOT IN ('preflight-failed', 'cancelled')
-    AND c.created_at > to_timestamp($3::float8) - interval '24 hours'`;
+    AND coalesce(c.pulled_at, c.created_at) > to_timestamp($3::float8) - interval '24 hours'`;
 
 export const EXTEND_NOW_USED_SQL = `SELECT count(*)::int AS used,
-  extract(epoch from min(c.created_at))::int8::text AS oldest ${COUNTED}`;
+  extract(epoch from min(coalesce(c.pulled_at, c.created_at)))::int8::text AS oldest ${COUNTED}`;
 
 /**
  * One row, only while the limit allows it. The limit is re-checked inside the
