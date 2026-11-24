@@ -35,7 +35,7 @@ export const ROUTES: readonly DashboardRoute[] = [
   { route: '/', does: 'The problem, the thesis, and a real scan capture.', reads: 'committed' },
   {
     route: '/dashboard/',
-    does: "Signed in: a summary of the person's own contracts, the one that needs attention first, and a side panel per contract. Signed out: the scan field.",
+    does: 'Scan any contract, and the live state of the three this project runs against.',
     reads: 'live',
   },
   { route: '/dashboard/scanner/', does: 'The scan panel on its own page.', reads: 'live' },
@@ -43,11 +43,6 @@ export const ROUTES: readonly DashboardRoute[] = [
     route: '/dashboard/watchlist/',
     does: "A signed-in user's watched contracts, binding expiry first, from the Evergreen API.",
     reads: 'live',
-  },
-  {
-    route: '/dashboard/activity/',
-    does: 'The engine jobs and fee ledger for the signed-in user, once the API serves them.',
-    reads: 'committed',
   },
   {
     route: '/dashboard/alerts/',

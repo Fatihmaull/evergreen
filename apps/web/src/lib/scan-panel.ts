@@ -12,6 +12,7 @@
  * submits, renews or broadcasts, and there is no control that implies it.
  */
 import {
+  OUR_CONTRACTS,
   health,
   isValidContractId,
   quoteRent,
@@ -20,46 +21,12 @@ import {
   type ScanReport,
   type ScanResult,
 } from './evergreen';
-import { approxDate, approxXlm, esc, formatCount } from './format';
-import { bindingFromScan } from './watchlist-view';
+import { approxXlm, esc, formatCount } from './format';
 import { NETWORK } from './network';
 import { blastRadiusPanel, entryTable, jsonPanel, verdict, wireCopyButtons } from './ui';
 import { addOutcomeHtml, addToWatchlist, scopeFor } from './watchlist';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
-
-/**
- * The dominant figure: the binding expiry, through the watchlist's own
- * `bindingFromScan`. Undetermined is a chip and a sentence, never a figure.
- */
-export function resultHead(result: ScanResult, rep: ScanReport, cli: string): string {
-  const b = bindingFromScan(result);
-  const actions = `<div class="actions"><button class="secondary copy" type="button" data-copy="${esc(cli)}">Copy CLI command</button><button type="button" id="watch-button">Add to watchlist</button></div>`;
-  const tone =
-    rep.worst === 'warning' || rep.worst === 'critical'
-      ? ''
-      : rep.worst === 'healthy'
-        ? ' ok'
-        : ' ink';
-  const chip =
-    rep.worst === undefined || rep.worst === 'unknown'
-      ? '<span class="chip undetermined"><span class="shape"></span>undetermined</span>'
-      : `<span class="chip ${esc(rep.worst)}"><span class="shape"></span>${rep.worst === 'healthy' ? 'healthy' : 'at risk'}</span>`;
-  let body: string;
-  if (b.state === 'live' && b.remainingLedgers !== undefined) {
-    body = `<p><span class="next-figure${tone}">${esc(formatCount(b.remainingLedgers))}</span><span class="next-unit">ledgers left</span></p>
-      <p class="caption">${chip} binds on ${esc(b.kind)} · ends ${esc(approxDate(b.endsAt))}${
-        b.observedAtLedger === undefined
-          ? ''
-          : ` · read at ledger <span class="mono">${esc(formatCount(b.observedAtLedger))}</span>`
-      }</p>`;
-  } else if (b.state === 'expired') {
-    body = `<p><span class="next-figure ink">${esc(b.word)}</span></p><p class="caption">binds on ${esc(b.kind)} · restore it before it can be extended</p>`;
-  } else {
-    body = `<p>${chip}</p><p class="caption">No entry with a TTL came back, so the binding expiry is undetermined. Absence is not health.</p>`;
-  }
-  return `<section class="next" aria-label="Result"><div><p class="label">Binding expiry</p>${body}</div>${actions}</section>`;
-}
 
 let lastScan:
   { result: ScanResult; report: ScanReport; id: string; dataKeys: readonly string[] } | undefined;
@@ -89,20 +56,25 @@ async function runScan(event: Event): Promise<void> {
     const result = await scanOne(id, dataKeys);
     const rep = report(result);
     lastScan = { result, report: rep, id, dataKeys };
-    const cli = `npx @evergreen-stellar/cli scan ${id}`;
     out.innerHTML = [
-      resultHead(result, rep, cli),
-      `<div id="watch-result" aria-live="polite"></div>`,
-      `<section class="block" aria-labelledby="entries-h"><div class="block-head"><h2 id="entries-h">Entries read</h2></div>${entryTable(rep)}</section>`,
-      `<details class="block"><summary>Rent to extend</summary><div class="stack" id="cost-panel">
+      verdict(rep),
+      entryTable(rep),
+      blastRadiusPanel(rep, [id]),
+      `<div class="card card-pad stack" id="cost-panel">
          <div class="row">
            <button class="secondary" type="button" id="cost-button">Estimate rent to extend</button>
            <label class="small muted">by <input type="number" id="cost-ledgers" value="518400" min="1" step="1" style="width:9.5rem;display:inline-block"> more ledgers (about 30 days)</label>
          </div>
-         <p class="note">Priced by simulating against the network, one entry at a time. Nothing is submitted.</p>
-       </div></details>`,
-      `<details class="block"><summary>Shared code and the full verdict</summary><div class="stack">${verdict(rep)}${blastRadiusPanel(rep, [id])}</div></details>`,
-      `<details class="block"><summary>JSON</summary>${jsonPanel(result, health(result))}</details>`,
+         <p class="small muted">Pricing asks the network to simulate the extension, one entry at a time, so it takes a moment. Nothing is submitted.</p>
+       </div>`,
+      `<div class="card card-pad stack" id="watch-panel">
+         <div class="row">
+           <button class="secondary" type="button" id="watch-button">Add to watchlist</button>
+         </div>
+         <p class="small muted">Adds this contract, with the same data keys, to the watchlist of your signed-in account, which the Evergreen API keeps. Adding needs <a href="/login/">an email sign-in</a>; the scan itself never does. The engine has not necessarily checked it yet: the watchlist says so per row.</p>
+         <div id="watch-result" aria-live="polite"></div>
+       </div>`,
+      jsonPanel(result, health(result)),
     ].join('');
     wireCopyButtons(out);
     $('cost-button').addEventListener('click', () => void runCost());
@@ -208,8 +180,9 @@ export function mountScanPanel(): void {
   if (form === null) return;
   form.addEventListener('submit', (e) => void runScan(e));
   const fromQuery = new URLSearchParams(location.search).get('id');
-  if (fromQuery && isValidContractId(fromQuery)) {
-    $<HTMLInputElement>('contract-id').value = fromQuery;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-  }
+  $<HTMLInputElement>('contract-id').value =
+    fromQuery && isValidContractId(fromQuery) ? fromQuery : OUR_CONTRACTS[0].id;
+  $('example-button').addEventListener('click', () => {
+    $<HTMLInputElement>('contract-id').value = OUR_CONTRACTS[0].id;
+  });
 }

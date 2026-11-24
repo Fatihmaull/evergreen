@@ -1,182 +1,122 @@
 /**
- * Blast radius (`/dashboard/blast-radius/`). One `GET /watchlist` names the
- * contracts; `?ids=` adds others for this view only. One `scanMany` reads
- * them together, which is the only way a shared code entry can be seen.
- * `?show=all` draws every entry, not just code; `?sel=` is the selected node
- * and opens the side panel.
+ * Blast radius. One contract ID per line, because a maintainer has these in a
+ * list somewhere. The result is a dependency graph, and the notice that even
+ * this proves only a lower bound.
  */
-import { apiRequest } from '../lib/api';
 import {
-  blastPanelHtml,
-  largestSharedHtml,
-  mapSvg,
-  sharedEntries,
-  type MapShow,
-} from '../lib/blast-view';
-import { isValidContractId, report, scanMany, type ScanReport } from '../lib/evergreen';
-import { esc } from '../lib/format';
+  OUR_CONTRACTS,
+  health,
+  isValidContractId,
+  report,
+  scanMany,
+  type ScanReport,
+} from '../lib/evergreen';
+import { approxDate, esc, formatCount } from '../lib/format';
 import { NETWORK } from '../lib/network';
-import { wireCopyButtons } from '../lib/ui';
-import type { WatchItem } from '../lib/watchlist-view';
+import { entryTable, graph, jsonPanel, verdict, wireCopyButtons } from '../lib/ui';
+import { entryView } from '../lib/view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
-let rep: ScanReport | undefined;
-const labels = new Map<string, string>();
-const watched = new Set<string>();
-
-const params = (): URLSearchParams => new URLSearchParams(location.search);
-const show = (): MapShow => (params().get('show') === 'all' ? 'all' : 'code');
-const selected = (): string | undefined => params().get('sel') ?? undefined;
-const extraIds = (): string[] =>
-  (params().get('ids') ?? '')
-    .split(/[\s,]+/)
-    .map((s) => s.trim())
+function ids(): string[] {
+  return $<HTMLTextAreaElement>('ids')
+    .value.split('\n')
+    .map((line) => line.trim())
     .filter(Boolean);
-
-function setParam(name: string, value: string | undefined): void {
-  const url = new URL(location.href);
-  if (value === undefined) url.searchParams.delete(name);
-  else url.searchParams.set(name, value);
-  history.replaceState(null, '', url);
 }
 
-function filtersHtml(active: MapShow): string {
-  const link = (v: MapShow, text: string): string => {
-    const url = new URL(location.href);
-    if (v === 'code') url.searchParams.delete('show');
-    else url.searchParams.set('show', v);
-    const on = v === active;
-    return `<a class="filter${on ? ' active' : ''}" href="${esc(url.search || '?')}" data-show="${v}"${on ? ' aria-current="true"' : ''}>${text}</a>`;
-  };
-  return link('code', 'Code') + link('all', 'All entries');
+function updateCount(): void {
+  const list = ids();
+  const invalid = list.filter((id) => !isValidContractId(id));
+  $('count').textContent =
+    `${list.length} contract${list.length === 1 ? '' : 's'} provided` +
+    (invalid.length > 0 ? ` · ${invalid.length} not a valid contract ID` : '');
 }
 
-function render(): void {
-  if (rep === undefined) return;
-  const sel = selected();
-  const s = show();
-  $('br-filters').innerHTML = filtersHtml(s);
-  $('br-right-h').textContent = s === 'code' ? 'Code they run on' : 'Entries they need';
-  $('br-svg').innerHTML = mapSvg(rep, labels, s, sel ?? sharedEntries(rep)[0]?.key);
-  const panel = $('side-panel');
-  const html = sel === undefined ? '' : blastPanelHtml(rep, labels, watched, sel);
-  panel.innerHTML = html;
-  panel.hidden = html === '';
-  document.body.classList.toggle('panel-open', html !== '');
-  wireCopyButtons(panel);
-}
-
-function select(id: string | undefined): void {
-  setParam('sel', selected() === id ? undefined : id);
-  render();
-  if (selected() !== undefined)
-    $('side-panel').querySelector<HTMLElement>('[data-panel-close]')?.focus();
-}
-
-async function scan(ids: readonly string[]): Promise<void> {
-  const status = $('br-status');
-  status.hidden = false;
-  status.textContent = `Reading ${ids.length} contract${ids.length === 1 ? '' : 's'} from the chain…`;
-  try {
-    rep = report(await scanMany(ids));
-  } catch (error) {
-    status.innerHTML = `The chain could not be read: ${esc((error as Error).message)}. The endpoint is <span class="mono">${esc(NETWORK.rpcUrl)}</span>.`;
-    return;
+/** The sentence the page exists for, built from what the scan actually found. */
+function sharedSentence(rep: ScanReport, now = new Date()): string {
+  const shared = rep.entries.filter((e) => e.assessment.observedContractCount > 1);
+  if (shared.length === 0) {
+    return `<p class="headline">No entry in this scan is shared by more than one of the contracts you listed. That is not proof that none is shared — it is what these contracts, read together, can show.</p>`;
   }
-  status.hidden = true;
-  const next = $('br-next');
-  next.innerHTML = largestSharedHtml(rep, labels);
-  next.hidden = false;
-  $('br-map').hidden = false;
-  render();
-}
-
-function openAdd(): void {
-  $('br-add').hidden = false;
-  $('br-add-toggle').setAttribute('aria-expanded', 'true');
-  $<HTMLTextAreaElement>('br-ids').focus();
-}
-
-async function load(): Promise<void> {
-  const outcome = await apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(
-    () => ({ kind: 'unavailable', reason: 'network' }) as const,
-  );
-  if (outcome.kind === 'ok' && Array.isArray(outcome.data?.items)) {
-    for (const i of outcome.data.items as WatchItem[]) {
-      if (i.network !== 'testnet') continue;
-      watched.add(i.contractId);
-      if (i.label) labels.set(i.contractId, i.label);
+  const lines = shared.map((e) => {
+    const view = entryView(e, now);
+    const count = e.assessment.observedContractCount;
+    // A shared entry that has already expired took every contract with it —
+    // past tense, and no projected date, because there is nothing to project.
+    if (view.state === 'expired') {
+      return (
+        `These ${count} contracts shared 1 ${esc(e.entry.kind)} entry, and it is ${view.word}` +
+        `${view.endedAtLedger === undefined ? '' : ` (ended at ledger <span class="mono">${esc(formatCount(view.endedAtLedger))}</span>)`}. ` +
+        `They failed together. ${esc(view.reason)}`
+      );
     }
-  }
-  const extra = extraIds().filter(isValidContractId);
-  $<HTMLTextAreaElement>('br-ids').value = extra.join('\n');
-  const ids = [...new Set([...watched, ...extra])];
-  if (ids.length === 0) {
-    const signedOut = outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED';
-    $('br-status').innerHTML = signedOut
-      ? '<a href="/login/">Sign in</a> to draw your watched contracts, or add contract IDs to scan them together.'
-      : 'No contracts to draw yet. Add contract IDs to scan them together.';
-    openAdd();
-    return;
-  }
-  await scan(ids);
+    const when = view.state === 'live' ? approxDate(view.endsAt) : 'an unread date';
+    const at =
+      view.state === 'live'
+        ? ` (ledger <span class="mono">${esc(formatCount(view.endsAtLedger))}</span>)`
+        : '';
+    return `These ${count} contracts share 1 ${esc(e.entry.kind)} entry. It expires <strong>${esc(when)}</strong>${at}. They fail together.`;
+  });
+  return lines.map((l) => `<p class="headline">${l}</p>`).join('');
 }
 
-$('br-add-toggle').addEventListener('click', () => {
-  const add = $('br-add');
-  if (add.hidden) openAdd();
-  else {
-    add.hidden = true;
-    $('br-add-toggle').setAttribute('aria-expanded', 'false');
-  }
-});
+async function run(event?: Event): Promise<void> {
+  event?.preventDefault();
+  const list = ids();
+  const out = $('result');
+  const button = $<HTMLButtonElement>('scan-button');
+  const invalid = list.filter((id) => !isValidContractId(id));
 
-$('br-add').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const list = $<HTMLTextAreaElement>('br-ids')
-    .value.split(/[\s,]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const bad = list.filter((id) => !isValidContractId(id));
-  if (bad.length > 0) {
-    $('br-count').textContent =
-      `${bad.length} of these is not a contract ID. A contract ID starts with C and is 56 characters. Nothing was read.`;
+  if (list.length === 0) {
+    out.innerHTML = '<p class="muted">Add at least one contract ID.</p>';
     return;
   }
-  $('br-count').textContent = '';
-  setParam('ids', list.length === 0 ? undefined : list.join(','));
-  setParam('sel', undefined);
-  const ids = [...new Set([...watched, ...list])];
-  if (ids.length === 0) return;
-  void scan(ids);
-});
-
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (!(t instanceof Element)) return;
-  if (t.closest('[data-panel-close]')) return select(undefined);
-  const show = t.closest<HTMLAnchorElement>('a[data-show]');
-  if (show !== null) {
-    ev.preventDefault();
-    setParam('show', show.dataset.show === 'all' ? 'all' : undefined);
-    return render();
+  if (invalid.length > 0) {
+    out.innerHTML = `<div class="error-box"><p><strong>${invalid.length} of these is not a contract ID.</strong> Expected 56-character addresses beginning with <span class="mono">C</span>. Nothing was requested.</p>
+      <p class="small mono">${invalid.map((i) => esc(i)).join('<br>')}</p></div>`;
+    return;
   }
-  const node = t.closest<Element>('[data-select]');
-  if (node !== null) select(node.getAttribute('data-select') ?? undefined);
-});
 
-document.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Escape' && selected() !== undefined) return select(undefined);
-  const t = ev.target;
-  if (
-    (ev.key === 'Enter' || ev.key === ' ') &&
-    t instanceof Element &&
-    t.matches('g[data-select]')
-  ) {
-    ev.preventDefault();
-    select(t.getAttribute('data-select') ?? undefined);
+  button.disabled = true;
+  button.textContent = 'Scanning…';
+  out.innerHTML = '<p class="muted">Reading the chain…</p>';
+  try {
+    const result = await scanMany(list);
+    const rep = report(result);
+    out.innerHTML = [
+      verdict(rep),
+      `<div class="card card-pad stack">${sharedSentence(rep)}
+        <p class="small muted">Even a scan of several contracts proves only a lower bound: contracts you did not list may also depend on that entry. That is why the count reads “at least”.</p>
+      </div>`,
+      graph(rep),
+      entryTable(rep),
+      jsonPanel(result, health(result)),
+    ].join('');
+    wireCopyButtons(out);
+  } catch (error) {
+    out.innerHTML = `<div class="error-box"><p><strong>The scan could not be completed.</strong> ${esc((error as Error).message)}</p>
+      <p class="small muted">The endpoint is <span class="mono">${esc(NETWORK.rpcUrl)}</span>. The contracts are unaffected by our failure to read them.</p></div>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Scan together';
   }
-});
+}
 
-void load();
+function start(): void {
+  const field = $<HTMLTextAreaElement>('ids');
+  const fromQuery = new URLSearchParams(location.search).get('ids');
+  field.value = fromQuery ?? OUR_CONTRACTS.map((c) => c.id).join('\n');
+  field.addEventListener('input', updateCount);
+  updateCount();
+  $('form').addEventListener('submit', (e) => void run(e));
+  $('example-button').addEventListener('click', () => {
+    field.value = OUR_CONTRACTS.map((c) => c.id).join('\n');
+    updateCount();
+  });
+  // A single ID arriving from the dashboard is the interesting case: it shows
+  // undetermined turning into a number.
+  if (fromQuery) void run();
+}
+
+start();

@@ -1,38 +1,46 @@
-/**
- * /dashboard/scanner/ — Scanner (components.md § "Dashboard revamp",
- * Scanner). One input row, data keys folded away, then the binding expiry as
- * the dominant figure with Add to watchlist and Copy CLI command, then the
- * entries read. No example contract is offered.
- */
+/** /dashboard/scanner/ — single-contract scan console. */
 export const meta = {
-  title: 'Scanner — Evergreen',
+  title: 'Contract scanner — Evergreen',
   description:
-    'Scan one Soroban testnet contract for the entry that binds its expiry, every entry read, and what extending costs. No wallet, no signup.',
+    'Scan one Soroban testnet contract for TTL health, the entry that binds its expiry, and a rent estimate. No wallet, no signup.',
   active: '/dashboard/scanner/',
-  eyebrow: 'Scanner · Stellar testnet',
-  heading: 'Scan a contract',
+  eyebrow: 'Contract scanner · Stellar testnet',
+  heading: 'Scan one contract',
+  lead: 'A permissionless read: TTL health, which entry expires first, and what extending costs — priced by simulating against the network. A single-contract scan cannot settle whether the code entry is shared; that reads undetermined, with a link into Blast Radius.',
   script: '/assets/scanner.js',
-  bare: true,
 };
 
 export function render() {
-  return `<div class="ov-head">
-      <div>
-        <p class="eyebrow">Scanner · Stellar testnet</p>
-        <h1>Scan a contract</h1>
-      </div>
-    </div>
-    <form class="stack" id="scan-form">
-      <div class="scan-row">
-        <label class="skip" for="contract-id">Contract ID</label>
-        <input id="contract-id" class="search wide mono" type="text" spellcheck="false" autocomplete="off" placeholder="Paste a testnet contract ID, C…" />
-        <button id="scan-button" type="submit">Scan</button>
-      </div>
-      <details>
-        <summary>Data keys (optional)</summary>
-        <p class="note">Storage cannot be listed: a scan reads the keys it is given. One base64 <span class="mono">LedgerKey</span> per line, as the CLI's <span class="mono">--keys-file</span>.</p>
-        <textarea id="data-keys" spellcheck="false" placeholder="AAAABgAAAAE…"></textarea>
-      </details>
-    </form>
-    <div id="result" aria-live="polite"></div>`;
+  return `<section>
+      <form class="card card-pad stack" id="scan-form">
+        <div>
+          <label class="field-label" for="contract-id">Testnet contract address</label>
+          <input id="contract-id" type="text" spellcheck="false" autocomplete="off" placeholder="C…" />
+        </div>
+        <div class="row">
+          <button id="scan-button" type="submit">Scan</button>
+          <button id="example-button" class="secondary" type="button">Use guinea-pig A</button>
+          <span class="small muted">Checking several contracts that share a Wasm? <a href="/dashboard/blast-radius/">Use Blast Radius</a>.</span>
+        </div>
+        <details>
+          <summary>Data keys — optional, and what they change</summary>
+          <p class="small muted">
+            Contract storage cannot be enumerated: a scan reads the keys it is handed. Without any, only the instance
+            and code entries are visible, and the result says so. One base64 <span class="mono">LedgerKey</span> per
+            line — the same values the CLI takes in <span class="mono">--keys-file</span>.
+          </p>
+          <textarea id="data-keys" spellcheck="false" placeholder="AAAABgAAAAE…"></textarea>
+        </details>
+      </form>
+    </section>
+    <section><div id="result" aria-live="polite"></div></section>
+    <section>
+      <h2 class="section">Reading the result</h2>
+      <p class="muted">
+        The verdict names the entry that expires first — that entry sets the contract’s real deadline,
+        and it is rarely the instance. A clean scan means everything asked-for is healthy, never that the
+        contract is fully healthy: coverage travels with the verdict. Exit codes and flags are on
+        <a href="/docs/">the CLI reference</a>.
+      </p>
+    </section>`;
 }

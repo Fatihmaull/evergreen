@@ -16,13 +16,13 @@ export const meta = {
   description:
     'Sign in with your email to keep a watchlist, and link a Freighter wallet by signing a sign-in challenge. Stellar testnet.',
   active: '/login/',
-  eyebrow: 'Settings',
+  eyebrow: 'Account · Stellar testnet',
   heading: 'Sign in',
+  lead: 'Your email is your account. A wallet is linked by signing a sign-in challenge, which cannot be submitted to the network. Signing in with email cannot move XLM: only a signature from your own wallet, on a screen that says what it moves, ever can. Signing in again does not resume anything that spends: autopilot and allowances need a new signature from your wallet first.',
 };
 
 export function render() {
-  return `<p class="note">Signing in with email cannot move XLM: only a signature from your own wallet ever can. Signing in again does not resume anything that spends: autopilot and allowances need a new signature from your wallet first.</p>
-    <section class="stack">
+  return `<section class="stack">
       <div id="session" aria-live="polite"><p class="muted">Checking whether you are signed in…</p></div>
     </section>
     <section class="stack">

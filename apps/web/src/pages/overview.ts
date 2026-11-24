@@ -1,157 +1,154 @@
 /**
- * Overview (components.md § "Dashboard revamp"). One `GET /watchlist` picks
- * the state: signed out, signed in with nothing watched, or the summary.
- * Then, for the summary, this browser reads the chain for rows the engine
- * has not observed yet, and the allowance of the payer (or the first linked
- * wallet) to the engine. The side panel is driven by `?c=<contractId>`.
+ * Overview. The scan panel, a summary of the signed-in watchlist, then our
+ * three contracts as a worked example: a stat strip and their cards.
+ *
+ * Live reads can fail in front of an audience, so everything here falls back
+ * to the snapshot committed with the build and says which ledger it was
+ * recorded at. Stale readings are labelled, never presented as current.
  */
-import { readAllowance, type ReadResult } from '../lib/allowance';
+import {
+  OUR_CONTRACTS,
+  report,
+  scanMany,
+  worstHealth,
+  type ScanReport,
+  type ScanResult,
+} from '../lib/evergreen';
+import { approxDateShort, esc, formatCount, stamp } from '../lib/format';
+import { bindingEntry, contractCard } from '../lib/ui';
+import { entryView } from '../lib/view';
+import { mountScanPanel } from '../lib/scan-panel';
 import { apiRequest } from '../lib/api';
-import { isValidContractId, scanOne, type ScanResult } from '../lib/evergreen';
-import { readSession } from '../lib/login';
-import { factsHtml, listHtml, nextHtml, panelHtml, type AllowanceFact } from '../lib/overview-view';
-import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
-import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
-import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
+import { watchlistSummaryHtml } from '../lib/watchlist-view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
-let items: WatchItem[] = [];
-const scans = new Map<string, ScanResult>();
-let allowance: AllowanceFact = { kind: 'reading' };
-
-const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
-
-const panel = mountPanel({
-  rows,
-  renderList: (open) => ($('ov-list').innerHTML = listHtml(rows(), open)),
-  panelHtml: (r) => panelHtml(r, 'overview'),
-  removed: (id) => {
-    items = items.filter((i) => i.contractId !== id);
-    if (items.length === 0) {
-      $('ov-actions').hidden = true;
-      show('ov-add');
-    } else renderSummary();
-  },
-  // Not offered on the Overview panel; Contracts has it.
-  autopilotOff: () => undefined,
-});
-
-function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
-  for (const s of ['ov-signed-out', 'ov-add', 'ov-summary'] as const) $(s).hidden = s !== id;
+function subReport(full: ScanReport, contractId: string): ScanReport {
+  const entries = full.entries.filter((e) => e.entry.contracts.includes(contractId));
+  return {
+    ...full,
+    entries,
+    worst: worstHealth(entries.map((e) => e.assessment)),
+    result: { ...full.result, contracts: [{ id: contractId }] },
+  };
 }
 
-function renderSummary(): void {
-  const all = rows();
-  $('ov-next').innerHTML = nextHtml(all);
-  $('ov-facts').innerHTML = factsHtml(all, allowance);
-  $('ov-list').innerHTML = listHtml(all, openIdFromUrl());
-  panel.render();
-}
+function statStrip(full: ScanReport): string {
+  const cells = OUR_CONTRACTS.map((c) => {
+    const sub = subReport(full, c.id);
+    const binding = bindingEntry(sub);
+    const view = binding ? entryView(binding) : undefined;
+    const worst = sub.worst ?? 'unknown';
+    const tone = worst === 'unknown' ? 'undetermined' : worst;
 
-function fromRead(wallet: string, read: ReadResult): AllowanceFact {
-  if (read.kind !== 'read') return { kind: 'unread' };
-  const { amountStroops, liveUntilLedger, observedAtLedger } = read.raw;
-  const amount = BigInt(amountStroops);
-  if (amount > 0n && liveUntilLedger !== null && liveUntilLedger > observedAtLedger)
-    return { kind: 'live', wallet, amountStroops: amount, liveUntilLedger, observedAtLedger };
-  return { kind: 'none', wallet };
+    // An expired subject gets the word, not a count. `-4,810,562 ledgers left`
+    // is the arithmetic of a zero, and there is no remaining to report.
+    if (view?.state === 'expired') {
+      return `<div class="stat stat-expired">
+        <p class="stat-label">${esc(c.label)}</p>
+        <p class="stat-figure">${view.word}</p>
+        <p class="stat-caption">${
+          view.endedAtLedger === undefined
+            ? `read at ledger ${esc(formatCount(view.observedAtLedger))}`
+            : `ended at ledger ${esc(formatCount(view.endedAtLedger))}${view.endedOn ? ` · ${esc(approxDateShort(new Date(view.endedOn)))}` : ''}`
+        }</p>
+      </div>`;
+    }
+
+    return `<div class="stat">
+      <p class="stat-label">${esc(c.label)}</p>
+      <p class="stat-figure ${tone}">${
+        view?.state === 'live' ? esc(formatCount(view.remainingLedgers)) : 'unread'
+      }</p>
+      <p class="stat-caption">${
+        view?.state === 'live'
+          ? `ledgers left${binding ? ` · binds on ${esc(binding.entry.kind)}` : ''} · expires ${esc(approxDateShort(view.endsAt))}`
+          : 'the read did not return a TTL — absence is not health'
+      }</p>
+    </div>`;
+  }).join('');
+  // Cells only. `#strip` already carries `.stat-strip`, and wrapping them in a
+  // second one nested a three-column grid inside one column of itself, so every
+  // cell rendered at 91px of a 302px column and the figures clipped.
+  return cells;
 }
 
 async function load(): Promise<void> {
+  const strip = $('strip');
+  const target = $('ours');
+  const note = $('ours-note');
+  const ids = OUR_CONTRACTS.map((c) => c.id);
+  // The READ is what may fail and fall back to the snapshot. Rendering is not:
+  // wrapping both in one `try` meant a fault in our own rendering would be
+  // reported to the visitor as "the live read failed" and quietly swap in
+  // stale data — the same misattribution the rent panel was making, in the
+  // path that decides which figures a stranger sees.
+  let result: ScanResult | undefined;
+  try {
+    const live = await scanMany(ids);
+    if (Object.keys(live.entries).length === 0) throw new Error('no entries returned');
+    result = live;
+  } catch {
+    result = undefined;
+  }
+
+  if (result !== undefined) {
+    const at = report(result).observedAtLedger;
+    // `?? 0` here would print "ledger 0" — the same fabricated figure, from the
+    // same habit of filling a hole with a number.
+    render(
+      result,
+      at === undefined
+        ? 'Read live from testnet; the response carried no observed ledger.'
+        : `Read live from testnet at ledger ${formatCount(at)}.`,
+    );
+    return;
+  }
+
+  {
+    try {
+      const response = await fetch('/assets/snapshot.json', { cache: 'no-store' });
+      const snapshot = (await response.json()) as { capturedAt: string; result: ScanResult };
+      const at = report(snapshot.result).observedAtLedger;
+      render(
+        snapshot.result,
+        `The live read failed, so this is the snapshot committed with this build: ${
+          at === undefined ? 'no observed ledger recorded' : `as of ledger ${formatCount(at)}`
+        }, recorded ${stamp(snapshot.capturedAt)}. It is not current.`,
+      );
+    } catch {
+      note.textContent =
+        'The live read failed and no snapshot is available. Nothing is shown rather than something stale.';
+      strip.innerHTML = '';
+      target.innerHTML = '';
+    }
+  }
+
+  function render(result: ScanResult, noteText: string): void {
+    const full = report(result);
+    note.textContent = noteText;
+    strip.innerHTML = statStrip(full);
+    target.innerHTML = OUR_CONTRACTS.map((c) =>
+      contractCard(c.label, c.id, subReport(full, c.id)),
+    ).join('');
+  }
+}
+
+// `/dashboard` must answer a stranger's question on its own — see the spec's
+// amendment of 2026-09-23. The scan panel is the same one `/dashboard/scanner`
+// mounts, not a second implementation.
+mountScanPanel();
+
+// One `GET /watchlist`, the same request the watchlist screen makes. Signed
+// out or without an API, the panel says so in the watchlist screen's words.
+async function loadWatchlistSummary(): Promise<void> {
+  const out = document.getElementById('wl-summary');
+  if (out === null) return;
   const outcome = await apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(
     () => ({ kind: 'unavailable', reason: 'network' }) as const,
   );
-  const status = $('ov-status');
-  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
-    status.hidden = true;
-    $('ov-heading').textContent = 'What expires first, read from the chain';
-    show('ov-signed-out');
-    return;
-  }
-  if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
-    // About the API, not any contract: the sentence the Contracts screen uses.
-    status.innerHTML = noWatchlistSentence(outcome);
-    show('ov-signed-out');
-    $('ov-heading').textContent = 'What expires first, read from the chain';
-    return;
-  }
-  status.hidden = true;
-  items = outcome.data.items as WatchItem[];
-  if (items.length === 0) {
-    show('ov-add');
-    return;
-  }
-  $('ov-actions').hidden = false;
-  $('add-h').textContent = 'Add a contract';
-  show('ov-summary');
-  renderSummary();
-  // Contracts' "Add contract" lands here with ?add=1.
-  if (new URLSearchParams(location.search).has('add')) $('add-toggle').click();
-
-  // Rows the engine has not observed yet: this browser reads their expiry.
-  const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
-  const scanned = Promise.all(
-    pending.map((i) =>
-      scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
-        .then((s) => void scans.set(i.contractId, s))
-        .catch(() => undefined),
-    ),
-  );
-
-  // The allowance: the payer autopilot names, else the first linked wallet.
-  const payer = items
-    .map((i) => (i.autopilot?.enabled === true ? i.autopilot.payerWallet : undefined))
-    .find((p): p is string => typeof p === 'string');
-  const wallet =
-    payer ??
-    (await readSession()
-      .then((s) => (s.kind === 'signed-in' ? s.me.wallets[0]?.account : undefined))
-      .catch(() => undefined));
-  const read =
-    wallet === undefined
-      ? Promise.resolve((allowance = { kind: 'no-wallet' }))
-      : readAllowance(wallet)
-          .catch((e: unknown) => ({ kind: 'read-failed', detail: String(e) }) as const)
-          .then((r) => (allowance = fromRead(wallet, r)));
-  await Promise.all([scanned, read]);
-  renderSummary();
+  out.innerHTML = watchlistSummaryHtml(outcome);
 }
 
-$('add-toggle').addEventListener('click', () => {
-  const add = $('ov-add');
-  add.hidden = !add.hidden;
-  $('add-toggle').setAttribute('aria-expanded', String(!add.hidden));
-  if (!add.hidden) $<HTMLInputElement>('add-id').focus();
-});
-
-$('add-form').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const id = $<HTMLInputElement>('add-id').value.trim();
-  const label = $<HTMLInputElement>('add-label').value.trim();
-  const out = $('add-result');
-  if (!isValidContractId(id)) {
-    out.innerHTML = `<p class="note">That is not a contract ID. A contract ID starts with C and is 56 characters.</p>`;
-    return;
-  }
-  const button = $<HTMLButtonElement>('add-button');
-  button.disabled = true;
-  out.innerHTML = '<p class="note">Asking the Evergreen API…</p>';
-  void addToWatchlist({
-    network: 'testnet',
-    contractId: id,
-    scope: { noDataKeys: true },
-    ...(label === '' ? {} : { label }),
-  })
-    .catch(() => ({ kind: 'unavailable', reason: 'network' }) as const)
-    .then((o) => {
-      button.disabled = false;
-      out.innerHTML = addOutcomeHtml(o, id);
-      if (o.kind === 'added' || o.kind === 'already-present') {
-        // Reload the summary from the API so the new row is the API's, not ours.
-        location.assign(`/dashboard/?c=${encodeURIComponent(id)}`);
-      }
-    });
-});
-
+void loadWatchlistSummary();
 void load();

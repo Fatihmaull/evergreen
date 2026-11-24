@@ -4,8 +4,9 @@ export const meta = {
   description:
     'Turn optional testnet alert emails off or leave them on. Required alerts stay on. This page stores the choice and does not send mail.',
   active: '/dashboard/alerts/',
-  eyebrow: 'Settings',
+  eyebrow: 'Account · Stellar testnet',
   heading: 'Alerts',
+  lead: 'Optional emails can be turned off. Required ones cannot. Signing in with email cannot move XLM.',
   script: '/assets/alerts.js',
 };
 

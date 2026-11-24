@@ -10,53 +10,60 @@
  * holds a funded testnet fee key.
  */
 
-/**
- * Route → nav. The active item is marked here, not by the client.
- *
- * Dashboard revamp (components.md § "Dashboard revamp: overview", Fatih
- * 2026-11-24): the person's own pages first with no section label, then
- * Tools, then Settings. Our own contracts, engine runs and extension history
- * left the dashboard nav: they are public evidence, not the person's data,
- * and their pages stay reachable from the docs and /about/.
- *
- * Activity lists the engine's jobs. Until the API serves them its page says
- * so in one line (components.md § "Where the data comes from today").
- */
+/** Route → nav. The active item is marked here, not by the client. */
 export const NAV = [
   {
-    section: '',
+    section: 'Live reads',
     items: [
       { href: '/dashboard/', label: 'Overview' },
-      // The watchlist, renamed. The route stays so old links keep working.
-      { href: '/dashboard/watchlist/', label: 'Contracts' },
-      { href: '/dashboard/activity/', label: 'Activity' },
+      { href: '/dashboard/scanner/', label: 'Contract scanner' },
+      { href: '/dashboard/blast-radius/', label: 'Blast radius' },
+      { href: '/dashboard/decay/', label: 'TTL decay' },
+    ],
+  },
+  /**
+   * The signed-in surface (PH2-E3-02). The link is always shown; the page
+   * itself says when this browser has no session, rather than the nav hiding
+   * it and the reader never learning the watchlist exists.
+   */
+  {
+    section: 'Your account',
+    items: [
+      { href: '/dashboard/watchlist/', label: 'Watchlist' },
+      // After Watchlist, per the alert preferences spec (components.md §5).
+      { href: '/dashboard/alerts/', label: 'Alerts' },
+      { href: '/login/', label: 'Sign in' },
       { href: '/allowance/', label: 'Allowance' },
       { href: '/extend/', label: 'Extend now' },
     ],
   },
   {
-    section: 'Tools',
+    section: 'Our own record',
     items: [
-      { href: '/dashboard/scanner/', label: 'Scanner' },
-      { href: '/dashboard/blast-radius/', label: 'Blast radius' },
-      { href: '/dashboard/decay/', label: 'TTL decay' },
+      { href: '/dashboard/contracts/', label: 'Our contracts' },
+      { href: '/dashboard/engine/', label: 'Engine runs' },
+      { href: '/dashboard/history/', label: 'Extension history' },
     ],
   },
+  /**
+   * One link out, not four.
+   *
+   * This group used to list State archival, CLI reference, Evidence and About
+   * — every one of them a page that now lives in the documentation, reached
+   * from a sidebar that already has its own tree. A reader met the same
+   * material twice under two different navigations, and the dashboard's job is
+   * reading the chain rather than being a second table of contents.
+   */
   {
-    section: 'Settings',
-    items: [
-      { href: '/dashboard/alerts/', label: 'Alerts' },
-      // chrome.js relabels this "Account" when /me answers with a session.
-      { href: '/login/', label: 'Sign in' },
-      { href: '/docs/', label: 'Documentation' },
-    ],
+    section: 'Reference',
+    items: [{ href: '/docs/', label: 'Documentation' }],
   },
 ];
 
 function navHtml(active) {
   return NAV.map(
     (group) => `<div class="nav-group">
-        ${group.section ? `<p class="nav-section">${group.section}</p>` : ''}
+        <p class="nav-section">${group.section}</p>
         ${group.items
           .map(
             (item) =>
@@ -92,23 +99,7 @@ export function shell({
   body,
   script,
   cadence,
-  bare,
-  panel,
 }) {
-  // `bare`: the page draws its own head (the revamp's `.ov-head`, with up to
-  // two buttons beside the heading). `panel`: the side panel's slot, beside
-  // main; the page fills it and sets `body.panel-open`.
-  const head = bare
-    ? ''
-    : `<header class="page-head">
-            <p class="eyebrow">${eyebrow}</p>
-            <h1>${heading}</h1>
-            ${lead ? `<p class="lead">${lead}</p>` : ''}
-          </header>`;
-  const main = `<main id="main" class="main${bare ? ' overview' : ''}">
-          ${head}
-          ${body}
-        </main>`;
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -140,7 +131,14 @@ export function shell({
       </aside>
       <div class="content">
         ${statusBar(cadence)}
-        <div class="with-panel">${main}${panel ? `<aside class="panel-side" id="side-panel" aria-label="Details" hidden></aside>` : ''}</div>
+        <main id="main" class="main">
+          <header class="page-head">
+            <p class="eyebrow">${eyebrow}</p>
+            <h1>${heading}</h1>
+            ${lead ? `<p class="lead">${lead}</p>` : ''}
+          </header>
+          ${body}
+        </main>
         <footer class="site">
           <div class="foot-row">
             <p>Built for Stellar, backed by Instawards.</p>

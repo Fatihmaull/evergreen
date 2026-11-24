@@ -1,82 +1,65 @@
 /**
- * /dashboard/ — Overview (components.md § "Dashboard revamp", Fatih
- * 2026-11-24). A summary of the person's own contracts, never ours: the one
- * that needs attention first, four facts, one line per contract, and a side
- * panel for detail. Signed out it is the scan field and one line; signed in
- * with nothing watched it is the Add field.
- *
- * Every state is in the static page, hidden, and `overview.ts` shows the one
- * the API's answer selects. Nothing here is a figure: the figures are drawn
- * from `GET /watchlist` and the chain in the browser.
+ * /dashboard/ — Overview. Leads with what a visitor came for: scan any
+ * contract, then (signed in) a summary of their own watchlist. Our three
+ * testnet contracts follow as a worked example, no longer the page's subject
+ * (Fatih, 2026-11-23: real adoption, Q4).
  */
 export const meta = {
   title: 'Overview — Evergreen',
   description:
-    'Your Soroban testnet contracts at a glance: the one that expires first, autopilot, the allowance left, and one line per contract. Scan any contract with no wallet and no signup.',
+    'Scan any Soroban testnet contract for its TTL, keep a watchlist when signed in, and see three of our own contracts as a worked example. No wallet, no signup to scan.',
   active: '/dashboard/',
   eyebrow: 'Overview · Stellar testnet',
-  heading: 'Your contracts',
+  heading: 'What expires first, read from the chain',
+  lead: 'Scan any testnet contract with no wallet and no signup. Signed in, your watchlist is summarised below it. Our own three contracts close the page as a worked example.',
   script: '/assets/overview.js',
-  bare: true,
-  panel: true,
 };
 
 export function render() {
-  return `<div class="ov-head">
-      <div>
-        <p class="eyebrow">Overview · Stellar testnet</p>
-        <h1 id="ov-heading">Your contracts</h1>
-      </div>
-      <div class="actions" id="ov-actions" hidden>
-        <a class="pill secondary" href="/dashboard/scanner/">Scan a contract</a>
-        <button type="button" id="add-toggle" aria-controls="ov-add" aria-expanded="false">Add contract</button>
-      </div>
-    </div>
-    <p class="note" id="ov-status" role="status">Asking the Evergreen API…</p>
-    <noscript><p class="note">This page needs JavaScript to ask the Evergreen API. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly.</p></noscript>
-
-    <section id="ov-signed-out" class="stack" hidden aria-label="Scan">
-      <form class="scan-row" action="/dashboard/scanner/" method="get">
-        <label class="skip" for="ov-scan-id">Contract ID</label>
-        <input id="ov-scan-id" name="id" class="search wide mono" type="text" placeholder="Paste a testnet contract ID, C…" spellcheck="false" autocomplete="off" />
-        <button type="submit">Scan</button>
-      </form>
-      <p class="note">No wallet, no signup to scan.</p>
-      <div class="signin-line">
-        <p>Sign in to watch your contracts and turn on autopilot.</p>
-        <a class="pill secondary" href="/login/">Sign in</a>
-      </div>
-    </section>
-
-    <section id="ov-add" class="empty" hidden aria-labelledby="add-h">
-      <h2 id="add-h">Add your first contract</h2>
-      <form class="scan-row" id="add-form">
-        <label class="skip" for="add-id">Contract ID</label>
-        <input id="add-id" class="search wide mono" type="text" placeholder="Contract ID, C…" spellcheck="false" autocomplete="off" required />
-        <label class="skip" for="add-label">Label</label>
-        <input id="add-label" class="search" type="text" placeholder="Label (optional)" maxlength="64" autocomplete="off" />
-        <button type="submit" id="add-button">Add</button>
-      </form>
-      <div id="add-result" aria-live="polite"></div>
-      <p class="note">Evergreen reads its expiry now and every few minutes after. Not sure of the ID? <a href="/dashboard/scanner/">Scan first</a>.</p>
-    </section>
-
-    <div id="ov-summary" hidden>
-      <section class="next" id="ov-next" aria-label="Needs attention first"></section>
-      <section class="facts" id="ov-facts" aria-label="Summary"></section>
-      <section class="block" aria-labelledby="contracts-h">
-        <div class="block-head">
-          <h2 id="contracts-h">Contracts</h2>
-          <a href="/dashboard/watchlist/">All contracts</a>
+  return `<section>
+      <h2 class="section">Scan any contract</h2>
+      <p class="muted">
+        A permissionless read — no wallet, no signup. Paste any testnet contract ID for its TTL health, the entry
+        that binds its expiry, and what extending would cost. Several contracts that share a Wasm belong on
+        <a href="/dashboard/blast-radius/">Blast Radius</a>.
+      </p>
+      <form class="card card-pad stack" id="scan-form">
+        <div>
+          <label class="field-label" for="contract-id">Testnet contract address</label>
+          <input id="contract-id" type="text" spellcheck="false" autocomplete="off" placeholder="C…" />
         </div>
-        <div id="ov-list"></div>
-      </section>
-      <section class="block" aria-labelledby="activity-h">
-        <div class="block-head">
-          <h2 id="activity-h">Recent activity</h2>
-          <a href="/dashboard/activity/">All activity</a>
+        <div class="row">
+          <button id="scan-button" type="submit">Scan</button>
+          <button id="example-button" class="secondary" type="button">Use guinea-pig A</button>
         </div>
-        <p class="note unavailable">not yet available</p>
-      </section>
-    </div>`;
+        <details>
+          <summary>Data keys — optional, and what they change</summary>
+          <p class="small muted">
+            Contract storage cannot be enumerated: a scan reads the keys it is handed. Without any, only the
+            instance and code entries are visible, and the result says so. One base64
+            <span class="mono">LedgerKey</span> per line.
+          </p>
+          <textarea id="data-keys" spellcheck="false" placeholder="AAAABgAAAAE…"></textarea>
+        </details>
+      </form>
+      <div id="result" aria-live="polite"></div>
+    </section>
+    <section>
+      <h2 class="section">Your watchlist</h2>
+      <div id="wl-summary" class="stack" aria-live="polite"><p class="muted">Asking the Evergreen API…</p><noscript><p class="muted">This needs JavaScript to ask the Evergreen API.</p></noscript></div>
+    </section>
+    <section>
+      <h2 class="section">Worked example: our three testnet contracts</h2>
+      <p class="small muted" id="ours-note">Reading the chain…</p>
+      <div class="stat-strip" id="strip" aria-live="polite">
+        <p class="muted">Reading the chain…</p>
+      </div>
+      <div class="contract-grid" id="ours"></div>
+      <p class="small muted">
+        Three contracts deployed from one Wasm, so all three depend on a single code entry —
+        <a href="/dashboard/blast-radius/">see the dependency graph</a>, or
+        <a href="/dashboard/contracts/">what each contract is for</a>.
+        Their remaining TTL over time is on <a href="/dashboard/decay/">the decay chart</a>.
+      </p>
+    </section>`;
 }
