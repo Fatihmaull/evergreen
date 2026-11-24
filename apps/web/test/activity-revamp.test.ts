@@ -67,6 +67,10 @@ test('🔴 rent and fee come from ledger rows; a job without them shows a dash, 
   expect(failedRow).toContain('—');
   expect(failedRow).not.toMatch(/>0</);
   expect(failedRow).toContain('pre-flight failed');
+  // On mobile the Status column is hidden, so the chip also sits under the event.
+  expect(failedRow).toMatch(/class="only-m"><br \/><span class="chip critical"/);
+  const okRow = html.split('data-open="j1"')[1]!.split('</tr>')[0]!;
+  expect(okRow).not.toContain('only-m');
 });
 
 test('🔴 an extended job with a margin refund is not counted as failed', () => {
@@ -82,7 +86,7 @@ test('🔴 the 30-day facts are "not yet available" unless the whole window was 
   expect(partial).not.toContain('141,960');
   const whole = factsHtml({ jobs: [extended, failed], ledger, complete: true }, NOW);
   expect(whole).toContain('>1<'); // one extend; the failed job is not one
-  expect(whole).toContain('1 autopilot · 0 extend now');
+  expect(whole).toContain('1 autopilot, 0 manual');
   expect(whole).toContain('141,960');
   expect(whole).toContain('25,000');
   expect(whole).toContain('121,445');
@@ -90,10 +94,10 @@ test('🔴 the 30-day facts are "not yet available" unless the whole window was 
 
 test('the panel lists the steps with transaction links and closes the identity', () => {
   const html = panelHtml(extended, moneyByJob(ledger).get('j1')!, labels);
-  expect(html).toContain('rent simulated at <span class="mono">141,960</span>');
+  expect(html).toContain('rent simulated at <span class="mono">141,960</span></span>');
   expect(html).toContain('https://stellar.expert/explorer/testnet/tx/aaaa1111bbbb');
-  expect(html).toContain('rent charged <span class="mono">141,960</span>');
-  expect(html).toContain('288,405 = 141,960 + 25,000 + 121,445 + 0');
+  expect(html).toContain('charged <span class="mono">141,960</span></span>');
+  expect(html.replace(/<\/?span[^>]*>/g, '')).toContain('288,405 = 141,960 + 25,000 + 121,445 + 0');
   expect(html).not.toContain('not yet accounted for');
   expect(html).toContain('Network fees are paid by Evergreen, not you.');
 });

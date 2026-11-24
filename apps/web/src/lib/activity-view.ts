@@ -147,7 +147,7 @@ export function factsHtml(f: Facts, now = new Date()): string {
     cell(
       'Extends, 30 days',
       esc(formatCount(recent.length)),
-      `${formatCount(auto)} autopilot · ${formatCount(recent.length - auto)} extend now`,
+      `${formatCount(auto)} autopilot, ${formatCount(recent.length - auto)} manual`,
     ),
     cell('Rent charged', esc(n(sum('rent'))), 'stroops'),
     cell('Evergreen fee', esc(n(sum('evergreen-fee'))), 'stroops'),
@@ -189,9 +189,11 @@ export function listHtml(
           ? `<td class="num hide-m">${NONE}</td>`
           : `<td class="num mono hide-m">${esc(n(v))}</td>`;
       return `<tr data-open="${esc(j.id)}" tabindex="0"${j.id === openId ? ' class="open" aria-current="true"' : ''}>
-        <td class="mono muted-cell">${esc(when(j.createdAt))}</td>
+        <td class="mono muted-cell nowrap">${esc(when(j.createdAt))}</td>
         <td>${esc(nameOf(labels, j.contractId))}</td>
-        <td>${EVENT[j.kind]}</td>
+        <td>${EVENT[j.kind]}${
+          j.status === 'extended' ? '' : `<span class="only-m"><br />${statusHtml(j.status)}</span>`
+        }</td>
         ${fig(m.rent)}
         ${fig(m['evergreen-fee'])}
         <td class="hide-m">${statusHtml(j.status)}</td>
@@ -251,7 +253,7 @@ export function panelHtml(job: ApiJob, money: Money, labels: Labels): string {
     const what = p.ok
       ? p.rentStroops === undefined
         ? 'passed'
-        : `rent simulated at <span class="mono">${esc(n(p.rentStroops))}</span>`
+        : `<span class="nowrap">rent simulated at <span class="mono">${esc(n(p.rentStroops))}</span></span>`
       : `stopped: ${esc(PREFLIGHT_REASON[p.reason ?? ''] ?? p.reason ?? 'no reason recorded')}. Nothing was pulled.`;
     steps.push(step('Pre-flight', what));
   }
@@ -271,7 +273,9 @@ export function panelHtml(job: ApiJob, money: Money, labels: Labels): string {
     steps.push(
       step(
         'Extended',
-        r === null ? 'not confirmed' : `rent charged <span class="mono">${esc(n(r))}</span>`,
+        r === null
+          ? 'not confirmed'
+          : `<span class="nowrap">charged <span class="mono">${esc(n(r))}</span></span>`,
         s.extendTx.txHash,
       ),
     );
@@ -299,11 +303,14 @@ export function panelHtml(job: ApiJob, money: Money, labels: Labels): string {
     const parts = [money.rent, money['evergreen-fee'], money.refund, money.difference];
     const sum = parts.reduce<bigint>((a, v) => a + (v ?? 0n), 0n);
     const closes = sum === money.pull;
-    identity = `<p class="note">Pulled = rent + fee + refund + difference: <span class="mono">${esc(n(money.pull))} = ${parts
-      .map((v) => esc(n(v ?? 0n)))
-      .join(
-        ' + ',
-      )}</span>${closes ? '' : `. <strong>${esc(n(money.pull - sum))} stroops are not yet accounted for.</strong>`}</p>`;
+    const term = (v: bigint): string => `<span class="nowrap">${esc(n(v))}</span>`;
+    identity = `<p class="note identity">Pulled = rent + fee + refund + difference<br /><span class="mono">${term(
+      money.pull,
+    )} = ${parts.map((v) => term(v ?? 0n)).join(' + ')}</span>${
+      closes
+        ? ''
+        : `<br /><strong>${esc(n(money.pull - sum))} stroops are not yet accounted for.</strong>`
+    }</p>`;
   }
   return `${top}
     ${kv}
