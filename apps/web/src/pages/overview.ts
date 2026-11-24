@@ -10,14 +10,9 @@ import { apiRequest } from '../lib/api';
 import { isValidContractId, scanOne, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
 import { factsHtml, listHtml, nextHtml, panelHtml, type AllowanceFact } from '../lib/overview-view';
-import { addOutcomeHtml, addToWatchlist, removeFromWatchlist } from '../lib/watchlist';
-import {
-  noWatchlistSentence,
-  removeOutcomeText,
-  rowFor,
-  type Row,
-  type WatchItem,
-} from '../lib/watchlist-view';
+import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
+import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
+import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -26,7 +21,21 @@ const scans = new Map<string, ScanResult>();
 let allowance: AllowanceFact = { kind: 'reading' };
 
 const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
-const openId = (): string | undefined => new URLSearchParams(location.search).get('c') ?? undefined;
+
+const panel = mountPanel({
+  rows,
+  renderList: (open) => ($('ov-list').innerHTML = listHtml(rows(), open)),
+  panelHtml: (r) => panelHtml(r, 'overview'),
+  removed: (id) => {
+    items = items.filter((i) => i.contractId !== id);
+    if (items.length === 0) {
+      $('ov-actions').hidden = true;
+      show('ov-add');
+    } else renderSummary();
+  },
+  // Not offered on the Overview panel; Contracts has it.
+  autopilotOff: () => undefined,
+});
 
 function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
   for (const s of ['ov-signed-out', 'ov-add', 'ov-summary'] as const) $(s).hidden = s !== id;
@@ -34,42 +43,10 @@ function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
 
 function renderSummary(): void {
   const all = rows();
-  const open = openId();
   $('ov-next').innerHTML = nextHtml(all);
   $('ov-facts').innerHTML = factsHtml(all, allowance);
-  $('ov-list').innerHTML = listHtml(all, open);
-  renderPanel(all, open);
-}
-
-function renderPanel(all: readonly Row[], open: string | undefined): void {
-  const panel = $('side-panel');
-  const row = open === undefined ? undefined : all.find((r) => r.item.contractId === open);
-  if (row === undefined) {
-    panel.hidden = true;
-    panel.innerHTML = '';
-    document.body.classList.remove('panel-open');
-    return;
-  }
-  panel.innerHTML = panelHtml(row);
-  panel.setAttribute('aria-label', row.item.label ?? row.item.contractId);
-  panel.hidden = false;
-  document.body.classList.add('panel-open');
-}
-
-/** Opening is a URL change, so a reload or a shared link reopens the same panel. */
-function setOpen(id: string | undefined): void {
-  const url = new URL(location.href);
-  if (id === undefined) url.searchParams.delete('c');
-  else url.searchParams.set('c', id);
-  history.replaceState(null, '', url);
-  const all = rows();
-  $('ov-list').innerHTML = listHtml(all, id);
-  renderPanel(all, id);
-  if (id !== undefined) $('side-panel').querySelector<HTMLElement>('[data-panel-close]')?.focus();
-}
-
-function toggle(id: string): void {
-  setOpen(openId() === id ? undefined : id);
+  $('ov-list').innerHTML = listHtml(all, openIdFromUrl());
+  panel.render();
 }
 
 function fromRead(wallet: string, read: ReadResult): AllowanceFact {
@@ -109,6 +86,8 @@ async function load(): Promise<void> {
   $('add-h').textContent = 'Add a contract';
   show('ov-summary');
   renderSummary();
+  // Contracts' "Add contract" lands here with ?add=1.
+  if (new URLSearchParams(location.search).has('add')) $('add-toggle').click();
 
   // Rows the engine has not observed yet: this browser reads their expiry.
   const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
@@ -138,60 +117,6 @@ async function load(): Promise<void> {
   await Promise.all([scanned, read]);
   renderSummary();
 }
-
-// Rows and Open: the whole row opens the panel; clicking the open row closes it.
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (!(t instanceof HTMLElement)) return;
-  if (t.closest('[data-panel-close]')) {
-    setOpen(undefined);
-    return;
-  }
-  const opener = t.closest<HTMLElement>('[data-open]');
-  if (opener !== null && opener.closest('a') === null) {
-    toggle(opener.dataset.open ?? '');
-    return;
-  }
-  const remove = t.closest<HTMLButtonElement>('button[data-remove]');
-  if (remove !== null && !remove.disabled) {
-    const id = remove.dataset.remove ?? '';
-    const out = remove.parentElement?.querySelector<HTMLElement>('[data-remove-status]');
-    remove.disabled = true;
-    if (out) out.textContent = 'Asking the Evergreen API…';
-    void removeFromWatchlist('testnet', id)
-      .catch(() => ({ kind: 'unavailable', reason: 'network' }) as const)
-      .then((o) => {
-        const text = removeOutcomeText(o);
-        if (text === undefined) {
-          items = items.filter((i) => i.contractId !== id);
-          setOpen(undefined);
-          if (items.length === 0) {
-            $('ov-actions').hidden = true;
-            show('ov-add');
-          } else renderSummary();
-          return;
-        }
-        remove.disabled = false;
-        if (out) out.textContent = text;
-      });
-  }
-});
-
-document.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Escape' && openId() !== undefined) {
-    setOpen(undefined);
-    return;
-  }
-  const t = ev.target;
-  if (
-    (ev.key === 'Enter' || ev.key === ' ') &&
-    t instanceof HTMLTableRowElement &&
-    t.dataset.open
-  ) {
-    ev.preventDefault();
-    toggle(t.dataset.open);
-  }
-});
 
 $('add-toggle').addEventListener('click', () => {
   const add = $('ov-add');

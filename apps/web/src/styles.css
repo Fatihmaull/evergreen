@@ -3546,3 +3546,33 @@ body.app .fact-cell .v {
   display: grid;
   gap: 8px;
 }
+#cl-body[hidden] {
+  display: none;
+}
+#cl-body {
+  display: grid;
+  gap: 16px;
+}
+.toolbar .search {
+  width: 260px;
+  max-width: 100%;
+}
+/* An empty figure: the em dash in the sans face (DES, #670). */
+.none {
+  font-family: var(--sans);
+  color: var(--ink-3);
+}
+body.app .panel-links,
+body.app .panel-links a,
+body.app .panel-links button {
+  font-size: 14px;
+}
+/* One line on a phone: the cadence note stays on desktop only (DES, #670). */
+@media (max-width: 760px) {
+  .statusbar .status-item.dim {
+    display: none;
+  }
+}
+body.app a.filter {
+  font-size: 14px;
+}

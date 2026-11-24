@@ -1,137 +1,112 @@
 /**
- * `/dashboard/watchlist/` — one `GET /watchlist` and one `GET /me` (for the
- * linked wallets the autopilot cell needs), one chain read per payer wallet
- * (its allowance to the engine, components.md § A), plus one `DELETE` per Remove click
- * and one `PATCH` per autopilot Turn off (spec #350 §6, §9b; components.md § A).
+ * Contracts (`/dashboard/watchlist/`). One `GET /watchlist`, this browser's
+ * chain read for rows the engine has not observed yet, filters in the URL
+ * (`?state=`), and the shared side panel (`?c=`). Remove and Turn off live in
+ * the panel (`panel-controller.ts`); turning on goes to /allowance/, where
+ * the wallet signs (components.md § A).
  */
-import { readAllowance, type ReadResult } from '../lib/allowance';
 import { apiRequest } from '../lib/api';
 import { scanOne, type ScanResult } from '../lib/evergreen';
-import { readSession } from '../lib/login';
-import { removeFromWatchlist, turnAutopilotOff } from '../lib/watchlist';
+import { formatCount } from '../lib/format';
 import {
-  AUTOPILOT_OFF_TEXT,
-  autopilotOffOutcomeText,
-  removeOutcomeText,
-  watchlistScreenHtml,
-  type AutopilotContext,
-  type PayerAllowance,
-  type WatchItem,
-} from '../lib/watchlist-view';
+  filtersHtml,
+  listHtml,
+  matchesFilter,
+  panelHtml,
+  type StateFilter,
+} from '../lib/overview-view';
+import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
+import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
-/** The chain read, reduced to what the row says. Live only when the expiry is ahead. */
-function payerAllowance(read: ReadResult): PayerAllowance {
-  if (read.kind !== 'read') return { kind: 'unread' };
-  const { amountStroops, liveUntilLedger, observedAtLedger } = read.raw;
-  if (BigInt(amountStroops) > 0n && liveUntilLedger !== null && liveUntilLedger > observedAtLedger)
-    return { kind: 'live', liveUntilLedger, observedAtLedger };
-  return { kind: 'missing' };
+const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+
+let items: WatchItem[] = [];
+const scans = new Map<string, ScanResult>();
+const FILTERS: readonly StateFilter[] = ['all', 'at-risk', 'undetermined', 'archived'];
+
+const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
+const filter = (): StateFilter => {
+  const f = new URLSearchParams(location.search).get('state');
+  return FILTERS.includes(f as StateFilter) ? (f as StateFilter) : 'all';
+};
+const visible = (): Row[] => {
+  const q = $<HTMLInputElement>('cl-q').value;
+  return rows().filter((r) => matchesFilter(r, filter(), q));
+};
+
+function renderList(open = openIdFromUrl()): void {
+  const shown = visible();
+  $('cl-list').innerHTML =
+    shown.length === 0
+      ? '<p class="note">No contract matches this filter.</p>'
+      : listHtml(shown, open, { limit: Infinity, wide: true });
+  $('cl-count').textContent =
+    `${formatCount(items.length)} ${items.length === 1 ? 'contract' : 'contracts'}. Ordered by what needs attention first.`;
 }
 
-const out = document.getElementById('watchlist');
-if (out !== null) {
-  out.innerHTML = '<p class="muted">Asking the Evergreen API…</p>';
-  void Promise.all([
-    apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }),
-    // Only the wallet list is used. A failed read leaves it unknown, and the
-    // cell then offers the turn-on path; /allowance/ checks the wallet itself.
-    readSession().catch(() => undefined),
-  ]).then(([outcome, session]) => {
-    const linked: AutopilotContext =
-      session?.kind === 'signed-in'
-        ? { linkedWallets: session.me.wallets.map((w) => w.account) }
-        : {};
-    const scans = new Map<string, ScanResult>();
-    const allowances = new Map<string, PayerAllowance>();
-    const render = () =>
-      (out.innerHTML = watchlistScreenHtml(outcome, new Date(), scans, { ...linked, allowances }));
+function render(): void {
+  $('cl-filters').innerHTML = filtersHtml(rows(), filter());
+  renderList();
+  panel.render();
+}
+
+const panel = mountPanel({
+  rows,
+  renderList,
+  panelHtml: (r) => panelHtml(r, 'contracts'),
+  removed: (id) => {
+    items = items.filter((i) => i.contractId !== id);
     render();
-    if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) return;
-    const items = outcome.data.items as WatchItem[];
-    // Stage 1: the engine has stored no observation yet. Read the chain from
-    // this browser for those rows, same scope as the item, so the binding
-    // expiry has a value. A failed read leaves the row undetermined.
-    const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
-    const scanned = Promise.all(
-      pending.map((i) =>
-        scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
-          .then((s) => void scans.set(i.contractId, s))
-          .catch(() => undefined),
-      ),
-    );
-    // Each payer's allowance to the engine, one chain read per wallet (§ A).
-    const payers = new Set(
-      items
-        .filter((i) => i.network === 'testnet' && i.autopilot?.enabled === true)
-        .map((i) => (i.autopilot as { payerWallet?: unknown }).payerWallet)
-        .filter((p): p is string => typeof p === 'string'),
-    );
-    const read = Promise.all(
-      [...payers].map((payer) =>
-        readAllowance(payer)
-          .catch((e: unknown) => ({ kind: 'read-failed', detail: String(e) }) as const)
-          .then((r) => void allowances.set(payer, payerAllowance(r))),
-      ),
-    );
-    void Promise.all([scanned, read]).then(() => {
-      if (scans.size > 0 || allowances.size > 0) render();
-    });
-  });
+  },
+  autopilotOff: (id) => {
+    items = items.map((i) => (i.contractId === id ? { ...i, autopilot: { enabled: false } } : i));
+    render();
+  },
+});
 
-  out.addEventListener('click', (ev) => {
-    const target = ev.target;
-    if (!(target instanceof HTMLElement)) return;
+$('cl-filters').addEventListener('click', (ev) => {
+  const a = (ev.target as HTMLElement).closest<HTMLAnchorElement>('a[data-filter]');
+  if (a === null) return;
+  ev.preventDefault();
+  const url = new URL(location.href);
+  const f = a.dataset.filter as StateFilter;
+  if (f === 'all') url.searchParams.delete('state');
+  else url.searchParams.set('state', f);
+  history.replaceState(null, '', url);
+  render();
+});
+$('cl-q').addEventListener('input', () => renderList());
 
-    // Turn on: no call here. The wallet signs on /allowance/ (components.md § A).
-    const on = target.closest<HTMLButtonElement>('button[data-autopilot-on]');
-    if (on !== null) {
-      const id = on.dataset.autopilotContract ?? '';
-      if (on.dataset.autopilotNetwork === 'testnet' && id !== '')
-        window.location.assign(`/allowance/?for=${encodeURIComponent(id)}`);
-      return;
-    }
-
-    const off = target.closest<HTMLButtonElement>('button[data-autopilot-off]');
-    if (off !== null) {
-      if (off.disabled) return;
-      const id = off.dataset.autopilotContract ?? '';
-      if (off.dataset.autopilotNetwork !== 'testnet' || id === '') return;
-      const cell = off.closest<HTMLElement>('[data-autopilot-cell]');
-      const status = cell?.querySelector<HTMLElement>('[data-autopilot-status]') ?? null;
-      off.disabled = true;
-      if (status !== null) status.textContent = 'Asking the Evergreen API…';
-      void turnAutopilotOff('testnet', id)
-        .catch(() => ({ kind: 'unavailable', reason: 'network' }) as const)
-        .then((result) => {
-          const text = autopilotOffOutcomeText(result);
-          if (text === undefined) {
-            if (cell !== null)
-              cell.innerHTML = `<span class="small">Off</span> <span class="small muted" role="status">${AUTOPILOT_OFF_TEXT}</span>`;
-            return;
-          }
-          off.disabled = false;
-          if (status !== null) status.textContent = text;
-        });
-      return;
-    }
-    const btn = target.closest<HTMLButtonElement>('button[data-remove-contract]');
-    if (btn === null || btn.disabled) return;
-    const contractId = btn.dataset.removeContract ?? '';
-    if (btn.dataset.removeNetwork !== 'testnet' || contractId === '') return;
-    const row = btn.closest('tr');
-    const status = row?.querySelector<HTMLElement>('[data-remove-status]') ?? null;
-    btn.disabled = true;
-    if (status !== null) status.textContent = 'Asking the Evergreen API…';
-    void removeFromWatchlist('testnet', contractId)
-      .catch(() => ({ kind: 'unavailable', reason: 'network' }) as const)
-      .then((outcome) => {
-        const text = removeOutcomeText(outcome);
-        if (text === undefined) {
-          row?.remove();
-          return;
-        }
-        btn.disabled = false;
-        if (status !== null) status.textContent = text;
-      });
-  });
+async function load(): Promise<void> {
+  const outcome = await apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).catch(
+    () => ({ kind: 'unavailable', reason: 'network' }) as const,
+  );
+  const status = $('cl-status');
+  if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
+    status.innerHTML = 'Sign in to see your contracts. <a href="/login/">Sign in</a>';
+    return;
+  }
+  if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
+    status.innerHTML = noWatchlistSentence(outcome);
+    return;
+  }
+  items = outcome.data.items as WatchItem[];
+  if (items.length === 0) {
+    status.innerHTML = 'Nothing watched yet. <a href="/dashboard/">Add your first contract</a>.';
+    return;
+  }
+  status.hidden = true;
+  $('cl-body').hidden = false;
+  render();
+  const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
+  await Promise.all(
+    pending.map((i) =>
+      scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
+        .then((s) => void scans.set(i.contractId, s))
+        .catch(() => undefined),
+    ),
+  );
+  if (scans.size > 0) render();
 }
+
+void load();

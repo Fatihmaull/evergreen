@@ -156,43 +156,109 @@ export function factsHtml(
 /** At most this many rows on the Overview; the rest are on Contracts. */
 export const OVERVIEW_ROWS = 5;
 
-export function listHtml(rows: readonly Row[], openId?: string): string {
-  const ordered = orderRows(rows).slice(0, OVERVIEW_ROWS);
+/** An empty figure cell: the em dash in the sans face, so it reads as "—", not "–". */
+const NONE = '<span class="none">—</span>';
+
+/** "3 min ago", "2 h ago", "4 d ago": how old a read is, from its stored time. */
+export function ago(iso: string | undefined, now = new Date()): string {
+  if (typeof iso !== 'string') return '—';
+  const s = Math.max(0, Math.round((now.getTime() - new Date(iso).getTime()) / 1000));
+  if (!Number.isFinite(s)) return '—';
+  if (s < 60) return `${s} s ago`;
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86_400) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86_400)} d ago`;
+}
+
+export interface ListOptions {
+  /** Overview: 5, with a link to the rest. Contracts: every row. */
+  readonly limit?: number;
+  /** Contracts adds Binds on and Read. */
+  readonly wide?: boolean;
+  readonly now?: Date;
+}
+
+export function listHtml(rows: readonly Row[], openId?: string, opts: ListOptions = {}): string {
+  const limit = opts.limit ?? OVERVIEW_ROWS;
+  const now = opts.now ?? new Date();
+  const ordered = orderRows(rows).slice(0, limit);
   const body = ordered
     .map((r) => {
       const left = ledgersLeft(r);
       const ends =
-        r.conclusion === 'undetermined'
-          ? '—'
-          : r.binding.state === 'live'
-            ? approxDateShort(r.binding.endsAt)
-            : '—';
+        r.conclusion !== 'undetermined' && r.binding.state === 'live'
+          ? esc(approxDateShort(r.binding.endsAt))
+          : NONE;
+      const binds =
+        r.conclusion !== 'undetermined' && r.binding.state !== 'undetermined'
+          ? esc(r.binding.kind)
+          : NONE;
       const id = esc(r.item.contractId);
       return `<tr data-open="${id}" tabindex="0"${r.item.contractId === openId ? ' class="open" aria-current="true"' : ''}>
         <td><div class="name"><span>${esc(r.item.label ?? 'Unlabelled')}</span><span class="id">${esc(short(r.item.contractId, 4, 4))}</span></div></td>
-        <td>${stateChip(r)}</td>
-        <td class="num mono">${left === undefined ? '—' : esc(formatCount(left))}</td>
+        <td>${stateChip(r)}</td>${opts.wide ? `\n        <td class="hide-m">${binds}</td>` : ''}
+        <td class="num${left === undefined ? '' : ' mono'}">${left === undefined ? NONE : esc(formatCount(left))}</td>
         <td class="hide-m">${ends}</td>
-        <td class="hide-m">${r.item.autopilot?.enabled === true ? 'on' : 'off'}</td>
-        <td class="hide-m chev" aria-hidden="true">›</td>
+        <td class="hide-m">${r.item.autopilot?.enabled === true ? 'on' : 'off'}</td>${
+          opts.wide
+            ? `\n        <td class="hide-m muted-cell">${esc(ago(r.item.lastObservation?.observedAt, now))}</td>`
+            : '\n        <td class="hide-m chev" aria-hidden="true">›</td>'
+        }
       </tr>`;
     })
     .join('');
   const more =
-    rows.length > OVERVIEW_ROWS
-      ? `<p class="note">${formatCount(rows.length - OVERVIEW_ROWS)} more on <a href="/dashboard/watchlist/">Contracts</a>.</p>`
+    rows.length > limit
+      ? `<p class="note">${formatCount(rows.length - limit)} more on <a href="/dashboard/watchlist/">Contracts</a>.</p>`
       : '';
+  const head = opts.wide
+    ? '<th scope="col">Contract</th><th scope="col">State</th><th scope="col" class="hide-m">Binds on</th><th scope="col" class="num">Ledgers left</th><th scope="col" class="hide-m">Ends (est.)</th><th scope="col" class="hide-m">Autopilot</th><th scope="col" class="hide-m">Read</th>'
+    : '<th scope="col">Contract</th><th scope="col">State</th><th scope="col" class="num">Ledgers left</th><th scope="col" class="hide-m">Ends (est.)</th><th scope="col" class="hide-m">Autopilot</th><th class="hide-m"><span class="skip">Open</span></th>';
   return `<table class="list">
-      <thead><tr><th scope="col">Contract</th><th scope="col">State</th><th scope="col" class="num">Ledgers left</th><th scope="col" class="hide-m">Ends (est.)</th><th scope="col" class="hide-m">Autopilot</th><th class="hide-m"><span class="skip">Open</span></th></tr></thead>
+      <thead><tr>${head}</tr></thead>
       <tbody>${body}</tbody>
     </table>${more}`;
+}
+
+/** The Contracts filters (components.md § "The other screens", Contracts). */
+export type StateFilter = 'all' | 'at-risk' | 'undetermined' | 'archived';
+
+export function matchesFilter(r: Row, f: StateFilter, q = ''): boolean {
+  const ok =
+    f === 'all' ||
+    (f === 'archived' && r.binding.state === 'expired') ||
+    (f === 'at-risk' && r.conclusion === 'at-risk' && r.binding.state !== 'expired') ||
+    (f === 'undetermined' && r.conclusion === 'undetermined');
+  const needle = q.trim().toLowerCase();
+  return (
+    ok &&
+    (needle === '' ||
+      r.item.contractId.toLowerCase().includes(needle) ||
+      (r.item.label ?? '').toLowerCase().includes(needle))
+  );
+}
+
+export function filtersHtml(rows: readonly Row[], active: StateFilter): string {
+  const pills: [StateFilter, string][] = [
+    ['all', 'All'],
+    ['at-risk', 'Needs attention'],
+    ['undetermined', 'Undetermined'],
+    ['archived', 'Archived'],
+  ];
+  return pills
+    .map(([f, label]) => {
+      const n = rows.filter((r) => matchesFilter(r, f)).length;
+      const on = f === active;
+      return `<a class="filter${on ? ' active' : ''}" href="?${f === 'all' ? '' : `state=${f}`}" data-filter="${f}"${on ? ' aria-current="true"' : ''}>${label} <span class="mono">${formatCount(n)}</span></a>`;
+    })
+    .join('');
 }
 
 const kv = (pairs: readonly (readonly [string, string])[]): string =>
   `<dl class="kv">${pairs.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 
 /** The side panel for one contract. No Extend now: `POST /jobs` is not built. */
-export function panelHtml(r: Row): string {
+export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): string {
   const { item } = r;
   const obs = item.lastObservation;
   const top = `<div class="panel-top"><div><h2>${esc(item.label ?? 'Unlabelled contract')}</h2><p class="mono note addr">${esc(
@@ -201,8 +267,11 @@ export function panelHtml(r: Row): string {
     <p>${stateChip(r)}</p>`;
 
   const facts: [string, string][] = [];
+  let fix = '';
   if (r.conclusion === 'undetermined') {
     facts.push(['Why', esc(r.why ?? 'Its expiry could not be established.')]);
+    const scan = `/dashboard/scanner/?id=${encodeURIComponent(item.contractId)}`;
+    fix = `<div class="actions"><a class="pill" href="${esc(scan)}">Add data keys</a><a class="pill secondary" href="${esc(scan)}">Scan again</a></div>`;
   } else if (r.binding.state === 'expired') {
     facts.push(['Binds on', esc(r.binding.kind)]);
     facts.push(['State', `${esc(r.binding.word)}: restore it before it can be extended`]);
@@ -245,21 +314,31 @@ export function panelHtml(r: Row): string {
       ap.push(['Act below', `<span class="mono">${esc(formatCount(a.thresholdLedgers!))}</span>`]);
     if (Number.isInteger(a.extendToLedgers))
       ap.push(['Extend to', `<span class="mono">${esc(formatCount(a.extendToLedgers!))}</span>`]);
-    actions = `<div class="actions"><a class="pill secondary" href="${esc(forId)}">Edit autopilot</a></div>`;
+    actions = `<div class="actions"><a class="pill secondary" href="${esc(forId)}">Edit autopilot</a>${
+      page === 'contracts'
+        ? `<button type="button" class="secondary" data-autopilot-off="${esc(item.contractId)}">Turn off</button>`
+        : ''
+    }</div>`;
   } else {
     ap.push(['State', 'off']);
     if (item.network === 'testnet')
       actions = `<div class="actions"><a class="pill" href="${esc(forId)}">Turn on autopilot</a></div>`;
   }
 
+  const details =
+    page === 'overview'
+      ? `<a href="/dashboard/watchlist/?c=${encodeURIComponent(item.contractId)}">Full details</a> · `
+      : '';
   return `${top}
     ${kv(facts)}
+    ${fix}
     <p class="panel-h">Autopilot</p>
     ${kv(ap)}
     ${actions}
     <p class="panel-h">Last runs</p>
     <p class="note unavailable">${NOT_YET_AVAILABLE}</p>
-    <p><a href="/dashboard/watchlist/">Full details</a> · <button type="button" class="linkish" data-remove="${esc(
+    <p class="panel-links">${details}<button type="button" class="linkish" data-remove="${esc(
       item.contractId,
-    )}">Remove</button> <span class="note" data-remove-status role="status"></span></p>`;
+    )}">Remove</button></p>
+    <p class="note" data-panel-status role="status"></p>`;
 }
