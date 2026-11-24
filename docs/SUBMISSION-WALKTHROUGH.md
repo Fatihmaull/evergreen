@@ -187,7 +187,7 @@ to."* A tool that only reports its successes cannot be trusted near production.
 
 ### Step 7 · Both halves of the claim, from observations recorded at the time
 
-**Open:** [the TTL decay chart](https://evergreen-stellar.pages.dev/dashboard/decay/)
+**Open:** [the TTL decay chart](https://evergreen-stellar.pages.dev/dashboard/decay/evidence/)
 
 **You should see:** one chart with two shapes — a line declining to zero and
 stopping (**guinea-pig B**, left alone), and a line that steps back up

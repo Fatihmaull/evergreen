@@ -33,7 +33,7 @@ import {
   settingsProblem,
   type CapRow,
 } from '../lib/allowance-candidates';
-import { quoteRent, scanOne, type ScanResult } from '../lib/evergreen';
+import { quoteRent, scanOne, verifiedServer, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
 import type { WatchItem } from '../lib/watchlist-view';
 import { createApprover } from '../lib/allowance-approve';
@@ -593,9 +593,34 @@ function showSummary(wallet: string | undefined, read: ReadResult | undefined): 
         : { kind: 'none', wallet };
   }
   $('al-next').innerHTML = allowanceNextHtml(s);
+  // No wallet: the facts say nothing yet, so they go (DES, 2026-11-24).
+  $('al-facts').hidden = s.kind === 'no-wallet';
   const flow = $<HTMLDetailsElement>('al-flow');
-  if (s.kind !== 'live' || new URLSearchParams(location.search).has('for')) flow.open = true;
+  if (s.kind === 'none' || new URLSearchParams(location.search).has('for')) flow.open = true;
+  if (wallet !== undefined) void showBalance(wallet);
 }
+
+/** The wallet's native balance, read from the chain; the cell is left out if the read fails. */
+async function showBalance(wallet: string): Promise<void> {
+  try {
+    const server = await verifiedServer();
+    const entry = (await server.getAccountEntry(wallet)) as unknown as {
+      balance: bigint | number | string | (() => { toString(): string });
+    };
+    const raw =
+      typeof entry.balance === 'function' ? entry.balance().toString() : String(entry.balance);
+    if (!/^\d+$/.test(raw)) return;
+    $('al-facts').innerHTML = allowanceFactsHtml(ENGINE_SPENDER, BigInt(raw));
+  } catch {
+    // Leave the cell out: an unread balance is never shown as zero.
+  }
+}
+
+$('al-next').addEventListener('click', (ev) => {
+  if (!(ev.target instanceof Element) || ev.target.closest('[data-connect]') === null) return;
+  $<HTMLDetailsElement>('al-flow').open = true;
+  $('connect-button').click();
+});
 
 $('al-facts').innerHTML = allowanceFactsHtml(ENGINE_SPENDER);
 void readSession()

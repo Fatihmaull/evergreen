@@ -59,10 +59,11 @@ export function render() {
       </div>
       <div id="wallet-list"></div>
       <div id="wallet-result" aria-live="polite"></div>
-      <p class="note">Linking needs your wallet's signature. Signing in with email cannot move XLM: only a signature from your own wallet ever can. Signing in again does not resume anything that spends: autopilot and allowances need a new signature from your wallet first.</p>
+      <p class="note">Linking needs your wallet's signature. Signing in with email cannot move XLM.</p>
       <details>
         <summary>What linking signs</summary>
         <div class="stack">
+          <p class="note">Only a signature from your own wallet ever can move XLM. Signing in again does not resume anything that spends: autopilot and allowances need a new signature from your wallet first.</p>
           <p class="note">You can add contracts to your watchlist with the email sign-in alone. A linked wallet is needed only for autopilot and allowances.</p>
           <p class="note">Linking proves you control a Stellar account. Freighter will ask you to sign a sign-in challenge: a transaction with sequence number 0, which the network rejects, so it cannot move anything. Nothing on this page asks your wallet to sign a payment, an allowance or an extension.</p>
           <p class="note" id="unlink-allowance-note">Unlinking a wallet from your account does not revoke the allowance it granted Evergreen’s engine: the allowance stays on chain until it is revoked or reaches its expiry ledger. <a href="/allowance/">Revoke it on the allowance page</a>.</p>

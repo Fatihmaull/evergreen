@@ -3692,3 +3692,52 @@ body.app .alerts .alerts-how .kv dd {
 #email-section[hidden] {
   display: none;
 }
+/* Below the sidebar breakpoint the sidebar is a bar: its row takes only its
+   content, and the page row takes the rest of the viewport (DES QA). */
+@media (max-width: 959px) {
+  .shell {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
+#al-facts[hidden] {
+  display: none;
+}
+body.app .al-how summary {
+  font: 400 20px/1.3 var(--serif);
+}
+/* TTL decay: one reading, a dot, and a dashed projection; never a solid line. */
+#td-chart[hidden],
+#td-all[hidden],
+#td-status[hidden] {
+  display: none;
+}
+.spark .proj {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.spark .pt {
+  stroke: var(--pine);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.strip[data-open] {
+  cursor: pointer;
+}
+.strip[data-open]:focus-visible {
+  outline: 2px solid var(--pine);
+  outline-offset: -2px;
+}
+body.app .strips li.strip,
+body.app .strips li.strip p {
+  max-width: none;
+}
+.chart-wrap {
+  overflow-x: auto;
+}
+@media (max-width: 760px) {
+  .chart.big {
+    min-width: 640px;
+  }
+}

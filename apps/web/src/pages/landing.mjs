@@ -184,7 +184,7 @@ export function render(ctx) {
               archived. Its timeline stays up after the event, because a record of what happened is
               evidence and not a status display.
             </p>`,
-    link: `<p><a class="site-more" href="/dashboard/decay/">The recorded decay, dot by dot <span aria-hidden="true">→</span></a></p>`,
+    link: `<p><a class="site-more" href="/dashboard/decay/evidence/">The recorded decay, dot by dot <span aria-hidden="true">→</span></a></p>`,
     artefact: `<div class="ended">
             <p class="ended-label">guinea-pig B · instance</p>
             <p class="ended-word">expired</p>
