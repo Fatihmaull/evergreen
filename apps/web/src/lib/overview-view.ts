@@ -257,11 +257,7 @@ export function filtersHtml(rows: readonly Row[], active: StateFilter): string {
 const kv = (pairs: readonly (readonly [string, string])[]): string =>
   `<dl class="kv">${pairs.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 
-/**
- * The side panel for one contract. Extend now is the primary action when
- * autopilot is on (components.md § Side panel). It queues one job; it does
- * not sign. Last runs stay "not yet available" until `GET /jobs` exists.
- */
+/** The side panel for one contract. No Extend now: `POST /jobs` is not built. */
 export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): string {
   const { item } = r;
   const obs = item.lastObservation;
@@ -318,24 +314,11 @@ export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): 
       ap.push(['Act below', `<span class="mono">${esc(formatCount(a.thresholdLedgers!))}</span>`]);
     if (Number.isInteger(a.extendToLedgers))
       ap.push(['Extend to', `<span class="mono">${esc(formatCount(a.extendToLedgers!))}</span>`]);
-    const uses = item.extendNow;
-    const atLimit =
-      Number.isInteger(uses?.usedToday) &&
-      Number.isInteger(uses?.limitPerDay) &&
-      (uses?.usedToday as number) >= (uses?.limitPerDay as number);
-    const used =
-      Number.isInteger(uses?.usedToday) && Number.isInteger(uses?.limitPerDay)
-        ? `<p class="note">${uses!.usedToday} of ${uses!.limitPerDay} extend-now uses in the rolling day. Only a pull counts.</p>`
-        : '<p class="note">Today’s extend count is undetermined.</p>';
-    actions = `<div class="actions"><button type="button" class="pill" data-extend-now="${esc(
-      item.contractId,
-    )}"${atLimit ? ' disabled' : ''}>Extend now</button><a class="pill secondary" href="${esc(
-      forId,
-    )}">Edit autopilot</a>${
+    actions = `<div class="actions"><a class="pill secondary" href="${esc(forId)}">Edit autopilot</a>${
       page === 'contracts'
         ? `<button type="button" class="secondary" data-autopilot-off="${esc(item.contractId)}">Turn off</button>`
         : ''
-    }</div>${used}<div data-extend-result></div><p class="note">This uses the allowance already signed. It does not ask the wallet to sign. Without an allowance, the router covers instance and code only, and this panel does not ask for a signature.</p>`;
+    }</div>`;
   } else {
     ap.push(['State', 'off']);
     if (item.network === 'testnet')
