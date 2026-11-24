@@ -1,7 +1,9 @@
 /**
  * Stage 2 of PH2-E4-04: the money step of a tick. After the heartbeat and the evaluation, it
  * enqueues one autopilot job per due item and then resumes or starts open jobs, oldest first,
- * through PH2-E4-02's `runHostedJob`.
+ * through PH2-E4-02's `runHostedJob`. Open jobs include `extend-now` jobs the API queued (Fatih,
+ * 2026-11-24, option A): same money path, the item's own budget and `extendToLedgers`, and
+ * core's daily limit counted from the database.
  *
  * **Dry-run is the default.** `HOSTED_MODE=live` is honoured only with a valid `ENGINE_SECRET`;
  * otherwise the step counts what it would enqueue and touches neither the database nor the chain.
@@ -28,6 +30,7 @@ import type { ExtendPlan } from './extend-plan.js';
 import {
   autopilotWindow,
   enqueueAutopilotJobs,
+  extendNowUsedToday,
   loadJob,
   openJobs,
   saveStatements,
@@ -151,7 +154,7 @@ export async function runHostedStage(
           retryMarginStroops: config.retryMarginStroops,
           chain,
           budget: (estimate) => checkBudget(item, estimate),
-          extendNowUsedToday: () => Promise.resolve(0),
+          extendNowUsedToday: () => extendNowUsedToday(deps.query, job),
           load: () => loadJob(deps.query, job.id),
           save: (next, rows) => deps.transaction(saveStatements(next, rows)),
         }),
