@@ -73,3 +73,28 @@ test('the Overview page carries no example contract', () => {
     expect(text).not.toMatch(/guinea|OUR_CONTRACTS|snapshot\.json/);
   }
 });
+
+describe('Contracts', () => {
+  test('filters count by state and archived is not "needs attention"', async () => {
+    const { filtersHtml, matchesFilter } = await import('../src/lib/overview-view');
+    const all = [healthy, archived, pending];
+    expect(all.filter((r) => matchesFilter(r, 'archived'))).toEqual([archived]);
+    expect(all.filter((r) => matchesFilter(r, 'at-risk'))).toEqual([]);
+    expect(all.filter((r) => matchesFilter(r, 'all', 'payments'))).toEqual([healthy]);
+    expect(filtersHtml(all, 'all')).toContain('All <span class="mono">3</span>');
+  });
+  test('the wide list adds Binds on and Read; an empty figure is the sans em dash', () => {
+    const html = listHtml([pending, healthy], undefined, { limit: Infinity, wide: true, now: NOW });
+    expect(html).toContain('Binds on');
+    expect(html).toContain('<span class="none">—</span>');
+  });
+  test('the Contracts panel offers Turn off; an undetermined panel offers a rescan', () => {
+    const on = rowFor(
+      item(A, { autopilot: { enabled: true, payerWallet: 'G'.repeat(56) } as never }),
+      NOW,
+    );
+    expect(panelHtml(on, 'contracts')).toContain('data-autopilot-off');
+    expect(panelHtml(on, 'overview')).not.toContain('data-autopilot-off');
+    expect(panelHtml(pending, 'contracts')).toContain('Scan again');
+  });
+});
