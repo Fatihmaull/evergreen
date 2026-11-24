@@ -1,6 +1,11 @@
-/* Dashboard revamp reference (overview, signed in). Loaded after
+/* Dashboard revamp reference, every screen. Loaded after
    alert-preferences.css (the shell) and autopilot-approve.css (buttons, mono).
    No colour, face, or weight is introduced here. */
+
+/* The site token (apps/web/src/styles.css); templates/base.css has no copy. */
+:root {
+  --sage: #7fa893;
+}
 
 main.main.overview {
   max-width: none;
@@ -168,8 +173,12 @@ table.list .id {
 /* The side panel. Opens because the person asked; no slide-in. */
 .with-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100%;
+}
+
+body.panel-open .with-panel {
+  grid-template-columns: minmax(0, 1fr) 380px;
 }
 
 /* Inside the narrow panel each job stacks. */
@@ -302,7 +311,7 @@ table.list .id {
     grid-column: 1 / -1;
   }
 
-  .with-panel {
+  body.panel-open .with-panel {
     grid-template-columns: 1fr;
   }
 
@@ -310,4 +319,236 @@ table.list .id {
     border-left: 0;
     border-top: 1px solid var(--rule);
   }
+}
+
+/* ---- Shared by the other revamp screens ---- */
+
+.next .next-figure.ink {
+  color: var(--ink);
+}
+
+.next .next-figure.ok {
+  color: var(--ok-ink);
+}
+
+.fact-cell .v.mono-v {
+  font: 400 20px/1.4 var(--mono);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.app a.filter {
+  padding: 7px 14px;
+  border-radius: 100vw;
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+body.app a.filter.active {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.filter .mono {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-left: 4px;
+}
+
+.search {
+  padding: 10px 14px;
+  border: 1px solid rgba(15, 15, 15, 0.5);
+  border-radius: 6px;
+  background: var(--paper);
+  font: 400 14px/1.2 var(--sans);
+  color: var(--ink);
+  min-width: 0;
+}
+
+.search.mono {
+  font-family: var(--mono);
+}
+
+.scan-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.scan-row .wide {
+  flex: 1 1 360px;
+}
+
+.muted-cell {
+  color: var(--ink-3);
+}
+
+.when-cell {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.chart-wrap {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  padding-top: 24px;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart .t {
+  font: 400 12px var(--mono);
+  fill: var(--ink-2);
+}
+
+.chart .band {
+  stroke: var(--warn);
+  stroke-width: 1;
+}
+
+.chart .line {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+}
+
+.chart .proj {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.chart .dot {
+  fill: var(--pine);
+}
+
+.kv.wide-kv {
+  max-width: 640px;
+}
+
+.kv.wide-kv > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.toggles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 720px;
+}
+
+.toggles li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.toggles.fixed li {
+  grid-template-columns: 1fr;
+  color: var(--ink-2);
+}
+
+.toggle {
+  font: 400 12px/1 var(--mono);
+  padding: 6px 12px;
+  border-radius: 100vw;
+  border: 1px solid var(--rule-strong);
+  min-width: 36px;
+  text-align: center;
+}
+
+.toggle.on {
+  background: var(--pine);
+  border-color: var(--pine);
+  color: var(--surface);
+}
+
+.signin-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.empty {
+  display: grid;
+  gap: 14px;
+  padding: 28px 0;
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 760px) {
+  .toggles li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .toggles li .note {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .steps li {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+/* The panel runs the full height under the status bar. */
+.content {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Text cells may wrap; figures, times and chips do not. */
+table.list td {
+  white-space: normal;
+}
+
+table.list td.num,
+table.list td.when-cell,
+table.list td .chip {
+  white-space: nowrap;
+}
+
+.fact-cell .v {
+  overflow-wrap: anywhere;
 }

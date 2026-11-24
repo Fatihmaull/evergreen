@@ -891,9 +891,9 @@ two-line usage; only the message changes.
 Exit codes, `--json` output, the scan and extend option names, and colour
 rules (TTY only, `NO_COLOR` honoured). The top-level screen adds no colour.
 
-## Dashboard revamp: overview (2026-11-24, branch `revamp-dashboard`)
+## Dashboard revamp (2026-11-24, branch `revamp-dashboard`)
 
-Reference: `source/screens/dashboard-overview.html`, renders `source/renders/screens/dashboard-overview.png` (desktop, side panel open) and `dashboard-overview-mobile.png` (390 px).
+Reference screens: `source/screens/revamp/`, built from `parts/` by `build.mjs` so every screen shares one sidebar. Renders at 1440 px in `source/renders/screens/revamp/` (`*-panel.png` is the side panel open). Mobile renders at 390 px are in the project files, not the repo.
 
 **Why.** Fatih, 2026-11-24: the dashboard reads like a document. It shows our example contracts, explains itself in paragraphs, and scrolls a long way. A dashboard summarises the person's own data. Detail opens on demand: a click, or a side panel.
 
@@ -904,7 +904,7 @@ Reference: `source/screens/dashboard-overview.html`, renders `source/renders/scr
 - **Summary first, detail on request.** A list shows one line per item. The whole row opens the side panel. The full page remains for deep links.
 - **Fits one screen on desktop.** With up to 5 contracts, the overview fits within 1440 × 900 without the activity block. Lists beyond 5 rows link to the full list.
 
-**Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed), Activity (jobs and fee ledger, new), Allowance. *Tools*: Scanner, Blast radius, TTL decay. *Settings*: Alerts, Account (Sign in when signed out), Documentation. Below 760 px the sidebar becomes a horizontal scrolling tab row with the top group first, section labels hidden.
+**Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed; it keeps the URL `/dashboard/watchlist/`), Activity (jobs and fee ledger, new), Allowance. *Tools*: Scanner, Blast radius, TTL decay. *Settings*: Alerts, Account (Sign in when signed out), Documentation. Below 760 px the sidebar becomes a horizontal scrolling tab row with the top group first, section labels hidden.
 
 **Overview, signed in, from the top.**
 
@@ -922,4 +922,25 @@ Reference: `source/screens/dashboard-overview.html`, renders `source/renders/scr
 
 **Stand-ins in the render.** Every contract name, ID, ledger, date, amount and the payer are invented for the render: current ledger 5,400,000; payments-v2 41,208 left; allowance 812,400 stroops until 5,912,000. Wire them to `GET /watchlist`, `GET /wallets/{account}/allowance`, `GET /jobs` and `GET /ledger`.
 
-**Open.** The Activity page and the move of "Our own record" to `/about/` are specified next. Whether the scheduler's next check time is readable from the API is undetermined; until it is, that fact cell shows only `N of M`.
+**Stand-ins agree with each other.** payments-v2 has never been extended since autopilot went on: its first run on Nov 22 stopped at pre-flight, which is why it needs attention. The allowance was approved on Nov 12 for 1,080,822. Two pulls (186,234 and 229,011) leave 665,577. Refunds go back to the wallet, not to the allowance.
+
+### The other screens
+
+Every screen uses the same head: an eyebrow, an h1, and at most two buttons on the right. At most one dominant figure (`.next`), facts without boxes, a one-line-per-item table, and the side panel for detail.
+
+- **Contracts** (`contracts`, `contracts-panel`): filter pills with counts (All, Needs attention, Undetermined, Archived) and a name/ID filter. The table adds Binds on and Read. The render opens the undetermined contract: the panel says why in one sentence, offers *Add data keys* and *Scan again*, and lists what was read. It never shows a figure for an undetermined expiry.
+- **Activity** (new, `activity`, `activity-panel`): four facts for 30 days (extends, rent charged, Evergreen fee, refunded), filter pills, and one row per event (When, Contract, Event, Rent, Fee, Status). Rent and fee are separate columns. A job's panel lists its steps (pre-flight, pulled, extended, reconciled, refunded) with transaction links, and closes with the identity *Pulled = rent + fee + refund + difference*.
+- **Allowance** (`allowance`, `allowance-panel`): the dominant figure is what is left to pull, with the state chip, the until ledger and the wallet. Facts: cap approved, pulled so far, wallet balance (exact, never rounded), spender. *What it covers* lists rent + fee per extend and extends left per contract. *Change cap* opens the existing three-step flow in the panel; the full-page flow from PH2-E3-05 stays for a first approve.
+- **Scanner** (`scanner`): one input row, data keys folded away, then the binding expiry as the dominant figure with *Add to watchlist* and *Copy CLI command*, then the entries read.
+- **Blast radius** (`blast-radius`): the person's contracts grouped by Wasm. The dominant figure is the largest group. One row per code entry.
+- **TTL decay** (`decay`): one contract at a time, chosen by pills. The figure and the caption give the rate and when the threshold is reached. The chart follows § Chart. It is drawn at the container's width, so its 12 px text stays 12 px; the reference SVG is drawn at 1100 px.
+- **Alerts** (`alerts`): who alerts go to, three switches the person chooses, and the always-sent list without switches.
+- **Account** (`account`): email, session, and the linked wallets table with *Unlink*, plus *Sign out*.
+- **Overview, signed out** (`overview-signed-out`) and **with nothing watched** (`overview-empty`), as above.
+
+### Where the data comes from today (WEBF, 2026-11-24)
+
+`apps/api` serves auth, watchlist and alert preferences only. `GET /jobs`, `GET /ledger`, `GET /wallets/{account}/allowance` and `POST /jobs` are specified in docs/API.md §7 but not built. Until they are:
+
+- **Read in the browser now:** the allowance left and its until ledger (the SAC `allowance()` read), the wallet balance, and everything a scan reads.
+- **No source yet:** the Last 30 days fact, Recent activity, the Activity page, the panel's last runs, *Extend now*, and the scheduler's next check. Each shows the word *not yet available* in `--ink-3` where its value would be: no figure, no zero, no placeholder rows. *Extend now* is not drawn. The Activity nav item stays, and its page says *Activity appears here once the engine reports jobs.* An unavailable value is never shown as zero (three-state honesty).

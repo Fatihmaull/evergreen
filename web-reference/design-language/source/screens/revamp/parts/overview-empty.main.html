@@ -1,0 +1,28 @@
+<main id="main" class="main overview">
+  <div class="ov-head">
+    <div>
+      <p class="eyebrow">Overview · Stellar testnet</p>
+      <h1>Your contracts</h1>
+    </div>
+  </div>
+
+  <section class="empty" aria-labelledby="add-h">
+    <h2 id="add-h">Add your first contract</h2>
+    <form class="scan-row" onsubmit="return false;">
+      <label class="skip" for="cid">Contract ID</label>
+      <input
+        id="cid"
+        class="search wide mono"
+        type="text"
+        placeholder="Contract ID, C…"
+        spellcheck="false"
+      />
+      <input class="search" type="text" placeholder="Label (optional)" aria-label="Label" />
+      <button class="primary" type="submit">Add</button>
+    </form>
+    <p class="note">
+      Evergreen reads its expiry now and every few minutes after. Not sure of the ID?
+      <a href="/dashboard/scanner/">Scan first</a>.
+    </p>
+  </section>
+</main>
