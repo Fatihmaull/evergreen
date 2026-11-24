@@ -3748,3 +3748,38 @@ body.app p.legend {
 #stop-section[hidden] {
   display: none;
 }
+
+/* Activity: room between the pills and the list, as on Contracts' toolbar. */
+body.app #ac-filters {
+  margin-bottom: 24px;
+}
+.only-m {
+  display: none;
+}
+.nowrap,
+body.app table.list td.nowrap {
+  white-space: nowrap;
+}
+.identity .mono {
+  font-size: 12px;
+  white-space: nowrap;
+}
+body.panel-open #ac-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  table.list .only-m {
+    display: inline;
+  }
+  /* Long names end in an ellipsis rather than pushing the page wider than the phone. */
+  body.app table.list td.clip {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+/* Activity panel steps: a narrower label column so "charged 141,960" fits beside its tx link. */
+#side-panel .steps li {
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  column-gap: 10px;
+}
