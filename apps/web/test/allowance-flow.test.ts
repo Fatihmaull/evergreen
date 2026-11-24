@@ -21,7 +21,7 @@ vi.mock('../src/lib/evergreen', () => ({
   },
 }));
 
-import { approveScVals, type AllowanceChain } from '../src/lib/allowance';
+import { ENGINE_SPENDER, approveScVals, type AllowanceChain } from '../src/lib/allowance';
 import { createApprover } from '../src/lib/allowance-approve';
 import {
   ALLOWANCE_RETRY_MARGIN_STROOPS,
@@ -115,7 +115,7 @@ function historyBody(over: Record<string, unknown> = {}): Record<string, unknown
   return {
     network: 'testnet',
     account: ME,
-    spender: SPENDER,
+    spender: ENGINE_SPENDER,
     amountStroops: '0',
     liveUntilLedger: null,
     status: 'expired',
@@ -133,14 +133,17 @@ function historyBody(over: Record<string, unknown> = {}): Record<string, unknown
 }
 
 describe('the cap estimate', () => {
-  test('the margin ships unset, and an unset margin is not an amount', () => {
-    expect(ALLOWANCE_RETRY_MARGIN_STROOPS).toBeUndefined();
+  test('the margin is 100,000 stroops on testnet only, and an unset margin is not an amount', () => {
+    expect(ALLOWANCE_RETRY_MARGIN_STROOPS).toBe(100_000n);
     const src = readFileSync(
       fileURLToPath(new URL('../src/lib/allowance-cap.ts', import.meta.url)),
       'utf8',
     );
-    expect(src).toContain('ALLOWANCE_RETRY_MARGIN_STROOPS: bigint | undefined = undefined');
-    const estimate = estimateAllowanceCap([{ simulatedRentStroops: 1n, hostedActions: 3n }]);
+    expect(src).toMatch(/NETWORK\.name === 'testnet' \? 100_000n : undefined/);
+    const estimate = estimateAllowanceCap(
+      [{ simulatedRentStroops: 1n, hostedActions: 3n }],
+      undefined,
+    );
     expect(estimate.amountStroops).toBeUndefined();
     expect(estimate.lines[0]?.perActionFeeStroops).toBe(25_000n);
     expect(estimate.feeStroops).toBe(75_000n);
@@ -237,6 +240,7 @@ describe('approve guards', () => {
     const before = fake.calls;
     const approver = createApprover({
       wallet: w,
+      spender: undefined,
       allowanceChain: c,
       moneyChain: m,
       sleep: async () => {},
@@ -399,6 +403,8 @@ describe('expired shows as stopped', () => {
     expect(parseAllowanceState(historyBody({ lastKnown: null }), ME)).toBeUndefined();
     expect(parseAllowanceState(historyBody({ network: 'mainnet' }), ME)).toBeUndefined();
     expect(parseAllowanceState(historyBody({ account: SPENDER }), ME)).toBeUndefined();
+    // A history for another spender is not this page's allowance.
+    expect(parseAllowanceState(historyBody({ spender: SPENDER }), ME)).toBeUndefined();
     expect(
       parseAllowanceState(
         historyBody({

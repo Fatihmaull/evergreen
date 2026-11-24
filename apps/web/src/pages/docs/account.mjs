@@ -102,19 +102,22 @@ export function render() {
 
     <h2 id="autopilot">Autopilot and the allowance</h2>
     <p class="note">
-      As of 2026-11-23 (<a href="https://github.com/Fatihmaull/evergreen/pull/642">#642</a>): the
-      <strong>Autopilot</strong> column shows the setting the API holds for each row. A row that is
-      off has <strong>Turn on autopilot</strong>, which only opens the allowance page. A row that is
-      on has <strong>Turn off</strong>, which changes the stored setting and leaves any allowance
-      on the chain. <strong>No control on this site turns autopilot on, and no step on it grants an
-      allowance.</strong>
+      As of 2026-11-23 (PH2-E3-05): the <strong>Autopilot</strong> column shows the setting the API
+      holds for each row. A row that is off has <strong>Turn on autopilot</strong>, which only opens
+      the allowance page. A row that is on shows the payer's allowance as read from the chain, and
+      has <strong>Turn off</strong>, which changes the stored setting and leaves any allowance on the
+      chain. <strong>No control on this site turns autopilot on except the last step of the allowance
+      page, and no step grants an allowance except the approve your own wallet signs there.</strong>
+      Testnet only.
     </p>
     <p>
-      <a href="/allowance/">The allowance page</a> reads a wallet's allowance and can revoke one.
-      Its <strong>Revoke allowance</strong> button stays disabled, with the reason printed beneath
-      it, until the engine's spender address is published. An allowance lets the engine pull
-      native XLM from your account, only up to the amount you approved and only until the ledger
-      you chose.
+      <a href="/allowance/">The allowance page</a> sizes a cap from your watchlist and shows what you
+      would sign. Your wallet signs one <span class="mono">approve</span> to Evergreen's engine
+      account, <span class="mono">GBNCEF…CJ6AM</span>. When the chain reads back the same amount and
+      ledger, the page offers to turn autopilot on for the contracts you chose. An allowance lets
+      the engine pull native XLM from your account, only up to the amount you approved and only
+      until the ledger you chose. <strong>Revoke allowance</strong> sets it to zero. It stays
+      disabled until a wallet is connected.
     </p>
 
     <h2 id="not">What none of this does</h2>

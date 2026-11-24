@@ -84,6 +84,7 @@ export type {
   HostedJobOutcome,
   HostedJobPorts,
   HostedJobSnapshot,
+  PreflightRecord,
   HostedJobStatus,
   HostedStopCode,
   LedgerWrite,

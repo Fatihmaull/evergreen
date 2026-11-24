@@ -55,6 +55,7 @@ describe('INVALID_REQUEST is a known code, not UNRECOGNISED', () => {
       status,
       code: 'INVALID_REQUEST',
       retryable: false,
+      details: { field: 'scope.dataKeys' },
     });
   });
 

@@ -2,6 +2,7 @@
  * /allowance/ (PH2-E3-05): the unset spender, the raw read, the revoke flow
  * against stand-ins, and one distinct sentence per outcome.
  */
+import { StrKey, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { describe, expect, test, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +15,13 @@ vi.mock('../src/lib/evergreen', () => ({
   },
 }));
 
-import { ENGINE_SPENDER, readAllowance, type AllowanceChain } from '../src/lib/allowance';
+import {
+  ENGINE_SPENDER,
+  TESTNET_ENGINE_SPENDER,
+  allowanceValue,
+  readAllowance,
+  type AllowanceChain,
+} from '../src/lib/allowance';
 import { createRevoker, type RevokeOutcome } from '../src/lib/allowance-revoke';
 import { readHtml, revokeOutcomeHtml, SPENDER_UNSET_TEXT } from '../src/lib/allowance-view';
 import type { Wallet } from '../src/lib/wallet';
@@ -81,20 +88,25 @@ function money(over: Partial<ChainPort> = {}): ChainPort & { sent: string[] } {
   };
 }
 
-describe('the spender is unset', () => {
-  test('ENGINE_SPENDER ships unset: no engine address is guessed', () => {
-    expect(ENGINE_SPENDER).toBeUndefined();
+describe('the spender', () => {
+  test("ENGINE_SPENDER is the engine's testnet account, and only testnet gets it", () => {
+    expect(ENGINE_SPENDER).toBe(TESTNET_ENGINE_SPENDER);
+    expect(StrKey.isValidEd25519PublicKey(TESTNET_ENGINE_SPENDER)).toBe(true);
     const src = readFileSync(
       fileURLToPath(new URL('../src/lib/allowance.ts', import.meta.url)),
       'utf8',
     );
-    expect(src).not.toMatch(/\bG[A-Z2-7]{55}\b/);
+    // One address in the file, and the export is gated on the network.
+    expect(src.match(/\bG[A-Z2-7]{55}\b/g)).toEqual([TESTNET_ENGINE_SPENDER]);
+    expect(src).toMatch(/NETWORK\.name === 'testnet' \? TESTNET_ENGINE_SPENDER : undefined/);
   });
+});
 
+describe('the spender is unset (as on any non-testnet build)', () => {
   test('no chain read happens, and the status is undetermined with the reason', async () => {
     const c = allowanceChain();
     const before = fake.calls;
-    const read = await readAllowance(ME, { chain: c });
+    const read = await readAllowance(ME, { spender: undefined, chain: c });
     expect(read).toEqual({ kind: 'spender-unset' });
     expect(c.reads).toBe(0);
     expect(fake.calls).toBe(before);
@@ -107,7 +119,7 @@ describe('the spender is unset', () => {
     const w = wallet();
     const c = allowanceChain();
     const m = money();
-    const r = createRevoker({ wallet: w, allowanceChain: c, moneyChain: m });
+    const r = createRevoker({ wallet: w, spender: undefined, allowanceChain: c, moneyChain: m });
     expect(r.available).toBe(false);
     expect(await r.revoke(ME)).toEqual({ kind: 'spender-unset' });
     expect([c.builds.length, w.asked.length, m.sent.length]).toEqual([0, 0, 0]);
@@ -302,5 +314,39 @@ describe('every outcome renders distinctly', () => {
 
   test('the unset-spender sentence is the one the read panel shows', () => {
     expect(text(revokeOutcomeHtml({ kind: 'spender-unset' }))).toContain(SPENDER_UNSET_TEXT);
+  });
+});
+
+describe('the stored allowance value', () => {
+  const entry = (fields: [string, xdr.ScVal][]) =>
+    xdr.ScVal.scvMap(
+      fields.map(([k, v]) => new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol(k), val: v })),
+    );
+  const amount = nativeToScVal(17_499_704n, { type: 'i128' });
+
+  test('the built-in SAC stores live_until_ledger (first real approve, 2026-11-23)', () => {
+    expect(
+      allowanceValue(
+        entry([
+          ['amount', amount],
+          ['live_until_ledger', xdr.ScVal.scvU32(8_993_626)],
+        ]),
+      ),
+    ).toEqual({ amountStroops: '17499704', liveUntilLedger: 8_993_626 });
+  });
+
+  test('the older expiration_ledger spelling is read too', () => {
+    expect(
+      allowanceValue(
+        entry([
+          ['amount', amount],
+          ['expiration_ledger', xdr.ScVal.scvU32(9)],
+        ]),
+      ),
+    ).toEqual({ amountStroops: '17499704', liveUntilLedger: 9 });
+  });
+
+  test('an entry with no expiry field is undetermined, never "no entry"', () => {
+    expect(() => allowanceValue(entry([['amount', amount]]))).toThrow(/unexpected shape.*amount/);
   });
 });

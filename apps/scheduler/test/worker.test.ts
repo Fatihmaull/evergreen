@@ -370,26 +370,36 @@ describe('Stage 1 evaluation step', () => {
   });
 
   it('logs money-path counts and does not log a payer', async () => {
-    let ran = false;
+    let seen: unknown;
     const logs: Record<string, unknown>[] = [];
+    const extendPlan = {
+      requests: [],
+      skipped: { 'not-due': 0, expired: 0, undetermined: 0, 'no-budget': 0 },
+    };
     const rt: Runtime = {
       runTick: () => Promise.resolve({ observedLedger: 7 }),
-      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [] }),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [], extendPlan }),
       dryRunTenants: () => Promise.resolve({ runId: 'tick-7', tenants: [], warnings: [] }),
-      hostedJobs: () => {
-        ran = true;
+      hostedJobs: (input) => {
+        seen = input;
         return Promise.resolve({
           dryRun: false,
+          due: 2,
+          enqueued: 1,
           jobs: 1,
           submitted: 1,
           refunded: 1,
           shortfall: 0,
+          preflightFailed: 0,
+          failed: 0,
+          orphaned: 0,
+          deadlineHit: false,
         });
       },
       log: (entry) => logs.push({ ...entry }),
     };
     await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
-    expect(ran).toBe(true);
+    expect(seen).toEqual({ observedLedger: 7, plans: [], extendPlan });
     expect(logs.map((entry) => entry['event'])).toEqual([
       'scheduler.tick',
       'scheduler.evaluate',
@@ -401,12 +411,34 @@ describe('Stage 1 evaluation step', () => {
       trigger: 'cron',
       environment: 'preview',
       dryRun: false,
+      due: 2,
+      enqueued: 1,
       jobs: 1,
       submitted: 1,
       refunded: 1,
       shortfall: 0,
+      preflightFailed: 0,
+      failed: 0,
+      orphaned: 0,
+      deadlineHit: false,
     });
     expect(JSON.stringify(logs)).not.toContain('G');
+  });
+
+  it('skips the money step when the evaluation had no chain read', async () => {
+    let ran = false;
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () => Promise.resolve({ summary: SUMMARY, plans: [] }),
+      dryRunTenants: () => Promise.resolve({ runId: 'tick-7', tenants: [], warnings: [] }),
+      hostedJobs: () => {
+        ran = true;
+        return Promise.reject(new Error('unreachable'));
+      },
+      log: () => {},
+    };
+    await handleScheduled({}, rt);
+    expect(ran).toBe(false);
   });
 
   it('does not run the money path when the runtime has none', async () => {

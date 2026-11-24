@@ -153,12 +153,17 @@ export function rowUsable(row: CapRow): boolean {
  * The rent cell of one row. The page swaps only this cell and the row's box
  * after a simulation or a settings change, never the inputs, so a number being
  * typed in another row keeps its value and its focus (DES review, #651).
+ * `cover` is the row's coverage sentence (`coverageSentence`), when there is one.
  */
-export function rowRentHtml(row: CapRow): string {
+export function rowRentHtml(row: CapRow, cover?: string): string {
   const problem = settingsProblem(row);
-  return problem === undefined
-    ? rentCell(row.rent)
-    : `<span class="small">${esc(problem)} This contract is left out of the cap.</span>`;
+  if (problem !== undefined)
+    return `<span class="small">${esc(problem)} This contract is left out of the cap.</span>`;
+  const line =
+    cover === undefined
+      ? ''
+      : `<br /><span class="small muted" data-cap-cover>${esc(cover)}</span>`;
+  return `${rentCell(row.rent)}${line}`;
 }
 
 export function capRowsHtml(rows: readonly CapRow[]): string {

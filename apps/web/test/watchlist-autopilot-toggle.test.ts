@@ -10,6 +10,7 @@ import {
   AUTOPILOT_OFF_TEXT,
   autopilotCell,
   autopilotOffOutcomeText,
+  type PayerAllowance,
   type WatchItem,
 } from '../src/lib/watchlist-view';
 import { A, item } from './fixtures/watchlist-example';
@@ -60,9 +61,25 @@ describe('autopilot cell controls', () => {
     const html = autopilotCell(on(), { linkedWallets: [PAYER] });
     expect(html).toContain('>Turn off</button>');
     expect(html).toContain('chip undetermined');
-    expect(html).toContain('Allowance not read');
+    expect(html).toContain('Allowance not read yet.');
     expect(html).not.toContain('chip healthy');
     expect(html).not.toContain('Turn on autopilot');
+  });
+
+  test('the allowance part reads live, missing or undetermined (§ A)', () => {
+    const at = (read: PayerAllowance) =>
+      autopilotCell(on(), { linkedWallets: [PAYER], allowances: new Map([[PAYER, read]]) });
+    const live = at({ kind: 'live', liveUntilLedger: 8_510_399, observedAtLedger: 5_400_000 });
+    expect(live).toContain('allowance until ledger');
+    expect(live).toContain('8,510,399');
+    expect(live).not.toContain('chip');
+    const missing = at({ kind: 'missing' });
+    expect(missing).toContain('chip warning');
+    expect(missing).toContain('allowance missing');
+    expect(missing).toMatch(/href="\/allowance\/\?for=[^"]+">Approve an allowance →<\/a>/);
+    const unread = at({ kind: 'unread' });
+    expect(unread).toContain('chip undetermined');
+    expect(unread).not.toContain('chip healthy');
   });
 });
 

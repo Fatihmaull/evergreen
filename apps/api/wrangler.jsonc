@@ -6,6 +6,7 @@
 //   CHALLENGE_SIGNING_KEY  S… seed of the unfunded SEP-10 challenge-signing key
 // Plain vars auth also needs (not secret):
 //   DASHBOARD_ORIGIN  set below per environment (one exact origin, no wildcard)
+//   DASHBOARD_EXTRA_ORIGINS  optional, preview only (exact origins, comma-separated)
 //   EMAIL_FROM        alerts@mail.evergreenstellar.biz.id on both environments
 //                     (Resend domain mail.evergreenstellar.biz.id, verified)
 // Until all of these are set, the auth routes answer 503 UPSTREAM_UNAVAILABLE.
@@ -68,6 +69,10 @@
         // preview accepts and refuses what production will.
         "THRESHOLD_FLOOR_LEDGERS": "4329",
         "DASHBOARD_ORIGIN": "https://preview.evergreen-stellar.pages.dev",
+        // Extra exact origins CSRF accepts besides DASHBOARD_ORIGIN (comma-separated, no
+        // wildcard, no path). Preview only: the dashboard revamp branch (Fatih, 2026-11-24).
+        // Production leaves it unset.
+        "DASHBOARD_EXTRA_ORIGINS": "https://revamp-dashboard.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
       },
     },
