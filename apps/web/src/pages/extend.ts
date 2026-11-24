@@ -1,88 +1,76 @@
 /**
- * /extend/ in the browser. Loads the watchlist, and queues one job per click.
- * No wallet. No storage. A key is kept in memory for the page, one per
- * contract, so a second click is the same intent.
+ * /extend/ in the revamp shell: one line per watched contract and the shared
+ * side panel. Extend now is the panel's primary button when autopilot is on.
+ * Nothing is queued when the page loads. No wallet.
  */
 import { apiRequest } from '../lib/api';
 import { esc } from '../lib/format';
-import { extendRows, queueExtendNow, type ExtendRow } from '../lib/extend-job';
-import { oneExtendQuoteHtml, queueHtml, routerNoteHtml, rowHtml } from '../lib/extend-view';
+import { oneExtendQuoteHtml, routerNoteHtml } from '../lib/extend-view';
+import { listHtml, panelHtml } from '../lib/overview-view';
+import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
+import { rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
-const rowsEl = document.getElementById('extend-rows');
+const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+
 const note = document.getElementById('router-note');
 if (note !== null) note.innerHTML = routerNoteHtml();
 
-const keys = new Map<string, string>();
+let items: WatchItem[] = [];
+const rows = (): Row[] => items.map((item) => rowFor(item, new Date()));
 
-function keyFor(contractId: string): string {
-  const existing = keys.get(contractId);
-  if (existing !== undefined) return existing;
-  const created = crypto.randomUUID();
-  keys.set(contractId, created);
-  return created;
+function renderList(open = openIdFromUrl()): void {
+  const list = document.getElementById('extend-list');
+  if (list === null) return;
+  list.innerHTML =
+    rows().length === 0
+      ? '<p class="note">No contract on the watchlist. Nothing was queued.</p>'
+      : listHtml(rows(), open, { limit: Infinity, wide: true });
 }
 
-if (rowsEl !== null) {
-  void apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).then((outcome) => {
-    if (outcome.kind === 'unavailable') {
-      rowsEl.innerHTML =
-        '<p class="small">The watchlist did not answer, so this page has no contracts to extend. Nothing was queued.</p>';
-      return;
-    }
-    if (outcome.kind === 'error') {
-      rowsEl.innerHTML =
-        outcome.code === 'UNAUTHENTICATED'
-          ? '<p class="small">Not signed in. <a href="/login/">Sign in</a> to see the contracts this account watches. Nothing was queued.</p>'
-          : '<p class="small">The watchlist answered in a shape this page will not read. Nothing was queued.</p>';
-      return;
-    }
-    const parsed = extendRows(outcome.data?.items);
-    if (parsed.rows.length === 0) {
-      rowsEl.innerHTML =
-        '<p class="small">No testnet contract on the watchlist. Nothing was queued.</p>';
-      return;
-    }
-    const unread =
-      parsed.unreadable === 0
-        ? ''
-        : `<p class="small muted">${parsed.unreadable} row${parsed.unreadable === 1 ? '' : 's'} could not be read and ${parsed.unreadable === 1 ? 'is' : 'are'} not listed.</p>`;
-    rowsEl.innerHTML = unread + parsed.rows.map((row) => rowHtml(row)).join('');
-    const byId = new Map<string, ExtendRow>(parsed.rows.map((row) => [row.contractId, row]));
-    rowsEl.addEventListener('click', (event) => {
-      const button = (event.target as Element | null)?.closest?.('button.extend-now');
-      if (!(button instanceof HTMLButtonElement) || button.disabled) return;
-      const contractId = button.dataset['contract'];
-      const row = contractId === undefined ? undefined : byId.get(contractId);
-      if (row === undefined || !row.autopilot) return;
-      if (
-        row.limitPerDay !== undefined &&
-        row.usedToday !== undefined &&
-        row.usedToday >= row.limitPerDay
-      ) {
-        return;
-      }
-      button.disabled = true;
-      const result = rowsEl.querySelector(
-        `.extend-result[data-contract="${CSS.escape(contractId ?? '')}"]`,
-      );
-      if (result !== null)
-        result.innerHTML = '<p class="muted">Asking the API to queue one extend…</p>';
-      void queueExtendNow(row.contractId, keyFor(row.contractId)).then((queued) => {
-        if (result !== null) result.innerHTML = queueHtml(queued);
-        // An unreadable success may already be a job. Anything else can be
-        // asked again, and the same key is sent so a retry is not a second intent.
-        button.disabled =
-          queued.kind === 'queued' ||
-          (queued.kind === 'not-queued' && queued.reason === 'unrecognised');
-      });
-    });
-  });
-}
+const panel = mountPanel({
+  rows,
+  renderList,
+  panelHtml: (row) => panelHtml(row, 'contracts'),
+  removed: (id) => {
+    items = items.filter((item) => item.contractId !== id);
+    renderList();
+    panel.render();
+  },
+  autopilotOff: (id) => {
+    items = items.map((item) =>
+      item.contractId === id ? { ...item, autopilot: { enabled: false } } : item,
+    );
+    renderList();
+    panel.render();
+  },
+});
 
-const estimate = document.getElementById('estimate-button');
-estimate?.addEventListener('click', () => {
-  const raw =
-    (document.getElementById('rent-stroops') as HTMLInputElement | null)?.value.trim() ?? '';
+void apiRequest<{ items?: unknown }>('/watchlist', { method: 'GET' }).then((outcome) => {
+  const status = $('extend-status');
+  if (outcome.kind === 'unavailable') {
+    status.textContent = 'The watchlist did not answer. Nothing was queued.';
+    return;
+  }
+  if (outcome.kind === 'error') {
+    status.innerHTML =
+      outcome.code === 'UNAUTHENTICATED'
+        ? 'Not signed in. <a href="/login/">Sign in</a>. Nothing was queued.'
+        : 'The watchlist answered in a shape this page will not read. Nothing was queued.';
+    return;
+  }
+  if (!Array.isArray(outcome.data?.items)) {
+    status.textContent =
+      'The watchlist answered in a shape this page will not read. Nothing was queued.';
+    return;
+  }
+  items = outcome.data.items as WatchItem[];
+  status.hidden = true;
+  renderList();
+  panel.render();
+});
+
+document.getElementById('estimate-button')?.addEventListener('click', () => {
+  const raw = ($<HTMLInputElement>('rent-stroops').value ?? '').trim();
   const out = document.getElementById('estimate-result');
   if (out === null) return;
   if (raw === '') {

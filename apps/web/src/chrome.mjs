@@ -31,7 +31,6 @@ export const NAV = [
       { href: '/dashboard/watchlist/', label: 'Contracts' },
       { href: '/dashboard/activity/', label: 'Activity' },
       { href: '/allowance/', label: 'Allowance' },
-      { href: '/extend/', label: 'Extend now' },
     ],
   },
   {

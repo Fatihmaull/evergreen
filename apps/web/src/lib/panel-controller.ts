@@ -8,8 +8,19 @@
  * The page owns the data; this owns the URL, the panel element and the
  * clicks. Remove and Turn off are here because both live in the panel.
  */
+import { queueExtendNow } from './extend-job';
+import { queueHtml } from './extend-view';
 import { removeFromWatchlist, turnAutopilotOff } from './watchlist';
 import { autopilotOffOutcomeText, removeOutcomeText, type Row } from './watchlist-view';
+
+const extendKeys = new Map<string, string>();
+function extendKey(contractId: string): string {
+  const existing = extendKeys.get(contractId);
+  if (existing !== undefined) return existing;
+  const created = crypto.randomUUID();
+  extendKeys.set(contractId, created);
+  return created;
+}
 
 export interface PanelHost {
   /** Every row the page knows, in any order. */
@@ -90,6 +101,21 @@ export function mountPanel(host: PanelHost): { render(): void; setOpen(id?: stri
           remove.disabled = false;
           if (out) out.textContent = text;
         });
+      return;
+    }
+    const extendNow = t.closest<HTMLButtonElement>('button[data-extend-now]');
+    if (extendNow !== null && !extendNow.disabled) {
+      const id = extendNow.dataset.extendNow ?? '';
+      const out = panel.querySelector<HTMLElement>('[data-extend-result]');
+      extendNow.disabled = true;
+      if (out) out.innerHTML = '<p class="note">Asking the API to queue one extend…</p>';
+      void queueExtendNow(id, extendKey(id)).then((queued) => {
+        if (out) out.innerHTML = queueHtml(queued);
+        const lock =
+          queued.kind === 'queued' ||
+          (queued.kind === 'not-queued' && queued.reason === 'unrecognised');
+        extendNow.disabled = lock;
+      });
       return;
     }
     const off = t.closest<HTMLButtonElement>('button[data-autopilot-off]');

@@ -50,9 +50,26 @@ describe('values with no API route are words, never zero', () => {
     expect(html).toContain(NOT_YET_AVAILABLE);
     expect(html).not.toMatch(/Last 30 days<\/p><p class="v">0/);
   });
-  test('the panel draws no Extend now and says the runs are not yet available', () => {
+  test('autopilot off draws no Extend now, and the runs stay not yet available', () => {
     const html = panelHtml(healthy);
     expect(html).not.toContain('Extend now');
+    expect(html).toContain(NOT_YET_AVAILABLE);
+  });
+  test('autopilot on offers Extend now and still does not invent last runs', () => {
+    const on = rowFor(
+      item(A, {
+        autopilot: {
+          enabled: true,
+          payerWallet: 'G' + 'A'.repeat(55),
+          thresholdLedgers: 17_280,
+          extendToLedgers: 120_960,
+        },
+      }),
+      NOW,
+    );
+    const html = panelHtml(on);
+    expect(html).toContain('Extend now');
+    expect(html).toContain('instance and code only');
     expect(html).toContain(NOT_YET_AVAILABLE);
   });
 });

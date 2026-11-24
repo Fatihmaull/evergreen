@@ -6,7 +6,12 @@
  * A job status outside the documented set is undetermined, never "extended".
  * Nothing here says a contract is protected.
  */
-import { hostedFeeStroops, routerFeeStroops } from '../../../../packages/core/src/index';
+import {
+  pullAmountStroops,
+  hostedFeeStroops,
+  routerFeeStroops,
+} from '../../../../packages/core/src/index';
+import { ALLOWANCE_RETRY_MARGIN_STROOPS } from './allowance-cap';
 import { exactXlm, esc, short } from './format';
 import {
   ROUTER_CONTRACT_ID,
@@ -26,21 +31,34 @@ export const EMAIL_UNDETERMINED =
 export const ROUTER_UNPUBLISHED =
   'Without a live allowance, one signature would go to the router, and that signature extends instance and code only. Persistent entries are not in it. No router address is published, so this page will not ask your wallet to sign an extend. A second signature is not offered.';
 
-/** Rent and fee for one extend. No pull total: the margin is unset. */
+/**
+ * Rent, the provisional fee, and — on testnet, where the retry margin is
+ * 100,000 stroops — the pull. Each is its own line. Any other network leaves
+ * the margin unset, and the pull stays undetermined.
+ */
 export function oneExtendQuoteHtml(rentStroops: bigint | undefined): string {
   if (rentStroops === undefined) {
     return `<div class="panel undetermined"><p><span class="chip undetermined"><span class="shape"></span>undetermined</span> Rent and the fee for one extend are undetermined until a rent figure is entered.</p></div>`;
   }
   const hosted = hostedFeeStroops(rentStroops);
   const router = routerFeeStroops(rentStroops);
+  const margin = ALLOWANCE_RETRY_MARGIN_STROOPS;
+  const pull =
+    margin === undefined
+      ? undefined
+      : pullAmountStroops({ simulatedRentStroops: rentStroops, retryMarginStroops: margin });
+  const pullLine =
+    pull === undefined
+      ? '<p class="small">Pull amount: undetermined. The safety margin is not set on this network.</p>'
+      : `<dl class="small"><dt>Margin, one extend</dt><dd class="mono">${money(pull.marginStroops)}</dd><dt>Pull amount, one extend</dt><dd class="mono">${money(pull.totalStroops)}</dd></dl>`;
   return `<div class="stack">
       <dl class="small">
         <dt>Rent, one extend, estimate</dt><dd class="mono">${money(rentStroops)}</dd>
         <dt>Fee, one extend, estimate</dt><dd class="mono">${money(hosted)}</dd>
         <dt>Router fee, one extend, estimate</dt><dd class="mono">${money(router)}</dd>
       </dl>
-      <p class="small">Pull amount: undetermined. The safety margin is not set, so this page will not name what the engine would pull. A live pull is refused until that margin is set.</p>
-      <p class="small muted">The fee is provisional. Rent and the fee are separate. The router fee has no minimum and is shown because a user without an allowance would pay that fee in the one signature. This page does not send it.</p>
+      ${pullLine}
+      <p class="small muted">The fee is provisional. Rent and the fee are separate. The pull is rent, that fee and the margin. The router fee has no minimum. This page does not send it.</p>
     </div>`;
 }
 
