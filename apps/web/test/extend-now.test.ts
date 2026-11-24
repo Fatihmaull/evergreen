@@ -100,12 +100,15 @@ describe('queueExtendNow', () => {
 });
 
 describe('the estimate and the rows', () => {
-  test('rent and the fee stay apart, and the pull amount stays undetermined', () => {
+  test('rent, the fee and the testnet pull stay on separate lines', () => {
     const html = text(oneExtendQuoteHtml(1n));
+    expect(html).toContain('Rent, one extend, estimate');
+    expect(html).toContain('Fee, one extend, estimate');
+    expect(html).toContain('Pull amount, one extend');
     expect(html).toContain(exactXlm(1n).stroops);
     expect(html).toContain(exactXlm(25_000n).stroops);
-    expect(html).toContain('undetermined');
-    expect(html).not.toContain(exactXlm(25_001n).stroops);
+    expect(html).toContain(exactXlm(100_000n).stroops);
+    expect(html).toContain(exactXlm(125_001n).stroops);
     expect(text(oneExtendQuoteHtml(undefined))).toContain('undetermined');
     expect(ROUTER_CONTRACT_ID).toBeUndefined();
   });

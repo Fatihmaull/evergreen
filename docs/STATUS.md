@@ -40,7 +40,7 @@
 
 ## Current — PH2-E3-04 Extend now screen, 2026-11-23
 
-`/extend/` queues one hosted extend per click for a watched testnet contract whose autopilot is on. The page does not sign, and it does not build a router call or a second signature. `POST /jobs` is specified in `docs/API.md` §7 and is not mounted in `apps/api`, so a click that gets an HTML 404 reports that nothing was queued. Rent and the provisional fee are separate lines. `ROUTER_CONTRACT_ID` is unset. Unknown job statuses are not shown as extended. The card stays `[~]`. The email notice is specified and not sent from this page; whether one has been sent is undetermined. `/docs/account/` still says nothing on the site submits an extension. That page is WEBF's. Notion sync pending for PH2-E3-04. No testnet transaction.
+`/extend/` stays on main's dashboard shell. It queues one hosted extend per click and does not sign. `POST /jobs` is not mounted, so an HTML 404 reports that nothing was queued. On testnet the pull is rent, the provisional fee and the 100,000-stroop margin, each on its own line. `ROUTER_CONTRACT_ID` is unset: without an allowance the page says the router covers instance and code only and asks for no signature. `/docs/account/` was not edited. The revamp merge was reverted; that work stays on `revamp-dashboard` until it lands on main. The card stays `[~]`. Notion sync pending for PH2-E3-04. No testnet transaction.
 
 ## Current — PH2-E4-04 Stage 2, the money step, 2026-11-23
 
