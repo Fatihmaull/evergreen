@@ -3741,3 +3741,10 @@ body.app .strips li.strip p {
     min-width: 640px;
   }
 }
+body.app p.legend {
+  font: 400 12px/1 var(--mono);
+  max-width: none;
+}
+#stop-section[hidden] {
+  display: none;
+}

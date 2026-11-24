@@ -10,10 +10,17 @@ export const meta = {
   active: '/dashboard/activity/',
   eyebrow: 'Activity · Stellar testnet',
   heading: 'Activity',
+  bare: true,
 };
 
 export function render() {
-  return `<section class="empty">
+  return `<div class="ov-head">
+      <div>
+        <p class="eyebrow">Activity · Stellar testnet</p>
+        <h1>Activity</h1>
+      </div>
+    </div>
+    <section class="empty">
       <p>Activity appears here once the engine reports jobs.</p>
       <p class="note">Until then each contract's last check is on <a href="/dashboard/watchlist/">Contracts</a>.</p>
     </section>`;

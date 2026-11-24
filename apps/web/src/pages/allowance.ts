@@ -595,6 +595,9 @@ function showSummary(wallet: string | undefined, read: ReadResult | undefined): 
   $('al-next').innerHTML = allowanceNextHtml(s);
   // No wallet: the facts say nothing yet, so they go (DES, 2026-11-24).
   $('al-facts').hidden = s.kind === 'no-wallet';
+  // Stop shows when there may be something to revoke: a live allowance, or
+  // one the chain did not answer for (undetermined is not "none").
+  $('stop-section').hidden = s.kind === 'no-wallet' || s.kind === 'none';
   const flow = $<HTMLDetailsElement>('al-flow');
   if (s.kind === 'none' || new URLSearchParams(location.search).has('for')) flow.open = true;
   if (wallet !== undefined) void showBalance(wallet);
