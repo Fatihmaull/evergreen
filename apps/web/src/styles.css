@@ -3576,3 +3576,30 @@ body.app .panel-links button {
 body.app a.filter {
   font-size: 14px;
 }
+#al-flow > summary {
+  font: 400 var(--step-2)/1.2 var(--serif);
+  color: var(--ink);
+  padding: 8px 0;
+}
+.al-flow-body {
+  padding-top: 16px;
+  gap: 28px;
+}
+/* `.main > section` sets one column for blowout safety; the facts row keeps four. */
+.main > section.facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.main > section.next {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+@media (max-width: 760px) {
+  .main > section.facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .main > section.next {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+body.app .fact-cell .v.mono-v {
+  font-size: 20px;
+}

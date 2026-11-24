@@ -38,6 +38,11 @@ import { readSession } from '../lib/login';
 import type { WatchItem } from '../lib/watchlist-view';
 import { createApprover } from '../lib/allowance-approve';
 import {
+  allowanceFactsHtml,
+  allowanceNextHtml,
+  type AllowanceSummary,
+} from '../lib/allowance-summary';
+import {
   ALLOWANCE_RETRY_MARGIN_STROOPS,
   estimateAllowanceCap,
   maxLiveUntilLedger,
@@ -186,6 +191,7 @@ async function readStanding(from: string): Promise<void> {
     currentAmountStroops = undefined;
     $('reminders').innerHTML = reminderHtml(undefined);
   }
+  showSummary(from, read);
   // The history only tells a zero apart; a spender-unset read needs none.
   const history = read.kind === 'read' ? await readAllowanceHistory(from) : undefined;
   $('standing').innerHTML = standingLineHtml({
@@ -568,3 +574,40 @@ $('revoke-button').addEventListener('click', async () => {
   $('revoke-result').innerHTML = revokeOutcomeHtml(await revoker.revoke(account));
   syncRevokeButton();
 });
+
+/**
+ * The summary at the top (components.md § Allowance): one chain read of the
+ * wallet's allowance to the engine. The flow below opens by itself when
+ * there is no live allowance, or when a contract sent the person here.
+ */
+function showSummary(wallet: string | undefined, read: ReadResult | undefined): void {
+  let s: AllowanceSummary;
+  if (wallet === undefined) s = { kind: 'no-wallet' };
+  else if (read === undefined || read.kind !== 'read') s = { kind: 'unread', wallet };
+  else {
+    const { amountStroops, liveUntilLedger, observedAtLedger } = read.raw;
+    const amount = BigInt(amountStroops);
+    s =
+      amount > 0n && liveUntilLedger !== null && liveUntilLedger > observedAtLedger
+        ? { kind: 'live', wallet, amountStroops: amount, liveUntilLedger, observedAtLedger }
+        : { kind: 'none', wallet };
+  }
+  $('al-next').innerHTML = allowanceNextHtml(s);
+  const flow = $<HTMLDetailsElement>('al-flow');
+  if (s.kind !== 'live' || new URLSearchParams(location.search).has('for')) flow.open = true;
+}
+
+$('al-facts').innerHTML = allowanceFactsHtml(ENGINE_SPENDER);
+void readSession()
+  .then((session) => (session.kind === 'signed-in' ? session.me.wallets[0]?.account : undefined))
+  .catch(() => undefined)
+  .then(async (wallet) => {
+    if (account !== undefined) return; // the connect flow already read it
+    const read =
+      wallet === undefined
+        ? undefined
+        : await readAllowance(wallet).catch(
+            (e: unknown) => ({ kind: 'read-failed', detail: String(e) }) as const,
+          );
+    if (account === undefined) showSummary(wallet, read);
+  });

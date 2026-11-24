@@ -15,13 +15,25 @@ export const meta = {
   description:
     'Read the native XLM allowance your wallet has granted Evergreen, size and approve one for autopilot, and revoke it with one signature from your own wallet. Stellar testnet.',
   active: '/allowance/',
-  eyebrow: 'Account · Stellar testnet',
+  eyebrow: 'Allowance · Stellar testnet',
   heading: 'Allowance',
-  lead: 'An allowance lets Evergreen’s engine pull native XLM from your wallet, up to a cap and until a ledger you approve. Your wallet signs it. Signing in with email cannot move XLM.',
+  bare: true,
 };
 
 export function render() {
-  return `<section class="stack">
+  return `<div class="ov-head">
+      <div>
+        <p class="eyebrow">Allowance · Stellar testnet</p>
+        <h1>Allowance</h1>
+      </div>
+    </div>
+    <section class="next" id="al-next" aria-label="Left to pull"><div><p class="label">Left to pull</p><p class="caption">Reading the allowance…</p></div></section>
+    <section class="facts" id="al-facts" aria-label="Allowance facts"></section>
+    <p class="note">Your wallet signs every allowance. Signing in with email cannot move XLM.</p>
+    <details id="al-flow" class="block">
+      <summary>Change cap</summary>
+      <div class="stack al-flow-body">
+    <section class="stack">
       <div id="standing" aria-live="polite"><p class="standing-line">Connect a wallet to read its allowance.</p></div>
       <div id="reminders" aria-live="polite">
         <p class="small muted">Renewal reminders are at 30, 7 and 1 days before expiry. The expiry is not known yet, so those dates are undetermined. This page does not send them.</p>
@@ -71,6 +83,8 @@ export function render() {
       <div class="row"><button id="autopilot-button" type="button">Turn on autopilot for these contracts →</button></div>
       <div id="autopilot-result" aria-live="polite"></div>
     </section>
+      </div>
+    </details>
     <section class="stack stop-section">
       <h2 class="section">Stop</h2>
       <p class="small muted">
