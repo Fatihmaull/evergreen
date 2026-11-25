@@ -101,6 +101,10 @@ beforeAll(async () => {
   await pg.exec(s0008.replace(NEON_LINE, ''));
   await pg.exec(db('0009_connect_and_scheduler_ticks_select.sql'));
   await pg.exec(db('0011_alert_outbox_and_prefs.sql'));
+  // 0018 adds the required kind `extend_now_requested` to the outbox CHECK; it ends
+  // with a ledger INSERT, so the ledger table (0013) goes first.
+  await pg.exec(db('0013_schema_migrations.sql'));
+  await pg.exec(db('0018_api_extend_now.sql'));
   await pg.exec(
     `INSERT INTO users (id, email) VALUES ('${U1}', 'a@example.test'), ('${U2}', 'b@example.test')`,
   );

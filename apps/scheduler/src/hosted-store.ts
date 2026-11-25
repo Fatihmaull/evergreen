@@ -84,9 +84,26 @@ const JOB_COLUMNS = `id, user_id, network, contract_id, kind, payer_account, sta
   refund_tx_hash, shortfall_stroops`;
 
 export const OPEN_JOBS_SQL = `SELECT ${JOB_COLUMNS} FROM jobs
-WHERE network = 'testnet' AND kind = 'autopilot' AND status IN ('queued', 'pulled')
+WHERE network = 'testnet' AND kind IN ('autopilot', 'extend-now') AND status IN ('queued', 'pulled')
 ORDER BY created_at, id
 LIMIT $1`;
+
+/**
+ * Other extend-now jobs of this user on this contract that pulled in the rolling 24 hours
+ * (core's `EXTEND_NOW_DAILY_LIMIT` counts only jobs that pulled, plan §3.3). `$1` user,
+ * `$2` contract, `$3` this job, which is never counted against itself.
+ */
+export const EXTEND_NOW_USED_SQL = `SELECT count(*)::int AS used FROM jobs
+WHERE user_id = $1::uuid AND network = 'testnet' AND contract_id = $2 AND kind = 'extend-now'
+  AND id <> $3::uuid AND pulled_at IS NOT NULL AND pulled_at > now() - interval '24 hours'`;
+
+export async function extendNowUsedToday(query: Query, job: HostedJobSnapshot): Promise<number> {
+  const rows = await query(EXTEND_NOW_USED_SQL, [job.userId, job.contractId, job.id]);
+  const used = rows[0]?.['used'];
+  const n = typeof used === 'string' ? Number(used) : used;
+  if (typeof n !== 'number' || !Number.isSafeInteger(n) || n < 0) throw new Error('JOB_ROW_SHAPE');
+  return n;
+}
 
 export const LOAD_JOB_SQL = `SELECT ${JOB_COLUMNS} FROM jobs WHERE id = $1::uuid`;
 
