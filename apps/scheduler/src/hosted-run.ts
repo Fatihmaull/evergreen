@@ -141,7 +141,9 @@ export async function runHostedStage(
     if (item === undefined) {
       // Autopilot was turned off or the item removed. A queued job never pulled, so it is
       // closed without touching the chain; a pulled one needs its money back by an operator.
-      if (job.pullTxHash === null) {
+      // A submitted pull may already have landed. Closing it here would drop the
+      // refund. It is orphaned, same as a confirmed pull, until an operator finishes it.
+      if (job.pullTxHash === null && job.pullSubmittedHash === null) {
         await deps.transaction(saveStatements({ ...job, status: 'preflight-failed' }, []));
       } else orphaned += 1;
       continue;
