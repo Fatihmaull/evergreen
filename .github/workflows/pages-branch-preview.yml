@@ -1,0 +1,87 @@
+# Deploys one non-main git branch of the dashboard to the Pages project
+# `evergreen-stellar` as a preview, served at https://<branch>.evergreen-stellar.pages.dev.
+# Manual only (workflow_dispatch).
+#
+# Why: Pages' git integration builds previews only for the branch `preview`
+# (branch control `custom`, include only `preview`; docs/ops/README.md), so any
+# other branch, for example `revamp-dashboard`, never gets a deployment and its
+# alias answers "Deployment Not Found".
+#
+# What this does: check out the branch, run the Pages build command, then
+# `wrangler pages deploy --branch <branch>`. That is a preview deployment, so the
+# Pages Function at functions/api/[[path]].ts gets the preview `API` binding
+# (evergreen-api-preview). Production (`main`) and `preview` are refused.
+name: Pages branch preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Git branch to deploy as a Pages preview (not main or preview)'
+        type: string
+        required: true
+
+concurrency:
+  group: pages-branch-preview-${{ inputs.branch }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_VERSION: '4.156.0'
+
+jobs:
+  deploy:
+    name: deploy ${{ inputs.branch }} to Pages preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: refuse main, preview and malformed branch names
+        env:
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          case "$BRANCH" in
+            main|preview) echo "::error::refusing: $BRANCH is built by the Pages git integration"; exit 1 ;;
+          esac
+          if ! printf '%s' "$BRANCH" | grep -qxE '[a-z0-9][a-z0-9-]{0,27}'; then
+            echo "::error::refusing: branch must be lowercase letters, digits and dashes (it becomes a hostname label)"
+            exit 1
+          fi
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch }}
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # The Pages project's build command (docs/ops/README.md, Pages project row).
+      - name: build (same command as the Pages project)
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm build
+          node apps/web/build.mjs
+      # Run from the repo root so wrangler picks up functions/ (the /api/* proxy).
+      - name: wrangler pages deploy --branch
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          npx --yes "wrangler@${WRANGLER_VERSION}" pages deploy apps/dashboard/public \
+            --project-name evergreen-stellar \
+            --branch "$BRANCH" \
+            --commit-hash "$sha" \
+            --commit-message "branch preview ${BRANCH} ${sha:0:7} (run ${GITHUB_RUN_ID})"
+      - name: list the newest deployments for this branch
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          npx --yes "wrangler@${WRANGLER_VERSION}" pages deployment list \
+            --project-name evergreen-stellar --environment preview --json \
+            | jq -r --arg b "$BRANCH" '[.[] | select((.Branch // .branch // "") == $b)][:3][] | "\(.Id // .id) \(.Branch // .branch) \(.Deployment // .url // "") \(.Status // .status // "")"' || true

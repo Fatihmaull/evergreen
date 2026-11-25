@@ -218,6 +218,40 @@ export type {
   WatchScope,
   WatchlistStore,
 } from './watchlist/store.js';
+
+// Job history and fee-ledger reads (PH2-E2-08). Read-only; POST /jobs is not built.
+export {
+  JOBS_PAGE_DEFAULT,
+  JOBS_PAGE_MAX,
+  decodeCursor,
+  encodeCursor,
+  handleJobs,
+  jobsMethods,
+} from './jobs/routes.js';
+export type { JobsDeps } from './jobs/routes.js';
+export { jobsDepsFor } from './jobs/mount.js';
+export type { JobsMountOptions, JobsStoreFactory } from './jobs/mount.js';
+export { MemoryJobsStore } from './jobs/memory-store.js';
+export {
+  GET_JOB_SQL,
+  LIST_JOBS_SQL,
+  LIST_LEDGER_SQL,
+  PgJobsStore,
+  isoFromMicros,
+  jobFromRow,
+} from './jobs/pg-store.js';
+export type {
+  Job,
+  JobQuery,
+  JobStatus,
+  JobSteps,
+  JobsStore,
+  LedgerKind,
+  LedgerQuery,
+  LedgerRow,
+  Page,
+  PageKey,
+} from './jobs/store.js';
 export {
   ALERT_RATE_LIMIT,
   ALERT_SPECS,

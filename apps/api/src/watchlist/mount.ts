@@ -5,7 +5,8 @@
  *
  * Settings (config, not constants in code, §3):
  * - `EXTEND_NOW_PER_USER_CONTRACT_PER_DAY`: the "Extend now" limit shown on
- *   each item. Default 3, Fatih's starting value (2026-10-20, amended 2026-10-23).
+ *   each item and enforced by `POST /jobs`. Default 1 (Fatih, 2026-11-24; it
+ *   was 3 from 2026-10-20), the same as core's `EXTEND_NOW_DAILY_LIMIT`.
  * - `THRESHOLD_FLOOR_LEDGERS`: the lowest `thresholdLedgers` the API accepts
  *   (§6). No default: the value is the engine's to publish (`PH2-E4-04`,
  *   `B-D31-01`), and until it is set autopilot cannot be turned on.
@@ -16,7 +17,7 @@ import { PgWatchlistStore } from './pg-store.js';
 import type { WatchlistDeps } from './routes.js';
 import type { WatchlistStore } from './store.js';
 
-export const WATCHLIST_DEFAULTS = { EXTEND_NOW_PER_USER_CONTRACT_PER_DAY: 3 } as const;
+export const WATCHLIST_DEFAULTS = { EXTEND_NOW_PER_USER_CONTRACT_PER_DAY: 1 } as const;
 
 /** Builds the store from `DATABASE_URL`. Defaults to `PgWatchlistStore` over Neon; tests inject one. */
 export type WatchlistStoreFactory = (databaseUrl: string) => WatchlistStore | undefined;
@@ -59,6 +60,7 @@ export function watchlistDepsFor(
     auth,
     store,
     extendNowLimitPerDay: limit,
+    extendNowEnabled: env['EXTEND_NOW_ENABLED'] === 'true',
     thresholdFloorLedgers: floor,
     now: auth.now,
   };
