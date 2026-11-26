@@ -40,7 +40,7 @@
 
 ## Current — PH2-E4-03 float, headroom, sweep, 2026-11-23
 
-`PH2-E4-03` is `[~]`. `assessFloat` / `planSweep` / `runSweep` decide the refund headroom and the sweep. Headroom is the sum of jobs still `pulled` (`IN_FLIGHT_PULLS_SQL`). The cap is headroom plus a sweep buffer. The buffer has no default, and a sweep sends nothing while it is unset. Dry-run never sends. Live sends only to the testnet treasury `GD7LISFDUOWIVEW3FX452FIGARVRACPTHXVJ42XOBHMJMOQAPIRRMMRZ` and does not take that account's key. Mainnet has no address here. This does not edit the scheduler files in #643. The sweep is not called from the tick. Notion sync pending for `PH2-E4-03`.
+`PH2-E4-03` is `[~]`. `assessFloat` / `planSweep` / `runSweep` decide the refund headroom and the sweep. Headroom is the sum of jobs still `pulled` (`IN_FLIGHT_PULLS_SQL`). The cap is headroom plus a sweep buffer. The buffer has no default, and a sweep sends nothing while it is unset. The tick calls that planner (`SWEEP_MODE`, default dry-run). No treasury key. The published preview record is one settled job and is not enough to name a buffer (`docs/PH2-E4-03-SWEEP-BUFFER.md`). Notion sync pending for `PH2-E4-03`.
 
 ## Current — PH2-E3-04 Extend now, 2026-11-25
 

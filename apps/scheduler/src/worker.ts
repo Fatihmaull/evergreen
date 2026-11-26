@@ -17,11 +17,12 @@ import type { TenantRunReport } from '@evergreen/engine/dist/tenant-run.js';
 import { EvaluationError, type EvaluationSummary } from './evaluate.js';
 import type { ExtendPlan } from './extend-plan.js';
 import type { HostedEnv, HostedStageInput, HostedStageSummary } from './hosted-run.js';
+import type { SweepEnv, SweepTickCounts } from './sweep.js';
 import { TickError } from './tick.js';
 
 export const SERVICE = 'evergreen-scheduler';
 
-export interface Env extends HostedEnv {
+export interface Env extends HostedEnv, SweepEnv {
   /** Secret. The scheduler's own role, never the owner's (docs/ops/neon-migrations.md). */
   DATABASE_URL?: string;
   /** Optional override; the RPC must still report the testnet passphrase. */
@@ -55,6 +56,11 @@ export interface Runtime {
    * counts are logged: no payer, user or contract. A failure never fails the tick.
    */
   readonly hostedJobs?: (input: HostedStageInput) => Promise<HostedStageSummary>;
+  /**
+   * PH2-E4-03. Absent means the tick does not sweep. When present, counts only.
+   * Dry-run unless `SWEEP_MODE=live`. A failure never fails the tick.
+   */
+  readonly sweep?: () => Promise<SweepTickCounts>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -194,6 +200,36 @@ async function moneyStep(
   }
 }
 
+/** Sweep counts. A bug is rethrown. Any other failure stays off the heartbeat. */
+async function sweepStep(
+  env: Env,
+  sweep: NonNullable<Runtime['sweep']>,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<void> {
+  try {
+    const counts = await sweep();
+    runtime.log({
+      event: 'scheduler.sweep',
+      trigger,
+      environment: environmentOf(env),
+      dryRun: counts.dryRun,
+      reason: counts.reason,
+      inFlight: counts.inFlight,
+      amount: counts.amount,
+      submitted: counts.submitted,
+    });
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) throw error;
+    runtime.log({
+      event: 'scheduler.sweep_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: 'SWEEP_FAILED',
+    });
+  }
+}
+
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
@@ -225,6 +261,7 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
         trigger,
       );
     }
+    if (runtime.sweep !== undefined) await sweepStep(env, runtime.sweep, runtime, trigger);
     return { ok: true as const, observedLedger, evaluation: evaluation.summary };
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';

@@ -9,11 +9,13 @@ import {
   scanContracts,
 } from '@evergreen-stellar/core';
 import type { LedgerEntryTTL } from '@evergreen-stellar/shared-types';
+import { IN_FLIGHT_PULLS_SQL } from '@evergreen/engine/dist/float-headroom.js';
 import { neon } from '@neondatabase/serverless';
 import { rpc as stellarRpc } from '@stellar/stellar-sdk';
 import { createFetchReader, scanRequest } from './due.js';
 import { createHostedChain } from './hosted-chain.js';
 import { parseHostedConfig, runHostedStage } from './hosted-run.js';
+import { parseSweepConfig, runSweepTick } from './sweep.js';
 import { pgSubmittedStore, type Query } from './hosted-store.js';
 import { evaluate } from './evaluate.js';
 import { dryRunTenantPlans } from './tenant-dry-run.js';
@@ -56,6 +58,21 @@ export function productionRuntime(env: Env): Runtime {
         timeoutMs: DEFAULT_RPC_TIMEOUT_MS,
       });
       return dryRunTenantPlans(plans, reader, `tick-${Date.now()}`, TENANT_RUN_DEADLINE_MS);
+    },
+    // PH2-E4-03. Dry-run unless SWEEP_MODE=live. No buffer means nothing is swept.
+    // No treasury key. This runtime does not attach a payment, so live still
+    // does not send (the sender rejects). Counts only.
+    sweep: async () => {
+      const sql = neon(databaseUrl());
+      const rows = (await sql.query(IN_FLIGHT_PULLS_SQL)) as readonly Record<string, unknown>[];
+      const raw = rows[0]?.['in_flight_stroops'];
+      const inFlightStroops = typeof raw === 'string' && /^\d+$/.test(raw) ? BigInt(raw) : 0n;
+      return runSweepTick({
+        config: parseSweepConfig(env),
+        inFlightStroops,
+        balanceStroops: undefined,
+        send: () => Promise.reject(new Error('SWEEP_SEND_UNWIRED')),
+      });
     },
     // Stage 2: the money step. Dry-run unless HOSTED_MODE=live with ENGINE_SECRET (hosted-run.ts).
     hostedJobs: (input) => {
