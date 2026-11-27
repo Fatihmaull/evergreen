@@ -453,3 +453,45 @@ describe('Stage 1 evaluation step', () => {
     expect(logs.map((entry) => entry['event'])).not.toContain('scheduler.money');
   });
 });
+
+describe('engine observation step', () => {
+  it('🔴 runs last on a tick, even when the evaluation failed, and logs counts only', async () => {
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () => Promise.reject(new EvaluationError('EVAL_DB_FAILED')),
+      observe: () => Promise.resolve({ contracts: 2, written: 1, skipped: 1 }),
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(logs.map((e) => e['event'])).toEqual([
+      'scheduler.tick',
+      'scheduler.evaluate_failed',
+      'scheduler.observe',
+    ]);
+    expect(logs[2]).toEqual({
+      event: 'scheduler.observe',
+      trigger: 'cron',
+      environment: 'preview',
+      contracts: 2,
+      written: 1,
+      skipped: 1,
+    });
+  });
+
+  it('🔴 a failed observation never fails the tick', async () => {
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      observe: () => Promise.reject(new Error('permission denied for table observations')),
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await expect(handleScheduled({}, rt)).resolves.toBeUndefined();
+    expect(logs.at(-1)).toEqual({
+      event: 'scheduler.observe_failed',
+      trigger: 'cron',
+      environment: 'undetermined',
+      code: 'OBSERVE_FAILED',
+    });
+  });
+});

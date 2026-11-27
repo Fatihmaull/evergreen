@@ -131,17 +131,21 @@ export function timedReader(
 
 /** The watch item's scope as core's scan request, or null when it is not one of the two API shapes. */
 export function scanRequest(item: TenantItem): ContractScanRequest | null {
-  const scope = item.scope;
+  return scopeRequest(item.contractId, item.scope);
+}
+
+/** A watch item's stored scope as core's scan request, or null when it is not one of the two API shapes. */
+export function scopeRequest(contractId: string, scope: unknown): ContractScanRequest | null {
   if (!isObj(scope)) return null;
   if (scope['noDataKeys'] === true && Object.keys(scope).length === 1)
-    return { contract: { id: item.contractId }, noDataKeys: true };
+    return { contract: { id: contractId }, noDataKeys: true };
   const keys = scope['dataKeys'];
   if (
     Object.keys(scope).length === 1 &&
     Array.isArray(keys) &&
     keys.every((k) => typeof k === 'string')
   )
-    return { contract: { id: item.contractId }, dataKeys: keys as string[] };
+    return { contract: { id: contractId }, dataKeys: keys as string[] };
   return null;
 }
 
