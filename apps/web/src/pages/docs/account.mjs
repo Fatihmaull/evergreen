@@ -86,18 +86,18 @@ export function render() {
 
     <h3 id="rows">What a row says today</h3>
     <p class="note">
-      As of 2026-11-05, on <span class="mono">origin/main</span> at
-      <span class="mono">9ef4094</span>: nothing in the repository writes an engine observation for
-      a watched contract. So every row's health reads <em>undetermined</em>, with the line <em>Not checked by the engine
-      yet. The expiry beside it is this browser reading the chain now.</em> That expiry is the
-      scanner's read, taken when you open the page. It is not an engine check, and the row says
-      so. If this browser's own read of the chain did not complete, the row reads <em>Not scanned
-      yet.</em> instead.
+      As of 2026-11-27 (PH2-E4-04): the scheduler writes an engine observation for every watched
+      testnet contract on each tick, about every 15 minutes. A row then shows the engine's last
+      scan, its health and the ledger it was read at, not a reading taken now. Health uses the
+      default tiers: critical at or below 17,280 ledgers left, warning below 120,960. A read that
+      failed is <em>unknown</em>, never healthy.
     </p>
     <p>
-      When an engine observation exists, a row shows the engine's last scan with the ledger it was
-      read at beside it, not a reading taken now. Until then, a watchlist row tells you what the
-      scanner would tell you, kept in one place.
+      A contract the engine has not observed yet, for example one added since the last tick, reads
+      <em>undetermined</em> with the line <em>Not checked by the engine yet. The expiry beside it
+      is this browser reading the chain now.</em> That expiry is the scanner's read, taken when you
+      open the page. It is not an engine check, and the row says so. If this browser's own read of
+      the chain did not complete, the row reads <em>Not scanned yet.</em> instead.
     </p>
 
     <h2 id="autopilot">Autopilot and the allowance</h2>
