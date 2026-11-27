@@ -8,6 +8,7 @@
  * screen would not. An undetermined contract is never shown with a figure,
  * and a value with no source yet says "not yet available", never zero.
  */
+import { DAY_MS, statusHtml, when, type ApiJob } from './activity-view';
 import { extendNowPanelHtml } from './extend-now';
 import { approxDate, approxDateShort, esc, formatCount, short, stamp } from './format';
 import { approxDateOfLedger } from './view';
@@ -15,8 +16,6 @@ import { orderRows, type Row } from './watchlist-view';
 
 /** Shown where a value would be when no API route serves it yet. */
 export const NOT_YET_AVAILABLE = 'not yet available';
-const unavailable = (cls = 'note'): string =>
-  `<span class="${cls} unavailable">${NOT_YET_AVAILABLE}</span>`;
 
 const WORD = { healthy: 'healthy', 'at-risk': 'at risk', undetermined: 'undetermined' } as const;
 
@@ -136,10 +135,42 @@ function allowanceCell(a: AllowanceFact, now: Date): string {
   }
 }
 
+/**
+ * What `GET /jobs` gave the Overview. `complete` is true when the read reached
+ * past the 30-day edge or the end of history, so a 30-day count is a count.
+ */
+export type JobsFact =
+  | { readonly kind: 'reading' }
+  | { readonly kind: 'unread' }
+  | { readonly kind: 'read'; readonly jobs: readonly ApiJob[]; readonly complete: boolean };
+
+/** The scheduler's tick: every 15 minutes, on the quarter hour (UTC). A schedule, not a read. */
+export function nextTick(now: Date): Date {
+  const q = 15 * 60_000;
+  return new Date(Math.floor(now.getTime() / q) * q + q);
+}
+
+const hhmm = (d: Date): string =>
+  `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+
+function lastThirtyCell(jobs: JobsFact, now: Date): string {
+  const head = '<p class="k">Last 30 days</p>';
+  if (jobs.kind === 'reading') return `${head}<p class="v note">reading…</p>`;
+  if (jobs.kind === 'unread' || !jobs.complete)
+    return `${head}<p class="v unavailable">${NOT_YET_AVAILABLE}</p>`;
+  const since = now.getTime() - 30 * DAY_MS;
+  const done = jobs.jobs.filter((j) => j.status === 'extended' && Date.parse(j.createdAt) >= since);
+  const auto = done.filter((j) => j.kind === 'autopilot').length;
+  return `${head}<p class="v">${esc(formatCount(done.length))}</p><p class="s">${
+    done.length === 1 ? 'extend' : 'extends'
+  } · ${formatCount(auto)} autopilot, ${formatCount(done.length - auto)} Extend now</p>`;
+}
+
 export function factsHtml(
   rows: readonly Row[],
   allowance: AllowanceFact,
   now = new Date(),
+  jobs: JobsFact = { kind: 'unread' },
 ): string {
   const n = (f: (r: Row) => boolean): number => rows.filter(f).length;
   const archived = n((r) => r.binding.state === 'expired');
@@ -149,9 +180,13 @@ export function factsHtml(
   return `<div class="fact-cell"><p class="k">Watching</p><p class="v">${esc(formatCount(rows.length))}</p><p class="s">${formatCount(attention)} ${
     attention === 1 ? 'needs' : 'need'
   } attention · ${formatCount(und)} undetermined · ${formatCount(archived)} archived</p></div>
-    <div class="fact-cell"><p class="k">Autopilot</p><p class="v">${esc(formatCount(on))} of ${esc(formatCount(rows.length))}</p><p class="s">next check ${unavailable('unavailable-inline')}</p></div>
+    <div class="fact-cell"><p class="k">Autopilot</p><p class="v">${esc(formatCount(on))} of ${esc(formatCount(rows.length))}</p><p class="s">${
+      on > 0
+        ? `checks every 15 min · next ~${esc(hhmm(nextTick(now)))}`
+        : 'no contract on autopilot'
+    }</p></div>
     <div class="fact-cell">${allowanceCell(allowance, now)}</div>
-    <div class="fact-cell"><p class="k">Last 30 days</p><p class="v unavailable">${NOT_YET_AVAILABLE}</p></div>`;
+    <div class="fact-cell">${lastThirtyCell(jobs, now)}</div>`;
 }
 
 /** At most this many rows on the Overview; the rest are on Contracts. */
@@ -258,6 +293,43 @@ export function filtersHtml(rows: readonly Row[], active: StateFilter): string {
 const kv = (pairs: readonly (readonly [string, string])[]): string =>
   `<dl class="kv">${pairs.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 
+const EVENT_WORD: Record<ApiJob['kind'], string> = {
+  autopilot: 'Autopilot extend',
+  'extend-now': 'Extend now',
+};
+
+/**
+ * Recent jobs, newest first, one line each, linking to the job on Activity.
+ * `showContract` is off inside a contract's own panel.
+ */
+export function recentJobsHtml(
+  jobs: readonly ApiJob[],
+  names: ReadonlyMap<string, string>,
+  opts: { readonly limit?: number; readonly showContract?: boolean } = {},
+): string {
+  const shown = jobs.slice(0, opts.limit ?? 5);
+  if (shown.length === 0) return '<p class="note">No runs yet.</p>';
+  return `<ul class="activity">${shown
+    .map((j) => {
+      const who =
+        opts.showContract === false
+          ? ''
+          : ` · ${esc(names.get(j.contractId) ?? short(j.contractId, 4, 4))}`;
+      return `<li><span class="when">${esc(when(j.createdAt))}</span><span><a href="/dashboard/activity/?j=${encodeURIComponent(
+        j.id,
+      )}">${EVENT_WORD[j.kind] ?? esc(j.kind)}</a>${who}</span><span>${statusHtml(j.status)}</span></li>`;
+    })
+    .join('')}</ul>`;
+}
+
+/** The Recent activity block's body on the Overview. */
+export function recentActivityHtml(jobs: JobsFact, names: ReadonlyMap<string, string>): string {
+  if (jobs.kind === 'reading') return '<p class="note">reading…</p>';
+  if (jobs.kind === 'unread')
+    return '<p class="note unavailable">The Evergreen API did not answer, so recent runs are not shown.</p>';
+  return recentJobsHtml(jobs.jobs, names);
+}
+
 /**
  * The panel's name line: the label, or "Unlabelled contract" with a nudge to
  * name it, and Rename beside it. Rename swaps in `renameFormHtml` in place.
@@ -282,7 +354,11 @@ export function renameFormHtml(item: Row['item']): string {
 }
 
 /** The side panel for one contract. Extend now is `extend-now.ts`'s block, under Autopilot. */
-export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): string {
+export function panelHtml(
+  r: Row,
+  page: 'overview' | 'contracts' = 'overview',
+  jobs: JobsFact = { kind: 'unread' },
+): string {
   const { item } = r;
   const obs = item.lastObservation;
   const top = `<div class="panel-top"><div data-name-box>${panelNameHtml(item)}<p class="mono note addr">${esc(
@@ -361,7 +437,21 @@ export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): 
     ${actions}
     ${extendNowPanelHtml(r)}
     <p class="panel-h">Last runs</p>
-    <p class="note unavailable">${NOT_YET_AVAILABLE}</p>
+    ${
+      jobs.kind === 'read' &&
+      !jobs.complete &&
+      !jobs.jobs.some((j) => j.contractId === item.contractId)
+        ? '<p class="note">None in your latest 100 runs. <a href="/dashboard/activity/">All activity</a></p>'
+        : jobs.kind === 'read'
+          ? recentJobsHtml(
+              jobs.jobs.filter((j) => j.contractId === item.contractId),
+              new Map(),
+              { limit: 3, showContract: false },
+            )
+          : jobs.kind === 'reading'
+            ? '<p class="note">reading…</p>'
+            : `<p class="note unavailable">${NOT_YET_AVAILABLE}</p>`
+    }
     <p class="panel-links">${details}<button type="button" class="linkish" data-remove="${esc(
       item.contractId,
     )}">Remove</button></p>

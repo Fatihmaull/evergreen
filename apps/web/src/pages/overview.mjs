@@ -76,7 +76,7 @@ export function render() {
           <h2 id="activity-h">Recent activity</h2>
           <a href="/dashboard/activity/">All activity</a>
         </div>
-        <p class="note unavailable">not yet available</p>
+        <div id="ov-activity"><p class="note">reading…</p></div>
       </section>
     </div>`;
 }
