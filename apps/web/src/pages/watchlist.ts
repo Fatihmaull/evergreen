@@ -13,8 +13,10 @@ import {
   listHtml,
   matchesFilter,
   panelHtml,
+  type JobsFact,
   type StateFilter,
 } from '../lib/overview-view';
+import { readRecentJobs } from '../lib/recent-jobs';
 import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
@@ -23,6 +25,7 @@ const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) 
 
 let items: WatchItem[] = [];
 const scans = new Map<string, ScanResult>();
+let jobs: JobsFact = { kind: 'reading' };
 const FILTERS: readonly StateFilter[] = ['all', 'at-risk', 'undetermined', 'archived'];
 
 const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
@@ -77,7 +80,7 @@ mountExtendNow({
 const panel = mountPanel({
   rows,
   renderList,
-  panelHtml: (r) => panelHtml(r, 'contracts'),
+  panelHtml: (r) => panelHtml(r, 'contracts', jobs),
   removed: (id) => {
     items = items.filter((i) => i.contractId !== id);
     render();
@@ -126,6 +129,10 @@ async function load(): Promise<void> {
   status.hidden = true;
   $('cl-body').hidden = false;
   render();
+  void readRecentJobs().then((j) => {
+    jobs = j;
+    panel.render();
+  });
   const pending = items.filter((i) => i.lastObservation === null && i.network === 'testnet');
   await Promise.all(
     pending.map((i) =>

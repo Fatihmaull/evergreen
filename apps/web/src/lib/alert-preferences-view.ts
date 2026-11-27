@@ -87,6 +87,8 @@ const LEADS: Readonly<Record<AlertKindName, string>> = {
     'The Stellar testnet appears to have been reset. Protection state for this entry starts over.',
   restore_lost_changes:
     'Evergreen data was restored from a backup. Recent changes for this entry may be missing; which ones is undetermined.',
+  extend_now_requested:
+    'Someone signed in to your account pressed Extend now. It runs through autopilot, paid from your allowance. If it was not you, revoke the allowance and sign out.',
 };
 
 const TITLES: Readonly<Record<AlertKindName, string>> = {
@@ -100,6 +102,7 @@ const TITLES: Readonly<Record<AlertKindName, string>> = {
   unexplained_charge: 'Unexplained charge',
   testnet_reset: 'Testnet reset',
   restore_lost_changes: 'Restore lost changes',
+  extend_now_requested: 'Extend now requested',
 };
 
 const REQUIRED_TONE: Readonly<Record<string, 'warning' | 'critical'>> = {
@@ -110,6 +113,7 @@ const REQUIRED_TONE: Readonly<Record<string, 'warning' | 'critical'>> = {
   unexplained_charge: 'critical',
   testnet_reset: 'warning',
   restore_lost_changes: 'warning',
+  extend_now_requested: 'warning',
 };
 
 export function watchlistNoteHtml(fact: WatchlistFact): string {

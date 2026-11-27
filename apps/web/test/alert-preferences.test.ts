@@ -8,8 +8,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_CRITICAL_LEDGERS, SECONDS_PER_LEDGER } from '../../../packages/core/src/index';
+import { ALERT_SPECS } from '../../../apps/api/src/alerts/policy';
 import { renderAlertEmail } from '../../../apps/api/src/alerts/templates';
 import {
+  OPTIONAL_ORDER,
+  REQUIRED_ORDER,
   assertPreferenceRequest,
   loadPreferences,
   parsePreferenceItems,
@@ -40,6 +43,7 @@ const ORDER: readonly AlertKindName[] = [
   'restore_lost_changes',
   'approaching_critical',
   'extend_succeeded',
+  'extend_now_requested',
 ];
 
 const OPTIONAL = new Set(['allowance_expiring', 'approaching_critical', 'extend_succeeded']);
@@ -125,9 +129,9 @@ describe('the preference body', () => {
 });
 
 describe('the read', () => {
-  test('ten kinds, or nothing', () => {
-    expect(parsePreferenceItems(items())).toHaveLength(10);
-    expect(parsePreferenceItems(items().slice(0, 9))).toBeNull();
+  test('🔴 every kind the API serves (11 since 0018), or nothing', () => {
+    expect(parsePreferenceItems(items())).toHaveLength(11);
+    expect(parsePreferenceItems(items().slice(0, 10))).toBeNull();
     const extra = items().map((item) => ({ ...item, updated_at: '2026-11-10' }));
     expect(parsePreferenceItems(extra)).toBeNull();
     const requiredOff = items().map((item) =>
@@ -255,5 +259,11 @@ describe('the screen', () => {
     expect(page).not.toMatch(/method:\s*'PATCH'/);
     expect(page).toContain("'/watchlist'");
     expect(page).not.toContain('sending:');
+  });
+});
+
+describe('the kinds match the API', () => {
+  test('🔴 every ALERT_SPECS kind is one this page reads (a new kind made it undetermined)', () => {
+    expect(Object.keys(ALERT_SPECS).sort()).toEqual([...OPTIONAL_ORDER, ...REQUIRED_ORDER].sort());
   });
 });

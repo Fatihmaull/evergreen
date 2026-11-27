@@ -9,7 +9,16 @@ import { readAllowance, type ReadResult } from '../lib/allowance';
 import { apiRequest } from '../lib/api';
 import { isValidContractId, scanOne, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
-import { factsHtml, listHtml, nextHtml, panelHtml, type AllowanceFact } from '../lib/overview-view';
+import {
+  factsHtml,
+  listHtml,
+  nextHtml,
+  panelHtml,
+  recentActivityHtml,
+  type AllowanceFact,
+  type JobsFact,
+} from '../lib/overview-view';
+import { namesOf, readRecentJobs } from '../lib/recent-jobs';
 import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
 import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
@@ -20,6 +29,7 @@ const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) 
 let items: WatchItem[] = [];
 const scans = new Map<string, ScanResult>();
 let allowance: AllowanceFact = { kind: 'reading' };
+let jobs: JobsFact = { kind: 'reading' };
 
 const rows = (): Row[] => items.map((i) => rowFor(i, new Date(), scans.get(i.contractId)));
 
@@ -49,7 +59,7 @@ mountExtendNow({
 const panel = mountPanel({
   rows,
   renderList: (open) => ($('ov-list').innerHTML = listHtml(rows(), open)),
-  panelHtml: (r) => panelHtml(r, 'overview'),
+  panelHtml: (r) => panelHtml(r, 'overview', jobs),
   removed: (id) => {
     items = items.filter((i) => i.contractId !== id);
     if (items.length === 0) {
@@ -72,7 +82,8 @@ function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
 function renderSummary(): void {
   const all = rows();
   $('ov-next').innerHTML = nextHtml(all);
-  $('ov-facts').innerHTML = factsHtml(all, allowance);
+  $('ov-facts').innerHTML = factsHtml(all, allowance, new Date(), jobs);
+  $('ov-activity').innerHTML = recentActivityHtml(jobs, namesOf(items));
   $('ov-list').innerHTML = listHtml(all, openIdFromUrl());
   panel.render();
 }
@@ -142,7 +153,11 @@ async function load(): Promise<void> {
       : readAllowance(wallet)
           .catch((e: unknown) => ({ kind: 'read-failed', detail: String(e) }) as const)
           .then((r) => (allowance = fromRead(wallet, r)));
-  await Promise.all([scanned, read]);
+  const ran = readRecentJobs().then((j) => {
+    jobs = j;
+    renderSummary();
+  });
+  await Promise.all([scanned, read, ran]);
   renderSummary();
 }
 

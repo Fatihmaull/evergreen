@@ -21,6 +21,7 @@ export const REQUIRED_ORDER = [
   'unexplained_charge',
   'testnet_reset',
   'restore_lost_changes',
+  'extend_now_requested',
 ] as const;
 
 export type OptionalKind = (typeof OPTIONAL_ORDER)[number];
@@ -38,6 +39,7 @@ const KIND_CLASS: Readonly<Record<AlertKindName, 'optional' | 'required'>> = {
   unexplained_charge: 'required',
   testnet_reset: 'required',
   restore_lost_changes: 'required',
+  extend_now_requested: 'required',
 };
 
 export interface PreferenceItem {
@@ -72,6 +74,9 @@ export function preferencePatchBody(
   return { kind, enabled };
 }
 
+/** The API's kinds, apps/api/src/alerts/policy.ts `ALERT_SPECS` (11 since 0018: extend_now_requested). */
+export const ALL_KIND_COUNT = OPTIONAL_ORDER.length + REQUIRED_ORDER.length;
+
 export function isOptionalKind(kind: string): kind is OptionalKind {
   return (OPTIONAL_ORDER as readonly string[]).includes(kind);
 }
@@ -80,9 +85,9 @@ function isKind(kind: string): kind is AlertKindName {
   return Object.hasOwn(KIND_CLASS, kind);
 }
 
-/** The ten kinds, each once, or null. A partial list is not a preference read. */
+/** Every kind (`ALL_KIND_COUNT`), each once, or null. A partial list is not a preference read. */
 export function parsePreferenceItems(value: unknown): PreferenceItem[] | null {
-  if (!Array.isArray(value) || value.length !== 10) return null;
+  if (!Array.isArray(value) || value.length !== ALL_KIND_COUNT) return null;
   const seen = new Set<string>();
   const items: PreferenceItem[] = [];
   for (const raw of value) {
@@ -120,7 +125,7 @@ export function parsePreferenceItems(value: unknown): PreferenceItem[] | null {
       stored: row['stored'],
     });
   }
-  if (seen.size !== 10) return null;
+  if (seen.size !== ALL_KIND_COUNT) return null;
   return items;
 }
 
