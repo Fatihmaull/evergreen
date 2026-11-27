@@ -58,6 +58,10 @@ const panel = mountPanel({
     } else renderSummary();
   },
   // Not offered on the Overview panel; Contracts has it.
+  renamed: (id, label) => {
+    items = items.map((i) => (i.contractId === id ? { ...i, label } : i));
+    renderSummary();
+  },
   autopilotOff: () => undefined,
 });
 
