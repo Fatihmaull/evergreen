@@ -122,6 +122,20 @@ describe('the allowance gate', () => {
       'data-en-confirm disabled',
     );
   });
+  test('🔴 the page never claims an email was sent: it cannot know (preview sends none)', () => {
+    const queued = extendNowDialogHtml(on(), { phase: 'queued', jobId: 'j', again: false });
+    expect(queued).not.toMatch(/sent you an email/i);
+    const e = estimateExtendNow(1_000_000n)!;
+    const confirm = extendNowDialogHtml(on(), {
+      phase: 'confirm',
+      estimate: e,
+      extendByLedgers: 20_000,
+      payer: PAYER,
+      coverage: { kind: 'covered', allowanceStroops: 5_000_000n },
+    });
+    expect(confirm).not.toMatch(/We email you/);
+    expect(confirm).toContain('only where email alerts are switched on');
+  });
   test('while sending, Confirm is disabled so a double click sends once', () => {
     const e = estimateExtendNow(1_000_000n)!;
     const html = extendNowDialogHtml(on(), {

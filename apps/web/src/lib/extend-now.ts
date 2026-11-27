@@ -194,12 +194,12 @@ export function extendNowDialogHtml(item: WatchItem, s: DialogState): string {
     <div class="total"><dt>Pulled at most</dt><dd>${money(e.totalStroops)}</dd></div>
   </dl>
   ${coverageHtml(s.coverage, s.payer)}
-  <p class="note">It is queued and runs within about 15 minutes. We email you when it is requested. One Extend now per contract per 24 hours.</p>
+  <p class="note">It is queued and runs within about 15 minutes. One Extend now per contract per 24 hours. An email notice goes to your account address only where email alerts are switched on.</p>
   <div class="actions"><button type="button" data-en-confirm${ok && s.sending !== true ? '' : ' disabled'}>${s.sending === true ? 'Queuing…' : 'Confirm Extend now'}</button>${cancel}</div>`;
     }
     case 'queued':
       return `<h2>Queued</h2>
-  <p>${s.again ? 'This Extend now was already queued; nothing new was added.' : 'Extend now is queued.'} It runs within about 15 minutes, through autopilot. We sent you an email.</p>
+  <p>${s.again ? 'This Extend now was already queued; nothing new was added.' : 'Extend now is queued.'} It runs within about 15 minutes, through autopilot.</p>
   <div class="actions"><a class="pill" href="/dashboard/activity/?j=${encodeURIComponent(s.jobId)}">See it in Activity</a><button type="button" class="secondary" data-en-close>Close</button></div>`;
     case 'refused':
       return `${head}<p class="warn-line">${esc(s.text)}</p><div class="actions"><button type="button" class="secondary" data-en-close>Close</button></div>`;
