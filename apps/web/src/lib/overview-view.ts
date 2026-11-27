@@ -258,11 +258,34 @@ export function filtersHtml(rows: readonly Row[], active: StateFilter): string {
 const kv = (pairs: readonly (readonly [string, string])[]): string =>
   `<dl class="kv">${pairs.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 
+/**
+ * The panel's name line: the label, or "Unlabelled contract" with a nudge to
+ * name it, and Rename beside it. Rename swaps in `renameFormHtml` in place.
+ */
+export function panelNameHtml(item: Row['item']): string {
+  const has = typeof item.label === 'string' && item.label !== '';
+  return `<div class="name-line" data-name-line><h2>${esc(has ? item.label : 'Unlabelled contract')}</h2><button type="button" class="linkish rename" data-rename="${esc(
+    item.contractId,
+  )}">${has ? 'Rename' : 'Add a name'}</button></div>`;
+}
+
+/** The inline rename form. The input starts with the current name, selected. */
+export function renameFormHtml(item: Row['item']): string {
+  return `<form class="rename-form" data-rename-form="${esc(item.contractId)}" novalidate>
+    <label class="skip" for="rename-input">Contract name</label>
+    <input id="rename-input" class="search" type="text" maxlength="100" autocomplete="off" placeholder="e.g. payments-v2" value="${esc(
+      item.label ?? '',
+    )}" />
+    <div class="actions"><button type="submit">Save</button><button type="button" class="secondary" data-rename-cancel>Cancel</button></div>
+    <p class="note" data-rename-status role="status"></p>
+  </form>`;
+}
+
 /** The side panel for one contract. Extend now is `extend-now.ts`'s block, under Autopilot. */
 export function panelHtml(r: Row, page: 'overview' | 'contracts' = 'overview'): string {
   const { item } = r;
   const obs = item.lastObservation;
-  const top = `<div class="panel-top"><div><h2>${esc(item.label ?? 'Unlabelled contract')}</h2><p class="mono note addr">${esc(
+  const top = `<div class="panel-top"><div data-name-box>${panelNameHtml(item)}<p class="mono note addr">${esc(
     item.contractId,
   )}</p></div><button class="close" type="button" data-panel-close>Close</button></div>
     <p>${stateChip(r)}</p>`;

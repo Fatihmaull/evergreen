@@ -3836,3 +3836,33 @@ dialog.extend-now .kv .total {
     gap: 2px;
   }
 }
+
+/* Rename in the side panel: the name with a quiet link beside it, swapped
+   in place for a one-field form. */
+.name-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.name-line h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.name-line .rename {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.rename-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.rename-form input {
+  width: 100%;
+  box-sizing: border-box;
+}

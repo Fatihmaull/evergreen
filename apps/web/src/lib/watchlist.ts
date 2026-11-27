@@ -240,3 +240,62 @@ export async function turnAutopilotOff(
   if (res.kind !== 'ok') return res;
   return { kind: 'off' };
 }
+
+export const LABEL_MAX_CHARS = 100;
+
+export type RenameOutcome =
+  | { readonly kind: 'renamed'; readonly label: string }
+  | Exclude<ApiOutcome<unknown>, { kind: 'ok' }>;
+
+/** A name the API will take (its `parseLabel`): 1 to 100 characters, no control characters. */
+export function labelProblem(text: string): string | undefined {
+  const t = text.trim();
+  if (t === '') return 'Type a name.';
+  if ([...t].length > LABEL_MAX_CHARS) return `A name is at most ${LABEL_MAX_CHARS} characters.`;
+  // eslint-disable-next-line no-control-regex -- the API refuses control characters
+  if (/[\u0000-\u001f\u007f]/.test(t)) return 'A name cannot contain control characters.';
+  return undefined;
+}
+
+/**
+ * `PATCH /watchlist/{network}/{contractId}` with `{ label }` (`docs/API.md` §6).
+ * Only the name changes; scope and autopilot are left alone.
+ */
+export async function renameWatchItem(
+  network: 'testnet',
+  contractId: string,
+  label: string,
+  fetchImpl?: FetchLike,
+): Promise<RenameOutcome> {
+  const me = await apiRequest<Me>('/me', { method: 'GET' }, fetchImpl);
+  if (me.kind !== 'ok') return me;
+  if (typeof me.data?.csrfToken !== 'string' || me.data.csrfToken === '') {
+    return { kind: 'error', status: me.status, code: 'UNRECOGNISED' };
+  }
+  const name = label.trim();
+  const res = await apiRequest<unknown>(
+    `/watchlist/${encodeURIComponent(network)}/${encodeURIComponent(contractId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Evergreen-CSRF': me.data.csrfToken },
+      body: JSON.stringify({ label: name }),
+    },
+    fetchImpl,
+  );
+  if (res.kind !== 'ok') return res;
+  return { kind: 'renamed', label: name };
+}
+
+/** What the panel says after Save. `undefined` when renamed: the panel redraws with the name. */
+export function renameOutcomeText(o: RenameOutcome): string | undefined {
+  if (o.kind === 'renamed') return undefined;
+  if (o.kind === 'unavailable')
+    return 'The Evergreen API did not answer, so the name was not saved. Try again.';
+  if (o.code === 'UNAUTHENTICATED') return 'This browser is signed out. Sign in and try again.';
+  if (o.code === 'INVALID_REQUEST')
+    return `The API refused that name. Use 1 to ${LABEL_MAX_CHARS} characters.`;
+  if (o.code === 'NOT_FOUND')
+    return 'This contract is no longer on your watchlist. Reload the page.';
+  if (o.code === 'CSRF_FAILED') return 'This page was open too long. Reload and try again.';
+  return `The API did not confirm the new name (${o.code}, HTTP ${o.status}).`;
+}

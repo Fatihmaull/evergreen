@@ -8,7 +8,14 @@
  * The page owns the data; this owns the URL, the panel element and the
  * clicks. Remove and Turn off are here because both live in the panel.
  */
-import { removeFromWatchlist, turnAutopilotOff } from './watchlist';
+import { panelNameHtml, renameFormHtml } from './overview-view';
+import {
+  labelProblem,
+  removeFromWatchlist,
+  renameOutcomeText,
+  renameWatchItem,
+  turnAutopilotOff,
+} from './watchlist';
 import { autopilotOffOutcomeText, removeOutcomeText, type Row } from './watchlist-view';
 
 export interface PanelHost {
@@ -22,6 +29,8 @@ export interface PanelHost {
   removed(contractId: string): void;
   /** After `PATCH` turned autopilot off: reload the row's state. */
   autopilotOff(contractId: string): void;
+  /** After `PATCH` saved a new name: update the row and redraw. */
+  renamed(contractId: string, label: string): void;
 }
 
 export function openIdFromUrl(): string | undefined {
@@ -92,6 +101,23 @@ export function mountPanel(host: PanelHost): { render(): void; setOpen(id?: stri
         });
       return;
     }
+    const rename = t.closest<HTMLButtonElement>('button[data-rename]');
+    if (rename !== null) {
+      const row = host.rows().find((r) => r.item.contractId === rename.dataset.rename);
+      const line = panel.querySelector<HTMLElement>('[data-name-line]');
+      if (row === undefined || line === null) return;
+      line.outerHTML = renameFormHtml(row.item);
+      const input = panel.querySelector<HTMLInputElement>('#rename-input');
+      input?.focus();
+      input?.select();
+      return;
+    }
+    if (t.closest('[data-rename-cancel]')) {
+      const form = panel.querySelector<HTMLFormElement>('form[data-rename-form]');
+      const row = host.rows().find((r) => r.item.contractId === form?.dataset.renameForm);
+      if (form !== null && row !== undefined) form.outerHTML = panelNameHtml(row.item);
+      return;
+    }
     const off = t.closest<HTMLButtonElement>('button[data-autopilot-off]');
     if (off !== null && !off.disabled) {
       const id = off.dataset.autopilotOff ?? '';
@@ -112,7 +138,42 @@ export function mountPanel(host: PanelHost): { render(): void; setOpen(id?: stri
     }
   });
 
+  panel.addEventListener('submit', (ev) => {
+    const form = (ev.target as HTMLElement).closest<HTMLFormElement>('form[data-rename-form]');
+    if (form === null) return;
+    ev.preventDefault();
+    const id = form.dataset.renameForm ?? '';
+    const input = form.querySelector<HTMLInputElement>('#rename-input');
+    const out = form.querySelector<HTMLElement>('[data-rename-status]');
+    const save = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const text = input?.value ?? '';
+    const problem = labelProblem(text);
+    if (problem !== undefined) {
+      if (out) out.textContent = problem;
+      return;
+    }
+    if (save) save.disabled = true;
+    if (out) out.textContent = 'Saving…';
+    void renameWatchItem('testnet', id, text)
+      .catch(() => ({ kind: 'unavailable', reason: 'network' }) as const)
+      .then((o) => {
+        const why = renameOutcomeText(o);
+        if (why === undefined && o.kind === 'renamed') {
+          host.renamed(id, o.label);
+          return;
+        }
+        if (save) save.disabled = false;
+        if (out) out.textContent = why ?? '';
+      });
+  });
+
   document.addEventListener('keydown', (ev) => {
+    const inRename =
+      ev.target instanceof HTMLElement && ev.target.closest('form[data-rename-form]');
+    if (ev.key === 'Escape' && inRename) {
+      panel.querySelector<HTMLElement>('[data-rename-cancel]')?.click();
+      return;
+    }
     if (ev.key === 'Escape' && openIdFromUrl() !== undefined) {
       setOpen(undefined);
       return;

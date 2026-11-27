@@ -82,6 +82,10 @@ const panel = mountPanel({
     items = items.filter((i) => i.contractId !== id);
     render();
   },
+  renamed: (id, label) => {
+    items = items.map((i) => (i.contractId === id ? { ...i, label } : i));
+    render();
+  },
   autopilotOff: (id) => {
     items = items.map((i) => (i.contractId === id ? { ...i, autopilot: { enabled: false } } : i));
     render();
