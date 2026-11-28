@@ -452,6 +452,65 @@ describe('Stage 1 evaluation step', () => {
     await handleScheduled({}, rt);
     expect(logs.map((entry) => entry['event'])).not.toContain('scheduler.money');
   });
+
+  it('logs a dry-run sweep after the money step and does not log an account', async () => {
+    const logs: Record<string, unknown>[] = [];
+    const rt: Runtime = {
+      runTick: () => Promise.resolve({ observedLedger: 7 }),
+      evaluate: () =>
+        Promise.resolve({
+          summary: SUMMARY,
+          plans: [],
+          extendPlan: {
+            requests: [],
+            skipped: { 'not-due': 0, expired: 0, undetermined: 0, 'no-budget': 0 },
+          },
+        }),
+      dryRunTenants: () => Promise.resolve({ runId: 'tick-7', tenants: [], warnings: [] }),
+      hostedJobs: () =>
+        Promise.resolve({
+          dryRun: true,
+          due: 0,
+          enqueued: 0,
+          jobs: 0,
+          submitted: 0,
+          refunded: 0,
+          shortfall: 0,
+          preflightFailed: 0,
+          failed: 0,
+          orphaned: 0,
+          deadlineHit: false,
+        }),
+      sweep: () =>
+        Promise.resolve({
+          dryRun: true,
+          reason: 'buffer-unset',
+          inFlight: '0',
+          amount: '0',
+          submitted: false,
+        }),
+      log: (entry) => logs.push({ ...entry }),
+    };
+    await handleScheduled({ ENVIRONMENT: 'preview' }, rt);
+    expect(logs.map((entry) => entry['event'])).toEqual([
+      'scheduler.tick',
+      'scheduler.evaluate',
+      'scheduler.tenants',
+      'scheduler.money',
+      'scheduler.sweep',
+    ]);
+    expect(logs[4]).toEqual({
+      event: 'scheduler.sweep',
+      trigger: 'cron',
+      environment: 'preview',
+      dryRun: true,
+      reason: 'buffer-unset',
+      inFlight: '0',
+      amount: '0',
+      submitted: false,
+    });
+    expect(JSON.stringify(logs)).not.toContain('G');
+  });
 });
 
 describe('engine observation step', () => {
