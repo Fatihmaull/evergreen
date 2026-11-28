@@ -11,6 +11,7 @@ import {
   listHtml,
   nextHtml,
   panelHtml,
+  setupStepsHtml,
 } from '../src/lib/overview-view';
 import { rowFor } from '../src/lib/watchlist-view';
 import { A, B, item } from './fixtures/watchlist-example';
@@ -98,6 +99,47 @@ describe('Contracts', () => {
     expect(panelHtml(on, 'contracts')).toContain('data-autopilot-off');
     expect(panelHtml(on, 'overview')).not.toContain('data-autopilot-off');
     expect(panelHtml(pending, 'contracts')).toContain('Scan again');
+  });
+});
+
+describe('first-run steps', () => {
+  test('a signed-in account with no contract is on step 2', () => {
+    const html = setupStepsHtml({
+      contracts: 0,
+      allowance: { kind: 'no-wallet' },
+      autopilotOn: 0,
+    });
+    expect(html).toContain('Set up · 1 of 4');
+    expect(html).toContain('Add a contract');
+    expect(html).toContain('after the allowance');
+  });
+  test('a live allowance with autopilot off offers Continue, and a finished setup is empty', () => {
+    const open = setupStepsHtml({
+      contracts: 1,
+      allowance: {
+        kind: 'live',
+        wallet: 'G'.repeat(56),
+        amountStroops: 1n,
+        liveUntilLedger: 2,
+        observedAtLedger: 1,
+      },
+      autopilotOn: 0,
+    });
+    expect(open).toContain('Set up · 3 of 4');
+    expect(open).toContain('href="/dashboard/allowance/">Continue</a>');
+    expect(
+      setupStepsHtml({
+        contracts: 2,
+        allowance: {
+          kind: 'live',
+          wallet: 'G'.repeat(56),
+          amountStroops: 1n,
+          liveUntilLedger: 2,
+          observedAtLedger: 1,
+        },
+        autopilotOn: 1,
+      }),
+    ).toBe('');
   });
 });
 

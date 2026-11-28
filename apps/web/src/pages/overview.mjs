@@ -36,25 +36,24 @@ export function render() {
     <noscript><p class="note">This page needs JavaScript to ask the Evergreen API. <a href="/dashboard/scanner/">The scanner</a> reads the chain directly.</p></noscript>
 
     <section id="ov-signed-out" class="stack" hidden aria-label="Scan">
+      <p class="example-flag">Example layout, not a live reading. A real scan fills the figure.</p>
+      <section class="next" aria-label="Example: what expires first">
+        <div>
+          <p class="label">Example · ends first</p>
+          <p class="who">A contract you watch</p>
+          <p><span class="next-figure ink">—</span><span class="next-unit">ledgers left</span></p>
+          <p class="caption">about how long it has left · binds on the earliest entry · example data, not yours</p>
+        </div>
+      </section>
       <form class="scan-row" action="/dashboard/scanner/" method="get">
         <label class="skip" for="ov-scan-id">Contract ID</label>
         <input id="ov-scan-id" name="id" class="search wide mono" type="text" placeholder="Paste a testnet contract ID, C…" spellcheck="false" autocomplete="off" />
         <button type="submit">Scan</button>
       </form>
-      <p class="note">No wallet, no signup to scan.</p>
-      <section class="block" aria-label="Example, not your contracts">
-        <div class="block-head">
-          <h2>How a contract looks</h2>
-          <span class="chip undetermined"><span class="shape"></span>example</span>
-        </div>
-        <p class="note">This is not a contract of yours. A scan above reads a real one. Sign in to save it.</p>
-        <ol class="checklist">
-          <li>Add the contract</li>
-          <li>Evergreen reads its expiry</li>
-          <li>Open it to see status, <abbr class="term" title="How many ledgers a Soroban entry stays live before it is archived or deleted.">TTL</abbr>, and Extend now</li>
-          <li>Turn on <abbr class="term" title="Evergreen extending a watched contract on a schedule, paid from your allowance.">autopilot</abbr></li>
-        </ol>
-        <p><a class="pill secondary" href="/login/">Sign in</a></p>
+      <p class="note">No wallet, no signup to scan. You can still try a contract ID.</p>
+      <section class="signin-line" aria-label="Sign in">
+        <p>Sign in to watch your own contracts and turn on <abbr class="term" title="Evergreen extending a watched contract on a schedule, paid from your allowance.">autopilot</abbr>.</p>
+        <a class="pill secondary" href="/login/">Sign in</a>
       </section>
     </section>
 
@@ -68,17 +67,20 @@ export function render() {
         <button type="submit" id="add-button">Add</button>
       </form>
       <div id="add-result" aria-live="polite"></div>
-      <ol class="checklist">
-        <li>Add a contract, with the form above</li>
-        <li>This browser reads its expiry, so the row is not left as not scanned</li>
-        <li>Open it on <a href="/dashboard/watchlist/">Contracts</a> for status and Extend now</li>
-        <li>Turn on autopilot from <a href="/dashboard/allowance/">Autopilot and allowance</a></li>
-      </ol>
-      <p class="note">Not sure of the ID? <a href="/dashboard/scanner/">Scan first</a>.</p>
+      <section class="block" aria-labelledby="setup-empty-h">
+        <p class="setup-h" id="setup-empty-h">Set up · 1 of 4</p>
+        <ol class="steps setup">
+          <li><span class="step-state">Done</span><span>Signed in</span><span></span></li>
+          <li class="now"><span class="step-state">Now</span><span>Add a contract</span><span class="step-action">the form above</span></li>
+          <li class="waiting"><span class="step-state">Waiting</span><span>Set an allowance</span><span class="step-action">after a contract</span></li>
+          <li class="waiting"><span class="step-state">Waiting</span><span>Turn on autopilot</span><span class="step-action">after the allowance</span></li>
+        </ol>
+      </section>
+      <p class="note">Not sure of the ID? <a href="/dashboard/scanner/">Scan first</a>. <abbr class="term" title="How many ledgers a Soroban entry stays live before it is archived or deleted.">TTL</abbr> is that lifetime, counted in ledgers.</p>
     </section>
 
     <div id="ov-summary" hidden>
-      <p class="note" id="ov-setup" hidden></p>
+      <div id="ov-setup" hidden></div>
       <section class="next" id="ov-next" aria-label="Needs attention first"></section>
       <section class="facts" id="ov-facts" aria-label="Summary"></section>
       <section class="block" aria-labelledby="contracts-h">

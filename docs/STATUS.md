@@ -40,7 +40,7 @@
 
 ## Current — dashboard UX preview, 2026-11-28
 
-Branch `webr-preview`, based on `revamp-dashboard`. The dashboard IA is Overview, Contracts, Activity, Autopilot and allowance (`/dashboard/allowance/`, with `/allowance/` redirecting). Tools are collapsed. Account sits at the bottom of the sidebar. Extend now stays visible and says why it is disabled. A partial scan is not labelled healthy. Overview has a first-run checklist and a signed-out example that is labelled as an example. Colours and the logo are unchanged. The published UX audit canvas frame returned “No page here”, so the wireframes and hi-fi mockups on that URL were not readable. Preview API CSRF accepts `https://webr-preview.evergreen-stellar.pages.dev` only after the preview Worker is deployed with the updated `DASHBOARD_EXTRA_ORIGINS`. Notion sync pending. No testnet transaction.
+Branch `webr-preview`, based on `revamp-dashboard`. Second pass follows the hi-fi pasted after the canvas frame 404. Nav is Overview, Contracts, Activity, Autopilot, then Scanner, Shared code and Time left, with Sign in, Alerts and Docs at the bottom. Overview shows a Done / Now / Waiting setup list until those four steps are done. The signed-out example uses a dash, not a made-up ledger count. Allowance is a three-step wizard under `/dashboard/allowance/` (`/allowance/` redirects). Extend now stays visible and says why it is disabled. A partial scan is not labelled healthy. Colours, type tokens and the logo are unchanged. Preview API CSRF accepts `https://webr-preview.evergreen-stellar.pages.dev` only after the preview Worker is deployed with the updated `DASHBOARD_EXTRA_ORIGINS`. Notion sync pending. No testnet transaction.
 
 ## Current — PH2-E4-04 Stage 2, the money step, 2026-11-23
 

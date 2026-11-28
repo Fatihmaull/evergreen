@@ -24,26 +24,32 @@ export function render() {
   return `<div class="ov-head">
       <div>
         <p class="eyebrow">Autopilot · Stellar testnet</p>
-        <h1>Autopilot and allowance</h1>
+        <h1>Set an allowance</h1>
       </div>
+    </div>
+    <p class="lead wizard-lead">Autopilot can only extend a contract after you approve a cap. Three steps, then you sign in your wallet.</p>
+    <div class="filters" role="navigation" aria-label="Setup steps">
+      <a class="filter" href="#al-wallet">1. Wallet</a>
+      <a class="filter" href="#al-cap">2. Set a limit</a>
+      <a class="filter" href="#al-review">3. Review and turn on</a>
     </div>
     <section class="next" id="al-next" aria-label="Left to pull"><div><p class="label">Left to pull</p><p class="caption">Reading the allowance…</p></div></section>
     <section class="facts" id="al-facts" aria-label="Allowance facts"></section>
     <p class="note">Your wallet signs every allowance. Signing in with email cannot move XLM.</p>
-    <details id="al-flow" class="block">
+    <details id="al-flow" class="block" open>
       <summary>Set the cap and sign</summary>
       <div class="stack al-flow-body">
     <section class="stack">
       <div id="standing" aria-live="polite"><p class="standing-line">Connect a wallet to read its allowance.</p></div>
     </section>
-    <section class="stack">
-      <h2 class="section">Wallet</h2>
+    <section class="stack" id="al-wallet">
+      <h2 class="section">1. Wallet</h2>
       <div class="row"><button id="connect-button" class="secondary" type="button">Connect Freighter</button></div>
       <div id="wallet-result" aria-live="polite"></div>
     </section>
-    <section class="stack">
-      <h2 class="section">Cap</h2>
-      <p class="small muted">One allowance covers every contract on your watchlist that this wallet pays for.</p>
+    <section class="stack" id="al-cap">
+      <h2 class="section">2. Set a limit</h2>
+      <p class="small muted">One allowance covers every contract on your watchlist that this wallet pays for. A typical extend is a fraction of an XLM. The exact rent is simulated before you sign. <abbr class="term" title="The smallest unit of XLM. 1 XLM is 10,000,000 stroops.">Stroops</abbr> are that unit.</p>
       <div id="cap-rows" aria-live="polite"><p class="small muted">Connect a wallet to list the contracts it can pay for.</p></div>
       <label class="field-label" for="hosted-actions">Extends to cover, per contract</label>
       <input id="hosted-actions" class="mono" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="2" />
@@ -54,8 +60,8 @@ export function render() {
       </details>
       <div id="estimate-result" aria-live="polite"></div>
     </section>
-    <section class="stack">
-      <h2 class="section">Review and sign</h2>
+    <section class="stack" id="al-review">
+      <h2 class="section">3. Review and turn on</h2>
       <div class="card card-pad stack">
         <div id="review" aria-live="polite"></div>
         <div id="approve-disclosure" aria-live="polite"></div>

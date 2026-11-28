@@ -13,10 +13,9 @@
 /**
  * Route → nav. The active item is marked here, not by the client.
  *
- * Dashboard IA (Fatih, 2026-11-27): Overview, Contracts, Activity, then
- * Autopilot & Allowance. Tools stay one Scanner plus Blast radius and TTL
- * decay, collapsed until opened. Account (Alerts, Sign in) sits at the
- * bottom. Our own contracts stay out of this nav.
+ * Dashboard IA, second pass (hi-fi, 2026-11-28): Overview, Contracts,
+ * Activity, Autopilot. Tools stay visible: Scanner, Shared code, Time left.
+ * Account, Alerts and Docs sit at the bottom. Our own contracts stay out.
  *
  * Activity lists the engine's jobs. Until the API serves them its page says
  * so in one line (components.md § "Where the data comes from today").
@@ -29,24 +28,24 @@ export const NAV = [
       // The watchlist, renamed. The route stays so old links keep working.
       { href: '/dashboard/watchlist/', label: 'Contracts' },
       { href: '/dashboard/activity/', label: 'Activity' },
-      { href: '/dashboard/allowance/', label: 'Autopilot & Allowance' },
+      { href: '/dashboard/allowance/', label: 'Autopilot' },
     ],
   },
   {
     section: 'Tools',
-    collapsed: true,
     items: [
       { href: '/dashboard/scanner/', label: 'Scanner' },
-      { href: '/dashboard/blast-radius/', label: 'Blast radius' },
-      { href: '/dashboard/decay/', label: 'TTL decay' },
+      { href: '/dashboard/blast-radius/', label: 'Shared code' },
+      { href: '/dashboard/decay/', label: 'Time left' },
     ],
   },
 ];
 
 /** Bottom of the sidebar. chrome.js relabels Sign in to Account when /me has a session. */
 export const ACCOUNT_NAV = [
-  { href: '/dashboard/alerts/', label: 'Alerts' },
   { href: '/login/', label: 'Sign in' },
+  { href: '/dashboard/alerts/', label: 'Alerts' },
+  { href: '/docs/', label: 'Docs' },
 ];
 
 function itemHtml(item, active) {
@@ -76,7 +75,7 @@ function navHtml(active) {
  */
 function statusBar(cadence) {
   return `<div class="statusbar">
-      <span class="status-item"><span class="dot"></span>Soroban testnet</span>
+      <span class="status-item"><span class="dot"></span>Testnet</span>
       <span class="status-item">ledger <span class="mono" id="live-ledger" data-live-ledger>reading…</span></span>
       <span class="status-item dim">ledger close ${cadence.value} <span class="dim">· measured, not assumed</span></span>
     </div>`;
@@ -134,10 +133,9 @@ export function shell({
           <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
         </a>
         <nav aria-label="Sections">${navHtml(active)}</nav>
-        <div class="sidebar-foot">
-          <div class="account-links">${ACCOUNT_NAV.map((item) => itemHtml(item, active)).join('')}</div>
-          <p><a href="/docs/">Documentation</a></p>
-          <p class="mono">testnet only</p>
+        <div class="sidebar-end">
+          <div class="nav-group account-links">${ACCOUNT_NAV.map((item) => itemHtml(item, active)).join('')}</div>
+          <p class="sidebar-foot mono">testnet only</p>
         </div>
       </aside>
       <div class="content">

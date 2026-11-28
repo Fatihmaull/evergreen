@@ -906,7 +906,7 @@ Reference screens: `source/screens/revamp/`, built from `parts/` by `build.mjs` 
 
 **Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed; it keeps the URL `/dashboard/watchlist/`), Activity (jobs and fee ledger), Autopilot & Allowance (`/dashboard/allowance/`; `/allowance/` redirects). *Tools*, collapsed until a tool page is open: Scanner (one entry), Blast radius, TTL decay. Account sits at the bottom of the sidebar: Alerts, then Sign in (Account when a session exists), then Documentation. Below 960 px the links wrap onto more than one line instead of scrolling off the screen. Colours and the logo are unchanged.
 
-**2026-11-28, branch `webr-preview`.** Fatih asked for the first-run path on Overview (add a contract, read its expiry, see status, turn on autopilot), a signed-out example that is labelled as an example, Extend now drawn disabled with the reason it cannot run, a partial scan labelled partial rather than healthy beside the PARTIAL line, and glossary titles on TTL and autopilot. The three allowance steps are one “Set the cap and sign” disclosure.
+**2026-11-28, branch `webr-preview`.** Second pass follows the hi-fi: nav is Overview, Contracts, Activity, Autopilot, then Tools (Scanner, Shared code, Time left), with Account, Alerts and Docs at the bottom. Overview shows a Done / Now / Waiting setup list until those four steps are done, and a signed-out example whose figure is a dash, not a made-up ledger count. Allowance is a three-step wizard (Wallet, Set a limit, Review and turn on) under `/dashboard/allowance/`. Colours, type tokens and the logo are unchanged.
 
 **Overview, signed in, from the top.**
 

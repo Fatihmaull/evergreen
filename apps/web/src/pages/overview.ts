@@ -15,6 +15,7 @@ import {
   nextHtml,
   panelHtml,
   recentActivityHtml,
+  setupStepsHtml,
   type AllowanceFact,
   type JobsFact,
 } from '../lib/overview-view';
@@ -83,12 +84,13 @@ function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
 function renderSummary(): void {
   const all = rows();
   const setup = $('ov-setup');
-  const anyAuto = all.some((r) => r.item.autopilot?.enabled === true);
-  setup.hidden = anyAuto;
-  if (!anyAuto) {
-    setup.innerHTML =
-      'Autopilot is off. <a href="/dashboard/allowance/">Set an allowance and turn it on</a>. Extend now stays on the contract and says why it is disabled.';
-  }
+  const html = setupStepsHtml({
+    contracts: all.length,
+    allowance,
+    autopilotOn: all.filter((r) => r.item.autopilot?.enabled === true).length,
+  });
+  setup.hidden = html === '';
+  setup.innerHTML = html;
   $('ov-next').innerHTML = nextHtml(all);
   $('ov-facts').innerHTML = factsHtml(all, allowance, new Date(), jobs);
   $('ov-activity').innerHTML = recentActivityHtml(jobs, namesOf(items));
@@ -112,7 +114,7 @@ async function load(): Promise<void> {
   const status = $('ov-status');
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
     status.hidden = true;
-    $('ov-heading').textContent = 'What expires first, read from the chain';
+    $('ov-heading').textContent = 'What expires first';
     show('ov-signed-out');
     return;
   }
@@ -120,7 +122,7 @@ async function load(): Promise<void> {
     // About the API, not any contract: the sentence the Contracts screen uses.
     status.innerHTML = noWatchlistSentence(outcome);
     show('ov-signed-out');
-    $('ov-heading').textContent = 'What expires first, read from the chain';
+    $('ov-heading').textContent = 'What expires first';
     return;
   }
   status.hidden = true;
