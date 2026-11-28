@@ -15,12 +15,14 @@ import {
   nextHtml,
   panelHtml,
   recentActivityHtml,
+  setupStepsHtml,
   type AllowanceFact,
   type JobsFact,
 } from '../lib/overview-view';
 import { namesOf, readRecentJobs } from '../lib/recent-jobs';
 import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
+import { rememberedScan, rememberScan } from '../lib/scan-share';
 import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
@@ -81,6 +83,14 @@ function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
 
 function renderSummary(): void {
   const all = rows();
+  const setup = $('ov-setup');
+  const html = setupStepsHtml({
+    contracts: all.length,
+    allowance,
+    autopilotOn: all.filter((r) => r.item.autopilot?.enabled === true).length,
+  });
+  setup.hidden = html === '';
+  setup.innerHTML = html;
   $('ov-next').innerHTML = nextHtml(all);
   $('ov-facts').innerHTML = factsHtml(all, allowance, new Date(), jobs);
   $('ov-activity').innerHTML = recentActivityHtml(jobs, namesOf(items));
@@ -104,7 +114,7 @@ async function load(): Promise<void> {
   const status = $('ov-status');
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
     status.hidden = true;
-    $('ov-heading').textContent = 'What expires first, read from the chain';
+    $('ov-heading').textContent = 'What expires first';
     show('ov-signed-out');
     return;
   }
@@ -112,7 +122,7 @@ async function load(): Promise<void> {
     // About the API, not any contract: the sentence the Contracts screen uses.
     status.innerHTML = noWatchlistSentence(outcome);
     show('ov-signed-out');
-    $('ov-heading').textContent = 'What expires first, read from the chain';
+    $('ov-heading').textContent = 'What expires first';
     return;
   }
   status.hidden = true;
@@ -123,6 +133,10 @@ async function load(): Promise<void> {
   }
   $('ov-actions').hidden = false;
   $('add-h').textContent = 'Add a contract';
+  for (const i of items) {
+    const shared = rememberedScan(i.contractId);
+    if (shared !== undefined) scans.set(i.contractId, shared);
+  }
   show('ov-summary');
   renderSummary();
   // Contracts' "Add contract" lands here with ?add=1.
@@ -191,8 +205,12 @@ $('add-form').addEventListener('submit', (ev) => {
       button.disabled = false;
       out.innerHTML = addOutcomeHtml(o, id);
       if (o.kind === 'added' || o.kind === 'already-present') {
-        // Reload the summary from the API so the new row is the API's, not ours.
-        location.assign(`/dashboard/?c=${encodeURIComponent(id)}`);
+        // The API does not store this browser's scan. Read the chain now and
+        // keep it in localStorage so Contracts and Time left are not blank.
+        void scanOne(id)
+          .then((s) => rememberScan(id, s))
+          .catch(() => undefined)
+          .then(() => location.assign(`/dashboard/?c=${encodeURIComponent(id)}`));
       }
     });
 });

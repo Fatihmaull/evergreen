@@ -127,7 +127,9 @@ export function verdict(report: ScanReport, now = new Date()): string {
       ? ''
       : worst === 'unknown'
         ? '<span class="chip undetermined"><span class="shape"></span>unread</span>'
-        : `<span class="chip ${worst}"><span class="shape"></span>${worst}</span>`;
+        : report.partial === true && worst === 'healthy'
+          ? '<span class="chip undetermined"><span class="shape"></span>partial</span>'
+          : `<span class="chip ${worst}"><span class="shape"></span>${worst}</span>`;
 
   return `
     <div class="verdict ${tone}">

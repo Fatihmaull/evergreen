@@ -4,6 +4,8 @@
  * charted row is `?c=` (else the one needing attention first).
  */
 import { apiRequest } from '../lib/api';
+import { rememberedScan, rememberScan } from '../lib/scan-share';
+import { signedOutDemoHtml } from '../lib/signed-out-demo';
 import { bigChartHtml, selectedRow, stripsHtml } from '../lib/decay-view';
 import { scanOne, type ScanResult } from '../lib/evergreen';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
@@ -38,8 +40,7 @@ async function load(): Promise<void> {
   );
   const status = $('td-status');
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
-    status.innerHTML =
-      '<a href="/login/">Sign in</a> to chart your watched contracts. <a href="/dashboard/scanner/">The scanner</a> needs no session.';
+    status.innerHTML = `${signedOutDemoHtml('Time left')} <a href="/login/">Sign in</a> to chart your watched contracts. <a href="/dashboard/scanner/">The scanner</a> needs no session.`;
     return;
   }
   if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
@@ -47,6 +48,10 @@ async function load(): Promise<void> {
     return;
   }
   items = (outcome.data.items as WatchItem[]).filter((i) => i.network === 'testnet');
+  for (const i of items) {
+    const shared = rememberedScan(i.contractId);
+    if (shared !== undefined) scans.set(i.contractId, shared);
+  }
   if (items.length === 0) {
     status.innerHTML =
       'Nothing watched yet. <a href="/dashboard/?add=1">Add a contract</a> to chart how its TTL runs down.';
@@ -58,7 +63,10 @@ async function load(): Promise<void> {
   await Promise.all(
     pending.map((i) =>
       scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
-        .then((s) => void scans.set(i.contractId, s))
+        .then((s) => {
+          scans.set(i.contractId, s);
+          rememberScan(i.contractId, s);
+        })
         .catch(() => undefined),
     ),
   );

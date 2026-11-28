@@ -750,7 +750,7 @@ const PAGES = [
     module: 'src/pages/allowance.mjs',
     entry: 'src/pages/allowance.ts',
     js: 'assets/allowance.js',
-    to: 'allowance/index.html',
+    to: 'dashboard/allowance/index.html',
   },
 ];
 
@@ -1207,6 +1207,25 @@ mkdirSync(out, { recursive: true });
 for (const page of PAGES) {
   await buildPage(page);
 }
+
+// Old links stay. The page itself lives under the dashboard.
+mkdirSync(join(out, 'allowance'), { recursive: true });
+writeFileSync(
+  join(out, 'allowance/index.html'),
+  `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=/dashboard/allowance/" />
+    <link rel="canonical" href="/dashboard/allowance/" />
+    <title>Autopilot and allowance — Evergreen</title>
+  </head>
+  <body>
+    <p><a href="/dashboard/allowance/">Autopilot and allowance</a></p>
+  </body>
+</html>
+`,
+);
 
 // The shell's live-ledger script. No core, no SDK — one getHealth read.
 await bundle('src/chrome-client.ts', 'assets/chrome.js');

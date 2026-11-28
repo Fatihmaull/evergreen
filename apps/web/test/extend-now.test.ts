@@ -42,15 +42,19 @@ describe('who gets the button', () => {
     expect(extendNowGate(rowFor(on(), NOW))).toEqual({ kind: 'ready', payer: PAYER });
     expect(panelHtml(rowFor(on(), NOW))).toContain(`data-extend-now="${A}"`);
   });
-  test('🔴 flag off or absent (older API): no button at all', () => {
-    expect(extendNowPanelHtml(rowFor(on({ enabled: false }), NOW))).toBe('');
+  test('🔴 flag off or absent (older API): the button is disabled and says why', () => {
+    const off = extendNowPanelHtml(rowFor(on({ enabled: false }), NOW));
+    expect(off).toContain('<button type="button" disabled>Extend now</button>');
+    expect(off).toContain('switched off');
+    expect(off).not.toContain('data-extend-now');
     const old = on();
     const rest = { limitPerDay: 1, usedToday: 0, resetsAt: old.extendNow.resetsAt };
-    expect(extendNowPanelHtml(rowFor({ ...old, extendNow: rest }, NOW))).toBe('');
+    expect(extendNowPanelHtml(rowFor({ ...old, extendNow: rest }, NOW))).toContain('switched off');
   });
-  test('🔴 autopilot off: no button, the XLM has no path to move through', () => {
+  test('🔴 autopilot off: the button is disabled and names the reason', () => {
     const r = rowFor({ ...on(), autopilot: { enabled: false } }, NOW);
-    expect(extendNowGate(r).kind).toBe('hidden');
+    expect(extendNowGate(r).kind).toBe('blocked');
+    expect(panelHtml(r)).toContain('Turn autopilot on first');
     expect(panelHtml(r)).not.toContain('data-extend-now');
   });
   test('🔴 used today: the button is disabled and says when it is back', () => {

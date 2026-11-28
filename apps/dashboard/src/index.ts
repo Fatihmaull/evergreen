@@ -60,8 +60,13 @@ export const ROUTES: readonly DashboardRoute[] = [
     reads: 'live',
   },
   {
-    route: '/allowance/',
+    route: '/dashboard/allowance/',
     does: 'Read the native XLM allowance a wallet granted the engine, and revoke it with a wallet signature.',
+    reads: 'live',
+  },
+  {
+    route: '/allowance/',
+    does: 'Redirect to /dashboard/allowance/. Old links keep working.',
     reads: 'live',
   },
   {

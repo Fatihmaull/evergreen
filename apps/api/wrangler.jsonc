@@ -76,7 +76,7 @@
         // Extra exact origins CSRF accepts besides DASHBOARD_ORIGIN (comma-separated, no
         // wildcard, no path). Preview only: the dashboard revamp branch (Fatih, 2026-11-24).
         // Production leaves it unset.
-        "DASHBOARD_EXTRA_ORIGINS": "https://revamp-dashboard.evergreen-stellar.pages.dev",
+        "DASHBOARD_EXTRA_ORIGINS": "https://revamp-dashboard.evergreen-stellar.pages.dev,https://webr-preview.evergreen-stellar.pages.dev",
         "EMAIL_FROM": "alerts@mail.evergreenstellar.biz.id",
         // Extend now on preview testnet (Fatih, 2026-11-24, option A): queues an extend-now job
         // that the hosted engine runs through the autopilot money path. 1 per (user, contract)

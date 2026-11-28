@@ -362,7 +362,7 @@ export function rowHtml(r: Row, ctx: AutopilotContext = {}): string {
     : `<span class="mono">${esc(item.contractId.slice(0, 6))}…${esc(item.contractId.slice(-4))}</span>`;
   return `<tr>
       <td>${bindingCell(r.binding, r.bindingSource)}</td>
-      <td><span class="chip ${chipClass(r)}"><span class="shape"></span>${WORD[r.conclusion]}</span>${r.why ? ` <span class="small muted">${esc(r.why)}</span>` : ''}</td>
+      <td><span class="chip ${chipClass(r)}"><span class="shape"></span>${r.bindingSource === 'browser' && r.binding.state === 'live' ? 'read here' : WORD[r.conclusion]}</span>${r.why ? ` <span class="small muted">${esc(r.why)}</span>` : ''}</td>
       <td>${name}</td>
       <td class="small">${seen}</td>
       <td class="small muted">${esc(coverage(item))}</td>

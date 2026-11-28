@@ -205,6 +205,7 @@ async function startEmail(event: Event): Promise<void> {
   const out = $('email-result');
   const button = $<HTMLButtonElement>('email-button');
   button.disabled = true;
+  button.textContent = 'Sending…';
   try {
     const r = await postEmailStart(email);
     if (r.kind === 'sent') {
@@ -224,6 +225,7 @@ async function startEmail(event: Event): Promise<void> {
     }
   } finally {
     if (cancelCooldown === undefined) button.disabled = false;
+    if (cancelCooldown === undefined) button.textContent = 'Email me a code';
   }
 }
 

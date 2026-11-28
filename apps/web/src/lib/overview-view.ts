@@ -10,6 +10,7 @@
  */
 import { DAY_MS, statusHtml, when, type ApiJob } from './activity-view';
 import { extendNowPanelHtml } from './extend-now';
+import { glossaryHtml, term } from './glossary';
 import { approxDate, approxDateShort, esc, formatCount, short, stamp } from './format';
 import { approxDateOfLedger } from './view';
 import { orderRows, type Row } from './watchlist-view';
@@ -21,6 +22,8 @@ const WORD = { healthy: 'healthy', 'at-risk': 'at risk', undetermined: 'undeterm
 
 /** The chip for one row: archived beats at risk; at risk says how close. */
 export function stateChip(r: Row): string {
+  if (r.bindingSource === 'browser' && r.binding.state === 'live')
+    return `<span class="chip undetermined"><span class="shape"></span>read here</span>`;
   if (r.binding.state === 'expired')
     return `<span class="chip expired"><span class="shape"></span>${esc(r.binding.word)}</span>`;
   if (r.conclusion === 'at-risk') {
@@ -101,6 +104,59 @@ export function nextHtml(rows: readonly Row[]): string {
       ? stateChip(r)
       : `<span class="next-figure${why === 'ends-first' ? ' ink' : ''}">${esc(formatCount(left))}</span><span class="next-unit">ledgers left</span>`;
   return `<div>${who}<p>${figure}</p><p class="caption">${caption.join(' · ')}</p></div>${open}`;
+}
+
+/**
+ * The signed-in setup list from the hi-fi (Done / Now / Waiting).
+ * Empty when all four steps are done, so a finished account does not keep the list.
+ */
+export function setupStepsHtml(input: {
+  readonly contracts: number;
+  readonly allowance: AllowanceFact;
+  readonly autopilotOn: number;
+}): string {
+  const hasContract = input.contracts > 0;
+  const live = input.allowance.kind === 'live';
+  const auto = input.autopilotOn > 0;
+  const done = 1 + (hasContract ? 1 : 0) + (live ? 1 : 0) + (auto ? 1 : 0);
+  if (done === 4) return '';
+  const allowanceState: 'done' | 'now' | 'waiting' = live
+    ? 'done'
+    : hasContract
+      ? 'now'
+      : 'waiting';
+  const autoState: 'done' | 'now' | 'waiting' = auto ? 'done' : live ? 'now' : 'waiting';
+  const row = (state: 'done' | 'now' | 'waiting', label: string, action: string): string =>
+    `<li class="${state === 'done' ? '' : state}">
+      <span class="step-state">${state === 'done' ? 'Done' : state === 'now' ? 'Now' : 'Waiting'}</span>
+      <span>${label}</span>
+      <span class="step-action">${action}</span>
+    </li>`;
+  const allowanceAction =
+    allowanceState === 'now'
+      ? '<a href="/dashboard/allowance/">Continue</a>'
+      : allowanceState === 'waiting'
+        ? 'after a contract'
+        : '';
+  const autoAction =
+    autoState === 'now'
+      ? '<a href="/dashboard/allowance/">Continue</a>'
+      : autoState === 'waiting'
+        ? 'after the allowance'
+        : '';
+  return `<section class="block" aria-labelledby="setup-h">
+    <p class="setup-h" id="setup-h">Set up · ${done} of 4</p>
+    <ol class="steps setup">
+      ${row('done', 'Signed in', '')}
+      ${row(
+        hasContract ? 'done' : 'now',
+        hasContract ? 'Contract added' : 'Add a contract',
+        hasContract ? '' : 'the form on this page',
+      )}
+      ${row(allowanceState, 'Set an allowance', allowanceAction)}
+      ${row(autoState, 'Turn on autopilot', autoAction)}
+    </ol>
+  </section>`;
 }
 
 /** The allowance fact: read in the browser from the chain (SAC `allowance()`). */
@@ -422,7 +478,7 @@ export function panelHtml(
   } else {
     ap.push(['State', 'off']);
     if (item.network === 'testnet')
-      actions = `<div class="actions"><a class="pill" href="${esc(forId)}">Turn on autopilot</a></div>`;
+      actions = `<div class="actions"><a class="pill" href="${esc(forId)}">Set an allowance</a></div>`;
   }
 
   const details =
@@ -436,7 +492,10 @@ export function panelHtml(
     ${kv(ap)}
     ${actions}
     ${extendNowPanelHtml(r)}
+    <p class="panel-h">Time left</p>
+    <p class="note">${term('TTL')} is the ledgers left above, counted down to zero. <a href="/dashboard/decay/?c=${encodeURIComponent(item.contractId)}">Open the chart</a>. ${term('allowance')} pays ${term('autopilot')} and Extend now.</p>
     <p class="panel-h">Last runs</p>
+    ${glossaryHtml()}
     ${
       jobs.kind === 'read' &&
       !jobs.complete &&

@@ -6,6 +6,7 @@
  * and opens the side panel.
  */
 import { apiRequest } from '../lib/api';
+import { signedOutDemoHtml } from '../lib/signed-out-demo';
 import {
   blastPanelHtml,
   largestSharedHtml,
@@ -115,7 +116,7 @@ async function load(): Promise<void> {
   if (ids.length === 0) {
     const signedOut = outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED';
     $('br-status').innerHTML = signedOut
-      ? '<a href="/login/">Sign in</a> to draw your watched contracts, or add contract IDs to scan them together.'
+      ? `${signedOutDemoHtml('Shared code')} <a href="/login/">Sign in</a> to draw your watched contracts, or add contract IDs to scan them together.`
       : 'No contracts to draw yet. Add contract IDs to scan them together.';
     openAdd();
     return;

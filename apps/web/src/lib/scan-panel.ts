@@ -24,6 +24,7 @@ import { approxDate, approxXlm, esc, formatCount } from './format';
 import { bindingFromScan } from './watchlist-view';
 import { NETWORK } from './network';
 import { blastRadiusPanel, entryTable, jsonPanel, verdict, wireCopyButtons } from './ui';
+import { rememberScan } from './scan-share';
 import { addOutcomeHtml, addToWatchlist, scopeFor } from './watchlist';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -42,9 +43,11 @@ export function resultHead(result: ScanResult, rep: ScanReport, cli: string): st
         ? ' ok'
         : ' ink';
   const chip =
-    rep.worst === undefined || rep.worst === 'unknown'
-      ? '<span class="chip undetermined"><span class="shape"></span>undetermined</span>'
-      : `<span class="chip ${esc(rep.worst)}"><span class="shape"></span>${rep.worst === 'healthy' ? 'healthy' : 'at risk'}</span>`;
+    rep.partial === true && rep.worst === 'healthy'
+      ? '<span class="chip undetermined"><span class="shape"></span>partial</span>'
+      : rep.worst === undefined || rep.worst === 'unknown'
+        ? '<span class="chip undetermined"><span class="shape"></span>undetermined</span>'
+        : `<span class="chip ${esc(rep.worst)}"><span class="shape"></span>${rep.worst === 'healthy' ? 'healthy' : 'at risk'}</span>`;
   let body: string;
   if (b.state === 'live' && b.remainingLedgers !== undefined) {
     body = `<p><span class="next-figure${tone}">${esc(formatCount(b.remainingLedgers))}</span><span class="next-unit">ledgers left</span></p>
@@ -89,6 +92,7 @@ async function runScan(event: Event): Promise<void> {
     const result = await scanOne(id, dataKeys);
     const rep = report(result);
     lastScan = { result, report: rep, id, dataKeys };
+    rememberScan(id, result);
     const cli = `npx @evergreen-stellar/cli scan ${id}`;
     out.innerHTML = [
       resultHead(result, rep, cli),
@@ -131,6 +135,10 @@ async function runAdd(): Promise<void> {
       scope: scopeFor(lastScan.dataKeys),
     });
     target.innerHTML = addOutcomeHtml(outcome, lastScan.id, lastScan.dataKeys.length);
+    if (outcome.kind === 'added' || outcome.kind === 'already-present') {
+      rememberScan(lastScan.id, lastScan.result);
+      target.innerHTML += `<p class="note"><a href="/dashboard/watchlist/?c=${encodeURIComponent(lastScan.id)}">Open this contract</a></p>`;
+    }
   } finally {
     button.disabled = false;
     button.textContent = 'Add to watchlist';

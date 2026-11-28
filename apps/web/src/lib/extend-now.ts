@@ -27,9 +27,9 @@ import type { ReadResult } from './allowance';
 import { esc, exactXlm, formatCount, short } from './format';
 import type { Row, WatchItem } from './watchlist-view';
 
-/** Whether the panel offers the button, and if not, why. */
+/** Whether the panel offers the button, and if not, why. A blocked gate still draws the button, disabled, with the reason. */
 export type ExtendNowGate =
-  | { readonly kind: 'hidden' }
+  | { readonly kind: 'blocked'; readonly reason: string }
   | { readonly kind: 'used'; readonly resetsAt: Date | undefined }
   | { readonly kind: 'archived' }
   | { readonly kind: 'ready'; readonly payer: string };
@@ -38,13 +38,25 @@ export function extendNowGate(r: Row): ExtendNowGate {
   const { item } = r;
   const a = item.autopilot;
   const en = item.extendNow;
-  if (
-    en?.enabled !== true ||
-    item.network !== 'testnet' ||
-    a?.enabled !== true ||
-    typeof a.payerWallet !== 'string'
-  )
-    return { kind: 'hidden' };
+  if (item.network !== 'testnet')
+    return { kind: 'blocked', reason: 'Extend now is only offered on testnet.' };
+  if (en?.enabled !== true)
+    return {
+      kind: 'blocked',
+      reason:
+        'Extend now is switched off on this network for now. Autopilot still extends on its own schedule.',
+    };
+  if (a?.enabled !== true)
+    return {
+      kind: 'blocked',
+      reason:
+        'Autopilot is off for this contract, so Extend now has nothing to run through. Turn autopilot on first.',
+    };
+  if (typeof a.payerWallet !== 'string')
+    return {
+      kind: 'blocked',
+      reason: 'Autopilot has no payer wallet yet. Set up an allowance first.',
+    };
   if (r.binding.state === 'expired') return { kind: 'archived' };
   if (
     Number.isInteger(en.usedToday) &&
@@ -76,8 +88,10 @@ export function extendNowPanelHtml(r: Row): string {
   const g = extendNowGate(r);
   const id = esc(r.item.contractId);
   switch (g.kind) {
-    case 'hidden':
-      return '';
+    case 'blocked':
+      return `<p class="panel-h">Extend now</p>
+    <div class="actions"><button type="button" disabled>Extend now</button></div>
+    <p class="note">${esc(g.reason)}</p>`;
     case 'archived':
       return `<p class="panel-h">Extend now</p><p class="note">Archived entries must be restored before they can be extended.</p>`;
     case 'used':
