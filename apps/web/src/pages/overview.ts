@@ -21,6 +21,7 @@ import {
 import { namesOf, readRecentJobs } from '../lib/recent-jobs';
 import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
+import { rememberedScan } from '../lib/scan-share';
 import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
@@ -81,6 +82,13 @@ function show(id: 'ov-signed-out' | 'ov-add' | 'ov-summary' | undefined): void {
 
 function renderSummary(): void {
   const all = rows();
+  const setup = $('ov-setup');
+  const anyAuto = all.some((r) => r.item.autopilot?.enabled === true);
+  setup.hidden = anyAuto;
+  if (!anyAuto) {
+    setup.innerHTML =
+      'Autopilot is off. <a href="/dashboard/allowance/">Set an allowance and turn it on</a>. Extend now stays on the contract and says why it is disabled.';
+  }
   $('ov-next').innerHTML = nextHtml(all);
   $('ov-facts').innerHTML = factsHtml(all, allowance, new Date(), jobs);
   $('ov-activity').innerHTML = recentActivityHtml(jobs, namesOf(items));
@@ -123,6 +131,10 @@ async function load(): Promise<void> {
   }
   $('ov-actions').hidden = false;
   $('add-h').textContent = 'Add a contract';
+  for (const i of items) {
+    const shared = rememberedScan(i.contractId);
+    if (shared !== undefined) scans.set(i.contractId, shared);
+  }
   show('ov-summary');
   renderSummary();
   // Contracts' "Add contract" lands here with ?add=1.

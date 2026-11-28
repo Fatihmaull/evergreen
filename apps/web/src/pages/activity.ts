@@ -162,7 +162,7 @@ async function load(): Promise<void> {
     const r = await page<ApiJob>('/jobs', jobsCursor);
     if (!r.ok) {
       status.innerHTML = r.signedOut
-        ? 'Sign in to see what Evergreen ran for your contracts. <a href="/login/">Sign in</a>'
+        ? 'Sign in to see what Evergreen ran for your contracts. The scanner needs no account. <a href="/dashboard/scanner/">Scan a contract</a> · <a href="/login/">Sign in</a>'
         : 'The Evergreen API did not answer, so there is no activity to show. This says nothing about your contracts: it is about us.';
       return;
     }

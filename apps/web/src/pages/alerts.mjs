@@ -17,5 +17,6 @@ export function render() {
         <h1>Alerts</h1>
       </div>
     </div>
+    <p class="note">When an alert needs you, open the contract from <a href="/dashboard/watchlist/">Contracts</a>, or set the allowance from <a href="/dashboard/allowance/">Autopilot and allowance</a>.</p>
     <div class="alerts stack" id="alerts" aria-live="polite"><p class="fine">reading…</p><noscript><p class="muted">This page needs JavaScript to ask the Evergreen API.</p></noscript></div>`;
 }

@@ -7,6 +7,7 @@
  */
 import { apiRequest } from '../lib/api';
 import { scanOne, type ScanResult } from '../lib/evergreen';
+import { rememberedScan } from '../lib/scan-share';
 import { formatCount } from '../lib/format';
 import {
   filtersHtml,
@@ -114,7 +115,8 @@ async function load(): Promise<void> {
   );
   const status = $('cl-status');
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
-    status.innerHTML = 'Sign in to see your contracts. <a href="/login/">Sign in</a>';
+    status.innerHTML =
+      'Sign in to save contracts and turn on autopilot. You can <a href="/dashboard/scanner/">scan one now</a> with no account. <a href="/login/">Sign in</a>';
     return;
   }
   if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
@@ -125,6 +127,10 @@ async function load(): Promise<void> {
   if (items.length === 0) {
     status.innerHTML = 'Nothing watched yet. <a href="/dashboard/">Add your first contract</a>.';
     return;
+  }
+  for (const i of items) {
+    const shared = rememberedScan(i.contractId);
+    if (shared !== undefined) scans.set(i.contractId, shared);
   }
   status.hidden = true;
   $('cl-body').hidden = false;

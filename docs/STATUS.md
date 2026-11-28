@@ -38,6 +38,10 @@
 
 ---
 
+## Current — dashboard UX preview, 2026-11-28
+
+Branch `webr-preview`, based on `revamp-dashboard`. The dashboard IA is Overview, Contracts, Activity, Autopilot and allowance (`/dashboard/allowance/`, with `/allowance/` redirecting). Tools are collapsed. Account sits at the bottom of the sidebar. Extend now stays visible and says why it is disabled. A partial scan is not labelled healthy. Overview has a first-run checklist and a signed-out example that is labelled as an example. Colours and the logo are unchanged. The published UX audit canvas frame returned “No page here”, so the wireframes and hi-fi mockups on that URL were not readable. Preview API CSRF accepts `https://webr-preview.evergreen-stellar.pages.dev` only after the preview Worker is deployed with the updated `DASHBOARD_EXTRA_ORIGINS`. Notion sync pending. No testnet transaction.
+
 ## Current — PH2-E4-04 Stage 2, the money step, 2026-11-23
 
 `PH2-E4-04` stays `[~]`. Stage 2 is built on top of the #630 money path (with the #640 review fixes) and ships **dry-run**: `HOSTED_MODE=live` with `ENGINE_SECRET` is needed before anything is enqueued, signed or sent. `apps/scheduler/src/hosted-store.ts` enqueues one autopilot job per due item per 180-ledger window, resumes open jobs and saves state plus ledger rows in one transaction; `hosted-chain.ts` implements `HostedChain` (SEP-41 `transfer_from` on the native SAC, `ExtendFootprintTTL` with rent read from the meta's `rentFeeCharged`, refund by native payment) with the 0006 submitted-hash rule; `hosted-run.ts` caps a tick at 3 jobs and 300 s, and the tenant pass is cut at 120 s (DevOps, 2026-11-23). Tested on PGlite as `eg_scheduler` end to end with a fake chain; not yet run against testnet. **Retry margin decided 2026-11-23: `ALLOWANCE_RETRY_MARGIN_STROOPS` = 100,000 stroops on testnet** (approved by the orchestrator under Fatih's standing authority of the same day; resized from measured simulated-vs-charged rent once jobs run). Open before live: the engine key (`PH2-E4-03`), the Workers plan's CPU limit (DevOps checking), and 0016 applied. Notion sync pending for `PH2-E4-04`.

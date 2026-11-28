@@ -52,7 +52,9 @@ describe('values with no API route are words, never zero', () => {
   });
   test('the panel draws no Extend now and says the runs are not yet available', () => {
     const html = panelHtml(healthy);
-    expect(html).not.toContain('Extend now');
+    expect(html).toContain('<button type="button" disabled>Extend now</button>');
+    expect(html).toContain('switched off');
+    expect(html).not.toContain('data-extend-now');
     expect(html).toContain(NOT_YET_AVAILABLE);
   });
 });

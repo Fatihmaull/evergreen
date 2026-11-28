@@ -42,10 +42,20 @@ export function render() {
         <button type="submit">Scan</button>
       </form>
       <p class="note">No wallet, no signup to scan.</p>
-      <div class="signin-line">
-        <p>Sign in to watch your contracts and turn on autopilot.</p>
-        <a class="pill secondary" href="/login/">Sign in</a>
-      </div>
+      <section class="block" aria-label="Example, not your contracts">
+        <div class="block-head">
+          <h2>How a contract looks</h2>
+          <span class="chip undetermined"><span class="shape"></span>example</span>
+        </div>
+        <p class="note">This is not a contract of yours. A scan above reads a real one. Sign in to save it.</p>
+        <ol class="checklist">
+          <li>Add the contract</li>
+          <li>Evergreen reads its expiry</li>
+          <li>Open it to see status, <abbr class="term" title="How many ledgers a Soroban entry stays live before it is archived or deleted.">TTL</abbr>, and Extend now</li>
+          <li>Turn on <abbr class="term" title="Evergreen extending a watched contract on a schedule, paid from your allowance.">autopilot</abbr></li>
+        </ol>
+        <p><a class="pill secondary" href="/login/">Sign in</a></p>
+      </section>
     </section>
 
     <section id="ov-add" class="empty" hidden aria-labelledby="add-h">
@@ -58,10 +68,17 @@ export function render() {
         <button type="submit" id="add-button">Add</button>
       </form>
       <div id="add-result" aria-live="polite"></div>
-      <p class="note">Evergreen reads its expiry now and every few minutes after. Not sure of the ID? <a href="/dashboard/scanner/">Scan first</a>.</p>
+      <ol class="checklist">
+        <li>Add a contract, with the form above</li>
+        <li>This browser reads its expiry, so the row is not left as not scanned</li>
+        <li>Open it on <a href="/dashboard/watchlist/">Contracts</a> for status and Extend now</li>
+        <li>Turn on autopilot from <a href="/dashboard/allowance/">Autopilot and allowance</a></li>
+      </ol>
+      <p class="note">Not sure of the ID? <a href="/dashboard/scanner/">Scan first</a>.</p>
     </section>
 
     <div id="ov-summary" hidden>
+      <p class="note" id="ov-setup" hidden></p>
       <section class="next" id="ov-next" aria-label="Needs attention first"></section>
       <section class="facts" id="ov-facts" aria-label="Summary"></section>
       <section class="block" aria-labelledby="contracts-h">
