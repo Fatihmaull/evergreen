@@ -17,6 +17,7 @@ import type { TenantRunReport } from '@evergreen/engine/dist/tenant-run.js';
 import { EvaluationError, type EvaluationSummary } from './evaluate.js';
 import type { ExtendPlan } from './extend-plan.js';
 import type { HostedEnv, HostedStageInput, HostedStageSummary } from './hosted-run.js';
+import type { ObserveSummary } from './observe.js';
 import type { SweepEnv, SweepTickCounts } from './sweep.js';
 import { TickError } from './tick.js';
 
@@ -58,9 +59,16 @@ export interface Runtime {
   readonly hostedJobs?: (input: HostedStageInput) => Promise<HostedStageSummary>;
   /**
    * PH2-E4-03. Absent means the tick does not sweep. When present, counts only.
-   * Dry-run unless `SWEEP_MODE=live`. A failure never fails the tick.
+   * Dry-run unless `SWEEP_MODE=live`. The buffer is `SWEEP_BUFFER_STROOPS`.
+   * A failure never fails the tick.
    */
   readonly sweep?: () => Promise<SweepTickCounts>;
+  /**
+   * Engine observations (src/observe.ts): appends one `observations` row per watched testnet
+   * contract it could read. Runs last on every tick that recorded a heartbeat, whatever the
+   * earlier stages did. Counts only are logged. A failure never fails the tick.
+   */
+  readonly observe?: () => Promise<ObserveSummary>;
   readonly log: (entry: Readonly<Record<string, unknown>>) => void;
 }
 
@@ -230,6 +238,64 @@ async function sweepStep(
   }
 }
 
+/** Observation counts. A bug is rethrown. Any other failure stays off the heartbeat. */
+async function observeStep(
+  env: Env,
+  observe: NonNullable<Runtime['observe']>,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+): Promise<void> {
+  try {
+    const counts = await observe();
+    runtime.log({
+      event: 'scheduler.observe',
+      trigger,
+      environment: environmentOf(env),
+      contracts: counts.contracts,
+      written: counts.written,
+      skipped: counts.skipped,
+    });
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) throw error;
+    runtime.log({
+      event: 'scheduler.observe_failed',
+      trigger,
+      environment: environmentOf(env),
+      code: 'OBSERVE_FAILED',
+    });
+  }
+}
+
+/** Evaluation, the dry-run tenant pass, the money step and the sweep, each only when the one before it ran. */
+async function stages(
+  env: Env,
+  runtime: Runtime,
+  trigger: 'cron' | 'manual',
+  observedLedger: number,
+) {
+  if (runtime.evaluate === undefined) return { ok: true as const, observedLedger };
+  const evaluation = await evaluateStep(env, runtime.evaluate, runtime, trigger);
+  if (!('summary' in evaluation) || runtime.dryRunTenants === undefined) {
+    return {
+      ok: true as const,
+      observedLedger,
+      evaluation: 'summary' in evaluation ? evaluation.summary : evaluation,
+    };
+  }
+  await tenantStep(env, runtime.dryRunTenants, evaluation.plans, runtime, trigger);
+  if (runtime.hostedJobs !== undefined && evaluation.extendPlan !== undefined) {
+    await moneyStep(
+      env,
+      runtime.hostedJobs,
+      { observedLedger, plans: evaluation.plans, extendPlan: evaluation.extendPlan },
+      runtime,
+      trigger,
+    );
+  }
+  if (runtime.sweep !== undefined) await sweepStep(env, runtime.sweep, runtime, trigger);
+  return { ok: true as const, observedLedger, evaluation: evaluation.summary };
+}
+
 /** Runs one tick and logs what happened: a code on failure, never a message. A fault of ours is logged as INTERNAL and rethrown. */
 async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
   try {
@@ -242,27 +308,9 @@ async function tick(env: Env, runtime: Runtime, trigger: 'cron' | 'manual') {
       observedLedger,
       ...(rpcMs === undefined ? {} : { rpcMs }),
     });
-    if (runtime.evaluate === undefined) return { ok: true as const, observedLedger };
-    const evaluation = await evaluateStep(env, runtime.evaluate, runtime, trigger);
-    if (!('summary' in evaluation) || runtime.dryRunTenants === undefined) {
-      return {
-        ok: true as const,
-        observedLedger,
-        evaluation: 'summary' in evaluation ? evaluation.summary : evaluation,
-      };
-    }
-    await tenantStep(env, runtime.dryRunTenants, evaluation.plans, runtime, trigger);
-    if (runtime.hostedJobs !== undefined && evaluation.extendPlan !== undefined) {
-      await moneyStep(
-        env,
-        runtime.hostedJobs,
-        { observedLedger, plans: evaluation.plans, extendPlan: evaluation.extendPlan },
-        runtime,
-        trigger,
-      );
-    }
-    if (runtime.sweep !== undefined) await sweepStep(env, runtime.sweep, runtime, trigger);
-    return { ok: true as const, observedLedger, evaluation: evaluation.summary };
+    const result = await stages(env, runtime, trigger, observedLedger);
+    if (runtime.observe !== undefined) await observeStep(env, runtime.observe, runtime, trigger);
+    return result;
   } catch (error) {
     const code = error instanceof TickError ? error.code : 'INTERNAL';
     runtime.log({

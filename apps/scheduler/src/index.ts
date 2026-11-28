@@ -18,6 +18,7 @@ import { parseHostedConfig, runHostedStage } from './hosted-run.js';
 import { parseSweepConfig, runSweepTick } from './sweep.js';
 import { pgSubmittedStore, type Query } from './hosted-store.js';
 import { evaluate } from './evaluate.js';
+import { recordObservations } from './observe.js';
 import { dryRunTenantPlans } from './tenant-dry-run.js';
 import { DEFAULT_RPC_TIMEOUT_MS, TickError, runTick } from './tick.js';
 
@@ -59,9 +60,9 @@ export function productionRuntime(env: Env): Runtime {
       });
       return dryRunTenantPlans(plans, reader, `tick-${Date.now()}`, TENANT_RUN_DEADLINE_MS);
     },
-    // PH2-E4-03. Dry-run unless SWEEP_MODE=live. No buffer means nothing is swept.
-    // No treasury key. This runtime does not attach a payment, so live still
-    // does not send (the sender rejects). Counts only.
+    // PH2-E4-03. Dry-run unless SWEEP_MODE=live. The buffer is SWEEP_BUFFER_STROOPS
+    // (preview: 20_000_000, #691). Unset, nothing is swept. No treasury key.
+    // This runtime does not attach a payment, so live still does not send.
     sweep: async () => {
       const sql = neon(databaseUrl());
       const rows = (await sql.query(IN_FLIGHT_PULLS_SQL)) as readonly Record<string, unknown>[];
@@ -73,6 +74,21 @@ export function productionRuntime(env: Env): Runtime {
         balanceStroops: undefined,
         send: () => Promise.reject(new Error('SWEEP_SEND_UNWIRED')),
       });
+    },
+    // Engine observations (src/observe.ts): one row per watched testnet contract, last in the
+    // tick so a contract extended this tick is recorded with its new TTL.
+    observe: () => {
+      const sql = neon(databaseUrl());
+      const reader = createFetchReader({
+        rpcUrl: env.SOROBAN_RPC_URL ?? NETWORKS.testnet.defaultRpcUrl,
+        fetch: (url, init) => fetch(url, init),
+        timeoutMs: DEFAULT_RPC_TIMEOUT_MS,
+      });
+      return recordObservations(
+        async (text, params) =>
+          (await sql.query(text, [...params])) as readonly Record<string, unknown>[],
+        reader,
+      );
     },
     // Stage 2: the money step. Dry-run unless HOSTED_MODE=live with ENGINE_SECRET (hosted-run.ts).
     hostedJobs: (input) => {
@@ -173,8 +189,18 @@ export {
   createFetchReader,
   dueVerdicts,
   scanRequest,
+  scopeRequest,
   verdict,
 } from './due.js';
+export {
+  INSERT_OBSERVATION_SQL,
+  WATCHED_SQL,
+  observationOf,
+  observeWatched,
+  recordObservations,
+  sliceScan,
+} from './observe.js';
+export type { Observation, ObserveSummary, ObservedHealth } from './observe.js';
 export {
   dryRunSubmitter,
   planExtendRequests,

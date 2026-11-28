@@ -1,6 +1,6 @@
 # Sweep buffer proposal (PH2-E4-03)
 
-**Status: not a decision.** A number for Fatih. The code does not use one. `SWEEP_BUFFER_STROOPS` stays unset, and `planSweep` sends nothing while it is unset.
+**Status: provisional.** Fatih, 2026-11-27, #689: `SWEEP_BUFFER_STROOPS` = 20,000,000 (2 XLM) on the preview scheduler only. `SWEEP_MODE` stays dry-run, so nothing is sent. Revisit after the DoD-2 window (about 2026-12-07). The tick reads that env var. Unset, the plan is `buffer-unset` and nothing is swept. There is no code default.
 
 ## What the buffer is
 
@@ -28,12 +28,6 @@ Not in the repo, and not read for this note:
 
 This session has no preview database credential, so those were not queried.
 
-## Proposal
+## What Fatih set
 
-No stroop value. One settled job, with no network-fee and no balance, cannot size a cushion. The tick leaves `SWEEP_BUFFER_STROOPS` unset, so it only logs.
-
-Options for Fatih, none of them chosen here:
-
-1. A fixed stroop amount he names, after a preview read of the engine balance and the `network-fee` rows.
-2. N times the largest pull in a day, once more than one preview day exists. N is his.
-3. Leave the buffer unset until the DoD-2 preview window (started 2026-11-23, about through 2026-12-07) has more than this one job. Recommended. The code already does nothing while the buffer is unset.
+A fixed 20,000,000 stroops (2 XLM) on preview: 1 XLM for the account reserve and 1 XLM of operating fees. The published network fee per job since #661 is 10,464 stroops, so 1 XLM covers about 95 jobs (`phase-2/PHASE2-PLAN.md`). `SWEEP_MODE` is not set, so the sweep stays dry-run. Production has no buffer.
