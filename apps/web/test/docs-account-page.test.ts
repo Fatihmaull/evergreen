@@ -3,7 +3,7 @@
  * statements are true only until someone ships the thing they say is missing,
  * so each is pinned to the source and fails the day it stops being true:
  *
- *   - no engine observation is written for a watched contract;
+ *   - only the scheduler writes an engine observation (PH2-E4-04);
  *   - no control on the site turns autopilot on or grants an allowance.
  *
  * A failure here is not a bug in the test. It means the page is now wrong and
@@ -67,7 +67,7 @@ describe('/docs/account/', () => {
 });
 
 describe('the two statements that go stale', () => {
-  test('nothing outside tests writes an engine observation', () => {
+  test('only the scheduler writes an engine observation', () => {
     const roots = [
       'apps/api/src',
       'apps/scheduler/src',
@@ -81,8 +81,8 @@ describe('the two statements that go stale', () => {
       .filter((file) =>
         /INSERT\s+INTO\s+(public\.)?observations/i.test(readFileSync(file, 'utf8')),
       );
-    expect(writers.map((f) => f.slice(ROOT.length))).toEqual([]);
-    expect(page).toContain('nothing in the repository writes an engine observation');
+    expect(writers.map((f) => f.slice(ROOT.length))).toEqual(['apps/scheduler/src/observe.ts']);
+    expect(page).toContain('the scheduler writes an engine observation for every watched');
   });
 
   test('no web code turns autopilot on or grants an allowance', () => {

@@ -42,6 +42,10 @@
         "ENVIRONMENT": "preview",
         "ALLOWANCE_RETRY_MARGIN_STROOPS": "100000",
         "HOSTED_MODE": "live",
+        // PH2-E4-03 sweep buffer, PROVISIONAL (Fatih, 2026-11-27, #689; revisit after DoD-2,
+        // about 2026-12-07): 1 XLM account reserve + 1 XLM operating fees. SWEEP_MODE is not set,
+        // so the sweep stays dry-run. Production has no buffer.
+        "SWEEP_BUFFER_STROOPS": "20000000",
       },
     },
   },
