@@ -1862,6 +1862,28 @@ body.app {
   display: grid;
   gap: 6px;
 }
+.term {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.18em;
+  cursor: help;
+}
+.checklist {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+.checklist li + li {
+  margin-top: 0.35rem;
+}
+.nav-tools {
+  margin: 0;
+  border: 0;
+}
+.nav-tools > summary {
+  cursor: pointer;
+}
+.nav-tools > summary::-webkit-details-marker {
+  display: none;
+}
 .sidebar-foot .mono {
   color: var(--sage);
 }
@@ -2236,10 +2258,11 @@ main.main,
   }
   .sidebar nav {
     display: flex;
-    gap: 18px;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    overflow-x: clip;
+    max-width: 100%;
     padding: 0 16px 4px;
-    scrollbar-width: thin;
   }
   .nav-group {
     display: flex;
@@ -2259,12 +2282,19 @@ main.main,
     white-space: nowrap;
     padding: 6px 10px;
   }
+  .sidebar nav {
+    flex-wrap: wrap;
+    overflow-x: clip;
+    max-width: 100%;
+  }
   .sidebar-foot {
     padding: 0 16px;
     font-size: 12px;
   }
-  .sidebar-foot p:first-child {
-    display: none;
+  .account-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 }
 

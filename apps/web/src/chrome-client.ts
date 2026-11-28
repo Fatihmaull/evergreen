@@ -75,7 +75,7 @@ function revealActiveNavItem(): void {
  * a 200 with a session body leaves "Sign in": a failed read is not a session.
  */
 async function labelAccountItem(): Promise<void> {
-  const item = document.querySelector<HTMLElement>('.sidebar nav a.nav-item[href="/login/"]');
+  const item = document.querySelector<HTMLElement>('.sidebar a.nav-item[href="/login/"]');
   if (!item) return;
   try {
     const res = await fetch('/api/v1/me', {

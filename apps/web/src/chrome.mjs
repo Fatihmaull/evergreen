@@ -13,11 +13,10 @@
 /**
  * Route → nav. The active item is marked here, not by the client.
  *
- * Dashboard revamp (components.md § "Dashboard revamp: overview", Fatih
- * 2026-11-24): the person's own pages first with no section label, then
- * Tools, then Settings. Our own contracts, engine runs and extension history
- * left the dashboard nav: they are public evidence, not the person's data,
- * and their pages stay reachable from the docs and /about/.
+ * Dashboard IA (Fatih, 2026-11-27): Overview, Contracts, Activity, then
+ * Autopilot & Allowance. Tools stay one Scanner plus Blast radius and TTL
+ * decay, collapsed until opened. Account (Alerts, Sign in) sits at the
+ * bottom. Our own contracts stay out of this nav.
  *
  * Activity lists the engine's jobs. Until the API serves them its page says
  * so in one line (components.md § "Where the data comes from today").
@@ -30,42 +29,44 @@ export const NAV = [
       // The watchlist, renamed. The route stays so old links keep working.
       { href: '/dashboard/watchlist/', label: 'Contracts' },
       { href: '/dashboard/activity/', label: 'Activity' },
-      { href: '/allowance/', label: 'Allowance' },
+      { href: '/dashboard/allowance/', label: 'Autopilot & Allowance' },
     ],
   },
   {
     section: 'Tools',
+    collapsed: true,
     items: [
       { href: '/dashboard/scanner/', label: 'Scanner' },
       { href: '/dashboard/blast-radius/', label: 'Blast radius' },
       { href: '/dashboard/decay/', label: 'TTL decay' },
     ],
   },
-  {
-    section: 'Settings',
-    items: [
-      { href: '/dashboard/alerts/', label: 'Alerts' },
-      // chrome.js relabels this "Account" when /me answers with a session.
-      { href: '/login/', label: 'Sign in' },
-      { href: '/docs/', label: 'Documentation' },
-    ],
-  },
 ];
 
+/** Bottom of the sidebar. chrome.js relabels Sign in to Account when /me has a session. */
+export const ACCOUNT_NAV = [
+  { href: '/dashboard/alerts/', label: 'Alerts' },
+  { href: '/login/', label: 'Sign in' },
+];
+
+function itemHtml(item, active) {
+  return `<a class="nav-item${item.href === active ? ' active' : ''}" href="${item.href}"${
+    item.href === active ? ' aria-current="page"' : ''
+  }>${item.label}</a>`;
+}
+
 function navHtml(active) {
-  return NAV.map(
-    (group) => `<div class="nav-group">
-        ${group.section ? `<p class="nav-section">${group.section}</p>` : ''}
-        ${group.items
-          .map(
-            (item) =>
-              `<a class="nav-item${item.href === active ? ' active' : ''}" href="${item.href}"${
-                item.href === active ? ' aria-current="page"' : ''
-              }>${item.label}</a>`,
-          )
-          .join('')}
-      </div>`,
-  ).join('');
+  return NAV.map((group) => {
+    const links = group.items.map((item) => itemHtml(item, active)).join('');
+    if (group.collapsed) {
+      const open = group.items.some((item) => item.href === active);
+      return `<div class="nav-group"><details class="nav-tools"${open ? ' open' : ''}>
+        <summary class="nav-section">${group.section}</summary>
+        ${links}
+      </details></div>`;
+    }
+    return `<div class="nav-group">${links}</div>`;
+  }).join('');
 }
 
 /**
@@ -134,6 +135,8 @@ export function shell({
         </a>
         <nav aria-label="Sections">${navHtml(active)}</nav>
         <div class="sidebar-foot">
+          <div class="account-links">${ACCOUNT_NAV.map((item) => itemHtml(item, active)).join('')}</div>
+          <p><a href="/docs/">Documentation</a></p>
           <p class="mono">testnet only</p>
         </div>
       </aside>

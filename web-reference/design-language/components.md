@@ -904,7 +904,9 @@ Reference screens: `source/screens/revamp/`, built from `parts/` by `build.mjs` 
 - **Summary first, detail on request.** A list shows one line per item. The whole row opens the side panel. The full page remains for deep links.
 - **Fits one screen on desktop.** With up to 5 contracts, the overview fits within 1440 × 900 without the activity block. Lists beyond 5 rows link to the full list.
 
-**Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed; it keeps the URL `/dashboard/watchlist/`), Activity (jobs and fee ledger, new), Allowance. *Tools*: Scanner, Blast radius, TTL decay. *Settings*: Alerts, Account (Sign in when signed out), Documentation. Below 760 px the sidebar becomes a horizontal scrolling tab row with the top group first, section labels hidden.
+**Sidebar (all dashboard pages).** Top group with no section label: Overview, Contracts (the watchlist, renamed; it keeps the URL `/dashboard/watchlist/`), Activity (jobs and fee ledger), Autopilot & Allowance (`/dashboard/allowance/`; `/allowance/` redirects). *Tools*, collapsed until a tool page is open: Scanner (one entry), Blast radius, TTL decay. Account sits at the bottom of the sidebar: Alerts, then Sign in (Account when a session exists), then Documentation. Below 960 px the links wrap onto more than one line instead of scrolling off the screen. Colours and the logo are unchanged.
+
+**2026-11-28, branch `webr-preview`.** Fatih asked for the first-run path on Overview (add a contract, read its expiry, see status, turn on autopilot), a signed-out example that is labelled as an example, Extend now drawn disabled with the reason it cannot run, a partial scan labelled partial rather than healthy beside the PARTIAL line, and glossary titles on TTL and autopilot. The three allowance steps are one “Set the cap and sign” disclosure.
 
 **Overview, signed in, from the top.**
 
