@@ -2245,9 +2245,8 @@ main.main,
    began below the fold, on every route. Found in the visual pass, not by the
    overflow check — nothing was overflowing, it was just all in the way.
 
-   Below the two-column breakpoint the nav becomes a compact horizontal strip
-   that scrolls sideways on its own. Every link stays reachable; none of them
-   stands between the visitor and the page they asked for. */
+   Below the two-column breakpoint the nav wraps onto extra lines. A sideways
+   strip cut off "Autopilot & Allowance" on a phone. Every link stays on screen. */
 @media (max-width: 959px) {
   .sidebar {
     gap: 10px;
@@ -2266,9 +2265,15 @@ main.main,
   }
   .nav-group {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px;
     margin-bottom: 0;
+    max-width: 100%;
+  }
+  .sidebar {
+    max-width: 100%;
+    overflow-x: clip;
   }
   .nav-section {
     margin: 0 4px 0 0;
