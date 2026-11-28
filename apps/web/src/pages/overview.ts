@@ -22,7 +22,7 @@ import {
 import { namesOf, readRecentJobs } from '../lib/recent-jobs';
 import { mountExtendNow } from '../lib/extend-now-controller';
 import { mountPanel, openIdFromUrl } from '../lib/panel-controller';
-import { rememberedScan } from '../lib/scan-share';
+import { rememberedScan, rememberScan } from '../lib/scan-share';
 import { addOutcomeHtml, addToWatchlist } from '../lib/watchlist';
 import { noWatchlistSentence, rowFor, type Row, type WatchItem } from '../lib/watchlist-view';
 
@@ -205,8 +205,12 @@ $('add-form').addEventListener('submit', (ev) => {
       button.disabled = false;
       out.innerHTML = addOutcomeHtml(o, id);
       if (o.kind === 'added' || o.kind === 'already-present') {
-        // Reload the summary from the API so the new row is the API's, not ours.
-        location.assign(`/dashboard/?c=${encodeURIComponent(id)}`);
+        // The API does not store this browser's scan. Read the chain now and
+        // keep it in localStorage so Contracts and Time left are not blank.
+        void scanOne(id)
+          .then((s) => rememberScan(id, s))
+          .catch(() => undefined)
+          .then(() => location.assign(`/dashboard/?c=${encodeURIComponent(id)}`));
       }
     });
 });

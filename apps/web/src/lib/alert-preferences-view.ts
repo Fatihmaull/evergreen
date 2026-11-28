@@ -23,6 +23,7 @@ import type {
   PreferenceRead,
 } from './alert-preferences';
 import { OPTIONAL_ORDER, REQUIRED_ORDER } from './alert-preferences';
+import { signedOutDemoHtml } from './signed-out-demo';
 
 /** Matches `DEFAULT_CRITICAL_LEDGERS`. The test locks the equality. */
 export const APPROACHING_AT_OR_BELOW_LEDGERS = 17_280;
@@ -206,7 +207,7 @@ export function alertsHtml(
     return '<p class="fine">reading…</p>';
   }
   if (read.kind === 'no-session') {
-    return `<div class="panel note"><p>A preference belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a>.</p><p class="fine">Signing in with email cannot move XLM.</p><p class="fine"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>`;
+    return `${signedOutDemoHtml('Alerts')}<div class="panel note"><p>A preference belongs to a signed-in session, and this browser has none. Nothing is shown. <a href="/login/">Sign in</a>.</p><p class="fine">Signing in with email cannot move XLM.</p><p class="fine"><a href="/dashboard/scanner/">The scanner</a> needs no session.</p></div>`;
   }
   if (read.kind === 'unavailable') {
     return `<div class="panel undetermined"><p>${CHIP.undetermined} The Evergreen API did not answer, so there are no preferences to show. This says nothing about your contracts: it is about us.</p></div>`;

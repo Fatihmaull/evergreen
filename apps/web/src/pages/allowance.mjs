@@ -28,10 +28,11 @@ export function render() {
       </div>
     </div>
     <p class="lead wizard-lead">Autopilot can only extend a contract after you approve a cap. Three steps, then you sign in your wallet.</p>
-    <div class="filters" role="navigation" aria-label="Setup steps">
-      <a class="filter" href="#al-wallet">1. Wallet</a>
-      <a class="filter" href="#al-cap">2. Set a limit</a>
-      <a class="filter" href="#al-review">3. Review and turn on</a>
+    <div id="al-signed-out"></div>
+    <div class="filters" role="tablist" aria-label="Setup steps">
+      <button type="button" class="filter active" data-wizard="0" aria-selected="true">1. Wallet</button>
+      <button type="button" class="filter" data-wizard="1" aria-selected="false">2. Set a limit</button>
+      <button type="button" class="filter" data-wizard="2" aria-selected="false">3. Review and turn on</button>
     </div>
     <section class="next" id="al-next" aria-label="Left to pull"><div><p class="label">Left to pull</p><p class="caption">Reading the allowance…</p></div></section>
     <section class="facts" id="al-facts" aria-label="Allowance facts"></section>
@@ -42,12 +43,13 @@ export function render() {
     <section class="stack">
       <div id="standing" aria-live="polite"><p class="standing-line">Connect a wallet to read its allowance.</p></div>
     </section>
-    <section class="stack" id="al-wallet">
+    <section class="stack wizard-step" id="al-wallet" data-step="0">
       <h2 class="section">1. Wallet</h2>
       <div class="row"><button id="connect-button" class="secondary" type="button">Connect Freighter</button></div>
       <div id="wallet-result" aria-live="polite"></div>
+      <div class="actions"><button type="button" class="primary" data-wizard-go="1">Continue</button></div>
     </section>
-    <section class="stack" id="al-cap">
+    <section class="stack wizard-step" id="al-cap" data-step="1" hidden>
       <h2 class="section">2. Set a limit</h2>
       <p class="small muted">One allowance covers every contract on your watchlist that this wallet pays for. A typical extend is a fraction of an XLM. The exact rent is simulated before you sign. <abbr class="term" title="The smallest unit of XLM. 1 XLM is 10,000,000 stroops.">Stroops</abbr> are that unit.</p>
       <div id="cap-rows" aria-live="polite"><p class="small muted">Connect a wallet to list the contracts it can pay for.</p></div>
@@ -59,8 +61,9 @@ export function render() {
         <textarea id="rent-lines" class="mono" rows="3" spellcheck="false" autocomplete="off"></textarea>
       </details>
       <div id="estimate-result" aria-live="polite"></div>
+      <div class="actions"><button type="button" class="secondary" data-wizard-go="0">Back</button><button type="button" class="primary" data-wizard-go="2">Continue</button></div>
     </section>
-    <section class="stack" id="al-review">
+    <section class="stack wizard-step" id="al-review" data-step="2" hidden>
       <h2 class="section">3. Review and turn on</h2>
       <div class="card card-pad stack">
         <div id="review" aria-live="polite"></div>
@@ -69,12 +72,13 @@ export function render() {
         <p id="sign-help" class="small muted">Your wallet shows the same amount and ledger. If it does not, reject it there.</p>
         <div id="approve-result" aria-live="polite"></div>
       </div>
-    </section>
-    <section id="autopilot-step" class="stack" hidden>
-      <h2 class="section">Turn on autopilot</h2>
-      <div id="autopilot-rows" aria-live="polite"></div>
-      <div class="row"><button id="autopilot-button" type="button">Turn on autopilot for these contracts →</button></div>
-      <div id="autopilot-result" aria-live="polite"></div>
+      <section id="autopilot-step" class="stack" hidden>
+        <h2 class="section">Turn on autopilot</h2>
+        <div id="autopilot-rows" aria-live="polite"></div>
+        <div class="row"><button id="autopilot-button" type="button">Turn on autopilot for these contracts →</button></div>
+        <div id="autopilot-result" aria-live="polite"></div>
+      </section>
+      <div class="actions"><button type="button" class="secondary" data-wizard-go="1">Back</button></div>
     </section>
       </div>
     </details>

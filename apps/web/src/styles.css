@@ -2251,66 +2251,66 @@ main.main,
   overflow-wrap: anywhere;
 }
 
-/* On a phone the sidebar stacks above the content, and twelve stacked links
-   filled the entire first screen: a visitor landed on a page whose content
-   began below the fold, on every route. Found in the visual pass, not by the
-   overflow check — nothing was overflowing, it was just all in the way.
+/* On a phone the sidebar is a drawer. A wrapping strip hid Tools and cut
+   labels. Menu opens it; the backdrop and Escape close it. */
+.nav-toggle,
+.nav-backdrop {
+  display: none;
+}
 
-   Below the two-column breakpoint the nav wraps onto extra lines. A sideways
-   strip cut off "Autopilot & Allowance" on a phone. Every link stays on screen. */
+.wizard-step[hidden] {
+  display: none;
+}
+
+button.filter {
+  font: inherit;
+  cursor: pointer;
+  background: transparent;
+}
+
 @media (max-width: 959px) {
-  .sidebar {
-    gap: 10px;
-    padding: 12px 0 8px;
-  }
-  .sidebar .brand {
-    padding: 0 16px;
-  }
-  .sidebar nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 18px;
-    overflow-x: clip;
-    max-width: 100%;
-    padding: 0 16px 4px;
-  }
-  .nav-group {
-    display: flex;
-    flex-wrap: wrap;
+  .nav-toggle {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 0;
-    max-width: 100%;
+    margin: 12px 16px 0;
+    padding: 8px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 100vw;
+    background: var(--surface);
+    color: var(--ink);
+    font: 400 14px/1 var(--sans);
+  }
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(15, 15, 15, 0.4);
+  }
+  .nav-backdrop[hidden] {
+    display: none;
   }
   .sidebar {
-    max-width: 100%;
-    overflow-x: clip;
+    position: fixed;
+    z-index: 21;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 86vw);
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 160ms ease-out;
   }
-  .nav-section {
-    margin: 0 4px 0 0;
-    white-space: nowrap;
-    /* NO `opacity` here. The colour already carries 0.55 alpha, and an opacity
-       on top of it multiplied to 0.30 — 2.48:1 against the pine, against 4.76:1
-       for the same label on a desktop. Measured, and the reason a phone user
-       could barely see the section headings at all. */
+  body.nav-open .sidebar {
+    transform: none;
+  }
+  .sidebar nav,
+  .nav-group,
+  .account-links {
+    display: grid;
+    gap: 4px;
   }
   .nav-item {
-    white-space: nowrap;
-    padding: 6px 10px;
-  }
-  .sidebar nav {
-    flex-wrap: wrap;
-    overflow-x: clip;
-    max-width: 100%;
-  }
-  .sidebar-foot {
-    padding: 0 16px;
-    font-size: 12px;
-  }
-  .account-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+    white-space: normal;
   }
 }
 
@@ -2988,7 +2988,8 @@ body.panel-open .with-panel {
   gap: 6px;
 }
 
-body.app a.filter {
+body.app a.filter,
+body.app button.filter {
   padding: 7px 14px;
   border-radius: 100vw;
   border: 1px solid var(--rule);
@@ -2997,7 +2998,8 @@ body.app a.filter {
   white-space: nowrap;
 }
 
-body.app a.filter.active {
+body.app a.filter.active,
+body.app button.filter.active {
   border-color: var(--ink);
   color: var(--ink);
 }
@@ -3652,7 +3654,8 @@ body.app .panel-links button {
     display: none;
   }
 }
-body.app a.filter {
+body.app a.filter,
+body.app button.filter {
   font-size: 14px;
 }
 #al-flow > summary {

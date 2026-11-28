@@ -10,6 +10,7 @@
  */
 import { DAY_MS, statusHtml, when, type ApiJob } from './activity-view';
 import { extendNowPanelHtml } from './extend-now';
+import { glossaryHtml, term } from './glossary';
 import { approxDate, approxDateShort, esc, formatCount, short, stamp } from './format';
 import { approxDateOfLedger } from './view';
 import { orderRows, type Row } from './watchlist-view';
@@ -21,6 +22,8 @@ const WORD = { healthy: 'healthy', 'at-risk': 'at risk', undetermined: 'undeterm
 
 /** The chip for one row: archived beats at risk; at risk says how close. */
 export function stateChip(r: Row): string {
+  if (r.bindingSource === 'browser' && r.binding.state === 'live')
+    return `<span class="chip undetermined"><span class="shape"></span>read here</span>`;
   if (r.binding.state === 'expired')
     return `<span class="chip expired"><span class="shape"></span>${esc(r.binding.word)}</span>`;
   if (r.conclusion === 'at-risk') {
@@ -489,7 +492,10 @@ export function panelHtml(
     ${kv(ap)}
     ${actions}
     ${extendNowPanelHtml(r)}
+    <p class="panel-h">Time left</p>
+    <p class="note">${term('TTL')} is the ledgers left above, counted down to zero. <a href="/dashboard/decay/?c=${encodeURIComponent(item.contractId)}">Open the chart</a>. ${term('allowance')} pays ${term('autopilot')} and Extend now.</p>
     <p class="panel-h">Last runs</p>
+    ${glossaryHtml()}
     ${
       jobs.kind === 'read' &&
       !jobs.complete &&

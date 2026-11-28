@@ -33,6 +33,7 @@ export const NAV = [
   },
   {
     section: 'Tools',
+    collapsed: true,
     items: [
       { href: '/dashboard/scanner/', label: 'Scanner' },
       { href: '/dashboard/blast-radius/', label: 'Shared code' },
@@ -126,8 +127,10 @@ export function shell({
   </head>
   <body class="app">
     <a class="skip" href="#main">Skip to content</a>
+    <button type="button" class="nav-toggle" aria-controls="dashboard-nav" aria-expanded="false">Menu</button>
+    <div class="nav-backdrop" hidden></div>
     <div class="shell">
-      <aside class="sidebar">
+      <aside class="sidebar" id="dashboard-nav">
         <a class="brand" href="/">
           <span class="brand-mark" aria-hidden="true"></span>
           <span><span class="brand-name">Evergreen</span><span class="brand-sub">Soroban state</span></span>
@@ -141,6 +144,7 @@ export function shell({
       <div class="content">
         ${statusBar(cadence)}
         <div class="with-panel">${main}${panel ? `<aside class="panel-side" id="side-panel" aria-label="Details" hidden></aside>` : ''}</div>
+        <div id="glossary-slot"></div>
         <footer class="site">
           <div class="foot-row">
             <p>Built for Stellar, backed by Instawards.</p>

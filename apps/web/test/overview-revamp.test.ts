@@ -99,6 +99,9 @@ describe('Contracts', () => {
     expect(panelHtml(on, 'contracts')).toContain('data-autopilot-off');
     expect(panelHtml(on, 'overview')).not.toContain('data-autopilot-off');
     expect(panelHtml(pending, 'contracts')).toContain('Scan again');
+    expect(panelHtml(healthy)).toContain('Time left');
+    expect(panelHtml(healthy)).toContain('Open the chart');
+    expect(panelHtml(healthy)).toContain('/dashboard/decay/?c=');
   });
 });
 

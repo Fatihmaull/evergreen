@@ -1,28 +1,42 @@
 /**
- * A scan made on the Scanner page, kept for this tab so Contracts and
- * Overview can show that reading before they ask the chain again.
- * The health conclusion stays the engine's: this only fills the expiry.
+ * A browser scan, kept in localStorage so another tab in this browser can
+ * show the expiry before it asks the chain again.
+ *
+ * The API has no field for a browser scan. `lastObservation` is the engine's.
+ * This store does not change that. The health conclusion stays undetermined
+ * until the engine checks; the chip says "read here" when this browser has
+ * a live expiry. Clearing site data drops the store.
  */
 import type { ScanResult } from '../../../../packages/shared-types/src/index';
 
 const KEY = 'evergreen.shared-scans.v1';
 
-export function rememberScan(id: string, result: ScanResult): void {
-  if (typeof sessionStorage === 'undefined') return;
+function store(): Storage | undefined {
   try {
-    const raw = sessionStorage.getItem(KEY);
+    return typeof localStorage === 'undefined' ? undefined : localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+export function rememberScan(id: string, result: ScanResult): void {
+  const box = store();
+  if (box === undefined) return;
+  try {
+    const raw = box.getItem(KEY);
     const all = raw === null ? {} : (JSON.parse(raw) as Record<string, ScanResult>);
     all[id] = result;
-    sessionStorage.setItem(KEY, JSON.stringify(all));
+    box.setItem(KEY, JSON.stringify(all));
   } catch {
-    // The scan is still on the scanner. Contracts reads the chain itself.
+    // The scan is still on screen. The next page reads the chain itself.
   }
 }
 
 export function rememberedScan(id: string): ScanResult | undefined {
-  if (typeof sessionStorage === 'undefined') return undefined;
+  const box = store();
+  if (box === undefined) return undefined;
   try {
-    const raw = sessionStorage.getItem(KEY);
+    const raw = box.getItem(KEY);
     if (raw === null) return undefined;
     const all = JSON.parse(raw) as Record<string, unknown>;
     const hit = all[id];

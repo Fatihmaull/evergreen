@@ -17,6 +17,8 @@
  * `packages/core/src/networks.ts` and refuses if that file moves, so there is
  * still no passphrase typed anywhere in `apps/`.
  */
+import { glossaryHtml } from './lib/glossary';
+
 declare const __EVERGREEN_RPC_URL__: string;
 declare const __EVERGREEN_PASSPHRASE__: string;
 
@@ -90,6 +92,26 @@ async function labelAccountItem(): Promise<void> {
   }
 }
 
+function wireDrawer(): void {
+  const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+  const backdrop = document.querySelector<HTMLElement>('.nav-backdrop');
+  if (!toggle) return;
+  const set = (open: boolean): void => {
+    document.body.classList.toggle('nav-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    if (backdrop) backdrop.hidden = !open;
+  };
+  toggle.addEventListener('click', () => set(!document.body.classList.contains('nav-open')));
+  backdrop?.addEventListener('click', () => set(false));
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') set(false);
+  });
+}
+
+const glossary = document.getElementById('glossary-slot');
+if (glossary) glossary.innerHTML = glossaryHtml();
+
+wireDrawer();
 revealActiveNavItem();
 void fillLiveLedger();
 void labelAccountItem();

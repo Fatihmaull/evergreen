@@ -9,7 +9,7 @@ describe('shared scanner results', () => {
       getItem: (key: string) => store.get(key) ?? null,
       setItem: (key: string, value: string) => void store.set(key, value),
     };
-    Object.defineProperty(globalThis, 'sessionStorage', { value: memory, configurable: true });
+    Object.defineProperty(globalThis, 'localStorage', { value: memory, configurable: true });
     rememberScan('C'.padEnd(56, 'A'), { network: 'testnet' } as ScanResult);
     expect(rememberedScan('C'.padEnd(56, 'A'))).toEqual({ network: 'testnet' });
     expect(rememberedScan('missing')).toBeUndefined();

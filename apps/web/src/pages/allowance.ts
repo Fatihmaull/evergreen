@@ -35,6 +35,7 @@ import {
 } from '../lib/allowance-candidates';
 import { quoteRent, scanOne, verifiedServer, type ScanResult } from '../lib/evergreen';
 import { readSession } from '../lib/login';
+import { signedOutDemoHtml } from '../lib/signed-out-demo';
 import type { WatchItem } from '../lib/watchlist-view';
 import { createApprover } from '../lib/allowance-approve';
 import {
@@ -626,9 +627,42 @@ $('al-next').addEventListener('click', (ev) => {
 });
 
 $('al-facts').innerHTML = allowanceFactsHtml(ENGINE_SPENDER);
+
+function showWizard(step: number): void {
+  const n = Math.min(2, Math.max(0, step));
+  document.querySelectorAll<HTMLElement>('.wizard-step').forEach((el) => {
+    const on = el.dataset.step === String(n);
+    el.hidden = !on;
+    el.classList.toggle('is-active', on);
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-wizard]').forEach((button) => {
+    const on = button.dataset.wizard === String(n);
+    button.classList.toggle('active', on);
+    button.setAttribute('aria-selected', String(on));
+  });
+}
+
+document.querySelectorAll<HTMLElement>('[data-wizard], [data-wizard-go]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const raw = button.dataset.wizard ?? button.dataset.wizardGo;
+    if (raw === undefined) return;
+    showWizard(Number(raw));
+  });
+});
+showWizard(0);
+
 void readSession()
-  .then((session) => (session.kind === 'signed-in' ? session.me.wallets[0]?.account : undefined))
-  .catch(() => undefined)
+  .then((session) => {
+    if (session.kind !== 'signed-in') {
+      $('al-signed-out').innerHTML = signedOutDemoHtml('Allowance');
+      return undefined;
+    }
+    return session.me.wallets[0]?.account;
+  })
+  .catch(() => {
+    $('al-signed-out').innerHTML = signedOutDemoHtml('Allowance');
+    return undefined;
+  })
   .then(async (wallet) => {
     if (account !== undefined) return; // the connect flow already read it
     const read =

@@ -136,6 +136,7 @@ async function runAdd(): Promise<void> {
     });
     target.innerHTML = addOutcomeHtml(outcome, lastScan.id, lastScan.dataKeys.length);
     if (outcome.kind === 'added' || outcome.kind === 'already-present') {
+      rememberScan(lastScan.id, lastScan.result);
       target.innerHTML += `<p class="note"><a href="/dashboard/watchlist/?c=${encodeURIComponent(lastScan.id)}">Open this contract</a></p>`;
     }
   } finally {

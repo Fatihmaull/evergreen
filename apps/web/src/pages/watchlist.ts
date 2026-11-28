@@ -7,7 +7,8 @@
  */
 import { apiRequest } from '../lib/api';
 import { scanOne, type ScanResult } from '../lib/evergreen';
-import { rememberedScan } from '../lib/scan-share';
+import { rememberedScan, rememberScan } from '../lib/scan-share';
+import { signedOutDemoHtml } from '../lib/signed-out-demo';
 import { formatCount } from '../lib/format';
 import {
   filtersHtml,
@@ -115,8 +116,7 @@ async function load(): Promise<void> {
   );
   const status = $('cl-status');
   if (outcome.kind === 'error' && outcome.code === 'UNAUTHENTICATED') {
-    status.innerHTML =
-      'Sign in to save contracts and turn on autopilot. You can <a href="/dashboard/scanner/">scan one now</a> with no account. <a href="/login/">Sign in</a>';
+    status.innerHTML = `${signedOutDemoHtml('Contracts')} Sign in to save contracts and turn on autopilot. You can <a href="/dashboard/scanner/">scan one now</a> with no account. <a href="/login/">Sign in</a>`;
     return;
   }
   if (outcome.kind !== 'ok' || !Array.isArray(outcome.data?.items)) {
@@ -143,7 +143,10 @@ async function load(): Promise<void> {
   await Promise.all(
     pending.map((i) =>
       scanOne(i.contractId, 'dataKeys' in i.scope ? (i.scope.dataKeys as readonly string[]) : [])
-        .then((s) => void scans.set(i.contractId, s))
+        .then((s) => {
+          scans.set(i.contractId, s);
+          rememberScan(i.contractId, s);
+        })
         .catch(() => undefined),
     ),
   );
